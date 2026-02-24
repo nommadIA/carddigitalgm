@@ -402,76 +402,177 @@ const brl = (v: number) =>
 export async function generateFinanceReportPdf(params: {
   rows: FinanceReportRow[];
   periodLabel?: string;
-  brand?: {
-    companyName?: string;
-    companySubtitle?: string;
-    phone?: string;
-    email?: string;
-    website?: string;
-    logoDataUrl?: string;
-  };
+  settings: AppSettings;
 }) {
-  const { rows, periodLabel, brand } = params;
+  const { rows, periodLabel, settings } = params;
 
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  let textX = 14;
-
-  if (brand?.logoDataUrl) {
-    try {
-      doc.addImage(brand.logoDataUrl, 14, 10, 25, 20);
-      textX = 44;
-    } catch (e) {
-      console.warn("Erro ao adicionar logo no PDF financeiro:", e);
-      textX = 14;
+  try {
+    const timbradoUrl = settings?.timbrado_url || "";
+    if (!timbradoUrl) {
+      throw new Error(
+        "Nenhum timbrado configurado. Vá em Configurações e envie o timbrado A4 (PNG/JPG)."
+      );
     }
+
+    const doc = await PDFDocument.create();
+    const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+
+    const bgImage = await embedBackgroundImage(doc, timbradoUrl);
+
+    const W = 595.28;
+    const H = 841.89;
+
+    const PX_W = 2480;
+    const PX_H = 3508;
+
+    const CONTENT_X_PX = 167;
+    const CONTENT_TOP_PX = 167;
+    const CONTENT_W_PX = 2146;
+    const CONTENT_H_PX = 2146;
+
+    const CONTENT_X = (CONTENT_X_PX / PX_W) * W;
+    const CONTENT_W = (CONTENT_W_PX / PX_W) * W;
+    const CONTENT_RIGHT_X = CONTENT_X + CONTENT_W;
+
+    const CONTENT_TOP_Y = H - (CONTENT_TOP_PX / PX_H) * H;
+    const CONTENT_BOTTOM_Y = H - ((CONTENT_TOP_PX + CONTENT_H_PX) / PX_H) * H;
+
+    let cursorY = CONTENT_TOP_Y;
+    let page: PDFPage;
+
+    const cText = rgb(0.12, 0.12, 0.12);
+    const cGray = rgb(0.35, 0.35, 0.35);
+    const cRed = rgb(0.86, 0.15, 0.16);
+    const cGreen = rgb(0.13, 0.77, 0.36);
+    const cLine = rgb(0.82, 0.82, 0.82);
+
+    const addPage = () => {
+      const p = doc.addPage([W, H]);
+      p.drawImage(bgImage, { x: 0, y: 0, width: W, height: H });
+      page = p;
+      cursorY = CONTENT_TOP_Y;
+    };
+
+    const checkSpace = (heightNeeded: number) => {
+      if (cursorY - heightNeeded < CONTENT_BOTTOM_Y) addPage();
+    };
+
+    addPage();
+
+    const drawLeft = (txt: string, size: number, yPos: number, bold = false, color = cText) => {
+      page.drawText(txt, { x: CONTENT_X, y: yPos, size, font: bold ? fontBold : fontRegular, color });
+    };
+
+    const drawRight = (txt: string, size: number, yPos: number, bold = false, color = cText) => {
+      const font = bold ? fontBold : fontRegular;
+      const w = font.widthOfTextAtSize(txt, size);
+      page.drawText(txt, { x: CONTENT_RIGHT_X - w, y: yPos, size, font, color });
+    };
+
+    const hr = (yPos: number) => {
+      page.drawLine({
+        start: { x: CONTENT_X, y: yPos },
+        end: { x: CONTENT_RIGHT_X, y: yPos },
+        thickness: 1,
+        color: cLine,
+      });
+    };
+
+    checkSpace(60);
+    drawLeft(`RELATÓRIO FINANCEIRO`, 14, cursorY, true);
+    cursorY -= 15;
+
+    const dateStr = new Date().toLocaleDateString();
+    drawLeft(`Data de Emissão: ${dateStr}`, 9.5, cursorY, false, cGray);
+    cursorY -= 12;
+    if (periodLabel) {
+      drawLeft(`Período: ${periodLabel}`, 9.5, cursorY, false, cGray);
+      cursorY -= 12;
+    }
+    cursorY -= 15;
+
+    const receitas = rows.filter(r => r.type === "receita").reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    const despesas = rows.filter(r => r.type === "despesa").reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    const saldo = receitas - despesas;
+
+    checkSpace(40);
+    drawLeft(`Resumo do Período`, 10.5, cursorY, true);
+    cursorY -= 10;
+    hr(cursorY);
+    cursorY -= 14;
+
+    drawLeft(`Total de Receitas:`, 10, cursorY, false, cText);
+    drawRight(`${CURRENCY_FORMATTER.format(receitas)}`, 10, cursorY, true, cGreen);
+    cursorY -= 14;
+
+    drawLeft(`Total de Despesas:`, 10, cursorY, false, cText);
+    drawRight(`-${CURRENCY_FORMATTER.format(despesas)}`, 10, cursorY, true, cRed);
+    cursorY -= 14;
+
+    drawLeft(`Saldo Líquido:`, 10, cursorY, true, cText);
+    drawRight(`${CURRENCY_FORMATTER.format(saldo)}`, 10, cursorY, true, saldo >= 0 ? cText : cRed);
+    cursorY -= 25;
+
+    checkSpace(30);
+    drawLeft("DETALHAMENTO DE MOVIMENTAÇÕES", 10.5, cursorY, true);
+    cursorY -= 10;
+    hr(cursorY);
+    cursorY -= 14;
+
+    const colDateX = CONTENT_X;
+    const colTypeX = CONTENT_X + 60;
+    const colDescX = CONTENT_X + 120;
+    const colValueX = CONTENT_RIGHT_X;
+
+    // Header
+    page.drawText("Data", { x: colDateX, y: cursorY, size: 9, font: fontBold, color: cGray });
+    page.drawText("Tipo", { x: colTypeX, y: cursorY, size: 9, font: fontBold, color: cGray });
+    page.drawText("Descrição", { x: colDescX, y: cursorY, size: 9, font: fontBold, color: cGray });
+    
+    const valHeaderW = fontBold.widthOfTextAtSize("Valor", 9);
+    page.drawText("Valor", { x: colValueX - valHeaderW, y: cursorY, size: 9, font: fontBold, color: cGray });
+    
+    cursorY -= 10;
+    hr(cursorY);
+    cursorY -= 14;
+
+    const colDescW = CONTENT_W - 120 - 70; // Available width for description
+
+    for (const r of rows) {
+      const isReceita = r.type === "receita";
+      const color = isReceita ? cGreen : cRed;
+      const typeStr = isReceita ? "Receita" : "Despesa";
+      const valStr = `${isReceita ? '+' : '-'} ${CURRENCY_FORMATTER.format(Number(r.amount) || 0)}`;
+      const dateStr = new Date(r.date).toLocaleDateString("pt-BR");
+
+      const size = 9;
+      const lines = wrapText(r.title || "-", colDescW, fontRegular, size);
+      const blockH = Math.max(18, lines.length * 12);
+
+      checkSpace(blockH + 5);
+
+      page.drawText(dateStr, { x: colDateX, y: cursorY, size, font: fontRegular, color: cText });
+      page.drawText(typeStr, { x: colTypeX, y: cursorY, size, font: fontRegular, color: color });
+
+      let yText = cursorY;
+      for (const line of lines) {
+        page.drawText(line, { x: colDescX, y: yText, size, font: fontRegular, color: cText });
+        yText -= 12;
+      }
+
+      const valW = fontBold.widthOfTextAtSize(valStr, size);
+      page.drawText(valStr, { x: colValueX - valW, y: cursorY, size, font: fontBold, color: color });
+
+      cursorY -= blockH;
+      hr(cursorY + 6);
+      cursorY -= 10;
+    }
+
+    const pdfBytes = await doc.save();
+    return new Blob([pdfBytes], { type: "application/pdf" });
+  } catch (err: any) {
+    console.error("Erro gerando PDF Financeiro", err);
+    throw err;
   }
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text(brand?.companyName ?? "CardDigital GM", textX, 16);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  if (brand?.companySubtitle) doc.text(brand.companySubtitle, textX, 22);
-
-  const contacts = [brand?.phone, brand?.email, brand?.website].filter(Boolean).join(" • ");
-  if (contacts) doc.text(contacts, textX, 28);
-
-  doc.setDrawColor(180);
-  doc.line(14, 32, 196, 32);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("Relatório Financeiro", 14, 42);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  if (periodLabel) doc.text(`Período: ${periodLabel}`, 14, 48);
-
-  const receitas = rows.filter(r => r.type === "receita").reduce((a, r) => a + (Number(r.amount) || 0), 0);
-  const despesas = rows.filter(r => r.type === "despesa").reduce((a, r) => a + (Number(r.amount) || 0), 0);
-  const saldo = receitas - despesas;
-
-  doc.setFont("helvetica", "bold");
-  doc.text(`Receitas: ${brl(receitas)}  •  Despesas: ${brl(despesas)}  •  Saldo: ${brl(saldo)}`, 14, 56);
-
-  const body = rows.map(r => ([
-    new Date(r.date).toLocaleDateString("pt-BR"),
-    r.type === "receita" ? "Receita" : "Despesa",
-    r.title,
-    r.category ?? "-",
-    r.status ?? "-",
-    brl(Number(r.amount) || 0),
-  ]));
-
-  autoTable(doc, {
-    startY: 62,
-    head: [["Data", "Tipo", "Título", "Categoria", "Status", "Valor"]],
-    body,
-    styles: { font: "helvetica", fontSize: 9, cellPadding: 2 },
-    headStyles: { fontStyle: "bold" },
-    columnStyles: { 5: { halign: "right" } },
-  });
-
-  return doc.output("blob") as Blob;
 }
