@@ -1,0 +1,7 @@
+{
+  "name": "CardDigital GM",
+  "description": "Gestão profissional para designers e agências com IA e Orçamentos.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

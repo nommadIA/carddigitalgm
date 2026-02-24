@@ -1,0 +1,881 @@
+
+
+/* =========================================================
+   CardDigital GM — UI System FINAL (Clean & Flat)
+========================================================= */
+
+:root{
+  --gm-primary:#ff7b00;
+  --gm-accent:#ff9a1a;
+  
+  /* Dark Mode Default - Solid Colors */
+  --gm-bg:#0f1117;
+  --gm-text:#ffffff;
+  --gm-surface: #161b22;
+  --gm-surface-2: #21262d;
+  --gm-border: #30363d;
+
+  --gm-font: Inter;
+
+  --gm-radius:8px;
+  --gm-radius-sm:6px;
+
+  --gm-space-1:8px;
+  --gm-space-2:12px;
+  --gm-space-3:16px;
+  --gm-space-4:20px;
+  --gm-space-5:24px;
+
+  --gm-sidebar-w:268px;
+  --gm-sidebar-w-collapsed:86px;
+
+  --gm-container: 1180px;
+
+  /* Background imagem configurável */
+  --gm-app-bg-url: none;
+  --gm-app-bg-fit: cover;
+  --gm-app-bg-opacity: 0;
+  --gm-app-bg-scale: 1;
+  --gm-app-bg-blur: 0px;
+  --gm-app-bg-parallax-y: 0px;
+  --gm-app-bg-parallax-x: 0px;
+}
+
+[data-theme="light"]{
+  --gm-bg:#f4f6fa;
+  --gm-text:#0b1020;
+  --gm-surface: #ffffff;
+  --gm-surface-2: #e2e8f0;
+  --gm-border: #cbd5e1;
+}
+
+/* RESET */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  color:var(--gm-text);
+  font-family: var(--gm-font), Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  overflow-x:hidden;
+  background: var(--gm-bg);
+}
+
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; }
+
+/* =========================================================
+   ANIMATIONS CUSTOM (GM PRO)
+========================================================= */
+
+/* Relógio balançando (Na Fila) */
+@keyframes gmSwing {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-15deg); }
+  75% { transform: rotate(15deg); }
+  100% { transform: rotate(0deg); }
+}
+.animate-swing {
+  animation: gmSwing 2s ease-in-out infinite;
+  transform-origin: center top;
+}
+
+/* Ponteiro do Relógio Girando (Suave) */
+@keyframes gmClockSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-clock-hand {
+  transform-origin: 12px 12px;
+  animation: gmClockSpin 6s linear infinite;
+}
+
+/* Verificado pulsando (Pronto) */
+@keyframes gmHeartbeat {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.25); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.15); }
+  60% { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+.animate-heartbeat {
+  animation: gmHeartbeat 2s ease-in-out infinite;
+}
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+.gm-layout{ display:flex; min-height:100vh; width:100%; }
+
+/* SIDEBAR: Importante - display flex apenas em desktop */
+.gm-sidebar{
+  width:var(--gm-sidebar-w);
+  min-width:var(--gm-sidebar-w);
+  height:100vh;
+  position:sticky; top:0;
+  padding: var(--gm-space-5) var(--gm-space-4);
+  background: var(--gm-surface);
+  border-right:1px solid var(--gm-border);
+  display:flex; flex-direction:column;
+  gap: var(--gm-space-3);
+  z-index: 50;
+}
+
+/* Força ocultar sidebar no mobile (css specificity fix) */
+@media (max-width: 768px) {
+  .gm-sidebar {
+    display: none !important;
+  }
+}
+
+.gm-sidebar.collapsed{
+  width:var(--gm-sidebar-w-collapsed);
+  min-width:var(--gm-sidebar-w-collapsed);
+}
+
+.gm-main{ flex:1; width:100%; padding: 28px; }
+.gm-container{ max-width:var(--gm-container); margin:0 auto; width:100%; }
+
+/* MOBILE ADJUSTMENTS */
+@media (max-width: 820px){
+  .gm-main{ 
+    padding: 16px; 
+    /* Espaço para Bottom Nav */
+    padding-bottom: 100px; 
+    /* Espaço para Top Header Mobile */
+    padding-top: 80px; 
+  }
+}
+
+/* =========================================================
+   HEADER / PAGE
+========================================================= */
+.gm-header{
+  display:flex; align-items:center; justify-content:space-between;
+  gap: var(--gm-space-3);
+  margin-bottom: var(--gm-space-5);
+  flex-wrap: wrap;
+}
+.gm-title{ display:flex; flex-direction:column; gap:4px; }
+.gm-title h1, .gm-title h2{
+  margin:0; letter-spacing:-0.4px;
+  font-size:24px; font-weight:700;
+}
+.gm-title p{ margin:0; opacity:.75; font-size:13px; }
+
+.gm-row{ display:flex; align-items:center; gap:12px; }
+.gm-right{ margin-left:auto; }
+.gm-muted{ opacity:.72; }
+
+/* =========================================================
+   NAV
+========================================================= */
+.gm-nav{ display:flex; flex-direction:column; gap:8px; }
+.gm-nav a{
+  display:flex; align-items:center; gap:12px;
+  padding: 10px 12px;
+  border-radius: var(--gm-radius);
+  border:1px solid transparent;
+  color: var(--gm-text);
+  opacity: .8;
+  font-weight: 500;
+}
+.gm-nav a:hover{
+  background: var(--gm-surface-2);
+  opacity: 1;
+}
+.gm-nav a.active{
+  background: var(--gm-surface-2);
+  color: var(--gm-primary);
+  border-color: var(--gm-border);
+  opacity: 1;
+}
+.gm-sidebar.collapsed .gm-nav a span{ display:none; }
+.gm-sidebar.collapsed .gm-nav a{ justify-content:center; padding:11px; }
+
+.gm-sidebar-footer{ margin-top:auto; display:grid; gap:10px; }
+
+/* =========================================================
+   GRID
+========================================================= */
+.gm-grid{ display:grid; gap: var(--gm-space-4); }
+.gm-grid-4{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+.gm-grid-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+.gm-grid-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+
+@media (max-width: 1200px){
+  .gm-main{ padding: 22px; }
+  .gm-grid-4{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 900px){
+  .gm-grid-4, .gm-grid-3, .gm-grid-2{ grid-template-columns:1fr; }
+  .gm-main{ padding: 16px; padding-bottom: 100px; padding-top: 80px; }
+}
+
+/* =========================================================
+   CARDS (Flat)
+========================================================= */
+.gm-card{
+  background: var(--gm-surface);
+  border:1px solid var(--gm-border);
+  border-radius: var(--gm-radius);
+  padding: var(--gm-space-5);
+  overflow:hidden;
+  min-width:0;
+  display:flex; flex-direction:column;
+  box-shadow: none; /* Removed shadow for flat look */
+}
+.gm-card:hover{
+  border-color: var(--gm-primary);
+}
+
+.gm-compact{
+  padding: 14px 16px !important;
+  border-radius: var(--gm-radius) !important;
+}
+.gm-compact .gm-btn{
+  height: 36px;
+}
+
+/* Budget card: altura padrão e layout alinhado */
+.gm-budget-card{
+  display: flex;
+  flex-direction: column;
+  min-height: 220px; 
+}
+
+/* Badge dos tabs */
+.gm-tab-badge{
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+}
+
+/* =========================================================
+   BUTTONS / INPUTS
+========================================================= */
+.gm-btn{
+  display:flex; align-items:center; justify-content:center;
+  gap:10px;
+  height:40px;
+  padding: 0 16px;
+  border-radius: var(--gm-radius);
+  background: var(--gm-surface-2);
+  border:1px solid var(--gm-border);
+  color: var(--gm-text);
+  cursor:pointer;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.gm-btn:hover{ 
+  background: var(--gm-border);
+}
+.gm-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.gm-btn-icon{
+  width:40px; padding:0;
+}
+
+/* Removed border loop animation, replaced with primary style */
+.gm-border-loop{
+  background: var(--gm-surface-2);
+  border-color: var(--gm-primary);
+  color: var(--gm-primary);
+}
+.gm-border-loop::before {
+  display: none;
+}
+.gm-border-loop:hover {
+  background: var(--gm-primary);
+  color: #fff;
+}
+
+.gm-input{
+  width:100%;
+  height:40px;
+  padding: 0 12px;
+  border-radius: var(--gm-radius);
+  background: var(--gm-surface-2);
+  border:1px solid var(--gm-border);
+  color: var(--gm-text);
+  outline:none;
+  font-family: inherit;
+}
+.gm-input:focus{
+  border-color: var(--gm-primary);
+}
+
+.gm-label{ display:block; font-size:12px; opacity:.8; margin-bottom:6px; font-weight: 500; }
+
+.gm-search{
+  display:flex; align-items:center; gap:10px;
+  height:40px;
+  padding: 0 14px;
+  border-radius: var(--gm-radius);
+  border:1px solid var(--gm-border);
+  background: var(--gm-surface-2);
+}
+.gm-search input{
+  border:none; outline:none; background:transparent; color:var(--gm-text);
+  width: 220px;
+}
+.gm-tabs{
+  display:flex; gap:8px;
+  padding: 4px;
+  border-radius: var(--gm-radius);
+  border:1px solid var(--gm-border);
+  background: var(--gm-surface);
+  overflow-x: auto; /* Permite scroll horizontal em mobile */
+  scrollbar-width: none;
+}
+.gm-tab{
+  border:none; cursor:pointer;
+  padding: 8px 12px;
+  border-radius: var(--gm-radius-sm);
+  background: transparent;
+  color: var(--gm-text);
+  opacity: .7;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.gm-tab.active{
+  background: var(--gm-surface-2);
+  opacity: 1;
+  color: var(--gm-primary);
+}
+
+/* =========================================================
+   RECHARTS WARNING FIX (width/height -1)
+========================================================= */
+.recharts-responsive-container{
+  min-height: 260px !important;
+  min-width: 0 !important;
+}
+.recharts-wrapper{
+  min-width: 0 !important;
+}
+.gm-chart canvas{
+  width:100% !important;
+  height:260px !important;
+}
+
+/* ============================= */
+/* FULL WIDTH + FUNDO SEM “MANCHA” */
+/* ============================= */
+
+/* garante full width */
+:root{
+  --gm-container: 100%;
+}
+
+/* estrutura ocupa sempre a altura da tela */
+html, body, #root{
+  height: 100%;
+}
+
+/* layout sempre com altura mínima da viewport */
+.gm-layout{
+  min-height: 100vh;
+}
+
+/* =========================================================
+   GM — GLASS PREMIUM + APPLE SCROLL + BACKGROUND LAYER
+========================================================= */
+
+body{ overflow: hidden; }
+
+.gm-main{
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+.gm-main::-webkit-scrollbar{ width:10px; }
+.gm-main::-webkit-scrollbar-track{ background:transparent; }
+.gm-main::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,0.10);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.gm-main::-webkit-scrollbar-thumb:hover{
+  background: rgba(255,255,255,0.16);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Utilitário no-scrollbar para a lista de status */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+:root{
+  --gm-glass-border: rgba(255,255,255,0.10);
+  --gm-shadow: 0 18px 50px rgba(0,0,0,0.38);
+  --gm-app-bg-blur: 10px;
+}
+
+/* sidebar glass */
+.gm-sidebar{
+  background: rgba(20,24,31,0.65) !important;
+  border-right: 1px solid var(--gm-glass-border) !important;
+  backdrop-filter: blur(18px) saturate(1.25);
+}
+
+/* cards glass premium */
+.gm-card{
+  background: rgba(18,22,28,0.62) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  backdrop-filter: blur(20px) saturate(1.25);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+}
+
+/* inputs */
+.gm-input{
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+}
+.gm-input:focus{
+  outline:none;
+  border-color: rgba(255,123,0,0.55) !important;
+  box-shadow: 0 0 0 4px rgba(255,123,0,0.12);
+}
+
+/* BG layer global */
+.gm-layout{ position:relative; isolation:isolate; }
+
+.gm-layout::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events:none;
+
+  background-image: var(--gm-app-bg-url);
+  background-size: calc(var(--gm-app-bg-scale, 1) * 100%);
+  background-repeat:no-repeat;
+  
+  opacity: var(--gm-app-bg-opacity, 0);
+  transform: scale(var(--gm-app-bg-depth-scale, 1.05));
+  will-change: transform, background-position, filter;
+  backface-visibility: hidden;
+  transform: translateZ(0) scale(var(--gm-app-bg-depth-scale,1.04)) !important;
+}
+
+.gm-main{ background: transparent !important; }
+
+/* ============================= */
+/* PARALLAX 2.0 (X + Y)          */
+/* ============================= */
+
+.gm-layout::before{
+  /* usa X e Y juntos */
+  background-position:
+    calc(var(--gm-app-bg-pos-x, 50%) + var(--gm-app-bg-parallax-x, 0px))
+    calc(
+      var(--gm-app-bg-pos-y, 50%)
+      + var(--gm-app-bg-parallax-y, 0px)
+      + var(--gm-app-bg-parallax-y-mouse, 0px)
+    ) !important;
+
+  /* blur automático (calculado no JS) */
+  filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px)))
+          saturate(1.08) contrast(1.05);
+}
+
+/* =========================================================
+   PARALLAX DEPTH + OVERLAY INTELIGENTE (Apple premium)
+========================================================= */
+
+:root{
+  /* defaults (se a análise da imagem falhar) */
+  --gm-app-overlay-alpha: 0.55;  /* escurecimento geral */
+  --gm-app-vignette-alpha: 0.22; /* vinheta nas bordas */
+  --gm-app-bg-depth-scale: 1.06; /* “profundidade” do blur */
+}
+
+/* overlay inteligente: mantém leitura perfeita */
+.gm-layout::after{
+  background:
+    /* luz premium (mantém) */
+    radial-gradient(900px 420px at 15% 0%, rgba(255,123,0,0.10), transparent 55%),
+    radial-gradient(900px 420px at 85% 0%, rgba(255,154,26,0.08), transparent 55%),
+
+    /* vinheta (controlada por variável) */
+    radial-gradient(1400px 700px at 50% 30%, transparent 40%, rgba(0,0,0,var(--gm-app-vignette-alpha,0.22)) 85%),
+
+    /* escurecimento geral (controlado por variável) */
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,var(--gm-app-overlay-alpha,0.55)),
+      rgba(0,0,0,var(--gm-app-overlay-alpha,0.55))
+    ) !important;
+    
+  animation: gmAmbientBreath 18s ease-in-out infinite;
+}
+
+@keyframes gmAmbientBreath {
+  0%   { opacity: 0.55; }
+  50%  { opacity: 0.60; }
+  100% { opacity: 0.55; }
+}
+
+/* =========================================================
+   THEME (dark/light) real + TOAST premium
+========================================================= */
+
+/* Default já é dark — mas formalizamos */
+:root{
+  --gm-bg: #0b0f14;
+  --gm-surface: rgba(18,22,28,0.62);
+  --gm-border: rgba(255,255,255,0.08);
+  --gm-text: rgba(255,255,255,0.92);
+  --gm-muted: rgba(255,255,255,0.55);
+}
+
+/* Light mode */
+html[data-theme="light"]{
+  --gm-bg: #f6f7fb;
+  --gm-surface: rgba(255,255,255,0.80);
+  --gm-border: rgba(0,0,0,0.08);
+  --gm-text: rgba(10,14,20,0.92);
+  --gm-muted: rgba(10,14,20,0.55);
+}
+
+/* aplica base */
+body{
+  background: var(--gm-bg);
+  color: var(--gm-text);
+}
+
+.gm-card{
+  background: var(--gm-surface) !important;
+  border: 1px solid var(--gm-border) !important;
+}
+
+/* =========================
+   TOAST
+========================= */
+.toast-host{
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  display: grid;
+  gap: 10px;
+  width: min(420px, calc(100vw - 32px));
+}
+
+.toast{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--gm-border);
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.45);
+
+  transform: translateY(6px);
+  opacity: 0;
+  animation: toastIn 220ms ease-out forwards;
+}
+
+html[data-theme="light"] .toast{
+  background: rgba(255,255,255,0.70);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.14);
+}
+
+@keyframes toastIn{
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.toast-left{
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+  min-width: 0;
+}
+
+.toast-ic{ margin-top: 1px; opacity: 0.95; }
+.toast-success{ color: rgba(34,197,94,0.95); }
+.toast-error{ color: rgba(239,68,68,0.95); }
+.toast-info{ color: rgba(59,130,246,0.95); }
+
+.toast-text{ min-width: 0; }
+.toast-title{ font-weight: 800; font-size: 13px; line-height: 1.2; }
+.toast-msg{ margin-top: 2px; font-size: 12px; opacity: 0.75; line-height: 1.35; }
+
+.toast-close{
+  border: 1px solid var(--gm-border);
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 6px;
+  line-height: 0;
+}
+.toast-close:hover{ background: rgba(255,255,255,0.12); }
+html[data-theme="light"] .toast-close{ background: rgba(0,0,0,0.04); }
+html[data-theme="light"] .toast-close:hover{ background: rgba(0,0,0,0.08); }
+
+/* =========================
+   Budgets Tabs Counter Badge
+========================= */
+.gm-badge{
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  opacity: .9;
+}
+
+/* =========================
+   StatusPicker (Premium)
+========================= */
+.gm-statuspicker{ position: relative; display: inline-flex; }
+
+.gm-statuspill{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.18);
+  backdrop-filter: blur(12px) saturate(1.15);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.gm-statuspill-ic{ transition: transform 180ms ease; opacity: .85; }
+.gm-statuspill-ic.open{ transform: rotate(180deg); }
+
+.gm-statusmenu{
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 220px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.55);
+  overflow: hidden;
+  z-index: 50;
+}
+
+html[data-theme="light"] .gm-statusmenu{
+  background: rgba(255,255,255,0.78);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.14);
+}
+
+.gm-statusmenu-item{
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gm-statusmenu-item:hover{
+  background: rgba(255,255,255,0.06);
+}
+
+html[data-theme="light"] .gm-statusmenu-item:hover{
+  background: rgba(0,0,0,0.05);
+}
+
+.gm-statusmenu-left{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+.gm-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.06);
+}
+
+.gm-statusmenu-item.active{
+  background: rgba(255,255,255,0.08);
+}
+
+/* Pills colors */
+.gm-pill-green{ border-color: rgba(34,197,94,0.28); background: rgba(34,197,94,0.14); color: rgba(134,239,172,0.95); }
+.gm-pill-blue{ border-color: rgba(59,130,246,0.28); background: rgba(59,130,246,0.14); color: rgba(191,219,254,0.95); }
+.gm-pill-red{ border-color: rgba(239,68,68,0.28); background: rgba(239,68,68,0.14); color: rgba(254,202,202,0.95); }
+.gm-pill-gray{ border-color: rgba(148,163,184,0.28); background: rgba(148,163,184,0.12); color: rgba(226,232,240,0.9); }
+.gm-pill-indigo{ border-color: rgba(99,102,241,0.28); background: rgba(99,102,241,0.14); color: rgba(224,231,255,0.95); }
+.gm-pill-emerald{ border-color: rgba(16,185,129,0.28); background: rgba(16,185,129,0.14); color: rgba(167,243,208,0.95); }
+.gm-pill-orange{ border-color: rgba(255,102,0,0.30); background: rgba(255,102,0,0.14); color: rgba(255,204,170,0.95); }
+
+/* =========================
+   Toolbar + Filters + Bulk
+========================= */
+.gm-toolbar{
+  display:flex;
+  gap:12px;
+  align-items:stretch;
+  justify-content:space-between;
+  flex-wrap: wrap;
+}
+.gm-toolbar-left{ flex: 1; min-width: 280px; }
+.gm-toolbar-right{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* Select premium */
+.gm-select-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.gm-select-ico{ opacity: .75; }
+.gm-select{
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  padding-right: 6px;
+}
+
+/* Button soft / danger */
+.gm-btn-soft{
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+}
+.gm-btn-danger{
+  border: 1px solid rgba(255,80,80,.25);
+  background: rgba(255,80,80,.10);
+  color: rgba(255,180,180,.95);
+}
+
+/* Filters card */
+.gm-filters{
+  padding: 14px;
+}
+.gm-filters-grid{
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gm-check{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  font-weight: 800;
+  color: rgba(255,255,255,.85);
+}
+.gm-check input{ transform: scale(1.05); }
+.gm-status-filters{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.gm-pill{
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.20);
+  color: rgba(255,255,255,.85);
+}
+.gm-pill.active{
+  border-color: rgba(255,123,0,.35);
+  background: rgba(255,123,0,.12);
+  color: rgba(255,180,120,.95);
+}
+
+/* Bulk bar */
+.gm-bulkbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  flex-wrap: wrap;
+}
+.gm-bulk-select{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight: 900;
+  color: rgba(255,255,255,.90);
+}
+.gm-bulk-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap: wrap;
+}
+
+/* Seleção visual do card */
+.gm-selected{
+  outline: 2px solid rgba(255,123,0,.22);
+  box-shadow: 0 0 0 1px rgba(255,123,0,.12);
+}
+.gm-card-check{
+  position:absolute;
+  top: 10px;
+  left: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.22);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color: rgba(255,255,255,.85);
+}
+.gm-budget-card{ position: relative; } /* necessário pro checkbox */
+
+/* ✅ Apple-like scroll (sem elástico) */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* Melhor leitura em glass */
+.gm-tabs .gm-tab.active {
+  border-color: rgba(255, 102, 0, 0.45);
+  background: rgba(255, 102, 0, 0.10);
+}

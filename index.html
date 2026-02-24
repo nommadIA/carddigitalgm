@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>CardDigital GM Pro</title>
+    
+    <!-- FIVE ICON - Favicon -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/brand_assets_logo/FIVE%20ICON%20CARDDIGITAL%20GM.svg"
+    />
+
+    <link
+      rel="apple-touch-icon"
+      href="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/brand_assets_logo/FIVE%20ICON%20CARDDIGITAL%20GM.svg"
+    />
+
+    <meta name="theme-color" content="#ff7a00" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              // Mapeia para variáveis CSS dinâmicas
+              primary: 'var(--gm-primary)', 
+              'primary-weak': 'var(--gm-primary-weak)',
+              secondary: 'var(--gm-accent)', 
+              'secondary-weak': 'var(--gm-accent-weak)',
+              success: '#22c55e', 
+              dark: {
+                bg: 'var(--gm-bg)',
+                card: 'var(--gm-surface)',
+                text: 'var(--gm-text)'
+              }
+            },
+            fontFamily: {
+              sans: ['var(--gm-font)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <!-- PWA Manifest Placeholder -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+<style>
+  /* Base - Limpo e sem efeitos */
+  .app-bg {
+    background: var(--gm-bg);
+    min-height: 100vh;
+  }
+  
+  /* “Frame” de preview */
+  .frame {
+    margin: 0 auto;
+    width: 100%;
+    transition: max-width .18s ease;
+  }
+  .frame-mobile  { max-width: 430px; }
+  .frame-tablet  { max-width: 900px; }
+  .frame-desktop { max-width: 100%; }
+
+  .frame-outline {
+    border: 1px solid var(--gm-border);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  /* SPLASH SCREEN STYLES (Clean) */
+  #gm-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f1117;
+  }
+
+  .gm-card-splash {
+    width: min(400px, 90vw);
+    border-radius: 12px;
+    padding: 32px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    text-align: center;
+  }
+
+  .gm-logo-box{
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: #21262d;
+    border: 1px solid #30363d;
+  }
+
+  .gm-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+  }
+
+  .gm-title{
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
+
+  .gm-sub{
+    margin-top: 8px;
+    font-size: 13px;
+    color: #8b949e;
+  }
+
+  /* Simple Loading Bar */
+  .gm-bar{
+    height: 4px;
+    width: 100%;
+    margin: 24px auto 0;
+    background: #30363d;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .gm-bar span{
+    display:block;
+    height: 100%;
+    width: 30%;
+    background: #ff7b00;
+    animation: gmLoad 1.5s infinite ease-in-out;
+  }
+
+  @keyframes gmLoad {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(350%); }
+  }
+
+  .gm-hide{
+    display: none !important;
+  }
+</style>
+
+<link rel="stylesheet" href="/index.css">
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.564.0",
+    "path": "https://esm.sh/path@^0.12.7",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.95.3",
+    "qrcode": "https://esm.sh/qrcode@^1.5.4",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+    "pdf-lib": "https://esm.sh/pdf-lib@^1.17.1",
+    "jspdf": "https://esm.sh/jspdf@^4.1.0",
+    "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.7"
+  }
+}
+</script>
+</head>
+  <body class="bg-app text-muted transition-colors duration-200">
+    
+    <div id="gm-splash">
+      <div class="gm-card-splash">
+        <div class="gm-logo-box">
+          <img
+            id="gm-splash-avatar"
+            class="gm-logo"
+            src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/brand_assets_logo/FIVE%20ICON%20CARDDIGITAL%20GM.svg"
+            alt="CardDigital GM Pro"
+          />
+        </div>
+    
+        <h1 class="gm-title" id="gm-splash-title">CardDigital GM Pro</h1>
+    
+        <p class="gm-sub" id="gm-splash-sub">Carregando...</p>
+    
+        <p class="gm-sub" style="margin-top:6px; font-size:12px; opacity:.85">
+          <span id="gm-splash-user"></span>
+        </p>
+    
+        <div class="gm-bar"><span></span></div>
+      </div>
+    </div>
+
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+
+  <script>
+    (function () {
+      function hideSplash() {
+        var el = document.getElementById("gm-splash");
+        if (!el) return;
+        // Simple fade out or just remove
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.2s';
+        setTimeout(function () {
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+        }, 200);
+      }
+  
+      window.__GM_APP_READY__ = function () { hideSplash(); };
+  
+      window.__GM_SPLASH_STATUS__ = function (text) {
+        var p = document.getElementById("gm-splash-sub");
+        if (p) p.textContent = text;
+      };
+  
+      window.__GM_SPLASH_SET_USER__ = function (name, avatarUrl) {
+        var u = document.getElementById("gm-splash-user");
+        if (u) u.textContent = name ? ("Bem-vindo, " + name) : "";
+  
+        var img = document.getElementById("gm-splash-avatar");
+        if (img && avatarUrl) {
+          img.src = avatarUrl;
+        }
+      };
+  
+      setTimeout(function () { hideSplash(); }, 8000);
+    })();
+  </script>
+</body>
+</html>
