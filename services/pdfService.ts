@@ -332,27 +332,30 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
         const qrBytes = await fetchBytes(qrDataUrl);
         const qrPng = await doc.embedPng(qrBytes);
 
-        const qrSize = 110;
+        const qrSize = 100;
+        const qrY = cursorY - 120;
         page.drawImage(qrPng, {
           x: CONTENT_X,
-          y: cursorY - 120,
+          y: qrY,
           width: qrSize,
           height: qrSize,
         });
 
         drawLeft("PAGAMENTO VIA PIX", 10.5, cursorY - 8, true, cText);
-        drawLeft("Chave:", 9.5, cursorY - 24, false, cGray);
-        drawLeft(String(settings.pix_key), 9.5, cursorY - 38, true, cText);
-        drawLeft("Copia e Cola:", 9.5, cursorY - 54, false, cGray);
+        
+        const textX = CONTENT_X + qrSize + 15;
+        page.drawText("Chave:", { x: textX, y: cursorY - 24, size: 9.5, font: fontRegular, color: cGray });
+        page.drawText(String(settings.pix_key), { x: textX, y: cursorY - 38, size: 9.5, font: fontBold, color: cText });
+        page.drawText("Copia e Cola:", { x: textX, y: cursorY - 54, size: 9.5, font: fontRegular, color: cGray });
 
-        const clipLines = wrapText(payload, CONTENT_W - (qrSize + 14), fontRegular, 8.2);
+        const clipLines = wrapText(payload, CONTENT_W - (qrSize + 15), fontRegular, 8.2);
         let yClip = cursorY - 68;
         for (const l of clipLines.slice(0, 6)) {
-          page.drawText(l, { x: CONTENT_X + qrSize + 14, y: yClip, size: 8.2, font: fontRegular, color: cGray });
+          page.drawText(l, { x: textX, y: yClip, size: 8.2, font: fontRegular, color: cGray });
           yClip -= 10;
         }
 
-        cursorY -= 120;
+        cursorY -= 130;
       } catch (e) {
         console.error("Erro QR PDF", e);
       }
