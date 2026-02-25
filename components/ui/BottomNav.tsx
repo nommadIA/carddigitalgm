@@ -18,7 +18,6 @@ const items = [
   { to: "/clients", label: "Client", icon: Users },
   { to: "/expenses", label: "Desp.", icon: Receipt },
   { to: "/market", label: "Mkt", icon: ShoppingCart },
-  { to: "/ai-hub", label: "IA", icon: BrainCircuit },
   { to: "/financial", label: "Fin.", icon: BarChart3 },
   { to: "/configuracoes", label: "Conf.", icon: Settings },
 ];

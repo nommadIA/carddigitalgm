@@ -1,26 +1,23 @@
-import React, { useEffect, useState, Suspense, lazy } from "react";
-import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./store/AuthContext";
-import Layout from "./components/ui/Layout";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Budgets from "./pages/Budgets";
-import Clients from "./pages/Clients";
-import Market from "./pages/Market";
-import Financial from "./pages/Financial";
-import Expenses from "./pages/Expenses";
-import Configuracoes from "./pages/Configuracoes";
-import AuthCallback from "./pages/AuthCallback";
-import { Loader2 } from "lucide-react";
+import React, { useEffect, useState, Suspense, lazy } from 'react';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './store/AuthContext';
+import Layout from './components/ui/Layout';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Budgets from './pages/Budgets';
+import Clients from './pages/Clients';
+import Market from './pages/Market';
+import Financial from './pages/Financial';
+import Expenses from './pages/Expenses';
+import Configuracoes from './pages/Configuracoes';
+import AuthCallback from './pages/AuthCallback';
+import { Loader2 } from 'lucide-react';
 import { fetchSettingsSupabase, applySettingsToDOM, AppSettings } from "./lib/settings";
-import ThemeSync from "./components/ui/ThemeSync";
-
-// ✅ Lazy-load AIHub (Gemini só carrega quando abrir /ai-hub)
-const AIHub = lazy(() => import("./pages/AIHub"));
+import ThemeSync from './components/ui/ThemeSync';
 
 const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
-  const { user, checked, isAdmin } = useAuth();
+  const { user, checked } = useAuth();
 
   if (!checked) {
     return (
@@ -30,10 +27,7 @@ const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
     );
   }
 
-  if (!user || !isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
-
+  if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
@@ -54,7 +48,6 @@ const PrivateRoutes = () => {
             <Route path="/clients" element={<Clients />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/market" element={<Market />} />
-            <Route path="/ai-hub" element={<AIHub />} />
             <Route path="/financial" element={<Financial />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -82,9 +75,7 @@ function BootReady() {
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      document.documentElement.setAttribute("data-theme", savedTheme);
-    }
+    if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
 
     if (!checked) return;
 
@@ -99,22 +90,18 @@ function BootReady() {
         })
         .catch(() => {});
 
-      import("./services/pushFCM")
-        .then(({ startPush }) => {
-          startPush(tenantId, user.id);
-        })
+      import('./services/pushFCM')
+        .then(({ startPush }) => startPush(tenantId, user.id))
         .catch(console.error);
     }
 
-    setTimeout(() => {
-      window.__GM_APP_READY__?.();
-    }, 500);
+    setTimeout(() => window.__GM_APP_READY__?.(), 500);
   }, [checked, user, tenantId]);
 
   return <ThemeSync prefs={settings || undefined} />;
 }
 
-function App() {
+export default function App() {
   return (
     <AuthProvider>
       <BootReady />
@@ -126,5 +113,3 @@ function App() {
     </AuthProvider>
   );
 }
-
-export default App;

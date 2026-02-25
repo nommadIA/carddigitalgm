@@ -7,7 +7,6 @@ import {
   Loader2,
   Briefcase,
   ShoppingCart,
-  BrainCircuit,
   Wallet,
   TrendingUp
 } from 'lucide-react';
@@ -287,19 +286,6 @@ const Dashboard = () => {
                 </Card>
             </Link>
             
-            {/* IA Hub */}
-            <Link to="/ai-hub" className="group block">
-                <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-800/30 rounded-2xl h-full border border-white/5">
-                    <div className="text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-white/5">
-                        <BrainCircuit size={24}/>
-                    </div>
-                    <div className="text-center">
-                        <h3 className="font-bold text-sm text-white">IA Hub</h3>
-                        <p className="text-[10px] opacity-50 uppercase tracking-wide">Receitas</p>
-                    </div>
-                </Card>
-            </Link>
-
             {/* Clientes */}
             <Link to="/clients" className="group block">
                 <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-800/30 rounded-2xl h-full border border-white/5">

@@ -6,6 +6,9 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
 import { uploadTenantAsset, uploadTimbradoA4 } from "../services/storageService";
 import { applySettingsToDOM, fetchSettingsSupabase, upsertSettingsSupabase, ThemePreset } from "../lib/settings";
+import QRCode from "qrcode";
+import { buildPixPayload } from "../lib/pix";
+import { copyText } from "../lib/clipboard";
 import {
   Download,
   Upload,
@@ -14,6 +17,8 @@ import {
   FileImage,
   Palette,
   Move,
+  Copy,
+  Check,
 } from "lucide-react";
 
 type Fit = "cover" | "contain";
@@ -58,6 +63,11 @@ export default function Configuracoes() {
   const [bgPreviewScale, setBgPreviewScale] = useState(1);
 
   const [presets, setPresets] = useState<ThemePreset[]>([]);
+
+  // ✅ PIX Preview (Configurações)
+  const [pixPayloadPreview, setPixPayloadPreview] = useState("");
+  const [pixQrPreview, setPixQrPreview] = useState("");
+  const [pixCopied, setPixCopied] = useState(false);
 
   const canSave = useMemo(() => !!tenantId && !saving, [tenantId, saving]);
 
@@ -115,6 +125,40 @@ export default function Configuracoes() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId]);
+
+  // ✅ Gera QR + Copia e Cola na tela de Configurações (universal, qualquer banco)
+  useEffect(() => {
+    const key = (pixKey || "").trim();
+    if (!key) {
+      setPixPayloadPreview("");
+      setPixQrPreview("");
+      return;
+    }
+
+    try {
+      const payload = buildPixPayload({
+        pixKey: key,
+        merchantName: companyName || "GM PRO",
+        merchantCity: "SAO LUIS",
+        // Sem valor aqui = QR estático genérico (o banco deixa digitar valor)
+        txid: "***",
+        message: "Pagamento via Pix",
+      });
+
+      setPixPayloadPreview(payload);
+
+      QRCode.toDataURL(payload, { margin: 2, scale: 8 })
+        .then(setPixQrPreview)
+        .catch((e) => {
+          console.error("Erro gerando QR Pix (Config)", e);
+          setPixQrPreview("");
+        });
+    } catch (e) {
+      console.error("Erro gerando payload Pix (Config)", e);
+      setPixPayloadPreview("");
+      setPixQrPreview("");
+    }
+  }, [pixKey, companyName]);
 
   async function handleSave() {
     if (!tenantId) return;
@@ -264,7 +308,6 @@ export default function Configuracoes() {
     setFontFamily(p.font_family);
   }
 
-  // Componente interno para Input de Cor
   const ColorPickerInput = ({
     label,
     value,
@@ -347,9 +390,7 @@ export default function Configuracoes() {
                 <input className="gm-input" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
               </div>
 
-              {/* ====== PLUG ORGANIZADO ====== */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                {/* ESQUERDA: controles */}
                 <div className="space-y-4">
                   <div>
                     <label className="gm-label">Logo principal</label>
@@ -378,7 +419,6 @@ export default function Configuracoes() {
                     </div>
                   </div>
 
-                  {/* Toggle Background */}
                   <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
                     <div>
                       <div className="font-semibold text-sm">Plano de fundo</div>
@@ -429,7 +469,6 @@ export default function Configuracoes() {
                     <div className="gm-muted text-xs mt-1">1.0 = normal • 5.0 = super zoom</div>
                   </div>
 
-                  {/* POSIÇÃO X */}
                   <div>
                     <label className="gm-label flex items-center gap-1">
                       <Move size={12} /> Posição Horizontal (X)
@@ -444,7 +483,6 @@ export default function Configuracoes() {
                     <div className="gm-muted text-xs mt-1">0% = Esquerda • 50% = Centro • 100% = Direita</div>
                   </div>
 
-                  {/* POSIÇÃO Y */}
                   <div>
                     <label className="gm-label flex items-center gap-1">
                       <Move size={12} className="rotate-90" /> Posição Vertical (Y)
@@ -469,7 +507,6 @@ export default function Configuracoes() {
                   </div>
                 </div>
 
-                {/* DIREITA: upload + preview abaixo + slider preview */}
                 <div className="space-y-3">
                   <div>
                     <label className="gm-label">Plano de fundo (JPG/PNG/GIF)</label>
@@ -488,7 +525,6 @@ export default function Configuracoes() {
                     </label>
                   </div>
 
-                  {/* ✅ preview scale */}
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-extrabold tracking-wide opacity-80">Escala do Preview</div>
@@ -702,7 +738,9 @@ export default function Configuracoes() {
               {/* Pix */}
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="font-bold">Dados de Pagamento (Pix)</div>
-                <div className="gm-muted text-sm">Configuração exibida no PDF do orçamento</div>
+                <div className="gm-muted text-sm">
+                  ✅ QR e “Copia e Cola” gerados aqui funcionam em <b>qualquer banco</b> (Itaú, Nubank, Caixa, BB, Bradesco, Santander, Inter, etc.)
+                </div>
 
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   <div>
@@ -723,6 +761,71 @@ export default function Configuracoes() {
 
                 <div className="gm-muted text-sm mt-2">
                   Dica: e-mail deve ser minúsculo e sem espaços (o sistema pode ajustar).
+                </div>
+
+                {/* ✅ Preview do QR + Copia e Cola */}
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <div className="text-xs font-extrabold tracking-wide opacity-80 mb-3">QR Code Pix (universal)</div>
+                    {pixQrPreview ? (
+                      <div className="bg-white rounded-xl p-3 w-fit">
+                        <img src={pixQrPreview} alt="QR Pix (Preview)" className="w-[220px] h-auto" />
+                      </div>
+                    ) : (
+                      <div className="gm-muted text-sm">Informe uma chave Pix para gerar o QR.</div>
+                    )}
+
+                    {pixQrPreview && (
+                      <button
+                        type="button"
+                        className="gm-btn mt-3"
+                        onClick={() => {
+                          const a = document.createElement("a");
+                          a.href = pixQrPreview;
+                          a.download = "pix_qr_configuracoes.png";
+                          a.click();
+                        }}
+                      >
+                        <Download size={16} />
+                        Baixar QR
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <div className="text-xs font-extrabold tracking-wide opacity-80 mb-3">Pix “Copia e Cola”</div>
+
+                    {!pixPayloadPreview ? (
+                      <div className="gm-muted text-sm">Informe uma chave Pix para gerar o código.</div>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className={`gm-btn w-full justify-center ${pixCopied ? "gm-border-loop" : ""}`}
+                          onClick={async () => {
+                            const ok = await copyText(pixPayloadPreview);
+                            if (ok) {
+                              setPixCopied(true);
+                              setTimeout(() => setPixCopied(false), 1500);
+                            } else {
+                              alert("Não foi possível copiar automaticamente. Copie manualmente abaixo.");
+                            }
+                          }}
+                        >
+                          {pixCopied ? <Check size={16} /> : <Copy size={16} />}
+                          {pixCopied ? "Copiado!" : "Copiar código"}
+                        </button>
+
+                        <div className="mt-3 text-[10px] leading-tight font-mono break-all bg-black/30 border border-white/10 rounded-xl p-3 text-slate-300">
+                          {pixPayloadPreview}
+                        </div>
+                      </>
+                    )}
+
+                    <div className="gm-muted text-xs mt-2">
+                      Observação: este QR é <b>estático</b>. O banco do cliente pode digitar o valor ao pagar, ou você pode gerar com valor na tela de orçamento (como já existe no seu PixModal).
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

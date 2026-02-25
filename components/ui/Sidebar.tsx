@@ -24,7 +24,6 @@ const items = [
   { to: "/clients", label: "Clientes", icon: Users },
   { to: "/expenses", label: "Despesas", icon: Receipt },
   { to: "/market", label: "Mercado", icon: ShoppingCart },
-  { to: "/ai-hub", label: "Receitas IA", icon: Sparkles },
   { to: "/financial", label: "Financeiro", icon: BarChart3 },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];

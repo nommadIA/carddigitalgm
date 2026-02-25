@@ -1,8 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, useMemo, PropsWithChildren } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, PropsWithChildren } from 'react';
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
 import { ADMIN_EMAIL } from '../constants';
-import { forceSavePushToken } from '../services/pushFCM';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -18,7 +17,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ALLOWED_ADMINS = [ADMIN_EMAIL, "admin@carddigital.com"];
+const ALLOWED_ADMINS = [ADMIN_EMAIL, "admin@carddigital.com"].filter(Boolean).map(e => String(e).toLowerCase());
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -28,20 +27,21 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const initializeUser = async (sessionUser: any) => {
     try {
-      if (!sessionUser || !sessionUser.email) {
+      if (!sessionUser?.email) {
         setUser(null);
         setTenantId(null);
         setIsAdmin(false);
+        localStorage.removeItem("tenant_id");
         return;
       }
 
-      const email = sessionUser.email.toLowerCase();
+      const email = String(sessionUser.email).toLowerCase();
       const userIsAdmin = ALLOWED_ADMINS.includes(email);
       setIsAdmin(userIsAdmin);
 
       const profile: UserProfile = {
         id: sessionUser.id,
-        email: email,
+        email,
         full_name: sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name,
         avatar_url: sessionUser.user_metadata?.avatar_url,
         is_admin: userIsAdmin,
@@ -50,14 +50,17 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       setUser(profile);
 
-      // --- TENANT ---
+      // tenantId via RPC
       const { data: tenants, error } = await supabase.rpc("get_my_tenants");
       if (error) {
         console.error("Erro ao buscar tenants:", error);
+        // não trava o app
+        setTenantId(null);
+        localStorage.removeItem("tenant_id");
         return;
       }
 
-      let activeTenantId = tenants?.[0]?.tenant_id;
+      let activeTenantId = tenants?.[0]?.tenant_id as string | undefined;
 
       if (!activeTenantId) {
         const { data: newTenantId, error: createError } = await supabase.rpc("create_tenant", {
@@ -66,21 +69,20 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
         if (createError) {
           console.error("Erro ao criar tenant inicial:", createError);
+          setTenantId(null);
+          localStorage.removeItem("tenant_id");
           return;
         }
-        activeTenantId = newTenantId;
+        activeTenantId = newTenantId as any;
       }
 
-      setTenantId(activeTenantId);
-
-      // ✅ PUSH (FORÇADO) após ter tenant e user
-      try {
-      } catch (e) {
-        console.warn("[PUSH] falhou:", e);
-      }
+      setTenantId(activeTenantId || null);
+      if (activeTenantId) localStorage.setItem("tenant_id", activeTenantId);
 
     } catch (e) {
       console.error("Auth init error:", e);
+      setTenantId(null);
+      localStorage.removeItem("tenant_id");
     } finally {
       setChecked(true);
     }
@@ -125,7 +127,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const signUpWithEmail = async (email: string, password: string, fullName: string) => {
     const { error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: { data: { full_name: fullName } }
     });
@@ -137,6 +139,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setUser(null);
     setTenantId(null);
     setIsAdmin(false);
+    localStorage.removeItem("tenant_id");
   };
 
   const value = useMemo(() => ({

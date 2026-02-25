@@ -68,7 +68,6 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       { to: "/clients", label: "Clientes", icon: Users },
       { to: "/expenses", label: "Despesas", icon: Receipt },
       { to: "/market", label: "Mercado", icon: ShoppingCart },
-      { to: "/ai-hub", label: "Receitas IA", icon: BrainCircuit },
       { to: "/financial", label: "Financeiro", icon: Wallet },
       { to: "/configuracoes", label: "Configurações", icon: Settings }
     ],
