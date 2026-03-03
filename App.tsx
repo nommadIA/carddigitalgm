@@ -12,6 +12,7 @@ import Financial from './pages/Financial';
 import Expenses from './pages/Expenses';
 import Configuracoes from './pages/Configuracoes';
 import AuthCallback from './pages/AuthCallback';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { fetchSettingsSupabase, applySettingsToDOM, AppSettings } from "./lib/settings";
 import ThemeSync from './components/ui/ThemeSync';
@@ -105,11 +106,16 @@ export default function App() {
   return (
     <AuthProvider>
       <BootReady />
-      <div className="min-h-screen w-full">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="min-h-screen w-full"
+      >
         <Router>
           <AppRoutes />
         </Router>
-      </div>
+      </motion.div>
     </AuthProvider>
   );
 }
