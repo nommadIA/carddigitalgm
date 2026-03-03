@@ -260,6 +260,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
   const [paymentMethod, setPaymentMethod] = useState<PayMethod>("PIX");
   const [installments, setInstallments] = useState<number>(1);
   const [interestRate, setInterestRate] = useState<number>(0);
+  const [discount, setDiscount] = useState<number>(0);
 
   const [items, setItems] = useState<BudgetItemDraft[]>([]);
 
@@ -274,6 +275,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     setPaymentMethod("PIX");
     setInstallments(1);
     setInterestRate(0);
+    setDiscount(0);
     setItems([]);
     setSaving(false);
   };
@@ -330,6 +332,10 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         setPaymentMethod((budget.payment_method as PayMethod) || "PIX");
         setInstallments(Number(budget.installments || 1));
         setInterestRate(Number(budget.interest_rate || 0));
+        
+        const loadedSubtotal = Number(budget.subtotal || 0);
+        const loadedDiscountAmount = Number(budget.discount || 0);
+        setDiscount(loadedSubtotal > 0 ? (loadedDiscountAmount / loadedSubtotal) * 100 : 0);
 
         const loadedItems: BudgetItemDraft[] = ((budget.items || []) as any[]).map((it) => {
           const parsed = parseDescription(String(it.description || ""));
@@ -380,32 +386,6 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             artworkIncluded: false,
             total: 0,
           },
-          {
-            id: crypto.randomUUID(),
-            description: "Materiais Gráficos — ex: Panfletos, Cartões, Adesivos",
-            isAreaCalc: false,
-            quantity: 1000,
-            unitPrice: 0,
-            width: 0,
-            height: 0,
-            pricePerM2: 0,
-            deliveryTime: "3 dias",
-            artworkIncluded: false,
-            total: 0,
-          },
-          {
-            id: crypto.randomUUID(),
-            description: "Acabamentos/Extras — ex: Ilhós, Corte, Laminação, Entrega",
-            isAreaCalc: false,
-            quantity: 1,
-            unitPrice: 0,
-            width: 0,
-            height: 0,
-            pricePerM2: 0,
-            deliveryTime: "Combinar",
-            artworkIncluded: false,
-            total: 0,
-          },
         ]
       : [
           {
@@ -418,32 +398,6 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             height: 0,
             pricePerM2: 0,
             deliveryTime: "3 dias",
-            artworkIncluded: true,
-            total: 0,
-          },
-          {
-            id: crypto.randomUUID(),
-            description: "Serviço 02 — ex: Artes para Feed / Stories / Banners",
-            isAreaCalc: false,
-            quantity: 1,
-            unitPrice: 0,
-            width: 0,
-            height: 0,
-            pricePerM2: 0,
-            deliveryTime: "5 dias",
-            artworkIncluded: true,
-            total: 0,
-          },
-          {
-            id: crypto.randomUUID(),
-            description: "Suporte/Entrega — ex: Ajustes + Exportações + Arquivos finais",
-            isAreaCalc: false,
-            quantity: 1,
-            unitPrice: 0,
-            width: 0,
-            height: 0,
-            pricePerM2: 0,
-            deliveryTime: "Conforme itens",
             artworkIncluded: true,
             total: 0,
           },
@@ -522,10 +476,13 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
   const subtotal = useMemo(() => items.reduce((acc, it) => acc + it.total, 0), [items]);
 
   const totalFinal = useMemo(() => {
-    if (paymentMethod === "PIX") return subtotal;
+    const discAmount = subtotal * (clamp(Number(discount) || 0, 0, 100) / 100);
+    const afterDiscount = subtotal - discAmount;
+
+    if (paymentMethod === "PIX") return afterDiscount;
     const rate = clamp(Number(interestRate) || 0, 0, 200) / 100;
-    return subtotal * (1 + rate);
-  }, [subtotal, paymentMethod, interestRate]);
+    return afterDiscount * (1 + rate);
+  }, [subtotal, paymentMethod, interestRate, discount]);
 
   async function handleSave() {
     if (!tenantId) return alert("Erro de autenticação.");
@@ -544,7 +501,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         status: budgetToEditId ? undefined : "AGUARDANDO",
         type: kind,
         subtotal: subtotal,
-        discount: 0,
+        discount: subtotal * (clamp(Number(discount) || 0, 0, 100) / 100),
         total_amount: totalFinal,
         delivery_days: 5,
         payment_method: paymentMethod,
@@ -617,7 +574,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             cliente_nome: clientName,
             total: totalFinal,
             subtotal: subtotal,
-            discount: 0,
+            discount: subtotal * (clamp(Number(discount) || 0, 0, 100) / 100),
             created_at: new Date().toISOString(),
             dueLabel: "Conforme itens",
           },
@@ -1075,6 +1032,17 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                     </>
                   );
                 })()}
+
+                <div className="mt-4">
+                  <label style={labelTop}>Desconto (%)</label>
+                  <input
+                    type="number"
+                    style={inputBig}
+                    value={discount}
+                    onChange={(e) => setDiscount(Number(e.target.value))}
+                    placeholder="0"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 md:border-l md:border-white/10 md:pl-8 flex flex-col justify-center gap-3">
@@ -1082,10 +1050,16 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   <span>Subtotal</span>
                   <span className="text-white font-medium">{money(subtotal)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm text-green-400">
+                    <span>Desconto ({discount}%)</span>
+                    <span className="font-medium">-{money(subtotal * (discount / 100))}</span>
+                  </div>
+                )}
                 {paymentMethod === "CREDIT" && interestRate > 0 && (
                   <div className="flex justify-between text-sm text-orange-400">
                     <span>Juros ({interestRate}%)</span>
-                    <span className="font-medium">+{money(totalFinal - subtotal)}</span>
+                    <span className="font-medium">+{money(totalFinal - (subtotal * (1 - discount / 100)))}</span>
                   </div>
                 )}
                 <div className="border-t border-white/10 pt-4 mt-2">

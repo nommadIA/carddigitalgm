@@ -85,11 +85,12 @@ export async function restoreFinanceReport(id: string) {
   if (error) throw error;
 }
 
-export async function deleteFinanceReportForever(id: string) {
+export async function deleteFinanceReportForever(id: string, tenantId: string) {
   const { error } = await supabase
     .from("finance_reports")
     .delete()
-    .eq("id", id);
+    .eq("id", id)
+    .eq("tenant_id", tenantId);
 
   if (error) throw error;
 }

@@ -91,7 +91,7 @@ function BootReady() {
         .catch(() => {});
 
       import('./services/pushFCM')
-        .then(({ startPush }) => startPush(tenantId, user.id))
+        .then(({ startPush }) => startPush({ tenantId, userId: user.id }))
         .catch(console.error);
     }
 

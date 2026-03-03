@@ -7,7 +7,7 @@ import { Page } from "../components/ui/Page";
 import { CURRENCY_FORMATTER } from "../constants";
 import SafeResponsive from "../components/ui/SafeResponsive";
 import { pushToast } from "../store/toast";
-import { MessageCircle, FileText, Save, History, X, Download, Trash2 } from "lucide-react";
+import { MessageCircle, FileText, Save, History, X, Download, Trash2, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
 import { generateFinanceReportPdf } from "../services/pdfService";
 import { fetchSettingsSupabase } from "../lib/settings";
@@ -59,19 +59,21 @@ export default function Financial() {
   const [rows, setRows] = useState<DayRow[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
   const [showHistory, setShowHistory] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyReports, setHistoryReports] = useState<FinanceReport[]>([]);
 
   const loadData = async () => {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate() - 29);
+    setLoading(true);
+    const start = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    const end = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
 
     const startISO = toISODate(start);
     const endISO = toISODate(end);
 
-    // Budgets
+    const daysInMonth = end.getDate();
     let budgetsQ = supabase
       .from("budgets")
       .select("id, created_at, total_amount, status, client_name, tenant_id")
@@ -95,7 +97,7 @@ export default function Financial() {
 
     // 1. Prepare Daily Aggregation
     const map = new Map<string, { entradas: number; saidas: number }>();
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < daysInMonth; i++) {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       const key = toISODate(d);
@@ -155,7 +157,9 @@ export default function Financial() {
 
   useEffect(() => {
     loadData();
+  }, [selectedDate, tenantId]);
 
+  useEffect(() => {
     // Realtime subscription (mantive do jeito que estava para não mexer em estabilidade)
     const channel = supabase
       .channel("rt-finance")
@@ -197,6 +201,10 @@ export default function Financial() {
   const handlePDF = async (customTransactions?: any[], customTitle?: string) => {
     try {
       const settings = await fetchSettingsSupabase(tenantId);
+      if (!settings) {
+        pushToast({ type: "error", title: "Erro", message: "Configurações não encontradas. Salve as configurações primeiro." });
+        return;
+      }
 
       const t = customTransactions || transactions;
       const title = customTitle || "Últimos 30 dias";
@@ -213,7 +221,7 @@ export default function Financial() {
       const blob = await generateFinanceReportPdf({
         rows: rowsForPdf,
         periodLabel: title,
-        settings, // ✅ AQUI
+        settings,
       });
 
       const url = URL.createObjectURL(blob);
@@ -221,19 +229,23 @@ export default function Financial() {
       a.href = url;
       a.download = `Relatorio_Financeiro_${title.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
       a.click();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      pushToast({ type: "error", title: "Erro", message: "Não foi possível gerar o PDF" });
+      pushToast({ type: "error", title: "Erro", message: e?.message || "Não foi possível gerar o PDF" });
     }
   };
 
   const handleSave = async () => {
     try {
+      const monthName = selectedDate.toLocaleString("pt-BR", { month: "long" }).toUpperCase();
+      const year = selectedDate.getFullYear();
+      
       await createFinanceReport({
         tenant_id: tenantId,
-        title: `Relatório - Últimos 30 dias (${new Date().toLocaleDateString("pt-BR")})`,
-        period_start: toISODate(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000)),
-        period_end: toISODate(new Date()),
+        title: `Relatório - ${monthName} / ${year}`,
+        month_ref: `${year}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}`,
+        period_start: toISODate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)),
+        period_end: toISODate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)),
         totals: resumo,
         items: transactions,
       });
@@ -269,7 +281,7 @@ export default function Financial() {
   const handleDeleteReport = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este relatório?")) return;
     try {
-      await deleteFinanceReportForever(id);
+      await deleteFinanceReportForever(id, tenantId);
       pushToast({ type: "success", title: "Excluído", message: "Relatório excluído com sucesso." });
       loadHistory();
     } catch (e) {
@@ -281,24 +293,48 @@ export default function Financial() {
   return (
     <Page
       title="Relatórios Financeiros"
-      subtitle="Fluxo de caixa e análise de 30 dias"
+      subtitle={`Fluxo de caixa e análise de ${selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}`}
       actions={
         <div className="flex gap-2">
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-1 mr-2">
+            <button 
+              onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
+              className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <div className="px-3 flex items-center gap-2 font-bold text-sm min-w-[120px] justify-center">
+              <Calendar size={14} className="text-[var(--gm-primary)]" />
+              <span className="capitalize">{selectedDate.toLocaleString("pt-BR", { month: "short", year: "numeric" })}</span>
+            </div>
+            <button 
+              onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
+              className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
+            <button
+              onClick={() => setSelectedDate(new Date())}
+              className="ml-2 px-2 py-1 text-[10px] uppercase font-bold bg-white/10 hover:bg-white/20 rounded transition-colors"
+            >
+              Hoje
+            </button>
+          </div>
           <button
-            onClick={() => handleWhatsApp()}
+            onClick={() => handleWhatsApp(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))}
             className="gm-btn gm-btn-outline text-sm"
             title="Enviar por WhatsApp"
           >
             <MessageCircle size={16} className="text-green-500" />
             <span className="hidden sm:inline">WhatsApp</span>
           </button>
-          <button onClick={() => handlePDF()} className="gm-btn gm-btn-outline text-sm" title="Gerar PDF">
+          <button onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} className="gm-btn gm-btn-outline text-sm" title="Gerar PDF">
             <FileText size={16} className="text-blue-500" />
             <span className="hidden sm:inline">PDF</span>
           </button>
-          <button onClick={handleSave} className="gm-btn gm-btn-outline text-sm" title="Salvar Relatório">
+          <button onClick={handleSave} className="gm-btn gm-btn-outline text-sm" title="Fechar e Salvar Mês">
             <Save size={16} className="text-orange-500" />
-            <span className="hidden sm:inline">Salvar</span>
+            <span className="hidden sm:inline">Fechar Mês</span>
           </button>
           <button onClick={openHistory} className="gm-btn gm-btn-primary text-sm" title="Histórico">
             <History size={16} />
@@ -374,7 +410,7 @@ export default function Financial() {
               <div className="gm-card-header mb-4">
                 <div className="gm-card-title">
                   <h3>Relatório Detalhado</h3>
-                  <span className="gm-muted">Últimos 30 dias (Orçamentos Concluídos e Despesas)</span>
+                  <span className="gm-muted">Movimentações de {selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
                 </div>
               </div>
 

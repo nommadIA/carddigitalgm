@@ -14,7 +14,7 @@ export default function EnablePushButton() {
       }
 
       setStatus("Solicitando permissão...");
-      const result = await forceSavePushToken(tenantId, user.id);
+      const result = (await forceSavePushToken(tenantId, user.id)) as { ok: boolean; reason?: string };
 
       if (!result.ok) {
         if (result.reason === "permission_denied") {

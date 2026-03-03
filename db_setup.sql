@@ -677,3 +677,57 @@ end;
 $$;
 
 grant execute on function public.finance_archive_month(uuid, date) to authenticated;
+
+-- ==========================================
+-- 8. FINANCE REPORTS (MANUAL/SAVED)
+-- ==========================================
+
+create table if not exists public.finance_reports (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid references public.tenants(id) on delete cascade,
+  created_by uuid references auth.users(id) default auth.uid(),
+  title text not null,
+  month_ref text,
+  period_start date,
+  period_end date,
+  totals jsonb default '{}',
+  items jsonb default '[]',
+  archived_at timestamptz,
+  deleted_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.finance_reports enable row level security;
+
+do $$
+begin
+  drop policy if exists "finance_reports_select" on public.finance_reports;
+  create policy "finance_reports_select" on public.finance_reports for select using (public.is_tenant_member(tenant_id));
+
+  drop policy if exists "finance_reports_insert" on public.finance_reports;
+  create policy "finance_reports_insert" on public.finance_reports for insert with check (public.is_tenant_member(tenant_id));
+
+  drop policy if exists "finance_reports_update" on public.finance_reports;
+  create policy "finance_reports_update" on public.finance_reports for update using (public.is_tenant_member(tenant_id));
+
+  drop policy if exists "finance_reports_delete" on public.finance_reports;
+  create policy "finance_reports_delete" on public.finance_reports for delete using (public.is_tenant_member(tenant_id));
+end $$;
+
+-- ==========================================
+-- 9. STORAGE BUCKETS & POLICIES
+-- ==========================================
+
+-- STORAGE BUCKET: timbrados
+insert into storage.buckets (id, name, public) values ('timbrados', 'timbrados', true)
+on conflict (id) do nothing;
+
+create policy "Timbrados are public" on storage.objects
+  for select using ( bucket_id = 'timbrados' );
+
+create policy "Users can upload timbrados" on storage.objects
+  for insert with check ( bucket_id = 'timbrados' );
+
+create policy "Users can update their timbrados" on storage.objects
+  for update using ( bucket_id = 'timbrados' );

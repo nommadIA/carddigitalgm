@@ -24,19 +24,19 @@ function isFirebaseConfigValid() {
 
 export async function forceSavePushToken(tenantId: string, userId: string) {
   try {
-    if (typeof window === "undefined") return { ok: false };
+    if (typeof window === "undefined") return { ok: false, reason: "no_window" };
 
     if (!isFirebaseConfigValid()) {
       console.warn("Firebase config inválida. Push desativado.");
-      return { ok: false };
+      return { ok: false, reason: "invalid_config" };
     }
 
-    if (!("Notification" in window)) return { ok: false };
+    if (!("Notification" in window)) return { ok: false, reason: "no_notification_api" };
 
     const permission = await Notification.requestPermission();
-    if (permission !== "granted") return { ok: false };
+    if (permission !== "granted") return { ok: false, reason: "permission_denied" };
 
-    if (!("serviceWorker" in navigator)) return { ok: false };
+    if (!("serviceWorker" in navigator)) return { ok: false, reason: "no_sw_api" };
 
     const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
 
@@ -51,7 +51,7 @@ export async function forceSavePushToken(tenantId: string, userId: string) {
       serviceWorkerRegistration: swReg,
     });
 
-    if (!token) return { ok: false };
+    if (!token) return { ok: false, reason: "empty_token" };
 
     await supabase.from("fcm_tokens").upsert(
       {
@@ -67,7 +67,7 @@ export async function forceSavePushToken(tenantId: string, userId: string) {
     return { ok: true };
   } catch (err) {
     console.error("Push error:", err);
-    return { ok: false };
+    return { ok: false, reason: "exception" };
   }
 }
 

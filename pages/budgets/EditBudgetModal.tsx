@@ -63,7 +63,11 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
     }, 0);
   }, [items, budgetType]);
 
-  const discountValue = useMemo(() => toNumber(discount), [discount]);
+  const discountValue = useMemo(() => {
+    const rate = toNumber(discount) / 100;
+    return subtotal * rate;
+  }, [subtotal, discount]);
+
   const total = useMemo(() => Math.max(0, subtotal - discountValue), [subtotal, discountValue]);
 
   // Carrega settings + dados do orçamento
@@ -118,7 +122,10 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
         }
 
         setDeliveryDays(String(data.delivery_days ?? 5));
-        setDiscount(String(data.discount ?? 0));
+        
+        const loadedDiscountAmount = Number(data.discount ?? 0);
+        const loadedSubtotal = Number(data.subtotal ?? 0);
+        setDiscount(loadedSubtotal > 0 ? String((loadedDiscountAmount / loadedSubtotal) * 100) : "0");
 
         // tipo (agency/print)
         const kind = (data.type || "agency") as BudgetKind;
@@ -320,12 +327,13 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Desconto</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Desconto (%)</label>
                                 <input
                                     value={discount}
                                     onChange={(e) => setDiscount(e.target.value)}
                                     type="number"
                                     min={0}
+                                    max={100}
                                     className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                                 />
                             </div>
@@ -339,6 +347,15 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                     {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(subtotal)}
                                 </b>
                             </div>
+
+                            {discountValue > 0 && (
+                                <div className="flex justify-between text-sm text-green-400">
+                                    <span>Desconto ({discount}%)</span>
+                                    <b className="font-medium">
+                                        -{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(discountValue)}
+                                    </b>
+                                </div>
+                            )}
 
                             <div className="flex justify-between text-sm text-slate-400 pt-2">
                                 <span>Total</span>
