@@ -71,7 +71,7 @@ const Market = () => {
   };
 
   return (
-    <Page title="Mercado" subtitle="Lista de compras e saldo disponível">
+    <Page title="Mercado">
        
        <Grid cols={1} className="mb-6">
            <Card className="bg-[var(--gm-surface-2)] border-none p-0 overflow-hidden">

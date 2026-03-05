@@ -268,7 +268,6 @@ export default function Clients() {
     <div style={{ position: "relative" }}>
       <Page
         title="Clientes"
-        subtitle="Responsivo premium • mobile compacto • ações rápidas"
         actions={
           <button className="gm-btn gm-border-loop" type="button" onClick={() => setOpenNewPage(true)}>
             <Plus size={16} />

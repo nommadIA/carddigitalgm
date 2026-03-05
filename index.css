@@ -148,7 +148,7 @@ button{ font-family:inherit; }
   margin-bottom: var(--gm-space-5);
   flex-wrap: wrap;
 }
-.gm-title{ display:flex; flex-direction:column; gap:4px; }
+.gm-title{ display:flex; flex-direction:column; gap:4px; align-items: flex-start; text-align: left; }
 .gm-title h1, .gm-title h2{
   margin:0; letter-spacing:-0.4px;
   font-size:24px; font-weight:700;

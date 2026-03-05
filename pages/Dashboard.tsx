@@ -9,7 +9,8 @@ import {
   Briefcase,
   ShoppingCart,
   Wallet,
-  TrendingUp
+  TrendingUp,
+  Plus
 } from 'lucide-react';
 
 const containerVariants = {
@@ -314,21 +315,21 @@ const Dashboard = () => {
         <div>
            <h2 className="text-lg font-bold mb-4 px-1">Atalhos</h2>
            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Mercado */}
+              {/* Novo Orçamento */}
               <motion.div variants={itemVariants}>
-                <Link to="/market" className="group block h-full">
+                <Link to="/budgets?new=true" className="group block h-full">
                     <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl h-full border border-slate-200 dark:border-white/5">
                         <div className="text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/50 dark:bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-slate-200 dark:border-white/5">
-                            <ShoppingCart size={24}/>
+                            <Plus size={24}/>
                         </div>
                         <div className="text-center">
-                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Mercado</h3>
-                            <p className="text-[10px] text-slate-500 dark:text-white/50 uppercase tracking-wide">Compras</p>
+                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Novo Orçamento</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-white/50 uppercase tracking-wide">Projetos</p>
                         </div>
                     </Card>
                 </Link>
               </motion.div>
-              
+
               {/* Clientes */}
               <motion.div variants={itemVariants}>
                 <Link to="/clients" className="group block h-full">
@@ -359,16 +360,16 @@ const Dashboard = () => {
                 </Link>
               </motion.div>
 
-              {/* Orçamentos */}
+              {/* Mercado */}
               <motion.div variants={itemVariants}>
-                <Link to="/budgets" className="group block h-full">
+                <Link to="/market" className="group block h-full">
                     <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl h-full border border-slate-200 dark:border-white/5">
                         <div className="text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/50 dark:bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-slate-200 dark:border-white/5">
-                            <Briefcase size={24}/>
+                            <ShoppingCart size={24}/>
                         </div>
                         <div className="text-center">
-                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Orçamentos</h3>
-                            <p className="text-[10px] text-slate-500 dark:text-white/50 uppercase tracking-wide">Projetos</p>
+                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Mercado</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-white/50 uppercase tracking-wide">Compras</p>
                         </div>
                     </Card>
                 </Link>

@@ -320,7 +320,6 @@ export default function Financial() {
   return (
     <Page
       title="Relatórios Financeiros"
-      subtitle={`Fluxo de caixa e análise de ${selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}`}
       actions={
         <div className="flex gap-2">
           <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-1 mr-2">

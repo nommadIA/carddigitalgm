@@ -10,6 +10,7 @@ import { useAuth } from "../store/AuthContext";
 import { scheduleApprovedBudgetReminders, removeAlarmsForBudget, getBudgetRemindersEnabled, getBudgetReminderTimes } from "../lib/alarmSystem";
 import { generateOrcamentoPdf } from "../services/pdfService";
 import { buildWhatsappMessage } from "../services/whatsApp";
+import { useLocation } from "react-router-dom";
 import NewBudgetModal from "./budgets/NewBudgetModal";
 import ReminderConfigModal from "../components/budgets/ReminderConfigModal";
 import {
@@ -81,6 +82,7 @@ function pillClass(status: string) {
 
 export default function Budgets() {
   const { tenantId } = useAuth();
+  const location = useLocation();
 
   const [rows, setRows] = useState<BudgetRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,6 +96,13 @@ export default function Budgets() {
   
   // Hard delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("new") === "true") {
+      setNewOpen(true);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     load();
@@ -312,7 +321,6 @@ export default function Budgets() {
   return (
     <Page
       title="Orçamentos"
-      subtitle="Premium • compacto • sem azul • tabs + busca"
       actions={
         <button className="gm-btn gm-border-loop" type="button" onClick={() => setNewOpen(true)}>
           <Plus size={16} />

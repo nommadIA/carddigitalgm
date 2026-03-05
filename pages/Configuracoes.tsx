@@ -340,7 +340,6 @@ export default function Configuracoes() {
   return (
     <Page
       title="Configurações"
-      subtitle="Personalize a identidade do seu CardDigital GM Pro"
       actions={
         <div className="flex gap-2">
           <button className="gm-btn" onClick={exportJson} type="button">

@@ -222,7 +222,6 @@ export default function Expenses() {
   return (
     <Page
       title="Despesas"
-      subtitle="Controle de gastos e lançamentos"
       actions={
         <button className="gm-btn gm-border-loop" type="button" onClick={handleOpenNew}>
           <Plus size={16} />
