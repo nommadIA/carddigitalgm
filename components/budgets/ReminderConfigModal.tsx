@@ -51,11 +51,43 @@ export default function ReminderConfigModal({ open, onClose }: ReminderConfigMod
     }
 
     setBudgetReminderTimes([t1, t2, t3]);
+
+    // Solicita permissão de notificação se estiver ativando
+    if (remindersEnabled && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     setSavedToast("Horários salvos! (Novos APROVADOS usarão isso)");
     setTimeout(() => {
       setSavedToast(null);
       onClose();
     }, 2000);
+  }
+
+  function handleTestNotification() {
+    if (!("Notification" in window)) {
+      alert("Este navegador não suporta notificações.");
+      return;
+    }
+
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          sendTest();
+        } else {
+          alert("Permissão de notificação negada.");
+        }
+      });
+    } else {
+      sendTest();
+    }
+
+    function sendTest() {
+      new Notification("Teste de Notificação", {
+        body: "Seu sistema de lembretes está funcionando corretamente!",
+        icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
+      });
+    }
   }
 
   if (!open) return null;
@@ -129,10 +161,19 @@ export default function ReminderConfigModal({ open, onClose }: ReminderConfigMod
             </div>
           )}
 
-          <div className="pt-2">
+          <div className="pt-2 space-y-3">
             <button className="gm-btn gm-border-loop w-full font-bold" onClick={handleSave}>
               <Save size={16} />
               Salvar Configuração
+            </button>
+
+            <button 
+              className="w-full h-10 rounded-xl border border-white/5 bg-white/5 text-white/60 text-xs font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+              onClick={handleTestNotification}
+              type="button"
+            >
+              <Bell size={14} />
+              Testar Notificação
             </button>
           </div>
         </div>

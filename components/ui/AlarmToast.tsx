@@ -8,6 +8,11 @@ const AlarmToast = () => {
   const [alarms, setAlarms] = useState<BudgetAlarm[]>([]);
 
   useEffect(() => {
+    // Solicita permissão para notificações do navegador
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     // Polling a cada 2 segundos para verificar alarmes
     const interval = setInterval(() => {
       const alarm = checkAlarms();
@@ -24,6 +29,14 @@ const AlarmToast = () => {
           audio.volume = 0.4;
           audio.play().catch(() => {});
         } catch {}
+
+        // Notificação do Navegador (se permitido)
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification(alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : 'Orçamento Aprovado', {
+            body: `Cliente: ${alarm.clientName}\nHorário: ${alarm.time}`,
+            icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
+          });
+        }
 
         // Marca como disparado (no storage)
         markAlarmAsTriggered(alarm.id);

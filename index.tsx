@@ -49,6 +49,13 @@ async function bootReal() {
 // Inicia o boot mas não bloqueia a renderização do React
 bootReal();
 
+// Registro do Service Worker para PWA/Netlify
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(console.error);
+  });
+}
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");

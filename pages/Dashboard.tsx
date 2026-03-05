@@ -116,13 +116,16 @@ const Dashboard = () => {
   // ✅ Custom Header com Logo
   const headerContent = (
     <div className="flex items-center gap-4">
-      {branding?.company_logo_url && (
-        <img 
-          src={branding.company_logo_url} 
-          alt="Logo da Empresa" 
-          className="w-16 h-16 rounded-xl object-contain bg-white/5 border border-white/10 p-1"
-        />
-      )}
+      <div className="relative flex items-center justify-center shrink-0">
+        <div className="gm-neon-glow w-16 h-16"></div>
+        <div className="gm-neon-box w-14 h-14 rounded-2xl">
+          <img 
+            src={branding?.company_logo_url || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"} 
+            alt="Logo da Empresa" 
+            className="gm-neon-logo"
+          />
+        </div>
+      </div>
       <div className="flex flex-col justify-center">
         <h1 className="text-2xl font-bold leading-tight text-white">
           {branding?.company_name || "Visão Geral"}
