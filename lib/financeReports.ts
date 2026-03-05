@@ -86,11 +86,17 @@ export async function restoreFinanceReport(id: string) {
 }
 
 export async function deleteFinanceReportForever(id: string, tenantId: string) {
-  const { error } = await supabase
+  if (!id || !tenantId) throw new Error("ID e Tenant são obrigatórios.");
+  
+  const { error, count } = await supabase
     .from("finance_reports")
-    .delete()
+    .delete({ count: 'exact' })
     .eq("id", id)
     .eq("tenant_id", tenantId);
 
   if (error) throw error;
+  
+  if (count === 0) {
+    throw new Error("Nenhum registro foi removido. Verifique suas permissões.");
+  }
 }

@@ -64,6 +64,7 @@ export default function Financial() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyReports, setHistoryReports] = useState<FinanceReport[]>([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -147,8 +148,13 @@ export default function Financial() {
       out.push({ day: day.slice(5), entradas: v.entradas, saidas: v.saidas, saldoDia, acumulado });
     }
 
-    // 3. Sort Transactions (newest first)
-    allTrans.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // 3. Sort Transactions (Receitas first, then Despesas, then by Date)
+    allTrans.sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === "receita" ? -1 : 1;
+      }
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 
     setRows(out);
     setTransactions(allTrans);
@@ -279,14 +285,35 @@ export default function Financial() {
   };
 
   const handleDeleteReport = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este relatório?")) return;
+    if (!id || !tenantId) {
+      pushToast({ type: "error", title: "Erro", message: "ID ou Tenant ausente." });
+      return;
+    }
+
+    // Primeiro clique: pede confirmação mudando o estado
+    if (confirmDeleteId !== id) {
+      setConfirmDeleteId(id);
+      // Resetar após 4 segundos se não confirmar
+      setTimeout(() => {
+        setConfirmDeleteId(current => current === id ? null : current);
+      }, 4000);
+      return;
+    }
+
+    // Segundo clique: executa a exclusão
+    setConfirmDeleteId(null);
+    pushToast({ type: "info", title: "Aguarde", message: "Excluindo do banco de dados..." });
+    
     try {
       await deleteFinanceReportForever(id, tenantId);
-      pushToast({ type: "success", title: "Excluído", message: "Relatório excluído com sucesso." });
-      loadHistory();
-    } catch (e) {
-      console.error(e);
-      pushToast({ type: "error", title: "Erro", message: "Não foi possível excluir o relatório." });
+      pushToast({ type: "success", title: "Sucesso", message: "Relatório removido." });
+      await loadHistory();
+    } catch (e: any) {
+      pushToast({ 
+        type: "error", 
+        title: "Erro ao excluir", 
+        message: e.message || "Erro desconhecido." 
+      });
     }
   };
 
@@ -424,19 +451,48 @@ export default function Financial() {
                       <div>Descrição</div>
                       <div className="text-right">Valor</div>
                     </div>
-                    <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                      {transactions.map((t) => (
-                        <div
-                          key={t.id}
-                          className="grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors items-center"
-                        >
-                          <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
-                          <div className="font-medium">{t.desc}</div>
-                          <div className={`text-right font-bold ${t.type === "receita" ? "text-green-500" : "text-red-500"}`}>
-                            {t.type === "receita" ? "+" : "-"} {CURRENCY_FORMATTER.format(t.amount)}
+                    <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                      {/* RECEITAS */}
+                      {transactions.filter(t => t.type === "receita").length > 0 && (
+                        <>
+                          <div className="px-4 py-2 bg-green-500/5 text-green-500 text-[10px] font-bold uppercase tracking-widest border-y border-white/5">
+                            Ganhos / Receitas
                           </div>
-                        </div>
-                      ))}
+                          {transactions.filter(t => t.type === "receita").map((t) => (
+                            <div
+                              key={t.id}
+                              className="grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors items-center"
+                            >
+                              <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
+                              <div className="font-medium">{t.desc}</div>
+                              <div className="text-right font-bold text-green-500">
+                                + {CURRENCY_FORMATTER.format(t.amount)}
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* DESPESAS */}
+                      {transactions.filter(t => t.type === "despesa").length > 0 && (
+                        <>
+                          <div className="px-4 py-2 bg-red-500/5 text-red-500 text-[10px] font-bold uppercase tracking-widest border-y border-white/5 mt-4">
+                            Despesas / Saídas
+                          </div>
+                          {transactions.filter(t => t.type === "despesa").map((t) => (
+                            <div
+                              key={t.id}
+                              className="grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors items-center"
+                            >
+                              <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
+                              <div className="font-medium">{t.desc}</div>
+                              <div className="text-right font-bold text-red-500">
+                                - {CURRENCY_FORMATTER.format(t.amount)}
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -528,11 +584,19 @@ export default function Financial() {
                           <Download size={18} />
                         </button>
                         <button
-                          onClick={() => handleDeleteReport(rep.id)}
-                          className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
-                          title="Excluir Relatório"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteReport(rep.id);
+                          }}
+                          className={`p-2 rounded-lg transition-all flex items-center gap-2 ${
+                            confirmDeleteId === rep.id 
+                              ? "bg-red-500 text-white animate-pulse px-4" 
+                              : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                          }`}
+                          title={confirmDeleteId === rep.id ? "Clique novamente para confirmar" : "Excluir Relatório"}
                         >
                           <Trash2 size={18} />
+                          {confirmDeleteId === rep.id && <span className="text-xs font-bold">CONFIRMAR?</span>}
                         </button>
                       </div>
                     </div>

@@ -236,7 +236,7 @@ const Dashboard = () => {
           </div>
           
           <Grid cols={3} className="gap-4">
-              {/* NA FILA (BRANCO) - Relógio SVG com Ponteiro Animado */}
+              {/* NA FILA (BRANCO/DARK) - Relógio SVG com Ponteiro Animado */}
               <motion.div variants={itemVariants}>
                 <Card className="border border-white/20 hover:border-white/50 shadow-[0_0_20px_rgba(255,255,255,0.08)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
                    <div className="flex items-center justify-between relative z-10">
@@ -317,13 +317,13 @@ const Dashboard = () => {
               {/* Mercado */}
               <motion.div variants={itemVariants}>
                 <Link to="/market" className="group block h-full">
-                    <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-800/30 rounded-2xl h-full border border-white/5">
-                        <div className="text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-white/5">
+                    <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl h-full border border-slate-200 dark:border-white/5">
+                        <div className="text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/50 dark:bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-slate-200 dark:border-white/5">
                             <ShoppingCart size={24}/>
                         </div>
                         <div className="text-center">
-                            <h3 className="font-bold text-sm text-white">Mercado</h3>
-                            <p className="text-[10px] opacity-50 uppercase tracking-wide">Compras</p>
+                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Mercado</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-white/50 uppercase tracking-wide">Compras</p>
                         </div>
                     </Card>
                 </Link>
@@ -332,13 +332,13 @@ const Dashboard = () => {
               {/* Clientes */}
               <motion.div variants={itemVariants}>
                 <Link to="/clients" className="group block h-full">
-                    <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-800/30 rounded-2xl h-full border border-white/5">
-                        <div className="text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-white/5">
+                    <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl h-full border border-slate-200 dark:border-white/5">
+                        <div className="text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/50 dark:bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-slate-200 dark:border-white/5">
                             <Users size={24}/>
                         </div>
                         <div className="text-center">
-                            <h3 className="font-bold text-sm text-white">Clientes</h3>
-                            <p className="text-[10px] opacity-50 uppercase tracking-wide">Contatos</p>
+                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Clientes</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-white/50 uppercase tracking-wide">Contatos</p>
                         </div>
                     </Card>
                 </Link>
@@ -347,13 +347,28 @@ const Dashboard = () => {
               {/* Financeiro */}
               <motion.div variants={itemVariants}>
                 <Link to="/financial" className="group block h-full">
-                    <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-800/30 rounded-2xl h-full border border-white/5">
-                        <div className="text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-white/5">
+                    <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl h-full border border-slate-200 dark:border-white/5">
+                        <div className="text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/50 dark:bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-slate-200 dark:border-white/5">
                             <Wallet size={24}/>
                         </div>
                         <div className="text-center">
-                            <h3 className="font-bold text-sm text-white">Financeiro</h3>
-                            <p className="text-[10px] opacity-50 uppercase tracking-wide">Relatórios</p>
+                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Financeiro</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-white/50 uppercase tracking-wide">Relatórios</p>
+                        </div>
+                    </Card>
+                </Link>
+              </motion.div>
+
+              {/* Orçamentos */}
+              <motion.div variants={itemVariants}>
+                <Link to="/budgets" className="group block h-full">
+                    <Card className="aspect-square hover:border-[var(--gm-primary)] transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center gap-3 bg-slate-100/50 dark:bg-slate-800/30 rounded-2xl h-full border border-slate-200 dark:border-white/5">
+                        <div className="text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] bg-white/50 dark:bg-white/5 p-3.5 rounded-2xl transition-colors shadow-inner border border-slate-200 dark:border-white/5">
+                            <Briefcase size={24}/>
+                        </div>
+                        <div className="text-center">
+                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Orçamentos</h3>
+                            <p className="text-[10px] text-slate-500 dark:text-white/50 uppercase tracking-wide">Projetos</p>
                         </div>
                     </Card>
                 </Link>

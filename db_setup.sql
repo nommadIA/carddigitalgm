@@ -700,6 +700,10 @@ create table if not exists public.finance_reports (
 
 alter table public.finance_reports enable row level security;
 
+-- Garantir permissões de acesso
+grant all on public.finance_reports to authenticated;
+grant all on public.finance_reports to service_role;
+
 do $$
 begin
   drop policy if exists "finance_reports_select" on public.finance_reports;
@@ -712,7 +716,13 @@ begin
   create policy "finance_reports_update" on public.finance_reports for update using (public.is_tenant_member(tenant_id));
 
   drop policy if exists "finance_reports_delete" on public.finance_reports;
-  create policy "finance_reports_delete" on public.finance_reports for delete using (public.is_tenant_member(tenant_id));
+  create policy "finance_reports_delete" on public.finance_reports for delete using (
+    tenant_id in (
+      select m.tenant_id 
+      from public.tenant_memberships m 
+      where m.user_id = auth.uid()
+    )
+  );
 end $$;
 
 -- ==========================================

@@ -542,7 +542,42 @@ export async function generateFinanceReportPdf(params: {
 
     const colDescW = CONTENT_W - 120 - 70; // Available width for description
 
-    for (const r of rows) {
+    // Sort rows: Receitas first, then Despesas, then by Date
+    const sortedRows = [...rows].sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === "receita" ? -1 : 1;
+      }
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    let lastType: string | null = null;
+    for (const r of sortedRows) {
+      if (r.type !== lastType) {
+        lastType = r.type;
+        checkSpace(30);
+        const headerText = r.type === "receita" ? "GANHOS / RECEITAS" : "DESPESAS / SAÍDAS";
+        const headerColor = r.type === "receita" ? cGreen : cRed;
+        
+        page.drawRectangle({
+          x: CONTENT_X,
+          y: cursorY - 18,
+          width: CONTENT_W,
+          height: 18,
+          color: headerColor,
+          opacity: 0.05
+        });
+        
+        page.drawText(headerText, { 
+          x: CONTENT_X + 5, 
+          y: cursorY - 12, 
+          size: 8, 
+          font: fontBold, 
+          color: headerColor 
+        });
+        
+        cursorY -= 28;
+      }
+
       const isReceita = r.type === "receita";
       const color = isReceita ? cGreen : cRed;
       const typeStr = isReceita ? "Receita" : "Despesa";

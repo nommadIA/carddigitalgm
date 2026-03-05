@@ -11,7 +11,6 @@ import {
   BrainCircuit,
   Wallet,
   Settings,
-  Sun,
   Moon,
   ChevronLeft,
   LogOut,
@@ -22,7 +21,6 @@ import { useAuth } from "../../store/AuthContext";
 import { fetchSettingsSupabase, applySettingsToDOM } from "../../lib/settings";
 import AlarmToast from "./AlarmToast";
 import { ToastHost } from "./Toast";
-import { applyTheme, getTheme, toggleTheme } from "../../lib/theme";
 import BottomNav from "./BottomNav";
 
 export default function Layout({ children }: { children?: React.ReactNode }) {
@@ -37,12 +35,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   
   // ✅ 2) Search na Sidebar
   const [menuSearch, setMenuSearch] = useState("");
-  const [currentTheme, setCurrentTheme] = useState(getTheme());
 
   useEffect(() => localStorage.setItem("gm.sidebar", collapsed ? "1" : "0"), [collapsed]);
 
   useEffect(() => {
-    applyTheme(getTheme());
+    document.documentElement.setAttribute("data-theme", "dark");
   }, []);
 
   // Efeito de transição de rota
@@ -251,27 +248,22 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* MOBILE TOP HEADER */}
       <div className="fixed top-0 left-0 right-0 h-16 z-50 flex md:hidden items-center justify-between px-4 bg-[#0b1220]/60 backdrop-blur-2xl border-b border-white/5 shadow-sm">
         <div className="flex items-center gap-3">
-            <img 
-              src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/brand_assets_logo/FIVE%20ICON%20CARDDIGITAL%20GM.svg" 
-              alt="Logo" 
-              className="w-8 h-8 rounded-lg"
-            />
-            <div className="text-white text-base tracking-tight leading-none">
-                <span className="font-light opacity-90">CardDigital</span>
-                <span className="font-bold text-[var(--gm-primary)] ml-1">GM</span>
+            <div className="relative flex items-center justify-center">
+              <div className="gm-neon-glow w-10 h-10"></div>
+              <div className="gm-neon-box w-9 h-9 rounded-lg">
+                <img 
+                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
+                  alt="Logo" 
+                  className="gm-neon-logo"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-1 leading-none">
+                <span className="text-sm font-light text-slate-200 tracking-tight">CardDigital</span>
+                <span className="text-lg font-semibold text-[var(--gm-primary)]">GM</span>
             </div>
         </div>
         <div className="flex items-center gap-2">
-            <button
-                type="button"
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-300"
-                onClick={() => {
-                    const mode = toggleTheme();
-                    setCurrentTheme(mode);
-                }}
-            >
-                {currentTheme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
             <button 
                 className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 border border-red-500/20 text-red-400"
                 onClick={signOut}
@@ -285,14 +277,19 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       <aside className={`gm-sidebar ${collapsed ? "collapsed" : ""} hidden md:flex`}>
         {!collapsed && (
           <div className="flex items-center gap-3 px-2 py-1 mb-2">
-             <img 
-                src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/brand_assets_logo/FIVE%20ICON%20CARDDIGITAL%20GM.svg" 
-                alt="Logo" 
-                className="w-8 h-8 rounded-lg"
-              />
-              <div className="text-white text-base tracking-tight leading-none">
-                  <span className="font-light opacity-90">CardDigital</span>
-                  <span className="font-bold text-[var(--gm-primary)] ml-1">GM</span>
+             <div className="relative flex items-center justify-center">
+                <div className="gm-neon-glow w-10 h-10"></div>
+                <div className="gm-neon-box w-9 h-9 rounded-lg">
+                  <img 
+                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
+                    alt="Logo" 
+                    className="gm-neon-logo"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-1 leading-none">
+                  <span className="text-sm font-light text-slate-200 tracking-tight">CardDigital</span>
+                  <span className="text-lg font-semibold text-[var(--gm-primary)]">GM</span>
               </div>
           </div>
         )}
@@ -313,18 +310,6 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           <div className="px-1 py-2 flex flex-col gap-3">
              <div className="flex items-center justify-between gap-2 px-1">
                 <div className="font-extrabold tracking-tight text-sm">Menu</div>
-                <button
-                type="button"
-                className="gm-btn gm-btn-icon"
-                style={{ width: 32, height: 32 }}
-                title="Alternar tema"
-                onClick={() => {
-                    const mode = toggleTheme();
-                    setCurrentTheme(mode);
-                }}
-                >
-                {currentTheme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-                </button>
             </div>
 
             <div className="relative hidden md:block">

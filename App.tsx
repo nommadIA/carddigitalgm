@@ -75,9 +75,6 @@ function BootReady() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) document.documentElement.setAttribute("data-theme", savedTheme);
-
     if (!checked) return;
 
     if (user && tenantId) {

@@ -65,26 +65,28 @@ export default function Login() {
           style={{ borderRadius: 32 }}
         >
           {/* CABEÇALHO COMO ANTES */}
-          <div className="flex flex-col items-center mb-8">
+          <div className="flex flex-col items-center mb-10">
             <motion.div 
-              initial={{ scale: 0.8, opacity: 0, rotate: -10 }}
-              animate={{ scale: 1, opacity: 1, rotate: 0 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="relative mb-5"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
+              className="relative mb-6 flex items-center justify-center"
             >
-              <div className="absolute inset-0 bg-[var(--gm-primary)] blur-2xl opacity-20 rounded-full"></div>
-              <img
-                src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/brand_assets_logo/FIVE%20ICON%20CARDDIGITAL%20GM.svg"
-                alt="Logo CardDigital GM"
-                className="w-24 h-24 rounded-3xl shadow-2xl shadow-black/60 hover:scale-105 transition-transform duration-500 relative z-10"
-              />
+              <div className="gm-neon-glow w-32 h-32"></div>
+              <div className="gm-neon-box w-28 h-28 rounded-[28px]">
+                <img
+                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
+                  alt="Logo CardDigital GM"
+                  className="gm-neon-logo"
+                />
+              </div>
             </motion.div>
 
-            <div className="text-4xl font-light text-white leading-none">
-              <span className="opacity-95">CardDigital</span>{" "}
-              <span className="text-[var(--gm-primary)] font-bold">GM</span>
+            <div className="flex items-center justify-center text-center leading-none gap-2">
+              <span className="text-3xl font-light text-slate-200 tracking-tight">CardDigital</span>
+              <span className="text-4xl font-semibold text-[var(--gm-primary)] drop-shadow-[0_0_15px_rgba(255,122,0,0.3)]">GM</span>
             </div>
-            <div className="text-sm opacity-60 mt-3">Acesse sua conta para continuar</div>
+            <div className="text-sm opacity-50 mt-4 uppercase tracking-[0.2em] font-bold">Acesso Restrito</div>
           </div>
 
           {errorMessage && (
