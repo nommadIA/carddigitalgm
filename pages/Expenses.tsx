@@ -253,10 +253,10 @@ export default function Expenses() {
         </div>
 
         <div className="mt-4 flex gap-3 flex-wrap">
-          <div className="gm-pill gm-pill-green">
+          <div className="gm-pill-neon-green">
             <Check size={14} /> Pago: {CURRENCY_FORMATTER.format(totalPago)}
           </div>
-          <div className="gm-pill gm-pill-red">
+          <div className="gm-pill-neon-red">
             <Clock size={14} /> Pendente: {CURRENCY_FORMATTER.format(totalPendente)}
           </div>
           <button type="button" className="gm-btn gm-btn-outline text-sm" onClick={() => loadExpenses()} title="Recarregar">

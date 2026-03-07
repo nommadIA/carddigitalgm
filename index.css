@@ -94,6 +94,44 @@ button{ font-family:inherit; }
   animation: gmHeartbeat 2s ease-in-out infinite;
 }
 
+/* Neon Verified Animation */
+@keyframes neonVerified {
+  0% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 2px #22c55e); }
+  50% { transform: scale(1.2) translateY(-2px); filter: drop-shadow(0 0 8px #22c55e); }
+  100% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 2px #22c55e); }
+}
+.animate-neon-verified {
+  animation: neonVerified 2s ease-in-out infinite;
+  color: #22c55e;
+}
+
+/* Arrow Pointing Animation */
+@keyframes arrowPoint {
+  0%, 100% { transform: translateX(0); opacity: 0.6; }
+  50% { transform: translateX(6px); opacity: 1; }
+}
+.animate-arrow-point {
+  animation: arrowPoint 1.2s ease-in-out infinite;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Slide Up Animation */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* =========================================================
    LAYOUT
 ========================================================= */
@@ -219,6 +257,27 @@ button{ font-family:inherit; }
 }
 .gm-card:hover{
   border-color: var(--gm-primary);
+}
+
+.gm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--gm-space-4);
+  gap: var(--gm-space-3);
+  flex-wrap: wrap;
+}
+
+.gm-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.gm-card-title h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
 }
 
 .gm-compact{
@@ -603,6 +662,14 @@ body{
 /* =========================
    TOAST
 ========================= */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .toast-host{
   position: fixed;
   right: 16px;
@@ -748,6 +815,40 @@ body{
 .gm-pill-green{ border-color: rgba(34,197,94,0.28); background: rgba(34,197,94,0.14); color: rgba(134,239,172,0.95); }
 .gm-pill-blue{ border-color: rgba(59,130,246,0.28); background: rgba(59,130,246,0.14); color: rgba(191,219,254,0.95); }
 .gm-pill-red{ border-color: rgba(239,68,68,0.28); background: rgba(239,68,68,0.14); color: rgba(254,202,202,0.95); }
+
+/* Neon Pills (Modern) */
+.gm-pill-neon-green {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--gm-radius);
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid #22c55e;
+  color: #22c55e;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.gm-pill-neon-red {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--gm-radius);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+  backdrop-filter: blur(10px);
+}
+
 .gm-pill-gray{ border-color: rgba(148,163,184,0.28); background: rgba(148,163,184,0.12); color: rgba(226,232,240,0.9); }
 .gm-pill-indigo{ border-color: rgba(99,102,241,0.28); background: rgba(99,102,241,0.14); color: rgba(224,231,255,0.95); }
 .gm-pill-emerald{ border-color: rgba(16,185,129,0.28); background: rgba(16,185,129,0.14); color: rgba(167,243,208,0.95); }

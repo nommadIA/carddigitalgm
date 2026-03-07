@@ -13,12 +13,16 @@ import {
   Tag,
   ArrowLeft,
   Check,
+  CheckCircle2,
   CreditCard,
   Wallet,
   Clock,
   Brush,
   Eraser,
   Save,
+  ChevronUp,
+  ChevronDown,
+  ArrowRight,
 } from "lucide-react";
 
 type Props = {
@@ -190,7 +194,7 @@ const topBar: React.CSSProperties = {
 const pageContent: React.CSSProperties = {
   flex: 1,
   width: "100%",
-  maxWidth: "900px",
+  maxWidth: "1100px",
   margin: "0 auto",
   // ✅ mais espaço no final + safe-area (iPhone/Android gesture bar)
   padding: "40px 24px calc(160px + env(safe-area-inset-bottom, 0px)) 24px",
@@ -260,9 +264,47 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
   const [paymentMethod, setPaymentMethod] = useState<PayMethod>("PIX");
   const [installments, setInstallments] = useState<number>(1);
   const [interestRate, setInterestRate] = useState<number>(0);
-  const [discount, setDiscount] = useState<number>(0);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
 
   const [items, setItems] = useState<BudgetItemDraft[]>([]);
+  const [barPosition, setBarPosition] = useState(80); // Posição padrão em px da base
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = React.useRef(0);
+  const dragStartPos = React.useRef(0);
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    // Se clicou em botão, não arrasta
+    if ((e.target as HTMLElement).closest('button')) return;
+    
+    setIsDragging(true);
+    const y = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    dragStartY.current = y;
+    dragStartPos.current = barPosition;
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      const y = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+      const deltaY = dragStartY.current - y;
+      setBarPosition(Math.max(10, Math.min(600, dragStartPos.current + deltaY)));
+    };
+
+    const handleEnd = () => setIsDragging(false);
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleMove);
+    window.addEventListener('touchend', handleEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging, barPosition]);
 
   const itemsEndRef = React.useRef<HTMLDivElement | null>(null);
   const lastDescRef = React.useRef<HTMLTextAreaElement | null>(null);
@@ -275,7 +317,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     setPaymentMethod("PIX");
     setInstallments(1);
     setInterestRate(0);
-    setDiscount(0);
+    setDiscountAmount(0);
     setItems([]);
     setSaving(false);
   };
@@ -333,9 +375,8 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         setInstallments(Number(budget.installments || 1));
         setInterestRate(Number(budget.interest_rate || 0));
         
-        const loadedSubtotal = Number(budget.subtotal || 0);
         const loadedDiscountAmount = Number(budget.discount || 0);
-        setDiscount(loadedSubtotal > 0 ? (loadedDiscountAmount / loadedSubtotal) * 100 : 0);
+        setDiscountAmount(loadedDiscountAmount);
 
         const loadedItems: BudgetItemDraft[] = ((budget.items || []) as any[]).map((it) => {
           const parsed = parseDescription(String(it.description || ""));
@@ -475,14 +516,15 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
   const subtotal = useMemo(() => items.reduce((acc, it) => acc + it.total, 0), [items]);
 
+  const discountPercentage = useMemo(() => (subtotal > 0 ? (discountAmount / subtotal) * 100 : 0), [subtotal, discountAmount]);
+
   const totalFinal = useMemo(() => {
-    const discAmount = subtotal * (clamp(Number(discount) || 0, 0, 100) / 100);
-    const afterDiscount = subtotal - discAmount;
+    const afterDiscount = subtotal - discountAmount;
 
     if (paymentMethod === "PIX") return afterDiscount;
     const rate = clamp(Number(interestRate) || 0, 0, 200) / 100;
     return afterDiscount * (1 + rate);
-  }, [subtotal, paymentMethod, interestRate, discount]);
+  }, [subtotal, paymentMethod, interestRate, discountAmount]);
 
   async function handleSave() {
     if (!tenantId) return alert("Erro de autenticação.");
@@ -501,7 +543,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         status: budgetToEditId ? undefined : "AGUARDANDO",
         type: kind,
         subtotal: subtotal,
-        discount: subtotal * (clamp(Number(discount) || 0, 0, 100) / 100),
+        discount: discountAmount,
         total_amount: totalFinal,
         delivery_days: 5,
         payment_method: paymentMethod,
@@ -574,7 +616,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             cliente_nome: clientName,
             total: totalFinal,
             subtotal: subtotal,
-            discount: subtotal * (clamp(Number(discount) || 0, 0, 100) / 100),
+            discount: discountAmount,
             created_at: new Date().toISOString(),
             dueLabel: "Conforme itens",
           },
@@ -1034,14 +1076,20 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                 })()}
 
                 <div className="mt-4">
-                  <label style={labelTop}>Desconto (%)</label>
-                  <input
-                    type="number"
-                    style={inputBig}
-                    value={discount}
-                    onChange={(e) => setDiscount(Number(e.target.value))}
-                    placeholder="0"
-                  />
+                  <label style={labelTop}>Desconto (R$)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      style={inputBig}
+                      value={discountAmount}
+                      onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                      placeholder="0"
+                      className="pr-12"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                      {discountPercentage.toFixed(1)}%
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1050,16 +1098,16 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   <span>Subtotal</span>
                   <span className="text-white font-medium">{money(subtotal)}</span>
                 </div>
-                {discount > 0 && (
+                {discountAmount > 0 && (
                   <div className="flex justify-between text-sm text-green-400">
-                    <span>Desconto ({discount}%)</span>
-                    <span className="font-medium">-{money(subtotal * (discount / 100))}</span>
+                    <span>Desconto ({discountPercentage.toFixed(1)}%)</span>
+                    <span className="font-medium">-{money(discountAmount)}</span>
                   </div>
                 )}
                 {paymentMethod === "CREDIT" && interestRate > 0 && (
                   <div className="flex justify-between text-sm text-orange-400">
                     <span>Juros ({interestRate}%)</span>
-                    <span className="font-medium">+{money(totalFinal - (subtotal * (1 - discount / 100)))}</span>
+                    <span className="font-medium">+{money(totalFinal - (subtotal - discountAmount))}</span>
                   </div>
                 )}
                 <div className="border-t border-white/10 pt-4 mt-2">
@@ -1074,42 +1122,56 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
           {/* 04. AÇÕES */}
           <div
-            className="p-4 md:p-6 rounded-2xl bg-black/80 border border-white/10 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl z-50"
+            className={`p-4 md:p-5 rounded-2xl bg-black/85 border border-white/10 backdrop-blur-xl flex flex-row items-center justify-between gap-4 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            onMouseDown={handleDragStart}
+            onTouchStart={handleDragStart}
             style={{
               position: "fixed",
-              left: 16,
-              right: 16,
-              bottom: `calc(80px + env(safe-area-inset-bottom, 0px))`,
-              maxWidth: 900,
+              left: 24,
+              right: 24,
+              bottom: `calc(${barPosition}px + env(safe-area-inset-bottom, 0px))`,
+              maxWidth: 1052,
               margin: "0 auto",
+              transition: isDragging ? "none" : "bottom 0.3s ease",
+              touchAction: "none",
             }}
           >
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="w-10 h-10 rounded-full bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] flex items-center justify-center font-bold text-lg border border-[var(--gm-primary)]/30 shrink-0">
-                04
+            {/* Drag Handle Visual */}
+            <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/10 rounded-full" />
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center">
+                <CheckCircle2 size={28} className="animate-neon-verified" />
               </div>
-              <div>
-                <div className="text-white font-bold text-lg leading-none mb-1">
+              <div className="hidden sm:block">
+                <div className="text-white font-bold text-base leading-none mb-1">
                   {budgetToEditId ? "Pronto para atualizar?" : "Pronto para finalizar?"}
                 </div>
-                <div className="text-slate-400 text-xs">Confira os valores antes de salvar.</div>
+                <div className="text-slate-400 text-[10px] uppercase tracking-wider font-medium">Confira os valores antes de salvar</div>
+              </div>
+              <div className="sm:hidden">
+                <div className="text-white font-bold text-sm leading-none">
+                  {budgetToEditId ? "Atualizar?" : "Finalizar?"}
+                </div>
               </div>
             </div>
 
             <button
-              onClick={handleSave}
+              onClick={(e) => { e.stopPropagation(); handleSave(); }}
               disabled={saving}
-              className="w-full sm:w-auto px-8 py-3 rounded-xl font-bold text-sm bg-[var(--gm-primary)] text-white shadow-lg shadow-orange-500/20 hover:brightness-110 transition-all flex items-center justify-center gap-2"
+              className="px-6 py-3 rounded-xl font-bold text-sm bg-[var(--gm-primary)] text-white shadow-lg shadow-orange-500/20 hover:brightness-110 transition-all flex items-center gap-3 shrink-0"
             >
               {saving ? (
                 "Salvando..."
               ) : budgetToEditId ? (
                 <>
-                  <Save size={20} /> Atualizar Proposta
+                  <ArrowRight size={18} className="animate-arrow-point" />
+                  Atualizar Proposta
                 </>
               ) : (
                 <>
-                  <Check size={20} /> Finalizar Proposta
+                  <ArrowRight size={18} className="animate-arrow-point" />
+                  Finalizar Proposta
                 </>
               )}
             </button>

@@ -137,7 +137,7 @@ export function readSettingsLocal(): AppSettings | null {
   }
 }
 
-async function withTimeout<T>(p: Promise<T>, ms = 8000): Promise<T> {
+async function withTimeout<T>(p: Promise<T>, ms = 15000): Promise<T> {
   return await Promise.race([
     p,
     new Promise<T>((_, rej) => setTimeout(() => rej(new Error("Timeout")), ms)),
@@ -159,11 +159,11 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
     if (tenantId) {
       const { data: byTenant, error: errTenant } = await withTimeout<any>(
         supabase.from("app_settings").select("*").eq("tenant_id", tenantId).maybeSingle() as any,
-        8000
+        15000
       );
 
       if (errTenant) {
-        console.error("fetchSettings error (tenant):", errTenant);
+        console.warn("fetchSettings warn (tenant):", errTenant);
         // continua fallback
       } else if (byTenant) {
         return (byTenant as AppSettings) || DEFAULT_SETTINGS;
@@ -173,11 +173,11 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
       if (owner) {
         const { data: byOwner, error: errOwner } = await withTimeout<any>(
           supabase.from("app_settings").select("*").eq("owner", owner).maybeSingle() as any,
-          8000
+          15000
         );
 
         if (errOwner) {
-          console.error("fetchSettings error (owner):", errOwner);
+          console.warn("fetchSettings warn (owner):", errOwner);
           return DEFAULT_SETTINGS;
         }
 
@@ -216,16 +216,16 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
     if (owner) q = q.eq("owner", owner);
     else q = q.is("tenant_id", null);
 
-    const { data, error } = await withTimeout<any>(q.maybeSingle() as any, 8000);
+    const { data, error } = await withTimeout<any>(q.maybeSingle() as any, 15000);
 
     if (error) {
-      console.error("fetchSettings error:", error);
+      console.warn("fetchSettings warn:", error);
       return DEFAULT_SETTINGS;
     }
 
     return (data as AppSettings) || DEFAULT_SETTINGS;
   } catch (e: any) {
-    console.error("fetchSettings error:", e?.message || e);
+    console.warn("fetchSettings warn:", e?.message || e);
     return DEFAULT_SETTINGS; // ✅ nunca trava
   }
 }

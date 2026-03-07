@@ -1,4 +1,5 @@
 import { BudgetAlarm } from "../types";
+import { syncAlarmsToDB, markAlarmAsTriggeredInDB } from "./db";
 
 const ALARM_KEY = "gm_pro_alarms_v1";
 const REMINDER_TIMES_KEY = "gm_budget_reminder_times_v1"; // ✅ NOVO
@@ -19,6 +20,7 @@ export const getAlarms = (): BudgetAlarm[] => {
 
 export const saveAlarms = (alarms: BudgetAlarm[]) => {
   localStorage.setItem(ALARM_KEY, JSON.stringify(alarms));
+  syncAlarmsToDB(alarms).catch(console.error);
 };
 
 export const getBudgetReminderTimes = (): string[] => {
@@ -89,6 +91,41 @@ export const scheduleApprovedBudgetReminders = (budgetId: string, clientName: st
   addAlarmsForBudget(budgetId, clientName, times, "BUDGET");
 };
 
+// ✅ NOVO: Sincroniza todos os alarmes de orçamento existentes com os novos horários globais
+export const syncAllBudgetAlarms = () => {
+  const currentAlarms = getAlarms();
+  const budgetAlarms = currentAlarms.filter(a => a.type === "BUDGET");
+  
+  if (budgetAlarms.length === 0) return;
+
+  const times = getBudgetReminderTimes();
+  const nonBudgetAlarms = currentAlarms.filter(a => a.type !== "BUDGET");
+  
+  // Agrupa por budgetId para saber quais clientes temos
+  const budgetGroups = new Map<string, string>();
+  budgetAlarms.forEach(a => {
+    budgetGroups.set(a.budgetId, a.clientName);
+  });
+
+  const newAlarms: BudgetAlarm[] = [];
+  budgetGroups.forEach((clientName, budgetId) => {
+    times.forEach(time => {
+      newAlarms.push({
+        id: crypto.randomUUID(),
+        budgetId,
+        clientName,
+        time,
+        active: true,
+        triggered: false,
+        type: "BUDGET",
+        lastTriggeredOn: null as any,
+      });
+    });
+  });
+
+  saveAlarms([...nonBudgetAlarms, ...newAlarms]);
+};
+
 export const toggleAlarmsForBudget = (budgetId: string, active: boolean) => {
   const current = getAlarms();
   const updated = current.map((a) => (a.budgetId === budgetId ? { ...a, active } : a));
@@ -125,6 +162,7 @@ export const markAlarmAsTriggered = (alarmId: string) => {
     };
   });
   saveAlarms(updated as any);
+  markAlarmAsTriggeredInDB(alarmId).catch(console.error);
 };
 
 export const snoozeAlarm = (alarmId: string) => {

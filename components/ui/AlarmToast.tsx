@@ -23,22 +23,18 @@ const AlarmToast = () => {
           return [alarm, ...prev];
         });
 
-        // Toca som discreto
-        try {
-          const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-          audio.volume = 0.4;
-          audio.play().catch(() => {});
-        } catch {}
-
         // Notificação do Navegador (se permitido)
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification(alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : 'Orçamento Aprovado', {
             body: `Cliente: ${alarm.clientName}\nHorário: ${alarm.time}`,
-            icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
-          });
+            icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
+            vibrate: [200, 100, 200],
+            tag: alarm.id,
+            renotify: true
+          } as any);
         }
 
-        // Marca como disparado (no storage)
+        // Marca como disparado (no storage e IndexedDB)
         markAlarmAsTriggered(alarm.id);
       }
     }, 2000);
@@ -58,55 +54,71 @@ const AlarmToast = () => {
   if (alarms.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed bottom-20 right-4 z-[9999] flex flex-col gap-3 pointer-events-none">
       {alarms.map((alarm) => (
         <div
           key={alarm.id}
-          className="pointer-events-auto w-[360px] max-w-[92vw] rounded-2xl border border-white/10 bg-black/60 backdrop-blur-xl shadow-2xl p-4 animate-slide-up"
+          className="pointer-events-auto w-[360px] max-w-[92vw] rounded-xl border border-white/5 bg-[#151619] shadow-[0_20px_40px_rgba(0,0,0,0.5)] p-4 animate-slide-up"
           role="status"
         >
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
-              <Bell size={18} className="text-orange-400" />
+          <div className="flex items-start gap-4">
+            {/* Icon hardware style */}
+            <div className="h-12 w-12 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center shrink-0 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-orange-500/10 animate-pulse" />
+              <Bell size={20} className="text-orange-400 relative z-10" />
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="text-white font-extrabold text-sm tracking-wide">
-                {alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : 'Orçamento Aprovado'}
-              </div>
-              <div className="text-white/70 text-xs mt-1 truncate">
-                Cliente: <span className="text-white font-semibold">{alarm.clientName}</span>
-              </div>
-              <div className="text-white/55 text-xs mt-1">
-                Horário: <span className="text-white/80 font-semibold">{alarm.time}</span>
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-[9px] font-mono uppercase tracking-widest text-white/30">
+                  System // Alert
+                </div>
+                <div className="text-[9px] font-mono text-orange-400 animate-pulse">
+                  Live
+                </div>
               </div>
 
-              <div className="flex gap-2 mt-3">
+              <div className="text-white font-bold text-xs uppercase tracking-wider mb-2">
+                {alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : 'Orçamento Aprovado'}
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-white/40 uppercase">Client</span>
+                  <span className="text-[10px] font-mono text-white truncate max-w-[180px]">{alarm.clientName}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-white/40 uppercase">Timecode</span>
+                  <span className="text-[10px] font-mono text-orange-400/80">{alarm.time}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
                 <button
-                  className="h-8 px-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white/80 text-xs font-bold transition-colors"
+                  className="flex-1 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-bold uppercase tracking-widest transition-all"
                   onClick={() => dismiss(alarm.id)}
                   type="button"
                 >
-                  Entendi
+                  Acknowledge
                 </button>
 
                 <button
-                  className="h-8 px-3 rounded-lg bg-red-500/10 border border-red-500/25 hover:bg-red-500/20 text-red-200 text-xs font-bold flex items-center gap-2 transition-colors"
+                  className="h-9 px-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400/80 text-[10px] font-bold flex items-center justify-center transition-all"
                   onClick={() => disableReminder(alarm)}
                   type="button"
-                  title="Desativar lembretes deste orçamento"
+                  title="Disable reminders for this budget"
                 >
-                  <BellOff size={14} /> Desativar
+                  <BellOff size={14} />
                 </button>
               </div>
             </div>
 
             <button
-              className="h-8 w-8 rounded-full hover:bg-white/10 text-white/50 hover:text-white flex items-center justify-center transition-colors -mt-1 -mr-1"
+              className="h-6 w-6 rounded-lg hover:bg-white/5 text-white/20 hover:text-white flex items-center justify-center transition-colors -mt-1 -mr-1"
               onClick={() => dismiss(alarm.id)}
               type="button"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           </div>
         </div>

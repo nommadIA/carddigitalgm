@@ -24,7 +24,50 @@ import {
   RotateCcw,
   ShieldAlert,
   Bell,
+  Copy,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
+
+// ✅ Componente para Scroll por Arrastre (Mouse/Touch) sem barra visível
+const DraggableScroll = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [isDown, setIsDown] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    setIsDown(true);
+    setStartX(e.pageX - ref.current.offsetLeft);
+    setScrollLeft(ref.current.scrollLeft);
+  };
+
+  const onMouseLeave = () => setIsDown(false);
+  const onMouseUp = () => setIsDown(false);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDown || !ref.current) return;
+    e.preventDefault();
+    const x = e.pageX - ref.current.offsetLeft;
+    const walk = (x - startX) * 2; // velocidade do scroll
+    ref.current.scrollLeft = scrollLeft - walk;
+  };
+
+  return (
+    <div
+      ref={ref}
+      onMouseDown={onMouseDown}
+      onMouseLeave={onMouseLeave}
+      onMouseUp={onMouseUp}
+      onMouseMove={onMouseMove}
+      className={`flex gap-2 overflow-x-auto no-scrollbar pb-1 snap-x scroll-smooth items-center rounded-xl p-1 cursor-grab active:cursor-grabbing ${className}`}
+      style={{ WebkitOverflowScrolling: "touch" }}
+    >
+      {children}
+    </div>
+  );
+};
 
 const CURRENCY = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const ORANGE = "rgba(255,122,0,1)"; // ✅ sem azul
@@ -93,6 +136,8 @@ export default function Budgets() {
   const [newOpen, setNewOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [reminderConfigOpen, setReminderConfigOpen] = useState(false);
+  const [shareData, setShareData] = useState<{ budget: BudgetRow; message: string } | null>(null);
+  const [sharing, setSharing] = useState<string | null>(null);
   
   // Hard delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -239,6 +284,7 @@ export default function Budgets() {
   };
 
   const handleShare = async (r: BudgetRow) => {
+    setSharing(r.id);
     try {
       const { data: fullBudget } = await supabase
         .from("budgets")
@@ -265,9 +311,12 @@ export default function Budgets() {
         items,
       });
 
-      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+      setShareData({ budget: r, message: msg });
     } catch (e) {
       console.error(e);
+      alert("Erro ao preparar compartilhamento.");
+    } finally {
+      setSharing(null);
     }
   };
 
@@ -329,17 +378,7 @@ export default function Budgets() {
       }
     >
       {/* ✅ Tabs + Busca */}
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          overflowX: "auto",
-          paddingBottom: 6,
-          marginBottom: 16,
-          scrollbarWidth: "none",
-        }}
-        className="no-scrollbar"
-      >
+      <DraggableScroll className="mb-4">
         {[
           "AGUARDANDO",
           "APROVADO",
@@ -393,7 +432,7 @@ export default function Budgets() {
         >
           LIXEIRA
         </button>
-      </div>
+      </DraggableScroll>
 
       <div style={{ marginBottom: 20 }}>
         <input
@@ -474,7 +513,7 @@ export default function Budgets() {
                   {/* cápsulas de status */}
                   <div>
                     {tab !== "LIXEIRA" ? (
-                      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 snap-x scroll-smooth items-center rounded-xl p-1">
+                      <DraggableScroll>
                         {sortedOptions.map((opt) => {
                           const isActive = currentStatus === opt.value;
                           const activeCls = pillClass(opt.value);
@@ -496,7 +535,7 @@ export default function Budgets() {
                             </button>
                           );
                         })}
-                      </div>
+                      </DraggableScroll>
                     ) : (
                       <div className="w-full bg-red-500/10 border border-red-500/20 rounded-xl p-2 text-center">
                         <span className="text-xs font-extrabold text-red-400 uppercase tracking-widest">Na Lixeira</span>
@@ -512,8 +551,18 @@ export default function Budgets() {
                           <Pencil size={16} />
                         </button>
 
-                        <button className={iconBtn("green")} title="WhatsApp" onClick={() => handleShare(r)} type="button">
-                          <Share2 size={16} />
+                        <button 
+                          className={iconBtn("green")} 
+                          title="Compartilhar" 
+                          onClick={() => handleShare(r)} 
+                          type="button"
+                          disabled={sharing === r.id}
+                        >
+                          {sharing === r.id ? (
+                            <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Share2 size={16} />
+                          )}
                         </button>
 
                         <button className={iconBtn("neutral")} title="PDF" onClick={() => handlePdf(r.id, r.tenant_id)} type="button">
@@ -574,6 +623,85 @@ export default function Budgets() {
         open={reminderConfigOpen} 
         onClose={() => setReminderConfigOpen(false)} 
       />
+
+      {/* Share Options Modal */}
+      {shareData && (
+        <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setShareData(null)}>
+          <div className="bg-slate-900 border border-white/10 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Share2 size={20} className="text-[var(--gm-primary)]" />
+                Compartilhar Orçamento
+              </h3>
+              
+              <div className="grid grid-cols-1 gap-3">
+                <button 
+                  onClick={() => {
+                    window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
+                    setShareData(null);
+                  }}
+                  className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 text-green-400 transition-all font-bold"
+                >
+                  <MessageCircle size={20} /> WhatsApp
+                </button>
+
+                <button 
+                  onClick={() => {
+                    window.open(`mailto:?subject=Orçamento - ${shareData.budget.client_name}&body=${encodeURIComponent(shareData.message)}`, "_blank");
+                    setShareData(null);
+                  }}
+                  className="flex items-center gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-400 transition-all font-bold"
+                >
+                  <Mail size={20} /> E-mail
+                </button>
+
+                <button 
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(shareData.message);
+                      alert("Texto copiado para a área de transferência!");
+                      setShareData(null);
+                    } catch (err) {
+                      alert("Erro ao copiar texto.");
+                    }
+                  }}
+                  className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white transition-all font-bold"
+                >
+                  <Copy size={20} /> Copiar Texto
+                </button>
+
+                {navigator.share && (
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await navigator.share({
+                          title: `Orçamento - ${shareData.budget.client_name}`,
+                          text: shareData.message,
+                        });
+                        setShareData(null);
+                      } catch (err) {
+                        if ((err as Error).name !== 'AbortError') {
+                          alert("Erro ao compartilhar.");
+                        }
+                      }
+                    }}
+                    className="flex items-center gap-3 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 text-orange-400 transition-all font-bold"
+                  >
+                    <Share2 size={20} /> Outras Opções (Sistema)
+                  </button>
+                )}
+              </div>
+
+              <button 
+                onClick={() => setShareData(null)}
+                className="w-full mt-6 py-3 text-slate-400 font-medium hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hard Delete Confirmation Modal */}
       {deleteConfirmId && (

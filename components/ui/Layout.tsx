@@ -249,12 +249,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       <div className="fixed top-0 left-0 right-0 h-16 z-50 flex md:hidden items-center justify-between px-4 bg-[#0b1220]/60 backdrop-blur-2xl border-b border-white/5 shadow-sm">
         <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center shrink-0">
-              <div className="gm-neon-glow w-10 h-10"></div>
-              <div className="gm-neon-box w-9 h-9 rounded-xl">
+              <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
                 <img 
                   src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                   alt="Logo" 
-                  className="gm-neon-logo"
+                  className="w-full h-full object-cover"
                 />
               </div>
             </div>
@@ -278,12 +277,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         {!collapsed && (
           <div className="flex items-center gap-3 px-2 py-1 mb-2">
              <div className="relative flex items-center justify-center shrink-0">
-                <div className="gm-neon-glow w-10 h-10"></div>
-                <div className="gm-neon-box w-9 h-9 rounded-xl">
+                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
                   <img 
                     src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                     alt="Logo" 
-                    className="gm-neon-logo"
+                    className="w-full h-full object-cover"
                   />
                 </div>
               </div>

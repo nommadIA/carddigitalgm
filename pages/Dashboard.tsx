@@ -51,12 +51,14 @@ const Dashboard = () => {
   const [branding, setBranding] = useState<AppSettings | null>(null);
 
   const [stats, setStats] = useState({
-    faturamento: 0,
-    clientes: 0,
-    projetos: 0,
+    faturamentoMensal: 0,
+    clientesTotal: 0,
+    projetosAndamentoMensal: 0,
     fila: 0,
     fazendo: 0,
-    pronto: 0
+    pronto: 0,
+    faturamentoTotal: 0,
+    projetosConcluidosTotal: 0
   });
 
   useEffect(() => {
@@ -79,7 +81,10 @@ const Dashboard = () => {
         .is('deleted_at', null);
 
       if (budgets) {
-        const faturamento = budgets.reduce(
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        const faturamentoTotal = budgets.reduce(
           (acc: number, item: any) =>
             (item.status === "CONCLUIDO") 
               ? acc + Number(item.total_amount || item.total || 0) 
@@ -87,13 +92,36 @@ const Dashboard = () => {
           0
         );
 
+        const faturamentoMensal = budgets.reduce(
+          (acc: number, item: any) => {
+            const createdAt = new Date(item.created_at);
+            return (item.status === "CONCLUIDO" && createdAt >= startOfMonth)
+              ? acc + Number(item.total_amount || item.total || 0)
+              : acc;
+          },
+          0
+        );
+
+        const projetosAndamentoMensal = budgets.filter((b: any) => {
+          const createdAt = new Date(b.created_at);
+          const isCurrentMonth = createdAt >= startOfMonth;
+          const isActive = !["CONCLUIDO", "CANCELADO", "PRONTO"].includes((b.status || '').toUpperCase());
+          return isCurrentMonth && isActive;
+        }).length;
+
+        const projetosConcluidosTotal = budgets.filter((b: any) => 
+          ["CONCLUIDO", "PRONTO"].includes((b.status || '').toUpperCase())
+        ).length;
+
         setStats({
-          faturamento,
-          clientes: clients?.length || 0,
-          projetos: budgets.length,
+          faturamentoMensal,
+          clientesTotal: clients?.length || 0,
+          projetosAndamentoMensal,
           fila: budgets.filter((b: any) => ["AGUARDANDO"].includes((b.status||'').toUpperCase())).length,
           fazendo: budgets.filter((b: any) => ["APROVADO", "PRODUCAO", "FAZENDO"].includes((b.status||'').toUpperCase())).length,
-          pronto: budgets.filter((b: any) => ["CONCLUIDO", "PRONTO"].includes((b.status||'').toUpperCase())).length
+          pronto: budgets.filter((b: any) => ["CONCLUIDO", "PRONTO"].includes((b.status||'').toUpperCase())).length,
+          faturamentoTotal,
+          projetosConcluidosTotal
         });
       }
 
@@ -113,16 +141,15 @@ const Dashboard = () => {
     );
   }
 
-  // ✅ Custom Header com Logo
+  // ✅ Custom Header com Logo (Clean - Sem Neon)
   const headerContent = (
     <div className="flex items-center gap-4">
       <div className="relative flex items-center justify-center shrink-0">
-        <div className="gm-neon-glow w-16 h-16"></div>
-        <div className="gm-neon-box w-14 h-14 rounded-2xl">
+        <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
           <img 
             src={branding?.company_logo_url || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"} 
             alt="Logo da Empresa" 
-            className="gm-neon-logo"
+            className="w-full h-full object-cover"
           />
         </div>
       </div>
@@ -171,11 +198,11 @@ const Dashboard = () => {
                    <h3 className="text-slate-400 text-[11px] font-bold uppercase tracking-wider truncate">Faturamento Estimado</h3>
                    <div className="font-extrabold text-2xl text-[var(--gm-primary)] tracking-tight truncate">
                       <CountUp 
-                        value={stats.faturamento} 
+                        value={stats.faturamentoMensal} 
                         format={(n)=> n.toLocaleString("pt-BR",{style:"currency",currency:"BRL", maximumFractionDigits: 2, minimumFractionDigits: 2})} 
                       />
                    </div>
-                   <p className="text-[10px] text-slate-500 font-medium truncate">Total acumulado (Concluídos)</p>
+                   <p className="text-[10px] text-slate-500 font-medium truncate">Mês em andamento (Concluídos)</p>
                  </div>
 
                  <div className="w-12 h-12 flex items-center justify-center bg-[var(--gm-primary)]/10 rounded-2xl text-[var(--gm-primary)] border border-[var(--gm-primary)]/20 shrink-0">
@@ -192,7 +219,7 @@ const Dashboard = () => {
                  <div className="flex flex-col gap-1 min-w-0">
                    <h3 className="text-slate-400 text-[11px] font-bold uppercase tracking-wider truncate">Clientes Ativos</h3>
                    <div className="font-extrabold text-2xl text-orange-400 tracking-tight truncate">
-                      <CountUp value={stats.clientes} format={(n) => Math.floor(n).toString()} />
+                      <CountUp value={stats.clientesTotal} format={(n) => Math.floor(n).toString()} />
                    </div>
                    <p className="text-[10px] text-slate-500 font-medium truncate">Base total de cadastros</p>
                  </div>
@@ -211,9 +238,9 @@ const Dashboard = () => {
                  <div className="flex flex-col gap-1 min-w-0">
                    <h3 className="text-slate-400 text-[11px] font-bold uppercase tracking-wider truncate">Projetos em Andamento</h3>
                    <div className="font-extrabold text-2xl text-orange-200 tracking-tight truncate">
-                      <CountUp value={stats.projetos} format={(n) => Math.floor(n).toString()} />
+                      <CountUp value={stats.projetosAndamentoMensal} format={(n) => Math.floor(n).toString()} />
                    </div>
-                   <p className="text-[10px] text-slate-500 font-medium truncate">Total de orçamentos</p>
+                   <p className="text-[10px] text-slate-500 font-medium truncate">Projetos ativos do mês</p>
                  </div>
 
                  <div className="w-12 h-12 flex items-center justify-center bg-orange-200/10 rounded-2xl text-orange-200 border border-orange-200/20 shrink-0">
@@ -378,6 +405,70 @@ const Dashboard = () => {
                 </Link>
               </motion.div>
            </div>
+        </div>
+
+        {/* 
+            ==================================================
+            4) RESUMO TOTAL (NOVO)
+            ==================================================
+        */}
+        <div className="mt-12 mb-6">
+           <h2 className="text-lg font-bold mb-4 px-1">Resumo Total</h2>
+           <Grid cols={3} className="gap-4">
+              {/* FATURAMENTO TOTAL */}
+              <motion.div variants={itemVariants}>
+                <Card className="hover:border-[var(--gm-primary)] transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full bg-slate-900/40 border-white/5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest truncate">Faturamento Total</h3>
+                      <div className="text-xl font-black text-white truncate">
+                        {stats.faturamentoTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      </div>
+                      <p className="text-[9px] text-slate-600 mt-1 truncate">Histórico completo acumulado</p>
+                    </div>
+                    <div className="w-10 h-10 flex items-center justify-center bg-[var(--gm-primary)]/10 rounded-xl text-[var(--gm-primary)] border border-[var(--gm-primary)]/20 shrink-0">
+                      <Wallet size={20} />
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+
+              {/* TOTAL CLIENTES */}
+              <motion.div variants={itemVariants}>
+                <Card className="hover:border-orange-400 transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full bg-slate-900/40 border-white/5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest truncate">Total Clientes</h3>
+                      <div className="text-xl font-black text-white truncate">
+                        {stats.clientesTotal}
+                      </div>
+                      <p className="text-[9px] text-slate-600 mt-1 truncate">Contatos ativos na base</p>
+                    </div>
+                    <div className="w-10 h-10 flex items-center justify-center bg-orange-400/10 rounded-xl text-orange-400 border border-orange-400/20 shrink-0">
+                      <Users size={20} />
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+
+              {/* PROJETOS CONCLUÍDOS */}
+              <motion.div variants={itemVariants}>
+                <Card className="hover:border-green-500 transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full bg-slate-900/40 border-white/5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest truncate">Projetos Concluídos</h3>
+                      <div className="text-xl font-black text-white truncate">
+                        {stats.projetosConcluidosTotal}
+                      </div>
+                      <p className="text-[9px] text-slate-600 mt-1 truncate">Total de entregas realizadas</p>
+                    </div>
+                    <div className="w-10 h-10 flex items-center justify-center bg-green-500/10 rounded-xl text-green-500 border border-green-500/20 shrink-0">
+                      <CheckCircle2 size={20} />
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+           </Grid>
         </div>
       </motion.div>
     </Page>

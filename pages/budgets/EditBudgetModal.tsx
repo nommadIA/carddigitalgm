@@ -46,7 +46,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
   const [title, setTitle] = useState<string>("");
   const [status, setStatus] = useState<BudgetStatus>("AGUARDANDO");
   const [deliveryDays, setDeliveryDays] = useState<string>("5");
-  const [discount, setDiscount] = useState<string>("0");
+  const [discountAmount, setDiscountAmount] = useState<string>("0");
   const [budgetType, setBudgetType] = useState<BudgetKind>("agency");
   const [items, setItems] = useState<BudgetItemDraft[]>([]);
   const [settings, setSettings] = useState<any>(null);
@@ -63,10 +63,8 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
     }, 0);
   }, [items, budgetType]);
 
-  const discountValue = useMemo(() => {
-    const rate = toNumber(discount) / 100;
-    return subtotal * rate;
-  }, [subtotal, discount]);
+  const discountValue = useMemo(() => toNumber(discountAmount), [discountAmount]);
+  const discountPercentage = useMemo(() => (subtotal > 0 ? (discountValue / subtotal) * 100 : 0), [subtotal, discountValue]);
 
   const total = useMemo(() => Math.max(0, subtotal - discountValue), [subtotal, discountValue]);
 
@@ -124,8 +122,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
         setDeliveryDays(String(data.delivery_days ?? 5));
         
         const loadedDiscountAmount = Number(data.discount ?? 0);
-        const loadedSubtotal = Number(data.subtotal ?? 0);
-        setDiscount(loadedSubtotal > 0 ? String((loadedDiscountAmount / loadedSubtotal) * 100) : "0");
+        setDiscountAmount(String(loadedDiscountAmount));
 
         // tipo (agency/print)
         const kind = (data.type || "agency") as BudgetKind;
@@ -327,15 +324,19 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Desconto (%)</label>
-                                <input
-                                    value={discount}
-                                    onChange={(e) => setDiscount(e.target.value)}
-                                    type="number"
-                                    min={0}
-                                    max={100}
-                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
-                                />
+                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Desconto (R$)</label>
+                                <div className="relative">
+                                    <input
+                                        value={discountAmount}
+                                        onChange={(e) => setDiscountAmount(e.target.value)}
+                                        type="number"
+                                        min={0}
+                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors pr-12"
+                                    />
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                                        {discountPercentage.toFixed(1)}%
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -350,7 +351,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
 
                             {discountValue > 0 && (
                                 <div className="flex justify-between text-sm text-green-400">
-                                    <span>Desconto ({discount}%)</span>
+                                    <span>Desconto ({discountPercentage.toFixed(1)}%)</span>
                                     <b className="font-medium">
                                         -{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(discountValue)}
                                     </b>

@@ -286,9 +286,9 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
             </button>
           </div>
 
-          <div style={body}>
+          <div className="p-0 md:p-[0_18px_18px_18px]">
             <div style={card}>
-              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 12 }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <div style={label}>Nome</div>
                   <input
@@ -312,7 +312,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                 <div>
                   <div style={label}>Telefone (opcional)</div>
                   <input
@@ -336,7 +336,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                 <div>
                   <div style={label}>CPF/CNPJ (opcional)</div>
                   <input
