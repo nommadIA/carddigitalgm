@@ -154,19 +154,26 @@ function sanitizeFilename(str: string) {
 }
 
 function wrapText(text: string, maxWidth: number, font: PDFFont, size: number) {
-  const words = (text || "").split(/\s+/).filter(Boolean);
   const lines: string[] = [];
-  let line = "";
-  for (const w of words) {
-    const test = line ? `${line} ${w}` : w;
-    const width = font.widthOfTextAtSize(test, size);
-    if (width <= maxWidth) line = test;
-    else {
-      if (line) lines.push(line);
-      line = w;
+  const paragraphs = (text || "").split(/\r?\n/);
+  for (const para of paragraphs) {
+    const words = para.split(/\s+/).filter(Boolean);
+    if (words.length === 0) {
+      lines.push("");
+      continue;
     }
+    let line = "";
+    for (const w of words) {
+      const test = line ? `${line} ${w}` : w;
+      const width = font.widthOfTextAtSize(test, size);
+      if (width <= maxWidth) line = test;
+      else {
+        if (line) lines.push(line);
+        line = w;
+      }
+    }
+    if (line) lines.push(line);
   }
-  if (line) lines.push(line);
   return lines;
 }
 
@@ -269,32 +276,38 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
 
     for (const it of itens) {
       let desc = it.titulo;
-      if (it.isPrint && it.width && it.height) {
-        const area = (it.width * it.height) / 10000;
-        desc += ` (${it.width}x${it.height}cm - ${area.toFixed(2)}m²)`;
-      }
 
       let totalItem = 0;
+      let areaStr = "";
       if (it.isPrint && it.width && it.height) {
         const area = (it.width * it.height) / 10000;
         totalItem = area * it.valor_unit * it.qtd;
+        areaStr = `Medidas: ${it.width}x${it.height}cm | Área: ${area.toFixed(2)}m²`;
       } else {
         totalItem = it.qtd * it.valor_unit;
       }
 
-      const size = 9.5;
+      const size = 10;
       const lines = wrapText(desc, colDescW, fontRegular, size);
-      const blockH = Math.max(18, lines.length * 12);
+      
+      const detailsLine = `Qtd: ${it.qtd}  |  V. Unit: ${CURRENCY_FORMATTER.format(it.valor_unit)}${areaStr ? `  |  ${areaStr}` : ""}`;
+      
+      const blockH = (lines.length * 14) + 16;
 
-      checkSpace(blockH + 10);
+      checkSpace(blockH + 15);
 
       let yText = cursorY;
-      for (const line of lines) {
-        drawLeft(line, size, yText, false, cText);
-        yText -= 12;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const isFirstLine = i === 0;
+        drawLeft(line, isFirstLine ? 10.5 : 9.5, yText, isFirstLine, cText);
+        yText -= isFirstLine ? 14 : 12;
       }
 
-      drawRight(CURRENCY_FORMATTER.format(totalItem), size, cursorY, true, cText);
+      yText -= 2;
+      drawLeft(detailsLine, 8.5, yText, false, cGray);
+
+      drawRight(CURRENCY_FORMATTER.format(totalItem), 11, cursorY, true, cText);
 
       cursorY -= blockH;
       hr(cursorY + 6);

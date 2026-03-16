@@ -59,7 +59,8 @@ export const addAlarmsForBudget = (
   budgetId: string,
   clientName: string,
   times: string[],
-  type: "BUDGET" | "EXPENSE" = "BUDGET"
+  type: "BUDGET" | "EXPENSE" = "BUDGET",
+  deliveryDays?: number
 ) => {
   const current = getAlarms();
   // Remove alarmes antigos deste item se existirem
@@ -73,6 +74,7 @@ export const addAlarmsForBudget = (
     active: true,
     triggered: false, // compat
     type,
+    deliveryDays,
     lastTriggeredOn: null as any, // compat (se types ainda não tinha)
   }));
 
@@ -86,9 +88,9 @@ export const removeAlarmsForBudget = (budgetId: string) => {
 };
 
 // ✅ NOVO: chamado quando status vira APROVADO
-export const scheduleApprovedBudgetReminders = (budgetId: string, clientName: string) => {
+export const scheduleApprovedBudgetReminders = (budgetId: string, clientName: string, deliveryDays?: number) => {
   const times = getBudgetReminderTimes();
-  addAlarmsForBudget(budgetId, clientName, times, "BUDGET");
+  addAlarmsForBudget(budgetId, clientName, times, "BUDGET", deliveryDays);
 };
 
 // ✅ NOVO: Sincroniza todos os alarmes de orçamento existentes com os novos horários globais
@@ -101,26 +103,79 @@ export const syncAllBudgetAlarms = () => {
   const times = getBudgetReminderTimes();
   const nonBudgetAlarms = currentAlarms.filter(a => a.type !== "BUDGET");
   
-  // Agrupa por budgetId para saber quais clientes temos
-  const budgetGroups = new Map<string, string>();
+  // Agrupa por budgetId para saber quais clientes temos e os dias de entrega
+  const budgetGroups = new Map<string, { clientName: string, deliveryDays?: number }>();
   budgetAlarms.forEach(a => {
-    budgetGroups.set(a.budgetId, a.clientName);
+    budgetGroups.set(a.budgetId, { clientName: a.clientName, deliveryDays: a.deliveryDays });
   });
 
   const newAlarms: BudgetAlarm[] = [];
-  budgetGroups.forEach((clientName, budgetId) => {
+  budgetGroups.forEach((data, budgetId) => {
     times.forEach(time => {
       newAlarms.push({
         id: crypto.randomUUID(),
         budgetId,
-        clientName,
+        clientName: data.clientName,
         time,
         active: true,
         triggered: false,
         type: "BUDGET",
+        deliveryDays: data.deliveryDays,
         lastTriggeredOn: null as any,
       });
     });
+  });
+
+  saveAlarms([...nonBudgetAlarms, ...newAlarms]);
+};
+
+// ✅ NOVO: Sincroniza alarmes com a lista real de orçamentos do banco de dados
+export const syncAlarmsWithBudgets = (budgets: any[]) => {
+  const currentAlarms = getAlarms();
+  const nonBudgetAlarms = currentAlarms.filter(a => a.type !== "BUDGET");
+  const budgetAlarms = currentAlarms.filter(a => a.type === "BUDGET");
+
+  // Create a map of existing alarms by budgetId + time to preserve state
+  const existingAlarmsMap = new Map<string, BudgetAlarm>();
+  budgetAlarms.forEach(a => {
+    existingAlarmsMap.set(`${a.budgetId}_${a.time}`, a);
+  });
+
+  const times = getBudgetReminderTimes();
+  const newAlarms: BudgetAlarm[] = [];
+
+  budgets.forEach(budget => {
+    const rawStatus = (budget.status || "AGUARDANDO").toString().toUpperCase().trim();
+    let normStatus = rawStatus;
+    if (rawStatus.includes("CONCL")) normStatus = "CONCLUIDO";
+    else if (rawStatus.includes("APROV")) normStatus = "APROVADO";
+    else if (rawStatus.includes("CANC")) normStatus = "CANCELADO";
+    else if (rawStatus.includes("AGUAR")) normStatus = "AGUARDANDO";
+    else if (rawStatus.includes("PROD") || rawStatus.includes("FAZ") || rawStatus.includes("EM ")) normStatus = "PRODUCAO";
+
+    const isApprovedOrProd = normStatus === "APROVADO" || normStatus === "PRODUCAO";
+    
+    if (isApprovedOrProd && !budget.deleted_at) {
+      // Check if the user has disabled alarms for this budget entirely
+      const existingForBudget = budgetAlarms.filter(a => a.budgetId === budget.id);
+      const isManuallyDisabled = existingForBudget.length > 0 && existingForBudget.some(a => !a.active);
+
+      times.forEach(time => {
+        const existing = existingAlarmsMap.get(`${budget.id}_${time}`);
+        
+        newAlarms.push({
+          id: existing ? existing.id : crypto.randomUUID(),
+          budgetId: budget.id,
+          clientName: budget.client_name || "Cliente",
+          time,
+          active: existing ? existing.active : !isManuallyDisabled,
+          triggered: existing ? existing.triggered : false,
+          type: "BUDGET",
+          deliveryDays: budget.delivery_days || 5,
+          lastTriggeredOn: existing ? existing.lastTriggeredOn : null as any,
+        });
+      });
+    }
   });
 
   saveAlarms([...nonBudgetAlarms, ...newAlarms]);

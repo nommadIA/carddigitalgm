@@ -116,6 +116,7 @@ export interface BudgetAlarm {
   clientName: string;
   time: string;
   active: boolean;
+  deliveryDays?: number;
 
   // compat antigo
   triggered: boolean;

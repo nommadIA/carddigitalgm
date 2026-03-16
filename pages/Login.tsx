@@ -138,7 +138,7 @@ export default function Login() {
 
             <button
               type="submit"
-              className="gm-btn w-full h-14 rounded-2xl font-bold"
+              className="gm-btn w-full h-14"
               disabled={!canSubmit || isLoading}
             >
               {isLoading ? (

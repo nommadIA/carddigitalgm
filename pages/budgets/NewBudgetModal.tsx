@@ -662,7 +662,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
               className="group relative p-6 rounded-2xl border border-white/10 bg-white/5 hover:bg-[var(--gm-primary)]/10 hover:border-[var(--gm-primary)]/50 transition-all text-left flex flex-col gap-4"
               onClick={() => applyTemplate("agency")}
             >
-              <div className="w-14 h-14 rounded-xl bg-orange-500/20 text-orange-500 flex items-center justify-center border border-orange-500/20 group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/20 group-hover:scale-110 transition-transform">
                 <Palette size={28} />
               </div>
               <div>
@@ -676,14 +676,14 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             </button>
 
             <button
-              className="group relative p-6 rounded-2xl border border-white/10 bg-white/5 hover:bg-orange-500/10 hover:border-orange-500/50 transition-all text-left flex flex-col gap-4"
+              className="group relative p-6 rounded-2xl border border-white/10 bg-white/5 hover:bg-[var(--gm-accent)]/10 hover:border-[var(--gm-accent)]/50 transition-all text-left flex flex-col gap-4"
               onClick={() => applyTemplate("print")}
             >
-              <div className="w-14 h-14 rounded-xl bg-orange-500/20 text-orange-500 flex items-center justify-center border border-orange-500/20 group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 rounded-xl bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] flex items-center justify-center border border-[var(--gm-accent)]/20 group-hover:scale-110 transition-transform">
                 <Printer size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-orange-400">
+                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-accent)]">
                   Impressão & Gráfica
                 </h3>
                 <p className="text-sm text-slate-400 mt-1 leading-relaxed">
@@ -713,8 +713,8 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
                   kind === "agency"
-                    ? "border-orange-500/30 text-orange-400 bg-orange-500/10"
-                    : "border-orange-500/20 text-orange-300 bg-orange-500/5"
+                    ? "border-[var(--gm-primary)]/30 text-[var(--gm-primary)] bg-[var(--gm-primary)]/10"
+                    : "border-[var(--gm-accent)]/30 text-[var(--gm-accent)] bg-[var(--gm-accent)]/10"
                 }`}
               >
                 {kind === "agency" ? "AGÊNCIA" : "IMPRESSÃO"}
@@ -807,7 +807,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             type="button"
                             onClick={() => updateItem(item.id, { isAreaCalc: true })}
                             className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 group ${
-                              item.isAreaCalc ? "bg-orange-500 text-white shadow-md" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                              item.isAreaCalc ? "bg-[var(--gm-primary)] text-white shadow-md" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                             }`}
                           >
                             <Calculator size={14} className={item.isAreaCalc ? "animate-pulse" : "group-hover:rotate-12 transition-transform"} />
@@ -873,7 +873,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                         <button
                           onClick={() => updateItem(item.id, { artworkIncluded: true })}
                           className={`flex-1 h-full rounded text-xs font-bold transition-all ${
-                            item.artworkIncluded ? "bg-orange-500 text-white" : "text-slate-500 hover:text-slate-300"
+                            item.artworkIncluded ? "bg-[var(--gm-accent)] text-white" : "text-slate-500 hover:text-slate-300"
                           }`}
                         >
                           Sim
@@ -1105,7 +1105,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   </div>
                 )}
                 {paymentMethod === "CREDIT" && interestRate > 0 && (
-                  <div className="flex justify-between text-sm text-orange-400">
+                  <div className="flex justify-between text-sm text-[var(--gm-accent)]">
                     <span>Juros ({interestRate}%)</span>
                     <span className="font-medium">+{money(totalFinal - (subtotal - discountAmount))}</span>
                   </div>
@@ -1159,7 +1159,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             <button
               onClick={(e) => { e.stopPropagation(); handleSave(); }}
               disabled={saving}
-              className="px-6 py-3 rounded-xl font-bold text-sm bg-[var(--gm-primary)] text-white shadow-lg shadow-orange-500/20 hover:brightness-110 transition-all flex items-center gap-3 shrink-0"
+              className="px-6 py-3 rounded-xl font-bold text-sm bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20 hover:brightness-110 transition-all flex items-center gap-3 shrink-0"
             >
               {saving ? (
                 "Salvando..."

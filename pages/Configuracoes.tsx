@@ -40,6 +40,7 @@ export default function Configuracoes() {
   const [brandAccent, setBrandAccent] = useState("#ff9a1a");
   const [brandBg, setBrandBg] = useState("#0f1117");
   const [fontFamily, setFontFamily] = useState("Inter");
+  const [buttonStyle, setButtonStyle] = useState("solid");
 
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -85,6 +86,7 @@ export default function Configuracoes() {
         setBrandAccent(s.brand_accent || "#ff9a1a");
         setBrandBg(s.brand_bg || "#0f1117");
         setFontFamily(s.font_family || "Inter");
+        setButtonStyle(s.button_style || localStorage.getItem("gm_button_style_fallback") || "solid");
 
         setCompanyLogoUrl(s.company_logo_url || null);
         setAvatarUrl(s.avatar_url || null);
@@ -189,6 +191,7 @@ export default function Configuracoes() {
         app_background_pos_x: `${bgPosX}%`,
         app_background_pos_y: `${bgPosY}%`,
 
+        button_style: buttonStyle,
         theme_presets: presets,
       });
 
@@ -308,6 +311,32 @@ export default function Configuracoes() {
     setFontFamily(p.font_family);
   }
 
+  const PRESET_THEMES = [
+    { name: "Sunset Orange", primary: "#ff7b00", accent: "#ff9a1a", bg: "#0f1117", foreground: "#ffffff" },
+    { name: "Cyber Emerald", primary: "#00FF91", accent: "#00FF55", bg: "#0A110E", foreground: "#00331d" },
+    { name: "Electric Violet", primary: "#8B5CF6", accent: "#C084FC", bg: "#0F0E17", foreground: "#ffffff" },
+    { name: "Deep Sea Cyan", primary: "#00D1FF", accent: "#00F0FF", bg: "#0B1215", foreground: "#003540" },
+    { name: "Royal Gold", primary: "#FFB800", accent: "#FFD600", bg: "#12110A", foreground: "#332500" },
+    { name: "Crimson Red", primary: "#EF4444", accent: "#F87171", bg: "#110A0A", foreground: "#ffffff" },
+    { name: "Midnight Blue", primary: "#3B82F6", accent: "#60A5FA", bg: "#0A0D14", foreground: "#ffffff" },
+    { name: "Rose Quartz", primary: "#EC4899", accent: "#F472B6", bg: "#140A0F", foreground: "#ffffff" },
+    { name: "Arctic Glass", primary: "#F8FAFC", accent: "#CBD5E1", bg: "#0F172A", foreground: "#0f172a" },
+    { name: "Neon Pink", primary: "#FF00E5", accent: "#FF70F0", bg: "#120A14", foreground: "#ffffff" },
+  ];
+
+  const BUTTON_STYLES = [
+    { id: "solid", name: "Preenchido Sólido" },
+    { id: "neon", name: "Neon Frosted" },
+  ];
+
+  const applyTheme = (theme: typeof PRESET_THEMES[0]) => {
+    setBrandPrimary(theme.primary);
+    setBrandAccent(theme.accent);
+    setBrandBg(theme.bg);
+    // Adicionamos o foreground ao root temporariamente para o preview
+    document.documentElement.style.setProperty("--gm-primary-foreground", theme.foreground);
+  };
+
   const ColorPickerInput = ({
     label,
     value,
@@ -361,7 +390,7 @@ export default function Configuracoes() {
             />
           </label>
 
-          <button className="gm-btn gm-border-loop" disabled={!canSave} onClick={handleSave} type="button">
+          <button className="gm-btn" disabled={!canSave} onClick={handleSave} type="button">
             <Save size={16} />
             {saving ? "Salvando..." : "Salvar Alterações"}
           </button>
@@ -426,7 +455,7 @@ export default function Configuracoes() {
 
                     <button
                       type="button"
-                      className={`gm-btn ${bgEnabled ? "gm-border-loop" : ""}`}
+                      className={`gm-btn`}
                       onClick={() => {
                         setBgEnabled((v) => {
                           const next = !v;
@@ -588,11 +617,76 @@ export default function Configuracoes() {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <ColorPickerInput label={<><Palette size={14} /> Primária</>} value={brandPrimary} onChange={setBrandPrimary} />
-                <ColorPickerInput label="Destaque" value={brandAccent} onChange={setBrandAccent} />
-                <ColorPickerInput label="Fundo" value={brandBg} onChange={setBrandBg} />
+            <div className="space-y-6">
+              <div>
+                <label className="gm-label mb-3 block">Escolha um Tema Premium (10 Opções)</label>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {PRESET_THEMES.map((t) => {
+                    const isActive = brandPrimary.toLowerCase() === t.primary.toLowerCase();
+                    return (
+                      <button
+                        key={t.name}
+                        type="button"
+                        onClick={() => applyTheme(t)}
+                        className={`group relative flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all duration-300 ${
+                          isActive 
+                            ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)] shadow-[0_0_20px_var(--gm-primary-20)]" 
+                            : "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10"
+                        }`}
+                      >
+                        <div className="flex gap-1">
+                          <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: t.primary }} />
+                          <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: t.accent }} />
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors text-center ${isActive ? "text-[var(--gm-primary)]" : "text-slate-400 group-hover:text-white"}`}>
+                          {t.name}
+                        </span>
+                        {isActive && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--gm-primary)] rounded-full flex items-center justify-center shadow-lg">
+                            <Check size={10} className="text-white" strokeWidth={4} />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="gm-label mb-3 block">Estilo dos Botões (Global)</label>
+                <div className="grid grid-cols-2 gap-4">
+                  {BUTTON_STYLES.map((s) => {
+                    const isActive = buttonStyle === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setButtonStyle(s.id)}
+                        className={`group relative flex flex-col items-center justify-between p-4 rounded-2xl border transition-all duration-300 h-32 ${
+                          isActive 
+                            ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)] shadow-[0_0_20px_var(--gm-primary-20)]" 
+                            : "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10"
+                        }`}
+                      >
+                        <div className={`w-full py-3 text-lg font-bold rounded-xl flex items-center justify-center transition-all duration-300 pointer-events-none ${
+                          s.id === 'solid' 
+                            ? 'bg-[var(--gm-primary)] text-white shadow-none' 
+                            : 'bg-black/40 border border-[var(--gm-primary)] text-white backdrop-blur-md'
+                        }`}>
+                          Preview
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${isActive ? "text-[var(--gm-primary)]" : "text-slate-400 group-hover:text-white"}`}>
+                          {s.name}
+                        </span>
+                        {isActive && (
+                          <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--gm-primary)] rounded-full flex items-center justify-center shadow-lg">
+                            <Check size={14} className="text-white" strokeWidth={4} />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 items-end">
@@ -613,11 +707,13 @@ export default function Configuracoes() {
                 </button>
               </div>
 
-              <div className="rounded-2xl p-4 border border-white/10 bg-white/5">
-                <div className="gm-muted text-sm mb-2">Pré-visualização</div>
-                <div className="flex gap-2">
-                  <button className="gm-btn gm-border-loop" type="button">Botão Primário</button>
-                  <button className="gm-btn" type="button">Botão Secundário</button>
+              <div className="rounded-2xl p-4 border border-white/10 bg-white/5 gm-preview-container" data-button-style={buttonStyle}>
+                <div className="gm-muted text-sm mb-4">Pré-visualização do Estilo Atual</div>
+                <div className="flex flex-wrap gap-3">
+                  <button className="gm-btn" type="button">Botão Primário</button>
+                  <button className="gm-btn gm-btn-outline" type="button">Outline</button>
+                  <button className="gm-btn gm-btn-soft" type="button">Soft</button>
+                  <button className="gm-btn gm-btn-danger" type="button">Danger</button>
                 </div>
               </div>
 
@@ -686,7 +782,7 @@ export default function Configuracoes() {
                       href={TIMBRADO_MODEL_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="gm-btn bg-white/5 border-white/10 hover:bg-white/10 text-slate-300 w-full justify-center"
+                      className="gm-btn gm-btn-soft w-full justify-center"
                       title="Baixar modelo guia para criar seu design"
                     >
                       <Download size={16} />
@@ -800,7 +896,7 @@ export default function Configuracoes() {
                       <>
                         <button
                           type="button"
-                          className={`gm-btn w-full justify-center ${pixCopied ? "gm-border-loop" : ""}`}
+                          className={`gm-btn w-full justify-center`}
                           onClick={async () => {
                             const ok = await copyText(pixPayloadPreview);
                             if (ok) {

@@ -152,7 +152,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={isLoading}
-              className="gm-btn w-full h-14 rounded-2xl font-bold"
+              className="gm-btn w-full h-14"
             >
               {isLoading ? (
                 <span className="inline-flex items-center gap-2">

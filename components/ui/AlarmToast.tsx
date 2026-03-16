@@ -25,8 +25,13 @@ const AlarmToast = () => {
 
         // Notificação do Navegador (se permitido)
         if ("Notification" in window && Notification.permission === "granted") {
-          new Notification(alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : 'Orçamento Aprovado', {
-            body: `Cliente: ${alarm.clientName}\nHorário: ${alarm.time}`,
+          const title = alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : 'Orçamento Aprovado';
+          const body = alarm.type === 'EXPENSE'
+            ? `Cliente: ${alarm.clientName}\nHorário: ${alarm.time}`
+            : `Olá! Orçamento "${alarm.clientName}" em andamento, conclua antes do prazo "${alarm.deliveryDays || 5} dias"`;
+
+          new Notification(title, {
+            body: body,
             icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
             vibrate: [200, 100, 200],
             tag: alarm.id,
@@ -64,17 +69,17 @@ const AlarmToast = () => {
           <div className="flex items-start gap-4">
             {/* Icon hardware style */}
             <div className="h-12 w-12 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center shrink-0 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-orange-500/10 animate-pulse" />
-              <Bell size={20} className="text-orange-400 relative z-10" />
+              <div className="absolute inset-0 bg-[var(--gm-primary)]/10 animate-pulse" />
+              <Bell size={20} className="text-[var(--gm-primary)] relative z-10" />
             </div>
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-[9px] font-mono uppercase tracking-widest text-white/30">
-                  System // Alert
+                  SISTEMA // ALERTA
                 </div>
-                <div className="text-[9px] font-mono text-orange-400 animate-pulse">
-                  Live
+                <div className="text-[9px] font-mono text-[var(--gm-primary)] animate-pulse">
+                  Agora
                 </div>
               </div>
 
@@ -83,14 +88,22 @@ const AlarmToast = () => {
               </div>
 
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-white/40 uppercase">Client</span>
-                  <span className="text-[10px] font-mono text-white truncate max-w-[180px]">{alarm.clientName}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-white/40 uppercase">Timecode</span>
-                  <span className="text-[10px] font-mono text-orange-400/80">{alarm.time}</span>
-                </div>
+                {alarm.type === 'EXPENSE' ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-white/40 uppercase">Cliente</span>
+                      <span className="text-[10px] font-mono text-white truncate max-w-[180px]">{alarm.clientName}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-white/40 uppercase">Horário</span>
+                      <span className="text-[10px] font-mono text-[var(--gm-primary)]/80">{alarm.time}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-[11px] text-white/80 leading-relaxed">
+                    Olá! Orçamento "{alarm.clientName}" em andamento, conclua antes do prazo "{alarm.deliveryDays || 5} dias"
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 mt-4">
@@ -99,14 +112,14 @@ const AlarmToast = () => {
                   onClick={() => dismiss(alarm.id)}
                   type="button"
                 >
-                  Acknowledge
+                  Entendido
                 </button>
 
                 <button
                   className="h-9 px-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400/80 text-[10px] font-bold flex items-center justify-center transition-all"
                   onClick={() => disableReminder(alarm)}
                   type="button"
-                  title="Disable reminders for this budget"
+                  title="Desativar lembretes para este orçamento"
                 >
                   <BellOff size={14} />
                 </button>

@@ -223,7 +223,7 @@ export default function Expenses() {
     <Page
       title="Despesas"
       actions={
-        <button className="gm-btn gm-border-loop" type="button" onClick={handleOpenNew}>
+        <button className="gm-btn" type="button" onClick={handleOpenNew}>
           <Plus size={16} />
           Nova Despesa
         </button>
@@ -267,12 +267,12 @@ export default function Expenses() {
       </Card>
 
       {showForm && (
-        <Card className="mb-6 animate-fade-in border border-orange-500/30 bg-slate-900/60 backdrop-blur-xl relative overflow-hidden">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500" />
+        <Card className="mb-6 animate-fade-in border-[var(--gm-primary)]/30 bg-slate-900/60 backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--gm-primary)]" />
           <div className="pl-3">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                {editingId ? <Pencil size={18} className="text-orange-500" /> : <Plus size={18} className="text-green-500" />}
+                {editingId ? <Pencil size={18} className="text-[var(--gm-primary)]" /> : <Plus size={18} className="text-[var(--gm-accent)]" />}
                 {editingId ? "Editar Despesa" : "Nova Despesa"}
               </h3>
               <button
@@ -320,7 +320,7 @@ export default function Expenses() {
               </div>
 
               <div className="flex gap-2 flex-wrap">
-                <button className="gm-btn gm-btn-primary" type="submit">
+                <button className="gm-btn" type="submit">
                   <Save size={16} />
                   Salvar
                 </button>
@@ -345,45 +345,48 @@ export default function Expenses() {
         ) : (
           <div className="divide-y divide-white/10">
             {expenses.map((e) => (
-              <div key={e.id} className="p-4 flex items-center justify-between gap-4 flex-wrap">
-                <div className="min-w-[240px]">
-                  <div className="font-bold">{e.description}</div>
-                  <div className="text-xs opacity-60">
+              <div key={e.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="font-bold text-slate-100">{e.description}</div>
+                  <div className="text-xs text-slate-400 flex items-center gap-1 mt-1">
+                    <Calendar size={12} />
                     {e.dueDate ? new Date(e.dueDate).toLocaleDateString("pt-BR") : "-"}
                   </div>
                 </div>
 
-                <div className={`font-extrabold ${e.paid ? "text-green-500" : "text-orange-400"}`}>
-                  {CURRENCY_FORMATTER.format(e.amount)}
-                </div>
+                <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                  <div className={`text-lg font-extrabold ${e.paid ? "text-[var(--gm-accent)]" : "text-[var(--gm-primary)]"}`}>
+                    {CURRENCY_FORMATTER.format(e.amount)}
+                  </div>
 
-                <div className="flex gap-2">
-                  <button className="gm-btn gm-btn-outline text-sm" onClick={() => handleEdit(e)} title="Editar">
-                    <Pencil size={16} />
-                  </button>
-
-                  {tab === "active" ? (
-                    <button
-                      className="gm-btn gm-btn-outline text-sm"
-                      onClick={() => softDeleteExpense(e.id)}
-                      title="Mover para lixeira"
-                    >
-                      <Trash2 size={16} />
+                  <div className="flex gap-2">
+                    <button className="gm-btn gm-btn-icon gm-btn-soft" onClick={() => handleEdit(e)} title="Editar">
+                      <Pencil size={16} />
                     </button>
-                  ) : (
-                    <>
-                      <button className="gm-btn gm-btn-outline text-sm" onClick={() => restoreExpense(e.id)} title="Restaurar">
-                        <RotateCcw size={16} />
-                      </button>
+
+                    {tab === "active" ? (
                       <button
-                        className="gm-btn gm-btn-outline text-sm"
-                        onClick={() => confirmHardDelete(e.id)}
-                        title="Excluir definitivo"
+                        className="gm-btn gm-btn-icon gm-btn-danger"
+                        onClick={() => softDeleteExpense(e.id)}
+                        title="Mover para lixeira"
                       >
                         <Trash2 size={16} />
                       </button>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <button className="gm-btn gm-btn-icon gm-btn-soft" onClick={() => restoreExpense(e.id)} title="Restaurar">
+                          <RotateCcw size={16} />
+                        </button>
+                        <button
+                          className="gm-btn gm-btn-icon gm-btn-danger"
+                          onClick={() => confirmHardDelete(e.id)}
+                          title="Excluir definitivo"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -400,7 +403,7 @@ export default function Expenses() {
               <button className="gm-btn gm-btn-outline" onClick={() => setDeleteConfirmId(null)}>
                 Cancelar
               </button>
-              <button className="gm-btn gm-btn-primary" onClick={hardDelete}>
+              <button className="gm-btn" onClick={hardDelete}>
                 Excluir
               </button>
             </div>

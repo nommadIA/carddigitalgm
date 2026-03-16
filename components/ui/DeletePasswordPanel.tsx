@@ -76,7 +76,7 @@ export default function DeletePasswordPanel() {
         <div className="bg-slate-900/50 border border-slate-700/50 p-6 rounded-2xl flex flex-col justify-between">
             <div>
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500 border border-blue-500/20">
+                    <div className="p-2 bg-[var(--gm-primary)]/10 rounded-lg text-[var(--gm-primary)] border border-[var(--gm-primary)]/20">
                         <Lock size={20} />
                     </div>
                     <div>
@@ -144,7 +144,7 @@ export default function DeletePasswordPanel() {
                     </div>
 
                     <div className="p-6 space-y-4">
-                         <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-sm text-blue-200">
+                         <div className="p-3 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-xl text-sm text-[var(--gm-primary)]">
                             Essa senha será solicitada sempre que você tentar excluir algo <strong>definitivamente</strong>.
                         </div>
 
@@ -155,14 +155,14 @@ export default function DeletePasswordPanel() {
                                 onChange={(e) => setNewPass(e.target.value)}
                                 placeholder="Nova senha (mín. 6)"
                                 autoFocus
-                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none"
+                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-[var(--gm-primary)] outline-none"
                             />
                              <input
                                 type="password"
                                 value={confirmPass}
                                 onChange={(e) => setConfirmPass(e.target.value)}
                                 placeholder="Confirmar nova senha"
-                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none"
+                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-[var(--gm-primary)] outline-none"
                             />
                         </div>
 
@@ -177,7 +177,7 @@ export default function DeletePasswordPanel() {
                              <button
                                 onClick={handleSavePass}
                                 disabled={!canSavePass}
-                                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="flex-1 py-3 bg-[var(--gm-primary)] hover:brightness-110 text-white font-bold rounded-xl shadow-lg shadow-[var(--gm-primary)]/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                              >
                                 {loadingPass ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                                 Salvar

@@ -12,10 +12,10 @@ const LABEL: Record<BudgetStatus, string> = {
 };
 
 const STYLE: Record<BudgetStatus, string> = {
-  AGUARDANDO: "bg-amber-500/15 text-amber-200 border-amber-500/25 shadow-[0_0_10px_rgba(245,158,11,0.2)]",
-  APROVADO: "bg-emerald-500/15 text-emerald-200 border-emerald-500/25 shadow-[0_0_10px_rgba(16,185,129,0.2)]",
-  PRODUCAO: "bg-orange-500/15 text-orange-200 border-orange-500/25 shadow-[0_0_10px_rgba(249,115,22,0.2)]",
-  CONCLUIDO: "bg-emerald-400/10 text-emerald-100 border-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.2)]",
+  AGUARDANDO: "bg-[var(--gm-accent)]/15 text-[var(--gm-accent)] border-[var(--gm-accent)]/25 shadow-[0_0_10px_rgba(var(--gm-accent-rgb),0.2)]",
+  APROVADO: "bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border-[var(--gm-primary)]/25 shadow-[0_0_10px_rgba(var(--gm-primary-rgb),0.2)]",
+  PRODUCAO: "bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] border-[var(--gm-accent)]/30 shadow-[0_0_15px_rgba(var(--gm-accent-rgb),0.3)]",
+  CONCLUIDO: "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/30 shadow-[0_0_15px_rgba(var(--gm-primary-rgb),0.3)]",
   CANCELADO: "bg-red-500/15 text-red-200 border-red-500/25 shadow-[0_0_10px_rgba(239,68,68,0.2)]",
 };
 

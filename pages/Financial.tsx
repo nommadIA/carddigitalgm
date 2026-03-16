@@ -7,7 +7,8 @@ import { Page } from "../components/ui/Page";
 import { CURRENCY_FORMATTER } from "../constants";
 import SafeResponsive from "../components/ui/SafeResponsive";
 import { pushToast } from "../store/toast";
-import { MessageCircle, FileText, Save, History, X, Download, Trash2, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { FileText, Save, History, X, Download, Trash2, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
 import { generateFinanceReportPdf } from "../services/pdfService";
 import { fetchSettingsSupabase } from "../lib/settings";
@@ -321,51 +322,66 @@ export default function Financial() {
     <Page
       title="Relatórios Financeiros"
       actions={
-        <div className="flex gap-2">
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-1 mr-2">
+        <div className="flex flex-col lg:flex-row gap-4 w-full lg:w-auto items-stretch lg:items-center">
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1.5 w-full lg:w-auto justify-between lg:justify-start">
             <button 
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
-              className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={18} />
             </button>
-            <div className="px-3 flex items-center gap-2 font-bold text-sm min-w-[120px] justify-center">
-              <Calendar size={14} className="text-[var(--gm-primary)]" />
-              <span className="capitalize">{selectedDate.toLocaleString("pt-BR", { month: "short", year: "numeric" })}</span>
+            <div className="px-3 flex items-center gap-2 font-bold text-sm min-w-[140px] justify-center">
+              <Calendar size={16} className="text-[var(--gm-primary)]" />
+              <span className="capitalize">{selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
             </div>
             <button 
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
-              className="p-1.5 hover:bg-white/10 rounded-md transition-colors"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </button>
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="ml-2 px-2 py-1 text-[10px] uppercase font-bold bg-white/10 hover:bg-white/20 rounded transition-colors"
+              className="ml-2 px-3 py-1.5 text-[10px] uppercase font-bold bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
             >
               Hoje
             </button>
           </div>
-          <button
-            onClick={() => handleWhatsApp(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))}
-            className="gm-btn gm-btn-outline text-sm"
-            title="Enviar por WhatsApp"
-          >
-            <MessageCircle size={16} className="text-green-500" />
-            <span className="hidden sm:inline">WhatsApp</span>
-          </button>
-          <button onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} className="gm-btn gm-btn-outline text-sm" title="Gerar PDF">
-            <FileText size={16} className="text-blue-500" />
-            <span className="hidden sm:inline">PDF</span>
-          </button>
-          <button onClick={handleSave} className="gm-btn gm-btn-outline text-sm" title="Fechar e Salvar Mês">
-            <Save size={16} className="text-orange-500" />
-            <span className="hidden sm:inline">Fechar Mês</span>
-          </button>
-          <button onClick={openHistory} className="gm-btn gm-btn-primary text-sm" title="Histórico">
-            <History size={16} />
-            <span className="hidden sm:inline">Histórico</span>
-          </button>
+          
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto">
+            <button
+              onClick={() => handleWhatsApp(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))}
+              className="gm-btn gm-btn-outline text-xs sm:text-sm justify-center py-2.5"
+              title="Enviar por WhatsApp"
+            >
+              <WhatsAppIcon size={16} className="text-[var(--gm-accent)]" />
+              WhatsApp
+            </button>
+            <button 
+              onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} 
+              className="gm-btn gm-btn-outline text-xs sm:text-sm justify-center py-2.5" 
+              title="Gerar PDF"
+            >
+              <FileText size={16} className="text-[var(--gm-primary)]" />
+              PDF
+            </button>
+            <button 
+              onClick={handleSave} 
+              className="gm-btn gm-btn-outline text-xs sm:text-sm justify-center py-2.5" 
+              title="Fechar e Salvar Mês"
+            >
+              <Save size={16} className="text-[var(--gm-accent)]" />
+              Fechar Mês
+            </button>
+            <button 
+              onClick={openHistory} 
+              className="gm-btn text-xs sm:text-sm justify-center py-2.5" 
+              title="Histórico"
+            >
+              <History size={16} />
+              Histórico
+            </button>
+          </div>
         </div>
       }
     >
@@ -374,17 +390,17 @@ export default function Financial() {
       ) : (
         <>
           <Grid cols={3} className="mb-8">
-            <Card className="border-l-4 border-l-green-500">
+            <Card className="border-l-4 border-l-[var(--gm-accent)]">
               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Entradas</p>
-              <h2 className="text-3xl font-bold text-green-500">{CURRENCY_FORMATTER.format(resumo.entradas)}</h2>
+              <h2 className="text-3xl font-bold text-[var(--gm-accent)]">{CURRENCY_FORMATTER.format(resumo.entradas)}</h2>
             </Card>
             <Card className="border-l-4 border-l-red-500">
               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Saídas</p>
               <h2 className="text-3xl font-bold text-red-500">{CURRENCY_FORMATTER.format(resumo.saidas)}</h2>
             </Card>
-            <Card className={`border-l-4 ${resumo.acumulado >= 0 ? "border-l-blue-500" : "border-l-orange-500"}`}>
+            <Card className={`border-l-4 ${resumo.acumulado >= 0 ? "border-l-[var(--gm-accent)]" : "border-l-[var(--gm-primary)]"}`}>
               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Saldo Acumulado</p>
-              <h2 className={`text-3xl font-bold ${resumo.acumulado >= 0 ? "text-blue-500" : "text-orange-500"}`}>
+              <h2 className={`text-3xl font-bold ${resumo.acumulado >= 0 ? "text-[var(--gm-accent)]" : "text-[var(--gm-primary)]"}`}>
                 {CURRENCY_FORMATTER.format(resumo.acumulado)}
               </h2>
             </Card>
@@ -404,7 +420,7 @@ export default function Financial() {
                         cursor={{ fill: "rgba(255,255,255,0.03)" }}
                       />
                       <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                      <Bar name="Receita" dataKey="entradas" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={12} />
+                      <Bar name="Receita" dataKey="entradas" fill="var(--gm-accent)" radius={[4, 4, 0, 0]} barSize={12} />
                       <Bar name="Despesa" dataKey="saidas" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={12} />
                     </BarChart>
                   </SafeResponsive>
@@ -454,7 +470,7 @@ export default function Financial() {
                       {/* RECEITAS */}
                       {transactions.filter(t => t.type === "receita").length > 0 && (
                         <>
-                          <div className="px-4 py-2 bg-green-500/5 text-green-500 text-[10px] font-bold uppercase tracking-widest border-y border-white/5">
+                          <div className="px-4 py-2 bg-[var(--gm-accent)]/5 text-[var(--gm-accent)] text-[10px] font-bold uppercase tracking-widest border-y border-white/5">
                             Ganhos / Receitas
                           </div>
                           {transactions.filter(t => t.type === "receita").map((t) => (
@@ -464,7 +480,7 @@ export default function Financial() {
                             >
                               <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
                               <div className="font-medium">{t.desc}</div>
-                              <div className="text-right font-bold text-green-500">
+                              <div className="text-right font-bold text-[var(--gm-accent)]">
                                 + {CURRENCY_FORMATTER.format(t.amount)}
                               </div>
                             </div>
@@ -518,7 +534,7 @@ export default function Financial() {
 
                   <div className="flex items-center justify-between gap-4 sm:min-w-[260px]">
                     <span className="font-bold text-slate-300">Total Líquido (Período)</span>
-                    <span className={`text-xl font-extrabold ${resumo.acumulado >= 0 ? "text-[var(--gm-primary)]" : "text-orange-500"}`}>
+                    <span className={`text-xl font-extrabold ${resumo.acumulado >= 0 ? "text-[var(--gm-primary)]" : "text-[var(--gm-accent)]"}`}>
                       {CURRENCY_FORMATTER.format(resumo.acumulado)}
                     </span>
                   </div>
@@ -559,9 +575,9 @@ export default function Financial() {
                           {new Date(rep.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                         </p>
                         <div className="flex gap-4 mt-2 text-sm font-medium">
-                          <span className="text-green-500">Entradas: {CURRENCY_FORMATTER.format(rep.totals?.entradas || 0)}</span>
+                          <span className="text-[var(--gm-accent)]">Entradas: {CURRENCY_FORMATTER.format(rep.totals?.entradas || 0)}</span>
                           <span className="text-red-500">Saídas: {CURRENCY_FORMATTER.format(rep.totals?.saidas || 0)}</span>
-                          <span className={rep.totals?.acumulado >= 0 ? "text-blue-500" : "text-orange-500"}>
+                          <span className={rep.totals?.acumulado >= 0 ? "text-[var(--gm-primary)]" : "text-[var(--gm-accent)]"}>
                             Saldo: {CURRENCY_FORMATTER.format(rep.totals?.acumulado || 0)}
                           </span>
                         </div>
@@ -570,14 +586,14 @@ export default function Financial() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleWhatsApp(rep.totals, rep.title)}
-                          className="p-2 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded-lg transition-colors"
+                          className="p-2 bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20 rounded-lg transition-colors"
                           title="Reenviar WhatsApp"
                         >
-                          <MessageCircle size={18} />
+                          <WhatsAppIcon size={18} />
                         </button>
                         <button
                           onClick={() => handlePDF(rep.items, rep.title)}
-                          className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 rounded-lg transition-colors"
+                          className="p-2 bg-[var(--gm-accent)]/10 text-[var(--gm-accent)] hover:bg-[var(--gm-accent)]/20 rounded-lg transition-colors"
                           title="Abrir PDF"
                         >
                           <Download size={18} />

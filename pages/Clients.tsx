@@ -6,7 +6,8 @@ import { Card } from "../components/ui/Card";
 import NewClientPage from "./clients/NewClientPage";
 import EditClientPage from "./clients/EditClientPage";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
-import { Plus, Pencil, Trash2, Copy, MessageCircle, ShieldAlert } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail } from "lucide-react";
+import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
 
 type ClientRow = {
@@ -224,40 +225,6 @@ export default function Clients() {
     flexShrink: 0,
   };
 
-  const iconBtnBase: React.CSSProperties = {
-    height: isMobile ? 38 : 40,
-    width: isMobile ? 38 : 40,
-    borderRadius: isMobile ? 12 : 14,
-    background: "rgba(0,0,0,0.22)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    color: "rgba(255,255,255,0.82)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  };
-
-  const iconBtnGreen: React.CSSProperties = {
-    ...iconBtnBase,
-    background: "rgba(0,255,120,0.08)",
-    border: "1px solid rgba(0,255,120,0.20)",
-    color: "rgba(160,255,200,0.95)",
-  };
-
-  const iconBtnBlue: React.CSSProperties = {
-    ...iconBtnBase,
-    background: "rgba(120,180,255,0.08)",
-    border: "1px solid rgba(120,180,255,0.20)",
-    color: "rgba(200,230,255,0.95)",
-  };
-
-  const iconBtnRed: React.CSSProperties = {
-    ...iconBtnBase,
-    background: "rgba(255,0,0,0.08)",
-    border: "1px solid rgba(255,0,0,0.20)",
-    color: "rgba(255,200,200,0.95)",
-  };
-
   const gridWrap: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
@@ -269,7 +236,7 @@ export default function Clients() {
       <Page
         title="Clientes"
         actions={
-          <button className="gm-btn gm-border-loop" type="button" onClick={() => setOpenNewPage(true)}>
+          <button className="gm-btn" type="button" onClick={() => setOpenNewPage(true)}>
             <Plus size={16} />
             Novo Cliente
           </button>
@@ -351,19 +318,19 @@ export default function Clients() {
                       <div className="flex gap-2" style={{ flexShrink: 0 }}>
                         {tab === "LIXEIRA" ? (
                           <>
-                            <button style={iconBtnGreen} title="Restaurar" type="button" onClick={() => restore(c.id)}>↩️</button>
-                            <button style={iconBtnRed} title="Excluir definitivo" type="button" onClick={() => confirmHardDelete(c.id)}>
+                            <button className="gm-btn gm-btn-icon gm-btn-accent" title="Restaurar" type="button" onClick={() => restore(c.id)}>↩️</button>
+                            <button className="gm-btn gm-btn-icon gm-btn-danger" title="Excluir definitivo" type="button" onClick={() => confirmHardDelete(c.id)}>
                               <Trash2 size={16} />
                             </button>
                           </>
                         ) : (
                           <>
-                            <button style={iconBtnBlue} title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
+                            <button className="gm-btn gm-btn-icon gm-btn-accent" title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
                               <Pencil size={16} />
                             </button>
 
                             <button
-                              style={hasWpp ? iconBtnGreen : iconBtnBase}
+                              className={`gm-btn gm-btn-icon gm-btn-accent ${!hasWpp ? 'opacity-50' : ''}`}
                               title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
                               type="button"
                               onClick={() => {
@@ -371,11 +338,11 @@ export default function Clients() {
                                 openWhatsApp(wppDigits);
                               }}
                             >
-                              <MessageCircle size={16} />
+                              <WhatsAppIcon size={16} />
                             </button>
 
                             <button
-                              style={iconBtnBase}
+                              className="gm-btn gm-btn-icon gm-btn-accent"
                               title="Copiar telefone"
                               type="button"
                               onClick={async () => {
@@ -389,7 +356,7 @@ export default function Clients() {
                             </button>
 
                             <button
-                              style={iconBtnBase}
+                              className="gm-btn gm-btn-icon gm-btn-accent"
                               title="Copiar e-mail"
                               type="button"
                               onClick={async () => {
@@ -399,10 +366,10 @@ export default function Clients() {
                                 setToast(ok ? "E-mail copiado" : "Falha ao copiar");
                               }}
                             >
-                              @
+                              <Mail size={16} />
                             </button>
 
-                            <button style={iconBtnRed} title="Mover para lixeira" type="button" onClick={() => softDelete(c.id)}>
+                            <button className="gm-btn gm-btn-icon gm-btn-danger" title="Mover para lixeira" type="button" onClick={() => softDelete(c.id)}>
                               <Trash2 size={16} />
                             </button>
                           </>
@@ -416,19 +383,19 @@ export default function Clients() {
                     <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
                       {tab === "LIXEIRA" ? (
                         <>
-                          <button style={iconBtnGreen} title="Restaurar" type="button" onClick={() => restore(c.id)}>↩️</button>
-                          <button style={iconBtnRed} title="Excluir definitivo" type="button" onClick={() => confirmHardDelete(c.id)}>
+                          <button className="gm-btn gm-btn-icon gm-btn-accent" title="Restaurar" type="button" onClick={() => restore(c.id)}>↩️</button>
+                          <button className="gm-btn gm-btn-icon gm-btn-danger" title="Excluir definitivo" type="button" onClick={() => confirmHardDelete(c.id)}>
                             <Trash2 size={16} />
                           </button>
                         </>
                       ) : (
                         <>
-                          <button style={iconBtnBlue} title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
+                          <button className="gm-btn gm-btn-icon gm-btn-accent" title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
                             <Pencil size={16} />
                           </button>
 
                           <button
-                            style={hasWpp ? iconBtnGreen : iconBtnBase}
+                            className={`gm-btn gm-btn-icon gm-btn-accent ${!hasWpp ? 'opacity-50' : ''}`}
                             title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
                             type="button"
                             onClick={() => {
@@ -436,11 +403,11 @@ export default function Clients() {
                               openWhatsApp(wppDigits);
                             }}
                           >
-                            <MessageCircle size={16} />
+                            <WhatsAppIcon size={16} />
                           </button>
 
                           <button
-                            style={iconBtnBase}
+                            className="gm-btn gm-btn-icon gm-btn-accent"
                             title="Copiar telefone"
                             type="button"
                             onClick={async () => {
@@ -454,7 +421,7 @@ export default function Clients() {
                           </button>
 
                           <button
-                            style={iconBtnBase}
+                            className="gm-btn gm-btn-icon gm-btn-accent"
                             title="Copiar e-mail"
                             type="button"
                             onClick={async () => {
@@ -464,10 +431,10 @@ export default function Clients() {
                               setToast(ok ? "E-mail copiado" : "Falha ao copiar");
                             }}
                           >
-                            @
+                            <Mail size={16} />
                           </button>
 
-                          <button style={iconBtnRed} title="Lixeira" type="button" onClick={() => softDelete(c.id)}>
+                          <button className="gm-btn gm-btn-icon gm-btn-danger" title="Lixeira" type="button" onClick={() => softDelete(c.id)}>
                             <Trash2 size={16} />
                           </button>
                         </>

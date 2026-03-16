@@ -177,7 +177,7 @@ export default function ReminderConfigModal({ open, onClose }: ReminderConfigMod
         {/* Header - Hardware Style */}
         <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
           <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full ${remindersEnabled ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"} animate-pulse`} />
+            <div className={`w-2 h-2 rounded-full ${remindersEnabled ? "bg-[var(--gm-accent)] shadow-[0_0_8px_rgba(var(--gm-accent-rgb),0.6)]" : "bg-red-500"} animate-pulse`} />
             <h3 className="text-[10px] uppercase font-mono tracking-[2px] text-white/40">
               Sistema // Notificações
             </h3>
@@ -200,7 +200,7 @@ export default function ReminderConfigModal({ open, onClose }: ReminderConfigMod
               type="button"
               className={`h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
                 remindersEnabled 
-                ? "bg-green-500/20 text-green-400 border border-green-500/30" 
+                ? "bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] border border-[var(--gm-accent)]/30" 
                 : "bg-white/5 text-white/40 border border-white/10"
               }`}
               onClick={() => setRemindersEnabled(!remindersEnabled)}
@@ -234,10 +234,10 @@ export default function ReminderConfigModal({ open, onClose }: ReminderConfigMod
           )}
 
           {!pushStatus.ok && (
-            <div className="p-3 rounded-xl bg-orange-500/5 border border-dashed border-orange-500/20 flex items-start gap-3">
-              <Clock size={14} className="text-orange-400 shrink-0 mt-0.5" />
-              <div className="text-[9px] text-orange-200/60 font-mono uppercase leading-tight">
-                <span className="text-orange-400 font-bold">Aviso:</span> {pushStatus.reason}
+            <div className="p-3 rounded-xl bg-[var(--gm-primary)]/5 border border-dashed border-[var(--gm-primary)]/20 flex items-start gap-3">
+              <Clock size={14} className="text-[var(--gm-primary)] shrink-0 mt-0.5" />
+              <div className="text-[9px] text-[var(--gm-primary)]/60 font-mono uppercase leading-tight">
+                <span className="text-[var(--gm-primary)] font-bold">Aviso:</span> {pushStatus.reason}
                 <br />
                 <span className="opacity-50 mt-1 block">Os lembretes locais (com o app aberto) continuarão funcionando normalmente.</span>
               </div>
@@ -270,7 +270,7 @@ export default function ReminderConfigModal({ open, onClose }: ReminderConfigMod
           </div>
 
           {savedToast && (
-            <div className="bg-green-500/5 border border-dashed border-green-500/30 text-green-400 text-[9px] font-mono uppercase p-3 rounded-xl text-center animate-pulse">
+            <div className="bg-[var(--gm-accent)]/5 border border-dashed border-[var(--gm-accent)]/30 text-[var(--gm-accent)] text-[9px] font-mono uppercase p-3 rounded-xl text-center animate-pulse">
               {savedToast}
             </div>
           )}
@@ -283,7 +283,7 @@ export default function ReminderConfigModal({ open, onClose }: ReminderConfigMod
             
             <div className="grid grid-cols-2 gap-3">
               <button 
-                className="h-12 rounded-xl bg-[var(--gm-primary)] hover:opacity-90 text-white text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,122,0,0.2)]"
+                className="h-12 rounded-xl bg-[var(--gm-primary)] hover:opacity-90 text-white text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(var(--gm-primary-rgb),0.2)]"
                 onClick={handleSave}
               >
                 <Save size={14} />

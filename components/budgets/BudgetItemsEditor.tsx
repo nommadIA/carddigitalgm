@@ -111,7 +111,7 @@ export default function BudgetItemsEditor({
         <button
           type="button"
           onClick={add}
-          className="px-3 py-1.5 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600"
+          className="px-3 py-1.5 rounded-lg bg-[var(--gm-primary)] text-white font-semibold hover:brightness-110"
         >
           + Adicionar item
         </button>

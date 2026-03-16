@@ -77,7 +77,7 @@ export default function CreateDeletePasswordModal({ open, onClose }: Props) {
             placeholder="Nova senha (mín 6)"
             value={newPass}
             onChange={(e) => setNewPass(e.target.value)}
-            className="w-full p-3 rounded-xl border border-white/10 bg-white/5 text-white outline-none focus:border-blue-500 transition-all placeholder-slate-500"
+            className="w-full p-3 rounded-xl border border-white/10 bg-white/5 text-white outline-none focus:border-[var(--gm-primary)] transition-all placeholder-slate-500"
           />
 
           <input
@@ -85,7 +85,7 @@ export default function CreateDeletePasswordModal({ open, onClose }: Props) {
             placeholder="Confirme a senha"
             value={confirmPass}
             onChange={(e) => setConfirmPass(e.target.value)}
-            className="w-full p-3 rounded-xl border border-white/10 bg-white/5 text-white outline-none focus:border-blue-500 transition-all placeholder-slate-500"
+            className="w-full p-3 rounded-xl border border-white/10 bg-white/5 text-white outline-none focus:border-[var(--gm-primary)] transition-all placeholder-slate-500"
           />
 
           <div className="flex gap-3 mt-4">
@@ -101,7 +101,7 @@ export default function CreateDeletePasswordModal({ open, onClose }: Props) {
               onClick={handleSave}
               disabled={!canSave}
               className={`flex-1 py-3 rounded-xl border border-white/10 text-white font-bold flex items-center justify-center gap-2 transition-all ${
-                  canSave ? "bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20" : "bg-blue-600/20 cursor-not-allowed text-white/50"
+                  canSave ? "bg-[var(--gm-primary)] hover:brightness-110 shadow-lg shadow-[var(--gm-primary)]/20" : "bg-[var(--gm-primary)]/20 cursor-not-allowed text-white/50"
               }`}
             >
               {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}

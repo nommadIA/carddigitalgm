@@ -1,3 +1,4 @@
+// Service Worker v3
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
@@ -95,9 +96,14 @@ async function checkAlarms() {
 
     for (const alarm of alarms) {
       if (alarm.active && alarm.time === currentTime && alarm.lastTriggeredOn !== today) {
+        const title = alarm.type === 'EXPENSE' ? '🔔 Lembrete de Despesa' : '✅ Orçamento Aprovado';
+        const body = alarm.type === 'EXPENSE' 
+          ? `Lembrete programado: ${alarm.time}\n\nToque para ver os detalhes no CardDigital GM.`
+          : `Olá! Orçamento "${alarm.clientName}" em andamento, conclua antes do prazo "${alarm.deliveryDays || 5} dias"`;
+
         // Trigger notification
-        self.registration.showNotification(alarm.type === 'EXPENSE' ? '🔔 Lembrete de Despesa' : '✅ Orçamento Aprovado', {
-          body: `Cliente: ${alarm.clientName}\nHorário Programado: ${alarm.time}\n\nToque para ver os detalhes no CardDigital GM.`,
+        self.registration.showNotification(title, {
+          body: body,
           icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
           badge: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
           vibrate: [200, 100, 200, 100, 200],

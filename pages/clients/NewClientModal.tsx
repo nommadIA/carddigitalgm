@@ -114,9 +114,9 @@ const subtitle: React.CSSProperties = {
 const closeBtn: React.CSSProperties = {
   borderRadius: 14,
   padding: "10px 12px",
-  background: "rgba(0,0,0,0.22)",
-  border: "1px solid rgba(255,255,255,0.12)",
-  color: "rgba(255,255,255,0.85)",
+  background: "var(--gm-primary)",
+  border: "none",
+  color: "#fff",
   fontWeight: 900,
 };
 
@@ -167,18 +167,18 @@ const btnGhost: React.CSSProperties = {
   borderRadius: 14,
   padding: "12px 14px",
   fontWeight: 950,
-  background: "rgba(0,0,0,0.22)",
-  border: "1px solid rgba(255,255,255,0.12)",
-  color: "rgba(255,255,255,0.80)",
+  background: "var(--gm-primary)",
+  border: "none",
+  color: "#fff",
 };
 
 const btnPrimary: React.CSSProperties = {
   borderRadius: 14,
   padding: "12px 16px",
   fontWeight: 950,
-  background: "rgba(255,102,0,0.14)",
-  border: "1px solid rgba(255,102,0,0.38)",
-  color: "rgba(255,200,170,0.98)",
+  background: "var(--gm-primary)",
+  border: "none",
+  color: "#fff",
 };
 
 export default function NewClientModal({ open, onClose, onSuccess, clientToEdit }: Props) {

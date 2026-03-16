@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabase";
 import { fetchSettingsSupabase, readSettingsLocal } from "../lib/settings";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
 import { useAuth } from "../store/AuthContext";
-import { scheduleApprovedBudgetReminders, removeAlarmsForBudget, getBudgetRemindersEnabled, getBudgetReminderTimes } from "../lib/alarmSystem";
+import { scheduleApprovedBudgetReminders, removeAlarmsForBudget, getBudgetRemindersEnabled, getBudgetReminderTimes, syncAlarmsWithBudgets } from "../lib/alarmSystem";
 import { generateOrcamentoPdf } from "../services/pdfService";
 import { buildWhatsappMessage } from "../services/whatsApp";
 import { useLocation } from "react-router-dom";
@@ -15,6 +15,7 @@ import NewBudgetModal from "./budgets/NewBudgetModal";
 import ReminderConfigModal from "../components/budgets/ReminderConfigModal";
 import {
   Plus,
+  Search,
   Pencil,
   Trash2,
   Share2,
@@ -26,8 +27,8 @@ import {
   Bell,
   Copy,
   Mail,
-  MessageCircle,
 } from "lucide-react";
+import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 
 // ✅ Componente para Scroll por Arrastre (Mouse/Touch) sem barra visível
 const DraggableScroll = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
@@ -111,9 +112,9 @@ function pillClass(status: string) {
     case "AGUARDANDO":
       return "bg-yellow-500/10 text-yellow-400 border-yellow-500/25 hover:bg-yellow-500/20";
     case "APROVADO":
-      return "bg-green-500/10 text-green-400 border-green-500/25 hover:bg-green-500/20";
+      return "bg-[var(--gm-accent)]/10 text-[var(--gm-accent)] border-[var(--gm-accent)]/25 hover:bg-[var(--gm-accent)]/20";
     case "PRODUCAO":
-      return "bg-orange-500/10 text-orange-400 border-orange-500/25 hover:bg-orange-500/20";
+      return "bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border-[var(--gm-primary)]/25 hover:bg-[var(--gm-primary)]/20";
     case "CONCLUIDO":
       return "bg-emerald-500/10 text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/20";
     case "CANCELADO":
@@ -179,6 +180,11 @@ export default function Budgets() {
       const { data, error } = await query;
       if (error) throw error;
       setRows((data || []) as BudgetRow[]);
+      
+      // ✅ Sincroniza os alarmes com a lista real de orçamentos
+      if (data) {
+        syncAlarmsWithBudgets(data);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -230,18 +236,14 @@ export default function Budgets() {
     try {
       const row = rows.find((r) => r.id === id);
       const enabled = getBudgetRemindersEnabled();
-      // Ajuste para pegar tempos do localStorage corretamente
-      const times = getBudgetReminderTimes();
 
-      if (nextNorm === "APROVADO" && enabled && row) {
-        scheduleApprovedBudgetReminders(id, row.client_name || "Cliente");
+      if ((nextNorm === "APROVADO" || nextNorm === "PRODUCAO") && enabled && row) {
+        scheduleApprovedBudgetReminders(id, row.client_name || "Cliente", row.delivery_days || 5);
       }
 
-      // sai de aprovado => remove
-      if (nextNorm !== "APROVADO") removeAlarmsForBudget(id);
-
-      // concluiu => remove (garantia)
-      if (nextNorm === "CONCLUIDO") removeAlarmsForBudget(id);
+      if (nextNorm === "CONCLUIDO" || nextNorm === "CANCELADO" || nextNorm === "LIXEIRA" || nextNorm === "AGUARDANDO") {
+        removeAlarmsForBudget(id);
+      }
     } catch {}
   };
 
@@ -356,101 +358,74 @@ export default function Budgets() {
 
   // botões compactos
   const iconBtn = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-    const base =
-      "flex-1 h-10 rounded-xl border transition-all flex items-center justify-center gap-2 font-extrabold";
-    if (tone === "orange")
-      return `${base} bg-orange-500/10 border-orange-500/25 text-orange-300 hover:bg-orange-500/20`;
-    if (tone === "green")
-      return `${base} bg-green-500/10 border-green-500/25 text-green-300 hover:bg-green-500/20`;
-    if (tone === "red")
-      return `${base} bg-red-500/10 border-red-500/25 text-red-300 hover:bg-red-500/20`;
-    return `${base} bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20`;
+    const base = "gm-btn flex-1 h-10 flex items-center justify-center gap-2";
+    if (tone === "orange") return `${base} gm-btn-soft`;
+    if (tone === "green") return `${base} gm-btn-soft`;
+    if (tone === "red") return `${base} gm-btn-danger`;
+    return `${base} gm-btn-soft`;
   };
 
   return (
     <Page
       title="Orçamentos"
       actions={
-        <button className="gm-btn gm-border-loop" type="button" onClick={() => setNewOpen(true)}>
+        <button className="gm-btn" type="button" onClick={() => setNewOpen(true)}>
           <Plus size={16} />
           Novo Orçamento
         </button>
       }
     >
       {/* ✅ Tabs + Busca */}
-      <DraggableScroll className="mb-4">
-        {[
-          "AGUARDANDO",
-          "APROVADO",
-          "PRODUCAO",
-          "CONCLUIDOS",
-          "CANCELADOS",
-        ].map((status) => {
-          const active = tab === status;
-          const label = status === "PRODUCAO" ? "PRODUÇÃO" : status === "CONCLUIDOS" ? "CONCLUÍDOS" : status;
+      <div className="mb-6">
+        <DraggableScroll className="mb-4 pb-2">
+          {[
+            "AGUARDANDO",
+            "APROVADO",
+            "PRODUCAO",
+            "CONCLUIDOS",
+            "CANCELADOS",
+          ].map((status) => {
+            const active = tab === status;
+            const label = status === "PRODUCAO" ? "PRODUÇÃO" : status === "CONCLUIDOS" ? "CONCLUÍDOS" : status;
 
-          return (
-            <button
-              key={status}
-              onClick={() => setTab(status as TabKey)}
-              style={{
-                position: "relative",
-                padding: "10px 18px",
-                borderRadius: 999,
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: 0.5,
-                whiteSpace: "nowrap",
-                transition: "all 0.2s ease",
-                border: active
-                  ? "1px solid var(--gm-primary)"
-                  : "1px solid rgba(255,255,255,0.08)",
-                background: active
-                  ? "rgba(255,140,0,0.15)"
-                  : "rgba(255,255,255,0.03)",
-                color: active ? "var(--gm-primary)" : "rgba(255,255,255,0.6)",
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={status}
+                onClick={() => setTab(status as TabKey)}
+                className={`relative px-5 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all duration-300 whitespace-nowrap border ${
+                  active 
+                    ? "bg-[var(--gm-primary)]/15 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_15px_var(--gm-primary-10)]" 
+                    : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
 
-        {/* Lixeira separada */}
-        <button
-          onClick={() => setTab("LIXEIRA")}
-          style={{
-            padding: "10px 18px",
-            borderRadius: 999,
-            fontSize: 12,
-            fontWeight: 700,
-            whiteSpace: "nowrap",
-            border: "1px solid rgba(255,0,0,0.3)",
-            background: "rgba(255,0,0,0.08)",
-            color: "#ff4d4f",
-          }}
-        >
-          LIXEIRA
-        </button>
-      </DraggableScroll>
+          {/* Lixeira separada */}
+          <button
+            onClick={() => setTab("LIXEIRA")}
+            className={`px-5 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all duration-300 whitespace-nowrap border ${
+              tab === "LIXEIRA"
+                ? "bg-red-500/15 border-red-500 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
+                : "bg-red-500/5 border-red-500/20 text-red-400 hover:bg-red-500/10"
+            }`}
+          >
+            LIXEIRA
+          </button>
+        </DraggableScroll>
 
-      <div style={{ marginBottom: 20 }}>
-        <input
-          type="text"
-          placeholder="Buscar por cliente ou valor..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px 16px",
-            borderRadius: 14,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            color: "white",
-            fontSize: 14,
-            outline: "none",
-          }}
-        />
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+          <input
+            type="text"
+            className="gm-input !pl-14 py-3.5 bg-white/5 border-white/10 focus:border-[var(--gm-primary)] transition-all rounded-2xl"
+            placeholder="Buscar por cliente ou valor..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
       </div>
 
       <div style={{ height: 14 }} />
@@ -640,9 +615,9 @@ export default function Budgets() {
                     window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 text-green-400 transition-all font-bold"
+                  className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-accent)]/10 border border-[var(--gm-accent)]/20 hover:bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] transition-all font-bold"
                 >
-                  <MessageCircle size={20} /> WhatsApp
+                  <WhatsAppIcon size={20} /> WhatsApp
                 </button>
 
                 <button 
@@ -650,7 +625,7 @@ export default function Budgets() {
                     window.open(`mailto:?subject=Orçamento - ${shareData.budget.client_name}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-400 transition-all font-bold"
+                  className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] transition-all font-bold"
                 >
                   <Mail size={20} /> E-mail
                 </button>
@@ -685,7 +660,7 @@ export default function Budgets() {
                         }
                       }
                     }}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 text-orange-400 transition-all font-bold"
+                    className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-accent)]/10 border border-[var(--gm-accent)]/20 hover:bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] transition-all font-bold"
                   >
                     <Share2 size={20} /> Outras Opções (Sistema)
                   </button>

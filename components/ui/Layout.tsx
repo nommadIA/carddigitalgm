@@ -246,10 +246,10 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       <AlarmToast />
 
       {/* MOBILE TOP HEADER */}
-      <div className="fixed top-0 left-0 right-0 h-16 z-50 flex md:hidden items-center justify-between px-4 bg-[#0b1220]/60 backdrop-blur-2xl border-b border-white/5 shadow-sm">
+      <div className="fixed top-0 left-0 right-0 h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-slate-950/80 backdrop-blur-xl border-b border-white/5 shadow-lg">
         <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center shrink-0">
-              <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
                 <img 
                   src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                   alt="Logo" 
@@ -257,17 +257,18 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 />
               </div>
             </div>
-            <div className="flex items-center gap-1 leading-none">
-                <span className="text-sm font-light text-slate-200 tracking-tight">CardDigital</span>
-                <span className="text-lg font-semibold text-[var(--gm-primary)]">GM</span>
+            <div className="flex flex-col leading-tight">
+                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">CardDigital</span>
+                <span className="text-lg font-bold text-white">GM <span className="text-[var(--gm-primary)]">SISTEMAS</span></span>
             </div>
         </div>
         <div className="flex items-center gap-2">
             <button 
-                className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 border border-red-500/20 text-red-400"
+                className="gm-btn gm-btn-icon gm-btn-danger"
                 onClick={signOut}
+                aria-label="Sair"
             >
-                <LogOut size={14} />
+                <LogOut size={18} />
             </button>
         </div>
       </div>
@@ -294,7 +295,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
         <div className="gm-row">
           <button
-            className="gm-btn gm-btn-icon gm-border-loop hidden md:flex"
+            className="gm-btn gm-btn-icon hidden md:flex"
             type="button"
             onClick={() => setCollapsed((v) => !v)}
             aria-label="Recolher sidebar"
@@ -346,7 +347,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
         <div className="gm-sidebar-footer">
           <button className="gm-btn" type="button" onClick={signOut} title="Sair">
-            <LogOut size={18} className="text-red-400" />
+            <LogOut size={18} className="text-white" />
             {!collapsed && <span>Sair</span>}
           </button>
         </div>

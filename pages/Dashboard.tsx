@@ -38,6 +38,7 @@ const itemVariants = {
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
+import { syncAlarmsWithBudgets } from '../lib/alarmSystem';
 import { fetchSettingsSupabase, AppSettings } from '../lib/settings';
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
@@ -81,6 +82,8 @@ const Dashboard = () => {
         .is('deleted_at', null);
 
       if (budgets) {
+        syncAlarmsWithBudgets(budgets);
+        
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -143,9 +146,9 @@ const Dashboard = () => {
 
   // ✅ Custom Header com Logo (Clean - Sem Neon)
   const headerContent = (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3 md:gap-4">
       <div className="relative flex items-center justify-center shrink-0">
-        <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+        <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shadow-lg">
           <img 
             src={branding?.company_logo_url || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"} 
             alt="Logo da Empresa" 
@@ -153,11 +156,11 @@ const Dashboard = () => {
           />
         </div>
       </div>
-      <div className="flex flex-col justify-center">
-        <h1 className="text-2xl font-bold leading-tight text-white">
+      <div className="flex flex-col justify-center min-w-0">
+        <h1 className="text-xl md:text-2xl font-bold leading-tight text-white truncate">
           {branding?.company_name || "Visão Geral"}
         </h1>
-        <p className="text-sm opacity-70 mt-1">Resumo de desempenho e atividades recentes</p>
+        <p className="text-[10px] md:text-sm opacity-70 mt-0.5 md:mt-1 truncate">Resumo de desempenho e atividades recentes</p>
       </div>
     </div>
   );
@@ -214,17 +217,17 @@ const Dashboard = () => {
 
           {/* CARD 2: CLIENTES ATIVOS (Laranja Claro - orange-400) */}
           <motion.div variants={itemVariants}>
-            <Card className="hover:border-orange-400 transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full">
+            <Card className="hover:border-[var(--gm-accent)] transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full">
               <div className="flex items-center justify-between gap-4">
                  <div className="flex flex-col gap-1 min-w-0">
                    <h3 className="text-slate-400 text-[11px] font-bold uppercase tracking-wider truncate">Clientes Ativos</h3>
-                   <div className="font-extrabold text-2xl text-orange-400 tracking-tight truncate">
+                   <div className="font-extrabold text-2xl text-[var(--gm-accent)] tracking-tight truncate">
                       <CountUp value={stats.clientesTotal} format={(n) => Math.floor(n).toString()} />
                    </div>
                    <p className="text-[10px] text-slate-500 font-medium truncate">Base total de cadastros</p>
                  </div>
 
-                 <div className="w-12 h-12 flex items-center justify-center bg-orange-400/10 rounded-2xl text-orange-400 border border-orange-400/20 shrink-0">
+                 <div className="w-12 h-12 flex items-center justify-center bg-[var(--gm-accent)]/10 rounded-2xl text-[var(--gm-accent)] border border-[var(--gm-accent)]/20 shrink-0">
                    <Users size={24} />
                  </div>
               </div>
@@ -233,17 +236,17 @@ const Dashboard = () => {
 
           {/* CARD 3: PROJETOS (Laranja Mais Claro - orange-200/amber-200) */}
           <motion.div variants={itemVariants}>
-            <Card className="hover:border-orange-200 transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full">
+            <Card className="hover:border-[var(--gm-primary)] transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full opacity-80">
               <div className="flex items-center justify-between gap-4">
                  <div className="flex flex-col gap-1 min-w-0">
                    <h3 className="text-slate-400 text-[11px] font-bold uppercase tracking-wider truncate">Projetos em Andamento</h3>
-                   <div className="font-extrabold text-2xl text-orange-200 tracking-tight truncate">
+                   <div className="font-extrabold text-2xl text-[var(--gm-primary)] tracking-tight truncate">
                       <CountUp value={stats.projetosAndamentoMensal} format={(n) => Math.floor(n).toString()} />
                    </div>
                    <p className="text-[10px] text-slate-500 font-medium truncate">Projetos ativos do mês</p>
                  </div>
 
-                 <div className="w-12 h-12 flex items-center justify-center bg-orange-200/10 rounded-2xl text-orange-200 border border-orange-200/20 shrink-0">
+                 <div className="w-12 h-12 flex items-center justify-center bg-[var(--gm-primary)]/10 rounded-2xl text-[var(--gm-primary)] border border-[var(--gm-primary)]/20 shrink-0">
                    <Briefcase size={24} />
                  </div>
               </div>
@@ -299,36 +302,34 @@ const Dashboard = () => {
                 </Card>
               </motion.div>
 
-              {/* FAZENDO (LARANJA) - Animação Spin (já existe) */}
               <motion.div variants={itemVariants}>
-                <Card className="border border-orange-500/30 hover:border-orange-500/60 shadow-[0_0_20px_rgba(249,115,22,0.15)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
+                <Card className="border border-[var(--gm-primary)]/30 hover:border-[var(--gm-primary)]/60 shadow-[0_0_20px_rgba(var(--gm-primary-rgb),0.15)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
                    <div className="flex items-center justify-between relative z-10">
                       <div>
-                        <h3 className="text-orange-400/90 text-[11px] font-bold uppercase tracking-wider mb-1">Fazendo</h3>
-                        <div className="font-extrabold text-2xl text-orange-500 tracking-tight">
+                        <h3 className="text-[var(--gm-primary)]/90 text-[11px] font-bold uppercase tracking-wider mb-1">Fazendo</h3>
+                        <div className="font-extrabold text-2xl text-[var(--gm-primary)] tracking-tight">
                             <CountUp value={stats.fazendo} format={(n) => Math.floor(n).toString()} />
                         </div>
-                        <p className="text-[10px] text-orange-500/60 mt-1 font-medium">Em produção ativa</p>
+                        <p className="text-[10px] text-[var(--gm-primary)]/60 mt-1 font-medium">Em produção ativa</p>
                       </div>
-                      <div className="p-2.5 bg-orange-500/10 rounded-xl text-orange-500 border border-orange-500/20 shrink-0">
+                      <div className="p-2.5 bg-[var(--gm-primary)]/10 rounded-xl text-[var(--gm-primary)] border border-[var(--gm-primary)]/20 shrink-0">
                         <Loader2 size={22} className="animate-spin" />
                       </div>
                    </div>
                 </Card>
               </motion.div>
 
-              {/* PRONTO (VERDE) - Animação Heartbeat */}
               <motion.div variants={itemVariants}>
-                <Card className="border border-green-500/30 hover:border-green-500/60 shadow-[0_0_20px_rgba(34,197,94,0.15)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
+                <Card className="border border-[var(--gm-accent)]/30 hover:border-[var(--gm-accent)]/60 shadow-[0_0_20px_rgba(var(--gm-accent-rgb),0.15)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
                    <div className="flex items-center justify-between relative z-10">
                       <div>
-                        <h3 className="text-green-400/90 text-[11px] font-bold uppercase tracking-wider mb-1">Pronto</h3>
-                        <div className="font-extrabold text-2xl text-green-500 tracking-tight">
+                        <h3 className="text-[var(--gm-accent)]/90 text-[11px] font-bold uppercase tracking-wider mb-1">Pronto</h3>
+                        <div className="font-extrabold text-2xl text-[var(--gm-accent)] tracking-tight">
                             <CountUp value={stats.pronto} format={(n) => Math.floor(n).toString()} />
                         </div>
-                        <p className="text-[10px] text-green-500/60 mt-1 font-medium">Finalizados / Entregues</p>
+                        <p className="text-[10px] text-[var(--gm-accent)]/60 mt-1 font-medium">Finalizados / Entregues</p>
                       </div>
-                      <div className="p-2.5 bg-green-500/10 rounded-xl text-green-500 border border-green-500/20 shrink-0">
+                      <div className="p-2.5 bg-[var(--gm-accent)]/10 rounded-xl text-[var(--gm-accent)] border border-[var(--gm-accent)]/20 shrink-0">
                         <CheckCircle2 size={22} className="animate-heartbeat" />
                       </div>
                    </div>
@@ -435,7 +436,7 @@ const Dashboard = () => {
 
               {/* TOTAL CLIENTES */}
               <motion.div variants={itemVariants}>
-                <Card className="hover:border-orange-400 transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full bg-slate-900/40 border-white/5">
+                <Card className="hover:border-[var(--gm-accent)] transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full bg-slate-900/40 border-white/5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex flex-col gap-1 min-w-0">
                       <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest truncate">Total Clientes</h3>
@@ -444,7 +445,7 @@ const Dashboard = () => {
                       </div>
                       <p className="text-[9px] text-slate-600 mt-1 truncate">Contatos ativos na base</p>
                     </div>
-                    <div className="w-10 h-10 flex items-center justify-center bg-orange-400/10 rounded-xl text-orange-400 border border-orange-400/20 shrink-0">
+                    <div className="w-10 h-10 flex items-center justify-center bg-[var(--gm-accent)]/10 rounded-xl text-[var(--gm-accent)] border border-[var(--gm-accent)]/20 shrink-0">
                       <Users size={20} />
                     </div>
                   </div>
@@ -453,7 +454,7 @@ const Dashboard = () => {
 
               {/* PROJETOS CONCLUÍDOS */}
               <motion.div variants={itemVariants}>
-                <Card className="hover:border-green-500 transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full bg-slate-900/40 border-white/5">
+                <Card className="hover:border-[var(--gm-primary)] transition-all duration-300 py-5 px-6 flex flex-col justify-center h-full bg-slate-900/40 border-white/5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex flex-col gap-1 min-w-0">
                       <h3 className="text-slate-500 text-[10px] font-bold uppercase tracking-widest truncate">Projetos Concluídos</h3>
@@ -462,7 +463,7 @@ const Dashboard = () => {
                       </div>
                       <p className="text-[9px] text-slate-600 mt-1 truncate">Total de entregas realizadas</p>
                     </div>
-                    <div className="w-10 h-10 flex items-center justify-center bg-green-500/10 rounded-xl text-green-500 border border-green-500/20 shrink-0">
+                    <div className="w-10 h-10 flex items-center justify-center bg-[var(--gm-primary)]/10 rounded-xl text-[var(--gm-primary)] border border-[var(--gm-primary)]/20 shrink-0">
                       <CheckCircle2 size={20} />
                     </div>
                   </div>

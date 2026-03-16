@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, ShoppingCart, Trash2, Camera, Check, DollarSign, Wallet, Loader2, X, Sparkles, Share2, History, MessageCircle, Mail, Copy, Calendar } from 'lucide-react';
+import { Plus, ShoppingCart, Trash2, Camera, Check, DollarSign, Wallet, Loader2, X, Sparkles, Share2, History, Mail, Copy, Calendar } from 'lucide-react';
+import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { CURRENCY_FORMATTER } from '../constants';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
@@ -48,6 +49,19 @@ const Market = () => {
   const [showDeleteHistoryConfirm, setShowDeleteHistoryConfirm] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resettingBalance, setResettingBalance] = useState(false);
+
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    const isAnyModalOpen = topUpModalOpen || showFinalizeConfirm || showResetConfirm || showDeleteHistoryConfirm || !!shareData;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [topUpModalOpen, showFinalizeConfirm, showResetConfirm, showDeleteHistoryConfirm, shareData]);
 
   const totalListValue = useMemo(() => cartItems.reduce((acc, i) => acc + (Number(i.unit_price) * Number(i.quantity)), 0), [cartItems]);
   const realAvailableBalance = useMemo(() => walletBalance - totalListValue, [walletBalance, totalListValue]);
@@ -325,7 +339,7 @@ const Market = () => {
                 </button>
                 {!showHistory && cartItems.length > 0 && (
                     <button 
-                        className="gm-btn bg-green-600 hover:bg-green-700 text-white border-none" 
+                        className="gm-btn gm-btn-accent" 
                         onClick={handleShare}
                     >
                         <Share2 size={16} /> Compartilhar
@@ -340,20 +354,25 @@ const Market = () => {
               <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                  <div>
                     <p className="text-xs opacity-70 uppercase tracking-widest font-bold mb-1 text-slate-400">Saldo Disponível</p>
-                    <div className="text-4xl font-extrabold flex items-center gap-3 tracking-tight text-[var(--gm-primary)]">
-                        {CURRENCY_FORMATTER.format(availableBalanceDisplay)}
-                        <button onClick={() => setTopUpModalOpen(true)} className="w-8 h-8 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center text-white" title="Adicionar Saldo">
-                            <Plus size={20} />
-                        </button>
-                        {walletBalance > 0 && (
-                            <button 
-                                onClick={() => setShowResetConfirm(true)} 
-                                className="gm-btn text-sm tracking-[0.2em] border border-red-500 text-red-500 bg-transparent hover:bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:shadow-[0_0_25px_rgba(239,68,68,0.6)] transition-all ml-4 px-6 h-10"
-                            >
-                                <Trash2 size={16} /> ZERAR SALDO
+                    <div className="flex items-center justify-center sm:justify-start gap-4">
+                        <div className="text-4xl font-black tracking-tight text-[var(--gm-primary)]">
+                            {CURRENCY_FORMATTER.format(availableBalanceDisplay)}
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={() => setTopUpModalOpen(true)} className="gm-btn gm-btn-icon gm-btn-soft" title="Adicionar Saldo">
+                                <Plus size={24} />
                             </button>
-                        )}
-                    </div>
+                            {walletBalance > 0 && (
+                                <button 
+                                    onClick={() => setShowResetConfirm(true)} 
+                                    className="gm-btn gm-btn-icon gm-btn-danger"
+                                    title="Zerar Saldo"
+                                >
+                                    <Trash2 size={20} />
+                                </button>
+                            )}
+                        </div>
+                     </div>
                  </div>
                  <div className="text-center md:text-right bg-white/5 p-4 rounded-xl border border-white/10 min-w-[180px]">
                      <p className="text-xs opacity-70 uppercase tracking-widest font-bold mb-1">Total da Lista</p>
@@ -426,7 +445,7 @@ const Market = () => {
                             <label className="gm-label mb-1 block">Qtd</label>
                             <input className="gm-input text-center" type="number" value={newItemQty} onChange={e => setNewItemQty(Number(e.target.value))} />
                         </div>
-                        <button className="gm-btn gm-border-loop w-full md:w-auto px-8" onClick={handleAddItem} disabled={addingItem}>
+                        <button className="gm-btn w-full md:w-auto px-8" onClick={handleAddItem} disabled={addingItem}>
                             {addingItem ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />} Adicionar
                         </button>
                     </div>
@@ -438,7 +457,7 @@ const Market = () => {
                     right={
                         cartItems.length > 0 && (
                             <button 
-                                className="gm-btn bg-[#00ff00] hover:bg-[#00e600] text-black border-none font-black shadow-[0_0_20px_rgba(0,255,0,0.3)] hover:shadow-[0_0_30px_rgba(0,255,0,0.5)] transition-all px-6 py-2 rounded-xl flex items-center gap-2"
+                                className="gm-btn gm-btn-accent font-black transition-all px-6 py-2 rounded-xl flex items-center gap-2"
                                 onClick={() => setShowFinalizeConfirm(true)}
                                 disabled={finalizing}
                             >
@@ -468,7 +487,7 @@ const Market = () => {
                                     </div>
                                     <div className="flex items-center justify-between sm:justify-end gap-6">
                                         <span className="font-bold text-xl text-[var(--gm-primary)]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
-                                        <button onClick={() => handleRemoveItem(item.id)} className="w-10 h-10 rounded-lg hover:bg-red-500/20 text-red-500 flex items-center justify-center transition-colors flex-shrink-0">
+                                        <button onClick={() => handleRemoveItem(item.id)} className="gm-btn gm-btn-icon gm-btn-danger">
                                             <Trash2 size={18}/>
                                         </button>
                                     </div>
@@ -480,36 +499,65 @@ const Market = () => {
            </Grid>
        )}
 
-       {topUpModalOpen && (
-           <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setTopUpModalOpen(false)}>
-               <div className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-                   <h3 className="text-xl font-bold mb-1 text-white">Adicionar Saldo</h3>
-                   <p className="text-sm text-slate-400 mb-6">Insira o valor para recarregar sua carteira.</p>
-                   
-                   <input 
-                        type="number" 
-                        className="gm-input mb-6 text-3xl font-bold text-center h-16" 
-                        value={topUpAmount} 
-                        onChange={e => setTopUpAmount(e.target.value)} 
-                        placeholder="0.00" 
-                        autoFocus 
-                   />
-                   
-                   <div className="flex flex-col gap-2">
-                       <button 
-                        className="gm-btn gm-border-loop w-full py-4 font-bold text-white" 
-                        onClick={handleTopUp}
-                        disabled={toppingUp}
-                       >
-                           {toppingUp ? <Loader2 size={20} className="animate-spin mx-auto" /> : "Confirmar Recarga"}
-                       </button>
-                       <button className="gm-btn w-full py-3 text-slate-400 border-none" onClick={() => setTopUpModalOpen(false)}>
-                           Cancelar
-                       </button>
-                   </div>
-               </div>
-           </div>
-       )}
+       <AnimatePresence>
+        {topUpModalOpen && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+                    onClick={() => setTopUpModalOpen(false)}
+                />
+                <motion.div 
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                    className="relative w-full max-w-sm bg-[#1a1a1a]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden" 
+                    onClick={e => e.stopPropagation()}
+                >
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--gm-primary)] to-[var(--gm-accent)]"></div>
+                    
+                    <div className="flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-[var(--gm-primary)]/20 flex items-center justify-center text-[var(--gm-primary)] mb-6">
+                            <Wallet size={32} />
+                        </div>
+                        
+                        <h3 className="text-2xl font-black text-white mb-2">Adicionar Saldo</h3>
+                        <p className="text-sm text-slate-400 mb-8">Insira o valor para recarregar sua carteira.</p>
+                        
+                        <div className="relative w-full mb-8">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-slate-500">R$</span>
+                            <input 
+                                type="number" 
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-3xl font-black text-white focus:outline-none focus:border-[var(--gm-primary)] transition-all text-center" 
+                                value={topUpAmount} 
+                                onChange={e => setTopUpAmount(e.target.value)} 
+                                placeholder="0.00" 
+                                autoFocus 
+                            />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-3 w-full">
+                            <button 
+                                className="gm-btn w-full py-4 font-black text-lg" 
+                                onClick={handleTopUp}
+                                disabled={toppingUp}
+                            >
+                                {toppingUp ? <Loader2 size={24} className="animate-spin mx-auto" /> : "CONFIRMAR RECARGA"}
+                            </button>
+                            <button 
+                                className="gm-btn gm-btn-soft w-full py-3" 
+                                onClick={() => setTopUpModalOpen(false)}
+                            >
+                                CANCELAR
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+       </AnimatePresence>
 
                 {/* Modal de Confirmação de Exclusão de Histórico */}
                 <AnimatePresence>
@@ -528,7 +576,7 @@ const Market = () => {
                                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                                 className="relative w-full max-w-sm bg-[#1a1a1a]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
                             >
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-[var(--gm-primary)]"></div>
                                 
                                 <div className="flex flex-col items-center text-center">
                                     <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center text-red-500 mb-6">
@@ -544,13 +592,13 @@ const Market = () => {
                                     
                                     <div className="grid grid-cols-2 gap-4 w-full">
                                         <button 
-                                            className="gm-btn bg-white/5 hover:bg-white/10 text-white border border-white/10 py-3 rounded-2xl font-bold transition-all"
+                                            className="gm-btn gm-btn-soft w-full py-3"
                                             onClick={() => setShowDeleteHistoryConfirm(null)}
                                         >
                                             VOLTAR
                                         </button>
                                         <button 
-                                            className="gm-btn bg-red-500 hover:bg-red-600 text-white border-none py-3 rounded-2xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all"
+                                            className="gm-btn gm-btn-danger w-full py-3"
                                             onClick={() => handleDeleteHistoryMonth(showDeleteHistoryConfirm)}
                                             disabled={historyLoading}
                                         >
@@ -564,74 +612,107 @@ const Market = () => {
                 </AnimatePresence>
 
                {/* Finalize Confirmation Modal */}
-        {showFinalizeConfirm && (
-            <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setShowFinalizeConfirm(false)}>
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                    <div className="p-6 text-center">
-                        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <ShoppingCart size={32} className="text-green-500" />
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-2">Finalizar Compra?</h3>
-                        <p className="text-slate-400 mb-6">
-                            Deseja finalizar esta lista no valor de <span className="text-white font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
-                            O valor será deduzido do seu saldo de mercado.
-                        </p>
+        <AnimatePresence>
+            {showFinalizeConfirm && (
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden">
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                        onClick={() => setShowFinalizeConfirm(false)}
+                    />
+                    <motion.div 
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        className="relative w-full max-w-sm bg-[#1a1a1a]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--gm-primary)] to-[var(--gm-accent)]"></div>
                         
-                        <div className="grid grid-cols-1 gap-3">
-                            <button 
-                                onClick={handleFinalize}
-                                disabled={finalizing}
-                                className="gm-btn bg-green-600 hover:bg-green-700 text-white border-none py-4 font-bold flex items-center justify-center gap-2"
-                            >
-                                {finalizing ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
-                                Sim, Finalizar Agora
-                            </button>
-                            <button 
-                                onClick={() => setShowFinalizeConfirm(false)}
-                                className="gm-btn w-full py-3 text-slate-400 border-none"
-                            >
-                                Cancelar
-                            </button>
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-16 h-16 bg-[var(--gm-primary)]/20 rounded-2xl flex items-center justify-center mb-6 text-[var(--gm-primary)]">
+                                <ShoppingCart size={32} />
+                            </div>
+                            <h3 className="text-2xl font-black text-white mb-2">Finalizar Compra?</h3>
+                            <p className="text-slate-400 mb-8">
+                                Deseja finalizar esta lista no valor de <span className="text-white font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
+                                O valor será deduzido do seu saldo de mercado.
+                            </p>
+                            
+                            <div className="grid grid-cols-1 gap-3 w-full">
+                                <button 
+                                    onClick={handleFinalize}
+                                    disabled={finalizing}
+                                    className="gm-btn w-full py-4 font-black flex items-center justify-center gap-2"
+                                >
+                                    {finalizing ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
+                                    SIM, FINALIZAR AGORA
+                                </button>
+                                <button 
+                                    onClick={() => setShowFinalizeConfirm(false)}
+                                    className="gm-btn gm-btn-soft w-full py-3"
+                                >
+                                    CANCELAR
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
-            </div>
-        )}
+            )}
+        </AnimatePresence>
 
         {/* Reset Balance Confirmation Modal */}
-        {showResetConfirm && (
-            <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setShowResetConfirm(false)}>
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                    <div className="p-6 text-center">
-                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Trash2 size={32} className="text-red-500" />
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-2">Zerar Saldo?</h3>
-                        <p className="text-slate-400 mb-6">
-                            Tem certeza que deseja zerar o seu saldo disponível de <span className="text-white font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
-                            <br/><span className="text-red-400 text-sm">Esta ação não pode ser desfeita.</span>
-                        </p>
+        <AnimatePresence>
+            {showResetConfirm && (
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden">
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                        onClick={() => setShowResetConfirm(false)}
+                    />
+                    <motion.div 
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        className="relative w-full max-w-sm bg-[#1a1a1a]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-[var(--gm-primary)]"></div>
                         
-                        <div className="grid grid-cols-1 gap-3">
-                            <button 
-                                onClick={handleResetBalance}
-                                disabled={resettingBalance}
-                                className="gm-btn bg-red-600 hover:bg-red-700 text-white border-none py-4 font-bold flex items-center justify-center gap-2"
-                            >
-                                {resettingBalance ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
-                                Sim, Zerar Saldo
-                            </button>
-                            <button 
-                                onClick={() => setShowResetConfirm(false)}
-                                className="gm-btn w-full py-3 text-slate-400 border-none"
-                            >
-                                Cancelar
-                            </button>
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mb-6 text-red-500">
+                                <Trash2 size={32} />
+                            </div>
+                            <h3 className="text-2xl font-black text-white mb-2">Zerar Saldo?</h3>
+                            <p className="text-slate-400 mb-8">
+                                Tem certeza que deseja zerar o seu saldo disponível de <span className="text-white font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
+                                <br/><span className="text-red-400 font-bold">Esta ação não pode ser desfeita.</span>
+                            </p>
+                            
+                            <div className="grid grid-cols-1 gap-3 w-full">
+                                <button 
+                                    onClick={handleResetBalance}
+                                    disabled={resettingBalance}
+                                    className="gm-btn gm-btn-danger w-full py-4 font-black flex items-center justify-center gap-2"
+                                >
+                                    {resettingBalance ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={24} />}
+                                </button>
+                                <button 
+                                    onClick={() => setShowResetConfirm(false)}
+                                    className="gm-btn gm-btn-soft w-full py-3"
+                                >
+                                    CANCELAR
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
-            </div>
-        )}
+            )}
+        </AnimatePresence>
 
         {/* Share Options Modal */}
 
@@ -650,9 +731,9 @@ const Market = () => {
                     window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 text-green-400 transition-all font-bold text-left"
+                  className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] transition-all font-bold text-left"
                 >
-                  <MessageCircle size={20} /> WhatsApp
+                  <WhatsAppIcon size={20} /> WhatsApp
                 </button>
 
                 <button 
@@ -660,7 +741,7 @@ const Market = () => {
                     window.open(`mailto:?subject=${shareData.title}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-400 transition-all font-bold text-left"
+                  className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-accent)]/10 border border-[var(--gm-accent)]/20 hover:bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] transition-all font-bold text-left"
                 >
                   <Mail size={20} /> E-mail
                 </button>
@@ -681,24 +762,24 @@ const Market = () => {
                 </button>
 
                 {navigator.share && (
-                  <button 
-                    onClick={async () => {
-                      try {
-                        await navigator.share({
-                          title: shareData.title,
-                          text: shareData.message,
-                        });
-                        setShareData(null);
-                      } catch (err) {
-                        if ((err as Error).name !== 'AbortError') {
-                          alert("Erro ao compartilhar.");
+                    <button 
+                      onClick={async () => {
+                        try {
+                          await navigator.share({
+                            title: shareData.title,
+                            text: shareData.message,
+                          });
+                          setShareData(null);
+                        } catch (err) {
+                          if ((err as Error).name !== 'AbortError') {
+                            alert("Erro ao compartilhar.");
+                          }
                         }
-                      }
-                    }}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 text-orange-400 transition-all font-bold text-left"
-                  >
-                    <Share2 size={20} /> Outras Opções (Sistema)
-                  </button>
+                      }}
+                      className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] transition-all font-bold text-left"
+                    >
+                      <Share2 size={20} /> Outras Opções (Sistema)
+                    </button>
                 )}
               </div>
 

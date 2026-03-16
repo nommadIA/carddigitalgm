@@ -38,6 +38,8 @@ export type AppSettings = {
   app_background_scale?: number;
   app_background_blur?: number;
 
+  button_style?: string | null; // glass-1, glass-2, etc.
+
   // Alarm Settings
   budget_approved_reminder_enabled?: boolean | null;
   budget_approved_reminder_times?: string[] | null;
@@ -73,6 +75,7 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   app_background_pos_y: "50%",
   app_background_scale: 1,
   app_background_blur: 10,
+  button_style: "solid",
   budget_approved_reminder_enabled: false,
   budget_approved_reminder_times: DEFAULT_REMINDER_TIMES,
 
@@ -82,17 +85,50 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   logo_url: "",
 };
 
+function hexToRgb(hex: string) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
+}
+
+function getContrastColor(hex: string) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return "#ffffff";
+  // Formula de luminosidade (YIQ)
+  const yiq = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+  return yiq >= 128 ? "#000000" : "#ffffff";
+}
+
 export function applySettingsToDOM(s: AppSettings) {
   const root = document.documentElement;
 
   if (s.brand_primary) {
     root.style.setProperty("--gm-primary", s.brand_primary);
     root.style.setProperty("--brand-primary", s.brand_primary);
+    
+    const rgb = hexToRgb(s.brand_primary);
+    if (rgb) {
+      root.style.setProperty("--gm-primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+    }
+
+    // Calcula e aplica a cor de contraste para o texto sobre o primário
+    const contrast = getContrastColor(s.brand_primary);
+    root.style.setProperty("--gm-primary-foreground", contrast);
   }
 
   if (s.brand_accent) {
     root.style.setProperty("--gm-accent", s.brand_accent);
     root.style.setProperty("--brand-accent", s.brand_accent);
+
+    const rgb = hexToRgb(s.brand_accent);
+    if (rgb) {
+      root.style.setProperty("--gm-accent-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+    }
   }
 
   if (s.brand_bg) {
@@ -103,6 +139,13 @@ export function applySettingsToDOM(s: AppSettings) {
   if (s.font_family) {
     root.style.setProperty("--gm-font", s.font_family);
     root.style.setProperty("--app-font", s.font_family);
+  }
+
+  if (s.button_style) {
+    root.setAttribute("data-button-style", s.button_style);
+  } else {
+    const fallback = localStorage.getItem("gm_button_style_fallback") || "solid";
+    root.setAttribute("data-button-style", fallback);
   }
 
   // Background do app (imagem)
@@ -157,16 +200,34 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
 
     // 1) tenta direto pelo tenant
     if (tenantId) {
+      // Tentamos buscar as configurações. Se falhar por coluna inexistente, tentamos sem button_style.
       const { data: byTenant, error: errTenant } = await withTimeout<any>(
         supabase.from("app_settings").select("*").eq("tenant_id", tenantId).maybeSingle() as any,
         15000
       );
 
       if (errTenant) {
+        if (errTenant.code === "PGRST204" || errTenant.message?.includes("button_style") || errTenant.code === "42703") {
+           const { data: retryData } = await supabase
+             .from("app_settings")
+             .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
+             .eq("tenant_id", tenantId)
+             .maybeSingle();
+           if (retryData) {
+             const settings = { ...DEFAULT_SETTINGS, ...retryData };
+             const localStyle = localStorage.getItem("gm_button_style_fallback");
+             if (localStyle) settings.button_style = localStyle;
+             return settings;
+           }
+        }
         console.warn("fetchSettings warn (tenant):", errTenant);
-        // continua fallback
       } else if (byTenant) {
-        return (byTenant as AppSettings) || DEFAULT_SETTINGS;
+        const settings = { ...DEFAULT_SETTINGS, ...byTenant };
+        if (!byTenant.button_style) {
+          const localStyle = localStorage.getItem("gm_button_style_fallback");
+          if (localStyle) settings.button_style = localStyle;
+        }
+        return settings;
       }
 
       // 2) fallback: tenta por owner (geralmente tenant_id null)
@@ -177,6 +238,19 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
         );
 
         if (errOwner) {
+          if (errOwner.code === "PGRST204" || errOwner.message?.includes("button_style") || errOwner.code === "42703") {
+             const { data: retryData } = await supabase
+               .from("app_settings")
+               .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
+               .eq("owner", owner)
+               .maybeSingle();
+             if (retryData) {
+               const settings = { ...DEFAULT_SETTINGS, ...retryData };
+               const localStyle = localStorage.getItem("gm_button_style_fallback");
+               if (localStyle) settings.button_style = localStyle;
+               return settings;
+             }
+          }
           console.warn("fetchSettings warn (owner):", errOwner);
           return DEFAULT_SETTINGS;
         }
@@ -194,10 +268,19 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
           const { data: migrated, error: errUpsert } = await supabase
             .from("app_settings")
             .upsert(clone, { onConflict: "tenant_id" })
-            .select("*")
+            .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
             .single();
 
           if (errUpsert) {
+            if (errUpsert.code === "PGRST204" || errUpsert.message?.includes("button_style") || errUpsert.code === "42703") {
+               const { button_style, ...safeClone } = clone;
+               const { data: retryMigrate } = await supabase
+                 .from("app_settings")
+                 .upsert(safeClone, { onConflict: "tenant_id" })
+                 .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
+                 .single();
+               if (retryMigrate) return { ...DEFAULT_SETTINGS, ...retryMigrate };
+            }
             console.error("settings migrate error:", errUpsert);
             // se falhar migração, pelo menos devolve o do owner para não travar
             return (byOwner as AppSettings) || DEFAULT_SETTINGS;
@@ -223,7 +306,12 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
       return DEFAULT_SETTINGS;
     }
 
-    return (data as AppSettings) || DEFAULT_SETTINGS;
+    const settings = { ...DEFAULT_SETTINGS, ...(data || {}) };
+    if (!data?.button_style) {
+      const localStyle = localStorage.getItem("gm_button_style_fallback");
+      if (localStyle) settings.button_style = localStyle;
+    }
+    return settings;
   } catch (e: any) {
     console.warn("fetchSettings warn:", e?.message || e);
     return DEFAULT_SETTINGS; // ✅ nunca trava
@@ -250,13 +338,46 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
     payload.budget_approved_reminder_times = normalizeReminderTimes(payload.budget_approved_reminder_times);
   }
 
+  // Sempre salva no localStorage para garantir
+  if (payload.button_style) {
+    localStorage.setItem("gm_button_style_fallback", payload.button_style);
+  }
+
+  // Remove button_style do payload se soubermos que a coluna não existe (opcional, mas evita erro no console)
+  // Como não sabemos, vamos tentar. Se falhar, avisamos.
   const { data, error } = await supabase
     .from("app_settings")
     .upsert(payload, { onConflict: "tenant_id" })
     .select("*")
     .single();
 
-  if (error) throw error;
+  if (error) {
+    // Se falhar por coluna inexistente, tenta salvar sem o button_style
+    if (error.code === "PGRST204" || error.message?.includes("button_style") || error.code === "42703") {
+       const { button_style, ...safePayload } = payload as any;
+       const { data: retryData, error: retryErr } = await supabase
+         .from("app_settings")
+         .upsert(safePayload, { onConflict: "tenant_id" })
+         .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
+         .single();
+       
+       if (retryErr) {
+         console.error("Erro crítico ao salvar configurações (retry):", retryErr);
+         throw retryErr;
+       }
+       
+       // Salva o estilo localmente já que não deu no DB
+       if (button_style) {
+         localStorage.setItem("gm_button_style_fallback", button_style);
+       }
+       
+       const settings = { ...retryData, button_style: button_style || localStorage.getItem("gm_button_style_fallback") } as AppSettings;
+       applySettingsToDOM(settings);
+       return settings;
+    }
+    console.error("Erro ao salvar configurações:", error);
+    throw error;
+  }
 
   const settings = data as AppSettings;
   applySettingsToDOM(settings);

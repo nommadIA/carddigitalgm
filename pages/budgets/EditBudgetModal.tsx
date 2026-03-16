@@ -5,7 +5,7 @@ import { X, Save, Loader2 } from "lucide-react";
 
 import BudgetItemsEditor, { BudgetItemDraft, BudgetKind } from "../../components/budgets/BudgetItemsEditor";
 import { toNumber } from "../../lib/money";
-import { scheduleApprovedBudgetReminders } from "../../lib/alarmSystem";
+import { scheduleApprovedBudgetReminders, removeAlarmsForBudget } from "../../lib/alarmSystem";
 import { getAppSettings } from "../../lib/settings";
 import StatusPicker from "../../components/ui/StatusPicker";
 
@@ -211,9 +211,11 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
 
       if (error) throw error;
 
-      // ✅ Notificação leve quando APROVADO (3 horários das Configurações)
-      if (status === "APROVADO") {
-        scheduleApprovedBudgetReminders(budgetId, clientName || "Cliente");
+      // ✅ Notificação leve quando APROVADO ou PRODUCAO (3 horários das Configurações)
+      if (status === "APROVADO" || status === "PRODUCAO") {
+        scheduleApprovedBudgetReminders(budgetId, clientName || "Cliente", toNumber(deliveryDays || 5));
+      } else if (status === "CONCLUIDO" || status === "CANCELADO" || status === "LIXEIRA" || status === "AGUARDANDO") {
+        removeAlarmsForBudget(budgetId);
       }
 
       onSuccess();
