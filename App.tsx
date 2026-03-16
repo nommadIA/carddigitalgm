@@ -1,5 +1,5 @@
-import React, { useEffect, useState, Suspense, lazy } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './store/AuthContext';
 import Layout from './components/ui/Layout';
 import Login from './pages/Login';
@@ -33,40 +33,56 @@ const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
 };
 
 const PrivateRoutes = () => {
+  const location = useLocation();
   return (
     <ProtectedRoute>
       <Layout>
-        <Suspense
-          fallback={
-            <div className="h-screen w-full flex items-center justify-center bg-[var(--gm-bg)] text-[var(--gm-primary)]">
-              <Loader2 size={40} className="animate-spin" />
-            </div>
-          }
-        >
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/budgets" element={<Budgets />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/market" element={<Market />} />
-            <Route path="/financial" element={<Financial />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="w-full h-full"
+          >
+            <Routes location={location}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/budgets" element={<Budgets />} />
+              <Route path="/clients" element={<Clients />} />
+              <Route path="/expenses" element={<Expenses />} />
+              <Route path="/market" element={<Market />} />
+              <Route path="/financial" element={<Financial />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </motion.div>
+        </AnimatePresence>
       </Layout>
     </ProtectedRoute>
   );
 };
 
 const AppRoutes = () => {
+  const location = useLocation();
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/*" element={<PrivateRoutes />} />
-    </Routes>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname.split('/')[1]}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="w-full h-full"
+      >
+        <Routes location={location}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/*" element={<PrivateRoutes />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

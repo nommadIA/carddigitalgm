@@ -38,6 +38,8 @@ export type AppSettings = {
   app_background_scale?: number;
   app_background_blur?: number;
 
+  app_scale?: number | null;
+
   button_style?: string | null; // glass-1, glass-2, etc.
 
   // Alarm Settings
@@ -75,6 +77,7 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   app_background_pos_y: "50%",
   app_background_scale: 1,
   app_background_blur: 10,
+  app_scale: 1.0,
   button_style: "solid",
   budget_approved_reminder_enabled: false,
   budget_approved_reminder_times: DEFAULT_REMINDER_TIMES,
@@ -165,6 +168,16 @@ export function applySettingsToDOM(s: AppSettings) {
   const effectiveBlur = Math.round(blur * factor);
   root.style.setProperty("--gm-app-bg-blur-effective", `${effectiveBlur}px`);
 
+  // ✅ Escala Global do App (Zoom)
+  if (s.app_scale) {
+    // 1.0 = 100% (16px padrão)
+    // 0.8 = 80% (12.8px)
+    // 1.2 = 120% (19.2px)
+    root.style.fontSize = `${s.app_scale * 100}%`;
+  } else {
+    root.style.fontSize = "100%";
+  }
+
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(s));
   } catch {}
@@ -210,7 +223,7 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
         if (errTenant.code === "PGRST204" || errTenant.message?.includes("button_style") || errTenant.code === "42703") {
            const { data: retryData } = await supabase
              .from("app_settings")
-             .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
+             .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, app_scale, budget_approved_reminder_enabled, budget_approved_reminder_times")
              .eq("tenant_id", tenantId)
              .maybeSingle();
            if (retryData) {
@@ -241,7 +254,7 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
           if (errOwner.code === "PGRST204" || errOwner.message?.includes("button_style") || errOwner.code === "42703") {
              const { data: retryData } = await supabase
                .from("app_settings")
-               .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
+               .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, app_scale, budget_approved_reminder_enabled, budget_approved_reminder_times")
                .eq("owner", owner)
                .maybeSingle();
              if (retryData) {
@@ -268,7 +281,7 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
           const { data: migrated, error: errUpsert } = await supabase
             .from("app_settings")
             .upsert(clone, { onConflict: "tenant_id" })
-            .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
+            .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, app_scale, budget_approved_reminder_enabled, budget_approved_reminder_times")
             .single();
 
           if (errUpsert) {
@@ -277,7 +290,7 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
                const { data: retryMigrate } = await supabase
                  .from("app_settings")
                  .upsert(safeClone, { onConflict: "tenant_id" })
-                 .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
+                 .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, app_scale, budget_approved_reminder_enabled, budget_approved_reminder_times")
                  .single();
                if (retryMigrate) return { ...DEFAULT_SETTINGS, ...retryMigrate };
             }
@@ -358,7 +371,7 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
        const { data: retryData, error: retryErr } = await supabase
          .from("app_settings")
          .upsert(safePayload, { onConflict: "tenant_id" })
-         .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
+         .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, app_scale, budget_approved_reminder_enabled, budget_approved_reminder_times")
          .single();
        
        if (retryErr) {

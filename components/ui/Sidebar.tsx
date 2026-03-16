@@ -57,9 +57,8 @@ export default function Sidebar() {
     <div className="gm-sidebar-shell">
       <div className="gm-sidebar-top">
         <div className="gm-brand">
-          <div className="gm-brand-mark">G</div>
           <div className="gm-brand-text">
-            <div className="gm-brand-title">GM Pro</div>
+            <div className="gm-brand-title">CardDigital <span className="text-[var(--gm-primary)]">GM</span></div>
             <div className="gm-brand-sub">Enterprise</div>
           </div>
         </div>

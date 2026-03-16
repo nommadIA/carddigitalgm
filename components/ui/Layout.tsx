@@ -258,8 +258,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </div>
             </div>
             <div className="flex flex-col leading-tight">
-                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">CardDigital</span>
-                <span className="text-lg font-bold text-white">GM <span className="text-[var(--gm-primary)]">SISTEMAS</span></span>
+                <span className="text-lg font-bold text-white">CardDigital <span className="text-[var(--gm-primary)]">GM</span></span>
             </div>
         </div>
         <div className="flex items-center gap-2">
@@ -287,8 +286,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 </div>
               </div>
               <div className="flex items-center gap-1 leading-none">
-                  <span className="text-sm font-light text-slate-200 tracking-tight">CardDigital</span>
-                  <span className="text-lg font-semibold text-[var(--gm-primary)]">GM</span>
+                  <span className="text-lg font-bold text-white">CardDigital <span className="text-[var(--gm-primary)]">GM</span></span>
               </div>
           </div>
         )}

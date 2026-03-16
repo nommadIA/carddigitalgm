@@ -43,7 +43,7 @@ export function buildWhatsappMessage(params: {
 
     const payload = buildPixPayload({
       pixKey: settings.pix_key,
-      merchantName: (settings.company_name || "GM Pro").toUpperCase().slice(0, 25),
+      merchantName: (settings.company_name || "CardDigital GM").toUpperCase().slice(0, 25),
       merchantCity: "SAO LUIS",
       amount: total,
       txid: orcamentoId.slice(0, 25).replace(/[^a-zA-Z0-9]/g, ''),

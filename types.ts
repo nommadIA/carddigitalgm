@@ -161,6 +161,8 @@ export interface AppSettings {
   app_background_scale?: number;
   app_background_blur?: number;
 
+  app_scale?: number | null;
+
   // New Alarm Settings
   budget_approved_reminder_enabled?: boolean | null;
   budget_approved_reminder_times?: string[] | null;

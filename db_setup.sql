@@ -176,6 +176,7 @@ create table if not exists public.app_settings (
   app_background_opacity numeric default 1,
   budget_approved_reminder_enabled boolean default false,
   budget_approved_reminder_times jsonb default '[]',
+  app_scale numeric default 1.0,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   unique(tenant_id)

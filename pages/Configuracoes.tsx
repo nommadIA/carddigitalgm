@@ -19,6 +19,9 @@ import {
   Move,
   Copy,
   Check,
+  Bell,
+  RotateCcw,
+  Loader2,
 } from "lucide-react";
 
 type Fit = "cover" | "contain";
@@ -27,10 +30,12 @@ const TIMBRADO_MODEL_URL =
   "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/Modelo%20Timbrado/TIMBRADO%20GABARITO.png";
 
 export default function Configuracoes() {
-  const { tenantId } = useAuth();
+  const { tenantId, user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   const [companyName, setCompanyName] = useState("GM edificação");
   const [pixType, setPixType] = useState("CPF");
@@ -56,6 +61,32 @@ export default function Configuracoes() {
   // Position (0 a 100%)
   const [bgPosX, setBgPosX] = useState<number>(50);
   const [bgPosY, setBgPosY] = useState<number>(50);
+  const [appScale, setAppScale] = useState<number>(1.0);
+  const [originalScale, setOriginalScale] = useState<number>(1.0);
+
+  // ✅ Aplica escala em tempo real para preview
+  useEffect(() => {
+    if (!loading) {
+      document.documentElement.style.fontSize = `${appScale * 100}%`;
+    }
+  }, [appScale, loading]);
+
+  // ✅ Reverte para a escala original se sair sem salvar
+  useEffect(() => {
+    return () => {
+      // Pequeno delay para garantir que se estiver salvando, o valor novo prevaleça
+      // Mas o ideal é ler do localStorage ou refazer o apply
+      const saved = localStorage.getItem("gm.settings.cache.v1");
+      if (saved) {
+        try {
+          const s = JSON.parse(saved);
+          if (s.app_scale) {
+            document.documentElement.style.fontSize = `${s.app_scale * 100}%`;
+          }
+        } catch (e) {}
+      }
+    };
+  }, []);
 
   const [bgEnabled, setBgEnabled] = useState<boolean>(true);
   const [bgOpacityPrev, setBgOpacityPrev] = useState<number>(0.18);
@@ -110,6 +141,10 @@ export default function Configuracoes() {
 
         const py = parseFloat(s.app_background_pos_y || "50");
         setBgPosY(!isNaN(py) ? py : 50);
+
+        const as = Number(s.app_scale ?? 1.0);
+        setAppScale(Number.isFinite(as) && as > 0 ? as : 1.0);
+        setOriginalScale(Number.isFinite(as) && as > 0 ? as : 1.0);
 
         setBgEnabled(!!s.app_background_url && op > 0);
 
@@ -191,6 +226,8 @@ export default function Configuracoes() {
         app_background_pos_x: `${bgPosX}%`,
         app_background_pos_y: `${bgPosY}%`,
 
+        app_scale: Math.min(2, Math.max(0.5, appScale)),
+
         button_style: buttonStyle,
         theme_presets: presets,
       });
@@ -249,6 +286,7 @@ export default function Configuracoes() {
       bgBlur,
       bgPosX,
       bgPosY,
+      appScale,
       presets,
     };
 
@@ -286,6 +324,7 @@ export default function Configuracoes() {
 
     setBgPosX(Number(obj.bgPosX ?? bgPosX));
     setBgPosY(Number(obj.bgPosY ?? bgPosY));
+    setAppScale(Number(obj.appScale ?? appScale));
 
     setPresets(Array.isArray(obj.presets) ? obj.presets : presets);
   }
@@ -416,6 +455,35 @@ export default function Configuracoes() {
               <div>
                 <label className="gm-label">Nome da empresa (App)</label>
                 <input className="gm-input" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+              </div>
+
+              <div>
+                <label className="gm-label">Escala Global do App (Zoom UI)</label>
+                <div className="grid grid-cols-[1fr_80px] gap-3 items-center">
+                  <input 
+                    type="range" 
+                    min={0.7} 
+                    max={1.5} 
+                    step={0.05} 
+                    value={appScale} 
+                    onChange={(e) => setAppScale(Number(e.target.value))} 
+                  />
+                  <div className="relative">
+                    <input 
+                      type="number" 
+                      min={0.7} 
+                      max={1.5} 
+                      step={0.05} 
+                      className="gm-input pr-6" 
+                      value={appScale} 
+                      onChange={(e) => setAppScale(Math.min(1.5, Math.max(0.7, Number(e.target.value))))} 
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] opacity-50">x</span>
+                  </div>
+                </div>
+                <div className="gm-muted text-[10px] mt-1">
+                  Ajusta o tamanho de textos e botões para melhor visualização em diferentes telas.
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
@@ -925,6 +993,112 @@ export default function Configuracoes() {
               </div>
             </div>
           </Card>
+
+          {/* ✅ Notificações */}
+          <div className="lg:col-span-2">
+            <Card className="overflow-hidden border-white/5 bg-white/[0.02]">
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                    <Bell className="text-orange-500" size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Notificações Push</h2>
+                    <p className="text-sm text-slate-400">Receba alertas de orçamentos e despesas no seu Android</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                      <div>
+                        <div className="font-bold text-white">Status das Notificações</div>
+                        <div className="text-xs text-slate-400 mt-1">
+                          {Notification.permission === 'granted' 
+                            ? '✅ Ativadas no seu navegador' 
+                            : Notification.permission === 'denied' 
+                            ? '❌ Bloqueadas pelo navegador' 
+                            : '⚠️ Aguardando permissão'}
+                        </div>
+                      </div>
+                      <button 
+                        onClick={async () => {
+                          const permission = await Notification.requestPermission();
+                          if (permission === 'granted') {
+                            alert("Notificações ativadas com sucesso!");
+                            window.location.reload();
+                          } else {
+                            alert("Permissão negada. Verifique as configurações do seu navegador.");
+                          }
+                        }}
+                        className="gm-btn-soft text-xs py-2"
+                        disabled={Notification.permission === 'granted'}
+                      >
+                        {Notification.permission === 'granted' ? 'Ativado' : 'Ativar'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <button 
+                      disabled={testing}
+                      onClick={async () => {
+                        setTesting(true);
+                        try {
+                          if ("serviceWorker" in navigator) {
+                            const reg = await navigator.serviceWorker.ready;
+                            reg.active?.postMessage("TEST_NOTIFICATION");
+                            // Pequeno delay para o usuário sentir a ação
+                            setTimeout(() => setTesting(false), 1000);
+                          } else {
+                            alert("Service Worker não suportado neste navegador.");
+                            setTesting(false);
+                          }
+                        } catch (e) {
+                          console.error(e);
+                          setTesting(false);
+                        }
+                      }}
+                      className="gm-btn-soft py-3 flex items-center justify-center gap-2 text-sm w-full"
+                    >
+                      {testing ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}
+                      {testing ? "Enviando..." : "Testar Notificação"}
+                    </button>
+                    
+                    <button 
+                      disabled={syncing}
+                      onClick={async () => {
+                        if (!tenantId || !user?.id) {
+                          alert("Erro: Sessão não encontrada. Faça login novamente.");
+                          return;
+                        }
+
+                        setSyncing(true);
+                        try {
+                          const { forceSavePushToken } = await import("../services/pushFCM");
+                          const res = await forceSavePushToken(tenantId, user.id);
+                          if (res.ok) {
+                            alert("Token Push sincronizado com sucesso!");
+                          } else {
+                            alert(`Erro ao sincronizar: ${res.reason}`);
+                          }
+                        } catch (e) {
+                          console.error(e);
+                          alert("Ocorreu um erro inesperado ao sincronizar.");
+                        } finally {
+                          setSyncing(false);
+                        }
+                      }}
+                      className="gm-btn-soft py-3 flex items-center justify-center gap-2 text-sm w-full"
+                    >
+                      {syncing ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />}
+                      {syncing ? "Sincronizando..." : "Sincronizar Token"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
 
           {/* =========================
               CHECKLIST (full width)
