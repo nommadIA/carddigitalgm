@@ -7,7 +7,7 @@ type ThemePrefs = {
   brand_bg?: string;
 };
 
-function safeHex(v?: string) {
+function safeHex(v?: string | null) {
   if (!v) return "";
   const s = v.trim();
   if (/^#([0-9a-fA-F]{6})$/.test(s)) return s;

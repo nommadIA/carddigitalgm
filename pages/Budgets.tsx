@@ -27,6 +27,7 @@ import {
   Bell,
   Copy,
   Mail,
+  X,
 } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 
@@ -110,7 +111,7 @@ function normalizeStatus(s?: string | null) {
 function pillClass(status: string) {
   switch (status) {
     case "AGUARDANDO":
-      return "bg-yellow-500/10 text-yellow-400 border-yellow-500/25 hover:bg-yellow-500/20";
+      return "bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border-[var(--gm-primary)]/25 hover:bg-[var(--gm-primary)]/20";
     case "APROVADO":
       return "bg-[var(--gm-accent)]/10 text-[var(--gm-accent)] border-[var(--gm-accent)]/25 hover:bg-[var(--gm-accent)]/20";
     case "PRODUCAO":
@@ -476,7 +477,7 @@ export default function Budgets() {
                   </div>
 
                   <div className="text-right shrink-0">
-                    <div className="font-extrabold text-[18px]" style={{ color: ORANGE }}>
+                    <div className="font-extrabold text-[18px] text-[var(--gm-primary)]">
                       {CURRENCY.format(Number(r.total_amount || 0))}
                     </div>
                     <div className="gm-muted text-xs">Total</div>
@@ -601,78 +602,95 @@ export default function Budgets() {
 
       {/* Share Options Modal */}
       {shareData && (
-        <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setShareData(null)}>
-          <div className="bg-slate-900 border border-white/10 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Share2 size={20} className="text-[var(--gm-primary)]" />
-                Compartilhar Orçamento
-              </h3>
-              
-              <div className="grid grid-cols-1 gap-3">
-                <button 
-                  onClick={() => {
-                    window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
-                    setShareData(null);
-                  }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-accent)]/10 border border-[var(--gm-accent)]/20 hover:bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] transition-all font-bold"
-                >
-                  <WhatsAppIcon size={20} /> WhatsApp
-                </button>
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
+          <div className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+              <h3 className="text-lg font-bold">Compartilhar Orçamento</h3>
+              <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-3">
+              <button 
+                onClick={() => {
+                  window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
+                  setShareData(null);
+                }}
+                className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+              >
+                <div className="shrink-0">
+                  <WhatsAppIcon size={24} className="text-[var(--gm-primary)]" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-[var(--gm-primary)] leading-tight">WhatsApp</p>
+                  <p className="text-[10px] text-white/70 leading-tight">Enviar diretamente para um contato</p>
+                </div>
+              </button>
 
-                <button 
-                  onClick={() => {
-                    window.open(`mailto:?subject=Orçamento - ${shareData.budget.client_name}&body=${encodeURIComponent(shareData.message)}`, "_blank");
-                    setShareData(null);
-                  }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] transition-all font-bold"
-                >
-                  <Mail size={20} /> E-mail
-                </button>
+              <button 
+                onClick={() => {
+                  window.open(`mailto:?subject=Orçamento - ${shareData.budget.client_name}&body=${encodeURIComponent(shareData.message)}`, "_blank");
+                  setShareData(null);
+                }}
+                className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+              >
+                <div className="shrink-0">
+                  <Mail size={24} className="text-[var(--gm-primary)]" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-[var(--gm-primary)] leading-tight">E-mail</p>
+                  <p className="text-[10px] text-white/70 leading-tight">Enviar por correio eletrônico</p>
+                </div>
+              </button>
 
+              <button 
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(shareData.message);
+                    alert("Texto copiado para a área de transferência!");
+                    setShareData(null);
+                  } catch (err) {
+                    alert("Erro ao copiar texto.");
+                  }
+                }}
+                className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+              >
+                <div className="shrink-0">
+                  <Copy size={24} className="text-[var(--gm-primary)]" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-[var(--gm-primary)] leading-tight">Copiar Texto</p>
+                  <p className="text-[10px] text-white/70 leading-tight">Copiar para colar em outro lugar</p>
+                </div>
+              </button>
+
+              {navigator.share && (
                 <button 
                   onClick={async () => {
                     try {
-                      await navigator.clipboard.writeText(shareData.message);
-                      alert("Texto copiado para a área de transferência!");
+                      await navigator.share({
+                        title: `Orçamento - ${shareData.budget.client_name}`,
+                        text: shareData.message,
+                      });
                       setShareData(null);
                     } catch (err) {
-                      alert("Erro ao copiar texto.");
+                      if ((err as Error).name !== 'AbortError') {
+                        alert("Erro ao compartilhar.");
+                      }
                     }
                   }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white transition-all font-bold"
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
                 >
-                  <Copy size={20} /> Copiar Texto
+                  <div className="shrink-0">
+                    <Share2 size={24} className="text-[var(--gm-primary)]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-[var(--gm-primary)] leading-tight">Mais Opções</p>
+                    <p className="text-[10px] text-white/70 leading-tight">Menu de compartilhamento do sistema</p>
+                  </div>
                 </button>
-
-                {navigator.share && (
-                  <button 
-                    onClick={async () => {
-                      try {
-                        await navigator.share({
-                          title: `Orçamento - ${shareData.budget.client_name}`,
-                          text: shareData.message,
-                        });
-                        setShareData(null);
-                      } catch (err) {
-                        if ((err as Error).name !== 'AbortError') {
-                          alert("Erro ao compartilhar.");
-                        }
-                      }
-                    }}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-accent)]/10 border border-[var(--gm-accent)]/20 hover:bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] transition-all font-bold"
-                  >
-                    <Share2 size={20} /> Outras Opções (Sistema)
-                  </button>
-                )}
-              </div>
-
-              <button 
-                onClick={() => setShareData(null)}
-                className="w-full mt-6 py-3 text-slate-400 font-medium hover:text-white transition-colors"
-              >
-                Cancelar
-              </button>
+              )}
             </div>
           </div>
         </div>
@@ -693,13 +711,13 @@ export default function Budgets() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirmId(null)}
-                  className="flex-1 py-3 text-slate-300 font-medium hover:bg-white/5 rounded-xl transition-colors border border-white/10"
+                  className="gm-btn gm-btn-outline flex-1"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={hardDelete}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all"
+                  className="gm-btn gm-btn-danger flex-1"
                 >
                   Excluir
                 </button>

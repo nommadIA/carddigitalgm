@@ -64,32 +64,58 @@ export default function Configuracoes() {
   const [appScale, setAppScale] = useState<number>(1.0);
   const [originalScale, setOriginalScale] = useState<number>(1.0);
 
-  // ✅ Aplica escala em tempo real para preview
+  const [bgEnabled, setBgEnabled] = useState<boolean>(true);
+  const [bgOpacityPrev, setBgOpacityPrev] = useState<number>(0.18);
+
+  // ✅ Aplica as configurações em tempo real para preview (sem persistir no localStorage)
   useEffect(() => {
     if (!loading) {
-      document.documentElement.style.fontSize = `${appScale * 100}%`;
+      applySettingsToDOM({
+        brand_primary: brandPrimary,
+        brand_accent: brandAccent,
+        brand_bg: brandBg,
+        font_family: fontFamily,
+        button_style: buttonStyle,
+        app_scale: appScale,
+        app_background_url: bgUrl,
+        app_background_fit: bgFit,
+        app_background_opacity: bgEnabled ? bgOpacity : 0,
+        app_background_pos_x: `${bgPosX}%`,
+        app_background_pos_y: `${bgPosY}%`,
+        app_background_scale: bgScale,
+        app_background_blur: bgBlur,
+      }, false);
     }
-  }, [appScale, loading]);
+  }, [
+    loading,
+    brandPrimary,
+    brandAccent,
+    brandBg,
+    fontFamily,
+    buttonStyle,
+    appScale,
+    bgUrl,
+    bgFit,
+    bgEnabled,
+    bgOpacity,
+    bgPosX,
+    bgPosY,
+    bgScale,
+    bgBlur
+  ]);
 
-  // ✅ Reverte para a escala original se sair sem salvar
+  // ✅ Reverte para as configurações salvas se sair sem salvar
   useEffect(() => {
     return () => {
-      // Pequeno delay para garantir que se estiver salvando, o valor novo prevaleça
-      // Mas o ideal é ler do localStorage ou refazer o apply
       const saved = localStorage.getItem("gm.settings.cache.v1");
       if (saved) {
         try {
           const s = JSON.parse(saved);
-          if (s.app_scale) {
-            document.documentElement.style.fontSize = `${s.app_scale * 100}%`;
-          }
+          applySettingsToDOM(s);
         } catch (e) {}
       }
     };
   }, []);
-
-  const [bgEnabled, setBgEnabled] = useState<boolean>(true);
-  const [bgOpacityPrev, setBgOpacityPrev] = useState<number>(0.18);
 
   // ✅ IMPORTANTE: Preview Scale (somente UI / não salva no Supabase)
   const [bgPreviewScale, setBgPreviewScale] = useState(1);
@@ -372,8 +398,6 @@ export default function Configuracoes() {
     setBrandPrimary(theme.primary);
     setBrandAccent(theme.accent);
     setBrandBg(theme.bg);
-    // Adicionamos o foreground ao root temporariamente para o preview
-    document.documentElement.style.setProperty("--gm-primary-foreground", theme.foreground);
   };
 
   const ColorPickerInput = ({
@@ -429,9 +453,9 @@ export default function Configuracoes() {
             />
           </label>
 
-          <button className="gm-btn" disabled={!canSave} onClick={handleSave} type="button">
+          <button className="gm-btn px-4 py-2 text-sm" disabled={!canSave} onClick={handleSave} type="button">
             <Save size={16} />
-            {saving ? "Salvando..." : "Salvar Alterações"}
+            {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       }
@@ -738,7 +762,7 @@ export default function Configuracoes() {
                       >
                         <div className={`w-full py-3 text-lg font-bold rounded-xl flex items-center justify-center transition-all duration-300 pointer-events-none ${
                           s.id === 'solid' 
-                            ? 'bg-[var(--gm-primary)] text-white shadow-none' 
+                            ? 'bg-[var(--gm-primary)] text-[var(--gm-primary-foreground)] shadow-none' 
                             : 'bg-black/40 border border-[var(--gm-primary)] text-white backdrop-blur-md'
                         }`}>
                           Preview

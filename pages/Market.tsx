@@ -406,7 +406,7 @@ const Market = () => {
                                                 e.stopPropagation();
                                                 setShowDeleteHistoryConfirm(h.month);
                                             }}
-                                            className="absolute top-3 right-3 w-8 h-8 rounded-lg bg-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white z-20 transition-all shadow-lg border border-red-500/30"
+                                            className="absolute top-3 right-3 gm-btn gm-btn-icon gm-btn-danger z-20"
                                             title="Excluir este mês"
                                         >
                                             <Trash2 size={14} />
@@ -731,7 +731,7 @@ const Market = () => {
                     window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] transition-all font-bold text-left"
+                  className="gm-btn gm-btn-soft w-full justify-start py-4"
                 >
                   <WhatsAppIcon size={20} /> WhatsApp
                 </button>
@@ -741,7 +741,8 @@ const Market = () => {
                     window.open(`mailto:?subject=${shareData.title}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-accent)]/10 border border-[var(--gm-accent)]/20 hover:bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] transition-all font-bold text-left"
+                  className="gm-btn gm-btn-soft w-full justify-start py-4"
+                  style={{ color: 'var(--gm-accent)', borderColor: 'rgba(var(--gm-accent-rgb), 0.2)' }}
                 >
                   <Mail size={20} /> E-mail
                 </button>
@@ -756,7 +757,7 @@ const Market = () => {
                       alert("Erro ao copiar texto.");
                     }
                   }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white transition-all font-bold text-left"
+                  className="gm-btn gm-btn-soft w-full justify-start py-4"
                 >
                   <Copy size={20} /> Copiar Texto
                 </button>
@@ -776,7 +777,7 @@ const Market = () => {
                           }
                         }
                       }}
-                      className="flex items-center gap-3 p-4 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] transition-all font-bold text-left"
+                      className="gm-btn gm-btn-soft w-full justify-start py-4"
                     >
                       <Share2 size={20} /> Outras Opções (Sistema)
                     </button>

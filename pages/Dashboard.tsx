@@ -272,7 +272,7 @@ const Dashboard = () => {
           <Grid cols={3} className="gap-4">
               {/* NA FILA (BRANCO/DARK) - Relógio SVG com Ponteiro Animado */}
               <motion.div variants={itemVariants}>
-                <Card className="border border-white/20 hover:border-white/50 shadow-[0_0_20px_rgba(255,255,255,0.08)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
+                <Card className="border border-white hover:border-white/80 shadow-[0_0_20px_rgba(255,255,255,0.08)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
                    <div className="flex items-center justify-between relative z-10">
                       <div>
                         <h3 className="text-white/80 text-[11px] font-bold uppercase tracking-wider mb-1">Na Fila</h3>
@@ -281,11 +281,11 @@ const Dashboard = () => {
                         </div>
                         <p className="text-[10px] text-white/50 mt-1 font-medium">Aguardando aprovação</p>
                       </div>
-                      <div className="p-2.5 bg-white/10 rounded-xl text-white border border-white/20 shrink-0">
+                      <div className="w-12 h-12 flex items-center justify-center bg-white/10 rounded-2xl text-[var(--gm-primary)] border border-white shrink-0">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          width="22"
-                          height="22"
+                          width="24"
+                          height="24"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -303,7 +303,7 @@ const Dashboard = () => {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <Card className="border border-[var(--gm-primary)]/30 hover:border-[var(--gm-primary)]/60 shadow-[0_0_20px_rgba(var(--gm-primary-rgb),0.15)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
+                <Card className="border border-[var(--gm-primary)] hover:border-[var(--gm-primary)]/80 shadow-[0_0_20px_rgba(var(--gm-primary-rgb),0.15)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
                    <div className="flex items-center justify-between relative z-10">
                       <div>
                         <h3 className="text-[var(--gm-primary)]/90 text-[11px] font-bold uppercase tracking-wider mb-1">Fazendo</h3>
@@ -312,15 +312,15 @@ const Dashboard = () => {
                         </div>
                         <p className="text-[10px] text-[var(--gm-primary)]/60 mt-1 font-medium">Em produção ativa</p>
                       </div>
-                      <div className="p-2.5 bg-[var(--gm-primary)]/10 rounded-xl text-[var(--gm-primary)] border border-[var(--gm-primary)]/20 shrink-0">
-                        <Loader2 size={22} className="animate-spin" />
+                      <div className="w-12 h-12 flex items-center justify-center bg-[var(--gm-primary)]/10 rounded-2xl text-[var(--gm-primary)] border border-white shrink-0">
+                        <Loader2 size={24} className="animate-spin" />
                       </div>
                    </div>
                 </Card>
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <Card className="border border-[var(--gm-accent)]/30 hover:border-[var(--gm-accent)]/60 shadow-[0_0_20px_rgba(var(--gm-accent-rgb),0.15)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
+                <Card className="border border-[var(--gm-accent)] hover:border-[var(--gm-accent)]/80 shadow-[0_0_20px_rgba(var(--gm-accent-rgb),0.15)] transition-all duration-300 py-4 px-5 relative overflow-hidden group">
                    <div className="flex items-center justify-between relative z-10">
                       <div>
                         <h3 className="text-[var(--gm-accent)]/90 text-[11px] font-bold uppercase tracking-wider mb-1">Pronto</h3>
@@ -329,8 +329,8 @@ const Dashboard = () => {
                         </div>
                         <p className="text-[10px] text-[var(--gm-accent)]/60 mt-1 font-medium">Finalizados / Entregues</p>
                       </div>
-                      <div className="p-2.5 bg-[var(--gm-accent)]/10 rounded-xl text-[var(--gm-accent)] border border-[var(--gm-accent)]/20 shrink-0">
-                        <CheckCircle2 size={22} className="animate-heartbeat" />
+                      <div className="w-12 h-12 flex items-center justify-center bg-[var(--gm-accent)]/10 rounded-2xl text-[var(--gm-accent)] border border-white shrink-0">
+                        <CheckCircle2 size={24} className="animate-heartbeat" />
                       </div>
                    </div>
                 </Card>

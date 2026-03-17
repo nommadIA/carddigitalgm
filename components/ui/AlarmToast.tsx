@@ -35,7 +35,9 @@ const AlarmToast = () => {
             icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
             vibrate: [200, 100, 200],
             tag: alarm.id,
-            renotify: true
+            renotify: true,
+            silent: false,
+            requireInteraction: true
           } as any);
         }
 

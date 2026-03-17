@@ -7,7 +7,7 @@ import { Page } from "../components/ui/Page";
 import { CURRENCY_FORMATTER } from "../constants";
 import SafeResponsive from "../components/ui/SafeResponsive";
 import { pushToast } from "../store/toast";
-import { FileText, Save, History, X, Download, Trash2, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { FileText, Save, History, X, Download, Trash2, ChevronLeft, ChevronRight, Calendar, Share2, Copy, Mail } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
 import { generateFinanceReportPdf } from "../services/pdfService";
@@ -66,6 +66,7 @@ export default function Financial() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyReports, setHistoryReports] = useState<FinanceReport[]>([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [shareData, setShareData] = useState<{ title: string; message: string } | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -192,16 +193,32 @@ export default function Financial() {
     return { entradas, saidas, acumulado };
   }, [rows]);
 
-  const handleWhatsApp = (customResumo?: any, customTitle?: string) => {
+  const handleShare = (customResumo?: any, customTitle?: string, customTransactions?: any[]) => {
     const r = customResumo || resumo;
+    const t = customTransactions || transactions;
     const title = customTitle || "Últimos 30 dias";
-    const text = `*Relatório Financeiro - ${title}*\n\nEntradas: ${CURRENCY_FORMATTER.format(
-      r.entradas
-    )}\nSaídas: ${CURRENCY_FORMATTER.format(r.saidas)}\nSaldo: ${CURRENCY_FORMATTER.format(
-      r.acumulado
-    )}\n\nGerado por CardDigital GM`;
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, "_blank");
+    
+    let text = `📊 *Relatório Financeiro - ${title}*\n\n`;
+    text += `💰 *Entradas:* ${CURRENCY_FORMATTER.format(r.entradas)}\n`;
+    text += `💸 *Saídas:* ${CURRENCY_FORMATTER.format(r.saidas)}\n`;
+    text += `📈 *Saldo:* ${CURRENCY_FORMATTER.format(r.acumulado)}\n\n`;
+    
+    if (t && t.length > 0) {
+      text += `📝 *Movimentações:*\n`;
+      // Sort by date descending
+      const sorted = [...t].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      sorted.forEach((item: any) => {
+        const emoji = item.type === "receita" ? "✅" : "❌";
+        const date = new Date(item.date).toLocaleDateString("pt-BR");
+        text += `${emoji} ${date} - ${item.desc}: ${CURRENCY_FORMATTER.format(item.amount)}\n`;
+      });
+      text += `\n`;
+    }
+    
+    text += `📱 _Gerado por CardDigital GM_`;
+    
+    setShareData({ title: `Relatório Financeiro - ${title}`, message: text });
   };
 
   // ✅ FIX: passar "settings" (não brand), que é o que o pdfService realmente usa
@@ -350,12 +367,12 @@ export default function Financial() {
           
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto">
             <button
-              onClick={() => handleWhatsApp(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))}
+              onClick={() => handleShare(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }), transactions)}
               className="gm-btn gm-btn-outline text-xs sm:text-sm justify-center py-2.5"
-              title="Enviar por WhatsApp"
+              title="Compartilhar Relatório"
             >
-              <WhatsAppIcon size={16} className="text-[var(--gm-accent)]" />
-              WhatsApp
+              <Share2 size={16} className="text-[var(--gm-accent)]" />
+              Compartilhar
             </button>
             <button 
               onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} 
@@ -585,11 +602,11 @@ export default function Financial() {
 
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleWhatsApp(rep.totals, rep.title)}
+                          onClick={() => handleShare(rep.totals, rep.title, rep.items)}
                           className="p-2 bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20 rounded-lg transition-colors"
-                          title="Reenviar WhatsApp"
+                          title="Compartilhar Relatório"
                         >
-                          <WhatsAppIcon size={18} />
+                          <Share2 size={18} />
                         </button>
                         <button
                           onClick={() => handlePDF(rep.items, rep.title)}
@@ -617,6 +634,94 @@ export default function Financial() {
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Compartilhamento */}
+      {shareData && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+              <h3 className="text-lg font-bold">Compartilhar Relatório</h3>
+              <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-3">
+              <button
+                onClick={() => {
+                  window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
+                  setShareData(null);
+                }}
+                className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+              >
+                <div className="shrink-0">
+                  <WhatsAppIcon size={24} className="text-[var(--gm-primary)]" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-[var(--gm-primary)] leading-tight">WhatsApp</p>
+                  <p className="text-[10px] text-white/70 leading-tight">Enviar diretamente para um contato</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  window.open(`mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.message)}`, "_blank");
+                  setShareData(null);
+                }}
+                className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+              >
+                <div className="shrink-0">
+                  <Mail size={24} className="text-[var(--gm-primary)]" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-[var(--gm-primary)] leading-tight">E-mail</p>
+                  <p className="text-[10px] text-white/70 leading-tight">Enviar por correio eletrônico</p>
+                </div>
+              </button>
+
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(shareData.message);
+                  pushToast({ type: "success", title: "Copiado", message: "Texto copiado para a área de transferência!" });
+                  setShareData(null);
+                }}
+                className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+              >
+                <div className="shrink-0">
+                  <Copy size={24} className="text-[var(--gm-primary)]" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-[var(--gm-primary)] leading-tight">Copiar Texto</p>
+                  <p className="text-[10px] text-white/70 leading-tight">Copiar para colar em outro lugar</p>
+                </div>
+              </button>
+
+              {navigator.share && (
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.share({
+                        title: shareData.title,
+                        text: shareData.message,
+                      });
+                      setShareData(null);
+                    } catch (e) {
+                      console.warn("Share failed", e);
+                    }
+                  }}
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                >
+                  <div className="shrink-0">
+                    <Share2 size={24} className="text-[var(--gm-primary)]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-[var(--gm-primary)] leading-tight">Mais Opções</p>
+                    <p className="text-[10px] text-white/70 leading-tight">Menu de compartilhamento do sistema</p>
+                  </div>
+                </button>
               )}
             </div>
           </div>

@@ -54,12 +54,12 @@ export default function Sidebar() {
   const IconMode = useMemo(() => (mode === "dark" ? Sun : Moon), [mode]);
 
   return (
-    <div className="gm-sidebar-shell">
-      <div className="gm-sidebar-top">
-        <div className="gm-brand">
-          <div className="gm-brand-text">
-            <div className="gm-brand-title">CardDigital <span className="text-[var(--gm-primary)]">GM</span></div>
-            <div className="gm-brand-sub">Enterprise</div>
+    <div className="gm-sidebar">
+      <div className="mb-8">
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col">
+            <div className="text-xl font-bold tracking-tight">CardDigital <span className="text-[var(--gm-primary)]">GM</span></div>
+            <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Enterprise</div>
           </div>
         </div>
       </div>
@@ -71,40 +71,29 @@ export default function Sidebar() {
             <NavLink
               key={it.to}
               to={it.to}
-              className={({ isActive }) =>
-                `gm-nav-item ${isActive ? "is-active" : ""}`
-              }
               title={it.label}
             >
-              <span className="gm-nav-icon">
-                <Icon size={18} />
-              </span>
-              <span className="gm-nav-label">{it.label}</span>
+              <Icon size={18} />
+              <span>{it.label}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="gm-sidebar-bottom">
-        <button className="gm-theme-toggle" onClick={toggleMode} type="button">
-          <span className="gm-theme-toggle-icon">
-            <IconMode size={18} />
-          </span>
-          <span className="gm-theme-toggle-label">
-            {mode === "dark" ? "Modo claro" : "Modo escuro"}
-          </span>
+      <div className="gm-sidebar-footer">
+        <button className="gm-btn gm-btn-soft w-full justify-start" onClick={toggleMode} type="button">
+          <IconMode size={18} />
+          <span>{mode === "dark" ? "Modo claro" : "Modo escuro"}</span>
         </button>
         
         <button 
-          className="gm-theme-toggle mt-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 border-red-500/20" 
+          className="gm-btn gm-btn-soft w-full justify-start mt-2 text-red-400 hover:text-red-300" 
           onClick={signOut} 
           type="button"
           title="Sair"
         >
-          <span className="gm-theme-toggle-icon">
-            <LogOut size={18} />
-          </span>
-          <span className="gm-theme-toggle-label">Sair</span>
+          <LogOut size={18} />
+          <span>Sair</span>
         </button>
       </div>
     </div>

@@ -17,23 +17,62 @@ try {
   });
 
   const messaging = firebase.messaging();
+  
+  // Handler para mensagens do Firebase quando o app está em segundo plano ou fechado
   messaging.onBackgroundMessage((payload) => {
     console.log('[sw.js] Received background message ', payload);
-    const title = payload.notification?.title || "CardDigital GM";
-    const body = payload.notification?.body || "Nova notificação recebida";
-    const icon = payload.notification?.icon || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
+    const title = payload.notification?.title || payload.data?.title || "CardDigital GM";
+    const body = payload.notification?.body || payload.data?.body || "Nova notificação recebida";
+    const icon = payload.notification?.icon || payload.data?.icon || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
 
-    self.registration.showNotification(title, {
+    return self.registration.showNotification(title, {
       body,
       icon,
       badge: icon,
-      data: payload.data,
-      vibrate: [200, 100, 200]
+      data: payload.data || {},
+      vibrate: [200, 100, 200, 100, 200],
+      tag: payload.data?.tag || "fcm-push",
+      renotify: true,
+      requireInteraction: true,
+      silent: false
     });
   });
 } catch (e) {
   console.error("[sw.js] Firebase init error:", e);
 }
+
+// Fallback para eventos de Push genéricos (garante que acorde o Android)
+self.addEventListener('push', (event) => {
+  console.log('[sw.js] Push event received');
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      if (data.notification || data.data) {
+        // O Firebase Messaging já deve lidar com isso, mas se não lidar, mostramos aqui
+        const title = data.notification?.title || data.data?.title || "CardDigital GM";
+        const options = {
+          body: data.notification?.body || data.data?.body || "Você tem uma nova atualização.",
+          icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
+          badge: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
+          data: data.data || {},
+          vibrate: [200, 100, 200, 100, 200],
+          silent: false
+        };
+        event.waitUntil(self.registration.showNotification(title, options));
+      }
+    } catch (e) {
+      // Se não for JSON, pode ser texto simples
+      event.waitUntil(
+        self.registration.showNotification("CardDigital GM", {
+          body: event.data.text(),
+          icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
+          vibrate: [200, 100, 200],
+          silent: false
+        })
+      );
+    }
+  }
+});
 
 // --- IndexedDB Logic for SW ---
 const DB_NAME = "gm_pro_db";
@@ -110,6 +149,7 @@ async function checkAlarms() {
           tag: alarm.id,
           renotify: true,
           requireInteraction: true,
+          silent: false,
           data: { url: "/#/budgets" }
         });
 
@@ -126,6 +166,21 @@ if (!checkInterval) {
   checkInterval = setInterval(checkAlarms, 30000); // Check every 30s for better accuracy
 }
 
+// --- Background Sync & Periodic Sync (Para Android acordar o app fechado) ---
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'check-alarms-sync') {
+    console.log('[sw.js] Background Sync: Checking alarms');
+    event.waitUntil(checkAlarms());
+  }
+});
+
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'check-alarms-periodic') {
+    console.log('[sw.js] Periodic Sync: Checking alarms');
+    event.waitUntil(checkAlarms());
+  }
+});
+
 // Listen for manual triggers from the app
 self.addEventListener("message", (event) => {
   if (event.data === "CHECK_ALARMS") {
@@ -138,6 +193,7 @@ self.addEventListener("message", (event) => {
       vibrate: [200, 100, 200],
       tag: "test-notification",
       requireInteraction: true,
+      silent: false,
       data: { url: "/#/" }
     });
   }

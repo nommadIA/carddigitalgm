@@ -47,11 +47,39 @@ export async function forceSavePushToken(tenantId: string, userId: string) {
       console.log("[PushFCM] Unregistered old service worker:", registration.scope);
     }
 
-    const swReg = await navigator.serviceWorker.register("/sw.js?v=4");
+    const swReg = await navigator.serviceWorker.register("/sw.js?v=5");
     await swReg.update();
     
     // Wait for the service worker to be ready
     const readySwReg = await navigator.serviceWorker.ready;
+
+    // Tenta registrar Background Sync (para Android/Chrome)
+    try {
+      // Background sync is often restricted in iframes, so we only try if we are top-level
+      if (window === window.top) {
+        if ('sync' in readySwReg) {
+          await (readySwReg as any).sync.register('check-alarms');
+          console.log("[PushFCM] Background Sync registered");
+        }
+        
+        if ('periodicSync' in readySwReg) {
+          const status = await (navigator as any).permissions.query({
+            name: 'periodic-background-sync',
+          });
+          if (status.state === 'granted') {
+            await (readySwReg as any).periodicSync.register('check-alarms-periodic', {
+              minInterval: 15 * 60 * 1000, // Mínimo de 15 minutos (limite do Chrome)
+            });
+            console.log("[PushFCM] Periodic Sync registered");
+          }
+        }
+      }
+    } catch (e: any) {
+      // Ignore the warning if it's about window context (iframe)
+      if (!e?.message?.includes('without a window')) {
+        console.debug("[PushFCM] Sync registration skipped or failed:", e.message);
+      }
+    }
 
     let app;
     if (getApps().length) {

@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../store/AuthContext";
-import { fetchSettingsSupabase } from "../../lib/settings";
-import { generateOrcamentoPdf } from "../../services/pdfService";
 import {
   Palette,
   Printer,
@@ -598,35 +596,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
       await insertItemsWithAutoStrip(dbItems);
 
-      // PDF Auto (mantido)
-      try {
-        const settings = await fetchSettingsSupabase(tenantId);
-        const itemsPdf = dbItems.map((i: any) => ({
-          titulo: i.description,
-          qtd: i.quantity ?? 1,
-          valor_unit: i.unit_price,
-          width: i.width_cm,
-          height: i.height_cm,
-          isPrint: kind === "print" && i.width_cm > 0,
-        }));
-
-        await generateOrcamentoPdf(
-          {
-            id: finalBudgetId,
-            cliente_nome: clientName,
-            total: totalFinal,
-            subtotal: subtotal,
-            discount: discountAmount,
-            created_at: new Date().toISOString(),
-            dueLabel: "Conforme itens",
-          },
-          itemsPdf,
-          settings!
-        );
-      } catch (e) {
-        console.warn("PDF automático falhou:", e);
-      }
-
+      // PDF Auto removido conforme solicitado
       if (!budgetToEditId) resetForm();
       onSuccess();
     } catch (err: any) {
