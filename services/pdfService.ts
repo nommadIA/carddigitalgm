@@ -73,7 +73,8 @@ function looksLikeHTML(b: Uint8Array) {
 }
 
 async function fetchBytesStrict(url: string) {
-  const res = await fetch(url, { cache: "no-store" });
+  // Removido "no-store" para permitir cache do navegador e aumentar velocidade
+  const res = await fetch(url);
 
   if (!res.ok) {
     throw new Error(`Falha ao baixar timbrado: HTTP ${res.status}`);
@@ -91,27 +92,26 @@ async function fetchBytesStrict(url: string) {
   return { bytes, contentType: (res.headers.get("content-type") || "").toLowerCase() };
 }
 
-/* ✅ NOVO: tenta resolver URL assinada quando o link público retorna HTML */
-function tryExtractSupabaseStoragePath(url: string, bucket: string) {
-  try {
-    const u = new URL(url);
-    // pega tudo após "/timbrados/" (ou "/<bucket>/")
-    const idx = u.pathname.indexOf(`/${bucket}/`);
-    if (idx === -1) return null;
-    return decodeURIComponent(u.pathname.slice(idx + bucket.length + 2)); // remove "/bucket/"
-  } catch {
-    return null;
-  }
+/* ✅ OTIMIZADO: Extrai o path relativo do Storage */
+function tryExtractSupabaseStoragePath(url: string, bucket: string): string | null {
+  if (!url) return null;
+  // Exemplo: https://.../storage/v1/object/public/timbrados/tenant_id/file.png
+  const parts = url.split(`/public/${bucket}/`);
+  if (parts.length > 1) return parts[1];
+  
+  const signParts = url.split(`/authenticated/${bucket}/`);
+  if (signParts.length > 1) return signParts[1];
+  
+  return null;
 }
 
-async function resolveTimbradoUrlWithFallback(originalUrl: string) {
+/* ✅ OTIMIZADO: Retorna os bytes diretamente para evitar múltiplos fetches */
+async function resolveTimbradoBytesWithFallback(originalUrl: string) {
   // 1) tenta direto
   try {
-    await fetchBytesStrict(originalUrl);
-    return originalUrl;
+    return await fetchBytesStrict(originalUrl);
   } catch (e: any) {
     const msg = String(e?.message || "");
-    // se não for o caso “HTML/Access denied”, apenas re-erro
     if (!msg.toLowerCase().includes("html")) throw e;
 
     // 2) tenta assinar via Supabase (bucket "timbrados")
@@ -122,18 +122,17 @@ async function resolveTimbradoUrlWithFallback(originalUrl: string) {
       );
     }
 
-    const { data, error } = await supabase.storage.from("timbrados").createSignedUrl(path, 60 * 10); // 10 min
+    const { data, error } = await supabase.storage.from("timbrados").createSignedUrl(path, 60 * 10);
     if (error || !data?.signedUrl) {
       throw new Error("Não foi possível assinar o timbrado. Verifique permissões do Storage.");
     }
 
-    return data.signedUrl;
+    return await fetchBytesStrict(data.signedUrl);
   }
 }
 
 async function embedBackgroundImage(doc: any, url: string) {
-  const finalUrl = await resolveTimbradoUrlWithFallback(url);
-  const { bytes, contentType } = await fetchBytesStrict(finalUrl);
+  const { bytes, contentType } = await resolveTimbradoBytesWithFallback(url);
 
   if (looksLikePNG(bytes)) return await doc.embedPng(bytes);
   if (looksLikeJPG(bytes)) return await doc.embedJpg(bytes);
@@ -153,9 +152,27 @@ function sanitizeFilename(str: string) {
     .toUpperCase();
 }
 
+/**
+ * ✅ NOVO: Remove emojis e caracteres especiais que o jsPDF (WinAnsi) não consegue codificar.
+ * Isso evita o erro: "WinAnsi cannot encode ..."
+ */
+function stripEmojis(str: string): string {
+  if (!str) return "";
+  return str
+    .replace(/[\u{1F600}-\u{1F64F}]/gu, "") // emoticons
+    .replace(/[\u{1F300}-\u{1F5FF}]/gu, "") // symbols & pictographs
+    .replace(/[\u{1F680}-\u{1F6FF}]/gu, "") // transport & map symbols
+    .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, "") // flags (iOS)
+    .replace(/[\u{2600}-\u{26FF}]/gu, "")   // miscellaneous symbols
+    .replace(/[\u{2700}-\u{27BF}]/gu, "")   // dingbats
+    .replace(/[^\x00-\x7F\u00C0-\u00FF]/g, "") // remove anything non-ASCII/non-Latin1
+    .trim();
+}
+
 function wrapText(text: string, maxWidth: number, font: PDFFont, size: number) {
+  const sanitized = stripEmojis(text);
   const lines: string[] = [];
-  const paragraphs = (text || "").split(/\r?\n/);
+  const paragraphs = sanitized.split(/\r?\n/);
   for (const para of paragraphs) {
     const words = para.split(/\s+/).filter(Boolean);
     if (words.length === 0) {
@@ -198,10 +215,11 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
     const PX_W = 2480;
     const PX_H = 3508;
 
-    const CONTENT_X_PX = 167;
-    const CONTENT_TOP_PX = 167;
-    const CONTENT_W_PX = 2146;
-    const CONTENT_H_PX = 2146;
+    // Margens e limites ajustados para o timbrado (trabalhando no limite)
+    const CONTENT_X_PX = 160;
+    const CONTENT_TOP_PX = 230; // Descido conforme solicitado (estava 140)
+    const CONTENT_W_PX = 2160;
+    const CONTENT_H_PX = 2260; // Ajustado para manter o limite inferior proporcional
 
     const CONTENT_X = (CONTENT_X_PX / PX_W) * W;
     const CONTENT_W = (CONTENT_W_PX / PX_W) * W;
@@ -213,10 +231,10 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
     let cursorY = CONTENT_TOP_Y;
     let page: PDFPage;
 
-    const cText = rgb(0.12, 0.12, 0.12);
-    const cGray = rgb(0.35, 0.35, 0.35);
-    const cRed = rgb(0.86, 0.15, 0.16);
-    const cLine = rgb(0.82, 0.82, 0.82);
+    const cText = rgb(0.1, 0.1, 0.1);
+    const cGray = rgb(0.3, 0.3, 0.3);
+    const cRed = rgb(0.8, 0.1, 0.1);
+    const cLine = rgb(0.85, 0.85, 0.85);
 
     const addPage = () => {
       const p = doc.addPage([W, H]);
@@ -232,47 +250,50 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
     addPage();
 
     const drawLeft = (txt: string, size: number, yPos: number, bold = false, color = cText) => {
-      page.drawText(txt, { x: CONTENT_X, y: yPos, size, font: bold ? fontBold : fontRegular, color });
+      page.drawText(stripEmojis(txt), { x: CONTENT_X, y: yPos, size, font: bold ? fontBold : fontRegular, color });
     };
 
     const drawRight = (txt: string, size: number, yPos: number, bold = false, color = cText) => {
       const font = bold ? fontBold : fontRegular;
-      const w = font.widthOfTextAtSize(txt, size);
-      page.drawText(txt, { x: CONTENT_RIGHT_X - w, y: yPos, size, font, color });
+      const sanitized = stripEmojis(txt);
+      const w = font.widthOfTextAtSize(sanitized, size);
+      page.drawText(sanitized, { x: CONTENT_RIGHT_X - w, y: yPos, size, font, color });
     };
 
     const hr = (yPos: number) => {
       page.drawLine({
         start: { x: CONTENT_X, y: yPos },
         end: { x: CONTENT_RIGHT_X, y: yPos },
-        thickness: 1,
+        thickness: 0.8,
         color: cLine,
       });
     };
 
-    checkSpace(60);
-    drawLeft(`ORÇAMENTO #${orc.id.slice(0, 8).toUpperCase()}`, 14, cursorY, true);
-    cursorY -= 15;
+    // --- CABEÇALHO COMPACTO ---
+    checkSpace(50);
+    drawLeft(`ORÇAMENTO #${orc.id.slice(0, 8).toUpperCase()}`, 13, cursorY, true);
+    cursorY -= 13;
 
     const dateStr = orc.created_at ? new Date(orc.created_at).toLocaleDateString() : new Date().toLocaleDateString();
-    drawLeft(`Cliente: ${orc.cliente_nome}`, 9.5, cursorY, false, cGray);
-    cursorY -= 12;
-    drawLeft(`Data: ${dateStr}`, 9.5, cursorY, false, cGray);
+    drawLeft(`Cliente: ${orc.cliente_nome}`, 9, cursorY, false, cGray);
+    cursorY -= 11;
+    drawLeft(`Data: ${dateStr}`, 9, cursorY, false, cGray);
 
     const prazoTexto = orc.dueLabel || orc.deadline;
     if (prazoTexto) {
-      cursorY -= 12;
-      drawLeft(`Entrega: ${prazoTexto}`, 9.5, cursorY, false, cGray);
+      cursorY -= 11;
+      drawLeft(`Entrega: ${prazoTexto}`, 9, cursorY, false, cGray);
     }
-    cursorY -= 25;
+    cursorY -= 18;
 
-    checkSpace(30);
-    drawLeft("DESCRIÇÃO DOS SERVIÇOS", 10.5, cursorY, true);
-    cursorY -= 10;
+    // --- DESCRIÇÃO ---
+    checkSpace(25);
+    drawLeft("DESCRIÇÃO DOS SERVIÇOS", 10, cursorY, true);
+    cursorY -= 8;
     hr(cursorY);
-    cursorY -= 14;
+    cursorY -= 12;
 
-    const colDescW = CONTENT_W * 0.70;
+    const colDescW = CONTENT_W * 0.72;
 
     for (const it of itens) {
       let desc = it.titulo;
@@ -287,66 +308,67 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
         totalItem = it.qtd * it.valor_unit;
       }
 
-      const size = 10;
+      const size = 9.5;
       const lines = wrapText(desc, colDescW, fontRegular, size);
       
       const detailsLine = `Qtd: ${it.qtd}  |  V. Unit: ${CURRENCY_FORMATTER.format(it.valor_unit)}${areaStr ? `  |  ${areaStr}` : ""}`;
       
-      const blockH = (lines.length * 14) + 16;
+      const blockH = (lines.length * 12) + 14;
 
-      checkSpace(blockH + 15);
+      checkSpace(blockH + 10);
 
       let yText = cursorY;
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const isFirstLine = i === 0;
-        drawLeft(line, isFirstLine ? 10.5 : 9.5, yText, isFirstLine, cText);
-        yText -= isFirstLine ? 14 : 12;
+        drawLeft(line, isFirstLine ? 10 : 9, yText, isFirstLine, cText);
+        yText -= isFirstLine ? 12 : 11;
       }
 
-      yText -= 2;
-      drawLeft(detailsLine, 8.5, yText, false, cGray);
+      yText -= 1;
+      drawLeft(detailsLine, 8, yText, false, cGray);
 
-      drawRight(CURRENCY_FORMATTER.format(totalItem), 11, cursorY, true, cText);
+      drawRight(CURRENCY_FORMATTER.format(totalItem), 10.5, cursorY, true, cText);
 
       cursorY -= blockH;
-      hr(cursorY + 6);
-      cursorY -= 10;
+      hr(cursorY + 5);
+      cursorY -= 8;
     }
 
-    checkSpace(70);
+    // --- TOTAIS COMPACTOS ---
+    checkSpace(50);
     const subtotal = Number(orc.subtotal ?? orc.total ?? 0) || 0;
     const discount = Number(orc.discount ?? 0) || 0;
     const total = Number(orc.total ?? (subtotal - discount)) || 0;
 
-    drawRight(`Subtotal: ${CURRENCY_FORMATTER.format(subtotal)}`, 10, cursorY, false, cGray);
-    cursorY -= 14;
+    drawRight(`Subtotal: ${CURRENCY_FORMATTER.format(subtotal)}`, 9.5, cursorY, false, cGray);
+    cursorY -= 12;
     if (discount > 0) {
-      drawRight(`Desconto: -${CURRENCY_FORMATTER.format(discount)}`, 10, cursorY, false, cRed);
-      cursorY -= 14;
+      drawRight(`Desconto: -${CURRENCY_FORMATTER.format(discount)}`, 9.5, cursorY, false, cRed);
+      cursorY -= 12;
     }
-    drawRight(`Total: ${CURRENCY_FORMATTER.format(total)}`, 12, cursorY, true, cText);
-    cursorY -= 18;
+    drawRight(`Total: ${CURRENCY_FORMATTER.format(total)}`, 11.5, cursorY, true, cText);
+    cursorY -= 15;
 
-    // Pix QR se configurado
+    // --- PIX QR COMPACTO ---
     if (settings?.pix_key) {
-      checkSpace(140);
+      checkSpace(110); // Reduzido de 140 para 110
       try {
         const payload = buildPixPayload({
           pixKey: settings.pix_key,
-          merchantName: (settings.company_name || "CardDigital GM").slice(0, 25),
+          merchantName: stripEmojis(settings.company_name || "CardDigital GM").slice(0, 25),
           merchantCity: "SAO LUIS",
           amount: total,
           txid: orc.id.slice(0, 25).replace(/[^a-zA-Z0-9]/g, ''),
           message: "Pagamento Orcamento"
         });
 
-        const qrDataUrl = await QRCode.toDataURL(payload, { margin: 1, scale: 6 });
+        const qrDataUrl = await QRCode.toDataURL(payload, { margin: 1, scale: 5 });
         const qrBytes = await fetchBytes(qrDataUrl);
         const qrPng = await doc.embedPng(qrBytes);
 
-        const qrSize = 100;
-        const qrY = cursorY - 120;
+        const qrSize = 85; // QR um pouco menor para caber melhor
+        const qrY = cursorY - 95;
         page.drawImage(qrPng, {
           x: CONTENT_X,
           y: qrY,
@@ -354,21 +376,21 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
           height: qrSize,
         });
 
-        drawLeft("PAGAMENTO VIA PIX", 10.5, cursorY - 8, true, cText);
+        drawLeft("PAGAMENTO VIA PIX", 9.5, cursorY - 6, true, cText);
         
-        const textX = CONTENT_X + qrSize + 15;
-        page.drawText("Chave:", { x: textX, y: cursorY - 24, size: 9.5, font: fontRegular, color: cGray });
-        page.drawText(String(settings.pix_key), { x: textX, y: cursorY - 38, size: 9.5, font: fontBold, color: cText });
-        page.drawText("Copia e Cola:", { x: textX, y: cursorY - 54, size: 9.5, font: fontRegular, color: cGray });
+        const textX = CONTENT_X + qrSize + 12;
+        page.drawText("Chave:", { x: textX, y: cursorY - 20, size: 8.5, font: fontRegular, color: cGray });
+        page.drawText(String(settings.pix_key), { x: textX, y: cursorY - 32, size: 8.5, font: fontBold, color: cText });
+        page.drawText("Copia e Cola:", { x: textX, y: cursorY - 46, size: 8.5, font: fontRegular, color: cGray });
 
-        const clipLines = wrapText(payload, CONTENT_W - (qrSize + 15), fontRegular, 8.2);
-        let yClip = cursorY - 68;
-        for (const l of clipLines.slice(0, 6)) {
-          page.drawText(l, { x: textX, y: yClip, size: 8.2, font: fontRegular, color: cGray });
-          yClip -= 10;
+        const clipLines = wrapText(payload, CONTENT_W - (qrSize + 12), fontRegular, 7.5);
+        let yClip = cursorY - 58;
+        for (const l of clipLines.slice(0, 5)) {
+          page.drawText(l, { x: textX, y: yClip, size: 7.5, font: fontRegular, color: cGray });
+          yClip -= 9;
         }
 
-        cursorY -= 130;
+        cursorY -= 105;
       } catch (e) {
         console.error("Erro QR PDF", e);
       }
@@ -396,7 +418,7 @@ export function generateExpensesReportPdf(expenses: Expense[], monthLabel: strin
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  doc.text(`Relatório - ${monthLabel}`, MARGIN, y);
+  doc.text(`Relatório - ${stripEmojis(monthLabel)}`, MARGIN, y);
   y += 30;
 
   doc.setFontSize(10);
@@ -405,7 +427,8 @@ export function generateExpensesReportPdf(expenses: Expense[], monthLabel: strin
       doc.addPage();
       y = 50;
     }
-    doc.text(`${ex.description} - ${CURRENCY_FORMATTER.format(ex.amount)}`, MARGIN, y);
+    const desc = stripEmojis(ex.description);
+    doc.text(`${desc} - ${CURRENCY_FORMATTER.format(ex.amount)}`, MARGIN, y);
     y += 15;
   });
 
@@ -477,13 +500,14 @@ export async function generateFinanceReportPdf(params: {
     addPage();
 
     const drawLeft = (txt: string, size: number, yPos: number, bold = false, color = cText) => {
-      page.drawText(txt, { x: CONTENT_X, y: yPos, size, font: bold ? fontBold : fontRegular, color });
+      page.drawText(stripEmojis(txt), { x: CONTENT_X, y: yPos, size, font: bold ? fontBold : fontRegular, color });
     };
 
     const drawRight = (txt: string, size: number, yPos: number, bold = false, color = cText) => {
       const font = bold ? fontBold : fontRegular;
-      const w = font.widthOfTextAtSize(txt, size);
-      page.drawText(txt, { x: CONTENT_RIGHT_X - w, y: yPos, size, font, color });
+      const sanitized = stripEmojis(txt);
+      const w = font.widthOfTextAtSize(sanitized, size);
+      page.drawText(sanitized, { x: CONTENT_RIGHT_X - w, y: yPos, size, font, color });
     };
 
     const hr = (yPos: number) => {
@@ -503,7 +527,7 @@ export async function generateFinanceReportPdf(params: {
     drawLeft(`Data de Emissão: ${dateStr}`, 9.5, cursorY, false, cGray);
     cursorY -= 12;
     if (periodLabel) {
-      drawLeft(`Período: ${periodLabel}`, 9.5, cursorY, false, cGray);
+      drawLeft(`Período: ${stripEmojis(periodLabel)}`, 9.5, cursorY, false, cGray);
       cursorY -= 12;
     }
     cursorY -= 15;

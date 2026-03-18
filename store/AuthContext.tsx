@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       const { data: tenants, error } = await supabase.rpc("get_my_tenants");
       if (error) {
         console.error("Erro ao buscar tenants:", error);
+        alert(`Erro ao buscar sua conta (tenant): ${error.message || JSON.stringify(error)}`);
         // não trava o app
         setTenantId(null);
         localStorage.removeItem("tenant_id");
@@ -69,6 +70,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
         if (createError) {
           console.error("Erro ao criar tenant inicial:", createError);
+          alert(`Erro ao criar sua conta (tenant): ${createError.message || JSON.stringify(createError)}`);
           setTenantId(null);
           localStorage.removeItem("tenant_id");
           return;
@@ -95,7 +97,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       if (mounted) initializeUser(data.session?.user);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        window.location.replace(`${window.location.origin}/#/update-password`);
+      }
       if (mounted) initializeUser(session?.user);
     });
 

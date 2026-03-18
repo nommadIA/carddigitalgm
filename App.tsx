@@ -12,6 +12,7 @@ import Financial from './pages/Financial';
 import Expenses from './pages/Expenses';
 import Configuracoes from './pages/Configuracoes';
 import AuthCallback from './pages/AuthCallback';
+import UpdatePassword from './pages/UpdatePassword';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { fetchSettingsSupabase, applySettingsToDOM, AppSettings } from "./lib/settings";
@@ -79,6 +80,7 @@ const AppRoutes = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
           <Route path="/*" element={<PrivateRoutes />} />
         </Routes>
       </motion.div>
@@ -95,7 +97,7 @@ function BootReady() {
 
     if (user && tenantId) {
       window.__GM_SPLASH_STATUS__?.("Carregando preferências...");
-      fetchSettingsSupabase()
+      fetchSettingsSupabase(tenantId)
         .then((s) => {
           if (s) {
             applySettingsToDOM(s);

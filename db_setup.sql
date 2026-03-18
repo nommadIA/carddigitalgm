@@ -60,44 +60,22 @@ create policy "Users can insert own branding" on public.user_branding
 create policy "Users can update own branding" on public.user_branding
   for update using (auth.uid() = user_id);
 
--- STORAGE BUCKET: branding
-insert into storage.buckets (id, name, public) values ('branding', 'branding', true)
-on conflict (id) do nothing;
-
-create policy "Branding images are public" on storage.objects
-  for select using ( bucket_id = 'branding' );
-
-create policy "Users can upload branding images" on storage.objects
-  for insert with check (
-    bucket_id = 'branding' and auth.uid() = (storage.foldername(name))[1]::uuid
-  );
-
-create policy "Users can update their branding images" on storage.objects
-  for update using (
-    bucket_id = 'branding' and auth.uid() = (storage.foldername(name))[1]::uuid
-  );
-
--- STORAGE BUCKET: tenant-assets
-insert into storage.buckets (id, name, public) values ('tenant-assets', 'tenant-assets', true)
-on conflict (id) do nothing;
-
-create policy "Tenant assets are public" on storage.objects
-  for select using ( bucket_id = 'tenant-assets' );
-
-create policy "Tenant members can upload assets" on storage.objects
-  for insert with check (
-    bucket_id = 'tenant-assets' and
-    public.is_tenant_member((storage.foldername(name))[1]::uuid)
-  );
-
-create policy "Tenant members can update assets" on storage.objects
-  for update using (
-    bucket_id = 'tenant-assets' and
-    public.is_tenant_member((storage.foldername(name))[1]::uuid)
-  );
-
 -- 2. FUNÇÕES RPC (Backend Logic)
+create or replace function public.is_tenant_member(p_tenant_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.tenant_memberships m
+    where m.tenant_id = p_tenant_id
+      and m.user_id = auth.uid()
+  );
+$$;
 
+drop function if exists public.get_my_tenants();
 create or replace function public.get_my_tenants()
 returns table (
   tenant_id uuid,
@@ -136,19 +114,41 @@ begin
 end;
 $$;
 
-create or replace function public.is_tenant_member(p_tenant_id uuid)
-returns boolean
-language sql
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.tenant_memberships m
-    where m.tenant_id = p_tenant_id
-      and m.user_id = auth.uid()
+-- STORAGE BUCKET: branding
+insert into storage.buckets (id, name, public) values ('branding', 'branding', true)
+on conflict (id) do nothing;
+
+create policy "Branding images are public" on storage.objects
+  for select using ( bucket_id = 'branding' );
+
+create policy "Users can upload branding images" on storage.objects
+  for insert with check (
+    bucket_id = 'branding' and auth.uid() = (storage.foldername(name))[1]::uuid
   );
-$$;
+
+create policy "Users can update their branding images" on storage.objects
+  for update using (
+    bucket_id = 'branding' and auth.uid() = (storage.foldername(name))[1]::uuid
+  );
+
+-- STORAGE BUCKET: tenant-assets
+insert into storage.buckets (id, name, public) values ('tenant-assets', 'tenant-assets', true)
+on conflict (id) do nothing;
+
+create policy "Tenant assets are public" on storage.objects
+  for select using ( bucket_id = 'tenant-assets' );
+
+create policy "Tenant members can upload assets" on storage.objects
+  for insert with check (
+    bucket_id = 'tenant-assets' and
+    public.is_tenant_member((storage.foldername(name))[1]::uuid)
+  );
+
+create policy "Tenant members can update assets" on storage.objects
+  for update using (
+    bucket_id = 'tenant-assets' and
+    public.is_tenant_member((storage.foldername(name))[1]::uuid)
+  );
 
 grant execute on function public.get_my_tenants() to authenticated;
 grant execute on function public.create_tenant(text) to authenticated;
