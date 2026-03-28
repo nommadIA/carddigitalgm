@@ -39,6 +39,7 @@ import {
   Type,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSwipeNav } from "../hooks/useSwipeNav";
 
 type Fit = "cover" | "contain";
 
@@ -69,6 +70,14 @@ export default function Configuracoes() {
   }, []);
   const [currentScreen, setCurrentScreen] = useState(0);
   const [direction, setDirection] = useState(0);
+
+  const swipeRef = useSwipeNav<HTMLDivElement>({
+    onSwipeLeft: () => paginate(1),
+    onSwipeRight: () => paginate(-1),
+    thresholdPx: 60,
+    restraintPx: 100,
+    stopPropagation: true,
+  });
 
   const pushSupported = "Notification" in window && "serviceWorker" in navigator;
   const [pushPermission, setPushPermission] = useState<NotificationPermission>(
@@ -1131,19 +1140,10 @@ export default function Configuracoes() {
                 animate={{ x: `-${currentScreen * 100}%` }}
                 transition={{ type: "spring", stiffness: 400, damping: 35 }}
               >
-                <motion.div
-                className="flex w-full items-start h-full min-h-0"
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={1}
-                  onDragEnd={(e, { offset, velocity }) => {
-                    const swipe = offset.x * velocity.x;
-                    if (offset.x < -50 && currentScreen < 2) {
-                      setCurrentScreen(currentScreen + 1);
-                    } else if (offset.x > 50 && currentScreen > 0) {
-                      setCurrentScreen(currentScreen - 1);
-                    }
-                  }}
+                <div
+                  ref={swipeRef}
+                  className="flex w-full items-start h-full min-h-0"
+                  style={{ touchAction: 'pan-y' }}
                 >
                 {[0, 1, 2].map((index) => {
                   const isActive = index === currentScreen;
@@ -1546,7 +1546,7 @@ export default function Configuracoes() {
                   )
                 })}
 
-                </motion.div>
+                </div>
               </motion.div>
             </motion.div>
           </div>

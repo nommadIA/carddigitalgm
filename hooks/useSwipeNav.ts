@@ -7,6 +7,7 @@ type Options = {
   thresholdPx?: number;     // distância mínima
   restraintPx?: number;     // tolerância vertical
   allowedTimeMs?: number;   // tempo máximo
+  stopPropagation?: boolean; // parar propagação do evento
 };
 
 export function useSwipeNav<T extends HTMLElement>({
@@ -16,6 +17,7 @@ export function useSwipeNav<T extends HTMLElement>({
   thresholdPx = 60,
   restraintPx = 80,
   allowedTimeMs = 450,
+  stopPropagation = false,
 }: Options) {
   const ref = useRef<T | null>(null);
 
@@ -34,13 +36,14 @@ export function useSwipeNav<T extends HTMLElement>({
       if (!node) return false;
       return Boolean(
         node.closest(
-          "input, textarea, select, button, a, [data-no-swipe], .no-swipe"
+          "input, textarea, select, [data-no-swipe], .no-swipe, .overflow-x-auto, .snap-x"
         )
       );
     };
 
     const onTouchStart = (e: TouchEvent) => {
       if (isInteractiveTarget(e.target)) return;
+      if (stopPropagation) e.stopPropagation();
       const t = e.changedTouches[0];
       tracking = true;
       startX = t.pageX;
@@ -50,12 +53,14 @@ export function useSwipeNav<T extends HTMLElement>({
 
     const onTouchMove = (e: TouchEvent) => {
       if (!tracking) return;
+      if (stopPropagation) e.stopPropagation();
       // Se quiser bloquear “voltar página” do browser em iOS, mantenha:
       // e.preventDefault();
     };
 
     const onTouchEnd = (e: TouchEvent) => {
       if (!tracking) return;
+      if (stopPropagation) e.stopPropagation();
       tracking = false;
 
       const t = e.changedTouches[0];

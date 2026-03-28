@@ -49,6 +49,7 @@ import { Card } from "../components/ui/Card";
 import { Grid } from "../components/ui/Grid";
 import CountUp from "../components/ui/CountUp";
 import { pushToast } from "../store/toast";
+import { useSwipeNav } from "../hooks/useSwipeNav";
 
 const Dashboard = () => {
   const { tenantId } = useAuth();
@@ -69,6 +70,14 @@ const Dashboard = () => {
       setCurrentScreen(nextScreen);
     }
   };
+
+  const swipeRef = useSwipeNav<HTMLDivElement>({
+    onSwipeLeft: () => paginate(1),
+    onSwipeRight: () => paginate(-1),
+    thresholdPx: 60,
+    restraintPx: 100,
+    stopPropagation: true,
+  });
 
   const swipeConfidenceThreshold = 10000;
   const swipePower = (offset: number, velocity: number) => {
@@ -624,19 +633,10 @@ const Dashboard = () => {
               animate={{ x: `-${currentScreen * 100}%` }}
               transition={{ type: "spring", stiffness: 400, damping: 35 }}
             >
-              <motion.div
+              <div
+                ref={swipeRef}
                 className="flex w-full h-full"
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={1}
-                onDragEnd={(e, { offset, velocity }) => {
-                  const swipe = swipePower(offset.x, velocity.x);
-                  if (swipe < -swipeConfidenceThreshold && currentScreen < 3) {
-                    setCurrentScreen(currentScreen + 1);
-                  } else if (swipe > swipeConfidenceThreshold && currentScreen > 0) {
-                    setCurrentScreen(currentScreen - 1);
-                  }
-                }}
+                style={{ touchAction: 'pan-y' }}
               >
                 {screens.map((ScreenContent, index) => {
                 const isActive = index === currentScreen;
@@ -655,7 +655,7 @@ const Dashboard = () => {
                   </motion.div>
                 );
               })}
-              </motion.div>
+              </div>
             </motion.div>
           </div>
 

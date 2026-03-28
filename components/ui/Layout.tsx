@@ -26,6 +26,7 @@ import { fetchSettingsSupabase, applySettingsToDOM } from "../../lib/settings";
 import AlarmToast from "./AlarmToast";
 import { ToastHost } from "./Toast";
 import BottomNav from "./BottomNav";
+import { useSwipeNav } from "../../hooks/useSwipeNav";
 
 export default function Layout({ children }: { children?: React.ReactNode }) {
   const { signOut, tenantId } = useAuth();
@@ -73,6 +74,36 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   }, [nav, menuSearch]);
 
   const mainRef = useRef<HTMLElement | null>(null);
+
+  // Swipe Navigation Logic
+  const currentIndex = nav.findIndex(n => n.to === location.pathname);
+  
+  const handleSwipeLeft = () => {
+    if (currentIndex >= 0 && currentIndex < nav.length - 1) {
+      navigate(nav[currentIndex + 1].to);
+    }
+  };
+
+  const handleSwipeRight = () => {
+    if (currentIndex > 0) {
+      navigate(nav[currentIndex - 1].to);
+    }
+  };
+
+  const swipeRef = useSwipeNav<HTMLDivElement>({
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+    thresholdPx: 80, // Aumentado um pouco para evitar swipes acidentais
+    restraintPx: 100, // Permitir um pouco mais de movimento vertical
+  });
+
+  // Merge refs
+  const setRefs = (node: HTMLDivElement | null) => {
+    mainRef.current = node;
+    if (swipeRef) {
+      swipeRef.current = node;
+    }
+  };
 
   useEffect(() => {
     const el = mainRef.current as HTMLElement | null;
@@ -428,7 +459,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       </aside>
 
       <main 
-        ref={mainRef}
+        ref={setRefs}
         className="gm-main"
       >
         <div className="gm-container min-h-full flex flex-col">{children}</div>
