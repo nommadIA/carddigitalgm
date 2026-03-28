@@ -53,8 +53,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       // tenantId via RPC
       const { data: tenants, error } = await supabase.rpc("get_my_tenants");
       if (error) {
-        console.error("Erro ao buscar tenants:", error);
-        alert(`Erro ao buscar sua conta (tenant): ${error.message || JSON.stringify(error)}`);
+        console.warn("Erro ao buscar tenants:", error);
         // não trava o app
         setTenantId(null);
         localStorage.removeItem("tenant_id");
@@ -69,8 +68,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         });
 
         if (createError) {
-          console.error("Erro ao criar tenant inicial:", createError);
-          alert(`Erro ao criar sua conta (tenant): ${createError.message || JSON.stringify(createError)}`);
+          console.warn("Erro ao criar tenant inicial:", createError);
           setTenantId(null);
           localStorage.removeItem("tenant_id");
           return;

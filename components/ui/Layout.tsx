@@ -1,6 +1,7 @@
 
 // components/ui/Layout.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutGrid,
@@ -15,7 +16,10 @@ import {
   ChevronLeft,
   LogOut,
   Search,
-  X
+  X,
+  ArrowDown,
+  ArrowUp,
+  ChevronUp
 } from "lucide-react";
 import { useAuth } from "../../store/AuthContext";
 import { fetchSettingsSupabase, applySettingsToDOM } from "../../lib/settings";
@@ -29,25 +33,17 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   const location = useLocation();
 
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("gm.sidebar") === "1");
-
-  // ✅ 1) Transição entre páginas
-  const [pageVisible, setPageVisible] = useState(false);
   
   // ✅ 2) Search na Sidebar
   const [menuSearch, setMenuSearch] = useState("");
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
 
   useEffect(() => localStorage.setItem("gm.sidebar", collapsed ? "1" : "0"), [collapsed]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", "dark");
   }, []);
-
-  // Efeito de transição de rota
-  useEffect(() => {
-    setPageVisible(false);
-    const t = setTimeout(() => setPageVisible(true), 120); // Delay suave
-    return () => clearTimeout(t);
-  }, [location.pathname]);
 
   // ✅ Carrega settings por TENANT
   useEffect(() => {
@@ -76,34 +72,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     return nav.filter(n => n.label.toLowerCase().includes(menuSearch.toLowerCase()));
   }, [nav, menuSearch]);
 
-  const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const mainRef = useRef<HTMLElement | null>(null);
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    swipeRef.current = { x: e.clientX, y: e.clientY, t: Date.now() };
-  };
-
-  const onPointerUp = (e: React.PointerEvent) => {
-    const start = swipeRef.current;
-    swipeRef.current = null;
-    if (!start) return;
-
-    const dx = e.clientX - start.x;
-    const dy = e.clientY - start.y;
-    const dt = Date.now() - start.t;
-
-    if (Math.abs(dy) > Math.abs(dx)) return;
-
-    if (Math.abs(dx) < 90) return;
-    if (dt > 650) return;
-
-    const idx = nav.findIndex((n) => location.pathname === n.to);
-    if (idx < 0) return;
-
-    if (dx < 0 && idx < nav.length - 1) navigate(nav[idx + 1].to);
-    if (dx > 0 && idx > 0) navigate(nav[idx - 1].to);
-  };
 
   useEffect(() => {
     const el = mainRef.current as HTMLElement | null;
@@ -155,17 +124,94 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       }
     };
 
-    const onScroll = () => {
-      updateTargets();
-      if (!raf) raf = requestAnimationFrame(tick);
+    let lastScrollY = 0;
+    let activeScrollElement: HTMLElement | null = null;
+
+    const onScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      
+      // Ignore scrolls from elements that are not scrollable or very small
+      if (!target || !target.scrollHeight || target.scrollHeight <= target.clientHeight + 10) return;
+      
+      // If we're scrolling a different element, reset
+      if (activeScrollElement !== target) {
+        if (activeScrollElement) {
+          activeScrollElement.removeAttribute('data-active-scroll');
+        }
+        activeScrollElement = target;
+        activeScrollElement.setAttribute('data-active-scroll', 'true');
+        lastScrollY = target.scrollTop;
+      }
+
+      // Update parallax if it's the main container
+      if (target === el) {
+        updateTargets();
+        if (!raf) raf = requestAnimationFrame(tick);
+      }
+
+      const currentScrollY = target.scrollTop;
+      const maxScroll = target.scrollHeight - target.clientHeight;
+      
+      setCanScrollUp(currentScrollY > 100);
+      setCanScrollDown(maxScroll > 0 && currentScrollY < maxScroll - 50);
+      
+      lastScrollY = currentScrollY;
     };
+
+    // Check periodically to update indicators even if not scrolling (e.g., on mount or resize)
+    const checkScroll = () => {
+      let target = activeScrollElement;
+      if (!target || !document.contains(target)) {
+        // Try to find the scrollable element under the center of the screen
+        const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+        if (centerEl) {
+          let curr: HTMLElement | null = centerEl as HTMLElement;
+          while (curr && curr !== document.body) {
+            if (curr.scrollHeight > curr.clientHeight + 10 && 
+                (window.getComputedStyle(curr).overflowY === 'auto' || window.getComputedStyle(curr).overflowY === 'scroll' || curr.classList.contains('gm-main'))) {
+              target = curr;
+              break;
+            }
+            curr = curr.parentElement;
+          }
+        }
+
+        // Fallback to the old method
+        if (!target) {
+          const elements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
+          for (let i = elements.length - 1; i >= 0; i--) {
+            const el = elements[i] as HTMLElement;
+            if (el.scrollHeight > el.clientHeight + 10) {
+              target = el;
+              break;
+            }
+          }
+        }
+      }
+
+      if (target) {
+        const currentScrollY = target.scrollTop;
+        const maxScroll = target.scrollHeight - target.clientHeight;
+        setCanScrollUp(currentScrollY > 100);
+        setCanScrollDown(maxScroll > 0 && currentScrollY < maxScroll - 50);
+      } else {
+        setCanScrollUp(false);
+        setCanScrollDown(false);
+      }
+    };
+
+    const interval = setInterval(checkScroll, 500);
 
     updateTargets();
     tick();
 
-    el.addEventListener("scroll", onScroll, { passive: true });
+    // Use capture: true to catch all scroll events on the page
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    window.addEventListener("resize", checkScroll);
     return () => {
-      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", onScroll, { capture: true } as any);
+      window.removeEventListener("resize", checkScroll);
+      clearInterval(interval);
       if (raf) cancelAnimationFrame(raf);
       document.documentElement.style.setProperty("--gm-app-bg-parallax-y", "0px");
       document.documentElement.style.setProperty("--gm-app-bg-depth-scale", `${BASE_DEPTH}`);
@@ -245,11 +291,41 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* Novo componente de alarmes para orçamentos aprovados */}
       <AlarmToast />
 
+      {/* GESTO GLOBAL DE VOLTAR (BORDAS LATERAIS) */}
+      <div 
+        className="fixed top-0 left-0 w-3 h-full z-[9999] pointer-events-auto touch-none"
+        onPointerDown={(e) => {
+          const startX = e.clientX;
+          const onPointerUp = (upEvent: PointerEvent) => {
+            const diffX = upEvent.clientX - startX;
+            if (diffX > 50) {
+              navigate(-1);
+            }
+            window.removeEventListener('pointerup', onPointerUp);
+          };
+          window.addEventListener('pointerup', onPointerUp);
+        }}
+      />
+      <div 
+        className="fixed top-0 right-0 w-3 h-full z-[9999] pointer-events-auto touch-none"
+        onPointerDown={(e) => {
+          const startX = e.clientX;
+          const onPointerUp = (upEvent: PointerEvent) => {
+            const diffX = startX - upEvent.clientX;
+            if (diffX > 50) {
+              navigate(-1);
+            }
+            window.removeEventListener('pointerup', onPointerUp);
+          };
+          window.addEventListener('pointerup', onPointerUp);
+        }}
+      />
+
       {/* MOBILE TOP HEADER */}
-      <div className="fixed top-0 left-0 right-0 h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-slate-950/80 backdrop-blur-xl border-b border-white/5 shadow-lg">
+      <div className="fixed top-0 left-0 right-0 h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-black/40 backdrop-blur-[32px] saturate-[1.8] border-b border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
         <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
                 <img 
                   src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                   alt="Logo" 
@@ -353,14 +429,68 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       <main 
         ref={mainRef}
-        className={`gm-main transition-all duration-300 ease-out transform ${
-            pageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-        }`}
-        onPointerDown={onPointerDown} 
-        onPointerUp={onPointerUp}
+        className="gm-main"
       >
-        <div className="gm-container">{children}</div>
+        <div className="gm-container min-h-full flex flex-col">{children}</div>
       </main>
+
+      {/* FADE OVERLAY PARA ROLAGEM VERTICAL */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 h-24 pointer-events-none z-[10000]" 
+        style={{ 
+          background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 100%)',
+        }} 
+      />
+      
+      {/* SCROLL INDICATORS CONTAINER */}
+      {createPortal(
+        <div className="fixed right-4 bottom-24 z-[10001] flex flex-col gap-3 lg:hidden pointer-events-none" style={{ zIndex: 10001 }}>
+          {/* BACK TO TOP BUTTON (GLASS) */}
+          <button
+            onClick={() => {
+              const scrollableElements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
+              scrollableElements.forEach(el => el.scrollTo({ top: 0, behavior: "smooth" }));
+              const activeEl = document.querySelector('[data-active-scroll="true"]');
+              if (activeEl) activeEl.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className={`transition-all duration-300 flex items-center justify-center w-12 h-12 rounded-full bg-[var(--gm-primary)]/80 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(255,102,0,0.4)] pointer-events-auto ${
+              canScrollUp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+            }`}
+            aria-label="Voltar ao topo"
+          >
+            <ChevronUp size={24} className="text-white" />
+          </button>
+
+          {/* SCROLL DOWN INDICATOR (GLASS) */}
+          {!(location.pathname === '/' || location.pathname === '/configuracoes') && (
+            <button 
+              onClick={() => {
+                let target = document.querySelector('[data-active-scroll="true"]') as HTMLElement;
+                if (!target) {
+                  const elements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
+                  for (let i = elements.length - 1; i >= 0; i--) {
+                    const el = elements[i] as HTMLElement;
+                    if (el.scrollHeight > el.clientHeight + 10) {
+                      target = el;
+                      break;
+                    }
+                  }
+                }
+                if (target) {
+                  target.scrollBy({ top: target.clientHeight * 0.8, behavior: "smooth" });
+                }
+              }}
+              className={`transition-all duration-300 flex flex-col items-center justify-center w-12 h-12 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.4)] pointer-events-auto ${
+                canScrollDown ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+              }`}
+              aria-label="Rolar para baixo"
+            >
+              <ArrowDown size={24} className="text-white animate-bounce" />
+            </button>
+          )}
+        </div>,
+        document.body
+      )}
 
       <BottomNav />
       <ToastHost />

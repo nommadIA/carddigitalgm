@@ -85,8 +85,6 @@ export default function Financial() {
 
     if (tenantId) budgetsQ = budgetsQ.eq("tenant_id", tenantId);
 
-    const { data: budgets } = await budgetsQ;
-
     // Expenses
     let expensesQ = supabase
       .from("expenses")
@@ -96,7 +94,9 @@ export default function Financial() {
 
     if (tenantId) expensesQ = expensesQ.eq("tenant_id", tenantId);
 
-    const { data: expenses } = await expensesQ;
+    const [budgetsRes, expensesRes] = await Promise.all([budgetsQ, expensesQ]);
+    const budgets = budgetsRes.data;
+    const expenses = expensesRes.data;
 
     // 1. Prepare Daily Aggregation
     const map = new Map<string, { entradas: number; saidas: number }>();
@@ -483,7 +483,7 @@ export default function Financial() {
                       <div>Descrição</div>
                       <div className="text-right">Valor</div>
                     </div>
-                    <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="pb-24">
                       {/* RECEITAS */}
                       {transactions.filter(t => t.type === "receita").length > 0 && (
                         <>

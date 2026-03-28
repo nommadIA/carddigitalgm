@@ -1,5 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
+import Select from "../../components/ui/Select";
 import { supabase } from "../../lib/supabase";
 import { X, Save, Loader2 } from "lucide-react";
 
@@ -280,18 +281,12 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                     <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-5 space-y-5 sticky top-6">
                         <div>
                             <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Cliente</label>
-                            <select
+                            <Select
                                 value={clientId}
-                                onChange={(e) => setClientId(e.target.value)}
-                                className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
-                            >
-                                <option value="">Selecione...</option>
-                                {clients.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                                ))}
-                            </select>
+                                onChange={(val) => setClientId(String(val))}
+                                className="w-full h-[46px] bg-black/30 border border-white/10 rounded-xl px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                options={clients.map(c => ({ value: c.id, label: c.name }))}
+                            />
                         </div>
 
                         <div>
@@ -319,6 +314,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                 <input
                                     value={deliveryDays}
                                     onChange={(e) => setDeliveryDays(e.target.value)}
+                                    onFocus={(e) => e.target.select()}
                                     type="number"
                                     min={0}
                                     className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
@@ -331,6 +327,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                     <input
                                         value={discountAmount}
                                         onChange={(e) => setDiscountAmount(e.target.value)}
+                                        onFocus={(e) => e.target.select()}
                                         type="number"
                                         min={0}
                                         className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors pr-12"

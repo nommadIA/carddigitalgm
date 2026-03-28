@@ -1,7 +1,8 @@
 {
-  "name": "CardDigital GM",
+  "name": "CardDigital GM app",
   "description": "Gestão profissional para designers e agências com IA e Orçamentos.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "microphone"
   ]
 }

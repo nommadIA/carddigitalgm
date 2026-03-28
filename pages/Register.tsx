@@ -30,7 +30,20 @@ export default function Register() {
       await signUpWithEmail(email, password, fullName);
       setTimeout(() => navigate("/login"), 800);
     } catch (err: any) {
-      setErrorMessage(err?.message || "Erro ao criar conta.");
+      let msg = err?.message || "Erro ao criar conta.";
+      
+      // Traduzir erros comuns do Supabase
+      if (msg.includes("email rate limit exceeded") || msg.includes("rate limit")) {
+        msg = "Limite de e-mails excedido. Tente novamente mais tarde.";
+      } else if (msg.includes("Error sending confirmation email")) {
+        msg = "Erro ao enviar e-mail de confirmação. Verifique as configurações de SMTP no Supabase.";
+      } else if (msg.includes("User already registered")) {
+        msg = "Este e-mail já está cadastrado.";
+      } else if (msg.includes("Password should be at least")) {
+        msg = "A senha deve ter pelo menos 6 caracteres.";
+      }
+      
+      setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }

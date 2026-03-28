@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bell, BellOff, Clock, Save, X } from "lucide-react";
 import { getBudgetReminderTimes, setBudgetReminderTimes, getBudgetRemindersEnabled, setBudgetRemindersEnabled, syncAllBudgetAlarms } from "../../lib/alarmSystem";
 
@@ -171,7 +172,7 @@ export default function ReminderConfigModal({ open, onClose }: ReminderConfigMod
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div className="bg-[#151619] border border-white/5 rounded-2xl w-full max-w-md shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-slide-up">
         {/* Header - Hardware Style */}
@@ -302,6 +303,7 @@ export default function ReminderConfigModal({ open, onClose }: ReminderConfigMod
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

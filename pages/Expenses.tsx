@@ -301,6 +301,7 @@ export default function Expenses() {
                     className="gm-input"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
+                    onFocus={(e) => e.target.select()}
                     inputMode="decimal"
                     placeholder="0,00"
                   />
@@ -334,7 +335,7 @@ export default function Expenses() {
         </Card>
       )}
 
-      <Card>
+      <Card className="mb-24">
         {loading ? (
           <div className="p-8 text-center opacity-60">Carregando...</div>
         ) : expenses.length === 0 ? (

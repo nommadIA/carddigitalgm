@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import QRCode from "qrcode";
 import { buildPixPayload } from "../../lib/pix";
 import { copyText } from "../../lib/clipboard";
@@ -50,7 +51,7 @@ export default function PixModal({
 
   if (!open || !settings) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
       <div className="glass rounded-2xl w-full max-w-sm p-6 shadow-2xl bg-slate-900 border border-slate-700">
         <div className="flex items-center justify-between mb-4">
@@ -118,6 +119,7 @@ export default function PixModal({
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

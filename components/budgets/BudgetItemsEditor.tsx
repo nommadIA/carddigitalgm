@@ -153,6 +153,7 @@ export default function BudgetItemsEditor({
                         <input
                           value={it.width_cm ?? 0}
                           onChange={(e) => update(idx, { width_cm: toNumber(e.target.value) })}
+                          onFocus={(e) => e.target.select()}
                           className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-slate-100"
                         />
                       </div>
@@ -161,6 +162,7 @@ export default function BudgetItemsEditor({
                         <input
                           value={it.height_cm ?? 0}
                           onChange={(e) => update(idx, { height_cm: toNumber(e.target.value) })}
+                          onFocus={(e) => e.target.select()}
                           className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-slate-100"
                         />
                       </div>
@@ -179,6 +181,7 @@ export default function BudgetItemsEditor({
                         <input
                           value={it.price_per_m2 ?? 0}
                           onChange={(e) => update(idx, { price_per_m2: toNumber(e.target.value) })}
+                          onFocus={(e) => e.target.select()}
                           className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-slate-100"
                         />
                       </div>
@@ -192,12 +195,14 @@ export default function BudgetItemsEditor({
                       <input
                         value={it.qty}
                         onChange={(e) => update(idx, { qty: toNumber(e.target.value) })}
+                        onFocus={(e) => e.target.select()}
                         placeholder="Qtd"
                         className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-slate-100"
                       />
                       <input
                         value={it.unit_price}
                         onChange={(e) => update(idx, { unit_price: toNumber(e.target.value) })}
+                        onFocus={(e) => e.target.select()}
                         placeholder="Valor unit."
                         className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-slate-100"
                       />

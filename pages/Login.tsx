@@ -55,10 +55,15 @@ export default function Login() {
     try {
       await signInWithPassword(email.trim(), password);
     } catch (err: any) {
-      const msg = err?.message || "Erro ao conectar.";
-      setErrorMessage(
-        msg.includes("Invalid login credentials") ? "Credenciais inválidas." : msg
-      );
+      let msg = err?.message || "Erro ao conectar.";
+      
+      if (msg.includes("Invalid login credentials")) {
+        msg = "E-mail ou senha incorretos.";
+      } else if (msg.includes("Email not confirmed")) {
+        msg = "Por favor, confirme seu e-mail antes de fazer login.";
+      }
+      
+      setErrorMessage(msg);
       setIsLoading(false);
     }
   }

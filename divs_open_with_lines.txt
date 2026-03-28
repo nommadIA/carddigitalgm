@@ -1,0 +1,179 @@
+595:    <div>
+597:      <div className="flex items-center gap-2">
+598:        <div
+624:        <div className="flex gap-2">
+633:                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+686:      <div className="flex flex-col gap-4">
+691:          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6 pb-6 items-start">
+695:          <div className="space-y-4 md:space-y-6">
+696:            <div>
+701:              <div className="flex flex-col gap-4">
+703:                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+704:                    <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+721:                    <div className="flex-1 space-y-3 w-full">
+742:                      <div className="gm-muted text-xs text-center sm:text-left">
+750:                  <div className="space-y-4">
+751:                    <div>
+760:                    <div>
+764:                      <div className="grid grid-cols-[1fr_80px] gap-3 items-center">
+773:                        <div className="relative">
+792:                      <div className="gm-muted text-[10px] mt-1">
+806:          <div className="space-y-4 md:space-y-6">
+807:            <div>
+812:              <div className="flex flex-col gap-4">
+814:                  <div className="space-y-4">
+816:                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+817:                    <div>
+818:                      <div className="font-semibold text-sm">
+821:                      <div className="gm-muted text-xs">
+845:                  <div>
+857:                  <div>
+859:                    <div className="grid grid-cols-[1fr_80px] gap-3 items-center">
+884:                  <div>
+888:                    <div className="grid grid-cols-[1fr_80px] gap-3 items-center">
+911:                    <div className="gm-muted text-xs mt-1">
+916:                  <div>
+920:                    <div className="grid grid-cols-[1fr_80px] gap-3 items-center">
+929:                      <div className="relative">
+951:                    <div className="gm-muted text-xs mt-1">
+956:                  <div>
+961:                    <div className="grid grid-cols-[1fr_80px] gap-3 items-center">
+970:                      <div className="relative">
+992:                    <div className="gm-muted text-xs mt-1">
+997:                  <div>
+999:                    <div className="grid grid-cols-[1fr_80px] gap-3 items-center">
+1022:                    <div className="gm-muted text-xs mt-1">
+1028:                <div className="space-y-3">
+1029:                  <div>
+1048:                  <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+1049:                    <div className="flex items-center justify-between">
+1050:                      <div className="text-xs font-extrabold tracking-wide opacity-80">
+1053:                      <div className="text-xs opacity-60">
+1068:                    <div className="gm-muted text-[11px] mt-1">
+1073:                  <div className="gm-muted text-xs">Preview (miniatura)</div>
+1075:                    <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/20">
+1076:                      <div className="relative w-full h-64 overflow-hidden">
+1077:                        <div
+1100:                          <div className="absolute inset-0 bg-black/35 pointer-events-none" />
+1105:                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 gm-muted text-sm">
+1118:          <div className="space-y-4 md:space-y-6">
+1119:            <div>
+1124:              <div className="flex flex-col gap-4">
+1126:                  <div className="space-y-6">
+1127:              <div>
+1131:                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+1146:                        <div className="flex gap-1">
+1147:                          <div
+1151:                          <div
+1162:                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-[var(--gm-primary)] rounded-full flex items-center justify-center shadow-lg">
+1176:              <div>
+1180:                <div className="grid grid-cols-2 gap-4">
+1194:                        <div
+1209:                          <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--gm-primary)] rounded-full flex items-center justify-center shadow-lg">
+1223:              <div className="grid grid-cols-2 gap-3 items-end">
+1224:                <div>
+1245:              <div
+1249:                <div className="gm-muted text-sm mb-4">
+1252:                <div className="flex flex-wrap gap-3">
+1268:              <div className="mt-2">
+1269:                <div className="gm-muted text-sm mb-2">Presets salvos</div>
+1271:                  <div className="gm-muted text-sm">Nenhum preset salvo.</div>
+1273:                  <div className="grid grid-cols-2 gap-2">
+1297:          <div className="space-y-4 md:space-y-6">
+1298:            <div>
+1303:              <div className="flex flex-col gap-4">
+1305:                  <div className="space-y-4">
+1306:              <div>
+1308:                <div className="flex items-center gap-3">
+1309:                  <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 overflow-hidden flex items-center justify-center relative">
+1359:              <div className="rounded-2xl border border-white/10 p-4 bg-white/5">
+1360:                <div className="mb-4">
+1361:                  <div className="font-bold">Timbrado do Orçamento (A4)</div>
+1362:                  <div className="gm-muted text-sm">
+1368:              <div className="grid grid-cols-2 gap-4">
+1369:                  <div className="flex flex-col gap-3">
+1381:                    <div className="relative w-full aspect-[210/297] bg-black/20 rounded-lg overflow-hidden border border-white/10 group">
+1387:                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+1395:                  <div className="flex flex-col gap-3">
+1410:                    <div className="relative w-full aspect-[210/297] bg-black/20 rounded-lg overflow-hidden border border-white/10">
+1418:                        <div className="flex flex-col items-center justify-center h-full text-slate-500 gap-2 p-4 text-center">
+1439:          <div className="space-y-4 md:space-y-6">
+1440:            <div>
+1445:              <div className="flex flex-col gap-4">
+1447:                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+1448:                <div className="font-bold">Dados de Pagamento (Pix)</div>
+1449:                <div className="gm-muted text-sm">
+1455:                <div className="grid grid-cols-2 gap-3 mt-3">
+1456:                  <div>
+1470:                  <div>
+1480:                <div className="gm-muted text-sm mt-2">
+1486:                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+1487:                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+1488:                    <div className="text-xs font-extrabold tracking-wide opacity-80 mb-3">
+1492:                      <div className="bg-white rounded-xl p-3 w-fit">
+1500:                      <div className="gm-muted text-sm">
+1522:                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+1523:                    <div className="text-xs font-extrabold tracking-wide opacity-80 mb-3">
+1528:                      <div className="gm-muted text-sm">
+1552:                        <div className="mt-3 text-[10px] leading-tight font-mono break-all bg-black/30 border border-white/10 rounded-xl p-3 text-slate-300">
+1558:                    <div className="gm-muted text-xs mt-2">
+1569:            <div>
+1574:                <div className="flex flex-col gap-4">
+1576:              <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mb-4">
+1579:              <div className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+1582:              <div className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-[250px]">
+1586:              <div className="flex items-center gap-2 mb-6">
+1587:                <div
+1596:                <div className="w-full space-y-3">
+1597:                  <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+1628:                    <div className="flex flex-col gap-2">
+1693:        <div className="relative w-full max-w-[400px] mx-auto h-[calc(100dvh-180px)] mt-2 flex flex-col px-2">
+1694:          <div className="flex-1 overflow-hidden flex flex-col relative">
+1728:                <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto no-scrollbar pb-8">
+1729:                  <div className="flex items-center justify-between mb-2 shrink-0">
+1735:                  <div className="flex flex-col gap-2">
+1737:                      <div className="flex flex-col items-center gap-4">
+1738:                        <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+1756:                      <div className="space-y-4">
+1757:                        <div className="space-y-1.5">
+1762:                        <div className="space-y-1.5">
+1764:                          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+1766:                            <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{appScale}x</div>
+1776:                <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto no-scrollbar pb-8">
+1777:                  <div className="flex items-center justify-between mb-2 shrink-0">
+1783:                  <div className="flex flex-col gap-2">
+1786:                      <div className="grid grid-cols-5 gap-3">
+1799:                              <div 
+1806:                                <div className="absolute inset-0 flex items-center justify-center">
+1818:                      <div className="grid grid-cols-2 gap-3">
+1830:                              <div className={`w-full py-1.5 text-[10px] font-bold rounded-md flex items-center justify-center ${
+1846:                <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto no-scrollbar pb-8">
+1847:                  <div className="flex items-center justify-between mb-2 shrink-0">
+1853:                  <div className="flex flex-col gap-2">
+1856:                      <div className="flex items-center gap-4">
+1857:                        <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+1869:                      <div className="font-bold text-[10px] uppercase tracking-wider text-slate-500 mb-3">Pix (Pagamento)</div>
+1870:                      <div className="space-y-3">
+1871:                        <div>
+1881:                        <div>
+1892:                <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto no-scrollbar pb-8">
+1893:                  <div className="flex items-center justify-between mb-2 shrink-0">
+1899:                  <div className="flex flex-col gap-2">
+1902:                      <div className={`absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full opacity-20 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`} />
+1904:                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 border-2 transition-all duration-500 ${
+1912:                      <div className="space-y-2 mb-6">
+1958:                <div className="w-full flex-shrink-0 h-full flex flex-col overflow-y-auto no-scrollbar pb-8">
+1959:                  <div className="flex items-center justify-between mb-2 shrink-0">
+1965:                  <div className="flex flex-col gap-2">
+1967:                      <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
+1968:                        <div>
+1969:                          <div className="font-semibold text-sm">Plano de fundo</div>
+1970:                          <div className="gm-muted text-[10px]">Ative para aparecer no app</div>
+1988:                      <div className="mt-4 space-y-4">
+1989:                        <div className="space-y-1.5">
+1997:                        <div className="space-y-1.5">
+2002:                        <div className="space-y-1.5">
+2007:                        <div className="space-y-1.5">
+2012:                        <div className="pt-2">
+2032:          <div className="flex justify-center absolute bottom-32 left-0 right-0 z-10 pointer-events-none">
+2033:            <div className="flex gap-2 p-2 bg-black/20 backdrop-blur-md rounded-full pointer-events-auto border border-white/5 shadow-lg">

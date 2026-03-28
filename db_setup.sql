@@ -177,6 +177,7 @@ create table if not exists public.app_settings (
   budget_approved_reminder_enabled boolean default false,
   budget_approved_reminder_times jsonb default '[]',
   app_scale numeric default 1.0,
+  mobile_scale numeric default 1.5,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   unique(tenant_id)
@@ -297,9 +298,13 @@ create table if not exists public.market_transactions (
   tenant_id uuid references public.tenants(id) on delete cascade,
   amount numeric not null,
   note text,
+  items jsonb,
   created_by uuid default auth.uid(),
   created_at timestamptz default now()
 );
+
+-- Adiciona a coluna items caso a tabela já exista
+alter table public.market_transactions add column if not exists items jsonb;
 
 create table if not exists public.market_catalog_items (
   id uuid primary key default gen_random_uuid(),
@@ -382,7 +387,7 @@ begin
 end;
 $$;
 
-create or replace function public.market_wallet_spend(p_tenant_id uuid, p_amount numeric, p_note text)
+create or replace function public.market_wallet_spend(p_tenant_id uuid, p_amount numeric, p_note text, p_items jsonb default null)
 returns numeric
 language plpgsql
 security definer
@@ -407,8 +412,8 @@ begin
   where tenant_id = p_tenant_id
   returning balance into v_new_balance;
 
-  insert into public.market_transactions (tenant_id, amount, note, created_by)
-  values (p_tenant_id, -p_amount, p_note, auth.uid());
+  insert into public.market_transactions (tenant_id, amount, note, created_by, items)
+  values (p_tenant_id, -p_amount, p_note, auth.uid(), p_items);
 
   return v_new_balance;
 end;
@@ -430,7 +435,7 @@ end;
 $$;
 
 grant execute on function public.market_wallet_topup(uuid, numeric, text) to authenticated;
-grant execute on function public.market_wallet_spend(uuid, numeric, text) to authenticated;
+grant execute on function public.market_wallet_spend(uuid, numeric, text, jsonb) to authenticated;
 grant execute on function public.market_trash_delete_permanently(uuid) to authenticated;
 
 -- ==========================================

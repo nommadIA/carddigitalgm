@@ -39,6 +39,7 @@ export type AppSettings = {
   app_background_blur?: number;
 
   app_scale?: number | null;
+  mobile_scale?: number | null;
 
   button_style?: string | null; // glass-1, glass-2, etc.
 
@@ -77,7 +78,8 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   app_background_pos_y: "50%",
   app_background_scale: 1,
   app_background_blur: 10,
-  app_scale: 1.0,
+  app_scale: 2.0,
+  mobile_scale: 1.5,
   button_style: "solid",
   budget_approved_reminder_enabled: false,
   budget_approved_reminder_times: DEFAULT_REMINDER_TIMES,
@@ -169,8 +171,14 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
   root.style.setProperty("--gm-app-bg-blur-effective", `${effectiveBlur}px`);
 
   // ✅ Escala Global do App (Zoom)
-  const scale = s.app_scale ?? Number(localStorage.getItem("gm_app_scale_fallback") || 1.0);
-  root.style.fontSize = `${scale * 100}%`;
+  const scale = s.app_scale ?? Number(localStorage.getItem("gm_app_scale_fallback") || 2.0);
+  const mobileScale = s.mobile_scale ?? 1.5;
+  
+  root.style.setProperty("--gm-app-scale", String(scale));
+  root.style.setProperty("--gm-mobile-scale", String(mobileScale));
+  
+  // Se o usuário quer que o máximo (2) seja o tamanho normal (100%), multiplicamos por 50
+  // root.style.fontSize = `${scale * 50}%`; // Removido, agora é feito no CSS via media query
 
   if (persist) {
     try {
@@ -189,7 +197,7 @@ export function readSettingsLocal(): AppSettings | null {
   }
 }
 
-async function withTimeout<T>(p: Promise<T>, ms = 15000): Promise<T> {
+async function withTimeout<T>(p: Promise<T>, ms = 3000): Promise<T> {
   return await Promise.race([
     p,
     new Promise<T>((_, rej) => setTimeout(() => rej(new Error("Timeout")), ms)),
@@ -209,6 +217,12 @@ function mergeWithFallbacks(data: any): AppSettings {
   if (data?.app_scale === undefined || data?.app_scale === null) {
     const localScale = localStorage.getItem("gm_app_scale_fallback");
     if (localScale) settings.app_scale = Number(localScale);
+  }
+
+  // Fallback para mobile_scale
+  if (data?.mobile_scale === undefined || data?.mobile_scale === null) {
+    const localMobileScale = localStorage.getItem("gm_mobile_scale_fallback");
+    if (localMobileScale) settings.mobile_scale = Number(localMobileScale);
   }
   
   return settings;
@@ -234,10 +248,10 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
       );
 
       if (errTenant) {
-        if (errTenant.code === "PGRST204" || errTenant.message?.includes("button_style") || errTenant.message?.includes("app_scale") || errTenant.code === "42703") {
+        if (errTenant.code === "PGRST204" || errTenant.message?.includes("button_style") || errTenant.message?.includes("app_scale") || errTenant.message?.includes("mobile_scale") || errTenant.code === "42703") {
            const { data: retryData } = await supabase
              .from("app_settings")
-             .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times, app_scale, button_style")
+             .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
              .eq("tenant_id", tenantId)
              .maybeSingle();
            if (retryData) {
@@ -257,10 +271,10 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
         );
 
         if (errOwner) {
-          if (errOwner.code === "PGRST204" || errOwner.message?.includes("button_style") || errOwner.message?.includes("app_scale") || errOwner.code === "42703") {
+          if (errOwner.code === "PGRST204" || errOwner.message?.includes("button_style") || errOwner.message?.includes("app_scale") || errOwner.message?.includes("mobile_scale") || errOwner.code === "42703") {
              const { data: retryData } = await supabase
                .from("app_settings")
-               .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times, app_scale, button_style")
+               .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
                .eq("owner", owner)
                .maybeSingle();
              if (retryData) {
@@ -288,12 +302,12 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
             .single();
 
           if (errUpsert) {
-            if (errUpsert.code === "PGRST204" || errUpsert.message?.includes("button_style") || errUpsert.message?.includes("app_scale") || errUpsert.code === "42703") {
-               const { button_style, app_scale, ...safeClone } = clone;
+            if (errUpsert.code === "PGRST204" || errUpsert.message?.includes("button_style") || errUpsert.message?.includes("app_scale") || errUpsert.message?.includes("mobile_scale") || errUpsert.code === "42703") {
+               const { button_style, app_scale, mobile_scale, ...safeClone } = clone as any;
                const { data: retryMigrate } = await supabase
                  .from("app_settings")
                  .upsert(safeClone, { onConflict: "tenant_id" })
-                 .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times, app_scale, button_style")
+                 .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
                  .single();
                if (retryMigrate) return mergeWithFallbacks(retryMigrate);
             }
@@ -356,6 +370,9 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
   if (payload.app_scale != null) {
     localStorage.setItem("gm_app_scale_fallback", String(payload.app_scale));
   }
+  if (payload.mobile_scale != null) {
+    localStorage.setItem("gm_mobile_scale_fallback", String(payload.mobile_scale));
+  }
 
   // Remove button_style do payload se soubermos que a coluna não existe (opcional, mas evita erro no console)
   // Como não sabemos, vamos tentar. Se falhar, avisamos.
@@ -367,12 +384,12 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
 
   if (error) {
     // Se falhar por coluna inexistente, tenta salvar sem o button_style ou app_scale
-    if (error.code === "PGRST204" || error.message?.includes("button_style") || error.message?.includes("app_scale") || error.code === "42703") {
-       const { button_style, app_scale, ...safePayload } = payload as any;
+    if (error.code === "PGRST204" || error.message?.includes("button_style") || error.message?.includes("app_scale") || error.message?.includes("mobile_scale") || error.code === "42703") {
+       const { button_style, app_scale, mobile_scale, ...safePayload } = payload as any;
        const { data: retryData, error: retryErr } = await supabase
          .from("app_settings")
          .upsert(safePayload, { onConflict: "tenant_id" })
-         .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times, app_scale, button_style")
+         .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
          .single();
        
        if (retryErr) {
@@ -387,11 +404,15 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
        if (app_scale != null) {
          localStorage.setItem("gm_app_scale_fallback", String(app_scale));
        }
+       if (mobile_scale != null) {
+         localStorage.setItem("gm_mobile_scale_fallback", String(mobile_scale));
+       }
        
        const settings = { 
          ...retryData, 
          button_style: button_style || localStorage.getItem("gm_button_style_fallback"),
-         app_scale: app_scale ?? Number(localStorage.getItem("gm_app_scale_fallback") || 1.0)
+         app_scale: app_scale ?? Number(localStorage.getItem("gm_app_scale_fallback") || 2.0),
+         mobile_scale: mobile_scale ?? Number(localStorage.getItem("gm_mobile_scale_fallback") || 1.5)
        } as AppSettings;
        applySettingsToDOM(settings);
        return settings;

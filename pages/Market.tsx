@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, ShoppingCart, Trash2, Camera, Check, DollarSign, Wallet, Loader2, X, Sparkles, Share2, History, Mail, Copy, Calendar } from 'lucide-react';
+import { Plus, ShoppingCart, Trash2, Camera, Mic, Check, DollarSign, Wallet, Loader2, X, Sparkles, Share2, History, Mail, Copy, Calendar } from 'lucide-react';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { CURRENCY_FORMATTER } from '../constants';
 import { supabase } from '../lib/supabase';
@@ -9,6 +9,7 @@ import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
 import { motion, AnimatePresence } from 'motion/react';
+import { GoogleGenAI } from '@google/genai';
 
 type CartItem = {
   id: string;
@@ -23,6 +24,7 @@ type MarketHistory = {
   month: string;
   total: number;
   count: number;
+  lists: { id: string; amount: number; created_at: string; note: string; items?: CartItem[] }[];
 };
 
 const Market = () => {
@@ -47,12 +49,15 @@ const Market = () => {
   const [finalizing, setFinalizing] = useState(false);
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
   const [showDeleteHistoryConfirm, setShowDeleteHistoryConfirm] = useState<string | null>(null);
+  const [showDeleteListConfirm, setShowDeleteListConfirm] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resettingBalance, setResettingBalance] = useState(false);
+  const [scanningImage, setScanningImage] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   // Lock body scroll when any modal is open
   useEffect(() => {
-    const isAnyModalOpen = topUpModalOpen || showFinalizeConfirm || showResetConfirm || showDeleteHistoryConfirm || !!shareData;
+    const isAnyModalOpen = topUpModalOpen || showFinalizeConfirm || showResetConfirm || showDeleteHistoryConfirm || showDeleteListConfirm || !!shareData;
     if (isAnyModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -61,7 +66,7 @@ const Market = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [topUpModalOpen, showFinalizeConfirm, showResetConfirm, showDeleteHistoryConfirm, shareData]);
+  }, [topUpModalOpen, showFinalizeConfirm, showResetConfirm, showDeleteHistoryConfirm, showDeleteListConfirm, shareData]);
 
   const totalListValue = useMemo(() => cartItems.reduce((acc, i) => acc + (Number(i.unit_price) * Number(i.quantity)), 0), [cartItems]);
   const realAvailableBalance = useMemo(() => walletBalance - totalListValue, [walletBalance, totalListValue]);
@@ -103,7 +108,7 @@ const Market = () => {
     try {
         const { data, error } = await supabase
             .from("market_transactions")
-            .select("amount, created_at")
+            .select("id, amount, created_at, note, items")
             .eq("tenant_id", tenantId)
             .eq("created_by", user?.id)
             .lt("amount", 0); // apenas gastos
@@ -111,20 +116,26 @@ const Market = () => {
         if (error) throw error;
 
         // Agrupar por mês
-        const groups: Record<string, { total: number; count: number }> = {};
+        const groups: Record<string, { total: number; count: number; lists: any[] }> = {};
         data.forEach(t => {
             const date = new Date(t.created_at);
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-            if (!groups[key]) groups[key] = { total: 0, count: 0 };
+            if (!groups[key]) groups[key] = { total: 0, count: 0, lists: [] };
             groups[key].total += Math.abs(Number(t.amount));
             groups[key].count += 1;
+            groups[key].lists.push(t);
         });
 
-        const formatted = Object.entries(groups).map(([month, val]) => ({
-            month,
-            total: val.total,
-            count: val.count
-        })).sort((a, b) => b.month.localeCompare(a.month));
+        const formatted = Object.entries(groups).map(([month, val]) => {
+            // Sort lists by date descending
+            val.lists.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            return {
+                month,
+                total: val.total,
+                count: val.count,
+                lists: val.lists
+            };
+        }).sort((a, b) => b.month.localeCompare(a.month));
 
         setHistory(formatted);
     } catch (e) {
@@ -165,6 +176,44 @@ const Market = () => {
         }
     };
 
+    const handleDeleteList = async (listId: string) => {
+        setHistoryLoading(true);
+        try {
+            const { error } = await supabase
+                .from("market_transactions")
+                .delete()
+                .eq("tenant_id", tenantId)
+                .eq("id", listId);
+
+            if (error) {
+                console.error("Erro ao excluir lista:", error);
+                throw error;
+            }
+
+            // Atualizar o histórico local
+            setHistory(prev => {
+                return prev.map(h => {
+                    const newLists = h.lists.filter(l => l.id !== listId);
+                    if (newLists.length === h.lists.length) return h; // Não mudou
+                    
+                    const newTotal = newLists.reduce((acc, l) => acc + Math.abs(l.amount), 0);
+                    return {
+                        ...h,
+                        lists: newLists,
+                        total: newTotal,
+                        count: newLists.length
+                    };
+                }).filter(h => h.count > 0); // Remove o mês se ficar vazio
+            });
+            setShowDeleteListConfirm(null);
+        } catch (e: any) {
+            console.error("Erro ao excluir lista:", e);
+            alert("Erro ao excluir lista: " + (e.message || "Erro desconhecido"));
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
+
   const handleAddItem = async () => {
     const nome = newItemName.trim();
     const preco = Number(newItemPrice) || 0;
@@ -189,6 +238,123 @@ const Market = () => {
     } finally {
         setAddingItem(false);
     }
+  };
+
+  const handleScanImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setScanningImage(true);
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        alert("Chave da API do Gemini não configurada.");
+        setScanningImage(false);
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+
+      // Converter imagem para base64
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      await new Promise((resolve) => {
+        reader.onload = resolve;
+      });
+      const base64Data = (reader.result as string).split(',')[1];
+
+      // Usando o modelo correto para evitar erro 404
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                data: base64Data,
+                mimeType: file.type,
+              },
+            },
+            {
+              text: "Analise esta embalagem de produto. Extraia o nome principal do produto, a marca e o peso/volume. Crie um título resumido, claro e gramaticalmente correto para uma lista de compras. Retorne APENAS o título, nada mais. Exemplo de saída esperada: 'Arroz Prato Fino Parboilizado 5kg'.",
+            },
+          ],
+        },
+      });
+
+      const text = response.text?.trim();
+      if (text) {
+        setNewItemName(text);
+      } else {
+        alert("Não foi possível identificar o produto na imagem.");
+      }
+    } catch (err: any) {
+      console.error("Erro ao escanear produto:", err);
+      alert("Erro ao identificar o produto. Verifique sua conexão ou tente novamente.");
+    } finally {
+      setScanningImage(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Seu navegador não suporta reconhecimento de voz.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pt-BR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setIsListening(true);
+    
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      
+      let name = transcript;
+      let price = "";
+      
+      // Look for price patterns like "25 e 90", "25 reais e 90 centavos", "25,90"
+      const priceMatch = transcript.match(/(\d+)\s*(?:reais|vírgula|e)?\s*(\d+)?\s*(?:centavos)?$/i);
+      if (priceMatch) {
+         const reais = priceMatch[1];
+         const centavos = priceMatch[2] ? priceMatch[2].padEnd(2, '0').substring(0, 2) : "00";
+         price = `${reais}.${centavos}`;
+         name = transcript.replace(priceMatch[0], '').trim();
+         name = name.replace(/(por|custa|saindo a|reais)$/i, '').trim();
+      } else {
+         const matchNum = transcript.match(/(\d+(?:[.,]\d+)?)$/);
+         if (matchNum) {
+           price = matchNum[1].replace(',', '.');
+           name = transcript.replace(matchNum[0], '').trim();
+           name = name.replace(/(por|custa|saindo a)$/i, '').trim();
+         }
+      }
+      
+      name = name.charAt(0).toUpperCase() + name.slice(1);
+      
+      setNewItemName(name);
+      if (price) setNewItemPrice(price);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Erro no reconhecimento de voz:", event.error);
+      if (event.error === 'not-allowed') {
+        alert("Permissão negada para usar o microfone. Por favor, permita o acesso ao microfone no seu navegador para usar esta função.");
+      } else if (event.error === 'no-speech') {
+        // Silently ignore or show a gentle toast, but for now we just reset state
+        // The user just didn't speak in time.
+      } else {
+        alert("Erro ao capturar áudio. Tente novamente.");
+      }
+      setIsListening(false);
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    recognition.start();
   };
 
   const handleRemoveItem = async (id: string) => {
@@ -263,9 +429,9 @@ const Market = () => {
         // 1. Deduzir do saldo da carteira via RPC
         const { error: spendError } = await supabase.rpc("market_wallet_spend", { 
             p_tenant_id: tenantId, 
-            p_user_id: user?.id,
             p_amount: totalListValue, 
-            p_note: note 
+            p_note: note,
+            p_items: cartItems
         });
 
         if (spendError) throw new Error("Erro ao deduzir saldo: " + spendError.message);
@@ -324,6 +490,26 @@ const Market = () => {
     msg += `\n_Gerado por CardDigital GM_`;
 
     setShareData({ title: "Lista de Compras", message: msg });
+  };
+
+  const handleShareList = (list: any) => {
+    let msg = `*🛒 HISTÓRICO DE COMPRA - MERCADO*\n`;
+    msg += `📅 Data: ${new Date(list.created_at).toLocaleDateString('pt-BR')}\n`;
+    msg += `📝 Nota: ${list.note || 'Compra no mercado'}\n`;
+    msg += `--------------------------------\n`;
+    
+    if (list.items && list.items.length > 0) {
+        list.items.forEach((item: any) => {
+            const sub = Number(item.unit_price) * Number(item.quantity);
+            msg += `• ${item.quantity}x ${item.name} - ${CURRENCY_FORMATTER.format(sub)}\n`;
+        });
+        msg += `--------------------------------\n`;
+    }
+    
+    msg += `*TOTAL DA COMPRA: ${CURRENCY_FORMATTER.format(Math.abs(list.amount))}*\n`;
+    msg += `\n_Gerado por CardDigital GM_`;
+
+    setShareData({ title: "Histórico de Compra", message: msg });
   };
 
   return (
@@ -400,27 +586,78 @@ const Market = () => {
                                const [year, month] = h.month.split("-");
                                const monthName = new Date(Number(year), Number(month) - 1).toLocaleString('pt-BR', { month: 'long' });
                                return (
-                                   <div key={h.month} className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[var(--gm-primary)] transition-all group relative">
+                                   <div key={h.month} className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[var(--gm-primary)] transition-all flex flex-col relative">
+                                       <div className="flex justify-between items-start mb-2 pr-14">
+                                           <div className="flex items-center gap-2 text-slate-400">
+                                               <Calendar size={16} />
+                                               <span className="text-sm font-bold uppercase tracking-widest">{monthName} {year}</span>
+                                           </div>
+                                           <div className="text-xs bg-white/10 px-2 py-1 rounded-full font-bold">{h.count} compras</div>
+                                       </div>
+                                       <div className="text-3xl font-black text-white mb-4">
+                                           {CURRENCY_FORMATTER.format(h.total)}
+                                       </div>
+                                       
+                                       {/* Lista detalhada das compras do mês */}
+                                       <div className="flex flex-col gap-2 mt-2 pt-4 border-t border-white/10">
+                                           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Relação de Compras</h4>
+                                           {h.lists.map(list => (
+                                               <div key={list.id} className="flex flex-col bg-black/20 p-3 rounded-xl border border-white/5 relative group">
+                                                   <div className="flex justify-between items-center pr-20">
+                                                       <div className="flex flex-col">
+                                                           <span className="text-white/90 font-bold text-sm">{new Date(list.created_at).toLocaleDateString('pt-BR')}</span>
+                                                           <span className="text-xs text-slate-400 mt-0.5">{list.note || 'Compra no mercado'}</span>
+                                                       </div>
+                                                       <span className="font-black text-[var(--gm-primary)] text-base">{CURRENCY_FORMATTER.format(Math.abs(list.amount))}</span>
+                                                   </div>
+                                                   
+                                                   {list.items && list.items.length > 0 && (
+                                                       <div className="mt-3 pt-3 border-t border-white/5 flex flex-col gap-1">
+                                                           {list.items.map((item: any, idx: number) => (
+                                                               <div key={idx} className="flex justify-between items-center text-xs text-slate-300">
+                                                                   <span>{item.quantity}x {item.name}</span>
+                                                                   <span>{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
+                                                               </div>
+                                                           ))}
+                                                       </div>
+                                                   )}
+
+                                                   <div className="absolute right-2 top-3 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                       <button 
+                                                           onClick={(e) => {
+                                                               e.stopPropagation();
+                                                               handleShareList(list);
+                                                           }}
+                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
+                                                           title="Compartilhar esta compra"
+                                                       >
+                                                           <Share2 size={14} />
+                                                       </button>
+                                                       <button 
+                                                           onClick={(e) => {
+                                                               e.stopPropagation();
+                                                               setShowDeleteListConfirm(list.id);
+                                                           }}
+                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                                                           title="Excluir esta compra"
+                                                       >
+                                                           <Trash2 size={14} />
+                                                       </button>
+                                                   </div>
+                                               </div>
+                                           ))}
+                                       </div>
+
                                         <button 
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setShowDeleteHistoryConfirm(h.month);
                                             }}
-                                            className="absolute top-3 right-3 gm-btn gm-btn-icon gm-btn-danger z-20"
+                                            className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors z-20"
                                             title="Excluir este mês"
                                         >
-                                            <Trash2 size={14} />
+                                            <Trash2 size={18} />
                                         </button>
-                                       <div className="flex justify-between items-start mb-2 pr-8">
-                                           <div className="flex items-center gap-2 text-slate-400">
-                                               <Calendar size={14} />
-                                               <span className="text-xs font-bold uppercase tracking-widest">{monthName} {year}</span>
-                                           </div>
-                                           <div className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-bold">{h.count} compras</div>
-                                       </div>
-                                       <div className="text-2xl font-black text-white group-hover:text-[var(--gm-primary)] transition-colors">
-                                           {CURRENCY_FORMATTER.format(h.total)}
-                                       </div>
                                    </div>
                                );
                            })}
@@ -432,22 +669,72 @@ const Market = () => {
            <Grid cols={1} className="gap-6">
                 {/* Add Item Form */}
                 <Card title="Adicionar Item">
-                    <div className="flex flex-col md:flex-row gap-4 items-end">
-                        <div className="flex-1 w-full">
-                            <label className="gm-label mb-1 block">Produto</label>
-                            <input className="gm-input w-full" value={newItemName} onChange={e => setNewItemName(e.target.value)} placeholder="Ex: Arroz 5kg" />
+                    <div className="flex flex-col gap-4">
+                        <div className="w-full">
+                            <label className="gm-label mb-1 block">Captura Inteligente</label>
+                            <div className="flex gap-2">
+                                <button 
+                                   className="gm-btn gm-btn-primary flex-1 flex items-center justify-center h-12 rounded-xl shadow-lg shadow-[var(--gm-primary-30)] gap-2"
+                                   onClick={() => document.getElementById('camera-input')?.click()}
+                                   disabled={scanningImage || isListening}
+                                >
+                                   {scanningImage ? <Loader2 size={20} className="animate-spin" /> : <Camera size={20} />}
+                                   <span className="text-sm font-medium">{scanningImage ? "Lendo..." : "Câmera"}</span>
+                                </button>
+                                <button 
+                                   className={`gm-btn flex-1 flex items-center justify-center h-12 rounded-xl shadow-lg gap-2 transition-colors ${isListening ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/30' : 'bg-slate-800 text-white hover:bg-slate-700 shadow-black/20'}`}
+                                   onClick={handleVoiceInput}
+                                   disabled={scanningImage || isListening}
+                                >
+                                   {isListening ? (
+                                      <>
+                                        <span className="relative flex h-3 w-3 mr-1">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                                        </span>
+                                        <span className="text-sm font-medium">Ouvindo...</span>
+                                      </>
+                                   ) : (
+                                      <>
+                                        <Mic size={20} />
+                                        <span className="text-sm font-medium">Voz</span>
+                                      </>
+                                   )}
+                                </button>
+                            </div>
+                            <input 
+                               id="camera-input" 
+                               type="file" 
+                               accept="image/*" 
+                               capture="environment" 
+                               className="hidden" 
+                               onChange={handleScanImage} 
+                            />
                         </div>
-                        <div className="w-full md:w-32">
-                            <label className="gm-label mb-1 block">Preço (Un)</label>
-                            <input className="gm-input" type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} placeholder="0.00" />
+
+                        <div className="flex flex-col md:flex-row gap-4 items-end">
+                            <div className="flex-1 w-full">
+                                <label className="gm-label mb-1 block">Produto</label>
+                                <textarea 
+                                    className="gm-input w-full py-3 min-h-[48px] resize-y" 
+                                    value={newItemName} 
+                                    onChange={e => setNewItemName(e.target.value)} 
+                                    placeholder="Ex: Arroz 5kg" 
+                                    rows={2}
+                                />
+                            </div>
+                            <div className="w-full md:w-32">
+                                <label className="gm-label mb-1 block">Preço (Un)</label>
+                                <input className="gm-input h-12" type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} onFocus={(e) => e.target.select()} placeholder="0.00" />
+                            </div>
+                            <div className="w-full md:w-24">
+                                <label className="gm-label mb-1 block">Qtd</label>
+                                <input className="gm-input text-center h-12" type="number" value={newItemQty} onChange={e => setNewItemQty(Number(e.target.value))} onFocus={(e) => e.target.select()} />
+                            </div>
+                            <button className="gm-btn h-12 w-full md:w-auto px-8" onClick={handleAddItem} disabled={addingItem}>
+                                {addingItem ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />} Adicionar
+                            </button>
                         </div>
-                        <div className="w-full md:w-24">
-                            <label className="gm-label mb-1 block">Qtd</label>
-                            <input className="gm-input text-center" type="number" value={newItemQty} onChange={e => setNewItemQty(Number(e.target.value))} />
-                        </div>
-                        <button className="gm-btn w-full md:w-auto px-8" onClick={handleAddItem} disabled={addingItem}>
-                            {addingItem ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />} Adicionar
-                        </button>
                     </div>
                 </Card>
 
@@ -533,6 +820,7 @@ const Market = () => {
                                 className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-3xl font-black text-white focus:outline-none focus:border-[var(--gm-primary)] transition-all text-center" 
                                 value={topUpAmount} 
                                 onChange={e => setTopUpAmount(e.target.value)} 
+                                onFocus={(e) => e.target.select()}
                                 placeholder="0.00" 
                                 autoFocus 
                             />
@@ -558,6 +846,53 @@ const Market = () => {
             </div>
         )}
        </AnimatePresence>
+
+                {/* Modal de Confirmação de Exclusão de Lista */}
+                <AnimatePresence>
+                    {showDeleteListConfirm && (
+                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                                onClick={() => setShowDeleteListConfirm(null)}
+                            />
+                            <motion.div 
+                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                className="bg-[#1a1a1a] border border-white/10 p-6 rounded-3xl w-full max-w-md relative z-10 shadow-2xl"
+                            >
+                                <div className="flex flex-col items-center text-center">
+                                    <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mb-6 text-red-500">
+                                        <Trash2 size={32} />
+                                    </div>
+                                    <h3 className="text-2xl font-black text-white mb-2">Excluir Compra?</h3>
+                                    <p className="text-slate-400 mb-8">
+                                        Tem certeza que deseja excluir esta compra específica do histórico? Esta ação não pode ser desfeita.
+                                    </p>
+                                    
+                                    <div className="grid grid-cols-2 gap-4 w-full">
+                                        <button 
+                                            className="gm-btn gm-btn-soft w-full py-3"
+                                            onClick={() => setShowDeleteListConfirm(null)}
+                                        >
+                                            VOLTAR
+                                        </button>
+                                        <button 
+                                            className="gm-btn gm-btn-danger w-full py-3"
+                                            onClick={() => handleDeleteList(showDeleteListConfirm)}
+                                            disabled={historyLoading}
+                                        >
+                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "EXCLUIR"}
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
 
                 {/* Modal de Confirmação de Exclusão de Histórico */}
                 <AnimatePresence>
@@ -715,25 +1050,31 @@ const Market = () => {
         </AnimatePresence>
 
         {/* Share Options Modal */}
-
-       {shareData && (
-        <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setShareData(null)}>
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Share2 size={20} className="text-[var(--gm-primary)]" />
-                Compartilhar {shareData.title}
-              </h3>
+        {shareData && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
+            <div className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+                <h3 className="text-lg font-bold">Compartilhar {shareData.title}</h3>
+                <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
               
-              <div className="grid grid-cols-1 gap-3">
+              <div className="p-6 space-y-3">
                 <button 
                   onClick={() => {
                     window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="gm-btn gm-btn-soft w-full justify-start py-4"
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
                 >
-                  <WhatsAppIcon size={20} /> WhatsApp
+                  <div className="shrink-0">
+                    <WhatsAppIcon size={24} className="text-[var(--gm-primary)]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-[var(--gm-primary)] leading-tight">WhatsApp</p>
+                    <p className="text-[10px] text-white/70 leading-tight">Enviar diretamente para um contato</p>
+                  </div>
                 </button>
 
                 <button 
@@ -741,10 +1082,15 @@ const Market = () => {
                     window.open(`mailto:?subject=${shareData.title}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="gm-btn gm-btn-soft w-full justify-start py-4"
-                  style={{ color: 'var(--gm-accent)', borderColor: 'rgba(var(--gm-accent-rgb), 0.2)' }}
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
                 >
-                  <Mail size={20} /> E-mail
+                  <div className="shrink-0">
+                    <Mail size={24} className="text-[var(--gm-primary)]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-[var(--gm-primary)] leading-tight">E-mail</p>
+                    <p className="text-[10px] text-white/70 leading-tight">Enviar por correio eletrônico</p>
+                  </div>
                 </button>
 
                 <button 
@@ -757,43 +1103,47 @@ const Market = () => {
                       alert("Erro ao copiar texto.");
                     }
                   }}
-                  className="gm-btn gm-btn-soft w-full justify-start py-4"
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
                 >
-                  <Copy size={20} /> Copiar Texto
+                  <div className="shrink-0">
+                    <Copy size={24} className="text-[var(--gm-primary)]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-[var(--gm-primary)] leading-tight">Copiar Texto</p>
+                    <p className="text-[10px] text-white/70 leading-tight">Copiar para colar em outro lugar</p>
+                  </div>
                 </button>
 
                 {navigator.share && (
-                    <button 
-                      onClick={async () => {
-                        try {
-                          await navigator.share({
-                            title: shareData.title,
-                            text: shareData.message,
-                          });
-                          setShareData(null);
-                        } catch (err) {
-                          if ((err as Error).name !== 'AbortError') {
-                            alert("Erro ao compartilhar.");
-                          }
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await navigator.share({
+                          title: shareData.title,
+                          text: shareData.message,
+                        });
+                        setShareData(null);
+                      } catch (err) {
+                        if ((err as Error).name !== 'AbortError') {
+                          alert("Erro ao compartilhar.");
                         }
-                      }}
-                      className="gm-btn gm-btn-soft w-full justify-start py-4"
-                    >
-                      <Share2 size={20} /> Outras Opções (Sistema)
-                    </button>
+                      }
+                    }}
+                    className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                  >
+                    <div className="shrink-0">
+                      <Share2 size={24} className="text-[var(--gm-primary)]" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold text-[var(--gm-primary)] leading-tight">Mais Opções</p>
+                      <p className="text-[10px] text-white/70 leading-tight">Menu de compartilhamento do sistema</p>
+                    </div>
+                  </button>
                 )}
               </div>
-
-              <button 
-                onClick={() => setShareData(null)}
-                className="w-full mt-6 py-3 text-slate-400 font-medium hover:text-white transition-colors"
-              >
-                Cancelar
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
     </Page>
   );
 };

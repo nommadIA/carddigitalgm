@@ -10,15 +10,15 @@ interface PageProps {
 
 export function Page({ title, subtitle, actions, children }: PageProps) {
   return (
-    <div className="animate-fade-in">
-      <div className="gm-header flex-col md:flex-row items-start md:items-center gap-4">
-        <div className="gm-title w-full md:w-auto">
+    <div className="animate-fade-in min-h-full flex flex-col">
+      <div className="gm-header flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="gm-title flex-1 min-w-0 w-full">
           {typeof title === 'string' ? <h1>{title}</h1> : title}
           {subtitle && <p>{subtitle}</p>}
         </div>
-        {actions && <div className="gm-row w-full md:w-auto justify-start md:justify-end">{actions}</div>}
+        {actions && <div className="gm-row shrink-0 w-full md:w-auto overflow-x-auto no-scrollbar pb-1">{actions}</div>}
       </div>
-      {children}
+      <div className="flex-1 min-h-0 flex flex-col">{children}</div>
     </div>
   );
 }

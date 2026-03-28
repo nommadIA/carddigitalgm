@@ -1,5 +1,19 @@
 
 
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--gm-primary);
+  --color-primary-weak: var(--gm-primary-weak);
+  --color-secondary: var(--gm-accent);
+  --color-secondary-weak: var(--gm-accent-weak);
+  --color-success: #22c55e;
+  --color-dark-bg: var(--gm-bg);
+  --color-dark-card: var(--gm-surface);
+  --color-dark-text: var(--gm-text);
+  --font-sans: var(--gm-font), ui-sans-serif, system-ui, sans-serif;
+}
+
 /* =========================================================
    CardDigital GM — UI System FINAL (Clean & Flat)
 ========================================================= */
@@ -62,7 +76,15 @@
 
 /* RESET */
 *{ box-sizing:border-box; }
-html,body{ height:100%; }
+html {
+  height: 100%;
+  font-size: calc(var(--gm-app-scale, 2) * 50%);
+}
+@media (max-width: 1024px) {
+  html {
+    font-size: calc(var(--gm-mobile-scale, 1.5) * 50%);
+  }
+}
 body{
   margin:0;
   color:var(--gm-text);
@@ -151,6 +173,15 @@ button{ font-family:inherit; }
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Gradient Animation for Theme Swatches */
+@keyframes gradientXY {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animate-gradient-xy {
+  animation: gradientXY 3s ease infinite;
+}
+
 /* =========================================================
    LAYOUT
 ========================================================= */
@@ -190,7 +221,7 @@ button{ font-family:inherit; }
   .gm-main{ 
     padding: 16px; 
     /* Espaço para Bottom Nav */
-    padding-bottom: 100px; 
+    padding-bottom: 140px; 
     /* Espaço para Top Header Mobile */
     padding-top: 80px; 
   }
@@ -203,12 +234,12 @@ button{ font-family:inherit; }
   display:flex; align-items:center; justify-content:space-between;
   gap: var(--gm-space-3);
   margin-bottom: var(--gm-space-5);
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
 }
 .gm-title{ display:flex; flex-direction:column; gap:4px; align-items: flex-start; text-align: left; }
 .gm-title h1, .gm-title h2{
   margin:0; letter-spacing:-0.4px;
-  font-size:24px; font-weight:700;
+  font-size: clamp(22px, 6vw, 28px); font-weight:700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .gm-title p{ margin:0; opacity:.75; font-size:13px; }
 
@@ -263,7 +294,7 @@ button{ font-family:inherit; }
 
 @media (max-width: 900px) {
   .gm-grid-4, .gm-grid-3, .gm-grid-2 { grid-template-columns: 1fr; }
-  .gm-main { padding: 16px; padding-bottom: 100px; padding-top: 80px; }
+  .gm-main { padding: 16px; padding-bottom: 140px; padding-top: 80px; }
 }
 
 /* Mobile Utilities */
@@ -328,7 +359,7 @@ button{ font-family:inherit; }
   justify-content: space-between;
   margin-bottom: var(--gm-space-4);
   gap: var(--gm-space-3);
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
 }
 
 .gm-card-title {
@@ -704,18 +735,15 @@ body{ overflow: hidden; }
   scroll-behavior: smooth;
 }
 
-.gm-main::-webkit-scrollbar{ width:10px; }
-.gm-main::-webkit-scrollbar-track{ background:transparent; }
-.gm-main::-webkit-scrollbar-thumb{
-  background: rgba(255,255,255,0.10);
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: content-box;
+/* =========================================================
+   SCROLLBAR (HIDDEN)
+========================================================= */
+::-webkit-scrollbar {
+  display: none;
 }
-.gm-main::-webkit-scrollbar-thumb:hover{
-  background: rgba(255,255,255,0.16);
-  border: 2px solid transparent;
-  background-clip: content-box;
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* =========================================================
@@ -788,16 +816,18 @@ body{ overflow: hidden; }
 
 /* sidebar glass */
 .gm-sidebar{
-  background: rgba(20,24,31,0.65) !important;
-  border-right: 1px solid var(--gm-glass-border) !important;
-  backdrop-filter: blur(18px) saturate(1.25);
+  background: rgba(15, 15, 15, 0.75) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
 }
 
 /* cards glass premium */
 .gm-card{
-  background: rgba(18,22,28,0.62) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  backdrop-filter: blur(20px) saturate(1.25);
+  background: rgba(20, 20, 20, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
   box-shadow: 0 24px 70px rgba(0,0,0,0.45);
 }
 
@@ -1134,7 +1164,7 @@ body{
   gap:12px;
   align-items:stretch;
   justify-content:space-between;
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
 }
 .gm-toolbar-left{ flex: 1; min-width: 280px; }
 .gm-toolbar-right{
@@ -1150,10 +1180,10 @@ body{
   gap:8px;
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 15, 15, 0.75);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
 }
 .gm-select-ico{ opacity: .75; }
 .gm-select{
@@ -1187,7 +1217,7 @@ body{
 .gm-check input{ transform: scale(1.05); }
 .gm-status-filters{
   display:flex;
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
   gap: 10px;
 }
 .gm-pill{
@@ -1213,11 +1243,12 @@ body{
   gap: 12px;
   padding: 12px 14px;
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  flex-wrap: wrap;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 15, 15, 0.8);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  /* flex-wrap: wrap; */
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
 }
 .gm-bulk-select{
   display:flex;
@@ -1229,7 +1260,7 @@ body{
 .gm-bulk-actions{
   display:flex;
   gap:10px;
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
 }
 
 /* Seleção visual do card */
@@ -1262,4 +1293,19 @@ html, body {
 .gm-tabs .gm-tab.active {
   border-color: rgba(255, 102, 0, 0.45);
   background: rgba(255, 102, 0, 0.10);
+}
+
+
+/* Pagination Dots Positioning */
+.pagination-dots-container {
+  bottom: 40px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+body.bottom-nav-visible .pagination-dots-container {
+  bottom: 20px;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
 }

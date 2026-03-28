@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../store/AuthContext";
 import { Client } from "../../types";
@@ -260,7 +261,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div style={overlay} onClick={onClose}>
       <div style={{ display: "flex", width: "100%", maxWidth: modal.width as any }} onClick={(e) => e.stopPropagation()}>
         <div style={leftAccent} />
@@ -390,6 +391,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

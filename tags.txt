@@ -1,0 +1,427 @@
+680: 0           ) : viewMode === "desktop" ? (
+681: 1             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 pb-6 items-start">
+682: 1               {/* COLUNA ESQUERDA */}
+683: 2               <div className="space-y-4 md:space-y-6">
+684: 3                 <div>
+685: 4                   <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+686: 4                     <Palette size={20} className="text-slate-400" /> Personalização
+687: 3                   </h2>
+688: 4                   <div className="flex flex-col gap-2">
+689: 5                     <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-4 px-4 relative overflow-hidden group">
+690: 6                       <div className="flex flex-col items-center gap-4">
+691: 7                         <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+692: 7                           {uploadingLogo ? (
+693: 7                             <Loader2 size={24} className="animate-spin text-slate-400" />
+694: 7                           ) : companyLogoUrl ? (
+695: 7                             <img src={companyLogoUrl} alt="Logo" className="w-full h-full object-contain" />
+696: 7                           ) : (
+697: 7                             <ImageIcon size={24} className="opacity-50 text-slate-400" />
+698: 7                           )}
+699: 6                         </div>
+700: 7                         <label className={`gm-btn w-full py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingLogo ? "opacity-50 pointer-events-none" : ""}`}>
+701: 7                           {uploadingLogo ? <Loader2 size={16} className="animate-spin" /> : <FileImage size={16} />}
+702: 7                           {uploadingLogo ? "Enviando..." : "Alterar Logo"}
+703: 7                           <input type="file" accept="image/*" className="hidden" disabled={uploadingLogo} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadLogo(f); }} />
+704: 6                         </label>
+705: 5                       </div>
+706: 4                     </Card>
+707: 4 
+708: 5                     <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-4 px-4 relative overflow-hidden group">
+709: 6                       <div className="space-y-4">
+710: 7                         <div className="space-y-1.5">
+711: 7                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nome da empresa</label>
+712: 7                           <input className="gm-input py-2 text-sm h-10" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+713: 6                         </div>
+714: 6                         
+715: 7                         <div className="space-y-1.5">
+716: 7                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Escala Global</label>
+717: 8                           <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+718: 8                             <input type="range" min={0.7} max={1.5} step={0.05} className="flex-1 h-1.5 accent-[var(--gm-primary)]" value={appScale} onChange={(e) => setAppScale(Number(e.target.value))} />
+719: 8                             <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{appScale}x</div>
+720: 7                           </div>
+721: 6                         </div>
+722: 5                       </div>
+723: 4                     </Card>
+724: 3                   </div>
+725: 2                 </div>
+726: 2 
+727: 3                 <div>
+728: 4                   <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+729: 4                     <ImageIcon size={20} className="text-slate-400" /> Plano de Fundo
+730: 3                   </h2>
+731: 4                   <div className="flex flex-col gap-2">
+732: 5                     <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-4 px-4 relative overflow-hidden group">
+733: 6                       <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
+734: 7                         <div>
+735: 7                           <div className="font-semibold text-sm">Plano de fundo</div>
+736: 7                           <div className="gm-muted text-[10px]">Ative para aparecer no app</div>
+737: 6                         </div>
+738: 6                         <button
+739: 6                           type="button"
+740: 6                           className={`gm-btn py-1.5 px-3 text-xs`}
+741: 6                           onClick={() => {
+742: 6                             setBgEnabled((v) => {
+743: 6                               const next = !v;
+744: 6                               if (next && bgOpacity <= 0) setBgOpacity(bgOpacityPrev);
+745: 6                               else if (!next && bgOpacity > 0) setBgOpacityPrev(bgOpacity);
+746: 6                               return next;
+747: 6                             });
+748: 6                           }}
+749: 6                         >
+750: 6                           {bgEnabled ? "Ativo" : "Desativado"}
+751: 5                         </button>
+752: 4                       </div>
+753: 4 
+754: 5                       <div className="mt-4 space-y-4">
+755: 6                         <div className="space-y-1.5">
+756: 6                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Ajuste</label>
+757: 7                           <select className="gm-input py-2 text-sm h-10" value={bgFit} onChange={(e) => setBgFit(e.target.value as Fit)}>
+758: 7                             <option value="cover">Cortar (cover)</option>
+759: 7                             <option value="contain">Conter (contain)</option>
+760: 6                           </select>
+761: 5                         </div>
+762: 5 
+763: 6                         <div className="space-y-1.5">
+764: 6                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Opacidade ({Math.round(bgOpacity * 100)}%)</label>
+765: 6                           <input type="range" min={0} max={1} step={0.01} className="w-full h-1.5 accent-[var(--gm-primary)]" value={bgOpacity} onChange={(e) => setBgOpacity(Number(e.target.value))} />
+766: 5                         </div>
+767: 5 
+768: 6                         <div className="space-y-1.5">
+769: 6                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Zoom ({bgScale}x)</label>
+770: 6                           <input type="range" min={0.5} max={5} step={0.1} className="w-full h-1.5 accent-[var(--gm-primary)]" value={bgScale} onChange={(e) => setBgScale(Number(e.target.value))} />
+771: 5                         </div>
+772: 5 
+773: 6                         <div className="space-y-1.5">
+774: 6                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Desfoque ({bgBlur}px)</label>
+775: 6                           <input type="range" min={0} max={24} step={1} className="w-full h-1.5 accent-[var(--gm-primary)]" value={bgBlur} onChange={(e) => setBgBlur(Number(e.target.value))} />
+776: 5                         </div>
+777: 5 
+778: 6                         <div className="pt-2">
+779: 7                           <label className="gm-btn w-full py-2 flex items-center justify-center gap-2 cursor-pointer">
+780: 7                             <FileImage size={16} />
+781: 7                             Upload Background
+782: 7                             <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadBackground(f); }} />
+783: 6                           </label>
+784: 5                         </div>
+785: 4                       </div>
+786: 3                     </Card>
+787: 2                   </div>
+788: 1                 </div>
+789: 1 
+790: 2                 <div>
+791: 3                   <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+792: 3                     <User size={20} className="text-slate-400" /> Timbrado e Perfil
+793: 2                   </h2>
+794: 3                   <div className="flex flex-col gap-2">
+795: 4                     <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-4 px-4 relative overflow-hidden group">
+796: 4                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Avatar (perfil)</label>
+797: 5                       <div className="flex items-center gap-4">
+798: 6                         <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+799: 6                           {uploadingAvatar ? <Loader2 size={16} className="animate-spin text-slate-400" /> : avatarUrl ? <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> : <User size={20} className="opacity-50 text-slate-400" />}
+800: 5                         </div>
+801: 6                         <label className={`gm-btn-soft flex-1 py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingAvatar ? "opacity-50 pointer-events-none" : ""}`}>
+802: 6                           {uploadingAvatar ? <Loader2 size={14} className="animate-spin" /> : <FileImage size={14} />}
+803: 6                           {uploadingAvatar ? "Enviando..." : "Escolher arquivo"}
+804: 6                           <input type="file" accept="image/*" className="hidden" disabled={uploadingAvatar} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadAvatar(f); }} />
+805: 5                         </label>
+806: 4                       </div>
+807: 3                     </Card>
+808: 3 
+809: 4                     <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-4 px-4 relative overflow-hidden group">
+810: 4                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Timbrado A4 (PDF/JPG/PNG)</label>
+811: 5                       <div className="flex items-center gap-4">
+812: 6                         <div className="w-12 h-16 rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+813: 6                           {uploadingTimbrado ? <Loader2 size={16} className="animate-spin text-slate-400" /> : timbradoUrl ? <img src={timbradoUrl} alt="Timbrado" className="w-full h-full object-cover" /> : <FileText size={20} className="opacity-50 text-slate-400" />}
+814: 5                         </div>
+815: 6                         <label className={`gm-btn-soft flex-1 py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingTimbrado ? "opacity-50 pointer-events-none" : ""}`}>
+816: 6                           {uploadingTimbrado ? <Loader2 size={14} className="animate-spin" /> : <FileImage size={14} />}
+817: 6                           {uploadingTimbrado ? "Enviando..." : "Escolher arquivo"}
+818: 6                           <input type="file" accept="image/*,application/pdf" className="hidden" disabled={uploadingTimbrado} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadTimbrado(f); }} />
+819: 5                         </label>
+820: 4                       </div>
+821: 3                     </Card>
+822: 3 
+823: 3 
+824: 4                     <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-4 px-4 relative overflow-hidden group">
+825: 4                       <div className="font-bold text-[10px] uppercase tracking-wider text-slate-500 mb-3">Pix (Pagamento)</div>
+826: 5                       <div className="space-y-3">
+827: 6                         <div>
+828: 6                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Tipo de Chave</label>
+829: 7                           <select className="gm-input py-2 text-sm h-10" value={pixType} onChange={(e) => setPixType(e.target.value)}>
+830: 7                             <option value="CPF">CPF</option>
+831: 7                             <option value="CNPJ">CNPJ</option>
+832: 7                             <option value="EMAIL">E-mail</option>
+833: 7                             <option value="PHONE">Telefone</option>
+834: 7                             <option value="RANDOM">Aleatória</option>
+835: 6                           </select>
+836: 5                         </div>
+837: 6                         <div>
+838: 6                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Chave Pix</label>
+839: 6                           <input className="gm-input py-2 text-sm h-10" value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="Sua chave Pix" />
+840: 5                         </div>
+841: 4                       </div>
+842: 3                     </Card>
+843: 2                   </div>
+844: 1                 </div>
+845: 1                 
+846: 2                 <div>
+847: 3               <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+848: 3                 <CreditCard size={20} className="text-slate-400" /> Pagamento e Avisos
+849: 2               </h2>
+850: 2               
+851: 3               <div className="flex flex-col gap-4">
+852: 3                 {/* Pix */}
+853: 4                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+854: 4                 <div className="font-bold">Dados de Pagamento (Pix)</div>
+855: 5                 <div className="gm-muted text-sm">
+856: 5                   ✅ QR e “Copia e Cola” gerados aqui funcionam em{" "}
+857: 5                   <b>qualquer banco</b> (Itaú, Nubank, Caixa, BB, Bradesco,
+858: 5                   Santander, Inter, etc.)
+859: 4                 </div>
+860: 4 
+861: 5                 <div className="grid grid-cols-2 gap-3 mt-3">
+862: 6                   <div>
+863: 6                     <label className="gm-label">Tipo de chave</label>
+864: 6                     <select
+865: 6                       className="gm-input"
+866: 6                       value={pixType}
+867: 6                       onChange={(e) => setPixType(e.target.value)}
+868: 6                     >
+869: 6                       <option value="CPF">CPF</option>
+870: 6                       <option value="CNPJ">CNPJ</option>
+871: 6                       <option value="EMAIL">E-mail</option>
+872: 6                       <option value="PHONE">Telefone</option>
+873: 6                       <option value="RANDOM">Aleatória</option>
+874: 5                     </select>
+875: 4                   </div>
+876: 5                   <div>
+877: 5                     <label className="gm-label">Chave Pix</label>
+878: 5                     <input
+879: 5                       className="gm-input"
+880: 5                       value={pixKey}
+881: 5                       onChange={(e) => setPixKey(e.target.value)}
+882: 5                     />
+883: 4                   </div>
+884: 3                 </div>
+885: 3 
+886: 4                 <div className="gm-muted text-sm mt-2">
+887: 4                   Dica: e-mail deve ser minúsculo e sem espaços (o sistema pode
+888: 4                   ajustar).
+889: 3                 </div>
+890: 3 
+891: 3                 {/* ✅ Preview do QR + Copia e Cola */}
+892: 4                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+893: 5                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+894: 6                     <div className="text-xs font-extrabold tracking-wide opacity-80 mb-3">
+895: 6                       QR Code Pix (universal)
+896: 5                     </div>
+897: 5                     {pixQrPreview ? (
+898: 6                       <div className="bg-white rounded-xl p-3 w-fit">
+899: 6                         <img
+900: 6                           src={pixQrPreview}
+901: 6                           alt="QR Pix (Preview)"
+902: 6                           className="w-[220px] h-auto"
+903: 6                         />
+904: 5                       </div>
+905: 5                     ) : (
+906: 6                       <div className="gm-muted text-sm">
+907: 6                         Informe uma chave Pix para gerar o QR.
+908: 5                       </div>
+909: 5                     )}
+910: 5 
+911: 5                     {pixQrPreview && (
+912: 5                       <button
+913: 5                         type="button"
+914: 5                         className="gm-btn mt-3"
+915: 5                         onClick={() => {
+916: 5                           const a = document.createElement("a");
+917: 5                           a.href = pixQrPreview;
+918: 5                           a.download = "pix_qr_configuracoes.png";
+919: 5                           a.click();
+920: 5                         }}
+921: 5                       >
+922: 5                         <Download size={16} />
+923: 5                         Baixar QR
+924: 4                       </button>
+925: 4                     )}
+926: 3                   </div>
+927: 3 
+928: 4                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+929: 5                     <div className="text-xs font-extrabold tracking-wide opacity-80 mb-3">
+930: 5                       Pix “Copia e Cola”
+931: 4                     </div>
+932: 4 
+933: 4                     {!pixPayloadPreview ? (
+934: 5                       <div className="gm-muted text-sm">
+935: 5                         Informe uma chave Pix para gerar o código.
+936: 4                       </div>
+937: 4                     ) : (
+938: 4                       <>
+939: 4                         <button
+940: 4                           type="button"
+941: 4                           className={`gm-btn w-full justify-center`}
+942: 4                           onClick={async () => {
+943: 4                             const ok = await copyText(pixPayloadPreview);
+944: 4                             if (ok) {
+945: 4                               setPixCopied(true);
+946: 4                               setTimeout(() => setPixCopied(false), 1500);
+947: 4                             } else {
+948: 4                               alert(
+949: 4                                 "Não foi possível copiar automaticamente. Copie manualmente abaixo.",
+950: 4                               );
+951: 4                             }
+952: 4                           }}
+953: 4                         >
+954: 4                           {pixCopied ? <Check size={16} /> : <Copy size={16} />}
+955: 4                           {pixCopied ? "Copiado!" : "Copiar código"}
+956: 3                         </button>
+957: 3 
+958: 4                         <div className="mt-3 text-[10px] leading-tight font-mono break-all bg-black/30 border border-white/10 rounded-xl p-3 text-slate-300">
+959: 4                           {pixPayloadPreview}
+960: 3                         </div>
+961: 3                       </>
+962: 3                     )}
+963: 3 
+964: 4                     <div className="gm-muted text-xs mt-2">
+965: 4                       Observação: este QR é <b>estático</b>. O banco do cliente
+966: 4                       pode digitar o valor ao pagar, ou você pode gerar com
+967: 4                       valor na tela de orçamento (como já existe no seu
+968: 4                       PixModal).
+969: 3                     </div>
+970: 2                   </div>
+971: 1                 </div>
+972: 0               </div>
+973: -1             </div>
+974: -2               </div>
+975: -2 
+976: -2               {/* COLUNA DIREITA */}
+977: -1               <div className="space-y-4 md:space-y-6">
+978: 0                 <div>
+979: 1                   <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+980: 1                     <Paintbrush size={20} className="text-slate-400" /> Tema e Estilo
+981: 0                   </h2>
+982: 1                   <div className="flex flex-col gap-2">
+983: 2                     <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-4 px-4 relative overflow-hidden group">
+984: 2                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Temas de Cores</label>
+985: 3                       <div className="grid grid-cols-5 gap-3">
+986: 3                         {PRESET_THEMES.map((t) => {
+987: 3                           const isActive = brandPrimary.toLowerCase() === t.primary.toLowerCase();
+988: 3                           return (
+989: 3                             <button
+990: 3                               key={t.name}
+991: 3                               type="button"
+992: 3                               onClick={() => applyTheme(t)}
+993: 3                               className={`relative flex items-center justify-center aspect-square rounded-full transition-all ${
+994: 3                                 isActive ? "ring-2 ring-[var(--gm-primary)] ring-offset-2 ring-offset-white dark:ring-offset-slate-800 scale-110 shadow-lg shadow-[var(--gm-primary-30)]" : "hover:scale-105 opacity-80"
+995: 3                               }`}
+996: 3                               title={t.name}
+997: 3                             >
+998: 4                               <div 
+999: 4                                 className="w-full h-full rounded-full shadow-inner border border-black/5 dark:border-white/5" 
+1000: 4                                 style={{ 
+1001: 4                                   background: `linear-gradient(135deg, ${t.primary} 0%, ${t.primary} 50%, ${t.accent} 50%, ${t.accent} 100%)` 
+1002: 4                                 }} 
+1003: 4                               />
+1004: 4                               {isActive && (
+1005: 5                                 <div className="absolute inset-0 flex items-center justify-center">
+1006: 5                                   <Check size={12} className="text-white drop-shadow-md" />
+1007: 4                                 </div>
+1008: 4                               )}
+1009: 3                             </button>
+1010: 3                           );
+1011: 3                         })}
+1012: 2                       </div>
+1013: 1                     </Card>
+1014: 1 
+1015: 2                     <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-4 px-4 relative overflow-hidden group">
+1016: 2                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Estilo dos Botões</label>
+1017: 3                       <div className="grid grid-cols-2 gap-3">
+1018: 3                         {BUTTON_STYLES.map((s) => {
+1019: 3                           const isActive = buttonStyle === s.id;
+1020: 3                           return (
+1021: 3                             <button
+1022: 3                               key={s.id}
+1023: 3                               type="button"
+1024: 3                               onClick={() => setButtonStyle(s.id)}
+1025: 3                               className={`flex flex-col items-center justify-between p-3 rounded-xl border-2 transition-all h-20 ${
+1026: 3                                 isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+1027: 3                               }`}
+1028: 3                             >
+1029: 4                               <div className={`w-full py-1.5 text-[10px] font-bold rounded-md flex items-center justify-center ${
+1030: 4                                 s.id === "solid" ? "bg-[var(--gm-primary)] text-white" : "bg-transparent border border-[var(--gm-primary)] text-[var(--gm-primary)]"
+1031: 3                               }`}>Preview</div>
+1032: 4                               <span className={`text-[9px] font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-500"}`}>
+1033: 4                                 {s.name}
+1034: 3                               </span>
+1035: 2                             </button>
+1036: 2                           );
+1037: 2                         })}
+1038: 1                       </div>
+1039: 0                     </Card>
+1040: -1                   </div>
+1041: -2                 </div>
+1042: -2 
+1043: -1                 <div>
+1044: 0                   <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+1045: 0                     <Bell size={20} className="text-slate-400" /> Notificações Push
+1046: -1                   </h2>
+1047: 0                   <div className="flex flex-col gap-2">
+1048: 1                     <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-4 relative overflow-hidden group flex flex-col items-center text-center">
+1049: 1                       {/* Background Glow */}
+1050: 1                       <div className={`absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full opacity-20 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`} />
+1051: 1                       
+1052: 2                       <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 border-2 transition-all duration-500 ${
+1053: 2                         pushPermission === "granted" 
+1054: 2                           ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
+1055: 2                           : "bg-amber-500/10 border-amber-500/30 text-amber-500 animate-pulse"
+1056: 2                       }`}>
+1057: 2                         <Bell size={32} />
+1058: 1                       </div>
+1059: 1 
+1060: 2                       <div className="space-y-2 mb-6">
+1061: 3                         <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+1062: 3                           {pushPermission === "granted" ? "Notificações Ativas" : "Permissão Necessária"}
+1063: 2                         </h4>
+1064: 3                         <p className="text-xs text-slate-500 max-w-[240px] mx-auto leading-relaxed">
+1065: 3                           {pushPermission === "granted" 
+1066: 3                             ? "Você receberá alertas importantes diretamente no seu dispositivo." 
+1067: 3                             : "Ative as notificações para não perder atualizações em tempo real."}
+1068: 2                         </p>
+1069: 1                       </div>
+1070: 1 
+1071: 1                       {pushPermission !== "granted" && (
+1072: 1                         <button
+1073: 1                           onClick={async () => {
+1074: 1                             const permission = await Notification.requestPermission();
+1075: 1                             setPushPermission(permission);
+1076: 1                           }}
+1077: 1                           className="gm-btn w-full py-3 text-sm shadow-lg shadow-[var(--gm-primary-20)]"
+1078: 1                         >
+1079: 1                           Permitir Notificações
+1080: 0                         </button>
+1081: 0                       )}
+1082: 0 
+1083: 0                       <button
+1084: 0                         disabled={testing || pushPermission !== "granted"}
+1085: 0                         onClick={async () => {
+1086: 0                           setTesting(true);
+1087: 0                           if ("serviceWorker" in navigator) {
+1088: 0                             const reg = await navigator.serviceWorker.ready;
+1089: 0                             reg.active?.postMessage("TEST_NOTIFICATION");
+1090: 0                             setTimeout(() => setTesting(false), 1000);
+1091: 0                           }
+1092: 0                         }}
+1093: 0                         className={`gm-btn-soft mt-3 py-3 flex items-center justify-center gap-2 text-sm w-full transition-all ${
+1094: 0                           pushPermission !== "granted" ? "opacity-50 grayscale" : ""
+1095: 0                         }`}
+1096: 0                       >
+1097: 0                         {testing ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}
+1098: 0                         {testing ? "Enviando teste..." : "Enviar Notificação de Teste"}
+1099: -1                       </button>
+1100: -2                     </Card>
+1101: -3                   </div>
+1102: -4                 </div>
+1103: -5               </div>
+1104: -6             </div>
+1105: -6           ) : (
+1106: -6     /* SMARTPHONE CAROUSEL VIEW */

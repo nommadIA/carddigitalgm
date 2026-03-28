@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import Select from "../../components/ui/Select";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../store/AuthContext";
 import {
@@ -156,31 +158,30 @@ const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 9999,
-  background: "rgba(0,0,0,0.85)",
+  background: "rgba(0,0,0,0.6)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   padding: 16,
-  backdropFilter: "blur(4px)",
+  backdropFilter: "blur(8px)",
 };
 
 const fullScreenContainer: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 9999,
-  background: "#0b1015",
+  background: "rgba(0,0,0,0.6)",
+  backdropFilter: "blur(8px)",
   display: "flex",
   flexDirection: "column",
-  overflowY: "auto",
-  WebkitOverflowScrolling: "touch", // ✅ iOS smooth
-  overscrollBehavior: "contain",     // ✅ não “puxa” a tela de trás
+  overflow: "hidden",
 };
 
 const topBar: React.CSSProperties = {
   position: "sticky",
   top: 0,
   zIndex: 50,
-  background: "rgba(11, 16, 21, 0.95)",
+  background: "rgba(0, 0, 0, 0.4)",
   backdropFilter: "blur(12px)",
   borderBottom: "1px solid rgba(255,255,255,0.08)",
   padding: "16px 24px",
@@ -265,7 +266,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
   const [discountAmount, setDiscountAmount] = useState<number>(0);
 
   const [items, setItems] = useState<BudgetItemDraft[]>([]);
-  const [barPosition, setBarPosition] = useState(80); // Posição padrão em px da base
+  const [barPosition, setBarPosition] = useState(24); // Posição padrão em px da base
   const [isDragging, setIsDragging] = useState(false);
   const dragStartY = React.useRef(0);
   const dragStartPos = React.useRef(0);
@@ -611,10 +612,10 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
   // --- PICK SCREEN ---
   if (step === "pick" && !budgetToEditId) {
-    return (
+    return createPortal(
       <div style={overlay} onClick={onClose}>
         <div
-          style={{ ...card, width: 800, maxWidth: "95vw", background: "#161b22", padding: 40 }}
+          style={{ ...card, width: 800, maxWidth: "95vw", background: "rgba(20,20,20,0.8)", backdropFilter: "blur(16px)", padding: 40 }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-start mb-8">
@@ -663,33 +664,40 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   // --- FORM SCREEN ---
-  return (
+  return createPortal(
     <div style={fullScreenContainer}>
       <div style={topBar}>
         <div className="flex items-center gap-4">
-          {!budgetToEditId && (
-            <button onClick={() => setStep("pick")} className="text-slate-400 hover:text-white transition-colors">
-              <ArrowLeft size={24} />
-            </button>
-          )}
-          <div>
-            <h2 className="text-lg font-bold text-white leading-none">{budgetToEditId ? "Editar Proposta" : "Criar Proposta"}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                  kind === "agency"
-                    ? "border-[var(--gm-primary)]/30 text-[var(--gm-primary)] bg-[var(--gm-primary)]/10"
-                    : "border-[var(--gm-accent)]/30 text-[var(--gm-accent)] bg-[var(--gm-accent)]/10"
-                }`}
-              >
-                {kind === "agency" ? "AGÊNCIA" : "IMPRESSÃO"}
-              </span>
-              {loadingData && <span className="text-[10px] text-slate-400 animate-pulse">Carregando dados...</span>}
+          <div className="flex items-center gap-3">
+            {!budgetToEditId && (
+              <button onClick={() => setStep("pick")} className="text-slate-400 hover:text-white transition-colors">
+                <ArrowLeft size={24} />
+              </button>
+            )}
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col">
+                <h2 className="text-lg font-bold text-white leading-none">
+                  {budgetToEditId ? "Editar Proposta" : "Criar Proposta"}
+                </h2>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                      kind === "agency"
+                        ? "border-[var(--gm-primary)]/30 text-[var(--gm-primary)] bg-[var(--gm-primary)]/10"
+                        : "border-[var(--gm-accent)]/30 text-[var(--gm-accent)] bg-[var(--gm-accent)]/10"
+                    }`}
+                  >
+                    {kind === "agency" ? "AGÊNCIA" : "IMPRESSÃO GRÁFICA"}
+                  </span>
+                </div>
+              </div>
+              {loadingData && <span className="text-[10px] text-slate-400 animate-pulse ml-2">Carregando...</span>}
             </div>
           </div>
         </div>
@@ -699,27 +707,23 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         </button>
       </div>
 
-      <div style={pageContent}>
-        <div className="flex flex-col gap-6">
-          {/* 01. CLIENTE */}
+      <div className="flex-1 overflow-y-auto w-full" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
+        <div style={pageContent}>
+          <div className="flex flex-col gap-6">
+            {/* 01. CLIENTE */}
           <div style={card}>
             <div style={labelTop} className="flex justify-between">
               <span>01. Cliente</span>
             </div>
-            <select
+            <Select
               style={inputBig}
               value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
+              onChange={(val) => setClientId(String(val))}
               disabled={loadingClients || loadingData}
               className="cursor-pointer hover:bg-white/5 focus:bg-black/40 focus:border-[var(--gm-primary)]"
-            >
-              <option value="">{loadingClients ? "Carregando..." : "Selecione o cliente..."}</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              placeholder={loadingClients ? "Carregando..." : "Selecione o cliente..."}
+              options={clients.map(c => ({ value: c.id, label: c.name }))}
+            />
           </div>
 
           {/* 02. ITENS */}
@@ -740,7 +744,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
               <div className="p-8 border border-dashed border-white/10 rounded-2xl text-center text-slate-500">
                 <div className="font-bold text-white mb-1">Comece com um template</div>
                 <div className="text-sm mb-4">
-                  Já deixei uma proposta-base pronta (editável) para {kind === "agency" ? "AGÊNCIA" : "IMPRESSÃO"}.
+                  Já deixei uma proposta-base pronta (editável) para {kind === "agency" ? "AGÊNCIA" : "IMPRESSÃO GRÁFICA"}.
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -871,6 +875,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             style={inputBig}
                             value={item.width}
                             onChange={(e) => updateItem(item.id, { width: Number(e.target.value) })}
+                            onFocus={(e) => e.target.select()}
                             placeholder="0"
                           />
                         </div>
@@ -881,6 +886,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             style={inputBig}
                             value={item.height}
                             onChange={(e) => updateItem(item.id, { height: Number(e.target.value) })}
+                            onFocus={(e) => e.target.select()}
                             placeholder="0"
                           />
                         </div>
@@ -891,6 +897,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             style={inputBig}
                             value={item.pricePerM2}
                             onChange={(e) => updateItem(item.id, { pricePerM2: Number(e.target.value) })}
+                            onFocus={(e) => e.target.select()}
                             placeholder="0.00"
                           />
                         </div>
@@ -901,6 +908,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             style={inputBig}
                             value={item.quantity}
                             onChange={(e) => updateItem(item.id, { quantity: Number(e.target.value) })}
+                            onFocus={(e) => e.target.select()}
                             placeholder="1"
                           />
                         </div>
@@ -916,6 +924,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             style={inputBig}
                             value={item.quantity}
                             onChange={(e) => updateItem(item.id, { quantity: Number(e.target.value) })}
+                            onFocus={(e) => e.target.select()}
                             placeholder="1"
                           />
                         </div>
@@ -926,6 +935,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             style={inputBig}
                             value={item.unitPrice}
                             onChange={(e) => updateItem(item.id, { unitPrice: Number(e.target.value) })}
+                            onFocus={(e) => e.target.select()}
                             placeholder="0.00"
                           />
                         </div>
@@ -1021,13 +1031,12 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                         <div className="grid grid-cols-2 gap-3 animate-fade-in bg-black/20 p-4 rounded-xl border border-white/5">
                           <div>
                             <label style={labelTop}>Parcelas</label>
-                            <select style={inputBig} value={installments} onChange={(e) => setInstallments(Number(e.target.value))}>
-                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map((n) => (
-                                <option key={n} value={n}>
-                                  {n}x
-                                </option>
-                              ))}
-                            </select>
+                            <Select 
+                              style={inputBig} 
+                              value={installments} 
+                              onChange={(val) => setInstallments(Number(val))}
+                              options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map(n => ({ value: n, label: `${n}x` }))}
+                            />
                           </div>
                           <div>
                             <label style={labelTop}>Juros (%)</label>
@@ -1036,6 +1045,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                               style={inputBig}
                               value={interestRate}
                               onChange={(e) => setInterestRate(Number(e.target.value))}
+                              onFocus={(e) => e.target.select()}
                               placeholder="0"
                             />
                           </div>
@@ -1053,6 +1063,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                       style={inputBig}
                       value={discountAmount}
                       onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                      onFocus={(e) => e.target.select()}
                       placeholder="0"
                       className="pr-12"
                     />
@@ -1089,23 +1100,25 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* 04. AÇÕES */}
-          <div
-            className={`p-4 md:p-5 rounded-2xl bg-black/85 border border-white/10 backdrop-blur-xl flex flex-row items-center justify-between gap-4 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-            onMouseDown={handleDragStart}
-            onTouchStart={handleDragStart}
-            style={{
-              position: "fixed",
-              left: 24,
-              right: 24,
-              bottom: `calc(${barPosition}px + env(safe-area-inset-bottom, 0px))`,
-              maxWidth: 1052,
-              margin: "0 auto",
-              transition: isDragging ? "none" : "bottom 0.3s ease",
-              touchAction: "none",
-            }}
-          >
+      {/* 04. AÇÕES */}
+      <div
+        className={`p-4 md:p-5 rounded-2xl bg-black/85 border border-white/10 backdrop-blur-xl flex flex-row items-center justify-between gap-4 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
+        style={{
+          position: "fixed",
+          left: 24,
+          right: 24,
+          bottom: `calc(${barPosition}px + env(safe-area-inset-bottom, 0px))`,
+          maxWidth: 1052,
+          margin: "0 auto",
+          transition: isDragging ? "none" : "bottom 0.3s ease",
+          touchAction: "none",
+        }}
+      >
             {/* Drag Handle Visual */}
             <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/10 rounded-full" />
 
@@ -1146,8 +1159,8 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
               )}
             </button>
           </div>
-        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
