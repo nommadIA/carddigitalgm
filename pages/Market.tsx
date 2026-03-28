@@ -54,6 +54,7 @@ const Market = () => {
   const [resettingBalance, setResettingBalance] = useState(false);
   const [scanningImage, setScanningImage] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [processingVoice, setProcessingVoice] = useState(false);
 
   // Lock body scroll when any modal is open
   useEffect(() => {
@@ -246,9 +247,9 @@ const Market = () => {
 
     setScanningImage(true);
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
       if (!apiKey) {
-        alert("Chave da API do Gemini não configurada.");
+        alert("Chave da API do Gemini não configurada. Adicione VITE_GEMINI_API_KEY no Netlify.");
         setScanningImage(false);
         return;
       }
@@ -265,7 +266,7 @@ const Market = () => {
 
       // Usando o modelo correto para evitar erro 404
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.1-flash-preview",
         contents: {
           parts: [
             {
@@ -289,7 +290,7 @@ const Market = () => {
       }
     } catch (err: any) {
       console.error("Erro ao escanear produto:", err);
-      alert("Erro ao identificar o produto. Verifique sua conexão ou tente novamente.");
+      alert("Erro ao identificar o produto. Verifique sua conexão ou tente novamente. Detalhe: " + (err.message || "Erro desconhecido"));
     } finally {
       setScanningImage(false);
       e.target.value = '';
@@ -310,9 +311,38 @@ const Market = () => {
 
     recognition.onstart = () => setIsListening(true);
     
-    recognition.onresult = (event: any) => {
+    recognition.onresult = async (event: any) => {
       const transcript = event.results[0][0].transcript;
       
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
+      
+      if (apiKey) {
+        setProcessingVoice(true);
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+          const response = await ai.models.generateContent({
+            model: "gemini-3.1-flash-preview",
+            contents: `Analise este texto de voz e extraia o nome do produto e o preço. Texto: "${transcript}". Retorne APENAS um JSON válido no formato {"name": "Nome do Produto", "price": 9.99}. Se não houver preço, retorne null em price. Não inclua markdown, apenas o JSON.`,
+            config: {
+              responseMimeType: "application/json",
+            }
+          });
+          
+          const text = response.text?.trim();
+          if (text) {
+            const data = JSON.parse(text);
+            if (data.name) setNewItemName(data.name);
+            if (data.price !== null && data.price !== undefined) setNewItemPrice(data.price.toString());
+            return;
+          }
+        } catch (err) {
+          console.error("Erro ao processar voz com Gemini, usando fallback:", err);
+        } finally {
+          setProcessingVoice(false);
+        }
+      }
+
+      // Fallback regex
       let name = transcript;
       let price = "";
       
@@ -350,9 +380,12 @@ const Market = () => {
         alert("Erro ao capturar áudio. Tente novamente.");
       }
       setIsListening(false);
+      setProcessingVoice(false);
     };
 
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => {
+      setIsListening(false);
+    };
 
     recognition.start();
   };
@@ -682,9 +715,9 @@ const Market = () => {
                                    <span className="text-sm font-medium">{scanningImage ? "Lendo..." : "Câmera"}</span>
                                 </button>
                                 <button 
-                                   className={`gm-btn flex-1 flex items-center justify-center h-12 rounded-xl shadow-lg gap-2 transition-colors ${isListening ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/30' : 'bg-slate-800 text-white hover:bg-slate-700 shadow-black/20'}`}
+                                   className={`gm-btn flex-1 flex items-center justify-center h-12 rounded-xl shadow-lg gap-2 transition-colors ${isListening ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/30' : processingVoice ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/30' : 'bg-slate-800 text-white hover:bg-slate-700 shadow-black/20'}`}
                                    onClick={handleVoiceInput}
-                                   disabled={scanningImage || isListening}
+                                   disabled={scanningImage || isListening || processingVoice}
                                 >
                                    {isListening ? (
                                       <>
@@ -693,6 +726,11 @@ const Market = () => {
                                           <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
                                         </span>
                                         <span className="text-sm font-medium">Ouvindo...</span>
+                                      </>
+                                   ) : processingVoice ? (
+                                      <>
+                                        <Loader2 size={20} className="animate-spin" />
+                                        <span className="text-sm font-medium">Processando...</span>
                                       </>
                                    ) : (
                                       <>
