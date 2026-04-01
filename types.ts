@@ -68,6 +68,8 @@ export interface Budget {
   dueDays?: number;
   due_days?: number;
   dueLabel?: string;
+  delivery_days?: number;
+  validity_days?: number;
 
   deletedAt?: string | null;
 }

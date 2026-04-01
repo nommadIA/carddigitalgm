@@ -28,6 +28,8 @@ export type Orcamento = {
   interestRate?: number;
   deadline?: string;
   dueLabel?: string;
+  delivery_days?: number;
+  validity_days?: number;
   created_at?: string;
 };
 
@@ -279,10 +281,15 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
     cursorY -= 11;
     drawLeft(`Data: ${dateStr}`, 9, cursorY, false, cGray);
 
-    const prazoTexto = orc.dueLabel || orc.deadline;
+    const prazoTexto = orc.dueLabel || orc.deadline || (orc.delivery_days ? `${orc.delivery_days} dias úteis` : null);
     if (prazoTexto) {
       cursorY -= 11;
       drawLeft(`Entrega: ${prazoTexto}`, 9, cursorY, false, cGray);
+    }
+    
+    if (orc.validity_days) {
+      cursorY -= 11;
+      drawLeft(`Validade do Orçamento: ${orc.validity_days} dias`, 9, cursorY, false, cGray);
     }
     cursorY -= 18;
 

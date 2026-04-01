@@ -83,6 +83,8 @@ type BudgetRow = {
   total_amount: number;
   created_at?: string;
   due_days?: number | null;
+  delivery_days?: number | null;
+  validity_days?: number | null;
   deleted_at?: string | null;
 };
 
@@ -276,7 +278,9 @@ export default function Budgets() {
           subtotal: fullBudget.subtotal,
           discount: fullBudget.discount,
           created_at: fullBudget.created_at,
-          dueLabel: fullBudget.due_days ? `${fullBudget.due_days} dias úteis` : undefined,
+          dueLabel: fullBudget.delivery_days ? `${fullBudget.delivery_days} dias úteis` : undefined,
+          delivery_days: fullBudget.delivery_days,
+          validity_days: fullBudget.validity_days,
         },
         items,
         settings!
@@ -312,6 +316,8 @@ export default function Budgets() {
         total: r.total_amount,
         settings: settings!,
         items,
+        delivery_days: r.delivery_days,
+        validity_days: r.validity_days,
       });
 
       setShareData({ budget: r, message: msg });
@@ -471,7 +477,7 @@ export default function Budgets() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock size={14} />
-                        <span>{r.due_days ?? 5} dias úteis</span>
+                        <span>{r.delivery_days ?? 5} dias úteis</span>
                       </div>
                     </div>
                   </div>

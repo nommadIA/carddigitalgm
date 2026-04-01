@@ -264,6 +264,8 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
   const [installments, setInstallments] = useState<number>(1);
   const [interestRate, setInterestRate] = useState<number>(0);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [validityDays, setValidityDays] = useState<number>(5);
+  const [deliveryDays, setDeliveryDays] = useState<number>(5);
 
   const [items, setItems] = useState<BudgetItemDraft[]>([]);
   const [barPosition, setBarPosition] = useState(24); // Posição padrão em px da base
@@ -317,6 +319,8 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     setInstallments(1);
     setInterestRate(0);
     setDiscountAmount(0);
+    setValidityDays(5);
+    setDeliveryDays(5);
     setItems([]);
     setSaving(false);
   };
@@ -373,6 +377,8 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         setPaymentMethod((budget.payment_method as PayMethod) || "PIX");
         setInstallments(Number(budget.installments || 1));
         setInterestRate(Number(budget.interest_rate || 0));
+        setValidityDays(Number(budget.validity_days || 5));
+        setDeliveryDays(Number(budget.delivery_days || 5));
         
         const loadedDiscountAmount = Number(budget.discount || 0);
         setDiscountAmount(loadedDiscountAmount);
@@ -544,7 +550,8 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         subtotal: subtotal,
         discount: discountAmount,
         total_amount: totalFinal,
-        delivery_days: 5,
+        delivery_days: deliveryDays,
+        validity_days: validityDays,
         payment_method: paymentMethod,
         installments: paymentMethod === "PIX" ? 1 : installments,
         interest_rate: paymentMethod === "PIX" ? 0 : interestRate,
@@ -585,7 +592,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             tenant_id: tenantId,
             budget_id: finalBudgetId,
             description: finalDescription,
-            service_type: kind === "agency" ? "AGENCIA" : "IMPRESSAO_UNIT",
+            service_type: kind === "agency" ? "AGENCIA" : "IMPRESSAO",
             quantity: it.quantity,
             unit_price: it.unitPrice,
             total: it.total,
@@ -826,7 +833,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-2 gap-4 mb-4 items-end">
                     <div>
                       <label style={labelTop}>
                         <Clock size={10} className="inline mr-1" /> Prazo de Entrega
@@ -974,9 +981,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   const preset =
                     paymentMethod === "PIX"
                       ? "PIX"
-                      : installments === 4 && Number(interestRate || 0) === 0
-                        ? "4X"
-                        : "JUROS";
+                      : "CREDIT";
 
                   const pill = (active: boolean) =>
                     `p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
@@ -987,7 +992,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
                   return (
                     <>
-                      <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="grid grid-cols-2 gap-3 mb-4">
                         <button
                           type="button"
                           onClick={() => {
@@ -1005,30 +1010,17 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                           type="button"
                           onClick={() => {
                             setPaymentMethod("CREDIT");
-                            setInstallments(4);
-                            setInterestRate(0);
+                            if (!installments || installments < 2) setInstallments(4);
                           }}
-                          className={pill(preset === "4X")}
+                          className={pill(preset === "CREDIT")}
                         >
                           <CreditCard size={24} />
                           <span className="font-bold text-sm">4x</span>
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPaymentMethod("CREDIT");
-                            if (!installments || installments < 2) setInstallments(4);
-                          }}
-                          className={pill(preset === "JUROS")}
-                        >
-                          <Clock size={24} />
-                          <span className="font-bold text-sm">Juros</span>
-                        </button>
                       </div>
 
                       {paymentMethod === "CREDIT" && (
-                        <div className="grid grid-cols-2 gap-3 animate-fade-in bg-black/20 p-4 rounded-xl border border-white/5">
+                        <div className="grid grid-cols-2 gap-3 animate-fade-in bg-black/20 p-4 rounded-xl border border-white/5 items-end">
                           <div>
                             <label style={labelTop}>Parcelas</label>
                             <Select 
@@ -1055,21 +1047,45 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   );
                 })()}
 
-                <div className="mt-4">
-                  <label style={labelTop}>Desconto (R$)</label>
-                  <div className="relative">
+                <div className="mt-4 grid grid-cols-3 gap-4 items-end">
+                  <div>
+                    <label style={labelTop}>Desconto (R$)</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        style={inputBig}
+                        value={discountAmount}
+                        onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                        onFocus={(e) => e.target.select()}
+                        placeholder="0"
+                        className="pr-12"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                        {discountPercentage.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={labelTop}>Validade (Dias)</label>
                     <input
                       type="number"
                       style={inputBig}
-                      value={discountAmount}
-                      onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                      value={validityDays}
+                      onChange={(e) => setValidityDays(Number(e.target.value))}
                       onFocus={(e) => e.target.select()}
-                      placeholder="0"
-                      className="pr-12"
+                      placeholder="5"
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
-                      {discountPercentage.toFixed(1)}%
-                    </div>
+                  </div>
+                  <div>
+                    <label style={labelTop}>Entrega (Dias)</label>
+                    <input
+                      type="number"
+                      style={inputBig}
+                      value={deliveryDays}
+                      onChange={(e) => setDeliveryDays(Number(e.target.value))}
+                      onFocus={(e) => e.target.select()}
+                      placeholder="5"
+                    />
                   </div>
                 </div>
               </div>

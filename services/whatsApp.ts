@@ -9,8 +9,10 @@ export function buildWhatsappMessage(params: {
   settings: AppSettings;
   items?: OrcItem[]; 
   publicLink?: string;
+  delivery_days?: number;
+  validity_days?: number;
 }) {
-  const { clienteNome, orcamentoId, total, settings, items, publicLink } = params;
+  const { clienteNome, orcamentoId, total, settings, items, publicLink, delivery_days, validity_days } = params;
 
   const lines: string[] = [];
   lines.push(`Olá, ${clienteNome}! 👋`);
@@ -32,6 +34,13 @@ export function buildWhatsappMessage(params: {
   }
 
   lines.push(`*💰 TOTAL GERAL: R$ ${total.toFixed(2)}*`);
+
+  if (delivery_days) {
+    lines.push(`🚚 Prazo de Entrega: ${delivery_days} dias úteis`);
+  }
+  if (validity_days) {
+    lines.push(`⏳ Validade do Orçamento: ${validity_days} dias`);
+  }
 
   if (publicLink) lines.push(`🔗 Link: ${publicLink}`);
 

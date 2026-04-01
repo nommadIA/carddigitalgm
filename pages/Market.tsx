@@ -256,23 +256,52 @@ const Market = () => {
 
       const ai = new GoogleGenAI({ apiKey });
 
-      // Converter imagem para base64
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      await new Promise((resolve) => {
-        reader.onload = resolve;
+      // Resize image before sending to Gemini
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = objectUrl;
       });
-      const base64Data = (reader.result as string).split(',')[1];
+      URL.revokeObjectURL(objectUrl);
+
+      const canvas = document.createElement("canvas");
+      const MAX_WIDTH = 800;
+      const MAX_HEIGHT = 800;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width *= MAX_HEIGHT / height;
+          height = MAX_HEIGHT;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      const dataUrl = canvas.toDataURL(file.type || "image/jpeg", 0.8);
+      const actualMimeType = dataUrl.split(",")[0].split(":")[1].split(";")[0];
+      const base64Data = dataUrl.split(",")[1];
 
       // Usando o modelo correto para evitar erro 404
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-preview",
+        model: "gemini-3-flash-preview",
         contents: {
           parts: [
             {
               inlineData: {
                 data: base64Data,
-                mimeType: file.type,
+                mimeType: actualMimeType,
               },
             },
             {
@@ -297,32 +326,167 @@ const Market = () => {
     }
   };
 
-  const handleVoiceInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Seu navegador não suporta reconhecimento de voz.");
-      return;
-    }
+  const playSound = (type: 'beep' | 'cash'): Promise<void> => {
+    return new Promise((resolve) => {
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) {
+          resolve();
+          return;
+        }
+        const ctx = new AudioContext();
+        
+        if (type === 'beep') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+          
+          gain.gain.setValueAtTime(0, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+          gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+          
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.15);
+          
+          setTimeout(() => resolve(), 150);
+        } else if (type === 'cash') {
+          // Cha-ching sound simulation
+          // 1. The "Cha" (noise/slide)
+          const osc1 = ctx.createOscillator();
+          const gain1 = ctx.createGain();
+          osc1.connect(gain1);
+          gain1.connect(ctx.destination);
+          
+          osc1.type = 'square';
+          osc1.frequency.setValueAtTime(300, ctx.currentTime);
+          osc1.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+          
+          gain1.gain.setValueAtTime(0, ctx.currentTime);
+          gain1.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+          gain1.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+          
+          osc1.start(ctx.currentTime);
+          osc1.stop(ctx.currentTime + 0.15);
+          
+          // 2. The "Ching" (high bell)
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc2.connect(gain2);
+          gain2.connect(ctx.destination);
+          
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(2000, ctx.currentTime + 0.1);
+          osc2.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.5);
+          
+          gain2.gain.setValueAtTime(0, ctx.currentTime + 0.1);
+          gain2.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.15);
+          gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+          
+          osc2.start(ctx.currentTime + 0.1);
+          osc2.stop(ctx.currentTime + 0.6);
+          
+          setTimeout(() => resolve(), 600);
+        }
+      } catch (e) {
+        console.error("Audio error:", e);
+        resolve();
+      }
+    });
+  };
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'pt-BR';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+  const listenVoice = (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        reject(new Error("not-supported"));
+        return;
+      }
 
-    recognition.onstart = () => setIsListening(true);
-    
-    recognition.onresult = async (event: any) => {
-      const transcript = event.results[0][0].transcript;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      let resolved = false;
+
+      recognition.onresult = (event: any) => {
+        resolved = true;
+        resolve(event.results[0][0].transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        if (!resolved) {
+          resolved = true;
+          reject(new Error(event.error));
+        }
+      };
+
+      recognition.onend = () => {
+        if (!resolved) {
+          resolved = true;
+          reject(new Error("no-speech"));
+        }
+      };
+
+      recognition.start();
+    });
+  };
+
+  const handleVoiceInput = async () => {
+    try {
+      // 1. Play mic open sound for product
+      await playSound('beep');
       
+      setIsListening(true);
+      // 2. Listen for product
+      const productTranscript = await listenVoice();
+      setIsListening(false);
+      
+      setProcessingVoice(true);
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
       
+      let productName = productTranscript;
       if (apiKey) {
-        setProcessingVoice(true);
         try {
           const ai = new GoogleGenAI({ apiKey });
           const response = await ai.models.generateContent({
-            model: "gemini-3.1-flash-preview",
-            contents: `Analise este texto de voz e extraia o nome do produto e o preço. Texto: "${transcript}". Retorne APENAS um JSON válido no formato {"name": "Nome do Produto", "price": 9.99}. Se não houver preço, retorne null em price. Não inclua markdown, apenas o JSON.`,
+            model: "gemini-3-flash-preview",
+            contents: `Formate o nome deste produto para uma lista de compras. Texto: "${productTranscript}". Retorne APENAS o nome formatado, sem aspas, sem markdown. Exemplo: "Arroz 5 quilos" -> "Arroz 5kg".`,
+          });
+          const text = response.text?.trim();
+          if (text) productName = text;
+        } catch (err) {
+          console.error("Erro ao formatar produto com Gemini:", err);
+        }
+      }
+      
+      productName = productName.charAt(0).toUpperCase() + productName.slice(1);
+      setNewItemName(productName);
+      setProcessingVoice(false);
+      
+      // Wait 1 second
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 3. Play cash register sound for price
+      await playSound('cash');
+      
+      setIsListening(true);
+      // 4. Listen for price
+      const priceTranscript = await listenVoice();
+      setIsListening(false);
+      
+      setProcessingVoice(true);
+      let priceValue = "";
+      if (apiKey) {
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+          const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: `Converta o seguinte texto falado em um número (preço). Texto: "${priceTranscript}". Retorne APENAS um JSON válido no formato {"price": 9.99}. Se não houver preço, retorne null em price. Não inclua markdown, apenas o JSON.`,
             config: {
               responseMimeType: "application/json",
             }
@@ -331,63 +495,46 @@ const Market = () => {
           const text = response.text?.trim();
           if (text) {
             const data = JSON.parse(text);
-            if (data.name) setNewItemName(data.name);
-            if (data.price !== null && data.price !== undefined) setNewItemPrice(data.price.toString());
-            return;
+            if (data.price !== null && data.price !== undefined) {
+              priceValue = data.price.toString();
+            }
           }
         } catch (err) {
-          console.error("Erro ao processar voz com Gemini, usando fallback:", err);
-        } finally {
-          setProcessingVoice(false);
+          console.error("Erro ao processar preço com Gemini:", err);
         }
       }
-
-      // Fallback regex
-      let name = transcript;
-      let price = "";
       
-      // Look for price patterns like "25 e 90", "25 reais e 90 centavos", "25,90"
-      const priceMatch = transcript.match(/(\d+)\s*(?:reais|vírgula|e)?\s*(\d+)?\s*(?:centavos)?$/i);
-      if (priceMatch) {
-         const reais = priceMatch[1];
-         const centavos = priceMatch[2] ? priceMatch[2].padEnd(2, '0').substring(0, 2) : "00";
-         price = `${reais}.${centavos}`;
-         name = transcript.replace(priceMatch[0], '').trim();
-         name = name.replace(/(por|custa|saindo a|reais)$/i, '').trim();
-      } else {
-         const matchNum = transcript.match(/(\d+(?:[.,]\d+)?)$/);
-         if (matchNum) {
-           price = matchNum[1].replace(',', '.');
-           name = transcript.replace(matchNum[0], '').trim();
-           name = name.replace(/(por|custa|saindo a)$/i, '').trim();
-         }
+      if (!priceValue) {
+        // Fallback regex
+        const priceMatch = priceTranscript.match(/(\d+)\s*(?:reais|vírgula|e)?\s*(\d+)?\s*(?:centavos)?$/i);
+        if (priceMatch) {
+          const reais = priceMatch[1] || "0";
+          const centavos = priceMatch[2] ? priceMatch[2].padEnd(2, '0').slice(0, 2) : "00";
+          priceValue = `${reais}.${centavos}`;
+        } else {
+          const matchNum = priceTranscript.match(/(\d+(?:[.,]\d+)?)$/);
+          if (matchNum) {
+            priceValue = matchNum[1].replace(',', '.');
+          }
+        }
       }
       
-      name = name.charAt(0).toUpperCase() + name.slice(1);
+      if (priceValue) {
+        setNewItemPrice(priceValue);
+      }
+      setProcessingVoice(false);
       
-      setNewItemName(name);
-      if (price) setNewItemPrice(price);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error("Erro no reconhecimento de voz:", event.error);
-      if (event.error === 'not-allowed') {
+    } catch (err: any) {
+      if (err.message === "not-supported") {
+        alert("Seu navegador não suporta reconhecimento de voz.");
+      } else if (err.message === 'not-allowed') {
         alert("Permissão negada para usar o microfone. Por favor, permita o acesso ao microfone no seu navegador para usar esta função.");
-      } else if (event.error === 'no-speech') {
-        // Silently ignore or show a gentle toast, but for now we just reset state
-        // The user just didn't speak in time.
-      } else {
-        alert("Erro ao capturar áudio. Tente novamente.");
+      } else if (err.message !== "no-speech") {
+        console.error("Erro no reconhecimento de voz:", err);
       }
       setIsListening(false);
       setProcessingVoice(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognition.start();
+    }
   };
 
   const handleRemoveItem = async (id: string) => {
@@ -753,21 +900,21 @@ const Market = () => {
                         <div className="flex flex-col md:flex-row gap-4 items-end">
                             <div className="flex-1 w-full">
                                 <label className="gm-label mb-1 block">Produto</label>
-                                <textarea 
-                                    className="gm-input w-full py-3 min-h-[48px] resize-y" 
+                                <input 
+                                    type="text"
+                                    className="gm-input w-full h-12" 
                                     value={newItemName} 
                                     onChange={e => setNewItemName(e.target.value)} 
                                     placeholder="Ex: Arroz 5kg" 
-                                    rows={2}
                                 />
                             </div>
                             <div className="w-full md:w-32">
                                 <label className="gm-label mb-1 block">Preço (Un)</label>
-                                <input className="gm-input h-12" type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} onFocus={(e) => e.target.select()} placeholder="0.00" />
+                                <input className="gm-input h-12 w-full" type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} onFocus={(e) => e.target.select()} placeholder="0.00" />
                             </div>
                             <div className="w-full md:w-24">
                                 <label className="gm-label mb-1 block">Qtd</label>
-                                <input className="gm-input text-center h-12" type="number" value={newItemQty} onChange={e => setNewItemQty(Number(e.target.value))} onFocus={(e) => e.target.select()} />
+                                <input className="gm-input text-center h-12 w-full" type="number" value={newItemQty} onChange={e => setNewItemQty(Number(e.target.value))} onFocus={(e) => e.target.select()} />
                             </div>
                             <button className="gm-btn h-12 w-full md:w-auto px-8" onClick={handleAddItem} disabled={addingItem}>
                                 {addingItem ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />} Adicionar

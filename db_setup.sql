@@ -220,12 +220,22 @@ alter table public.budgets add column if not exists deleted_at timestamptz;
 alter table public.budgets
 add column if not exists delivery_days numeric default 5;
 
+alter table public.budgets
+add column if not exists validity_days numeric default 5;
+
 -- FIX BUDGETS STATUS CONSTRAINT
 do $$
 begin
   alter table public.budgets drop constraint if exists budgets_status_check;
   alter table public.budgets add constraint budgets_status_check 
     check (status in ('AGUARDANDO', 'APROVADO', 'PRODUCAO', 'CONCLUIDO', 'CANCELADO'));
+exception when others then null;
+end $$;
+
+-- FIX BUDGET ITEMS SERVICE TYPE CONSTRAINT
+do $$
+begin
+  alter table public.budget_items drop constraint if exists budget_items_service_type_check;
 exception when others then null;
 end $$;
 
