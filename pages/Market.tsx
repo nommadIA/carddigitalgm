@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, ShoppingCart, Trash2, Camera, Mic, Check, DollarSign, Wallet, Loader2, X, Sparkles, Share2, History, Mail, Copy, Calendar } from 'lucide-react';
+import { Plus, ShoppingCart, Trash2, Mic, Check, DollarSign, Wallet, Loader2, X, Sparkles, Share2, History, Mail, Copy, Calendar } from 'lucide-react';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { CURRENCY_FORMATTER } from '../constants';
 import { supabase } from '../lib/supabase';
@@ -52,7 +52,6 @@ const Market = () => {
   const [showDeleteListConfirm, setShowDeleteListConfirm] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resettingBalance, setResettingBalance] = useState(false);
-  const [scanningImage, setScanningImage] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [processingVoice, setProcessingVoice] = useState(false);
 
@@ -241,91 +240,6 @@ const Market = () => {
     }
   };
 
-  const handleScanImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setScanningImage(true);
-    try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
-      if (!apiKey) {
-        alert("Chave da API do Gemini não configurada. Adicione VITE_GEMINI_API_KEY no Netlify.");
-        setScanningImage(false);
-        return;
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-
-      // Resize image before sending to Gemini
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = objectUrl;
-      });
-      URL.revokeObjectURL(objectUrl);
-
-      const canvas = document.createElement("canvas");
-      const MAX_WIDTH = 800;
-      const MAX_HEIGHT = 800;
-      let width = img.width;
-      let height = img.height;
-
-      if (width > height) {
-        if (width > MAX_WIDTH) {
-          height *= MAX_WIDTH / width;
-          width = MAX_WIDTH;
-        }
-      } else {
-        if (height > MAX_HEIGHT) {
-          width *= MAX_HEIGHT / height;
-          height = MAX_HEIGHT;
-        }
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx?.drawImage(img, 0, 0, width, height);
-      
-      const dataUrl = canvas.toDataURL(file.type || "image/jpeg", 0.8);
-      const actualMimeType = dataUrl.split(",")[0].split(":")[1].split(";")[0];
-      const base64Data = dataUrl.split(",")[1];
-
-      // Usando o modelo correto para evitar erro 404
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                data: base64Data,
-                mimeType: actualMimeType,
-              },
-            },
-            {
-              text: "Analise esta embalagem de produto. Extraia o nome principal do produto, a marca e o peso/volume. Crie um título resumido, claro e gramaticalmente correto para uma lista de compras. Retorne APENAS o título, nada mais. Exemplo de saída esperada: 'Arroz Prato Fino Parboilizado 5kg'.",
-            },
-          ],
-        },
-      });
-
-      const text = response.text?.trim();
-      if (text) {
-        setNewItemName(text);
-      } else {
-        alert("Não foi possível identificar o produto na imagem.");
-      }
-    } catch (err: any) {
-      console.error("Erro ao escanear produto:", err);
-      alert("Erro ao identificar o produto. Verifique sua conexão ou tente novamente. Detalhe: " + (err.message || "Erro desconhecido"));
-    } finally {
-      setScanningImage(false);
-      e.target.value = '';
-    }
-  };
-
   const playSound = (type: 'beep' | 'cash'): Promise<void> => {
     return new Promise((resolve) => {
       try {
@@ -466,62 +380,6 @@ const Market = () => {
       
       productName = productName.charAt(0).toUpperCase() + productName.slice(1);
       setNewItemName(productName);
-      setProcessingVoice(false);
-      
-      // Wait 1 second
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // 3. Play cash register sound for price
-      await playSound('cash');
-      
-      setIsListening(true);
-      // 4. Listen for price
-      const priceTranscript = await listenVoice();
-      setIsListening(false);
-      
-      setProcessingVoice(true);
-      let priceValue = "";
-      if (apiKey) {
-        try {
-          const ai = new GoogleGenAI({ apiKey });
-          const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: `Converta o seguinte texto falado em um número (preço). Texto: "${priceTranscript}". Retorne APENAS um JSON válido no formato {"price": 9.99}. Se não houver preço, retorne null em price. Não inclua markdown, apenas o JSON.`,
-            config: {
-              responseMimeType: "application/json",
-            }
-          });
-          
-          const text = response.text?.trim();
-          if (text) {
-            const data = JSON.parse(text);
-            if (data.price !== null && data.price !== undefined) {
-              priceValue = data.price.toString();
-            }
-          }
-        } catch (err) {
-          console.error("Erro ao processar preço com Gemini:", err);
-        }
-      }
-      
-      if (!priceValue) {
-        // Fallback regex
-        const priceMatch = priceTranscript.match(/(\d+)\s*(?:reais|vírgula|e)?\s*(\d+)?\s*(?:centavos)?$/i);
-        if (priceMatch) {
-          const reais = priceMatch[1] || "0";
-          const centavos = priceMatch[2] ? priceMatch[2].padEnd(2, '0').slice(0, 2) : "00";
-          priceValue = `${reais}.${centavos}`;
-        } else {
-          const matchNum = priceTranscript.match(/(\d+(?:[.,]\d+)?)$/);
-          if (matchNum) {
-            priceValue = matchNum[1].replace(',', '.');
-          }
-        }
-      }
-      
-      if (priceValue) {
-        setNewItemPrice(priceValue);
-      }
       setProcessingVoice(false);
       
     } catch (err: any) {
@@ -851,20 +709,12 @@ const Market = () => {
                 <Card title="Adicionar Item">
                     <div className="flex flex-col gap-4">
                         <div className="w-full">
-                            <label className="gm-label mb-1 block">Captura Inteligente</label>
+                            <label className="gm-label mb-1 block">Captura por Voz</label>
                             <div className="flex gap-2">
                                 <button 
-                                   className="gm-btn gm-btn-primary flex-1 flex items-center justify-center h-12 rounded-xl shadow-lg shadow-[var(--gm-primary-30)] gap-2"
-                                   onClick={() => document.getElementById('camera-input')?.click()}
-                                   disabled={scanningImage || isListening}
-                                >
-                                   {scanningImage ? <Loader2 size={20} className="animate-spin" /> : <Camera size={20} />}
-                                   <span className="text-sm font-medium">{scanningImage ? "Lendo..." : "Câmera"}</span>
-                                </button>
-                                <button 
-                                   className={`gm-btn flex-1 flex items-center justify-center h-12 rounded-xl shadow-lg gap-2 transition-colors ${isListening ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/30' : processingVoice ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/30' : 'bg-slate-800 text-white hover:bg-slate-700 shadow-black/20'}`}
+                                   className={`gm-btn w-full flex items-center justify-center h-12 rounded-xl shadow-lg gap-2 transition-colors ${isListening ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/30' : processingVoice ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/30' : 'bg-slate-800 text-white hover:bg-slate-700 shadow-black/20'}`}
                                    onClick={handleVoiceInput}
-                                   disabled={scanningImage || isListening || processingVoice}
+                                   disabled={isListening || processingVoice}
                                 >
                                    {isListening ? (
                                       <>
@@ -887,14 +737,6 @@ const Market = () => {
                                    )}
                                 </button>
                             </div>
-                            <input 
-                               id="camera-input" 
-                               type="file" 
-                               accept="image/*" 
-                               capture="environment" 
-                               className="hidden" 
-                               onChange={handleScanImage} 
-                            />
                         </div>
 
                         <div className="flex flex-col md:flex-row gap-4 items-end">

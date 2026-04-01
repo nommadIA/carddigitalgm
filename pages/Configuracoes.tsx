@@ -132,7 +132,7 @@ export default function Configuracoes() {
 
   const paginate = (newDirection: number) => {
     const next = currentScreen + newDirection;
-    if (next >= 0 && next <= 4) {
+    if (next >= 0 && next <= 2) {
       setDirection(newDirection);
       setCurrentScreen(next);
     }
@@ -758,39 +758,40 @@ export default function Configuracoes() {
 
               <div className="flex flex-col h-full">
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Paintbrush size={20} className="text-slate-400" /> Tema e Estilo
+                  <Paintbrush size={20} className="text-slate-400" /> Cores do App
                 </h2>
                 <Card className="flex-1 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
                   <div className="flex flex-col gap-8 h-full">
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Temas de Cores</label>
-                      <div className="grid grid-cols-5 gap-3">
-                        {PRESET_THEMES.map((t) => {
-                          const isActive = brandPrimary.toLowerCase() === t.primary.toLowerCase();
-                          return (
-                            <button
-                              key={t.name}
-                              type="button"
-                              onClick={() => applyTheme(t)}
-                              className={`relative flex items-center justify-center aspect-square rounded-full transition-all ${
-                                isActive ? "ring-2 ring-[var(--gm-primary)] ring-offset-2 ring-offset-white dark:ring-offset-slate-800 scale-110 shadow-lg shadow-[var(--gm-primary-30)]" : "hover:scale-105 opacity-80"
-                              }`}
-                              title={t.name}
-                            >
-                              <div 
-                                className="w-full h-full rounded-full shadow-inner border border-black/5 dark:border-white/5" 
-                                style={{ 
-                                  background: `linear-gradient(135deg, ${t.primary} 0%, ${t.accent} 100%)` 
-                                }} 
-                              />
-                              {isActive && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <Check size={12} className="text-white drop-shadow-md" />
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Misturador de Cores</label>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                            <input type="color" value={brandPrimary} onChange={(e) => setBrandPrimary(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-bold">Cor Principal</div>
+                            <div className="text-xs text-slate-500 uppercase">{brandPrimary}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                            <input type="color" value={brandAccent} onChange={(e) => setBrandAccent(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-bold">Cor Secundária</div>
+                            <div className="text-xs text-slate-500 uppercase">{brandAccent}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                            <input type="color" value={brandBg} onChange={(e) => setBrandBg(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-bold">Cor de Fundo</div>
+                            <div className="text-xs text-slate-500 uppercase">{brandBg}</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -1280,40 +1281,41 @@ export default function Configuracoes() {
                             
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h2 className="text-lg font-bold flex items-center gap-2">
-                        <Paintbrush size={20} className="text-slate-400" /> Tema e Estilo
+                        <Paintbrush size={20} className="text-slate-400" /> Cores do App
                       </h2>
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
                       <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Temas de Cores</label>
-                        <div className="grid grid-cols-5 gap-3">
-                          {PRESET_THEMES.map((t) => {
-                            const isActive = brandPrimary.toLowerCase() === t.primary.toLowerCase();
-                            return (
-                              <button
-                                key={t.name}
-                                type="button"
-                                onClick={() => applyTheme(t)}
-                                className={`relative flex items-center justify-center aspect-square rounded-full transition-all ${
-                                  isActive ? "ring-2 ring-[var(--gm-primary)] ring-offset-2 ring-offset-white dark:ring-offset-slate-800 scale-110 shadow-lg shadow-[var(--gm-primary-30)]" : "hover:scale-105 opacity-80"
-                                }`}
-                                title={t.name}
-                              >
-                                <div 
-                                  className="w-full h-full rounded-full shadow-inner border border-black/5 dark:border-white/5" 
-                                  style={{ 
-                                    background: `linear-gradient(135deg, ${t.primary} 0%, ${t.accent} 100%)` 
-                                  }} 
-                                />
-                                {isActive && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <Check size={12} className="text-white drop-shadow-md" />
-                                  </div>
-                                )}
-                              </button>
-                            );
-                          })}
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Misturador de Cores</label>
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                              <input type="color" value={brandPrimary} onChange={(e) => setBrandPrimary(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-bold">Cor Principal</div>
+                              <div className="text-xs text-slate-500 uppercase">{brandPrimary}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                              <input type="color" value={brandAccent} onChange={(e) => setBrandAccent(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-bold">Cor Secundária</div>
+                              <div className="text-xs text-slate-500 uppercase">{brandAccent}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                              <input type="color" value={brandBg} onChange={(e) => setBrandBg(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-bold">Cor de Fundo</div>
+                              <div className="text-xs text-slate-500 uppercase">{brandBg}</div>
+                            </div>
+                          </div>
                         </div>
                       </Card>
 
