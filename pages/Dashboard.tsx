@@ -151,6 +151,18 @@ const Dashboard = () => {
     projetosConcluidosTotal: 0,
   });
 
+  function normalizeStatus(v?: string | null) {
+    if (!v) return "AGUARDANDO";
+    const up = v.toUpperCase();
+    if (up.includes("CONCLU")) return "CONCLUIDO";
+    if (up.includes("CANCEL")) return "CANCELADO";
+    if (up.includes("APROV")) return "APROVADO";
+    if (up.includes("AGUAR")) return "AGUARDANDO";
+    if (up.includes("PROD") || up.includes("FAZ") || up.includes("EM ")) return "PRODUCAO";
+    if (up.includes("PRONTO")) return "PRONTO";
+    return up;
+  }
+
   useEffect(() => {
     async function loadData() {
       if (!tenantId) return;
@@ -175,15 +187,15 @@ const Dashboard = () => {
 
         const faturamentoTotal = budgets.reduce(
           (acc: number, item: any) =>
-            item.status === "CONCLUIDO"
+            normalizeStatus(item.status) === "CONCLUIDO"
               ? acc + Number(item.total_amount || item.total || 0)
               : acc,
           0,
         );
 
         const faturamentoMensal = budgets.reduce((acc: number, item: any) => {
-          const createdAt = new Date(item.created_at);
-          return item.status === "CONCLUIDO" && createdAt >= startOfMonth
+          const dateToUse = item.completed_at ? new Date(item.completed_at) : new Date(item.created_at);
+          return normalizeStatus(item.status) === "CONCLUIDO" && dateToUse >= startOfMonth
             ? acc + Number(item.total_amount || item.total || 0)
             : acc;
         }, 0);
@@ -191,31 +203,29 @@ const Dashboard = () => {
         const projetosAndamentoMensal = budgets.filter((b: any) => {
           const createdAt = new Date(b.created_at);
           const isCurrentMonth = createdAt >= startOfMonth;
-          const isActive = !["CONCLUIDO", "CANCELADO", "PRONTO"].includes(
-            (b.status || "").toUpperCase(),
-          );
+          const st = normalizeStatus(b.status);
+          const isActive = st !== "CONCLUIDO" && st !== "CANCELADO" && st !== "PRONTO";
           return isCurrentMonth && isActive;
         }).length;
 
-        const projetosConcluidosTotal = budgets.filter((b: any) =>
-          ["CONCLUIDO", "PRONTO"].includes((b.status || "").toUpperCase()),
-        ).length;
+        const projetosConcluidosTotal = budgets.filter((b: any) => {
+          const st = normalizeStatus(b.status);
+          return st === "CONCLUIDO" || st === "PRONTO";
+        }).length;
 
         setStats({
           faturamentoMensal,
           clientesTotal: clients?.length || 0,
           projetosAndamentoMensal,
-          fila: budgets.filter((b: any) =>
-            ["AGUARDANDO"].includes((b.status || "").toUpperCase()),
-          ).length,
-          fazendo: budgets.filter((b: any) =>
-            ["APROVADO", "PRODUCAO", "FAZENDO"].includes(
-              (b.status || "").toUpperCase(),
-            ),
-          ).length,
-          pronto: budgets.filter((b: any) =>
-            ["CONCLUIDO", "PRONTO"].includes((b.status || "").toUpperCase()),
-          ).length,
+          fila: budgets.filter((b: any) => normalizeStatus(b.status) === "AGUARDANDO").length,
+          fazendo: budgets.filter((b: any) => {
+            const st = normalizeStatus(b.status);
+            return st === "APROVADO" || st === "PRODUCAO" || st === "FAZENDO";
+          }).length,
+          pronto: budgets.filter((b: any) => {
+            const st = normalizeStatus(b.status);
+            return st === "CONCLUIDO" || st === "PRONTO";
+          }).length,
           faturamentoTotal,
           projetosConcluidosTotal,
         });

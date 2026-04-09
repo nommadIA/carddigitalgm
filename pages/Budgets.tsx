@@ -228,7 +228,12 @@ export default function Budgets() {
     // UI otimista
     setRows((cur) => cur.map((r) => (r.id === id ? { ...r, status: nextNorm } : r)));
 
-    const { error } = await supabase.from("budgets").update({ status: nextNorm }).eq("id", id);
+    const updatePayload: any = { status: nextNorm };
+    if (nextNorm === "CONCLUIDO") {
+      updatePayload.completed_at = new Date().toISOString();
+    }
+
+    const { error } = await supabase.from("budgets").update(updatePayload).eq("id", id);
     if (error) {
       alert("Erro ao atualizar status.");
       load();

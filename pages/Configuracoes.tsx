@@ -608,8 +608,8 @@ export default function Configuracoes() {
   ];
 
   const BUTTON_STYLES = [
-    { id: "solid", name: "Preenchido Sólido" },
-    { id: "neon", name: "Neon Frosted" },
+    { id: "solid", name: "Sólido" },
+    { id: "neon", name: "Neon Jateado" },
   ];
 
   const applyTheme = (theme: (typeof PRESET_THEMES)[0]) => {
@@ -702,23 +702,23 @@ export default function Configuracoes() {
           {loading ? (
             <Card className="text-center p-10">Carregando...</Card>
           ) : viewMode === "desktop" ? (
-            <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 pb-6 items-stretch">
+            <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 pb-6 items-stretch lg:auto-rows-fr">
               
               {/* ROW 1 */}
               <div className="flex flex-col h-full">
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Palette size={20} className="text-slate-400" /> Personalização
+                  <Palette size={20} className="text-[var(--gm-primary)]" /> Personalização
                 </h2>
-                <Card className="flex-1 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col gap-8 h-full">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                  <div className="flex flex-col gap-8 h-full flex-1">
+                    <div className="flex flex-col items-center gap-2 shrink-0">
+                      <div className="w-32 h-32 rounded-2xl bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
                         {uploadingLogo ? (
-                          <Loader2 size={24} className="animate-spin text-slate-400" />
+                          <Loader2 size={32} className="animate-spin text-slate-400" />
                         ) : companyLogoUrl ? (
                           <img src={companyLogoUrl} alt="Logo" className="w-full h-full object-contain" />
                         ) : (
-                          <ImageIcon size={24} className="opacity-50 text-slate-400" />
+                          <ImageIcon size={32} className="opacity-50 text-slate-400" />
                         )}
                       </div>
                       <label className={`gm-btn w-full max-w-xs py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingLogo ? "opacity-50 pointer-events-none" : ""}`}>
@@ -728,45 +728,38 @@ export default function Configuracoes() {
                       </label>
                     </div>
 
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
+                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
 
-                    <div className="space-y-4 flex-1">
+                    <div className="space-y-4 flex-1 flex flex-col justify-center">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nome da empresa</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Nome da empresa</label>
                         <input className="gm-input py-2 text-sm h-10 w-full" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
                       </div>
                       
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Escala Global (Desktop)</label>
-                        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Desktop)</label>
+                        <div className="flex items-center gap-3 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
                           <input type="range" min={0.7} max={3} step={0.05} className="flex-1 h-1.5 accent-[var(--gm-primary)]" value={appScale} onChange={(e) => setAppScale(Number(e.target.value))} />
                           <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{appScale}x</div>
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Escala Global (Celular)</label>
-                        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Celular)</label>
+                        <div className="flex items-center gap-3 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
                           <input type="range" min={0.7} max={3} step={0.05} className="flex-1 h-1.5 accent-[var(--gm-primary)]" value={mobileScale} onChange={(e) => setMobileScale(Number(e.target.value))} />
                           <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{mobileScale}x</div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Card>
-              </div>
 
-              <div className="flex flex-col h-full">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Paintbrush size={20} className="text-slate-400" /> Cores do App
-                </h2>
-                <Card className="flex-1 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col gap-8 h-full">
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Misturador de Cores</label>
+                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
+
+                    <div className="flex-1 flex flex-col justify-center">
+                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">Misturador de Cores</label>
                       <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                        <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-black/10 dark:border-white/10 shrink-0">
                             <input type="color" value={brandPrimary} onChange={(e) => setBrandPrimary(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
                           </div>
                           <div className="flex-1">
@@ -774,8 +767,8 @@ export default function Configuracoes() {
                             <div className="text-xs text-slate-500 uppercase">{brandPrimary}</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                        <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-black/10 dark:border-white/10 shrink-0">
                             <input type="color" value={brandAccent} onChange={(e) => setBrandAccent(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
                           </div>
                           <div className="flex-1">
@@ -783,8 +776,8 @@ export default function Configuracoes() {
                             <div className="text-xs text-slate-500 uppercase">{brandAccent}</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                        <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-black/10 dark:border-white/10 shrink-0">
                             <input type="color" value={brandBg} onChange={(e) => setBrandBg(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
                           </div>
                           <div className="flex-1">
@@ -794,12 +787,19 @@ export default function Configuracoes() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                </Card>
+              </div>
 
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
-
-                    <div className="flex-1">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Estilo dos Botões</label>
-                      <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col h-full">
+                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+                  <Paintbrush size={20} className="text-[var(--gm-primary)]" /> Cores & Fonte
+                </h2>
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                  <div className="flex flex-col gap-8 h-full flex-1">
+                    <div className="flex-1 flex flex-col justify-center">
+                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">Estilo dos Botões</label>
+                      <div className="flex flex-col gap-3">
                         {BUTTON_STYLES.map((s) => {
                           const isActive = buttonStyle === s.id;
                           return (
@@ -807,15 +807,41 @@ export default function Configuracoes() {
                               key={s.id}
                               type="button"
                               onClick={() => setButtonStyle(s.id)}
-                              className={`flex flex-col items-center justify-between p-3 rounded-xl border-2 transition-all h-20 ${
-                                isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+                              className={`flex flex-col items-center justify-between p-4 rounded-xl border-2 transition-all h-28 ${
+                                isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md"
                               }`}
                             >
-                              <div className={`w-full py-1.5 text-[10px] font-bold rounded-md flex items-center justify-center ${
+                              <div className={`w-full py-3 text-sm font-bold rounded-xl flex items-center justify-center ${
                                 s.id === "solid" ? "bg-[var(--gm-primary)] text-white" : "bg-transparent border border-[var(--gm-primary)] text-[var(--gm-primary)]"
                               }`}>Preview</div>
-                              <span className={`text-[9px] font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-500"}`}>
+                              <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-500"}`}>
                                 {s.name}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
+
+                    <div className="flex-1 flex flex-col justify-center">
+                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">Família de Fonte</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {["Inter", "Roboto", "Poppins", "Montserrat", "Open Sans", "Lato", "Oswald", "Raleway"].map((font) => {
+                          const isActive = fontFamily === font;
+                          return (
+                            <button
+                              key={font}
+                              type="button"
+                              onClick={() => setFontFamily(font)}
+                              className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all h-12 ${
+                                isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md"
+                              }`}
+                              style={{ fontFamily: font }}
+                            >
+                              <span className={`text-sm font-medium ${isActive ? "text-[var(--gm-primary)]" : "text-slate-700 dark:text-slate-300"}`}>
+                                {font}
                               </span>
                             </button>
                           );
@@ -829,11 +855,11 @@ export default function Configuracoes() {
               {/* ROW 2 */}
               <div className="flex flex-col h-full">
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <ImageIcon size={20} className="text-slate-400" /> Plano de Fundo
+                  <ImageIcon size={20} className="text-[var(--gm-primary)]" /> Plano de Fundo
                 </h2>
-                <Card className="flex-1 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                  <div className="flex flex-col h-full flex-1">
+                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 shrink-0">
                       <div>
                         <div className="font-semibold text-sm">Plano de fundo</div>
                         <div className="gm-muted text-[10px]">Ative para aparecer no app</div>
@@ -854,9 +880,9 @@ export default function Configuracoes() {
                       </button>
                     </div>
 
-                    <div className="mt-4 space-y-4 flex-1">
+                    <div className="mt-4 space-y-4 flex-1 flex flex-col justify-center">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Ajuste</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Ajuste</label>
                         <Select 
                           className="gm-input py-2 text-sm h-10 w-full" 
                           value={bgFit} 
@@ -869,23 +895,23 @@ export default function Configuracoes() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Opacidade ({Math.round(bgOpacity * 100)}%)</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Opacidade ({Math.round(bgOpacity * 100)}%)</label>
                         <input type="range" min={0} max={1} step={0.01} className="w-full h-1.5 accent-[var(--gm-primary)]" value={bgOpacity} onChange={(e) => setBgOpacity(Number(e.target.value))} />
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Zoom ({bgScale}x)</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Zoom ({bgScale}x)</label>
                         <input type="range" min={0.5} max={5} step={0.1} className="w-full h-1.5 accent-[var(--gm-primary)]" value={bgScale} onChange={(e) => setBgScale(Number(e.target.value))} />
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Desfoque ({bgBlur}px)</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Desfoque ({bgBlur}px)</label>
                         <input type="range" min={0} max={24} step={1} className="w-full h-1.5 accent-[var(--gm-primary)]" value={bgBlur} onChange={(e) => setBgBlur(Number(e.target.value))} />
                       </div>
 
                       <div className="pt-2">
                         {bgUrl && (
-                          <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative aspect-video shadow-sm">
+                          <div className="mb-4 rounded-xl overflow-hidden border border-black/10 dark:border-white/10 relative aspect-video shadow-sm">
                             <img src={bgUrl} alt="Background" className="w-full h-full object-cover" />
                           </div>
                         )}
@@ -902,12 +928,12 @@ export default function Configuracoes() {
 
               <div className="flex flex-col h-full">
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <CreditCard size={20} className="text-slate-400" /> Dados de Pagamento
+                  <CreditCard size={20} className="text-[var(--gm-primary)]" /> Dados de Pagamento
                 </h2>
-                <Card className="flex-1 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col gap-6 h-full">
-                    <div>
-                      <div className="font-bold text-[10px] uppercase tracking-wider text-slate-500 mb-1">Dados de Pagamento (Pix)</div>
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                  <div className="flex flex-col gap-6 h-full flex-1">
+                    <div className="shrink-0">
+                      <div className="font-bold text-sm uppercase tracking-wider text-[var(--gm-primary)] mb-1">Dados de Pagamento (Pix)</div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">
                         ✅ QR e “Copia e Cola” gerados aqui funcionam em{" "}
                         <b>qualquer banco</b> (Itaú, Nubank, Caixa, BB, Bradesco,
@@ -915,9 +941,9 @@ export default function Configuracoes() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 shrink-0">
                       <div>
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Tipo de chave</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-1 block">Tipo de chave</label>
                         <Select
                           className="gm-input py-2 text-sm h-10 w-full"
                           value={pixType}
@@ -932,7 +958,7 @@ export default function Configuracoes() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Chave Pix</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-1 block">Chave Pix</label>
                         <input
                           type="text"
                           className="gm-input py-2 text-sm h-10 w-full"
@@ -943,15 +969,15 @@ export default function Configuracoes() {
                       </div>
                     </div>
 
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 shrink-0">
                       Dica: e-mail deve ser minúsculo e sem espaços (o sistema pode
                       ajustar).
                     </div>
 
                     {/* ✅ Preview do QR + Copia e Cola */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start pt-4 border-t border-slate-200 dark:border-slate-700 flex-1">
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 h-full flex flex-col">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start pt-4 border-t border-black/10 dark:border-white/10 flex-1">
+                      <div className="rounded-xl border border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md p-4 h-full flex flex-col">
+                        <div className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">
                           QR Code Pix (universal)
                         </div>
                         {pixQrPreview ? (
@@ -985,8 +1011,8 @@ export default function Configuracoes() {
                         )}
                       </div>
 
-                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 h-full flex flex-col">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3">
+                      <div className="rounded-xl border border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md p-4 h-full flex flex-col">
+                        <div className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">
                           Pix “Copia e Cola”
                         </div>
 
@@ -996,7 +1022,7 @@ export default function Configuracoes() {
                           </div>
                         ) : (
                           <div className="flex flex-col h-full justify-between flex-1">
-                            <div className="text-[10px] leading-relaxed font-mono break-all bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-slate-600 dark:text-slate-300 mb-4 max-h-[140px] overflow-y-auto">
+                            <div className="text-[10px] leading-relaxed font-mono break-all bg-white dark:bg-slate-800 border border-black/10 dark:border-white/10 rounded-lg p-3 text-slate-600 dark:text-slate-300 mb-4 max-h-[140px] overflow-y-auto">
                               {pixPayloadPreview}
                             </div>
                             
@@ -1023,7 +1049,7 @@ export default function Configuracoes() {
                       </div>
                     </div>
                     
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 text-center mt-2">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 text-center mt-2 shrink-0">
                       Observação: este QR é <b>estático</b>. O banco do cliente
                       pode digitar o valor ao pagar, ou você pode gerar com
                       valor na tela de orçamento (como já existe no seu
@@ -1036,17 +1062,17 @@ export default function Configuracoes() {
               {/* ROW 3 */}
               <div className="flex flex-col h-full">
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <FileText size={20} className="text-slate-400" /> Timbrado
+                  <FileText size={20} className="text-[var(--gm-primary)]" /> Timbrado
                 </h2>
-                <Card className="flex-1 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col gap-8 h-full">
-                    <div className="flex-1">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Timbrado A4 (PDF/JPG/PNG)</label>
-                      <div className="flex items-start gap-6 justify-center">
-                        <div className="flex flex-col items-center gap-3 flex-1">
-                          <span className="text-[10px] font-semibold text-slate-500">Seu Timbrado</span>
-                          <div className="w-24 h-36 rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
-                            {uploadingTimbrado ? <Loader2 size={24} className="animate-spin text-slate-400" /> : timbradoUrl ? <img src={timbradoUrl} alt="Timbrado" className="w-full h-full object-cover" /> : <FileText size={32} className="opacity-50 text-slate-400" />}
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                  <div className="flex flex-col gap-8 h-full flex-1 justify-center">
+                    <div className="w-full">
+                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-6 block text-center">Timbrado A4 (PDF/JPG/PNG)</label>
+                      <div className="flex items-start gap-10 justify-center">
+                        <div className="flex flex-col items-center gap-4 flex-1 max-w-[240px]">
+                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Seu Timbrado</span>
+                          <div className="w-56 h-80 rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+                            {uploadingTimbrado ? <Loader2 size={48} className="animate-spin text-slate-400" /> : timbradoUrl ? <img src={timbradoUrl} alt="Timbrado" className="w-full h-full object-cover" /> : <FileText size={48} className="opacity-50 text-slate-400" />}
                           </div>
                           <label className={`gm-btn w-full py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingTimbrado ? "opacity-50 pointer-events-none" : ""}`}>
                             {uploadingTimbrado ? <Loader2 size={14} className="animate-spin" /> : <FileImage size={14} />}
@@ -1054,9 +1080,9 @@ export default function Configuracoes() {
                             <input type="file" accept="image/*,application/pdf" className="hidden" disabled={uploadingTimbrado} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadTimbrado(f); }} />
                           </label>
                         </div>
-                        <div className="flex flex-col items-center gap-3 flex-1">
-                          <span className="text-[10px] font-semibold text-slate-500">Gabarito</span>
-                          <div className="w-24 h-36 rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+                        <div className="flex flex-col items-center gap-4 flex-1 max-w-[240px]">
+                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Gabarito</span>
+                          <div className="w-56 h-80 rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
                             <img src={TIMBRADO_MODEL_URL} alt="Gabarito" className="w-full h-full object-cover" />
                           </div>
                           <a href={TIMBRADO_MODEL_URL} target="_blank" rel="noopener noreferrer" className="gm-btn w-full py-2 flex items-center justify-center gap-2">
@@ -1072,58 +1098,61 @@ export default function Configuracoes() {
 
               <div className="flex flex-col h-full">
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Bell size={20} className="text-slate-400" /> Notificações Push
+                  <Bell size={20} className="text-[var(--gm-primary)]" /> Notificações Push
                 </h2>
-                <Card className="flex-1 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-4 relative overflow-hidden group flex flex-col items-center justify-center text-center">
-                  {/* Background Glow */}
-                  <div className={`absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full opacity-20 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`} />
-                  
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 border-2 transition-all duration-500 ${
-                    pushPermission === "granted" 
-                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
-                      : "bg-amber-500/10 border-amber-500/30 text-amber-500 animate-pulse"
-                  }`}>
-                    <Bell size={32} />
-                  </div>
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-4 relative overflow-hidden group items-center justify-center text-center">
+                  <div className="flex flex-col items-center justify-center w-full max-w-sm mx-auto flex-1">
+                    {/* Background Glow */}
+                    <div className={`absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full opacity-20 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`} />
+                    
+                    <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-4 border-2 transition-all duration-500 shrink-0 ${
+                      pushPermission === "granted" 
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
+                        : "bg-amber-500/10 border-amber-500/30 text-amber-500 animate-pulse"
+                    }`}>
+                      <Bell size={48} className={testing ? "animate-bounce" : ""} />
+                    </div>
 
-                  <div className="space-y-2 mb-6">
-                    <h4 className="text-lg font-bold text-slate-800 dark:text-white">
-                      {pushPermission === "granted" ? "Notificações Ativas" : "Permissão Necessária"}
-                    </h4>
-                    <p className="text-xs text-slate-500 max-w-[240px] mx-auto leading-relaxed">
-                      {pushPermission === "granted" 
-                        ? "Você receberá alertas importantes diretamente no seu dispositivo." 
-                        : "Ative as notificações para não perder atualizações em tempo real."}
-                    </p>
-                  </div>
+                    <div className="space-y-2 mb-6 shrink-0">
+                      <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+                        {pushPermission === "granted" ? "Notificações Ativas" : "Permissão Necessária"}
+                      </h4>
+                      <p className="text-xs text-slate-500 max-w-[240px] mx-auto leading-relaxed">
+                        {pushPermission === "granted" 
+                          ? "Você receberá alertas importantes diretamente no seu dispositivo." 
+                          : "Ative as notificações para não perder atualizações em tempo real."}
+                      </p>
+                    </div>
 
-                  {pushPermission !== "granted" && (
+                    {pushPermission !== "granted" && (
+                      <button
+                        onClick={async () => { const permission = await Notification.requestPermission(); setPushPermission(permission); }}
+                        className="gm-btn py-3 px-6 flex items-center justify-center gap-2 text-sm w-full transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
+                      >
+                        <Bell size={16} />
+                        Permitir Notificações
+                      </button>
+                    )}
+
                     <button
-                      onClick={async () => { const permission = await Notification.requestPermission(); setPushPermission(permission); }}
-                      className="gm-btn py-3 px-6 flex items-center justify-center gap-2 text-sm w-full transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      disabled={testing || pushPermission !== "granted"}
+                      onClick={async () => {
+                        setTesting(true);
+                        if ("serviceWorker" in navigator) {
+                          const reg = await navigator.serviceWorker.ready;
+                          reg.active?.postMessage("TEST_NOTIFICATION");
+                          setTimeout(() => setTesting(false), 1000);
+                        }
+                      }}
+                      className={`mt-3 py-3 flex items-center justify-center gap-2 text-sm w-full transition-all shrink-0 rounded-xl font-bold ${
+                        pushPermission !== "granted" ? "opacity-50 grayscale bg-slate-100 text-slate-400" : 
+                        testing ? "bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                      }`}
                     >
-                      <Bell size={16} />
-                      Permitir Notificações
+                      {testing ? <Bell size={16} className="animate-ping" /> : <Bell size={16} />}
+                      {testing ? "Notificação Enviada!" : "Enviar Notificação de Teste"}
                     </button>
-                  )}
-
-                  <button
-                    disabled={testing || pushPermission !== "granted"}
-                    onClick={async () => {
-                      setTesting(true);
-                      if ("serviceWorker" in navigator) {
-                        const reg = await navigator.serviceWorker.ready;
-                        reg.active?.postMessage("TEST_NOTIFICATION");
-                        setTimeout(() => setTesting(false), 1000);
-                      }
-                    }}
-                    className={`gm-btn-soft mt-3 py-3 flex items-center justify-center gap-2 text-sm w-full transition-all ${
-                      pushPermission !== "granted" ? "opacity-50 grayscale" : ""
-                    }`}
-                  >
-                    {testing ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}
-                    {testing ? "Enviando teste..." : "Enviar Notificação de Teste"}
-                  </button>
+                  </div>
                 </Card>
               </div>
 
@@ -1165,7 +1194,7 @@ export default function Configuracoes() {
                             
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h2 className="text-lg font-bold flex items-center gap-2">
-                        <Palette size={20} className="text-slate-400" /> Personalização
+                        <Palette size={20} className="text-[var(--gm-primary)]" /> Personalização
                       </h2>
                     </div>
 
@@ -1192,21 +1221,21 @@ export default function Configuracoes() {
                       <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <div className="space-y-4">
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Nome da empresa</label>
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Nome da empresa</label>
                             <input className="gm-input py-2 text-sm h-10" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
                           </div>
                           
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Escala Global (Desktop)</label>
-                            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Desktop)</label>
+                            <div className="flex items-center gap-3 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
                               <input type="range" min={0.7} max={3} step={0.05} className="flex-1 h-1.5 accent-[var(--gm-primary)]" value={appScale} onChange={(e) => setAppScale(Number(e.target.value))} />
                               <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{appScale}x</div>
                             </div>
                           </div>
                           
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Escala Global (Celular)</label>
-                            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Celular)</label>
+                            <div className="flex items-center gap-3 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
                               <input type="range" min={0.7} max={3} step={0.05} className="flex-1 h-1.5 accent-[var(--gm-primary)]" value={mobileScale} onChange={(e) => setMobileScale(Number(e.target.value))} />
                               <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{mobileScale}x</div>
                             </div>
@@ -1218,14 +1247,14 @@ export default function Configuracoes() {
                             
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h2 className="text-lg font-bold flex items-center gap-2">
-                        <ImageIcon size={20} className="text-slate-400" /> Plano de Fundo
+                        <ImageIcon size={20} className="text-[var(--gm-primary)]" /> Plano de Fundo
                       </h2>
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
                       <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                          <div className="flex items-center justify-between bg-black/10 dark:bg-black/40 backdrop-blur-md p-4 rounded-xl border border-black/10 dark:border-white/10">
                             <div>
                               <div className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-white">Plano de fundo</div>
                               <div className="text-[10px] text-slate-500 mt-0.5">Ative para aparecer no app</div>
@@ -1244,7 +1273,7 @@ export default function Configuracoes() {
 
 
                           <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex justify-between">
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex justify-between">
                               <span>Opacidade</span>
                               <span className="text-[var(--gm-primary)]">{Math.round(bgOpacity * 100)}%</span>
                             </label>
@@ -1252,7 +1281,7 @@ export default function Configuracoes() {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex justify-between">
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex justify-between">
                               <span>Zoom</span>
                               <span className="text-[var(--gm-primary)]">{bgScale}x</span>
                             </label>
@@ -1260,7 +1289,7 @@ export default function Configuracoes() {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex justify-between">
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex justify-between">
                               <span>Desfoque</span>
                               <span className="text-[var(--gm-primary)]">{bgBlur}px</span>
                             </label>
@@ -1281,16 +1310,16 @@ export default function Configuracoes() {
                             
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h2 className="text-lg font-bold flex items-center gap-2">
-                        <Paintbrush size={20} className="text-slate-400" /> Cores do App
+                        <Paintbrush size={20} className="text-[var(--gm-primary)]" /> Cores do App
                       </h2>
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
                       <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Misturador de Cores</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">Misturador de Cores</label>
                         <div className="flex flex-col gap-3">
-                          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                          <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-black/10 dark:border-white/10 shrink-0">
                               <input type="color" value={brandPrimary} onChange={(e) => setBrandPrimary(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
                             </div>
                             <div className="flex-1">
@@ -1298,8 +1327,8 @@ export default function Configuracoes() {
                               <div className="text-xs text-slate-500 uppercase">{brandPrimary}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                          <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-black/10 dark:border-white/10 shrink-0">
                               <input type="color" value={brandAccent} onChange={(e) => setBrandAccent(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
                             </div>
                             <div className="flex-1">
@@ -1307,8 +1336,8 @@ export default function Configuracoes() {
                               <div className="text-xs text-slate-500 uppercase">{brandAccent}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shrink-0">
+                          <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-black/10 dark:border-white/10 shrink-0">
                               <input type="color" value={brandBg} onChange={(e) => setBrandBg(e.target.value)} className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer" />
                             </div>
                             <div className="flex-1">
@@ -1320,7 +1349,7 @@ export default function Configuracoes() {
                       </Card>
 
                       <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block">Estilo dos Botões</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">Estilo dos Botões</label>
                         <div className="grid grid-cols-2 gap-3">
                           {BUTTON_STYLES.map((s) => {
                             const isActive = buttonStyle === s.id;
@@ -1329,14 +1358,14 @@ export default function Configuracoes() {
                                 key={s.id}
                                 type="button"
                                 onClick={() => setButtonStyle(s.id)}
-                                className={`flex flex-col items-center justify-between p-3 rounded-xl border-2 transition-all h-20 ${
-                                  isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+                                className={`flex flex-col items-center justify-between p-4 rounded-xl border-2 transition-all h-28 ${
+                                  isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md"
                                 }`}
                               >
-                                <div className={`w-full py-1.5 text-[10px] font-bold rounded-md flex items-center justify-center ${
+                                <div className={`w-full py-3 text-sm font-bold rounded-xl flex items-center justify-center ${
                                   s.id === "solid" ? "bg-[var(--gm-primary)] text-white" : "bg-transparent border border-[var(--gm-primary)] text-[var(--gm-primary)]"
                                 }`}>Preview</div>
-                                <span className={`text-[9px] font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-500"}`}>
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-500"}`}>
                                   {s.name}
                                 </span>
                               </button>
@@ -1349,13 +1378,13 @@ export default function Configuracoes() {
                             
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h2 className="text-lg font-bold flex items-center gap-2">
-                        <Type size={20} className="text-slate-400" /> Fonte do App
+                        <Type size={20} className="text-[var(--gm-primary)]" /> Fonte do App
                       </h2>
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
                       <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 block text-center">Família de Fonte</label>
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block text-center">Família de Fonte</label>
                         <div className="grid grid-cols-2 gap-3">
                           {["Inter", "Roboto", "Poppins", "Montserrat", "Open Sans", "Lato", "Oswald", "Raleway"].map((font) => {
                             const isActive = fontFamily === font;
@@ -1365,7 +1394,7 @@ export default function Configuracoes() {
                                 type="button"
                                 onClick={() => setFontFamily(font)}
                                 className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all h-20 ${
-                                  isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+                                  isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md"
                                 }`}
                                 style={{ fontFamily: font }}
                               >
@@ -1386,7 +1415,7 @@ export default function Configuracoes() {
                             
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h2 className="text-lg font-bold flex items-center gap-2">
-                        <CreditCard size={20} className="text-slate-400" /> Pix (Pagamento)
+                        <CreditCard size={20} className="text-[var(--gm-primary)]" /> Pix (Pagamento)
                       </h2>
                     </div>
 
@@ -1394,7 +1423,7 @@ export default function Configuracoes() {
                       <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <div className="space-y-2">
                           <div>
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Tipo de Chave</label>
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-1 block">Tipo de Chave</label>
                             <Select 
                               className="gm-input py-2 text-sm h-10 w-full" 
                               value={pixType} 
@@ -1409,13 +1438,13 @@ export default function Configuracoes() {
                             />
                           </div>
                           <div>
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 block">Chave Pix</label>
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-1 block">Chave Pix</label>
                             <input className="gm-input py-2 text-sm h-10 w-full" value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="Sua chave Pix" />
                           </div>
 
                           {pixQrPreview && (
-                            <div className="mt-4 flex flex-col items-center justify-center p-5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 w-full">
-                              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3">QR Code Pix</div>
+                            <div className="mt-4 flex flex-col items-center justify-center p-5 bg-black/10 dark:bg-black/40 backdrop-blur-md rounded-xl border border-black/10 dark:border-white/10 w-full">
+                              <div className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">QR Code Pix</div>
                               <img src={pixQrPreview} alt="QR Pix" className="w-32 h-32 rounded-xl shadow-md mb-4 object-contain bg-white p-2" />
                               <button
                                   type="button"
@@ -1440,7 +1469,7 @@ export default function Configuracoes() {
                             
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h2 className="text-lg font-bold flex items-center gap-2">
-                        <FileText size={20} className="text-slate-400" /> Timbrado
+                        <FileText size={20} className="text-[var(--gm-primary)]" /> Timbrado
                       </h2>
                     </div>
 
@@ -1481,7 +1510,7 @@ export default function Configuracoes() {
                             
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h2 className="text-lg font-bold flex items-center gap-2">
-                        <Bell size={20} className="text-slate-400" /> Notificações Push
+                        <Bell size={20} className="text-[var(--gm-primary)]" /> Notificações Push
                       </h2>
                     </div>
 

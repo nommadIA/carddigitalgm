@@ -68,6 +68,18 @@ export default function Financial() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [shareData, setShareData] = useState<{ title: string; message: string } | null>(null);
 
+  function normalizeStatus(v?: string | null) {
+    if (!v) return "AGUARDANDO";
+    const up = v.toUpperCase();
+    if (up.includes("CONCLU")) return "CONCLUIDO";
+    if (up.includes("CANCEL")) return "CANCELADO";
+    if (up.includes("APROV")) return "APROVADO";
+    if (up.includes("AGUAR")) return "AGUARDANDO";
+    if (up.includes("PROD") || up.includes("FAZ") || up.includes("EM ")) return "PRODUCAO";
+    if (up.includes("PRONTO")) return "PRONTO";
+    return up;
+  }
+
   const loadData = async () => {
     setLoading(true);
     const start = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
@@ -79,9 +91,8 @@ export default function Financial() {
     const daysInMonth = end.getDate();
     let budgetsQ = supabase
       .from("budgets")
-      .select("id, created_at, total_amount, status, client_name, tenant_id")
-      .gte("created_at", `${startISO}T00:00:00`)
-      .lte("created_at", `${endISO}T23:59:59`);
+      .select("*")
+      .or(`completed_at.gte.${startISO}T00:00:00,created_at.gte.${startISO}T00:00:00`);
 
     if (tenantId) budgetsQ = budgetsQ.eq("tenant_id", tenantId);
 
@@ -110,9 +121,13 @@ export default function Financial() {
     const allTrans: Transaction[] = [];
 
     (budgets ?? [])
-      .filter((b: any) => String(b.status || "").toLowerCase().includes("concl"))
+      .filter((b: any) => normalizeStatus(b.status) === "CONCLUIDO")
       .forEach((b: any) => {
-        const day = String(b.created_at).slice(0, 10);
+        const dateToUse = b.completed_at || b.created_at;
+        const dateObj = new Date(dateToUse);
+        if (dateObj < start || dateObj > end) return; // ignore if outside current month
+
+        const day = String(dateToUse).slice(0, 10);
         const val = Number(b.total_amount || 0);
         const item = map.get(day);
         if (item) item.entradas += val;
@@ -122,7 +137,7 @@ export default function Financial() {
           desc: b.client_name || "Orçamento",
           amount: val,
           type: "receita",
-          date: b.created_at,
+          date: dateToUse,
         });
       });
 

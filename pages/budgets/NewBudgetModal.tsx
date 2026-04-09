@@ -61,27 +61,29 @@ const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(ma
 
 // Helper para extrair dados da descrição salva (Engenharia reversa do texto)
 function parseDescription(fullDesc: string) {
-  // Padrão salvo: "Descrição... | Prazo: X dias • Arte Inclusa: Sim"
-  const parts = fullDesc.split("Prazo:");
-
-  if (parts.length < 2) {
-    return { description: fullDesc, deliveryTime: "3 dias", artworkIncluded: false };
-  }
-
-  let description = parts[0].trim();
-  description = description.replace(/\n+$/, "");
-
+  // Padrão antigo: "Descrição... \n\nPrazo: X dias • Arte Inclusa: Sim"
+  // Padrão novo: "Descrição... \n\nArte Inclusa: Sim"
+  
+  let description = fullDesc;
   let deliveryTime = "3 dias";
   let artworkIncluded = false;
 
-  const metaPart = parts[1];
-  const metaSplit = metaPart.split("• Arte Inclusa:");
-
-  if (metaSplit.length > 0) deliveryTime = metaSplit[0].trim();
-  if (metaSplit.length > 1) {
-    const artVal = metaSplit[1].trim();
-    artworkIncluded = artVal === "Sim";
+  if (fullDesc.includes("Prazo:")) {
+    const parts = fullDesc.split("Prazo:");
+    description = parts[0].trim();
+    const metaPart = parts[1];
+    const metaSplit = metaPart.split("• Arte Inclusa:");
+    if (metaSplit.length > 0) deliveryTime = metaSplit[0].trim();
+    if (metaSplit.length > 1) {
+      artworkIncluded = metaSplit[1].trim() === "Sim";
+    }
+  } else if (fullDesc.includes("Arte Inclusa:")) {
+    const parts = fullDesc.split("Arte Inclusa:");
+    description = parts[0].trim();
+    artworkIncluded = parts[1].trim() === "Sim";
   }
+
+  description = description.replace(/\n+$/, "");
 
   return { description, deliveryTime, artworkIncluded };
 }
@@ -566,7 +568,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
       }
 
       const dbItems = validItems.map((it) => {
-        const extraInfo = `\n\nPrazo: ${it.deliveryTime || "Combinar"} • Arte Inclusa: ${
+        const extraInfo = `\n\nPrazo: ${deliveryDays} dias • Arte Inclusa: ${
           it.artworkIncluded ? "Sim" : "Não"
         }`;
         const finalDescription = (it.description + extraInfo).trim();
@@ -833,19 +835,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4 items-end">
-                    <div>
-                      <label style={labelTop}>
-                        <Clock size={10} className="inline mr-1" /> Prazo de Entrega
-                      </label>
-                      <input
-                        type="text"
-                        style={inputBig}
-                        value={item.deliveryTime}
-                        onChange={(e) => updateItem(item.id, { deliveryTime: e.target.value })}
-                        placeholder="Ex: 3 dias úteis"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 items-end">
                     <div>
                       <label style={labelTop}>
                         <Brush size={10} className="inline mr-1" /> Arte Inclusa?
