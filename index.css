@@ -446,7 +446,9 @@ button{ font-family:inherit; }
 }
 [data-button-style="solid"] .gm-btn.gm-btn-outline,
 .gm-preview-container[data-button-style="solid"] .gm-btn.gm-btn-outline {
-  background-color: transparent !important;
+  background-color: rgba(30, 41, 59, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   border: 1px solid var(--gm-primary) !important;
   color: var(--gm-primary) !important;
   box-shadow: none !important;
@@ -506,7 +508,9 @@ button{ font-family:inherit; }
 }
 [data-button-style="neon"] .gm-btn.gm-btn-outline,
 .gm-preview-container[data-button-style="neon"] .gm-btn.gm-btn-outline {
-  background: transparent !important;
+  background: rgba(30, 41, 59, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   color: #fff !important;
 }

@@ -288,7 +288,7 @@ const Dashboard = () => {
       <div className={viewMode === "smartphone" ? "flex flex-col gap-2" : "grid grid-cols-3 gap-4"}>
         {/* CARD 1: FATURAMENTO */}
         <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "w-full" : ""}>
-          <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
+          <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
             <div className="flex items-center justify-between relative z-10">
               <div>
                 <h3 className="text-white text-[13px] md:text-[14px] font-bold uppercase tracking-wider mb-0.5 md:mb-1">
@@ -320,7 +320,7 @@ const Dashboard = () => {
 
         {/* CARD 2: CLIENTES ATIVOS */}
         <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "w-full" : ""}>
-          <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
+          <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
             <div className="flex items-center justify-between relative z-10">
               <div>
                 <h3 className="text-white text-[13px] md:text-[14px] font-bold uppercase tracking-wider mb-0.5 md:mb-1">
@@ -345,7 +345,7 @@ const Dashboard = () => {
 
         {/* CARD 3: PROJETOS */}
         <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "w-full" : ""}>
-          <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
+          <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
             <div className="flex items-center justify-between relative z-10">
               <div>
                 <h3 className="text-white text-[13px] md:text-[14px] font-bold uppercase tracking-wider mb-0.5 md:mb-1">
@@ -389,7 +389,7 @@ const Dashboard = () => {
       <div className={viewMode === "smartphone" ? "flex flex-col gap-2" : "grid grid-cols-3 gap-4"}>
         {/* NA FILA (BRANCO/DARK) - Relógio SVG com Ponteiro Animado */}
         <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "w-full" : ""}>
-          <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
+          <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
             <div className="flex items-center justify-between relative z-10">
               <div>
                 <h3 className="text-white text-[13px] md:text-[14px] font-bold uppercase tracking-wider mb-0.5 md:mb-1">
@@ -434,7 +434,7 @@ const Dashboard = () => {
         </motion.div>
 
         <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "w-full" : ""}>
-          <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
+          <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
             <div className="flex items-center justify-between relative z-10">
               <div>
                 <h3 className="text-white text-[13px] md:text-[14px] font-bold uppercase tracking-wider mb-0.5 md:mb-1">
@@ -458,7 +458,7 @@ const Dashboard = () => {
         </motion.div>
 
         <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "w-full" : ""}>
-          <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
+          <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-2 md:py-4 px-3 md:px-5 relative overflow-hidden group">
             <div className="flex items-center justify-between relative z-10">
               <div>
                 <h3 className="text-white text-[13px] md:text-[14px] font-bold uppercase tracking-wider mb-0.5 md:mb-1">
@@ -491,7 +491,7 @@ const Dashboard = () => {
         {/* Novo Orçamento */}
         <motion.div variants={itemVariants}>
           <Link to="/budgets?new=true" className="group block">
-            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-3xl">
+            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
               <div className="w-[50px] h-[50px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-colors">
                 <Plus size={25} strokeWidth={1.5} />
               </div>
@@ -507,7 +507,7 @@ const Dashboard = () => {
         {/* Clientes */}
         <motion.div variants={itemVariants}>
           <Link to="/clients" className="group block">
-            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-3xl">
+            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
               <div className="w-[50px] h-[50px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-colors">
                 <Users size={25} strokeWidth={1.5} />
               </div>
@@ -523,7 +523,7 @@ const Dashboard = () => {
         {/* Financeiro */}
         <motion.div variants={itemVariants}>
           <Link to="/financial" className="group block">
-            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-3xl">
+            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
               <div className="w-[50px] h-[50px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-colors">
                 <Wallet size={25} strokeWidth={1.5} />
               </div>
@@ -539,7 +539,7 @@ const Dashboard = () => {
         {/* Mercado */}
         <motion.div variants={itemVariants}>
           <Link to="/market" className="group block">
-            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-3xl">
+            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
               <div className="w-[50px] h-[50px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-colors">
                 <ShoppingCart size={25} strokeWidth={1.5} />
               </div>
@@ -561,7 +561,7 @@ const Dashboard = () => {
       <div className={viewMode === "smartphone" ? "flex flex-col gap-2" : "grid grid-cols-3 gap-4"}>
         {/* FATURAMENTO TOTAL */}
         <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "w-full" : ""}>
-          <Card className="!border-none !shadow-none transition-all duration-300 py-2 md:py-5 px-3 md:px-6 flex flex-col justify-center h-full bg-white dark:bg-slate-800">
+          <Card className="!border-none !shadow-none transition-all duration-300 py-2 md:py-5 px-3 md:px-6 flex flex-col justify-center h-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md">
             <div className="flex items-center justify-between gap-4">
               <div className="flex flex-col gap-0.5 md:gap-1 min-w-0">
                 <h3 className="text-white text-[12px] md:text-[13px] font-bold uppercase tracking-widest truncate">
@@ -586,7 +586,7 @@ const Dashboard = () => {
 
         {/* TOTAL CLIENTES */}
         <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "w-full" : ""}>
-          <Card className="!border-none !shadow-none transition-all duration-300 py-2 md:py-5 px-3 md:px-6 flex flex-col justify-center h-full bg-white dark:bg-slate-800">
+          <Card className="!border-none !shadow-none transition-all duration-300 py-2 md:py-5 px-3 md:px-6 flex flex-col justify-center h-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md">
             <div className="flex items-center justify-between gap-4">
               <div className="flex flex-col gap-0.5 md:gap-1 min-w-0">
                 <h3 className="text-white text-[12px] md:text-[13px] font-bold uppercase tracking-widest truncate">
@@ -608,7 +608,7 @@ const Dashboard = () => {
 
         {/* PROJETOS CONCLUÍDOS */}
         <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "w-full" : ""}>
-          <Card className="!border-none !shadow-none transition-all duration-300 py-2 md:py-5 px-3 md:px-6 flex flex-col justify-center h-full bg-white dark:bg-slate-800">
+          <Card className="!border-none !shadow-none transition-all duration-300 py-2 md:py-5 px-3 md:px-6 flex flex-col justify-center h-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md">
             <div className="flex items-center justify-between gap-4">
               <div className="flex flex-col gap-0.5 md:gap-1 min-w-0">
                 <h3 className="text-white text-[12px] md:text-[13px] font-bold uppercase tracking-widest truncate">

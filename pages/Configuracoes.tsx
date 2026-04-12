@@ -702,14 +702,14 @@ export default function Configuracoes() {
           {loading ? (
             <Card className="text-center p-10">Carregando...</Card>
           ) : viewMode === "desktop" ? (
-            <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 pb-6 items-stretch lg:auto-rows-fr">
+            <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 pb-6 items-stretch">
               
               {/* ROW 1 */}
               <div className="flex flex-col h-full">
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
                   <Palette size={20} className="text-[var(--gm-primary)]" /> Personalização
                 </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
                   <div className="flex flex-col gap-8 h-full flex-1">
                     <div className="flex flex-col items-center gap-2 shrink-0">
                       <div className="w-32 h-32 rounded-2xl bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
@@ -795,7 +795,7 @@ export default function Configuracoes() {
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
                   <Paintbrush size={20} className="text-[var(--gm-primary)]" /> Cores & Fonte
                 </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
                   <div className="flex flex-col gap-8 h-full flex-1">
                     <div className="flex-1 flex flex-col justify-center">
                       <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">Estilo dos Botões</label>
@@ -857,7 +857,7 @@ export default function Configuracoes() {
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
                   <ImageIcon size={20} className="text-[var(--gm-primary)]" /> Plano de Fundo
                 </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
                   <div className="flex flex-col h-full flex-1">
                     <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 shrink-0">
                       <div>
@@ -930,7 +930,7 @@ export default function Configuracoes() {
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
                   <CreditCard size={20} className="text-[var(--gm-primary)]" /> Dados de Pagamento
                 </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
                   <div className="flex flex-col gap-6 h-full flex-1">
                     <div className="shrink-0">
                       <div className="font-bold text-sm uppercase tracking-wider text-[var(--gm-primary)] mb-1">Dados de Pagamento (Pix)</div>
@@ -1022,7 +1022,7 @@ export default function Configuracoes() {
                           </div>
                         ) : (
                           <div className="flex flex-col h-full justify-between flex-1">
-                            <div className="text-[10px] leading-relaxed font-mono break-all bg-white dark:bg-slate-800 border border-black/10 dark:border-white/10 rounded-lg p-3 text-slate-600 dark:text-slate-300 mb-4 max-h-[140px] overflow-y-auto">
+                            <div className="text-[10px] leading-relaxed font-mono break-all bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-lg p-3 text-slate-600 dark:text-slate-300 mb-4 max-h-[140px] overflow-y-auto">
                               {pixPayloadPreview}
                             </div>
                             
@@ -1064,14 +1064,14 @@ export default function Configuracoes() {
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
                   <FileText size={20} className="text-[var(--gm-primary)]" /> Timbrado
                 </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col gap-8 h-full flex-1 justify-center">
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-4 px-4 relative overflow-hidden group">
+                  <div className="flex flex-col gap-4 h-full flex-1 justify-center">
                     <div className="w-full">
-                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-6 block text-center">Timbrado A4 (PDF/JPG/PNG)</label>
-                      <div className="flex items-start gap-10 justify-center">
-                        <div className="flex flex-col items-center gap-4 flex-1 max-w-[240px]">
+                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-4 block text-center">Timbrado A4 (PDF/JPG/PNG)</label>
+                      <div className="flex items-start gap-8 justify-center">
+                        <div className="flex flex-col items-center gap-3 flex-1 max-w-[200px]">
                           <span className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Seu Timbrado</span>
-                          <div className="w-56 h-80 rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+                          <div className="w-full aspect-[1/1.414] rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
                             {uploadingTimbrado ? <Loader2 size={48} className="animate-spin text-slate-400" /> : timbradoUrl ? <img src={timbradoUrl} alt="Timbrado" className="w-full h-full object-cover" /> : <FileText size={48} className="opacity-50 text-slate-400" />}
                           </div>
                           <label className={`gm-btn w-full py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingTimbrado ? "opacity-50 pointer-events-none" : ""}`}>
@@ -1080,9 +1080,9 @@ export default function Configuracoes() {
                             <input type="file" accept="image/*,application/pdf" className="hidden" disabled={uploadingTimbrado} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadTimbrado(f); }} />
                           </label>
                         </div>
-                        <div className="flex flex-col items-center gap-4 flex-1 max-w-[240px]">
+                        <div className="flex flex-col items-center gap-3 flex-1 max-w-[200px]">
                           <span className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Gabarito</span>
-                          <div className="w-56 h-80 rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+                          <div className="w-full aspect-[1/1.414] rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
                             <img src={TIMBRADO_MODEL_URL} alt="Gabarito" className="w-full h-full object-cover" />
                           </div>
                           <a href={TIMBRADO_MODEL_URL} target="_blank" rel="noopener noreferrer" className="gm-btn w-full py-2 flex items-center justify-center gap-2">
@@ -1100,7 +1100,7 @@ export default function Configuracoes() {
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
                   <Bell size={20} className="text-[var(--gm-primary)]" /> Notificações Push
                 </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white dark:bg-slate-800 transition-all duration-300 py-6 px-4 relative overflow-hidden group items-center justify-center text-center">
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-4 px-4 relative overflow-hidden group items-center justify-center text-center">
                   <div className="flex flex-col items-center justify-center w-full max-w-sm mx-auto flex-1">
                     {/* Background Glow */}
                     <div className={`absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full opacity-20 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`} />
@@ -1199,7 +1199,7 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
-                      <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
+                      <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <div className="flex flex-col items-center gap-2">
                           <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
                             {uploadingLogo ? (
@@ -1218,7 +1218,7 @@ export default function Configuracoes() {
                         </div>
                       </Card>
 
-                      <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
+                      <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <div className="space-y-4">
                           <div className="space-y-1.5">
                             <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Nome da empresa</label>
@@ -1252,7 +1252,7 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
-                      <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
+                      <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <div className="space-y-4">
                           <div className="flex items-center justify-between bg-black/10 dark:bg-black/40 backdrop-blur-md p-4 rounded-xl border border-black/10 dark:border-white/10">
                             <div>
@@ -1315,7 +1315,7 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
-                      <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
+                      <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">Misturador de Cores</label>
                         <div className="flex flex-col gap-3">
                           <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
@@ -1348,7 +1348,7 @@ export default function Configuracoes() {
                         </div>
                       </Card>
 
-                      <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
+                      <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">Estilo dos Botões</label>
                         <div className="grid grid-cols-2 gap-3">
                           {BUTTON_STYLES.map((s) => {
@@ -1383,7 +1383,7 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
-                      <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
+                      <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block text-center">Família de Fonte</label>
                         <div className="grid grid-cols-2 gap-3">
                           {["Inter", "Roboto", "Poppins", "Montserrat", "Open Sans", "Lato", "Oswald", "Raleway"].map((font) => {
@@ -1420,7 +1420,7 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
-                      <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
+                      <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <div className="space-y-2">
                           <div>
                             <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-1 block">Tipo de Chave</label>
@@ -1474,30 +1474,28 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
-                      <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-start gap-2 justify-center">
-                            <div className="flex flex-col items-center gap-2 flex-1">
-                              <span className="text-[10px] font-semibold text-white bg-slate-800/50 px-2 py-1 rounded-md">Seu Timbrado</span>
-                              <div className="w-36 h-52 rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
-                                {uploadingTimbrado ? <Loader2 size={24} className="animate-spin text-slate-400" /> : timbradoUrl ? <img src={timbradoUrl} alt="Timbrado" className="w-full h-full object-cover" /> : <FileText size={32} className="opacity-50 text-slate-400" />}
-                              </div>
-                              <label className={`gm-btn w-full py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingTimbrado ? "opacity-50 pointer-events-none" : ""}`}>
-                                {uploadingTimbrado ? <Loader2 size={14} className="animate-spin" /> : <FileImage size={14} />}
-                                {uploadingTimbrado ? "Enviando..." : "Importar"}
-                                <input type="file" accept="image/*,application/pdf" className="hidden" disabled={uploadingTimbrado} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadTimbrado(f); }} />
-                              </label>
+                      <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
+                        <div className="flex flex-col gap-6">
+                          <div className="flex flex-col items-center gap-3 w-full">
+                            <span className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Seu Timbrado</span>
+                            <div className="w-full max-w-[240px] aspect-[1/1.414] rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+                              {uploadingTimbrado ? <Loader2 size={32} className="animate-spin text-slate-400" /> : timbradoUrl ? <img src={timbradoUrl} alt="Timbrado" className="w-full h-full object-contain" /> : <FileText size={48} className="opacity-50 text-slate-400" />}
                             </div>
-                            <div className="flex flex-col items-center gap-2 flex-1">
-                              <span className="text-[10px] font-semibold text-white bg-slate-800/50 px-2 py-1 rounded-md">Gabarito</span>
-                              <div className="w-36 h-52 rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
-                                <img src={TIMBRADO_MODEL_URL} alt="Gabarito" className="w-full h-full object-cover" />
-                              </div>
-                              <a href={TIMBRADO_MODEL_URL} target="_blank" rel="noopener noreferrer" className="gm-btn w-full py-2 flex items-center justify-center gap-2">
-                                <Download size={14} />
-                                Baixar
-                              </a>
+                            <label className={`gm-btn w-full max-w-[240px] py-3 flex items-center justify-center gap-2 cursor-pointer ${uploadingTimbrado ? "opacity-50 pointer-events-none" : ""}`}>
+                              {uploadingTimbrado ? <Loader2 size={16} className="animate-spin" /> : <FileImage size={16} />}
+                              {uploadingTimbrado ? "Enviando..." : "Importar"}
+                              <input type="file" accept="image/*,application/pdf" className="hidden" disabled={uploadingTimbrado} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadTimbrado(f); }} />
+                            </label>
+                          </div>
+                          <div className="flex flex-col items-center gap-3 w-full">
+                            <span className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Gabarito</span>
+                            <div className="w-full max-w-[240px] aspect-[1/1.414] rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+                              <img src={TIMBRADO_MODEL_URL} alt="Gabarito" className="w-full h-full object-contain" />
                             </div>
+                            <a href={TIMBRADO_MODEL_URL} target="_blank" rel="noopener noreferrer" className="gm-btn w-full max-w-[240px] py-3 flex items-center justify-center gap-2">
+                              <Download size={16} />
+                              Baixar
+                            </a>
                           </div>
                         </div>
                       </Card>
@@ -1515,7 +1513,7 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="flex flex-col gap-2 h-auto">
-                      <Card className="!border-none !shadow-none bg-white dark:bg-slate-800 transition-all duration-300 py-3 px-3 relative overflow-hidden group flex flex-col items-center justify-center text-center h-auto">
+                      <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-3 px-3 relative overflow-hidden group flex flex-col items-center justify-center text-center h-auto">
                         {/* Background Glow */}
                         <div className={`absolute -top-10 -right-10 w-48 h-48 blur-3xl rounded-full opacity-20 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`} />
                         
