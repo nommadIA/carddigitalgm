@@ -672,7 +672,7 @@ export default function Configuracoes() {
           </AnimatePresence>
           <button
             type="button"
-            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-md !bg-orange-500 !text-white !border-none hover:!bg-orange-600"
+            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-md !bg-[var(--gm-primary)] !text-white !border-none hover:brightness-110"
             onClick={exportJson}
             title="Exportar JSON"
           >
@@ -682,7 +682,7 @@ export default function Configuracoes() {
 
           <button
             type="button"
-            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-md !bg-orange-500 !text-white !border-none hover:!bg-orange-600"
+            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-md !bg-[var(--gm-primary)] !text-white !border-none hover:brightness-110"
             onClick={handleSave}
             disabled={saving}
           >
@@ -1591,7 +1591,7 @@ export default function Configuracoes() {
                     setCurrentScreen(idx);
                   }}
                   className={`h-1 rounded-full transition-all duration-300 ${
-                    idx === currentScreen ? "w-4 bg-[#ff6600] shadow-[0_0_8px_#ff6600]" : "w-1 bg-white/50"
+                    idx === currentScreen ? "w-4 bg-[var(--gm-primary)] shadow-[0_0_8px_var(--gm-primary-30)]" : "w-1 bg-white/50"
                   }`}
                 />
               ))}

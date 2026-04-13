@@ -365,7 +365,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </div>
             </div>
             <div className="flex flex-col leading-tight">
-                <span className="text-lg font-bold text-white">CardDigital <span className="text-[var(--gm-primary)]">GM</span></span>
+                <span className="text-lg font-bold text-white">CardDigital <span className="text-[#ff7a00]">GM</span></span>
             </div>
         </div>
         <div className="flex items-center gap-2">
@@ -393,7 +393,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 </div>
               </div>
               <div className="flex items-center gap-1 leading-none">
-                  <span className="text-lg font-bold text-white">CardDigital <span className="text-[var(--gm-primary)]">GM</span></span>
+                  <span className="text-lg font-bold text-white">CardDigital <span className="text-[#ff7a00]">GM</span></span>
               </div>
           </div>
         )}

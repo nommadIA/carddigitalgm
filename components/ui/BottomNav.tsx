@@ -46,7 +46,7 @@ export default function BottomNav() {
           >
             <button
               onClick={() => setIsVisible(true)}
-              className="bg-[#ff6600] text-white text-sm font-black uppercase tracking-wider px-12 py-2.5 rounded-t-2xl rounded-b-none shadow-lg shadow-black/50"
+              className="bg-[var(--gm-primary)] text-white text-sm font-black uppercase tracking-wider px-12 py-2.5 rounded-t-2xl rounded-b-none shadow-lg shadow-black/50"
             >
               MENU
             </button>
@@ -93,7 +93,7 @@ export default function BottomNav() {
                   >
                     {({ isActive }) => (
                       <>
-                        <div className={`p-1.5 transition-all ${isActive ? 'text-[var(--gm-primary)] drop-shadow-[0_0_8px_rgba(255,123,0,0.6)]' : ''}`}>
+                        <div className={`p-1.5 transition-all ${isActive ? 'text-[var(--gm-primary)] drop-shadow-[0_0_8px_var(--gm-primary-30)]' : ''}`}>
                           <Icon size={22} />
                         </div>
                         <span className={`text-[11px] font-bold mt-0.5 tracking-tight ${isActive ? 'opacity-100' : 'opacity-60'}`}>

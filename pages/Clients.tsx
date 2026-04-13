@@ -318,19 +318,19 @@ export default function Clients() {
                       <div className="flex gap-2" style={{ flexShrink: 0 }}>
                         {tab === "LIXEIRA" ? (
                           <>
-                            <button className="gm-btn gm-btn-icon gm-btn-accent" title="Restaurar" type="button" onClick={() => restore(c.id)}>↩️</button>
+                            <button className="gm-btn gm-btn-icon" title="Restaurar" type="button" onClick={() => restore(c.id)}>↩️</button>
                             <button className="gm-btn gm-btn-icon gm-btn-danger" title="Excluir definitivo" type="button" onClick={() => confirmHardDelete(c.id)}>
                               <Trash2 size={16} />
                             </button>
                           </>
                         ) : (
                           <>
-                            <button className="gm-btn gm-btn-icon gm-btn-accent" title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
+                            <button className="gm-btn gm-btn-icon" title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
                               <Pencil size={16} />
                             </button>
 
                             <button
-                              className={`gm-btn gm-btn-icon gm-btn-accent ${!hasWpp ? 'opacity-50' : ''}`}
+                              className={`gm-btn gm-btn-icon ${!hasWpp ? 'opacity-50' : ''}`}
                               title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
                               type="button"
                               onClick={() => {

@@ -79,7 +79,7 @@ export default function Register() {
 
             <div className="text-4xl font-light text-white leading-none">
               <span className="opacity-95">CardDigital</span>{" "}
-              <span className="text-[var(--gm-primary)] font-bold">GM</span>
+              <span className="text-[#ff7a00] font-bold">GM</span>
             </div>
             <div className="text-sm opacity-60 mt-3">Crie sua conta para começar</div>
           </div>

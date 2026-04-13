@@ -656,14 +656,14 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             </button>
 
             <button
-              className="group relative p-6 rounded-2xl border border-white/10 bg-white/5 hover:bg-[var(--gm-accent)]/10 hover:border-[var(--gm-accent)]/50 transition-all text-left flex flex-col gap-4"
+              className="group relative p-6 rounded-2xl border border-white/10 bg-white/5 hover:bg-[var(--gm-primary)]/10 hover:border-[var(--gm-primary)]/50 transition-all text-left flex flex-col gap-4"
               onClick={() => applyTemplate("print")}
             >
-              <div className="w-14 h-14 rounded-xl bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] flex items-center justify-center border border-[var(--gm-accent)]/20 group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/20 group-hover:scale-110 transition-transform">
                 <Printer size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-accent)]">
+                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)]">
                   Impressão & Gráfica
                 </h3>
                 <p className="text-sm text-slate-400 mt-1 leading-relaxed">

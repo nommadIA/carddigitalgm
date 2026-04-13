@@ -114,7 +114,7 @@ export default function Login() {
 
             <div className="flex items-center justify-center text-center leading-none gap-2">
               <span className="text-3xl font-light text-slate-200 tracking-tight">CardDigital</span>
-              <span className="text-4xl font-semibold text-[var(--gm-primary)] drop-shadow-[0_0_15px_rgba(255,122,0,0.3)]">GM</span>
+              <span className="text-4xl font-semibold text-[#ff7a00] drop-shadow-[0_0_15px_rgba(255,122,0,0.3)]">GM</span>
             </div>
             <div className="text-sm opacity-50 mt-4 uppercase tracking-[0.2em] font-bold">Acesso Restrito</div>
           </div>

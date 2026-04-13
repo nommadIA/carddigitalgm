@@ -272,7 +272,7 @@ button{ font-family:inherit; }
 }
 .gm-nav a.active svg {
   color: var(--gm-primary);
-  filter: drop-shadow(0 0 8px rgba(255, 123, 0, 0.6));
+  filter: drop-shadow(0 0 8px var(--gm-primary-30));
 }
 .gm-sidebar.collapsed .gm-nav a span{ display:none; }
 .gm-sidebar.collapsed .gm-nav a{ justify-content:center; padding:11px; }
@@ -774,9 +774,9 @@ body{ overflow: hidden; }
   height: 200%;
   background: conic-gradient(
     transparent, 
-    #ffcc00 10%, 
-    #ff7a00 20%, 
-    #ff0000 30%, 
+    var(--gm-accent, #ffcc00) 10%, 
+    var(--gm-primary, #ff7a00) 20%, 
+    var(--gm-primary, #ff0000) 30%, 
     transparent 40%
   );
   animation: rotateNeon 2.5s linear infinite;
