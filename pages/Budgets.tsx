@@ -404,10 +404,10 @@ export default function Budgets() {
               <button
                 key={status}
                 onClick={() => setTab(status as TabKey)}
-                className={`relative px-5 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all duration-300 whitespace-nowrap border ${
+                className={`relative px-6 py-3 rounded-full text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border-2 ${
                   active 
-                    ? "bg-[var(--gm-primary)]/15 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_15px_var(--gm-primary-10)]" 
-                    : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10"
+                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_20px_var(--gm-primary-20)] scale-105" 
+                    : "bg-black/40 border-white/10 text-slate-400 hover:bg-white/10 hover:border-white/20 hover:text-white"
                 }`}
               >
                 {label}
@@ -418,10 +418,10 @@ export default function Budgets() {
           {/* Lixeira separada */}
           <button
             onClick={() => setTab("LIXEIRA")}
-            className={`px-5 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all duration-300 whitespace-nowrap border ${
+            className={`px-6 py-3 rounded-full text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border-2 ${
               tab === "LIXEIRA"
-                ? "bg-red-500/15 border-red-500 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
-                : "bg-red-500/5 border-red-500/20 text-red-400 hover:bg-red-500/10"
+                ? "bg-red-500/20 border-red-500 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)] scale-105"
+                : "bg-black/40 border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-300"
             }`}
           >
             LIXEIRA

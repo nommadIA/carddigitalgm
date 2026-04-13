@@ -438,7 +438,7 @@ button{ font-family:inherit; }
 [data-button-style="solid"] .gm-btn,
 .gm-preview-container[data-button-style="solid"] .gm-btn {
   background-color: var(--gm-primary) !important;
-  color: var(--gm-primary-foreground, #fff) !important;
+  color: #ffffff !important;
   border: none !important;
   box-shadow: none !important;
 }
@@ -450,17 +450,17 @@ button{ font-family:inherit; }
 }
 [data-button-style="solid"] .gm-btn.gm-btn-outline,
 .gm-preview-container[data-button-style="solid"] .gm-btn.gm-btn-outline {
-  background-color: rgba(30, 41, 59, 0.8) !important;
+  background-color: rgba(0, 0, 0, 0.4) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
   border: 1px solid var(--gm-primary) !important;
-  color: var(--gm-primary) !important;
+  color: #ffffff !important;
   box-shadow: none !important;
 }
 [data-button-style="solid"] .gm-btn.gm-btn-soft,
 .gm-preview-container[data-button-style="solid"] .gm-btn.gm-btn-soft {
   background-color: var(--gm-primary-10) !important;
-  color: var(--gm-primary) !important;
+  color: #ffffff !important;
   border: none !important;
   box-shadow: none !important;
 }
@@ -479,7 +479,7 @@ button{ font-family:inherit; }
 [data-button-style="solid"] .gm-btn.gm-btn-accent,
 .gm-preview-container[data-button-style="solid"] .gm-btn.gm-btn-accent {
   background-color: var(--gm-accent) !important;
-  color: var(--gm-primary-foreground, #fff) !important;
+  color: #ffffff !important;
   border: none !important;
   box-shadow: none !important;
 }
@@ -497,7 +497,7 @@ button{ font-family:inherit; }
   border: 1px solid rgba(var(--gm-primary-rgb), 0.4) !important;
   backdrop-filter: blur(16px) saturate(1.8) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.8) !important;
-  color: var(--gm-button-text, var(--gm-primary)) !important;
+  color: #ffffff !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1),
               inset 0 0 12px rgba(var(--gm-primary-rgb), 0.05) !important;
   text-shadow: 0 0 10px rgba(var(--gm-primary-rgb), 0.4) !important;
@@ -512,7 +512,7 @@ button{ font-family:inherit; }
 }
 [data-button-style="neon"] .gm-btn.gm-btn-outline,
 .gm-preview-container[data-button-style="neon"] .gm-btn.gm-btn-outline {
-  background: rgba(30, 41, 59, 0.8) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -521,7 +521,7 @@ button{ font-family:inherit; }
 [data-button-style="neon"] .gm-btn.gm-btn-outline:hover,
 .gm-preview-container[data-button-style="neon"] .gm-btn.gm-btn-outline:hover {
   border-color: var(--gm-primary) !important;
-  color: var(--gm-primary) !important;
+  color: #ffffff !important;
   box-shadow: 0 0 15px var(--gm-primary-20) !important;
 }
 [data-button-style="neon"] .gm-btn.gm-btn-soft,
@@ -539,7 +539,7 @@ button{ font-family:inherit; }
 .gm-preview-container[data-button-style="neon"] .gm-btn.gm-btn-danger {
   background: rgba(220, 38, 38, 0.1) !important;
   border: 1px solid rgba(220, 38, 38, 0.5) !important;
-  color: #ef4444 !important;
+  color: #ffffff !important;
   text-shadow: 0 0 10px rgba(239, 68, 68, 0.4) !important;
 }
 [data-button-style="neon"] .gm-btn.gm-btn-danger:hover,
@@ -552,7 +552,7 @@ button{ font-family:inherit; }
 .gm-preview-container[data-button-style="neon"] .gm-btn.gm-btn-accent {
   background: rgba(var(--gm-accent-rgb), 0.1) !important;
   border: 1px solid rgba(var(--gm-accent-rgb), 0.5) !important;
-  color: var(--gm-accent) !important;
+  color: #ffffff !important;
   text-shadow: 0 0 12px rgba(var(--gm-accent-rgb), 0.5) !important;
   backdrop-filter: blur(16px) saturate(1.8) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.8) !important;

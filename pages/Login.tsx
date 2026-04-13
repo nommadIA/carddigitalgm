@@ -101,12 +101,13 @@ export default function Login() {
               transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
               className="relative mb-6 flex items-center justify-center"
             >
-              <div className="gm-neon-glow w-32 h-32"></div>
-              <div className="gm-neon-box w-28 h-28 rounded-[28px]">
+              <div className="gm-logo-box" style={{ width: '110px', height: '110px' }}>
+                <div className="gm-logo-glow-wrapper"></div>
+                <div className="gm-logo-border-wrapper"></div>
                 <img
                   src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
                   alt="Logo CardDigital GM"
-                  className="gm-neon-logo"
+                  className="gm-logo"
                 />
               </div>
             </motion.div>

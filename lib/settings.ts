@@ -116,6 +116,12 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
     root.style.setProperty("--gm-primary", s.brand_primary);
     root.style.setProperty("--brand-primary", s.brand_primary);
     
+    // Atualiza a cor da barra de status do celular
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute("content", s.brand_primary);
+    }
+    
     const rgb = hexToRgb(s.brand_primary);
     if (rgb) {
       root.style.setProperty("--gm-primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
