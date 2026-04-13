@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { ChevronDown, Search } from 'lucide-react';
 
 export interface SelectOption {
   value: string | number;
@@ -14,6 +14,7 @@ interface SelectProps {
   disabled?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  searchable?: boolean;
 }
 
 export default function Select({
@@ -23,17 +24,27 @@ export default function Select({
   placeholder = "Selecione...",
   disabled = false,
   className = "",
-  style = {}
+  style = {},
+  searchable = false
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const selectedOption = options.find(opt => String(opt.value) === String(value));
+
+  const filteredOptions = useMemo(() => {
+    if (!searchable || !searchQuery.trim()) return options;
+    const lowerQuery = searchQuery.toLowerCase();
+    return options.filter(opt => opt.label.toLowerCase().includes(lowerQuery));
+  }, [options, searchable, searchQuery]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setSearchQuery("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -43,6 +54,14 @@ export default function Select({
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (isOpen && searchable && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+    }
+  }, [isOpen, searchable]);
 
   return (
     <div 
@@ -65,31 +84,52 @@ export default function Select({
 
       {isOpen && (
         <div 
-          className="absolute z-[10000] top-[calc(100%+8px)] left-0 w-full max-h-60 overflow-y-auto rounded-xl bg-black/80 backdrop-blur-2xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.8)] custom-scrollbar"
+          className="absolute z-[10000] top-[calc(100%+8px)] left-0 w-full max-h-80 overflow-hidden flex flex-col rounded-xl bg-black/80 backdrop-blur-2xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.8)]"
           style={{
             WebkitBackdropFilter: "blur(24px)",
             backdropFilter: "blur(24px)",
             padding: 0, // Reset padding for the dropdown
           }}
+          onClick={(e) => e.stopPropagation()}
         >
-          {options.length === 0 ? (
-            <div className="p-3 text-sm text-slate-400 text-center">Nenhuma opção</div>
-          ) : (
-            options.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-white/10 ${String(value) === String(opt.value) ? 'bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold' : 'text-white'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-              >
-                {opt.label}
-              </button>
-            ))
+          {searchable && (
+            <div className="p-2 border-b border-white/10 shrink-0">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--gm-primary)]" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-[var(--gm-primary)] transition-colors"
+                  placeholder="Buscar..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                />
+              </div>
+            </div>
           )}
+          <div className="overflow-y-auto custom-scrollbar flex-1 max-h-60">
+            {filteredOptions.length === 0 ? (
+              <div className="p-3 text-sm text-slate-400 text-center">Nenhuma opção</div>
+            ) : (
+              filteredOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-white/10 ${String(value) === String(opt.value) ? 'bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold' : 'text-white'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(opt.value);
+                    setIsOpen(false);
+                    setSearchQuery("");
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -491,12 +491,12 @@ const Dashboard = () => {
         {/* Novo Orçamento */}
         <motion.div variants={itemVariants}>
           <Link to="/budgets?new=true" className="group block">
-            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
-              <div className="w-[50px] h-[50px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-colors">
-                <Plus size={25} strokeWidth={1.5} />
+            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all duration-300 group-hover:-translate-y-2 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl hover:bg-white/90 dark:hover:bg-slate-700/90 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[70px] h-[70px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-500 group-hover:scale-110 group-hover:rotate-[360deg] group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <Plus size={36} strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)]">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300">
                   Novo Orçamento
                 </h3>
               </div>
@@ -507,12 +507,12 @@ const Dashboard = () => {
         {/* Clientes */}
         <motion.div variants={itemVariants}>
           <Link to="/clients" className="group block">
-            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
-              <div className="w-[50px] h-[50px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-colors">
-                <Users size={25} strokeWidth={1.5} />
+            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all duration-300 group-hover:-translate-y-2 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl hover:bg-white/90 dark:hover:bg-slate-700/90 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[70px] h-[70px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <Users size={36} strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)]">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300">
                   Clientes
                 </h3>
               </div>
@@ -523,12 +523,12 @@ const Dashboard = () => {
         {/* Financeiro */}
         <motion.div variants={itemVariants}>
           <Link to="/financial" className="group block">
-            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
-              <div className="w-[50px] h-[50px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-colors">
-                <Wallet size={25} strokeWidth={1.5} />
+            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all duration-300 group-hover:-translate-y-2 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl hover:bg-white/90 dark:hover:bg-slate-700/90 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[70px] h-[70px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <Wallet size={36} strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)]">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300">
                   Financeiro
                 </h3>
               </div>
@@ -539,12 +539,12 @@ const Dashboard = () => {
         {/* Mercado */}
         <motion.div variants={itemVariants}>
           <Link to="/market" className="group block">
-            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all group-hover:-translate-y-1 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl">
-              <div className="w-[50px] h-[50px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-colors">
-                <ShoppingCart size={25} strokeWidth={1.5} />
+            <Card className="aspect-square gap-3 !border-none !shadow-none transition-all duration-300 group-hover:-translate-y-2 p-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-3xl hover:bg-white/90 dark:hover:bg-slate-700/90 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[70px] h-[70px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <ShoppingCart size={36} strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)]">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300">
                   Mercado
                 </h3>
               </div>

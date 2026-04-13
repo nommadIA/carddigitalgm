@@ -86,14 +86,14 @@ export default function BottomNav() {
                     className={({ isActive }) =>
                       `flex flex-col items-center justify-center min-w-[72px] h-[64px] rounded-2xl transition-all duration-300 scroll-snap-align-start ${
                         isActive 
-                          ? "text-[var(--gm-primary)] bg-white/5 shadow-inner" 
+                          ? "text-white" 
                           : "text-slate-500 hover:text-slate-300 active:scale-90"
                       }`
                     }
                   >
                     {({ isActive }) => (
                       <>
-                        <div className={`p-1.5 rounded-xl transition-colors ${isActive ? 'bg-[var(--gm-primary)]/10' : ''}`}>
+                        <div className={`p-1.5 transition-all ${isActive ? 'text-[var(--gm-primary)] drop-shadow-[0_0_8px_rgba(255,123,0,0.6)]' : ''}`}>
                           <Icon size={22} />
                         </div>
                         <span className={`text-[11px] font-bold mt-0.5 tracking-tight ${isActive ? 'opacity-100' : 'opacity-60'}`}>

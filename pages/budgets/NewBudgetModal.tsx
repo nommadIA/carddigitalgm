@@ -732,6 +732,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
               className="cursor-pointer hover:bg-white/5 focus:bg-black/40 focus:border-[var(--gm-primary)]"
               placeholder={loadingClients ? "Carregando..." : "Selecione o cliente..."}
               options={clients.map(c => ({ value: c.id, label: c.name }))}
+              searchable={true}
             />
           </div>
 

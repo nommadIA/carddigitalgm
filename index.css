@@ -266,9 +266,13 @@ button{ font-family:inherit; }
 }
 .gm-nav a.active{
   background: var(--gm-primary-10);
-  color: var(--gm-primary);
+  color: #ffffff;
   border-color: var(--gm-primary-20);
   opacity: 1;
+}
+.gm-nav a.active svg {
+  color: var(--gm-primary);
+  filter: drop-shadow(0 0 8px rgba(255, 123, 0, 0.6));
 }
 .gm-sidebar.collapsed .gm-nav a span{ display:none; }
 .gm-sidebar.collapsed .gm-nav a{ justify-content:center; padding:11px; }
