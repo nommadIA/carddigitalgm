@@ -13,6 +13,7 @@ import { buildWhatsappMessage } from "../services/whatsApp";
 import { useLocation } from "react-router-dom";
 import NewBudgetModal from "./budgets/NewBudgetModal";
 import ReminderConfigModal from "../components/budgets/ReminderConfigModal";
+import ExpandedBudgetRow from "../components/budgets/ExpandedBudgetRow";
 import {
   Plus,
   Search,
@@ -28,6 +29,8 @@ import {
   Copy,
   Mail,
   X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 
@@ -92,12 +95,11 @@ type BudgetRow = {
 const STATUS_OPTIONS = [
   { value: "AGUARDANDO", label: "AGUARDANDO" },
   { value: "APROVADO", label: "APROVADO" },
-  { value: "PRODUCAO", label: "PRODUÇÃO" },
   { value: "CONCLUIDO", label: "CONCLUÍDOS" },
   { value: "CANCELADO", label: "CANCELADOS" },
 ];
 
-type TabKey = "AGUARDANDO" | "APROVADO" | "PRODUCAO" | "CONCLUIDOS" | "CANCELADOS" | "LIXEIRA";
+type TabKey = "AGUARDANDO" | "APROVADO" | "CONCLUIDOS" | "CANCELADOS" | "LIXEIRA";
 
 function normalizeStatus(s?: string | null) {
   const v = (s || "AGUARDANDO").toString().toUpperCase().trim();
@@ -105,7 +107,6 @@ function normalizeStatus(s?: string | null) {
   if (v.includes("APRO")) return "APROVADO";
   if (v.includes("CANC")) return "CANCELADO";
   if (v.includes("AGUAR")) return "AGUARDANDO";
-  if (v.includes("PROD") || v.includes("FAZ") || v.includes("EM ")) return "PRODUCAO";
   return v;
 }
 
@@ -145,6 +146,16 @@ export default function Budgets() {
   
   // Hard delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -393,12 +404,11 @@ export default function Budgets() {
           {[
             "AGUARDANDO",
             "APROVADO",
-            "PRODUCAO",
             "CONCLUIDOS",
             "CANCELADOS",
           ].map((status) => {
             const active = tab === status;
-            const label = status === "PRODUCAO" ? "PRODUÇÃO" : status === "CONCLUIDOS" ? "CONCLUÍDOS" : status;
+            const label = status === "CONCLUIDOS" ? "CONCLUÍDOS" : status;
 
             return (
               <button
@@ -474,66 +484,74 @@ export default function Budgets() {
                   };
 
                   return (
-                    <div
-                      key={r.id}
-                      className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors sm:items-center"
-                    >
-                      <div className="flex justify-between sm:contents">
-                        <div className="text-slate-400 font-mono text-xs sm:text-sm">
-                          {created ? created.toLocaleDateString("pt-BR") : "-"}
+                    <div key={r.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <div
+                        className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center"
+                      >
+                        <div className="flex justify-between sm:contents">
+                          <div className="flex items-center gap-2 text-slate-400 font-mono text-xs sm:text-sm">
+                            <button
+                              onClick={() => toggleRow(r.id)}
+                              className="p-1 hover:bg-white/10 rounded-md transition-colors"
+                            >
+                              {expandedRows.has(r.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                            {created ? created.toLocaleDateString("pt-BR") : "-"}
+                          </div>
+                          <div className="sm:hidden text-right font-bold text-[var(--gm-primary)]">
+                            {CURRENCY.format(Number(r.total_amount || 0))}
+                          </div>
                         </div>
-                        <div className="sm:hidden text-right font-bold text-[var(--gm-primary)]">
-                          {CURRENCY.format(Number(r.total_amount || 0))}
+                        <div className="font-medium truncate">
+                          <span className="font-extrabold text-white mr-2">{(r.client_name || "CLIENTE").toUpperCase()}</span>
+                          <span className="text-slate-300">{r.title || "Orçamento"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
+                          <div className="hidden sm:block text-right font-bold text-[var(--gm-primary)] mr-4">
+                            {CURRENCY.format(Number(r.total_amount || 0))}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {tab !== "LIXEIRA" ? (
+                              <>
+                                <button className={listBtnClass("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
+                                  <Pencil size={16} />
+                                </button>
+                                <button 
+                                  className={listBtnClass("green")} 
+                                  title="Compartilhar" 
+                                  onClick={() => handleShare(r)} 
+                                  type="button"
+                                  disabled={sharing === r.id}
+                                >
+                                  {sharing === r.id ? (
+                                    <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <Share2 size={16} />
+                                  )}
+                                </button>
+                                <button className={listBtnClass("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
+                                  <Trash2 size={16} />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button className={listBtnClass("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
+                                  <RotateCcw size={16} />
+                                </button>
+                                <button
+                                  className="h-10 w-10 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-300 transition-all flex items-center justify-center shrink-0"
+                                  title="Excluir Definitivamente"
+                                  onClick={() => hardDelete(r.id)}
+                                  type="button"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div className="font-medium truncate">
-                        <span className="font-extrabold text-white mr-2">{(r.client_name || "CLIENTE").toUpperCase()}</span>
-                        <span className="text-slate-300">{r.title || "Orçamento"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
-                        <div className="hidden sm:block text-right font-bold text-[var(--gm-primary)] mr-4">
-                          {CURRENCY.format(Number(r.total_amount || 0))}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {tab !== "LIXEIRA" ? (
-                            <>
-                              <button className={listBtnClass("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
-                                <Pencil size={16} />
-                              </button>
-                              <button 
-                                className={listBtnClass("green")} 
-                                title="Compartilhar" 
-                                onClick={() => handleShare(r)} 
-                                type="button"
-                                disabled={sharing === r.id}
-                              >
-                                {sharing === r.id ? (
-                                  <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                  <Share2 size={16} />
-                                )}
-                              </button>
-                              <button className={listBtnClass("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button className={listBtnClass("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
-                                <RotateCcw size={16} />
-                              </button>
-                              <button
-                                className="h-10 w-10 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-300 transition-all flex items-center justify-center shrink-0"
-                                title="Excluir Definitivamente"
-                                onClick={() => hardDelete(r.id)}
-                                type="button"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
+                      {expandedRows.has(r.id) && <ExpandedBudgetRow budgetId={r.id} />}
                     </div>
                   );
                 })}
