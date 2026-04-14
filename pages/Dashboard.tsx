@@ -680,7 +680,7 @@ const Dashboard = () => {
                     setCurrentScreen(i);
                   }}
                   className={`h-1 rounded-full transition-all duration-300 ${
-                    i === currentScreen ? "w-4 bg-[#ff6600] shadow-[0_0_8px_#ff6600]" : "w-1 bg-white/50"
+                    i === currentScreen ? "w-4 bg-[var(--gm-primary)] shadow-[0_0_8px_var(--gm-primary-30)]" : "w-1 bg-white/50"
                   }`}
                 />
               ))}

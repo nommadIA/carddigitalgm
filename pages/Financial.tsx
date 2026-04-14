@@ -355,26 +355,26 @@ export default function Financial() {
       title="Relatórios Financeiros"
       actions={
         <div className="flex flex-col xl:flex-row gap-3 w-full items-stretch xl:items-center mt-4">
-          <div className="flex items-center gm-btn-outline rounded-xl p-1.5 w-full xl:w-auto justify-between xl:justify-start shadow-sm h-[42px]" style={{ background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(12px)', border: '1px solid var(--gm-primary)' }}>
+          <div className="flex items-center gm-btn rounded-xl p-1.5 w-full xl:w-auto justify-between xl:justify-start shadow-sm h-[42px] !cursor-default">
             <button 
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
-              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white flex items-center justify-center"
+              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white flex items-center justify-center cursor-pointer"
             >
               <ChevronLeft size={16} />
             </button>
             <div className="px-3 flex items-center gap-2 font-bold text-sm min-w-[140px] justify-center text-white">
-              <Calendar size={14} className="text-[var(--gm-primary)]" />
+              <Calendar size={14} />
               <span className="capitalize">{selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
             </div>
             <button 
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
-              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white flex items-center justify-center"
+              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white flex items-center justify-center cursor-pointer"
             >
               <ChevronRight size={16} />
             </button>
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="ml-1 px-3 py-1 text-[10px] uppercase font-bold bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors h-full flex items-center justify-center"
+              className="ml-1 px-3 py-1 text-[10px] uppercase font-bold bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors h-full flex items-center justify-center cursor-pointer"
             >
               Hoje
             </button>
@@ -383,28 +383,28 @@ export default function Financial() {
           <div className="flex flex-row gap-2 w-full xl:w-auto justify-between xl:justify-start">
             <button
               onClick={() => handleShare(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }), transactions)}
-              className="gm-btn gm-btn-outline justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none"
+              className="gm-btn rounded-xl shadow-sm justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none"
               title="Compartilhar Relatório"
             >
-              <Share2 size={18} className="text-[var(--gm-accent)]" />
+              <Share2 size={18} />
             </button>
             <button 
               onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} 
-              className="gm-btn gm-btn-outline justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none" 
+              className="gm-btn rounded-xl shadow-sm justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none" 
               title="Gerar PDF"
             >
-              <FileText size={18} className="text-[var(--gm-primary)]" />
+              <FileText size={18} />
             </button>
             <button 
               onClick={handleSave} 
-              className="gm-btn gm-btn-outline justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none" 
+              className="gm-btn rounded-xl shadow-sm justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none" 
               title="Fechar e Salvar Mês"
             >
-              <Save size={18} className="text-[var(--gm-accent)]" />
+              <Save size={18} />
             </button>
             <button 
               onClick={openHistory} 
-              className="gm-btn justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none" 
+              className="gm-btn rounded-xl shadow-sm justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none" 
               title="Histórico"
             >
               <History size={18} />

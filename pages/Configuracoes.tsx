@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Select from "../components/ui/Select";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
+import { ScaleSlider } from "../components/ScaleSlider";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
 import {
@@ -146,6 +147,7 @@ export default function Configuracoes() {
   const [brandAccent, setBrandAccent] = useState("#ff9a1a");
   const [brandBg, setBrandBg] = useState("#0f1117");
   const [fontFamily, setFontFamily] = useState("Inter");
+  const [previewFont, setPreviewFont] = useState<string | null>(null);
   const [buttonStyle, setButtonStyle] = useState("solid");
 
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
@@ -177,7 +179,7 @@ export default function Configuracoes() {
           brand_primary: brandPrimary,
           brand_accent: brandAccent,
           brand_bg: brandBg,
-          font_family: fontFamily,
+          font_family: previewFont || fontFamily,
           button_style: buttonStyle,
           app_scale: appScale,
           mobile_scale: mobileScale,
@@ -198,6 +200,7 @@ export default function Configuracoes() {
     brandAccent,
     brandBg,
     fontFamily,
+    previewFont,
     buttonStyle,
     appScale,
     mobileScale,
@@ -738,18 +741,7 @@ export default function Configuracoes() {
                       
                       <div className="space-y-1.5">
                         <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Desktop)</label>
-                        <div className="flex items-center gap-3 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <input type="range" min={0.7} max={3} step={0.05} className="flex-1 h-1.5 accent-[var(--gm-primary)]" value={appScale} onChange={(e) => setAppScale(Number(e.target.value))} />
-                          <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{appScale}x</div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Celular)</label>
-                        <div className="flex items-center gap-3 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <input type="range" min={0.7} max={3} step={0.05} className="flex-1 h-1.5 accent-[var(--gm-primary)]" value={mobileScale} onChange={(e) => setMobileScale(Number(e.target.value))} />
-                          <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{mobileScale}x</div>
-                        </div>
+                        <ScaleSlider value={appScale} onChange={setAppScale} />
                       </div>
                     </div>
 
@@ -828,13 +820,17 @@ export default function Configuracoes() {
                     <div className="flex-1 flex flex-col justify-center">
                       <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">Família de Fonte</label>
                       <div className="grid grid-cols-2 gap-3">
-                        {["Inter", "Roboto", "Poppins", "Montserrat", "Open Sans", "Lato", "Oswald", "Raleway"].map((font) => {
+                        {["Inter", "Roboto", "Montserrat", "Open Sans", "Raleway", "Funnel Display", "Plus Jakarta Sans", "Hubot Sans"].map((font) => {
                           const isActive = fontFamily === font;
                           return (
                             <button
                               key={font}
                               type="button"
                               onClick={() => setFontFamily(font)}
+                              onMouseEnter={() => setPreviewFont(font)}
+                              onMouseLeave={() => setPreviewFont(null)}
+                              onTouchStart={() => setPreviewFont(font)}
+                              onTouchEnd={() => setPreviewFont(null)}
                               className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all h-12 ${
                                 isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md"
                               }`}
@@ -1226,19 +1222,8 @@ export default function Configuracoes() {
                           </div>
                           
                           <div className="space-y-1.5">
-                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Desktop)</label>
-                            <div className="flex items-center gap-3 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                              <input type="range" min={0.7} max={3} step={0.05} className="flex-1 h-1.5 accent-[var(--gm-primary)]" value={appScale} onChange={(e) => setAppScale(Number(e.target.value))} />
-                              <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{appScale}x</div>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-1.5">
                             <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Celular)</label>
-                            <div className="flex items-center gap-3 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                              <input type="range" min={0.7} max={3} step={0.05} className="flex-1 h-1.5 accent-[var(--gm-primary)]" value={mobileScale} onChange={(e) => setMobileScale(Number(e.target.value))} />
-                              <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{mobileScale}x</div>
-                            </div>
+                            <ScaleSlider value={mobileScale} onChange={setMobileScale} isMobile />
                           </div>
                         </div>
                       </Card>
@@ -1386,13 +1371,17 @@ export default function Configuracoes() {
                       <Card className="!border-none !shadow-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-5 px-4 relative overflow-hidden group flex flex-col justify-center h-auto">
                         <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block text-center">Família de Fonte</label>
                         <div className="grid grid-cols-2 gap-3">
-                          {["Inter", "Roboto", "Poppins", "Montserrat", "Open Sans", "Lato", "Oswald", "Raleway"].map((font) => {
+                          {["Inter", "Roboto", "Montserrat", "Open Sans", "Raleway", "Funnel Display", "Plus Jakarta Sans", "Hubot Sans"].map((font) => {
                             const isActive = fontFamily === font;
                             return (
                               <button
                                 key={font}
                                 type="button"
                                 onClick={() => setFontFamily(font)}
+                                onMouseEnter={() => setPreviewFont(font)}
+                                onMouseLeave={() => setPreviewFont(null)}
+                                onTouchStart={() => setPreviewFont(font)}
+                                onTouchEnd={() => setPreviewFont(null)}
                                 className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all h-20 ${
                                   isActive ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]" : "border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md"
                                 }`}
