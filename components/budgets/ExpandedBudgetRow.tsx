@@ -63,10 +63,10 @@ export default function ExpandedBudgetRow({ budgetId }: { budgetId: string }) {
               <div key={item.id} className="bg-white/5 p-3 rounded-lg flex justify-between items-center">
                 <div>
                   <div className="font-medium text-white">{item.title}</div>
-                  <div className="text-xs text-slate-400 mt-1 whitespace-pre-wrap">{item.description}</div>
+                  <div className="text-xs text-white/70 mt-1 whitespace-pre-wrap">{item.description}</div>
                 </div>
                 <div className="text-right shrink-0 ml-4">
-                  <div className="text-xs text-slate-400">{item.quantity}x {CURRENCY_FORMATTER.format(Number(item.unit_price || 0))}</div>
+                  <div className="text-xs text-white/70">{item.quantity}x {CURRENCY_FORMATTER.format(Number(item.unit_price || 0))}</div>
                   <div className="font-bold text-white">{CURRENCY_FORMATTER.format(Number(item.total_price || 0))}</div>
                 </div>
               </div>

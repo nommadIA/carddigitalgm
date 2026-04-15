@@ -492,9 +492,9 @@ export default function Budgets() {
                           <div className="flex items-center gap-2 text-slate-400 font-mono text-xs sm:text-sm">
                             <button
                               onClick={() => toggleRow(r.id)}
-                              className="p-1 hover:bg-white/10 rounded-md transition-colors"
+                              className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)]"
                             >
-                              {expandedRows.has(r.id) ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                              <ChevronDown size={18} className={`transition-transform duration-300 ${expandedRows.has(r.id) ? "rotate-180" : ""}`} />
                             </button>
                             {created ? created.toLocaleDateString("pt-BR") : "-"}
                           </div>

@@ -6,9 +6,10 @@ import { Card } from "../components/ui/Card";
 import NewClientPage from "./clients/NewClientPage";
 import EditClientPage from "./clients/EditClientPage";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
-import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
+import ExpandedClientRow from "../components/clients/ExpandedClientRow";
 
 type ClientRow = {
   id: string;
@@ -92,6 +93,16 @@ export default function Clients() {
 
   const [openNewPage, setOpenNewPage] = useState(false);
   const [editPageId, setEditPageId] = useState<string | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   
   // Hard delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -137,15 +148,20 @@ export default function Clients() {
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const base = tab === "LIXEIRA" ? rows.filter((r) => !!r.deleted_at) : rows.filter((r) => !r.deleted_at);
-    if (!needle) return base;
-
-    return base.filter((r) => {
-      const blob = [r.name, r.whatsapp, r.phone, r.email, r.address, r.cpf_cnpj]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return blob.includes(needle);
-    });
+    
+    let result = base;
+    if (needle) {
+      result = base.filter((r) => {
+        const blob = [r.name, r.whatsapp, r.phone, r.email, r.address, r.cpf_cnpj]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return blob.includes(needle);
+      });
+    }
+    
+    // Sort alphabetically by name
+    return result.sort((a, b) => a.name.localeCompare(b.name));
   }, [rows, tab, q]);
 
   async function softDelete(id: string) {
@@ -275,176 +291,139 @@ export default function Clients() {
         ) : filtered.length === 0 ? (
           <Card className="p-10 text-center opacity-70 border-dashed">Nenhum cliente encontrado.</Card>
         ) : (
-          <div style={gridWrap}>
-            {filtered.map((c) => {
-              const wppDigits = onlyDigits(c.whatsapp || c.phone || "");
-              const prettyWpp = fmtPhoneBR(c.whatsapp || c.phone || "");
-              const hasWpp = wppDigits.length >= 10;
+          <Card className="!p-0 overflow-hidden">
+            <div className="overflow-x-auto">
+              <div className="text-sm min-w-full">
+                <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/10 font-bold opacity-60 uppercase tracking-wider text-xs">
+                  <div>Avatar</div>
+                  <div>Cliente</div>
+                  <div className="text-right">Ações</div>
+                </div>
+                <div className="pb-2">
+                  {filtered.map((c) => {
+                    const wppDigits = onlyDigits(c.whatsapp || c.phone || "");
+                    const prettyWpp = fmtPhoneBR(c.whatsapp || c.phone || "");
+                    const hasWpp = wppDigits.length >= 10;
 
-              // linha compacta para mobile
-              const metaLine = [
-                prettyWpp ? `📱 ${prettyWpp}` : "",
-                c.email ? `✉️ ${c.email}` : "",
-              ].filter(Boolean);
+                    const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
+                      const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0";
+                      if (tone === "orange") return `${base} gm-btn-soft`;
+                      if (tone === "green") return `${base} gm-btn-soft`;
+                      if (tone === "red") return `${base} gm-btn-danger`;
+                      return `${base} gm-btn-soft`;
+                    };
 
-              return (
-                <Card key={c.id} className={isMobile ? "p-4" : "p-5"}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex" style={{ gap: 10, minWidth: 0 }}>
-                      <div style={avatarStyle}>{initialFromName(c.name)}</div>
+                    return (
+                      <div key={c.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center">
+                          <div className="flex justify-between sm:contents">
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => toggleRow(c.id)}
+                                className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)]"
+                              >
+                                <ChevronDown size={18} className={`transition-transform duration-300 ${expandedRows.has(c.id) ? "rotate-180" : ""}`} />
+                              </button>
+                              <div style={avatarStyle}>
+                                <User size={isMobile ? 18 : 20} className="text-[var(--gm-primary)]" />
+                              </div>
+                              <div className="sm:hidden font-extrabold text-white truncate text-sm">
+                                {c.name}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="font-medium truncate hidden sm:block">
+                            <div className="font-extrabold text-white text-base truncate">{c.name}</div>
+                            <div className="mt-1 text-xs text-slate-400 flex items-center gap-3">
+                              {prettyWpp ? <span className="flex items-center gap-1"><WhatsAppIcon size={12} /> {prettyWpp}</span> : null}
+                              {c.email ? <span className="flex items-center gap-1"><Mail size={12} /> {c.email}</span> : null}
+                            </div>
+                          </div>
 
-                      <div className="min-w-0">
-                        <div className="font-extrabold text-white truncate" style={{ fontSize: isMobile ? 14 : 16 }}>
-                          {c.name}
+                          <div className="sm:hidden mt-2 text-xs text-slate-400 flex flex-col gap-1">
+                            {prettyWpp ? <span className="flex items-center gap-1"><WhatsAppIcon size={12} /> {prettyWpp}</span> : null}
+                            {c.email ? <span className="flex items-center gap-1"><Mail size={12} /> {c.email}</span> : null}
+                          </div>
+
+                          <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
+                            <div className="flex items-center gap-2">
+                              {tab === "LIXEIRA" ? (
+                                <>
+                                  <button className={listBtnClass("green")} title="Restaurar" type="button" onClick={() => restore(c.id)}>
+                                    <RotateCcw size={16} />
+                                  </button>
+                                  <button
+                                    className="h-10 w-10 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-300 transition-all flex items-center justify-center shrink-0"
+                                    title="Excluir definitivo"
+                                    type="button"
+                                    onClick={() => confirmHardDelete(c.id)}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button className={listBtnClass("orange")} title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
+                                    <Pencil size={16} />
+                                  </button>
+
+                                  <button
+                                    className={`${listBtnClass("green")} ${!hasWpp ? 'opacity-50' : ''}`}
+                                    title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
+                                    type="button"
+                                    onClick={() => {
+                                      if (!hasWpp) return setToast("Sem WhatsApp cadastrado");
+                                      openWhatsApp(wppDigits);
+                                    }}
+                                  >
+                                    <WhatsAppIcon size={16} />
+                                  </button>
+
+                                  <button
+                                    className={listBtnClass("neutral")}
+                                    title="Copiar telefone"
+                                    type="button"
+                                    onClick={async () => {
+                                      const txt = prettyWpp || "";
+                                      if (!txt) return setToast("Sem telefone");
+                                      const ok = await copyToClipboard(txt);
+                                      setToast(ok ? "Telefone copiado" : "Falha ao copiar");
+                                    }}
+                                  >
+                                    <Copy size={16} />
+                                  </button>
+
+                                  <button
+                                    className={listBtnClass("neutral")}
+                                    title="Copiar e-mail"
+                                    type="button"
+                                    onClick={async () => {
+                                      const txt = (c.email || "").trim();
+                                      if (!txt) return setToast("Sem e-mail");
+                                      const ok = await copyToClipboard(txt);
+                                      setToast(ok ? "E-mail copiado" : "Falha ao copiar");
+                                    }}
+                                  >
+                                    <Mail size={16} />
+                                  </button>
+
+                                  <button className={listBtnClass("red")} title="Mover para lixeira" type="button" onClick={() => softDelete(c.id)}>
+                                    <Trash2 size={16} />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-
-                        {/* Desktop: detalhes em 3 linhas / Mobile: 1 linha compacta */}
-                        {isMobile ? (
-                          <div className="mt-2 text-xs text-white/60 truncate">
-                            {metaLine.length ? metaLine.join("  •  ") : "Sem dados adicionais"}
-                          </div>
-                        ) : (
-                          <div className="mt-2 text-xs text-white/60 space-y-1">
-                            {prettyWpp ? <div>📱 {prettyWpp}</div> : <div className="opacity-60">📱 Sem telefone</div>}
-                            {c.email ? <div>✉️ {c.email}</div> : null}
-                            {c.address ? <div>📍 {c.address}</div> : null}
-                          </div>
-                        )}
+                        {expandedRows.has(c.id) && <ExpandedClientRow clientId={c.id} />}
                       </div>
-                    </div>
-
-                    {/* Desktop: ações ao lado / Mobile: fica abaixo (linha compacta) */}
-                    {!isMobile ? (
-                      <div className="flex gap-2" style={{ flexShrink: 0 }}>
-                        {tab === "LIXEIRA" ? (
-                          <>
-                            <button className="gm-btn gm-btn-icon" title="Restaurar" type="button" onClick={() => restore(c.id)}>↩️</button>
-                            <button className="gm-btn gm-btn-icon gm-btn-danger" title="Excluir definitivo" type="button" onClick={() => confirmHardDelete(c.id)}>
-                              <Trash2 size={16} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button className="gm-btn gm-btn-icon" title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
-                              <Pencil size={16} />
-                            </button>
-
-                            <button
-                              className={`gm-btn gm-btn-icon ${!hasWpp ? 'opacity-50' : ''}`}
-                              title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
-                              type="button"
-                              onClick={() => {
-                                if (!hasWpp) return setToast("Sem WhatsApp cadastrado");
-                                openWhatsApp(wppDigits);
-                              }}
-                            >
-                              <WhatsAppIcon size={16} />
-                            </button>
-
-                            <button
-                              className="gm-btn gm-btn-icon gm-btn-accent"
-                              title="Copiar telefone"
-                              type="button"
-                              onClick={async () => {
-                                const txt = prettyWpp || "";
-                                if (!txt) return setToast("Sem telefone");
-                                const ok = await copyToClipboard(txt);
-                                setToast(ok ? "Telefone copiado" : "Falha ao copiar");
-                              }}
-                            >
-                              <Copy size={16} />
-                            </button>
-
-                            <button
-                              className="gm-btn gm-btn-icon gm-btn-accent"
-                              title="Copiar e-mail"
-                              type="button"
-                              onClick={async () => {
-                                const txt = (c.email || "").trim();
-                                if (!txt) return setToast("Sem e-mail");
-                                const ok = await copyToClipboard(txt);
-                                setToast(ok ? "E-mail copiado" : "Falha ao copiar");
-                              }}
-                            >
-                              <Mail size={16} />
-                            </button>
-
-                            <button className="gm-btn gm-btn-icon gm-btn-danger" title="Mover para lixeira" type="button" onClick={() => softDelete(c.id)}>
-                              <Trash2 size={16} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  {/* ✅ Mobile: linha de ações (compacta, touch-friendly) */}
-                  {isMobile ? (
-                    <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      {tab === "LIXEIRA" ? (
-                        <>
-                          <button className="gm-btn gm-btn-icon gm-btn-accent" title="Restaurar" type="button" onClick={() => restore(c.id)}>↩️</button>
-                          <button className="gm-btn gm-btn-icon gm-btn-danger" title="Excluir definitivo" type="button" onClick={() => confirmHardDelete(c.id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button className="gm-btn gm-btn-icon gm-btn-accent" title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
-                            <Pencil size={16} />
-                          </button>
-
-                          <button
-                            className={`gm-btn gm-btn-icon gm-btn-accent ${!hasWpp ? 'opacity-50' : ''}`}
-                            title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
-                            type="button"
-                            onClick={() => {
-                              if (!hasWpp) return setToast("Sem WhatsApp cadastrado");
-                              openWhatsApp(wppDigits);
-                            }}
-                          >
-                            <WhatsAppIcon size={16} />
-                          </button>
-
-                          <button
-                            className="gm-btn gm-btn-icon gm-btn-accent"
-                            title="Copiar telefone"
-                            type="button"
-                            onClick={async () => {
-                              const txt = prettyWpp || "";
-                              if (!txt) return setToast("Sem telefone");
-                              const ok = await copyToClipboard(txt);
-                              setToast(ok ? "Telefone copiado" : "Falha ao copiar");
-                            }}
-                          >
-                            <Copy size={16} />
-                          </button>
-
-                          <button
-                            className="gm-btn gm-btn-icon gm-btn-accent"
-                            title="Copiar e-mail"
-                            type="button"
-                            onClick={async () => {
-                              const txt = (c.email || "").trim();
-                              if (!txt) return setToast("Sem e-mail");
-                              const ok = await copyToClipboard(txt);
-                              setToast(ok ? "E-mail copiado" : "Falha ao copiar");
-                            }}
-                          >
-                            <Mail size={16} />
-                          </button>
-
-                          <button className="gm-btn gm-btn-icon gm-btn-danger" title="Lixeira" type="button" onClick={() => softDelete(c.id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ) : null}
-                </Card>
-              );
-            })}
-          </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </Card>
         )}
       </Page>
 
