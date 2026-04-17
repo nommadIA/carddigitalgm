@@ -19,6 +19,7 @@ const Expenses = lazy(() => import('./pages/Expenses'));
 const Configuracoes = lazy(() => import('./pages/Configuracoes'));
 const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
+const PixCopy = lazy(() => import('./pages/PixCopy'));
 
 const PageLoader = () => (
   <div className="w-full h-full flex items-center justify-center min-h-[50vh]">
@@ -96,6 +97,7 @@ const AppRoutes = () => {
       >
         <Suspense fallback={<PageLoader />}>
           <Routes location={location}>
+            <Route path="/pix" element={<PixCopy />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />

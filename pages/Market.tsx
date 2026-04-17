@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, ShoppingCart, Trash2, Mic, Check, DollarSign, Wallet, Loader2, X, Sparkles, Share2, History, Mail, Copy, Calendar } from 'lucide-react';
+import { Plus, ShoppingCart, Trash2, Mic, Check, DollarSign, Wallet, Loader2, X, Sparkles, Share2, History, Mail, Copy, Calendar, ChevronDown } from 'lucide-react';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { CURRENCY_FORMATTER } from '../constants';
 import { supabase } from '../lib/supabase';
@@ -36,6 +36,16 @@ const Market = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [history, setHistory] = useState<MarketHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
+
+  const toggleMonth = (month: string) => {
+    setExpandedMonths(prev => {
+      const next = new Set(prev);
+      if (next.has(month)) next.delete(month);
+      else next.add(month);
+      return next;
+    });
+  };
 
   const [newItemName, setNewItemName] = useState('');
   const [newItemPrice, setNewItemPrice] = useState('');
@@ -627,6 +637,15 @@ const Market = () => {
                                    <div key={h.month} className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[var(--gm-primary)] transition-all flex flex-col relative">
                                        <div className="flex justify-between items-start mb-2 pr-14">
                                            <div className="flex items-center gap-2 text-slate-400">
+                                               <button
+                                                   onClick={(e) => {
+                                                       e.stopPropagation();
+                                                       toggleMonth(h.month);
+                                                   }}
+                                                   className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
+                                               >
+                                                   <ChevronDown size={18} className={`transition-transform duration-300 ${expandedMonths.has(h.month) ? "rotate-180" : ""}`} />
+                                               </button>
                                                <Calendar size={16} />
                                                <span className="text-sm font-bold uppercase tracking-widest">{monthName} {year}</span>
                                            </div>
@@ -637,8 +656,9 @@ const Market = () => {
                                        </div>
                                        
                                        {/* Lista detalhada das compras do mês */}
-                                       <div className="flex flex-col gap-2 mt-2 pt-4 border-t border-white/10">
-                                           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Relação de Compras</h4>
+                                       {expandedMonths.has(h.month) && (
+                                           <div className="flex flex-col gap-2 mt-2 pt-4 border-t border-white/10">
+                                               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Relação de Compras</h4>
                                            {h.lists.map(list => (
                                                <div key={list.id} className="flex flex-col bg-black/20 p-3 rounded-xl border border-white/5 relative group">
                                                    <div className="flex justify-between items-center pr-20">
@@ -685,6 +705,7 @@ const Market = () => {
                                                </div>
                                            ))}
                                        </div>
+                                       )}
 
                                         <button 
                                             onClick={(e) => {

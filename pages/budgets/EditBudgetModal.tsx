@@ -49,6 +49,10 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
   const [deliveryDays, setDeliveryDays] = useState<string>("5");
   const [discountAmount, setDiscountAmount] = useState<string>("0");
   const [budgetType, setBudgetType] = useState<BudgetKind>("agency");
+  const [paymentMethod, setPaymentMethod] = useState<"PIX" | "CREDIT">("PIX");
+  const [paymentLink, setPaymentLink] = useState<string>("");
+  const [installments, setInstallments] = useState<number>(1);
+  const [interestRate, setInterestRate] = useState<number>(0);
   const [items, setItems] = useState<BudgetItemDraft[]>([]);
   const [settings, setSettings] = useState<any>(null);
 
@@ -129,6 +133,11 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
         const kind = (data.type || "agency") as BudgetKind;
         setBudgetType(kind === "print" ? "print" : "agency");
 
+        setPaymentMethod((data.payment_method as "PIX" | "CREDIT") || "PIX");
+        setPaymentLink(data.payment_link || "");
+        setInstallments(Number(data.installments || 1));
+        setInterestRate(Number(data.interest_rate || 0));
+
         // itens
         const mapped: BudgetItemDraft[] = (data.items || []).map((it: any) => {
           const desc = splitDesc(it.description || "");
@@ -202,6 +211,10 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
         discount: discountValue,
         total_amount: total,
         delivery_days: toNumber(deliveryDays || 5),
+        payment_method: paymentMethod,
+        payment_link: paymentLink,
+        installments: paymentMethod === "PIX" ? 1 : installments,
+        interest_rate: paymentMethod === "PIX" ? 0 : interestRate,
       };
 
       const { error } = await supabase
@@ -306,6 +319,56 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                             <div className="mt-2 text-xs text-slate-500">
                                 Atual: <b className="text-[var(--gm-primary)]">{STATUS_LABEL[status]}</b>
                             </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Pagamento</label>
+                                <Select
+                                    value={paymentMethod}
+                                    onChange={(val) => setPaymentMethod(val as any)}
+                                    className="w-full h-[46px] bg-black/30 border border-white/10 rounded-xl px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                    options={[
+                                        { value: "PIX", label: "PIX" },
+                                        { value: "CREDIT", label: "Cartão de Crédito" }
+                                    ]}
+                                />
+                            </div>
+                            {paymentMethod === "CREDIT" && (
+                                <div className="col-span-2 grid grid-cols-2 gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Parcelas</label>
+                                        <Select
+                                            value={installments}
+                                            onChange={(val) => setInstallments(Number(val))}
+                                            className="w-full h-[46px] bg-black/30 border border-white/10 rounded-xl px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                            options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => ({ value: n, label: `${n}x` }))}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Juros (%)</label>
+                                        <input
+                                            type="number"
+                                            value={interestRate}
+                                            onChange={(e) => setInterestRate(Number(e.target.value))}
+                                            onFocus={(e) => e.target.select()}
+                                            min="0"
+                                            max="100"
+                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Link de Pagamento (Opcional)</label>
+                                        <input
+                                            value={paymentLink}
+                                            onChange={(e) => setPaymentLink(e.target.value)}
+                                            placeholder="https://..."
+                                            type="url"
+                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">

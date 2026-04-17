@@ -297,6 +297,10 @@ export default function Budgets() {
           dueLabel: fullBudget.delivery_days ? `${fullBudget.delivery_days} dias úteis` : undefined,
           delivery_days: fullBudget.delivery_days,
           validity_days: fullBudget.validity_days,
+          payment_method: fullBudget.payment_method,
+          payment_link: fullBudget.payment_link,
+          installments: fullBudget.installments,
+          interestRate: fullBudget.interest_rate,
         },
         items,
         settings!
@@ -330,6 +334,12 @@ export default function Budgets() {
         clienteNome: r.client_name,
         orcamentoId: r.id,
         total: r.total_amount,
+        subtotal: fullBudget.subtotal,
+        discount: fullBudget.discount,
+        payment_method: fullBudget.payment_method,
+        payment_link: fullBudget.payment_link,
+        installments: fullBudget.installments,
+        interest_rate: fullBudget.interest_rate,
         settings: settings!,
         items,
         delivery_days: r.delivery_days,
@@ -492,7 +502,7 @@ export default function Budgets() {
                           <div className="flex items-center gap-2 text-slate-400 font-mono text-xs sm:text-sm">
                             <button
                               onClick={() => toggleRow(r.id)}
-                              className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)]"
+                              className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
                             >
                               <ChevronDown size={18} className={`transition-transform duration-300 ${expandedRows.has(r.id) ? "rotate-180" : ""}`} />
                             </button>

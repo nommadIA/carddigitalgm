@@ -6,13 +6,23 @@ export function buildWhatsappMessage(params: {
   clienteNome: string;
   orcamentoId: string;
   total: number;
+  subtotal?: number;
+  discount?: number;
+  payment_method?: string;
+  payment_link?: string;
+  installments?: number;
+  interest_rate?: number;
   settings: AppSettings;
   items?: OrcItem[]; 
   publicLink?: string;
   delivery_days?: number;
   validity_days?: number;
 }) {
-  const { clienteNome, orcamentoId, total, settings, items, publicLink, delivery_days, validity_days } = params;
+  const { 
+    clienteNome, orcamentoId, total, subtotal, discount,
+    payment_method, payment_link, installments, interest_rate,
+    settings, items, publicLink, delivery_days, validity_days 
+  } = params;
 
   const lines: string[] = [];
   lines.push(`Olá, ${clienteNome}! 👋`);
@@ -33,6 +43,10 @@ export function buildWhatsappMessage(params: {
       lines.push("");
   }
 
+  if (Number(subtotal) > 0 && Number(discount) > 0) {
+    lines.push(`Subtotal: R$ ${Number(subtotal).toFixed(2)}`);
+    lines.push(`Desconto: -R$ ${Number(discount).toFixed(2)}`);
+  }
   lines.push(`*💰 TOTAL GERAL: R$ ${total.toFixed(2)}*`);
 
   if (delivery_days) {
@@ -42,26 +56,46 @@ export function buildWhatsappMessage(params: {
     lines.push(`⏳ Validade do Orçamento: ${validity_days} dias`);
   }
 
-  if (publicLink) lines.push(`🔗 Link: ${publicLink}`);
+  if (publicLink) lines.push(`🔗 Link do Sistema: ${publicLink}`);
 
-  if (settings.pix_key) {
+  lines.push("");
+  lines.push("--------------------------------");
+
+  if (payment_method === 'CREDIT') {
+    lines.push("*💳 Pagamento via Cartão de Crédito*");
+    if (installments && installments > 0) {
+      const instValue = total / installments;
+      lines.push(`Parcelamento: ${installments}x de R$ ${instValue.toFixed(2)}`);
+      lines.push(`Total a prazo: R$ ${total.toFixed(2)}`);
+    }
     lines.push("");
-    lines.push("--------------------------------");
+    if (payment_link) {
+      lines.push(`🔗 *Link para pagamento:*`);
+      lines.push(payment_link);
+    } else {
+      lines.push("_Link de pagamento não informado no sistema._");
+    }
+  } else {
+    // PIX DEFAULT
     lines.push("*💳 Pagamento via Pix*");
-    lines.push(`Chave: ${settings.pix_key}`);
+    if (settings.pix_key) {
+      lines.push(`Chave PIX: ${settings.pix_key}`);
 
-    const payload = buildPixPayload({
-      pixKey: settings.pix_key,
-      merchantName: (settings.company_name || "CardDigital GM").toUpperCase().slice(0, 25),
-      merchantCity: "SAO LUIS",
-      amount: total,
-      txid: orcamentoId.slice(0, 25).replace(/[^a-zA-Z0-9]/g, ''),
-      message: "Pagamento Orcamento",
-    });
+      const payload = buildPixPayload({
+        pixKey: settings.pix_key,
+        merchantName: (settings.company_name || "CardDigital GM").toUpperCase().slice(0, 25),
+        merchantCity: "SAO LUIS",
+        amount: total,
+        txid: orcamentoId.slice(0, 25).replace(/[^a-zA-Z0-9]/g, ''),
+        message: "Pagamento Orcamento",
+      });
 
-    lines.push("");
-    lines.push("👇 *Copia e Cola:*");
-    lines.push(payload);
+      lines.push("");
+      lines.push("👇 *Pix Copia e Cola:*");
+      lines.push(payload);
+    } else {
+      lines.push("_Chave PIX não informada no sistema._");
+    }
   }
 
   return lines.join("\n");

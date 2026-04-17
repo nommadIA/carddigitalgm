@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFString, PDFName } from "pdf-lib";
 import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -23,6 +23,8 @@ export type Orcamento = {
   total: number;
   subtotal?: number;
   discount?: number;
+  payment_method?: string;
+  payment_link?: string;
   paymentMethod?: PaymentMethod;
   installments?: number;
   interestRate?: number;
@@ -291,14 +293,30 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
       cursorY -= 11;
       drawLeft(`Validade do Orçamento: ${orc.validity_days} dias`, 9, cursorY, false, cGray);
     }
-    cursorY -= 18;
+
+    cursorY -= 11;
+    let paymentText = "Forma de Pagamento: ";
+    if (orc.payment_method === 'CREDIT') {
+      paymentText += "Cartão de Crédito";
+      if (orc.installments && orc.installments > 1) {
+        paymentText += ` em ${orc.installments}x`;
+      }
+      if (orc.interestRate && orc.interestRate > 0) {
+        paymentText += ` (Juros: ${orc.interestRate}%)`;
+      }
+    } else {
+      paymentText += "PIX";
+    }
+    drawLeft(paymentText, 9, cursorY, false, cGray);
+
+    cursorY -= 20; // more breathing room after header
 
     // --- DESCRIÇÃO ---
     checkSpace(25);
     drawLeft("DESCRIÇÃO DOS SERVIÇOS", 10, cursorY, true);
-    cursorY -= 8;
+    cursorY -= 15; 
     hr(cursorY);
-    cursorY -= 12;
+    cursorY -= 20; // Respiro padrão e maior
 
     const colDescW = CONTENT_W * 0.72;
 
@@ -320,7 +338,7 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
       
       const detailsLine = `Qtd: ${it.qtd}  |  V. Unit: ${CURRENCY_FORMATTER.format(it.valor_unit)}${areaStr ? `  |  ${areaStr}` : ""}`;
       
-      const blockH = (lines.length * 12) + 14;
+      const blockH = (lines.length * 12) + 40; // Ajustado para englobar os novos respiros
 
       checkSpace(blockH + 10);
 
@@ -329,37 +347,105 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
         const line = lines[i];
         const isFirstLine = i === 0;
         drawLeft(line, isFirstLine ? 10 : 9, yText, isFirstLine, cText);
-        yText -= isFirstLine ? 12 : 11;
+        yText -= isFirstLine ? 14 : 12; 
       }
 
-      yText -= 1;
+      yText -= 3;
       drawLeft(detailsLine, 8, yText, false, cGray);
 
       drawRight(CURRENCY_FORMATTER.format(totalItem), 10.5, cursorY, true, cText);
 
-      cursorY -= blockH;
-      hr(cursorY + 5);
-      cursorY -= 8;
+      cursorY = yText - 20; // Espaçamento mais amplo até a linha divisória
+      hr(cursorY);
+      cursorY -= 20; // E mais espaço pós-linha até o próximo item ou rodapé!
     }
 
-    // --- TOTAIS COMPACTOS ---
-    checkSpace(50);
+    // --- TOTAIS COMPACTOS + PAGAMENTO ---
+    checkSpace(80);
+    // Add respiro under the description table before totals
+    cursorY -= 5;
+    
+    // Save Y to draw parallel
+    const yStartParallel = cursorY;
+
     const subtotal = Number(orc.subtotal ?? orc.total ?? 0) || 0;
     const discount = Number(orc.discount ?? 0) || 0;
     const total = Number(orc.total ?? (subtotal - discount)) || 0;
 
-    drawRight(`Subtotal: ${CURRENCY_FORMATTER.format(subtotal)}`, 9.5, cursorY, false, cGray);
-    cursorY -= 12;
+    let yTotals = yStartParallel;
+    drawRight(`Subtotal: ${CURRENCY_FORMATTER.format(subtotal)}`, 9.5, yTotals, false, cGray);
+    yTotals -= 15;
     if (discount > 0) {
-      drawRight(`Desconto: -${CURRENCY_FORMATTER.format(discount)}`, 9.5, cursorY, false, cRed);
-      cursorY -= 12;
+      drawRight(`Desconto: -${CURRENCY_FORMATTER.format(discount)}`, 9.5, yTotals, false, cRed);
+      yTotals -= 12;
     }
-    drawRight(`Total: ${CURRENCY_FORMATTER.format(total)}`, 11.5, cursorY, true, cText);
-    cursorY -= 15;
+    drawRight(`Total: ${CURRENCY_FORMATTER.format(total)}`, 11.5, yTotals, true, cText);
+    yTotals -= 15;
 
-    // --- PIX QR COMPACTO ---
-    if (settings?.pix_key) {
-      checkSpace(110); // Reduzido de 140 para 110
+    let yPayment = yStartParallel;
+
+    // --- PAYMENT LINK OR PIX ---
+    if (orc.payment_method === 'CREDIT') {
+      const btnW = 200;
+      const btnH = 24;
+      const btnX = CONTENT_X; // Back to Left Side
+      
+      // Top of the button aligns with "Subtotal:" height
+      const btnY = yPayment - 12; 
+      
+      page.drawRectangle({
+        x: btnX,
+        y: btnY,
+        width: btnW,
+        height: btnH,
+        color: rgb(0.95, 0.4, 0.1), // Laranja
+        borderColor: rgb(0.95, 0.4, 0.1),
+        borderWidth: 1,
+      });
+
+      const btnText = orc.payment_link ? "LINK DE PAGAMENTO" : "PAGAMENTO NO CARTÃO DE CRÉDITO";
+      const textW = fontBold.widthOfTextAtSize(btnText, 10);
+      page.drawText(btnText, {
+        x: btnX + (btnW - textW) / 2,
+        y: btnY + 8,
+        size: 10,
+        font: fontBold,
+        color: rgb(1, 1, 1),
+      });
+
+      if (orc.payment_link) {
+        const linkAnnotation = doc.context.obj({
+          Type: 'Annot',
+          Subtype: 'Link',
+          Rect: [btnX, btnY, btnX + btnW, btnY + btnH],
+          Border: [0, 0, 0],
+          A: {
+            Type: 'Action',
+            S: 'URI',
+            URI: PDFString.of(orc.payment_link),
+          },
+        });
+        const linkRef = doc.context.register(linkAnnotation);
+        page.node.set(PDFName.of('Annots'), doc.context.obj([linkRef]));
+      }
+
+      let installmentsText = orc.payment_link ? "pagamento parcelado no crédito" : "Link de pagamento não informado no sistema.";
+      if (orc.installments && orc.installments > 0) {
+        const instValue = total / orc.installments;
+        installmentsText = `${orc.installments}x de ${CURRENCY_FORMATTER.format(instValue)}   Total a prazo: ${CURRENCY_FORMATTER.format(total)}`;
+      }
+
+      // Drawing the text aligned to the left side
+      page.drawText(installmentsText, {
+        x: btnX,
+        y: btnY - 16,
+        size: 8.5,
+        font: fontBold,
+        color: cText,
+      });
+
+      yPayment = btnY - 30;
+    } else if (settings?.pix_key) {
       try {
         const payload = buildPixPayload({
           pixKey: settings.pix_key,
@@ -374,34 +460,54 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
         const qrBytes = await fetchBytes(qrDataUrl);
         const qrPng = await doc.embedPng(qrBytes);
 
-        const qrSize = 85; // QR um pouco menor para caber melhor
-        const qrY = cursorY - 95;
+        const qrSize = 85;
+        // Start drawing from yPayment
+        const pixYStart = yPayment;
+        const qrY = pixYStart - qrSize + 5; // Align top of QR with text roughly
+        
+        const pixX = CONTENT_X; // Back to Left Side
+
         page.drawImage(qrPng, {
-          x: CONTENT_X,
+          x: pixX,
           y: qrY,
           width: qrSize,
           height: qrSize,
         });
 
-        drawLeft("PAGAMENTO VIA PIX", 9.5, cursorY - 6, true, cText);
+        page.drawText("PAGAMENTO VIA PIX", { 
+          x: pixX, 
+          y: pixYStart + 15, 
+          size: 9.5, 
+          font: fontBold, 
+          color: cText 
+        });
         
-        const textX = CONTENT_X + qrSize + 12;
-        page.drawText("Chave:", { x: textX, y: cursorY - 20, size: 8.5, font: fontRegular, color: cGray });
-        page.drawText(String(settings.pix_key), { x: textX, y: cursorY - 32, size: 8.5, font: fontBold, color: cText });
-        page.drawText("Copia e Cola:", { x: textX, y: cursorY - 46, size: 8.5, font: fontRegular, color: cGray });
+        const textX = pixX + qrSize + 12;
+        page.drawText("Chave PIX:", { x: textX, y: pixYStart, size: 8.5, font: fontRegular, color: cGray });
+        
+        page.drawText(String(settings.pix_key), { x: textX, y: pixYStart - 12, size: 8.5, font: fontBold, color: cText });
+        
+        page.drawText("Pix Copia e Cola:", { x: textX, y: pixYStart - 30, size: 8.5, font: fontRegular, color: cGray });
 
-        const clipLines = wrapText(payload, CONTENT_W - (qrSize + 12), fontRegular, 7.5);
-        let yClip = cursorY - 58;
-        for (const l of clipLines.slice(0, 5)) {
-          page.drawText(l, { x: textX, y: yClip, size: 7.5, font: fontRegular, color: cGray });
-          yClip -= 9;
+        // Quebrar o payload em múltiplas linhas
+        const chunkString = (str: string, length: number) => {
+          return str.match(new RegExp('.{1,' + length + '}', 'g')) || [];
+        };
+        const payloadLines = chunkString(payload, 45); 
+        
+        let py = pixYStart - 42;
+        for (const line of payloadLines) {
+           page.drawText(line, { x: textX, y: py, size: 7.5, font: fontRegular, color: cText });
+           py -= 10;
         }
 
-        cursorY -= 105;
+        yPayment = Math.min(qrY - 10, py - 10);
       } catch (e) {
         console.error("Erro QR PDF", e);
       }
     }
+
+    cursorY = Math.min(yTotals, yPayment) - 20;
 
     const pdfBytes = await doc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });

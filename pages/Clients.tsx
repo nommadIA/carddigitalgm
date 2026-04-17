@@ -320,7 +320,7 @@ export default function Clients() {
                             <div className="flex items-center gap-3">
                               <button
                                 onClick={() => toggleRow(c.id)}
-                                className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)]"
+                                className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
                               >
                                 <ChevronDown size={18} className={`transition-transform duration-300 ${expandedRows.has(c.id) ? "rotate-180" : ""}`} />
                               </button>

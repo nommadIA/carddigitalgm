@@ -263,6 +263,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
   const [saving, setSaving] = useState(false);
 
   const [paymentMethod, setPaymentMethod] = useState<PayMethod>("PIX");
+  const [paymentLink, setPaymentLink] = useState<string>("");
   const [installments, setInstallments] = useState<number>(1);
   const [interestRate, setInterestRate] = useState<number>(0);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
@@ -318,6 +319,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     setClientId("");
     setClientName("");
     setPaymentMethod("PIX");
+    setPaymentLink("");
     setInstallments(1);
     setInterestRate(0);
     setDiscountAmount(0);
@@ -377,6 +379,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         setClientId(budget.client_id || "");
         setClientName(budget.client_name || "");
         setPaymentMethod((budget.payment_method as PayMethod) || "PIX");
+        setPaymentLink(budget.payment_link || "");
         setInstallments(Number(budget.installments || 1));
         setInterestRate(Number(budget.interest_rate || 0));
         setValidityDays(Number(budget.validity_days || 5));
@@ -555,6 +558,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         delivery_days: deliveryDays,
         validity_days: validityDays,
         payment_method: paymentMethod,
+        payment_link: paymentLink,
         installments: paymentMethod === "PIX" ? 1 : installments,
         interest_rate: paymentMethod === "PIX" ? 0 : interestRate,
       };
@@ -1006,30 +1010,42 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                           className={pill(preset === "CREDIT")}
                         >
                           <CreditCard size={24} />
-                          <span className="font-bold text-sm">4x</span>
+                          <span className="font-bold text-sm">Cartão de crédito</span>
                         </button>
                       </div>
 
                       {paymentMethod === "CREDIT" && (
-                        <div className="grid grid-cols-2 gap-3 animate-fade-in bg-black/20 p-4 rounded-xl border border-white/5 items-end">
-                          <div>
-                            <label style={labelTop}>Parcelas</label>
-                            <Select 
-                              style={inputBig} 
-                              value={installments} 
-                              onChange={(val) => setInstallments(Number(val))}
-                              options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map(n => ({ value: n, label: `${n}x` }))}
-                            />
+                        <div className="flex flex-col gap-3 animate-fade-in bg-black/20 p-4 rounded-xl border border-white/5">
+                          <div className="grid grid-cols-2 gap-3 items-end">
+                            <div>
+                              <label style={labelTop}>Parcelas</label>
+                              <Select 
+                                style={inputBig} 
+                                value={installments} 
+                                onChange={(val) => setInstallments(Number(val))}
+                                options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map(n => ({ value: n, label: `${n}x` }))}
+                              />
+                            </div>
+                            <div>
+                              <label style={labelTop}>Juros (%)</label>
+                              <input
+                                type="number"
+                                style={inputBig}
+                                value={interestRate}
+                                onChange={(e) => setInterestRate(Number(e.target.value))}
+                                onFocus={(e) => e.target.select()}
+                                placeholder="0"
+                              />
+                            </div>
                           </div>
                           <div>
-                            <label style={labelTop}>Juros (%)</label>
-                            <input
-                              type="number"
-                              style={inputBig}
-                              value={interestRate}
-                              onChange={(e) => setInterestRate(Number(e.target.value))}
-                              onFocus={(e) => e.target.select()}
-                              placeholder="0"
+                            <label style={labelTop}>Link de Pagamento (Opcional)</label>
+                            <input 
+                              type="url" 
+                              placeholder="https://..."
+                              style={inputBig} 
+                              value={paymentLink} 
+                              onChange={e => setPaymentLink(e.target.value)} 
                             />
                           </div>
                         </div>

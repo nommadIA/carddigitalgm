@@ -60,6 +60,7 @@ export interface Budget {
   discountType?: 'fixed' | 'percent';
   interestRate: number;
   paymentMethod: PaymentMethod;
+  payment_link?: string | null;
   installments: number;
   totalAmount: number;
   

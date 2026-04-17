@@ -838,19 +838,28 @@ body{ overflow: hidden; }
 
 /* sidebar glass */
 .gm-sidebar{
-  background: rgba(15, 15, 15, 0.75) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(0, 0, 0, 0.2) 100%) !important;
   border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
   backdrop-filter: blur(24px) saturate(1.5);
   -webkit-backdrop-filter: blur(24px) saturate(1.5);
 }
 
 /* cards glass premium */
 .gm-card{
-  background: rgba(20, 20, 20, 0.65) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
   backdrop-filter: blur(20px) saturate(1.2);
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.02) !important;
+}
+
+.gm-card:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
+  border-color: var(--gm-primary) !important;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
 }
 
 /* inputs */
@@ -919,10 +928,15 @@ body{ overflow: hidden; }
 
 /* overlay inteligente: mantém leitura perfeita */
 .gm-layout::after{
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background:
     /* luz premium (mantém) */
-    radial-gradient(900px 420px at 15% 0%, rgba(255,123,0,0.10), transparent 55%),
-    radial-gradient(900px 420px at 85% 0%, rgba(255,154,26,0.08), transparent 55%),
+    radial-gradient(900px 420px at 15% 0%, rgba(255,123,0,0.15), transparent 55%),
+    radial-gradient(900px 420px at 85% 0%, rgba(255,154,26,0.10), transparent 55%),
 
     /* vinheta (controlada por variável) */
     radial-gradient(1400px 700px at 50% 30%, transparent 40%, rgba(0,0,0,var(--gm-app-vignette-alpha,0.22)) 85%),
@@ -930,8 +944,8 @@ body{ overflow: hidden; }
     /* escurecimento geral (controlado por variável) */
     linear-gradient(
       to bottom,
-      rgba(0,0,0,var(--gm-app-overlay-alpha,0.55)),
-      rgba(0,0,0,var(--gm-app-overlay-alpha,0.55))
+      rgba(0,0,0,var(--gm-app-overlay-alpha,0.6)),
+      rgba(0,0,0,var(--gm-app-overlay-alpha,0.6))
     ) !important;
     
   animation: gmAmbientBreath 18s ease-in-out infinite;
@@ -960,11 +974,6 @@ body{ overflow: hidden; }
 body{
   background: var(--gm-bg);
   color: var(--gm-text);
-}
-
-.gm-card{
-  background: var(--gm-surface) !important;
-  border: 1px solid var(--gm-border) !important;
 }
 
 /* =========================
