@@ -185,22 +185,32 @@ button{ font-family:inherit; }
 /* =========================================================
    UTILITIES
 ========================================================= */
+@keyframes gm-reflection-animate {
+  0% { transform: translate3d(-3%, -3%, 0) rotate(0deg); opacity: 0.6; }
+  50% { transform: translate3d(3%, 1.5%, 0) rotate(0.5deg); opacity: 0.85; }
+  100% { transform: translate3d(-3%, -3%, 0) rotate(0deg); opacity: 0.6; }
+}
+
 .gm-reflection {
   position: relative;
   overflow: hidden !important;
+  contain: paint; /* PERFORMANCE: CSS Containment */
 }
 
 .gm-reflection::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: -15%;
+  left: -15%;
+  width: 130%;
+  height: 130%;
   background: linear-gradient(135deg, color-mix(in srgb, var(--gm-primary), transparent 88%) 0%, transparent 45%);
   pointer-events: none;
   opacity: 0.8;
   z-index: 0;
+  will-change: transform, opacity; /* PERFORMANCE hint */
+  animation: gm-reflection-animate 12s ease-in-out infinite;
+  transform: translateZ(0); /* FORCE GPU */
 }
 
 .gm-reflection > * {
@@ -210,6 +220,7 @@ button{ font-family:inherit; }
 
 .gm-reflection-strong::before {
   background: linear-gradient(135deg, color-mix(in srgb, var(--gm-primary), transparent 80%) 0%, transparent 60%);
+  animation-duration: 10s;
 }
 
 .gm-reflection-edge::after {
@@ -317,13 +328,16 @@ button{ font-family:inherit; }
 .gm-nav a.active::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: -15%;
+  left: -15%;
+  width: 130%;
+  height: 130%;
   background: linear-gradient(135deg, color-mix(in srgb, var(--gm-primary), transparent 80%) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
+  animation: gm-reflection-animate 12s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
 }
 .gm-nav a.active svg, .gm-nav a.active span {
   position: relative;
@@ -398,22 +412,26 @@ button{ font-family:inherit; }
   min-width: 0;
   display: flex;
   flex-direction: column;
-  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease, border-color 0.4s ease;
   position: relative;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  contain: content; /* PERFORMANCE: Isolate layout/paint */
 }
 
 .gm-card::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: -15%;
+  left: -15%;
+  width: 130%;
+  height: 130%;
   background: linear-gradient(135deg, color-mix(in srgb, var(--gm-primary), transparent 90%) 0%, transparent 50%);
   pointer-events: none;
   opacity: 0.7;
   z-index: 0;
+  animation: gm-reflection-animate 20s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
 .gm-card::after {
@@ -779,12 +797,15 @@ input[type="range"]::-moz-range-thumb {
 .gm-search::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: -15%;
+  left: -15%;
+  width: 130%;
+  height: 130%;
   background: linear-gradient(135deg, color-mix(in srgb, var(--gm-primary), transparent 95%) 0%, transparent 40%);
   pointer-events: none;
+  animation: gm-reflection-animate 18s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
 }
 .gm-search input{
   border:none; outline:none; background:transparent; color:var(--gm-text);
@@ -806,12 +827,15 @@ input[type="range"]::-moz-range-thumb {
 .gm-tabs::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: -15%;
+  left: -15%;
+  width: 130%;
+  height: 130%;
   background: linear-gradient(135deg, color-mix(in srgb, var(--gm-primary), transparent 95%) 0%, transparent 40%);
   pointer-events: none;
+  animation: gm-reflection-animate 25s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
 }
 .gm-tab{
   border:none; cursor:pointer;
