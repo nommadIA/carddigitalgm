@@ -246,7 +246,14 @@ export default function Expenses() {
             <button className={`gm-tab ${tab === "active" ? "active" : ""}`} onClick={() => setTab("active")}>
               Ativas
             </button>
-            <button className={`gm-tab ${tab === "trash" ? "active" : ""}`} onClick={() => setTab("trash")}>
+            <button 
+              className={`px-4 py-2 rounded-lg text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border-2 ${
+                tab === "trash"
+                  ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_15px_var(--gm-primary-20)]"
+                  : "bg-black/40 border-[var(--gm-primary)]/20 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/10 hover:border-[var(--gm-primary)]/40 hover:text-[var(--gm-primary)] shadow-none"
+              }`}
+              onClick={() => setTab("trash")}
+            >
               Lixeira
             </button>
           </div>
@@ -367,7 +374,7 @@ export default function Expenses() {
 
                     {tab === "active" ? (
                       <button
-                        className="gm-btn gm-btn-icon gm-btn-danger"
+                        className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_8px_rgba(255,123,0,0.1)]"
                         onClick={() => softDeleteExpense(e.id)}
                         title="Mover para lixeira"
                       >
@@ -379,7 +386,7 @@ export default function Expenses() {
                           <RotateCcw size={16} />
                         </button>
                         <button
-                          className="gm-btn gm-btn-icon gm-btn-danger"
+                          className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
                           onClick={() => confirmHardDelete(e.id)}
                           title="Excluir definitivo"
                         >
@@ -396,17 +403,30 @@ export default function Expenses() {
       </Card>
 
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6">
-            <h3 className="text-lg font-bold mb-2">Excluir definitivamente?</h3>
-            <p className="text-sm opacity-70 mb-4">Essa ação não pode ser desfeita.</p>
-            <div className="flex gap-2 justify-end">
-              <button className="gm-btn gm-btn-outline" onClick={() => setDeleteConfirmId(null)}>
-                Cancelar
-              </button>
-              <button className="gm-btn" onClick={hardDelete}>
-                Excluir
-              </button>
+        <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
+          <div className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
+                <Trash2 size={32} className="text-[var(--gm-primary)]" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Excluir Definitivamente?</h3>
+              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                Esta ação não pode ser desfeita. A despesa será removida permanentemente do sistema.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={hardDelete}
+                  className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
+                >
+                  Excluir
+                </button>
+              </div>
             </div>
           </div>
         </div>

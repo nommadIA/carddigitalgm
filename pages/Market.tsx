@@ -599,7 +599,7 @@ const Market = () => {
                             {walletBalance > 0 && (
                                 <button 
                                     onClick={() => setShowResetConfirm(true)} 
-                                    className="gm-btn gm-btn-icon gm-btn-danger"
+                                    className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
                                     title="Zerar Saldo"
                                 >
                                     <Trash2 size={20} />
@@ -696,7 +696,7 @@ const Market = () => {
                                                                e.stopPropagation();
                                                                setShowDeleteListConfirm(list.id);
                                                            }}
-                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white transition-colors shadow-[0_0_8px_rgba(255,123,0,0.1)]"
                                                            title="Excluir esta compra"
                                                        >
                                                            <Trash2 size={14} />
@@ -712,7 +712,7 @@ const Market = () => {
                                                 e.stopPropagation();
                                                 setShowDeleteHistoryConfirm(h.month);
                                             }}
-                                            className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors z-20"
+                                            className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white transition-colors z-20 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
                                             title="Excluir este mês"
                                         >
                                             <Trash2 size={18} />
@@ -822,7 +822,10 @@ const Market = () => {
                                     </div>
                                     <div className="flex items-center justify-between sm:justify-end gap-6">
                                         <span className="font-bold text-xl text-[var(--gm-primary)]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
-                                        <button onClick={() => handleRemoveItem(item.id)} className="gm-btn gm-btn-icon gm-btn-danger">
+                                        <button 
+                                            onClick={() => handleRemoveItem(item.id)} 
+                                            className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_8px_rgba(255,123,0,0.1)]"
+                                        >
                                             <Trash2 size={18}/>
                                         </button>
                                     </div>
@@ -895,7 +898,6 @@ const Market = () => {
         )}
        </AnimatePresence>
 
-                {/* Modal de Confirmação de Exclusão de Lista */}
                 <AnimatePresence>
                     {showDeleteListConfirm && (
                         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
@@ -910,30 +912,31 @@ const Market = () => {
                                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                                className="bg-[#1a1a1a] border border-white/10 p-6 rounded-3xl w-full max-w-md relative z-10 shadow-2xl"
+                                className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in"
+                                onClick={e => e.stopPropagation()}
                             >
-                                <div className="flex flex-col items-center text-center">
-                                    <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mb-6 text-red-500">
-                                        <Trash2 size={32} />
+                                <div className="p-8 text-center">
+                                    <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
+                                        <Trash2 size={32} className="text-[var(--gm-primary)]" />
                                     </div>
-                                    <h3 className="text-2xl font-black text-white mb-2">Excluir Compra?</h3>
-                                    <p className="text-slate-400 mb-8">
+                                    <h3 className="text-xl font-bold text-white mb-2">Excluir Compra?</h3>
+                                    <p className="text-slate-400 text-sm mb-8 leading-relaxed">
                                         Tem certeza que deseja excluir esta compra específica do histórico? Esta ação não pode ser desfeita.
                                     </p>
                                     
-                                    <div className="grid grid-cols-2 gap-4 w-full">
+                                    <div className="flex gap-3">
                                         <button 
-                                            className="gm-btn gm-btn-soft w-full py-3"
+                                            className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
                                             onClick={() => setShowDeleteListConfirm(null)}
                                         >
-                                            VOLTAR
+                                            Voltar
                                         </button>
                                         <button 
-                                            className="gm-btn gm-btn-danger w-full py-3"
+                                            className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
                                             onClick={() => handleDeleteList(showDeleteListConfirm)}
                                             disabled={historyLoading}
                                         >
-                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "EXCLUIR"}
+                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Excluir"}
                                         </button>
                                     </div>
                                 </div>
@@ -950,42 +953,40 @@ const Market = () => {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                                 onClick={() => setShowDeleteHistoryConfirm(null)}
                             />
                             <motion.div 
-                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                                className="relative w-full max-w-sm bg-[#1a1a1a]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
+                                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in"
+                                onClick={e => e.stopPropagation()}
                             >
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-[var(--gm-primary)]"></div>
-                                
-                                <div className="flex flex-col items-center text-center">
-                                    <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center text-red-500 mb-6">
-                                        <Trash2 size={32} />
+                                <div className="p-8 text-center">
+                                    <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
+                                        <Trash2 size={32} className="text-[var(--gm-primary)]" />
                                     </div>
-                                    
-                                    <h2 className="text-2xl font-black text-white mb-2">Excluir Histórico?</h2>
-                                    <p className="text-slate-400 mb-8">
+                                    <h2 className="text-xl font-bold text-white mb-2">Excluir Histórico?</h2>
+                                    <p className="text-slate-400 text-sm mb-8 leading-relaxed">
                                         Deseja excluir permanentemente todo o histórico de gastos deste mês? 
                                         <br />
-                                        <span className="text-red-400 font-bold">Esta ação não pode ser desfeita.</span>
+                                        Esta ação não pode ser desfeita.
                                     </p>
                                     
-                                    <div className="grid grid-cols-2 gap-4 w-full">
+                                    <div className="flex gap-3">
                                         <button 
-                                            className="gm-btn gm-btn-soft w-full py-3"
+                                            className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
                                             onClick={() => setShowDeleteHistoryConfirm(null)}
                                         >
-                                            VOLTAR
+                                            Voltar
                                         </button>
                                         <button 
-                                            className="gm-btn gm-btn-danger w-full py-3"
+                                            className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
                                             onClick={() => handleDeleteHistoryMonth(showDeleteHistoryConfirm)}
                                             disabled={historyLoading}
                                         >
-                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "EXCLUIR"}
+                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Excluir"}
                                         </button>
                                     </div>
                                 </div>
@@ -1058,37 +1059,35 @@ const Market = () => {
                         onClick={() => setShowResetConfirm(false)}
                     />
                     <motion.div 
-                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-sm bg-[#1a1a1a]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
+                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                        className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-[var(--gm-primary)]"></div>
-                        
-                        <div className="flex flex-col items-center text-center">
-                            <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mb-6 text-red-500">
-                                <Trash2 size={32} />
+                        <div className="p-8 text-center">
+                            <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
+                                <Trash2 size={32} className="text-[var(--gm-primary)]" />
                             </div>
-                            <h3 className="text-2xl font-black text-white mb-2">Zerar Saldo?</h3>
-                            <p className="text-slate-400 mb-8">
+                            <h3 className="text-xl font-bold text-white mb-2">Zerar Saldo?</h3>
+                            <p className="text-slate-400 text-sm mb-8 leading-relaxed">
                                 Tem certeza que deseja zerar o seu saldo disponível de <span className="text-white font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
-                                <br/><span className="text-red-400 font-bold">Esta ação não pode ser desfeita.</span>
+                                <br/>Esta ação não pode ser desfeita.
                             </p>
                             
-                            <div className="grid grid-cols-1 gap-3 w-full">
+                            <div className="flex gap-3">
+                                <button 
+                                    onClick={() => setShowResetConfirm(false)}
+                                    className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
+                                >
+                                    Cancelar
+                                </button>
                                 <button 
                                     onClick={handleResetBalance}
                                     disabled={resettingBalance}
-                                    className="gm-btn gm-btn-danger w-full py-4 font-black flex items-center justify-center gap-2"
+                                    className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
                                 >
-                                    {resettingBalance ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={24} />}
-                                </button>
-                                <button 
-                                    onClick={() => setShowResetConfirm(false)}
-                                    className="gm-btn gm-btn-soft w-full py-3"
-                                >
-                                    CANCELAR
+                                    {resettingBalance ? <Loader2 size={24} className="animate-spin mx-auto" /> : "Zerar"}
                                 </button>
                             </div>
                         </div>

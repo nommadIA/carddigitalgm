@@ -633,13 +633,13 @@ export default function Financial() {
                           }}
                           className={`p-2 rounded-lg transition-all flex items-center gap-2 ${
                             confirmDeleteId === rep.id 
-                              ? "bg-red-500 text-white animate-pulse px-4" 
-                              : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                              ? "bg-[var(--gm-primary)] text-white animate-pulse px-4 shadow-[0_0_15px_var(--gm-primary-40)]" 
+                              : "bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20 border border-[var(--gm-primary)]/20 shadow-[0_0_8px_rgba(255,123,0,0.1)]"
                           }`}
                           title={confirmDeleteId === rep.id ? "Clique novamente para confirmar" : "Excluir Relatório"}
                         >
                           <Trash2 size={18} />
-                          {confirmDeleteId === rep.id && <span className="text-xs font-bold">CONFIRMAR?</span>}
+                          {confirmDeleteId === rep.id && <span className="text-xs font-bold uppercase tracking-widest">Confirmar?</span>}
                         </button>
                       </div>
                     </div>

@@ -273,7 +273,15 @@ export default function Clients() {
               <button type="button" className={`gm-tab ${tab === "ATIVOS" ? "active" : ""}`} onClick={() => setTab("ATIVOS")}>
                 Ativos
               </button>
-              <button type="button" className={`gm-tab ${tab === "LIXEIRA" ? "active" : ""}`} onClick={() => setTab("LIXEIRA")}>
+              <button 
+                type="button" 
+                className={`flex-1 h-10 px-4 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border-2 ${
+                  tab === "LIXEIRA"
+                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_20px_var(--gm-primary-20)]"
+                    : "bg-black/40 border-[var(--gm-primary)]/20 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/10 hover:border-[var(--gm-primary)]/40 hover:text-[var(--gm-primary)] shadow-none"
+                }`}
+                onClick={() => setTab("LIXEIRA")}
+              >
                 Lixeira
               </button>
             </div>
@@ -309,7 +317,7 @@ export default function Clients() {
                       const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0";
                       if (tone === "orange") return `${base} gm-btn-soft`;
                       if (tone === "green") return `${base} gm-btn-soft`;
-                      if (tone === "red") return `${base} gm-btn-danger`;
+                      if (tone === "red") return `${base} bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] shadow-[0_0_8px_rgba(255,123,0,0.1)]`;
                       return `${base} gm-btn-soft`;
                     };
 
@@ -354,7 +362,7 @@ export default function Clients() {
                                     <RotateCcw size={16} />
                                   </button>
                                   <button
-                                    className="h-10 w-10 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-300 transition-all flex items-center justify-center shrink-0"
+                                    className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
                                     title="Excluir definitivo"
                                     type="button"
                                     onClick={() => confirmHardDelete(c.id)}
@@ -455,25 +463,25 @@ export default function Clients() {
       {/* Hard Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
-          <div className="bg-slate-900 border border-red-500/30 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
-                <ShieldAlert size={32} className="text-red-500" />
+          <div className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
+                <Trash2 size={32} className="text-[var(--gm-primary)]" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Excluir Definitivamente?</h3>
-              <p className="text-slate-400 text-sm mb-6">
+              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
                 Esta ação não pode ser desfeita. O cliente será removido permanentemente do sistema.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirmId(null)}
-                  className="flex-1 py-3 text-slate-300 font-medium hover:bg-white/5 rounded-xl transition-colors border border-white/10"
+                  className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={hardDelete}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-500/20 transition-all"
+                  className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
                 >
                   Excluir
                 </button>

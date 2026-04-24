@@ -394,7 +394,7 @@ export default function Budgets() {
     const base = "gm-btn flex-1 h-10 flex items-center justify-center gap-2";
     if (tone === "orange") return `${base} gm-btn-soft`;
     if (tone === "green") return `${base} gm-btn-soft`;
-    if (tone === "red") return `${base} gm-btn-danger`;
+    if (tone === "red") return `${base} bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] shadow-[0_0_10px_rgba(255,123,0,0.1)]`;
     return `${base} gm-btn-soft`;
   };
 
@@ -440,8 +440,8 @@ export default function Budgets() {
             onClick={() => setTab("LIXEIRA")}
             className={`px-6 py-3 rounded-full text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border-2 ${
               tab === "LIXEIRA"
-                ? "bg-red-500/20 border-red-500 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)] scale-105"
-                : "bg-black/40 border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-300"
+                ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_20px_var(--gm-primary-20)] scale-105"
+                : "bg-black/40 border-[var(--gm-primary)]/20 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/10 hover:border-[var(--gm-primary)]/40 hover:text-[var(--gm-primary)] shadow-none"
             }`}
           >
             LIXEIRA
@@ -489,7 +489,7 @@ export default function Budgets() {
                     const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0";
                     if (tone === "orange") return `${base} gm-btn-soft`;
                     if (tone === "green") return `${base} gm-btn-soft`;
-                    if (tone === "red") return `${base} gm-btn-danger`;
+                    if (tone === "red") return `${base} bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] shadow-[0_0_8px_rgba(255,123,0,0.1)]`;
                     return `${base} gm-btn-soft`;
                   };
 
@@ -549,9 +549,9 @@ export default function Budgets() {
                                   <RotateCcw size={16} />
                                 </button>
                                 <button
-                                  className="h-10 w-10 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-300 transition-all flex items-center justify-center shrink-0"
+                                  className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
                                   title="Excluir Definitivamente"
-                                  onClick={() => hardDelete(r.id)}
+                                  onClick={() => confirmHardDelete(r.id)}
                                   type="button"
                                 >
                                   <Trash2 size={16} />
@@ -641,8 +641,8 @@ export default function Budgets() {
                         })}
                       </DraggableScroll>
                     ) : (
-                      <div className="w-full bg-red-500/10 border border-red-500/20 rounded-xl p-2 text-center">
-                        <span className="text-xs font-extrabold text-red-400 uppercase tracking-widest">Na Lixeira</span>
+                      <div className="w-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-xl p-2 text-center shadow-[0_0_10px_rgba(255,123,0,0.05)]">
+                        <span className="text-xs font-extrabold text-[var(--gm-primary)] uppercase tracking-widest">Na Lixeira</span>
                       </div>
                     )}
                   </div>
@@ -688,12 +688,12 @@ export default function Budgets() {
                         </button>
 
                         <button
-                          className="h-10 w-12 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white text-red-300 transition-all flex items-center justify-center"
+                          className="h-10 w-12 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shadow-[0_0_10px_rgba(255,123,0,0.1)]"
                           title="Excluir Definitivo"
                           onClick={() => confirmHardDelete(r.id)}
                           type="button"
                         >
-                          <ShieldAlert size={16} />
+                          <Trash2 size={16} />
                         </button>
                       </>
                     )}
@@ -731,7 +731,7 @@ export default function Budgets() {
       {/* Share Options Modal */}
       {shareData && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
-          <div className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
+          <div className="gm-card w-full max-w-md rounded-3xl overflow-hidden animate-slide-up !border-white/10" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
               <h3 className="text-lg font-bold">Compartilhar Orçamento</h3>
               <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -827,25 +827,25 @@ export default function Budgets() {
       {/* Hard Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
-          <div className="bg-slate-900 border border-red-500/30 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
-                <ShieldAlert size={32} className="text-red-500" />
+          <div className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
+                <Trash2 size={32} className="text-[var(--gm-primary)]" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Excluir Definitivamente?</h3>
-              <p className="text-slate-400 text-sm mb-6">
+              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
                 Esta ação não pode ser desfeita. O orçamento será removido permanentemente do sistema.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirmId(null)}
-                  className="gm-btn gm-btn-outline flex-1"
+                  className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={hardDelete}
-                  className="gm-btn gm-btn-danger flex-1"
+                  className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
                 >
                   Excluir
                 </button>
