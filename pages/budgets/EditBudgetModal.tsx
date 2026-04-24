@@ -247,7 +247,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
     <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xl animate-fade-in">
       <div 
         onClick={(e) => e.stopPropagation()} 
-        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl custom-scrollbar flex flex-col"
+        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl custom-scrollbar flex flex-col gm-reflection-edge"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-white/10 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
@@ -276,8 +276,8 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
             ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left: Itens */}
-                <div className="lg:col-span-8 space-y-6">
-                    <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-5">
+                    <div className="lg:col-span-8 space-y-6">
+                        <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-5 gm-reflection">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-white">Itens</h3>
                             <div className="text-xs text-slate-400">
@@ -291,7 +291,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
 
                 {/* Right: Dados */}
                 <div className="lg:col-span-4 space-y-6">
-                    <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-5 space-y-5 sticky top-6">
+                    <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-5 space-y-5 sticky top-6 gm-reflection">
                         <div>
                             <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Cliente</label>
                             <Select
@@ -335,7 +335,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                 />
                             </div>
                             {paymentMethod === "CREDIT" && (
-                                <div className="col-span-2 grid grid-cols-2 gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                                <div className="col-span-2 grid grid-cols-2 gap-3 bg-black/20 p-3 rounded-xl border border-white/5 gm-reflection">
                                     <div>
                                         <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Parcelas</label>
                                         <Select
