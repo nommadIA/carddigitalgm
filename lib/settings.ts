@@ -159,8 +159,34 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
     root.setAttribute("data-button-style", fallback);
   }
 
-  // Background do app (imagem)
-  root.style.setProperty("--gm-app-bg-url", s.app_background_url ? `url("${s.app_background_url}")` : "none");
+  // Background do app (imagem/video)
+  const isVideo = s.app_background_url?.toLowerCase().endsWith(".mp4") || s.app_background_url?.toLowerCase().endsWith(".webm");
+  
+  if (isVideo) {
+    root.style.setProperty("--gm-app-bg-url", "none");
+  } else {
+    root.style.setProperty("--gm-app-bg-url", s.app_background_url ? `url("${s.app_background_url}")` : "none");
+  }
+  
+  if (s.app_background_url) {
+    root.classList.add("gm-has-bg");
+  } else {
+    root.classList.remove("gm-has-bg");
+  }
+  
+  const videoEl = document.getElementById("gm-video-bg") as HTMLVideoElement;
+  if (videoEl) {
+    if (isVideo && s.app_background_url) {
+      if (videoEl.src !== s.app_background_url) {
+        videoEl.src = s.app_background_url;
+      }
+      videoEl.style.display = "block";
+    } else {
+      videoEl.style.display = "none";
+      videoEl.src = "";
+    }
+  }
+
   root.style.setProperty("--gm-app-bg-fit", String(s.app_background_fit || "cover"));
   root.style.setProperty("--gm-app-bg-opacity", String(s.app_background_opacity ?? 0));
   root.style.setProperty("--gm-app-bg-pos-x", s.app_background_pos_x || "50%");

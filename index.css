@@ -1031,14 +1031,30 @@ body{ overflow: hidden; }
   pointer-events:none;
 
   background-image: var(--gm-app-bg-url);
-  background-size: calc(var(--gm-app-bg-scale, 1) * 100%);
+  background-size: var(--gm-app-bg-fit, cover);
   background-repeat:no-repeat;
   
   opacity: var(--gm-app-bg-opacity, 0);
-  transform: scale(var(--gm-app-bg-depth-scale, 1.05));
+  transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05)));
   will-change: transform, background-position, filter;
   backface-visibility: hidden;
-  transform: translateZ(0) scale(var(--gm-app-bg-depth-scale,1.04)) !important;
+}
+
+#gm-video-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3;
+  pointer-events: none;
+  object-fit: var(--gm-app-bg-fit, cover);
+  opacity: var(--gm-app-bg-opacity, 0);
+  transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05)));
+  filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) saturate(1.08) contrast(1.05);
+  object-position: 
+    calc(var(--gm-app-bg-pos-x, 50%) + var(--gm-app-bg-parallax-x, 0px))
+    calc(var(--gm-app-bg-pos-y, 50%) + var(--gm-app-bg-parallax-y, 0px) + var(--gm-app-bg-parallax-y-mouse, 0px));
+  will-change: transform, object-position, filter;
 }
 
 .gm-main{ background: transparent !important; }
@@ -1486,4 +1502,27 @@ body.bottom-nav-visible .pagination-dots-container {
   opacity: 0;
   transform: translateY(20px);
   pointer-events: none;
+}
+
+/* =========================================================
+   BACKGROUND BLUR EFFECTS 
+========================================================= */
+html.gm-has-bg .gm-card,
+html.gm-has-bg .gm-sidebar,
+html.gm-has-bg .gm-toolbar,
+html.gm-has-bg .gm-statusmenu,
+html.gm-has-bg .gm-tabs,
+html.gm-has-bg .gm-budget-card {
+  backdrop-filter: blur(8px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.1) !important;
+  background: linear-gradient(135deg, rgba(16, 20, 26, 0.55) 0%, rgba(16, 20, 26, 0.40) 100%) !important;
+}
+
+html.gm-has-bg .gm-search,
+html.gm-has-bg .gm-input,
+html.gm-has-bg select.gm-input,
+html.gm-has-bg .gm-tab {
+  backdrop-filter: blur(4px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(1.1) !important;
+  background: rgba(16, 20, 26, 0.35) !important;
 }

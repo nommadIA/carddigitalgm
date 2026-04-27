@@ -47,6 +47,8 @@ type Fit = "cover" | "contain";
 const TIMBRADO_MODEL_URL =
   "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/Modelo%20Timbrado/TIMBRADO%20GABARITO.png";
 
+import imageCompression from "browser-image-compression";
+
 export default function Configuracoes() {
   const { tenantId, user } = useAuth();
 
@@ -429,10 +431,41 @@ export default function Configuracoes() {
     }
   }
 
+  const [uploadingBackground, setUploadingBackground] = useState(false);
+
   async function onUploadBackground(file: File) {
     if (!tenantId) return;
-    const url = await uploadTenantAsset(tenantId, file, "background");
-    setBgUrl(url);
+    setUploadingBackground(true);
+    try {
+      let fileToUpload = file;
+      const isImage = file.type.startsWith('image/');
+      const isGif = file.type === 'image/gif';
+      
+      if (isImage && !isGif) {
+        const options = {
+          maxSizeMB: 2,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+          initialQuality: 0.8
+        };
+        try {
+          fileToUpload = await imageCompression(file, options);
+        } catch (e) {
+          console.warn("Compressão falhou, será enviado o arquivo original:", e);
+        }
+      } else {
+        if (file.size > 15 * 1024 * 1024) {
+          throw new Error("Arquivo muito grande. O limite máximo é 15MB para GIFs/Vídeos.");
+        }
+      }
+
+      const url = await uploadTenantAsset(tenantId, fileToUpload, "background");
+      setBgUrl(url);
+    } catch (e: any) {
+      alert(e.message || "Erro no upload");
+    } finally {
+      setUploadingBackground(false);
+    }
   }
 
   async function onUploadTimbrado(file: File) {
@@ -906,15 +939,35 @@ export default function Configuracoes() {
                       </div>
 
                       <div className="pt-2">
+                        <div className="text-[10px] leading-tight text-slate-500 dark:text-slate-400 mb-3 text-center">
+                          Formatos aceitos: JPG, PNG, WEBP, GIF, MP4 (Máx. 15MB).<br />
+                          As imagens contam com otimização automática.
+                        </div>
                         {bgUrl && (
-                          <div className="mb-4 rounded-xl overflow-hidden border border-black/10 dark:border-white/10 relative aspect-video shadow-sm">
-                            <img src={bgUrl} alt="Background" className="w-full h-full object-cover" />
+                          <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] group">
+                            {uploadingBackground ? (
+                              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
+                                <Loader2 size={32} className="animate-spin text-[var(--gm-primary)] mb-2" />
+                                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Processando...</span>
+                              </div>
+                            ) : null}
+                            {bgUrl.toLowerCase().endsWith('.mp4') || bgUrl.toLowerCase().endsWith('.webm') ? (
+                              <video src={bgUrl} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                            ) : (
+                              <img src={bgUrl} alt="Background" className="w-full h-full object-cover" />
+                            )}
                           </div>
                         )}
-                        <label className="gm-btn w-full py-2 flex items-center justify-center gap-2 cursor-pointer">
-                          <FileImage size={16} />
-                          Upload Background
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadBackground(f); }} />
+                        {!bgUrl && uploadingBackground && (
+                           <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] bg-black/10 flex flex-col items-center justify-center backdrop-blur-sm">
+                               <Loader2 size={32} className="animate-spin text-[var(--gm-primary)] mb-2" />
+                               <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Processando...</span>
+                           </div>
+                        )}
+                        <label className={`gm-btn w-full py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingBackground ? 'opacity-50 pointer-events-none' : ''}`}>
+                          {uploadingBackground ? <Loader2 size={16} className="animate-spin" /> : <FileImage size={16} />}
+                          {uploadingBackground ? "Enviando..." : "Upload Background"}
+                          <input type="file" accept="image/*,video/mp4,video/webm" className="hidden" disabled={uploadingBackground} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadBackground(f); }} />
                         </label>
                       </div>
                     </div>
@@ -1281,11 +1334,39 @@ export default function Configuracoes() {
                             <input type="range" min={0} max={24} step={1} className="w-full h-2 accent-[var(--gm-primary)]" value={bgBlur} onChange={(e) => setBgBlur(Number(e.target.value))} />
                           </div>
 
-                          <div className="pt-4">
-                            <label className="gm-btn w-full py-4 flex items-center justify-center gap-2 cursor-pointer text-base shadow-lg shadow-[var(--gm-primary-20)]">
-                              <FileImage size={20} />
-                              Upload Background
-                              <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadBackground(f); }} />
+                          <div className="pt-4 flex flex-col gap-3">
+                            <div className="text-[10px] leading-tight text-slate-500 dark:text-slate-400 text-center">
+                              Formatos aceitos: JPG, PNG, WEBP, GIF, MP4 (Máx. 15MB).<br />
+                              As imagens contam com otimização automática.
+                            </div>
+                            
+                            {bgUrl && (
+                              <div className="rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] group">
+                                {uploadingBackground ? (
+                                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
+                                    <Loader2 size={32} className="animate-spin text-[var(--gm-primary)] mb-2" />
+                                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">Processando...</span>
+                                  </div>
+                                ) : null}
+                                {bgUrl.toLowerCase().endsWith('.mp4') || bgUrl.toLowerCase().endsWith('.webm') ? (
+                                  <video src={bgUrl} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                                ) : (
+                                  <img src={bgUrl} alt="Background" className="w-full h-full object-cover" />
+                                )}
+                              </div>
+                            )}
+                            
+                            {!bgUrl && uploadingBackground && (
+                               <div className="rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] bg-black/10 flex flex-col items-center justify-center backdrop-blur-sm">
+                                   <Loader2 size={32} className="animate-spin text-[var(--gm-primary)] mb-2" />
+                                   <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Processando...</span>
+                               </div>
+                            )}
+
+                            <label className={`gm-btn w-full py-4 flex items-center justify-center gap-2 cursor-pointer text-base shadow-lg shadow-[var(--gm-primary-20)] ${uploadingBackground ? 'opacity-50 pointer-events-none' : ''}`}>
+                              {uploadingBackground ? <Loader2 size={20} className="animate-spin" /> : <FileImage size={20} />}
+                              {uploadingBackground ? "Enviando..." : "Upload Background"}
+                              <input type="file" accept="image/*,video/mp4,video/webm" className="hidden" disabled={uploadingBackground} onChange={(e) => { const f = e.target.files?.[0]; if (f) onUploadBackground(f); }} />
                             </label>
                           </div>
                         </div>

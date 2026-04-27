@@ -12,6 +12,7 @@
   "dependencies": {
     "@google/genai": "^1.42.0",
     "@supabase/supabase-js": "^2.93.3",
+    "browser-image-compression": "^2.0.2",
     "firebase": "^12.9.0",
     "framer-motion": "^12.34.3",
     "jspdf": "^2.5.1",
