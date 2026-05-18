@@ -353,7 +353,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       />
 
       {/* MOBILE TOP HEADER */}
-      <div className="fixed top-0 left-0 right-0 h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-black/40 backdrop-blur-[32px] saturate-[1.8] border-b border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+      <div className="fixed top-0 left-0 right-0 h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-black/40 backdrop-blur-[20px] saturate-[1.8] border-b border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
         <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center shrink-0">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-md">

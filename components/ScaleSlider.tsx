@@ -9,12 +9,18 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = Number(e.target.value);
-    setLocalValue(val);
-    document.documentElement.style.setProperty(isMobile ? "--gm-mobile-scale" : "--gm-app-scale", String(val));
+    if (!isNaN(val)) {
+      setLocalValue(val);
+      document.documentElement.style.setProperty(isMobile ? "--gm-mobile-scale" : "--gm-app-scale", String(val));
+    }
   };
 
   const handleCommit = () => {
-    onChange(localValue);
+    let finalVal = localValue;
+    if (finalVal < 0.7) finalVal = 0.7;
+    if (finalVal > 3) finalVal = 3;
+    setLocalValue(finalVal);
+    onChange(finalVal);
   };
 
   return (
@@ -30,7 +36,23 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
         onMouseUp={handleCommit}
         onTouchEnd={handleCommit}
       />
-      <div className="w-10 text-center font-bold text-xs text-[var(--gm-primary)]">{localValue}x</div>
+      <div className="flex items-center gap-1 shrink-0">
+        <input
+          type="number"
+          min={0.7}
+          max={3}
+          step={0.01}
+          className="w-16 bg-black/30 dark:bg-black/50 text-center font-bold text-sm text-[var(--gm-primary)] rounded-lg border border-[var(--gm-primary)]/20 focus:border-[var(--gm-primary)]/50 focus:outline-none h-8 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          value={localValue}
+          onChange={handleInput}
+          onBlur={handleCommit}
+          onFocus={(e) => e.currentTarget.select()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleCommit();
+          }}
+        />
+        <span className="text-sm font-bold text-[var(--gm-primary)] opacity-70">x</span>
+      </div>
     </div>
   );
 };

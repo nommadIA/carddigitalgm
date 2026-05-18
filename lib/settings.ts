@@ -38,6 +38,14 @@ export type AppSettings = {
   app_background_scale?: number;
   app_background_blur?: number;
 
+  mobile_app_background_url?: string | null;
+  mobile_app_background_fit?: string | null;
+  mobile_app_background_opacity?: number | null;
+  mobile_app_background_pos_x?: string;
+  mobile_app_background_pos_y?: string;
+  mobile_app_background_scale?: number;
+  mobile_app_background_blur?: number;
+
   app_scale?: number | null;
   mobile_scale?: number | null;
 
@@ -78,6 +86,15 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   app_background_pos_y: "50%",
   app_background_scale: 1,
   app_background_blur: 10,
+  
+  mobile_app_background_url: null,
+  mobile_app_background_fit: "cover",
+  mobile_app_background_opacity: 0.18,
+  mobile_app_background_pos_x: "50%",
+  mobile_app_background_pos_y: "50%",
+  mobile_app_background_scale: 1.2,
+  mobile_app_background_blur: 10,
+
   app_scale: 2.0,
   mobile_scale: 1.5,
   button_style: "solid",
@@ -202,9 +219,25 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
   const effectiveBlur = Math.round(blur * factor);
   root.style.setProperty("--gm-app-bg-blur-effective", `${effectiveBlur}px`);
 
+  // Mobile backgrounds
+  root.style.setProperty("--gm-mobile-bg-url", s.mobile_app_background_url ? `url("${s.mobile_app_background_url}")` : (s.app_background_url ? `url("${s.app_background_url}")` : "none"));
+  root.style.setProperty("--gm-mobile-bg-fit", String(s.mobile_app_background_fit || s.app_background_fit || "cover"));
+  root.style.setProperty("--gm-mobile-bg-opacity", String(s.mobile_app_background_opacity ?? s.app_background_opacity ?? 0));
+  root.style.setProperty("--gm-mobile-bg-pos-x", s.mobile_app_background_pos_x || s.app_background_pos_x || "50%");
+  root.style.setProperty("--gm-mobile-bg-pos-y", s.mobile_app_background_pos_y || s.app_background_pos_y || "50%");
+  root.style.setProperty("--gm-mobile-bg-scale", String(s.mobile_app_background_scale ?? s.app_background_scale ?? 1));
+  root.style.setProperty("--gm-mobile-bg-blur", (s.mobile_app_background_blur ?? s.app_background_blur ?? 10) + "px");
+
+  // ✅ auto-dimming do blur (Mobile)
+  const mop = Number(s.mobile_app_background_opacity ?? s.app_background_opacity ?? 0);
+  const mblur = Number(s.mobile_app_background_blur ?? s.app_background_blur ?? 10);
+  const mfactor = clamp(mop * 1.2, 0.25, 1);
+  const meffectiveBlur = Math.round(mblur * mfactor);
+  root.style.setProperty("--gm-mobile-bg-blur-effective", `${meffectiveBlur}px`);
+
   // ✅ Escala Global do App (Zoom)
   const scale = s.app_scale ?? Number(localStorage.getItem("gm_app_scale_fallback") || 2.0);
-  const mobileScale = s.mobile_scale ?? 1.5;
+  const mobileScale = s.mobile_scale ?? Number(localStorage.getItem("gm_mobile_scale_fallback") || 1.5);
   
   root.style.setProperty("--gm-app-scale", String(scale));
   root.style.setProperty("--gm-mobile-scale", String(mobileScale));
@@ -273,23 +306,12 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
 
     // 1) tenta direto pelo tenant
     if (tenantId) {
-      // Tentamos buscar as configurações. Se falhar por coluna inexistente, tentamos sem button_style.
       const { data: byTenant, error: errTenant } = await withTimeout<any>(
         supabase.from("app_settings").select("*").eq("tenant_id", tenantId).maybeSingle() as any,
         15000
       );
 
       if (errTenant) {
-        if (errTenant.code === "PGRST204" || errTenant.message?.includes("button_style") || errTenant.message?.includes("app_scale") || errTenant.message?.includes("mobile_scale") || errTenant.code === "42703") {
-           const { data: retryData } = await supabase
-             .from("app_settings")
-             .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
-             .eq("tenant_id", tenantId)
-             .maybeSingle();
-           if (retryData) {
-             return mergeWithFallbacks(retryData);
-           }
-        }
         console.warn("fetchSettings warn (tenant):", errTenant);
       } else if (byTenant) {
         return mergeWithFallbacks(byTenant);
@@ -303,16 +325,6 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
         );
 
         if (errOwner) {
-          if (errOwner.code === "PGRST204" || errOwner.message?.includes("button_style") || errOwner.message?.includes("app_scale") || errOwner.message?.includes("mobile_scale") || errOwner.code === "42703") {
-             const { data: retryData } = await supabase
-               .from("app_settings")
-               .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
-               .eq("owner", owner)
-               .maybeSingle();
-             if (retryData) {
-               return mergeWithFallbacks(retryData);
-             }
-          }
           console.warn("fetchSettings warn (owner):", errOwner);
           return DEFAULT_SETTINGS;
         }
@@ -330,19 +342,10 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
           const { data: migrated, error: errUpsert } = await supabase
             .from("app_settings")
             .upsert(clone, { onConflict: "tenant_id" })
-            .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times, app_scale, button_style")
+            .select("*")
             .single();
 
           if (errUpsert) {
-            if (errUpsert.code === "PGRST204" || errUpsert.message?.includes("button_style") || errUpsert.message?.includes("app_scale") || errUpsert.message?.includes("mobile_scale") || errUpsert.code === "42703") {
-               const { button_style, app_scale, mobile_scale, ...safeClone } = clone as any;
-               const { data: retryMigrate } = await supabase
-                 .from("app_settings")
-                 .upsert(safeClone, { onConflict: "tenant_id" })
-                 .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
-                 .single();
-               if (retryMigrate) return mergeWithFallbacks(retryMigrate);
-            }
             console.error("settings migrate error:", errUpsert);
             // se falhar migração, pelo menos devolve o do owner para não travar
             return mergeWithFallbacks(byOwner);
@@ -415,40 +418,6 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
     .single();
 
   if (error) {
-    // Se falhar por coluna inexistente, tenta salvar sem o button_style ou app_scale
-    if (error.code === "PGRST204" || error.message?.includes("button_style") || error.message?.includes("app_scale") || error.message?.includes("mobile_scale") || error.code === "42703") {
-       const { button_style, app_scale, mobile_scale, ...safePayload } = payload as any;
-       const { data: retryData, error: retryErr } = await supabase
-         .from("app_settings")
-         .upsert(safePayload, { onConflict: "tenant_id" })
-         .select("id, tenant_id, owner, company_name, pix_key, pix_type, brand_primary, brand_accent, brand_bg, font_family, avatar_url, company_logo_url, company_logo_scale, timbrado_url, theme_presets, app_background_url, app_background_fit, app_background_opacity, app_background_pos_x, app_background_pos_y, app_background_scale, app_background_blur, budget_approved_reminder_enabled, budget_approved_reminder_times")
-         .single();
-       
-       if (retryErr) {
-         console.error("Erro crítico ao salvar configurações (retry):", retryErr);
-         throw retryErr;
-       }
-       
-       // Salva localmente já que não deu no DB
-       if (button_style) {
-         localStorage.setItem("gm_button_style_fallback", button_style);
-       }
-       if (app_scale != null) {
-         localStorage.setItem("gm_app_scale_fallback", String(app_scale));
-       }
-       if (mobile_scale != null) {
-         localStorage.setItem("gm_mobile_scale_fallback", String(mobile_scale));
-       }
-       
-       const settings = { 
-         ...retryData, 
-         button_style: button_style || localStorage.getItem("gm_button_style_fallback"),
-         app_scale: app_scale ?? Number(localStorage.getItem("gm_app_scale_fallback") || 2.0),
-         mobile_scale: mobile_scale ?? Number(localStorage.getItem("gm_mobile_scale_fallback") || 1.5)
-       } as AppSettings;
-       applySettingsToDOM(settings);
-       return settings;
-    }
     console.error("Erro ao salvar configurações:", error);
     throw error;
   }

@@ -1078,6 +1078,24 @@ body{ overflow: hidden; }
           saturate(1.08) contrast(1.05);
 }
 
+@media (max-width: 1023px) {
+  .gm-layout::before {
+    background-image: var(--gm-mobile-bg-url, var(--gm-app-bg-url)) !important;
+    background-size: var(--gm-mobile-bg-fit, var(--gm-app-bg-fit, cover)) !important;
+    opacity: var(--gm-mobile-bg-opacity, var(--gm-app-bg-opacity, 0)) !important;
+    transform: scale(calc(var(--gm-mobile-bg-scale, var(--gm-app-bg-scale, 1)) * var(--gm-app-bg-depth-scale, 1.05))) !important;
+    background-position:
+      calc(var(--gm-mobile-bg-pos-x, var(--gm-app-bg-pos-x, 50%)) + var(--gm-app-bg-parallax-x, 0px))
+      calc(
+        var(--gm-mobile-bg-pos-y, var(--gm-app-bg-pos-y, 50%))
+        + var(--gm-app-bg-parallax-y, 0px)
+        + var(--gm-app-bg-parallax-y-mouse, 0px)
+      ) !important;
+    filter: blur(var(--gm-mobile-bg-blur-effective, var(--gm-mobile-bg-blur, var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px)))))
+            saturate(1.08) contrast(1.05) !important;
+  }
+}
+
 /* =========================================================
    PARALLAX DEPTH + OVERLAY INTELIGENTE (Apple premium)
 ========================================================= */

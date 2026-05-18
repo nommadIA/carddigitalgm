@@ -61,7 +61,7 @@ export default function BottomNav() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="md:hidden fixed bottom-0 left-0 right-0 z-[10002] bg-[rgba(15,15,15,0.85)] backdrop-blur-[24px] saturate-[1.5] border-t border-white/10 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.6)] touch-none"
+            className="md:hidden fixed bottom-0 left-0 right-0 z-[10002] bg-[rgba(15,15,15,0.85)] backdrop-blur-[16px] saturate-[1.5] border-t border-white/10 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.6)] touch-none"
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={0.2}

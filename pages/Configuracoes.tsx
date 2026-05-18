@@ -38,6 +38,8 @@ import {
   Paintbrush,
   CreditCard,
   Type,
+  Monitor,
+  Smartphone,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSwipeNav } from "../hooks/useSwipeNav";
@@ -173,6 +175,17 @@ export default function Configuracoes() {
   const [bgEnabled, setBgEnabled] = useState<boolean>(true);
   const [bgOpacityPrev, setBgOpacityPrev] = useState<number>(0.18);
 
+  // Smartphone Background Settings
+  const [mobileBgUrl, setMobileBgUrl] = useState<string | null>(null);
+  const [mobileBgFit, setMobileBgFit] = useState<Fit>("cover");
+  const [mobileBgOpacity, setMobileBgOpacity] = useState<number>(0.18);
+  const [mobileBgScale, setMobileBgScale] = useState<number>(1.2);
+  const [mobileBgBlur, setMobileBgBlur] = useState<number>(10);
+  const [mobileBgPosX, setMobileBgPosX] = useState<number>(50);
+  const [mobileBgPosY, setMobileBgPosY] = useState<number>(50);
+  const [mobileBgEnabled, setMobileBgEnabled] = useState<boolean>(true);
+  const [mobileBgOpacityPrev, setMobileBgOpacityPrev] = useState<number>(0.18);
+
   // ✅ Aplica as configurações em tempo real para preview (sem persistir no localStorage)
   useEffect(() => {
     if (!loading) {
@@ -192,6 +205,14 @@ export default function Configuracoes() {
           app_background_pos_y: `${bgPosY}%`,
           app_background_scale: bgScale,
           app_background_blur: bgBlur,
+
+          mobile_app_background_url: mobileBgUrl,
+          mobile_app_background_fit: mobileBgFit,
+          mobile_app_background_opacity: mobileBgEnabled ? mobileBgOpacity : 0,
+          mobile_app_background_pos_x: `${mobileBgPosX}%`,
+          mobile_app_background_pos_y: `${mobileBgPosY}%`,
+          mobile_app_background_scale: mobileBgScale,
+          mobile_app_background_blur: mobileBgBlur,
         },
         false,
       );
@@ -214,6 +235,14 @@ export default function Configuracoes() {
     bgPosY,
     bgScale,
     bgBlur,
+    mobileBgUrl,
+    mobileBgFit,
+    mobileBgEnabled,
+    mobileBgOpacity,
+    mobileBgPosX,
+    mobileBgPosY,
+    mobileBgScale,
+    mobileBgBlur,
   ]);
 
   // ✅ Desabilita rolagem vertical na página de configurações (Smartphone)
@@ -303,9 +332,33 @@ export default function Configuracoes() {
         const py = parseFloat(s.app_background_pos_y || "50");
         setBgPosY(!isNaN(py) ? py : 50);
 
+        // Mobile BG
+        setMobileBgUrl(s.mobile_app_background_url || s.app_background_url || null);
+        setMobileBgFit((s.mobile_app_background_fit as Fit) || (s.app_background_fit as Fit) || "cover");
+        
+        const mop = Number(s.mobile_app_background_opacity ?? s.app_background_opacity ?? 0.18);
+        setMobileBgOpacity(mop);
+        setMobileBgOpacityPrev(mop > 0 ? mop : 0.18);
+        setMobileBgEnabled(mop > 0);
+
+        const msc = Number(s.mobile_app_background_scale ?? 1.2);
+        setMobileBgScale(Number.isFinite(msc) && msc > 0 ? msc : 1.2);
+
+        const mbl = Number(s.mobile_app_background_blur ?? 10);
+        setMobileBgBlur(Number.isFinite(mbl) ? Math.min(24, Math.max(0, mbl)) : 10);
+
+        const mpx = parseFloat(s.mobile_app_background_pos_x || "50");
+        setMobileBgPosX(!isNaN(mpx) ? mpx : 50);
+
+        const mpy = parseFloat(s.mobile_app_background_pos_y || "50");
+        setMobileBgPosY(!isNaN(mpy) ? mpy : 50);
+
         const as = Number(s.app_scale ?? 1.0);
         setAppScale(Number.isFinite(as) && as > 0 ? as : 1.0);
         setOriginalScale(Number.isFinite(as) && as > 0 ? as : 1.0);
+
+        const ms = Number(s.mobile_scale ?? 1.5);
+        setMobileScale(Number.isFinite(ms) && ms > 0 ? ms : 1.5);
 
         setBgEnabled(!!s.app_background_url && op > 0);
 
@@ -391,6 +444,17 @@ export default function Configuracoes() {
         app_background_pos_x: `${bgPosX}%`,
         app_background_pos_y: `${bgPosY}%`,
 
+        // Mobile BG Settings
+        mobile_app_background_url: mobileBgUrl,
+        mobile_app_background_fit: mobileBgFit,
+        mobile_app_background_opacity: mobileBgEnabled
+          ? Math.min(1, Math.max(0, mobileBgOpacity || mobileBgOpacityPrev))
+          : 0,
+        mobile_app_background_scale: Math.min(5, Math.max(0.1, mobileBgScale)),
+        mobile_app_background_blur: Math.min(24, Math.max(0, mobileBgBlur)),
+        mobile_app_background_pos_x: `${mobileBgPosX}%`,
+        mobile_app_background_pos_y: `${mobileBgPosY}%`,
+
         app_scale: Math.min(2, Math.max(0.5, appScale)),
         mobile_scale: Math.min(3, Math.max(0.5, mobileScale)),
 
@@ -460,7 +524,11 @@ export default function Configuracoes() {
       }
 
       const url = await uploadTenantAsset(tenantId, fileToUpload, "background");
-      setBgUrl(url);
+      if (viewMode === "smartphone") {
+        setMobileBgUrl(url);
+      } else {
+        setBgUrl(url);
+      }
     } catch (e: any) {
       alert(e.message || "Erro no upload");
     } finally {
@@ -502,6 +570,13 @@ export default function Configuracoes() {
       bgBlur,
       bgPosX,
       bgPosY,
+      mobileBgUrl,
+      mobileBgFit,
+      mobileBgOpacity,
+      mobileBgScale,
+      mobileBgBlur,
+      mobileBgPosX,
+      mobileBgPosY,
       appScale,
       mobileScale,
       presets,
@@ -543,6 +618,15 @@ export default function Configuracoes() {
 
     setBgPosX(Number(obj.bgPosX ?? bgPosX));
     setBgPosY(Number(obj.bgPosY ?? bgPosY));
+    
+    setMobileBgUrl(obj.mobileBgUrl ?? mobileBgUrl);
+    setMobileBgFit(obj.mobileBgFit ?? mobileBgFit);
+    setMobileBgOpacity(Number(obj.mobileBgOpacity ?? mobileBgOpacity));
+    setMobileBgScale(Number(obj.mobileBgScale ?? mobileBgScale));
+    setMobileBgBlur(Number(obj.mobileBgBlur ?? mobileBgBlur));
+    setMobileBgPosX(Number(obj.mobileBgPosX ?? mobileBgPosX));
+    setMobileBgPosY(Number(obj.mobileBgPosY ?? mobileBgPosY));
+
     setAppScale(Number(obj.appScale ?? appScale));
     setMobileScale(Number(obj.mobileScale ?? mobileScale));
 
@@ -692,7 +776,26 @@ export default function Configuracoes() {
     <Page
       title="Configurações"
       actions={
-        <div className="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0">
+        <div className="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0 items-center">
+          <div className="flex bg-black/20 dark:bg-black/40 p-1 rounded-lg border border-white/5 mr-2">
+            <button
+              type="button"
+              onClick={() => setViewMode("desktop")}
+              className={`p-2 rounded-md transition-all ${viewMode === "desktop" ? "bg-[var(--gm-primary)] text-white shadow-sm" : "hover:bg-white/5 text-slate-400"}`}
+              title="Modo Desktop"
+            >
+              <Monitor size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("smartphone")}
+              className={`p-2 rounded-md transition-all ${viewMode === "smartphone" ? "bg-[var(--gm-primary)] text-white shadow-sm" : "hover:bg-white/5 text-slate-400"}`}
+              title="Modo Smartphone"
+            >
+              <Smartphone size={18} />
+            </button>
+          </div>
+
           <AnimatePresence>
             {saveSuccess && (
               <motion.div
@@ -772,9 +875,23 @@ export default function Configuracoes() {
                         <input className="gm-input py-2 text-sm h-10 w-full" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
                       </div>
                       
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Desktop)</label>
-                        <ScaleSlider value={appScale} onChange={setAppScale} />
+                      <div className="space-y-4">
+                        {viewMode === "desktop" && (
+                          <div className="space-y-1.5">
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
+                              <Monitor size={14} /> Escala Desktop
+                            </label>
+                            <ScaleSlider value={appScale} onChange={setAppScale} />
+                          </div>
+                        )}
+                        {viewMode === "smartphone" && (
+                          <div className="space-y-1.5">
+                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
+                              <Smartphone size={14} /> Escala Smartphone
+                            </label>
+                            <ScaleSlider value={mobileScale} onChange={setMobileScale} isMobile />
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -884,7 +1001,7 @@ export default function Configuracoes() {
               {/* ROW 2 */}
               <div className="flex flex-col h-full">
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <ImageIcon size={20} className="text-[var(--gm-primary)]" /> Plano de Fundo
+                  <ImageIcon size={20} className="text-[var(--gm-primary)]" /> Plano de Fundo ({viewMode === "smartphone" ? "Smartphone" : "Desktop"})
                 </h2>
                 <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
                   <div className="flex flex-col h-full flex-1">
@@ -897,15 +1014,24 @@ export default function Configuracoes() {
                         type="button"
                         className={`gm-btn py-1.5 px-3 text-xs`}
                         onClick={() => {
-                          setBgEnabled((v) => {
-                            const next = !v;
-                            if (next && bgOpacity <= 0) setBgOpacity(bgOpacityPrev);
-                            else if (!next && bgOpacity > 0) setBgOpacityPrev(bgOpacity);
-                            return next;
-                          });
+                          if (viewMode === "smartphone") {
+                            setMobileBgEnabled((v) => {
+                              const next = !v;
+                              if (next && mobileBgOpacity <= 0) setMobileBgOpacity(mobileBgOpacityPrev);
+                              else if (!next && mobileBgOpacity > 0) setMobileBgOpacityPrev(mobileBgOpacity);
+                              return next;
+                            });
+                          } else {
+                            setBgEnabled((v) => {
+                              const next = !v;
+                              if (next && bgOpacity <= 0) setBgOpacity(bgOpacityPrev);
+                              else if (!next && bgOpacity > 0) setBgOpacityPrev(bgOpacity);
+                              return next;
+                            });
+                          }
                         }}
                       >
-                        {bgEnabled ? "Ativo" : "Desativado"}
+                        {(viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) ? "Ativo" : "Desativado"}
                       </button>
                     </div>
 
@@ -914,8 +1040,11 @@ export default function Configuracoes() {
                         <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Ajuste</label>
                         <Select 
                           className="gm-input py-2 text-sm h-10 w-full" 
-                          value={bgFit} 
-                          onChange={(val) => setBgFit(String(val) as Fit)}
+                          value={viewMode === "smartphone" ? mobileBgFit : bgFit} 
+                          onChange={(val) => {
+                            if (viewMode === "smartphone") setMobileBgFit(String(val) as Fit);
+                            else setBgFit(String(val) as Fit);
+                          }}
                           options={[
                             { value: "cover", label: "Cortar (cover)" },
                             { value: "contain", label: "Conter (contain)" }
@@ -924,18 +1053,39 @@ export default function Configuracoes() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Opacidade ({Math.round(bgOpacity * 100)}%)</label>
-                        <input type="range" min={0} max={1} step={0.01} className="w-full h-1.5 accent-[var(--gm-primary)]" value={bgOpacity} onChange={(e) => setBgOpacity(Number(e.target.value))} />
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Opacidade ({Math.round((viewMode === "smartphone" ? mobileBgOpacity : bgOpacity) * 100)}%)</label>
+                        <input 
+                          type="range" min={0} max={1} step={0.01} className="w-full h-1.5 accent-[var(--gm-primary)]" 
+                          value={viewMode === "smartphone" ? mobileBgOpacity : bgOpacity} 
+                          onChange={(e) => {
+                            if (viewMode === "smartphone") setMobileBgOpacity(Number(e.target.value));
+                            else setBgOpacity(Number(e.target.value));
+                          }} 
+                        />
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Zoom ({bgScale}x)</label>
-                        <input type="range" min={0.5} max={5} step={0.1} className="w-full h-1.5 accent-[var(--gm-primary)]" value={bgScale} onChange={(e) => setBgScale(Number(e.target.value))} />
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Zoom ({viewMode === "smartphone" ? mobileBgScale : bgScale}x)</label>
+                        <input 
+                          type="range" min={0.5} max={5} step={0.1} className="w-full h-1.5 accent-[var(--gm-primary)]" 
+                          value={viewMode === "smartphone" ? mobileBgScale : bgScale} 
+                          onChange={(e) => {
+                            if (viewMode === "smartphone") setMobileBgScale(Number(e.target.value));
+                            else setBgScale(Number(e.target.value));
+                          }} 
+                        />
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Desfoque ({bgBlur}px)</label>
-                        <input type="range" min={0} max={24} step={1} className="w-full h-1.5 accent-[var(--gm-primary)]" value={bgBlur} onChange={(e) => setBgBlur(Number(e.target.value))} />
+                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Desfoque ({viewMode === "smartphone" ? mobileBgBlur : bgBlur}px)</label>
+                        <input 
+                          type="range" min={0} max={24} step={1} className="w-full h-1.5 accent-[var(--gm-primary)]" 
+                          value={viewMode === "smartphone" ? mobileBgBlur : bgBlur} 
+                          onChange={(e) => {
+                            if (viewMode === "smartphone") setMobileBgBlur(Number(e.target.value));
+                            else setBgBlur(Number(e.target.value));
+                          }} 
+                        />
                       </div>
 
                       <div className="pt-2">
@@ -943,7 +1093,7 @@ export default function Configuracoes() {
                           Formatos aceitos: JPG, PNG, WEBP, GIF, MP4 (Máx. 15MB).<br />
                           As imagens contam com otimização automática.
                         </div>
-                        {bgUrl && (
+                        {(viewMode === "smartphone" ? mobileBgUrl : bgUrl) && (
                           <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] group">
                             {uploadingBackground ? (
                               <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
@@ -951,14 +1101,14 @@ export default function Configuracoes() {
                                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">Processando...</span>
                               </div>
                             ) : null}
-                            {bgUrl.toLowerCase().endsWith('.mp4') || bgUrl.toLowerCase().endsWith('.webm') ? (
-                              <video src={bgUrl} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                            {((viewMode === "smartphone" ? mobileBgUrl : bgUrl) || '').toLowerCase().endsWith('.mp4') || ((viewMode === "smartphone" ? mobileBgUrl : bgUrl) || '').toLowerCase().endsWith('.webm') ? (
+                              <video src={(viewMode === "smartphone" ? mobileBgUrl : bgUrl) || ''} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                             ) : (
-                              <img src={bgUrl} alt="Background" className="w-full h-full object-cover" />
+                              <img src={(viewMode === "smartphone" ? mobileBgUrl : bgUrl) || ''} alt="Background" className="w-full h-full object-cover" />
                             )}
                           </div>
                         )}
-                        {!bgUrl && uploadingBackground && (
+                        {!(viewMode === "smartphone" ? mobileBgUrl : bgUrl) && uploadingBackground && (
                            <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] bg-black/10 flex flex-col items-center justify-center backdrop-blur-sm">
                                <Loader2 size={32} className="animate-spin text-[var(--gm-primary)] mb-2" />
                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Processando...</span>
@@ -1274,10 +1424,23 @@ export default function Configuracoes() {
                             <input className="gm-input py-2 text-sm h-10" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
                           </div>
                           
-                          <div className="space-y-1.5">
-                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">Escala Global (Celular)</label>
-                            <ScaleSlider value={mobileScale} onChange={setMobileScale} isMobile />
-                          </div>
+                          {viewMode === "desktop" && (
+                            <div className="space-y-1.5">
+                              <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
+                                <Monitor size={14} /> Escala Desktop
+                              </label>
+                              <ScaleSlider value={appScale} onChange={setAppScale} />
+                            </div>
+                          )}
+
+                          {viewMode === "smartphone" && (
+                            <div className="space-y-1.5">
+                              <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
+                                <Smartphone size={14} /> Escala Smartphone
+                              </label>
+                              <ScaleSlider value={mobileScale} onChange={setMobileScale} isMobile />
+                            </div>
+                          )}
                         </div>
                       </Card>
                     </div>
@@ -1285,7 +1448,7 @@ export default function Configuracoes() {
                             
                     <div className="flex items-center justify-between mb-2 shrink-0">
                       <h2 className="text-lg font-bold flex items-center gap-2">
-                        <ImageIcon size={20} className="text-[var(--gm-primary)]" /> Plano de Fundo
+                        <ImageIcon size={20} className="text-[var(--gm-primary)]" /> Plano de Fundo ({viewMode === "smartphone" ? "Smartphone" : "Desktop"})
                       </h2>
                     </div>
 
@@ -1299,39 +1462,61 @@ export default function Configuracoes() {
                             </div>
                             <button
                               type="button"
-                              onClick={() => setBgEnabled(!bgEnabled)}
+                              onClick={() => {
+                                if (viewMode === "smartphone") setMobileBgEnabled(!mobileBgEnabled);
+                                else setBgEnabled(!bgEnabled);
+                              }}
                               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                                bgEnabled ? "bg-[var(--gm-primary)] text-white shadow-md shadow-[var(--gm-primary-30)]" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+                                (viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) ? "bg-[var(--gm-primary)] text-white shadow-md shadow-[var(--gm-primary-30)]" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
                               }`}
                             >
-                              {bgEnabled ? "Ativo" : "Inativo"}
+                              {(viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) ? "Ativo" : "Inativo"}
                             </button>
                           </div>
-
-
 
                           <div className="space-y-2">
                             <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex justify-between">
                               <span>Opacidade</span>
-                              <span className="text-[var(--gm-primary)]">{Math.round(bgOpacity * 100)}%</span>
+                              <span className="text-[var(--gm-primary)]">{Math.round((viewMode === "smartphone" ? mobileBgOpacity : bgOpacity) * 100)}%</span>
                             </label>
-                            <input type="range" min={0} max={100} step={1} className="w-full h-2 accent-[var(--gm-primary)]" value={bgOpacity} onChange={(e) => setBgOpacity(Number(e.target.value))} />
+                            <input 
+                              type="range" min={0} max={1} step={0.01} className="w-full h-2 accent-[var(--gm-primary)]" 
+                              value={viewMode === "smartphone" ? mobileBgOpacity : bgOpacity} 
+                              onChange={(e) => {
+                                if (viewMode === "smartphone") setMobileBgOpacity(Number(e.target.value));
+                                else setBgOpacity(Number(e.target.value));
+                              }} 
+                            />
                           </div>
 
                           <div className="space-y-2">
                             <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex justify-between">
                               <span>Zoom</span>
-                              <span className="text-[var(--gm-primary)]">{bgScale}x</span>
+                              <span className="text-[var(--gm-primary)]">{viewMode === "smartphone" ? mobileBgScale : bgScale}x</span>
                             </label>
-                            <input type="range" min={1} max={2} step={0.1} className="w-full h-2 accent-[var(--gm-primary)]" value={bgScale} onChange={(e) => setBgScale(Number(e.target.value))} />
+                            <input 
+                              type="range" min={0.5} max={5} step={0.1} className="w-full h-2 accent-[var(--gm-primary)]" 
+                              value={viewMode === "smartphone" ? mobileBgScale : bgScale} 
+                              onChange={(e) => {
+                                if (viewMode === "smartphone") setMobileBgScale(Number(e.target.value));
+                                else setBgScale(Number(e.target.value));
+                              }} 
+                            />
                           </div>
 
                           <div className="space-y-2">
                             <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex justify-between">
                               <span>Desfoque</span>
-                              <span className="text-[var(--gm-primary)]">{bgBlur}px</span>
+                              <span className="text-[var(--gm-primary)]">{viewMode === "smartphone" ? mobileBgBlur : bgBlur}px</span>
                             </label>
-                            <input type="range" min={0} max={24} step={1} className="w-full h-2 accent-[var(--gm-primary)]" value={bgBlur} onChange={(e) => setBgBlur(Number(e.target.value))} />
+                            <input 
+                              type="range" min={0} max={24} step={1} className="w-full h-2 accent-[var(--gm-primary)]" 
+                              value={viewMode === "smartphone" ? mobileBgBlur : bgBlur} 
+                              onChange={(e) => {
+                                if (viewMode === "smartphone") setMobileBgBlur(Number(e.target.value));
+                                else setBgBlur(Number(e.target.value));
+                              }} 
+                            />
                           </div>
 
                           <div className="pt-4 flex flex-col gap-3">
@@ -1340,7 +1525,7 @@ export default function Configuracoes() {
                               As imagens contam com otimização automática.
                             </div>
                             
-                            {bgUrl && (
+                            {(viewMode === "smartphone" ? mobileBgUrl : bgUrl) && (
                               <div className="rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] group">
                                 {uploadingBackground ? (
                                   <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
@@ -1348,15 +1533,15 @@ export default function Configuracoes() {
                                     <span className="text-[10px] font-bold text-white uppercase tracking-wider">Processando...</span>
                                   </div>
                                 ) : null}
-                                {bgUrl.toLowerCase().endsWith('.mp4') || bgUrl.toLowerCase().endsWith('.webm') ? (
-                                  <video src={bgUrl} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                                {((viewMode === "smartphone" ? mobileBgUrl : bgUrl) || '').toLowerCase().endsWith('.mp4') || ((viewMode === "smartphone" ? mobileBgUrl : bgUrl) || '').toLowerCase().endsWith('.webm') ? (
+                                  <video src={(viewMode === "smartphone" ? mobileBgUrl : bgUrl) || ''} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                                 ) : (
-                                  <img src={bgUrl} alt="Background" className="w-full h-full object-cover" />
+                                  <img src={(viewMode === "smartphone" ? mobileBgUrl : bgUrl) || ''} alt="Background" className="w-full h-full object-cover" />
                                 )}
                               </div>
                             )}
                             
-                            {!bgUrl && uploadingBackground && (
+                            {!(viewMode === "smartphone" ? mobileBgUrl : bgUrl) && uploadingBackground && (
                                <div className="rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] bg-black/10 flex flex-col items-center justify-center backdrop-blur-sm">
                                    <Loader2 size={32} className="animate-spin text-[var(--gm-primary)] mb-2" />
                                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Processando...</span>
