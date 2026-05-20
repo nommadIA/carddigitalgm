@@ -27,26 +27,51 @@ const AlarmToast = () => {
         if ("Notification" in window && Notification.permission === "granted") {
           let title = 'Notificação';
           let body = '';
+          let hashUrl = '/';
+          
           if (alarm.type === 'NOTE') {
              title = 'Lembrete de Nota';
              body = `Nota: ${alarm.clientName}\nHorário: ${alarm.time}`;
+             hashUrl = '/#/notes';
           } else if (alarm.type === 'EXPENSE') {
              title = 'Lembrete de Despesa';
              body = `Cliente: ${alarm.clientName}\nHorário: ${alarm.time}`;
+             hashUrl = '/#/financeiro';
           } else {
              title = 'Orçamento Aprovado';
              body = `Olá! Orçamento "${alarm.clientName}" em andamento, conclua antes do prazo "${alarm.deliveryDays || 5} dias"`;
+             hashUrl = '/#/budgets';
           }
 
-          new Notification(title, {
-            body: body,
-            icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
-            vibrate: [200, 100, 200],
-            tag: alarm.id,
-            renotify: true,
-            silent: false,
-            requireInteraction: true
-          } as any);
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+              registration.showNotification(title, {
+                body: body,
+                icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
+                vibrate: [200, 100, 200],
+                tag: alarm.id,
+                renotify: true,
+                requireInteraction: true,
+                data: { url: hashUrl }
+              } as any);
+            });
+          } else {
+            const n = new Notification(title, {
+              body: body,
+              icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
+              vibrate: [200, 100, 200],
+              tag: alarm.id,
+              renotify: true,
+              requireInteraction: true
+            } as any);
+            
+            n.onclick = function(e) {
+              e.preventDefault();
+              window.focus();
+              window.location.hash = hashUrl.replace('/#', '');
+              n.close();
+            };
+          }
         }
 
         // Marca como disparado (no storage e IndexedDB)

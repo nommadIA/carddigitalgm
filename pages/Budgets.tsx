@@ -216,7 +216,6 @@ export default function Budgets() {
       if (isTrash) return base;
       if (tab === "AGUARDANDO") return base.filter((r) => normalizeStatus(r.status) === "AGUARDANDO");
       if (tab === "APROVADO") return base.filter((r) => normalizeStatus(r.status) === "APROVADO");
-      if (tab === "PRODUCAO") return base.filter((r) => normalizeStatus(r.status) === "PRODUCAO");
       if (tab === "CONCLUIDOS") return base.filter((r) => normalizeStatus(r.status) === "CONCLUIDO");
       if (tab === "CANCELADOS") return base.filter((r) => normalizeStatus(r.status) === "CANCELADO");
       return base;
@@ -616,40 +615,34 @@ export default function Budgets() {
                 <div className="mt-5 pt-4 border-t border-white/5 flex flex-col gap-3">
                   {/* cápsulas de status */}
                   <div>
-                    {tab !== "LIXEIRA" ? (
-                      <DraggableScroll>
-                        {sortedOptions.map((opt) => {
-                          const isActive = currentStatus === opt.value;
-                          const activeCls = pillClass(opt.value);
-                          const inactiveCls = "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
+                    <DraggableScroll>
+                      {sortedOptions.map((opt) => {
+                        const isActive = currentStatus === opt.value;
+                        const activeCls = pillClass(opt.value);
+                        const inactiveCls = "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
 
-                          return (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateStatusInstant(r.id, opt.value);
-                              }}
-                              className={`snap-start shrink-0 px-3 py-1.5 rounded-full text-[11px] font-extrabold tracking-wide transition-all whitespace-nowrap border ${
-                                isActive ? activeCls + " shadow-md" : inactiveCls
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          );
-                        })}
-                      </DraggableScroll>
-                    ) : (
-                      <div className="w-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-xl p-2 text-center shadow-[0_0_10px_rgba(255,123,0,0.05)]">
-                        <span className="text-xs font-extrabold text-[var(--gm-primary)] uppercase tracking-widest">Na Lixeira</span>
-                      </div>
-                    )}
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateStatusInstant(r.id, opt.value);
+                            }}
+                            className={`snap-start shrink-0 px-3 py-1.5 rounded-full text-[11px] font-extrabold tracking-wide transition-all whitespace-nowrap border ${
+                              isActive ? activeCls + " shadow-md" : inactiveCls
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </DraggableScroll>
                   </div>
 
                   {/* ações compactas (sem azul) */}
                   <div className="flex items-center gap-2">
-                    {tab !== "LIXEIRA" ? (
+                    {(tab as any) !== "LIXEIRA" ? (
                       <>
                         <button className={iconBtn("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
                           <Pencil size={16} />

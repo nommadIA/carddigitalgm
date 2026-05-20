@@ -53,6 +53,16 @@ bootReal();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(console.error);
+    
+    // Listen for navigation messages from the service worker (for pushes)
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'NAVIGATE' && event.data.url) {
+        const parts = event.data.url.split('/#');
+        if (parts.length > 1) {
+          window.location.hash = parts[1];
+        }
+      }
+    });
   });
 }
 

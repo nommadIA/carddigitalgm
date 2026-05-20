@@ -120,6 +120,7 @@ export interface BudgetAlarm {
   time: string;
   active: boolean;
   deliveryDays?: number;
+  date?: string | null;
 
   // compat antigo
   triggered: boolean;
@@ -182,6 +183,7 @@ export interface Note {
   color: string;
   is_pinned: boolean;
   reminder_time: string | null;
+  reminder_date?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;

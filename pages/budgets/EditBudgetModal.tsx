@@ -228,7 +228,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
       // ✅ Notificação leve quando APROVADO ou PRODUCAO (3 horários das Configurações)
       if (status === "APROVADO" || status === "PRODUCAO") {
         scheduleApprovedBudgetReminders(budgetId, clientName || "Cliente", toNumber(deliveryDays || 5));
-      } else if (status === "CONCLUIDO" || status === "CANCELADO" || status === "LIXEIRA" || status === "AGUARDANDO") {
+      } else if (status === "CONCLUIDO" || status === "CANCELADO" || (status as string) === "LIXEIRA" || status === "AGUARDANDO") {
         removeAlarmsForBudget(budgetId);
       }
 

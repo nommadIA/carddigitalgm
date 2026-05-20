@@ -6,11 +6,12 @@ interface PageProps {
   subtitle?: string;
   actions?: React.ReactNode;
   children?: React.ReactNode;
+  className?: string;
 }
 
-export function Page({ title, subtitle, actions, children }: PageProps) {
+export function Page({ title, subtitle, actions, children, className }: PageProps) {
   return (
-    <div className="animate-fade-in min-h-full flex flex-col">
+    <div className={`animate-fade-in min-h-full flex flex-col ${className || ""}`}>
       <div className="gm-header flex-col items-start justify-between gap-4">
         <div className="gm-title flex-1 min-w-0 w-full">
           {typeof title === 'string' ? <h1>{title}</h1> : title}

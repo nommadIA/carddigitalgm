@@ -62,7 +62,7 @@ export default function Configuracoes() {
   const [uploadingTimbrado, setUploadingTimbrado] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [viewMode, setViewMode] = useState<"desktop" | "smartphone">(
+  const [viewMode, setViewMode] = useState<string>(
     window.innerWidth >= 1024 ? "desktop" : "smartphone"
   );
 
@@ -551,47 +551,6 @@ export default function Configuracoes() {
     }
   }
 
-  function exportJson() {
-    const obj = {
-      companyName,
-      pixType,
-      pixKey,
-      brandPrimary,
-      brandAccent,
-      brandBg,
-      fontFamily,
-      companyLogoUrl,
-      avatarUrl,
-      timbradoUrl,
-      bgUrl,
-      bgFit,
-      bgOpacity,
-      bgScale,
-      bgBlur,
-      bgPosX,
-      bgPosY,
-      mobileBgUrl,
-      mobileBgFit,
-      mobileBgOpacity,
-      mobileBgScale,
-      mobileBgBlur,
-      mobileBgPosX,
-      mobileBgPosY,
-      appScale,
-      mobileScale,
-      presets,
-    };
-
-    const blob = new Blob([JSON.stringify(obj, null, 2)], {
-      type: "application/json",
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "carddigital-gm-config.json";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
   async function importJson(file: File) {
     const raw = await file.text();
     const obj = JSON.parse(raw || "{}");
@@ -811,26 +770,11 @@ export default function Configuracoes() {
           </AnimatePresence>
           <button
             type="button"
-            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-md !bg-[var(--gm-primary)] !text-white !border-none hover:brightness-110"
-            onClick={exportJson}
-            title="Exportar JSON"
-          >
-            <Download size={16} />
-            <span className="hidden sm:inline">Exportar JSON</span><span className="inline sm:hidden font-bold">Exportar</span>
-          </button>
-
-          <button
-            type="button"
-            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-md !bg-[var(--gm-primary)] !text-white !border-none hover:brightness-110"
+            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-xl !bg-transparent !text-[#00ff00] !border !border-[#00ff00]/40 hover:!bg-[#00ff00]/10 hover:!border-[#00ff00]/60 transition-all font-bold active:scale-95 shadow-[0_0_12px_rgba(0,255,0,0.15)]"
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
-            <span className="hidden sm:inline">{saving ? "Salvando..." : "Salvar Configurações"}</span><span className="inline sm:hidden font-bold">{saving ? "Salvando..." : "Salvar"}</span>
+            {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       }
@@ -840,7 +784,7 @@ export default function Configuracoes() {
         <div className={`flex-1 ${viewMode === "desktop" ? "pb-24" : "overflow-hidden"} p-0 md:p-6 lg:p-8 glass-scrollbar`}>
           {loading ? (
             <Card className="text-center p-10">Carregando...</Card>
-          ) : viewMode === "desktop" ? (
+          ) : (viewMode as any) === "desktop" ? (
             <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 pb-6 items-stretch">
               
               {/* ROW 1 */}

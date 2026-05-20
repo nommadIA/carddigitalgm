@@ -59,8 +59,9 @@ export const addAlarmsForBudget = (
   budgetId: string,
   clientName: string,
   times: string[],
-  type: "BUDGET" | "EXPENSE" = "BUDGET",
-  deliveryDays?: number
+  type: "BUDGET" | "EXPENSE" | "NOTE" = "BUDGET",
+  deliveryDays?: number,
+  date?: string | null
 ) => {
   const current = getAlarms();
   // Remove alarmes antigos deste item se existirem
@@ -75,6 +76,7 @@ export const addAlarmsForBudget = (
     triggered: false, // compat
     type,
     deliveryDays,
+    date,
     lastTriggeredOn: null as any, // compat (se types ainda não tinha)
   }));
 
@@ -198,6 +200,7 @@ export const checkAlarms = (): BudgetAlarm | null => {
   const alarmToTrigger = alarms.find((a: any) => {
     if (!a.active) return false;
     if (a.time !== currentTime) return false;
+    if (a.date && a.date !== today) return false;
     const last = String(a.lastTriggeredOn || "");
     return last !== today; // ✅ só 1x por dia naquele horário
   });

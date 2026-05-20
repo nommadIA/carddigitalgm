@@ -62,14 +62,26 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   event.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then(windowClients => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      let targetUrl = event.notification.data?.url || '/';
+      
+      // Ensure target URL is absolute to avoid relative path issues
+      if (targetUrl.startsWith('/')) {
+        targetUrl = self.location.origin + targetUrl;
+      }
+
       if (windowClients.length > 0) {
-        windowClients[0].focus();
-        if (event.notification.data && event.notification.data.url) {
-          windowClients[0].navigate(event.notification.data.url);
+        const client = windowClients[0];
+        client.focus();
+        
+        // If it's just a hash change, we can try to send a message or let it navigate
+        if (targetUrl.includes('/#')) {
+          client.postMessage({ type: 'NAVIGATE', url: targetUrl });
+        } else {
+          return client.navigate(targetUrl);
         }
       } else {
-        self.clients.openWindow(event.notification.data?.url || '/');
+        return self.clients.openWindow(targetUrl);
       }
     })
   );
