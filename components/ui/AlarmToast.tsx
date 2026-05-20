@@ -25,10 +25,18 @@ const AlarmToast = () => {
 
         // Notificação do Navegador (se permitido)
         if ("Notification" in window && Notification.permission === "granted") {
-          const title = alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : 'Orçamento Aprovado';
-          const body = alarm.type === 'EXPENSE'
-            ? `Cliente: ${alarm.clientName}\nHorário: ${alarm.time}`
-            : `Olá! Orçamento "${alarm.clientName}" em andamento, conclua antes do prazo "${alarm.deliveryDays || 5} dias"`;
+          let title = 'Notificação';
+          let body = '';
+          if (alarm.type === 'NOTE') {
+             title = 'Lembrete de Nota';
+             body = `Nota: ${alarm.clientName}\nHorário: ${alarm.time}`;
+          } else if (alarm.type === 'EXPENSE') {
+             title = 'Lembrete de Despesa';
+             body = `Cliente: ${alarm.clientName}\nHorário: ${alarm.time}`;
+          } else {
+             title = 'Orçamento Aprovado';
+             body = `Olá! Orçamento "${alarm.clientName}" em andamento, conclua antes do prazo "${alarm.deliveryDays || 5} dias"`;
+          }
 
           new Notification(title, {
             body: body,
@@ -86,14 +94,14 @@ const AlarmToast = () => {
               </div>
 
               <div className="text-white font-bold text-xs uppercase tracking-wider mb-2">
-                {alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : 'Orçamento Aprovado'}
+                {alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : alarm.type === 'NOTE' ? 'Lembrete de Nota' : 'Orçamento Aprovado'}
               </div>
 
               <div className="space-y-1">
-                {alarm.type === 'EXPENSE' ? (
+                {alarm.type === 'EXPENSE' || alarm.type === 'NOTE' ? (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-white/40 uppercase">Cliente</span>
+                      <span className="text-[10px] font-mono text-white/40 uppercase">{alarm.type === 'NOTE' ? 'Nota' : 'Cliente'}</span>
                       <span className="text-[10px] font-mono text-white truncate max-w-[180px]">{alarm.clientName}</span>
                     </div>
                     <div className="flex items-center justify-between">

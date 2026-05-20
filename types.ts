@@ -115,7 +115,7 @@ export interface KanbanColumn {
 export interface BudgetAlarm {
   id: string;
   budgetId: string;
-  type?: 'BUDGET' | 'EXPENSE';
+  type?: 'BUDGET' | 'EXPENSE' | 'NOTE';
   clientName: string;
   time: string;
   active: boolean;
@@ -172,4 +172,17 @@ export interface AppSettings {
 
   created_at?: string;
   updated_at?: string;
+}
+
+export interface Note {
+  id: string;
+  tenant_id: string;
+  title: string;
+  content: string;
+  color: string;
+  is_pinned: boolean;
+  reminder_time: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
 }

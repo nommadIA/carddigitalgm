@@ -19,7 +19,8 @@ import {
   X,
   ArrowDown,
   ArrowUp,
-  ChevronUp
+  ChevronUp,
+  StickyNote
 } from "lucide-react";
 import { useAuth } from "../../store/AuthContext";
 import { fetchSettingsSupabase, applySettingsToDOM } from "../../lib/settings";
@@ -62,6 +63,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       { to: "/clients", label: "Clientes", icon: Users },
       { to: "/expenses", label: "Despesas", icon: Receipt },
       { to: "/market", label: "Mercado", icon: ShoppingCart },
+      { to: "/notes", label: "Notas", icon: StickyNote },
       { to: "/financial", label: "Financeiro", icon: Wallet },
       { to: "/configuracoes", label: "Configurações", icon: Settings }
     ],

@@ -17,6 +17,7 @@ const Market = lazy(() => import('./pages/Market'));
 const Financial = lazy(() => import('./pages/Financial'));
 const Expenses = lazy(() => import('./pages/Expenses'));
 const Configuracoes = lazy(() => import('./pages/Configuracoes'));
+const Notes = lazy(() => import('./pages/Notes'));
 const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
 const PixCopy = lazy(() => import('./pages/PixCopy'));
@@ -63,6 +64,7 @@ const PrivateRoutes = () => {
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/expenses" element={<Expenses />} />
                 <Route path="/market" element={<Market />} />
+                <Route path="/notes" element={<Notes />} />
                 <Route path="/financial" element={<Financial />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
