@@ -5,12 +5,15 @@ import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Search, Pin, PinOff, Trash2, Edit2, X, Save, Clock, GripHorizontal, Palette, Share2, CornerRightDown, RefreshCcw, ChevronDown, ChevronUp, AlertTriangle, Copy, Mail, Calendar } from 'lucide-react';
+import { Plus, Search, Pin, PinOff, Trash2, Edit2, X, Save, Clock, GripHorizontal, Palette, Share2, CornerRightDown, RefreshCcw, ChevronDown, ChevronUp, AlertTriangle, Copy, Mail, Calendar, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Note } from '../types';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { addAlarmsForBudget, toggleAlarmsForBudget, checkAlarms, removeAlarmsForBudget } from '../lib/alarmSystem';
+import { uploadNoteAsset } from '../services/storageService';
+
+import jsPDF from 'jspdf';
 
 function htmlToPlainFormatedText(html: string): string {
   if (!html) return '';
@@ -110,7 +113,10 @@ export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [tab, setTab] = useState<'ATIVAS' | 'LIXEIRA'>('ATIVAS');
+  const [mainTab, setMainTab] = useState<'NOTE' | 'PRODUCTION'>('NOTE');
+  const [noteTab, setNoteTab] = useState<'AGUARDANDO' | 'APROVADO' | 'CONCLUÍDOS' | 'CANCELADOS' | 'LIXEIRA'>('AGUARDANDO');
+  const [prodTab, setProdTab] = useState<'A FAZER' | 'PRODUÇÃO' | 'CONCLUÍDOS' | 'CANCELADOS' | 'LIXEIRA'>('A FAZER');
+  const [newNoteModalOpen, setNewNoteModalOpen] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -123,6 +129,13 @@ export default function Notes() {
   const [isPinned, setIsPinned] = useState(false);
   const [reminderTime, setReminderTime] = useState(''); // e.g. "14:30"
   const [reminderDate, setReminderDate] = useState(''); // e.g. "2026-05-20"
+  const [noteType, setNoteType] = useState<'note' | 'production'>('note');
+  const [noteStatus, setNoteStatus] = useState('aguardando');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [deliveryTime, setDeliveryTime] = useState('');
+  const [responsibleName, setResponsibleName] = useState('');
+  const [layoutUrl, setLayoutUrl] = useState('');
+  const [uploadingLayout, setUploadingLayout] = useState(false);
   const [noteShareData, setNoteShareData] = useState<{ note: Note; message: string } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -365,7 +378,17 @@ export default function Notes() {
     applyStyleToSelection({ 'font-size': sizeValue });
   };
 
+  const normalizeStatus = (s: string | undefined | null) => {
+    if (!s) return '';
+    return s.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  };
+
   function openNewNote() {
+    setNewNoteModalOpen(true);
+  }
+
+  function openNewNoteModal(type: 'note' | 'production') {
+    setNewNoteModalOpen(false);
     setEditingNote(null);
     setTitle('');
     setContent('');
@@ -374,6 +397,12 @@ export default function Notes() {
     setReminderTime('');
     setReminderDate('');
     setFontSizeMode('M');
+    setNoteType(type);
+    setNoteStatus(type === 'note' ? 'aguardando' : 'a fazer');
+    setDeliveryDate('');
+    setDeliveryTime('');
+    setResponsibleName('');
+    setLayoutUrl('');
     setModalOpen(true);
   }
 
@@ -384,6 +413,12 @@ export default function Notes() {
     setColor(note.color || COLORS[0]);
     setIsPinned(note.is_pinned);
     setFontSizeMode('M');
+    setNoteType(note.type || 'note');
+    setNoteStatus(note.status || (note.type === 'production' ? 'a fazer' : 'aguardando'));
+    setDeliveryDate(note.delivery_date || '');
+    setDeliveryTime(note.delivery_time || '');
+    setResponsibleName(note.responsible_name || '');
+    setLayoutUrl(note.layout_url || '');
     
     if (note.reminder_time && note.reminder_time.includes(' ')) {
       const [rDate, rTime] = note.reminder_time.split(' ');
@@ -410,6 +445,12 @@ export default function Notes() {
       color,
       is_pinned: isPinned,
       reminder_time: savedReminder,
+      type: noteType,
+      status: noteStatus,
+      delivery_date: deliveryDate || null,
+      delivery_time: deliveryTime || null,
+      responsible_name: responsibleName || null,
+      layout_url: layoutUrl || null,
       updated_at: new Date().toISOString()
     };
 
@@ -504,6 +545,175 @@ export default function Notes() {
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
+  const handlePdf = async (note: Note) => {
+    try {
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+      
+      let timbradoUrl = '';
+      if (tenantId) {
+        const { fetchSettingsSupabase } = await import('../lib/settings');
+        const settings = await fetchSettingsSupabase(tenantId);
+        if (settings && settings.timbrado_url) {
+          timbradoUrl = settings.timbrado_url;
+        }
+      }
+
+      const getBase64ImageFormatUrl = async (imageUrl: string) => {
+        let fetchUrl = imageUrl;
+        try {
+          let res = await fetch(fetchUrl);
+          let textSample = '';
+          if (res.ok) {
+            const peekContent = await res.clone().text();
+            textSample = peekContent.slice(0, 100).toLowerCase();
+          }
+          if (!res.ok || textSample.includes('<html')) {
+             let bucket = null;
+             if (imageUrl.includes('/public/timbrados/') || imageUrl.includes('/authenticated/timbrados/')) bucket = 'timbrados';
+             else if (imageUrl.includes('/public/tenant-assets/') || imageUrl.includes('/authenticated/tenant-assets/')) bucket = 'tenant-assets';
+
+             if (bucket) {
+               const parts = imageUrl.split(`/public/${bucket}/`);
+               const signParts = imageUrl.split(`/authenticated/${bucket}/`);
+               let path = null;
+               if (parts.length > 1) path = parts[1];
+               else if (signParts.length > 1) path = signParts[1];
+               
+               if (path) {
+                  // remove query string like ?t=123
+                  path = path.split('?')[0];
+                  const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 10);
+                  if (data?.signedUrl) {
+                     fetchUrl = data.signedUrl;
+                     res = await fetch(fetchUrl);
+                  }
+               }
+             }
+          }
+
+          const blob = await res.blob();
+          return new Promise<{base64: string, type: string}>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+               const result = reader.result as string;
+               let type = 'JPEG';
+               if (result.startsWith('data:image/png')) type = 'PNG';
+               else if (result.startsWith('data:image/webp')) type = 'WEBP';
+               resolve({ base64: result, type });
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch (e) {
+           throw e;
+        }
+      };
+
+      const renderTimbrado = async () => {
+        if (timbradoUrl) {
+          try {
+            const { base64, type } = await getBase64ImageFormatUrl(timbradoUrl);
+            doc.addImage(base64, type, 0, 0, 210, 297);
+          } catch (e) {
+            console.error("Failed to load timbrado", e);
+          }
+        }
+      };
+
+      await renderTimbrado();
+
+      const title = note.title || 'Sem título';
+      const cleanContent = htmlToPlainFormatedText(note.content || '').replace(/\*/g, '').replace(/_/g, '');
+      
+      let currentY = 35; 
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(0);
+      doc.text(title, 20, currentY);
+
+      currentY += 8;
+      doc.setFontSize(10);
+      doc.setTextColor(50);
+
+      const addInfoLine = (label: string, value: string) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(label, 20, currentY);
+        const labelWidth = doc.getTextWidth(label + " ");
+        doc.setFont("helvetica", "normal");
+        doc.text(value, 20 + labelWidth, currentY);
+        currentY += 6;
+      };
+
+      addInfoLine("Criado em:", new Date(note.created_at).toLocaleDateString());
+      
+      if (note.delivery_date) {
+        addInfoLine("Prazo:", `${note.delivery_date.split('-').reverse().join('/')} ${note.delivery_time || ''}`);
+      }
+      if (note.responsible_name) {
+        addInfoLine("Responsável:", note.responsible_name);
+      }
+
+      currentY += 6;
+      doc.setTextColor(30);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      
+      const splitText = doc.splitTextToSize(cleanContent, 170);
+      // Small adjustment for line height
+      doc.text(splitText, 20, currentY, { lineHeightFactor: 1.5 });
+      
+      currentY += (splitText.length * 6.5) + 10;
+
+      if (note.layout_url) {
+        try {
+          const { base64, type } = await getBase64ImageFormatUrl(note.layout_url);
+          const finalHeight = 70;
+          
+          if (currentY + finalHeight > 220) {
+            doc.addPage();
+            await renderTimbrado();
+            currentY = 40;
+          }
+          
+          doc.addImage(base64, type, 20, currentY, 170, finalHeight);
+          currentY += finalHeight + 10; 
+        } catch(e) {
+          console.error("Failed to load layout image for PDF");
+        }
+      }
+
+      let sigY = Math.max(currentY + 20, 220);
+      
+      if (sigY > 260) {
+        doc.addPage();
+        await renderTimbrado();
+        sigY = 240;
+      }
+
+      doc.setLineWidth(0.3);
+      doc.setTextColor(0);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      
+      // Assinatura Recebedor
+      doc.line(20, sigY - 5, 95, sigY - 5);
+      doc.text("Assinatura do Recebedor", 20, sigY + 2);
+      
+      // Assinatura Responsável
+      doc.line(115, sigY - 5, 190, sigY - 5);
+      doc.text("Assinatura do Responsável", 115, sigY + 2);
+
+      doc.save(`Nota_${title.replace(/\s+/g, '_')}.pdf`);
+    } catch (e: any) {
+      alert("Erro ao gerar PDF: " + e.message);
+    }
+  };
+
   async function handleHardDeleteConfirm() {
     if (!deleteConfirmId) return;
     const id = deleteConfirmId;
@@ -515,8 +725,23 @@ export default function Notes() {
   }
 
   const filteredNotes = useMemo(() => {
-    const isTrash = tab === 'LIXEIRA';
-    let base = notes.filter(n => isTrash ? !!n.deleted_at : !n.deleted_at);
+    let base = notes.filter(n => (n.type || 'note').toUpperCase() === mainTab);
+    
+    const activeTab = mainTab === 'NOTE' ? noteTab : prodTab;
+    const isTrash = activeTab === 'LIXEIRA';
+    
+    if (isTrash) {
+      base = base.filter(n => !!n.deleted_at);
+    } else {
+      base = base.filter(n => !n.deleted_at);
+      
+      const normalizedActiveTab = normalizeStatus(activeTab);
+      base = base.filter(n => {
+        let st = normalizeStatus(n.status || (mainTab === 'NOTE' ? 'aguardando' : 'a fazer'));
+        if (normalizedActiveTab === 'PRODUCAO' && st === 'EM PRODUCAO') return true;
+        return st === normalizedActiveTab;
+      });
+    }
     
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
@@ -534,7 +759,10 @@ export default function Notes() {
     });
 
     return base;
-  }, [notes, searchTerm, tab]);
+  }, [notes, searchTerm, mainTab, noteTab, prodTab]);
+
+  const NOTE_STATUSES = ['AGUARDANDO', 'APROVADO', 'CONCLUÍDOS', 'CANCELADOS', 'LIXEIRA'] as const;
+  const PROD_STATUSES = ['A FAZER', 'PRODUÇÃO', 'CONCLUÍDOS', 'CANCELADOS', 'LIXEIRA'] as const;
 
   return (
     <Page title="Notes" className="animate-fade-in relative min-h-screen">
@@ -560,16 +788,44 @@ export default function Notes() {
           </button>
         </div>
 
+        {/* Main Tab Separator */}
+        <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl md:w-fit self-center md:self-start">
+          <button
+            onClick={() => setMainTab('NOTE')}
+            className={`px-8 py-3 rounded-xl font-bold flex-1 md:flex-none transition-all ${mainTab === 'NOTE' ? 'bg-[#ff6600] text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            NOTAS
+          </button>
+          <button
+             onClick={() => setMainTab('PRODUCTION')}
+             className={`px-8 py-3 rounded-xl font-bold flex-1 md:flex-none transition-all ${mainTab === 'PRODUCTION' ? 'bg-[#ff6600] text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            NOTAS DE PRODUÇÃO
+          </button>
+        </div>
+
+        {/* Workflow Tabs */}
         <div className="flex items-center gap-2 border-b border-white/5 pb-2 overflow-x-auto scrollbar-hide">
-          {['ATIVAS', 'LIXEIRA'].map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t as any)}
-              className={`px-4 py-2 font-bold text-sm rounded-xl transition-all whitespace-nowrap ${tab === t ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/80 hover:bg-white/5'}`}
-            >
-              {t === 'ATIVAS' ? 'Notas Ativas' : 'Lixeira'}
-            </button>
-          ))}
+          {mainTab === 'NOTE' 
+            ? NOTE_STATUSES.map(t => (
+                <button
+                  key={t}
+                  onClick={() => setNoteTab(t as any)}
+                  className={`px-4 py-2 font-bold text-sm rounded-xl transition-all whitespace-nowrap ${noteTab === t ? 'bg-[#ff6600]/20 text-[#ff6600] border border-[#ff6600]/50' : 'text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5'}`}
+                >
+                  {t}
+                </button>
+              ))
+            : PROD_STATUSES.map(t => (
+                <button
+                  key={t}
+                  onClick={() => setProdTab(t as any)}
+                  className={`px-4 py-2 font-bold text-sm rounded-xl transition-all whitespace-nowrap ${prodTab === t ? 'bg-[#ff6600]/20 text-[#ff6600] border border-[#ff6600]/50' : 'text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5'}`}
+                >
+                  {t}
+                </button>
+              ))
+          }
         </div>
       </div>
 
@@ -592,11 +848,11 @@ export default function Notes() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   layout
-                  className="col-span-1"
+                  className="col-span-1 h-full"
                   onClick={() => openEdit(note)}
                 >
                   <div 
-                    className={`rounded-3xl p-6 relative gap-4 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] ${isExpanded ? '' : 'h-[280px]'}`}
+                    className={`rounded-3xl p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full ${isExpanded ? 'overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]' : 'overflow-hidden min-h-[280px]'}`}
                     style={{ 
                       backgroundColor: 'rgba(17, 19, 24, 0.7)',
                       backdropFilter: 'blur(12px)',
@@ -616,9 +872,41 @@ export default function Notes() {
                     </button>
                     
                     {/* Title */}
-                    <h3 className="font-bold text-lg text-white mb-1 pr-8 leading-tight">
-                      {note.title || 'Sem título'}
-                    </h3>
+                    <div className="flex flex-col gap-1 pr-8">
+                      {note.status && (
+                        <div className="flex items-center">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style={{ backgroundColor: `${noteColor}20`, color: noteColor, border: `1px solid ${noteColor}40` }}>
+                            {note.status.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      )}
+                      <h3 className="font-bold text-lg text-white leading-tight mt-1">
+                        {note.title || 'Sem título'}
+                      </h3>
+                      
+                      {(note.delivery_date || note.responsible_name) && (
+                        <div className="flex flex-col gap-0.5 mt-1 text-xs text-white/60">
+                          {note.delivery_date && (
+                            <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                              <Clock size={12} style={{ color: noteColor }} /> 
+                              {note.delivery_date.split('-').reverse().join('/')} {note.delivery_time && `às ${note.delivery_time}`}
+                            </div>
+                          )}
+                          {note.responsible_name && (
+                            <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                              <span style={{ color: noteColor }} className="uppercase font-bold tracking-widest">Resp:</span> 
+                              {note.responsible_name}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {note.layout_url && (
+                       <div className="w-full h-32 rounded-xl overflow-hidden mt-1 shrink-0 relative bg-black/40 border border-white/5">
+                          <img src={note.layout_url} alt="Layout Thumbnail" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                       </div>
+                    )}
 
                     {/* Body Preview */}
                     <div className={`text-white/70 text-sm overflow-hidden flex-1 relative ${isExpanded ? '' : 'max-h-[140px]'}`}>
@@ -680,7 +968,7 @@ export default function Notes() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {tab === 'LIXEIRA' ? (
+                        {((mainTab === 'NOTE' ? noteTab : prodTab) === 'LIXEIRA') ? (
                           <>
                             <button 
                               onClick={(e) => {
@@ -728,6 +1016,27 @@ export default function Notes() {
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
+                                handlePdf(note);
+                              }}
+                              className="p-2 rounded-xl transition-all hover:scale-110 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
+                              style={{
+                                color: noteColor,
+                                backgroundColor: `${noteColor}1a`,
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = `${noteColor}33`;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = `${noteColor}1a`;
+                              }}
+                              title="Exportar PDF"
+                            >
+                              {/* Lucide FileDown icon logic since it might not be imported directly, reusing another or importing. Let's use Download or similar if needed. We have Mail, Copy, AlertTriangle. Let's just use text or download icon. Wait, I will use Copy. No, I'll add a simple SVG. */}
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            </button>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleSoftDelete(note.id);
                               }}
                               className="p-2 rounded-xl transition-all hover:scale-110 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
@@ -757,15 +1066,71 @@ export default function Notes() {
         </div>
       )}
 
+      {/* Selection Modal */}
+      <AnimatePresence>
+        {newNoteModalOpen && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setNewNoteModalOpen(false)}
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="gm-card p-6 w-full max-w-xl flex flex-col relative z-10 border-white/10"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-white mb-1">Nova Nota</h2>
+                  <p className="text-sm text-white/60">Selecione o tipo de nota que deseja criar.</p>
+                </div>
+                <button onClick={() => setNewNoteModalOpen(false)} className="p-2 text-white/50 hover:text-white transition-colors">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  onClick={() => openNewNoteModal('note')}
+                  className="flex flex-col items-start gap-4 p-6 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group"
+                >
+                  <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
+                    <Edit2 size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-white mb-1">Nota</h3>
+                    <p className="text-sm text-white/60">Anotações e lembretes com alarmes gerais.</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => openNewNoteModal('production')}
+                  className="flex flex-col items-start gap-4 p-6 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group"
+                >
+                  <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
+                    <Palette size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-white mb-1">Produção</h3>
+                    <p className="text-sm text-white/60">Acompanhamento e prazos de produções.</p>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Editor Modal */}
       <AnimatePresence>
         {modalOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[1000] flex md:items-center justify-center md:p-4 bg-black/90 md:bg-transparent backdrop-blur-md md:backdrop-blur-none">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm hidden md:block"
               onClick={() => setModalOpen(false)}
             />
             
@@ -774,13 +1139,14 @@ export default function Notes() {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: '100%', opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+              className="relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden"
               style={{ 
-                maxHeight: '90vh',
-                backgroundColor: 'rgba(17, 19, 24, 0.9)',
+                maxHeight: window.innerWidth < 768 ? '100dvh' : '90vh',
+                backgroundColor: 'rgba(17, 19, 24, 0.95)',
                 backdropFilter: 'blur(16px)',
                 borderColor: color || '#334155',
-                borderWidth: '1px',
+                borderWidth: window.innerWidth < 768 ? '0px' : '1px',
+                borderTopWidth: window.innerWidth < 768 ? '2px' : '1px',
                 borderStyle: 'solid',
                 boxShadow: `0 0 40px ${color}50, inset 0 0 30px ${color}20`
               }}
@@ -908,48 +1274,148 @@ export default function Notes() {
                   </div>
                 </div>
 
-                {/* Content Editor */}
-                <div className="flex-1 overflow-y-auto p-6 scrollbar-hide relative" 
-                  style={{ 
-                    backgroundColor: 'transparent',
-                    boxShadow: `inset 0 0 40px ${color}15`
-                  }}
-                >
-                   <div
-                     ref={(el) => {
-                       contentRef.current = el;
-                       if (el && el.innerHTML !== content) {
-                         el.innerHTML = content;
-                       }
-                     }}
-                     key={editingNote ? editingNote.id : 'new-note'}
-                     contentEditable
-                     onKeyDown={(e) => {
-                       // Custom Undo/Redo key interception for contentEditable to keep state perfectly synchronized
-                       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
-                         e.preventDefault();
-                         performUndo();
-                       } else if (
-                         ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
-                         ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')
-                       ) {
-                         e.preventDefault();
-                         performRedo();
-                       }
-                     }}
-                     onInput={(e) => {
-                       const val = e.currentTarget.innerHTML;
-                       setContent(val);
-                       pushToHistory(val);
-                     }}
-                     className="w-full h-full min-h-[300px] bg-transparent outline-none text-white/90 focus:outline-none relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0"
-                     {...{ placeholder: "Escreva sua nota aqui..." }}
-                     style={{ minHeight: '300px' }}
-                   />
+                {/* Scrollable Area */}
+                <div className="flex-1 overflow-y-auto custom-scroll min-h-0 relative flex flex-col" style={{ backgroundColor: 'transparent', boxShadow: `inset 0 0 40px ${color}15` }}>
+                  {/* Metadata Fields */}
+                  <div className="p-4 md:px-6 py-4 border-b border-white/5 bg-black/20 flex flex-wrap gap-4 shrink-0">
+                    <div className="flex flex-col gap-1 w-[100%] sm:w-auto flex-1 md:flex-none">
+                      <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Tipo da Nota</label>
+                      <select 
+                        value={noteType}
+                        onChange={(e) => {
+                           setNoteType(e.target.value as any);
+                           setNoteStatus(e.target.value === 'note' ? 'aguardando' : 'a fazer');
+                        }}
+                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30"
+                      >
+                        <option value="note">Geral (Nota)</option>
+                        <option value="production">Produção</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1 w-[100%] sm:w-auto flex-1 md:flex-none">
+                      <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Status</label>
+                      <select 
+                        value={noteStatus}
+                        onChange={(e) => setNoteStatus(e.target.value)}
+                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30"
+                      >
+                        {noteType === 'note' 
+                          ? NOTE_STATUSES.filter(s => s !== 'LIXEIRA').map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)
+                          : PROD_STATUSES.filter(s => s !== 'LIXEIRA').map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)
+                        }
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1 w-full sm:w-auto">
+                      <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Prazo de Entrega</label>
+                      <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                         <input 
+                           type="date"
+                           value={deliveryDate}
+                           onChange={e => setDeliveryDate(e.target.value)}
+                           className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30 [color-scheme:dark] flex-1 min-w-[140px]"
+                         />
+                         <input 
+                           type="time"
+                           value={deliveryTime}
+                           onChange={e => setDeliveryTime(e.target.value)}
+                           className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30 [color-scheme:dark] flex-1 min-w-[100px]"
+                         />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1 w-full sm:flex-1">
+                      <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Responsável</label>
+                      <input 
+                        type="text"
+                        placeholder="Nome do responsável"
+                        value={responsibleName}
+                        onChange={e => setResponsibleName(e.target.value)}
+                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30 w-full"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1 w-full sm:w-auto">
+                      <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Layout</label>
+                      <div className="flex items-center gap-2 w-full">
+                        <label className={`bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none hover:bg-white/5 cursor-pointer flex items-center w-full justify-center gap-2 h-auto transition-all ${uploadingLayout ? 'opacity-50 pointer-events-none' : ''}`}>
+                          {uploadingLayout ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+                          {uploadingLayout ? "Enviando..." : "Enviar Mídia"}
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            disabled={uploadingLayout} 
+                            onChange={async (e) => { 
+                              const f = e.target.files?.[0]; 
+                              if (f && tenantId) {
+                                 setUploadingLayout(true);
+                                 try {
+                                   const url = await uploadNoteAsset(tenantId, f);
+                                   setLayoutUrl(url);
+                                 } catch (err) {
+                                   alert('Erro ao enviar layout.');
+                                 } finally {
+                                   setUploadingLayout(false);
+                                 }
+                              } 
+                            }} 
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content Editor */}
+                  <div className="p-6 flex flex-col gap-4 relative flex-1 touch-pan-y">
+                     {layoutUrl && (
+                       <div className="w-full relative group rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-xl" style={{ backgroundColor: 'transparent' }}>
+                         <img src={layoutUrl} alt="Layout" className="w-full h-auto max-h-[600px] object-cover" />
+                         <button 
+                           onClick={() => setLayoutUrl('')} 
+                           className="absolute top-4 right-4 bg-black/60 hover:bg-red-500/80 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all text-white backdrop-blur-md"
+                           title="Remover Layout"
+                         >
+                           <Trash2 size={18} />
+                         </button>
+                       </div>
+                     )}
+                     <div
+                       ref={(el) => {
+                         contentRef.current = el;
+                         if (el && el.innerHTML !== content) {
+                           el.innerHTML = content;
+                         }
+                       }}
+                       key={editingNote ? editingNote.id : 'new-note'}
+                       contentEditable
+                       onKeyDown={(e) => {
+                         if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+                           e.preventDefault();
+                           performUndo();
+                         } else if (
+                           ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
+                           ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')
+                         ) {
+                           e.preventDefault();
+                           performRedo();
+                         }
+                       }}
+                       onInput={(e) => {
+                         const val = e.currentTarget.innerHTML;
+                         setContent(val);
+                         pushToHistory(val);
+                       }}
+                       className="w-full h-full min-h-[150px] md:min-h-[300px] bg-transparent outline-none text-white/90 focus:outline-none relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0"
+                       {...{ placeholder: "Escreva sua nota aqui..." }}
+                       style={{ minHeight: '150px' }}
+                     />
+                  </div>
                 </div>
 
                 {/* Action Bar */}
-                <div className="p-5 flex flex-col md:flex-row items-center justify-between gap-6 shrink-0 relative z-20"
+                <div className="p-4 pb-8 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shrink-0 relative z-20"
                   style={{ 
                     borderTop: `1px solid ${color}40`,
                     backgroundColor: 'rgba(0,0,0,0.5)'

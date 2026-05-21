@@ -184,6 +184,12 @@ export interface Note {
   is_pinned: boolean;
   reminder_time: string | null;
   reminder_date?: string | null;
+  type?: 'note' | 'production';
+  status?: string;
+  delivery_date?: string | null;
+  delivery_time?: string | null;
+  responsible_name?: string | null;
+  layout_url?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;

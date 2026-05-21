@@ -16,6 +16,21 @@ export async function uploadTenantAsset(tenantId: string, file: File, kind: "log
   return data.publicUrl;
 }
 
+export async function uploadNoteAsset(tenantId: string, file: File) {
+  const ext = (file.name.split(".").pop() || "png").toLowerCase();
+  const filename = `note_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+  const path = `${tenantId}/notes/${filename}`;
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, file, { upsert: true, contentType: file.type });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return `${data.publicUrl}?t=${Date.now()}`;
+}
+
 export async function uploadTimbradoA4(userId: string, file: File) {
   const ext = (file.name.split(".").pop() || "png").toLowerCase();
   const path = `${userId}/timbrado_a4.${ext}`;
