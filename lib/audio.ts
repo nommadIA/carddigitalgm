@@ -19,6 +19,7 @@ export const NOTIFICATION_SOUNDS: CustomSound[] = [
 
 export function playNotificationSound(soundId?: string) {
   try {
+    if (localStorage.getItem("gm.notificationsMuted") === "true") return;
     const selected = soundId || localStorage.getItem("gm.notificationSound") || "classic_chord";
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;

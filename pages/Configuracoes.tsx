@@ -43,6 +43,7 @@ import {
   HelpCircle,
   Sparkles,
   Volume2,
+  VolumeX,
   Music,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -99,6 +100,13 @@ export default function Configuracoes() {
   const [pushPermission, setPushPermission] = useState<NotificationPermission>(
     pushSupported ? Notification.permission : "denied"
   );
+  const [pushActive, setPushActive] = useState(() => {
+    return localStorage.getItem("gm.pushActive") !== "false";
+  });
+  const [notificationsMuted, setNotificationsMuted] = useState(() => {
+    return localStorage.getItem("gm.notificationsMuted") === "true";
+  });
+  const [shakeTest, setShakeTest] = useState(false);
 
   const variants = {
     enter: (direction: number) => ({
@@ -745,6 +753,7 @@ export default function Configuracoes() {
   return (
     <Page
       title="Configurações"
+      className={viewMode === "smartphone" ? "-mt-7 md:mt-0 pt-0" : ""}
       actions={
         <div className="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0 items-center">
           <div className="flex bg-black/20 dark:bg-black/40 p-1 rounded-lg border border-white/5 mr-2">
@@ -790,7 +799,7 @@ export default function Configuracoes() {
         </div>
       }
     >
-      <div className={`flex flex-col ${viewMode === "smartphone" ? "h-[calc(100dvh-170px)]" : ""}`}>
+      <div className={`flex flex-col ${viewMode === "smartphone" ? "h-[calc(100dvh-250px)] md:h-[calc(100dvh-170px)]" : ""}`}>
         {/* CONTENT */}
         <div className={`flex-1 ${viewMode === "desktop" ? "pb-24" : "overflow-hidden"} p-0 md:p-6 lg:p-8 glass-scrollbar`}>
           {loading ? (
@@ -1254,58 +1263,139 @@ export default function Configuracoes() {
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
                   <Bell size={20} className="text-[var(--gm-primary)]" /> Notificações Push
                 </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-4 px-4 relative overflow-hidden group items-center justify-center text-center">
-                  <div className="flex flex-col items-center justify-center w-full max-w-sm mx-auto flex-1">
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group items-center justify-center text-center">
+                  <div className="flex flex-col items-center justify-center w-full max-w-[280px] mx-auto flex-1 space-y-4">
                     {/* Background Glow */}
                     <div className={`absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full opacity-20 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`} />
                     
-                    <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-4 border-2 transition-all duration-500 shrink-0 ${
-                      pushPermission === "granted" 
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
-                        : "bg-amber-500/10 border-amber-500/30 text-amber-500 animate-pulse"
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center border transition-all duration-300 mx-auto ${
+                      pushActive && pushPermission === "granted" 
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-inner animate-pulse" 
+                        : "bg-amber-500/10 border-amber-500/30 text-amber-500"
                     }`}>
-                      <Bell size={48} className={testing ? "animate-bounce" : ""} />
+                      <Bell size={24} className={testing ? "animate-bounce" : ""} />
                     </div>
 
-                    <div className="space-y-2 mb-6 shrink-0">
-                      <h4 className="text-lg font-bold text-slate-800 dark:text-white">
-                        {pushPermission === "granted" ? "Notificações Ativas" : "Permissão Necessária"}
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                        Configurar Notificações
                       </h4>
-                      <p className="text-xs text-slate-500 max-w-[240px] mx-auto leading-relaxed">
-                        {pushPermission === "granted" 
-                          ? "Você receberá alertas importantes diretamente no seu dispositivo." 
-                          : "Ative as notificações para não perder atualizações em tempo real."}
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-normal">
+                        Defina suas preferências de alerta do dispositivo em tempo real.
                       </p>
                     </div>
 
-                    {pushPermission !== "granted" && (
-                      <button
-                        onClick={async () => { const permission = await Notification.requestPermission(); setPushPermission(permission); }}
-                        className="gm-btn py-3 px-6 flex items-center justify-center gap-2 text-sm w-full transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
-                      >
-                        <Bell size={16} />
-                        Permitir Notificações
-                      </button>
-                    )}
+                    <div className="w-full flex flex-col gap-3 pt-1">
+                      {/* SWITCH 1: PERMISSION / RECEBER ALERTAS */}
+                      <div className="w-full flex items-center justify-between p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/5 dark:border-white/5">
+                        <div className="text-left">
+                          <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Notificações Push</p>
+                          <p className={`text-[9px] font-semibold uppercase ${pushActive && pushPermission === "granted" ? "text-emerald-500" : "text-amber-500"}`}>
+                            {pushActive && pushPermission === "granted" ? "Ativo (ligado)" : "Desativado (desligado)"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (pushPermission !== "granted") {
+                              const permission = await Notification.requestPermission();
+                              setPushPermission(permission);
+                              if (permission === "granted") {
+                                setPushActive(true);
+                                localStorage.setItem("gm.pushActive", "true");
+                              } else {
+                                setPushActive(false);
+                                localStorage.setItem("gm.pushActive", "false");
+                              }
+                            } else {
+                              const nextActive = !pushActive;
+                              setPushActive(nextActive);
+                              localStorage.setItem("gm.pushActive", nextActive ? "true" : "false");
+                            }
+                          }}
+                          className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none ${
+                            pushActive && pushPermission === "granted"
+                              ? "bg-emerald-500 justify-end"
+                              : "bg-slate-300 dark:bg-slate-700 justify-start"
+                          }`}
+                          aria-label="Toggle Push Notifications Desktop"
+                        >
+                          <motion.div
+                            layout
+                            className="w-5 h-5 bg-white rounded-full shadow-md"
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          />
+                        </button>
+                      </div>
 
-                    <button
-                      disabled={testing || pushPermission !== "granted"}
-                      onClick={async () => {
-                        setTesting(true);
-                        if ("serviceWorker" in navigator) {
-                          const reg = await navigator.serviceWorker.ready;
-                          reg.active?.postMessage("TEST_NOTIFICATION");
+                      {/* SWITCH 2: MUTED / SONS DE NOTIFICAÇÃO */}
+                      <div className="w-full flex items-center justify-between p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/5 dark:border-white/5">
+                        <div className="text-left">
+                          <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Sons de Alerta</p>
+                          <p className={`text-[9px] font-semibold uppercase ${!notificationsMuted ? "text-emerald-500" : "text-amber-500"}`}>
+                            {!notificationsMuted ? "Ativo (ligado)" : "Desativado (desligado)"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = !notificationsMuted;
+                            localStorage.setItem("gm.notificationsMuted", next ? "true" : "false");
+                            setNotificationsMuted(next);
+                          }}
+                          className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none ${
+                            !notificationsMuted
+                              ? "bg-emerald-500 justify-end"
+                              : "bg-slate-300 dark:bg-slate-700 justify-start"
+                          }`}
+                          aria-label="Toggle Warning Sounds Desktop"
+                        >
+                          <motion.div
+                            layout
+                            className="w-5 h-5 bg-white rounded-full shadow-md"
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          />
+                        </button>
+                      </div>
+
+                      {/* SINGLE ACTION BUTTON: TEST NOTIFICATION (SHAKING) */}
+                      <motion.button
+                        type="button"
+                        animate={shakeTest ? { x: [-6, 6, -6, 6, -4, 4, -2, 2, 0] } : {}}
+                        transition={{ duration: 0.4 }}
+                        disabled={testing}
+                        onClick={async () => {
+                          setShakeTest(true);
+                          setTimeout(() => setShakeTest(false), 450);
+                          
+                          if (pushPermission !== "granted") {
+                            const permission = await Notification.requestPermission();
+                            setPushPermission(permission);
+                            if (permission !== "granted") return;
+                          }
+
+                          if (!pushActive) {
+                            setPushActive(true);
+                            localStorage.setItem("gm.pushActive", "true");
+                          }
+
+                          setTesting(true);
+                          try { playNotificationSound(activeSound); } catch (e) {}
+                          if ("serviceWorker" in navigator) {
+                            const reg = await navigator.serviceWorker.ready;
+                            reg.active?.postMessage("TEST_NOTIFICATION");
+                          }
                           setTimeout(() => setTesting(false), 1000);
-                        }
-                      }}
-                      className={`mt-3 py-3 flex items-center justify-center gap-2 text-sm w-full transition-all shrink-0 rounded-xl font-bold ${
-                        pushPermission !== "granted" ? "opacity-50 grayscale bg-slate-100 text-slate-400" : 
-                        testing ? "bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-                      }`}
-                    >
-                      {testing ? <Bell size={16} className="animate-ping" /> : <Bell size={16} />}
-                      {testing ? "Notificação Enviada!" : "Enviar Notificação de Teste"}
-                    </button>
+                        }}
+                        style={{
+                          backgroundColor: "var(--gm-primary)",
+                        }}
+                        className="py-3 flex items-center justify-center gap-1.5 text-xs font-bold w-full transition-all text-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:brightness-110 active:scale-[0.98] outline-none mt-2"
+                      >
+                        {testing ? <Loader2 size={13} className="animate-spin" /> : <Bell size={13} />}
+                        {testing ? "Testando..." : "Enviar Notificação de Teste"}
+                      </motion.button>
+                    </div>
                   </div>
                 </Card>
               </div>
@@ -1813,7 +1903,7 @@ export default function Configuracoes() {
                                 {/* Background glow */}
                                 <div className={`absolute -top-10 -right-10 w-24 h-24 blur-2xl rounded-full opacity-10 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`} />
                                 
-                                <div className="flex flex-col items-center justify-center text-center w-full max-w-[240px] mx-auto space-y-4">
+                                <div className="flex flex-col items-center justify-center text-center w-full max-w-[260px] mx-auto space-y-4">
                                   <div className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all duration-300 mx-auto ${
                                     pushPermission === "granted" 
                                       ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-inner animate-pulse" 
@@ -1824,47 +1914,126 @@ export default function Configuracoes() {
 
                                   <div className="space-y-1">
                                     <h4 className="text-sm font-bold text-slate-800 dark:text-white text-center uppercase tracking-wider">
-                                      {pushPermission === "granted" ? "Alertas Ativos" : "Notificações"}
+                                      Configurar Notificações
                                     </h4>
                                     <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-normal text-center">
-                                      {pushPermission === "granted" 
-                                        ? "Dispositivo ativo para receber avisos em tempo real." 
-                                        : "Ative notificações para ficar atualizado das suas vendas."}
+                                      Defina suas preferências de alerta do dispositivo em tempo real.
                                     </p>
                                   </div>
 
-                                  <div className="w-full flex flex-col gap-2 pt-1">
-                                    {pushPermission !== "granted" && (
+                                  <div className="w-full flex flex-col gap-3 pt-1">
+                                    {/* SWITCH 1: PERMISSION / RECEBER ALERTAS */}
+                                    <div className="w-full flex items-center justify-between p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/5 dark:border-white/5">
+                                      <div className="text-left">
+                                        <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Notificações Push</p>
+                                        <p className={`text-[9px] font-semibold uppercase ${pushActive && pushPermission === "granted" ? "text-emerald-500" : "text-amber-500"}`}>
+                                          {pushActive && pushPermission === "granted" ? "Ativo (ligado)" : "Desativado (desligado)"}
+                                        </p>
+                                      </div>
                                       <button
                                         type="button"
                                         onClick={async () => {
+                                          if (pushPermission !== "granted") {
+                                            const permission = await Notification.requestPermission();
+                                            setPushPermission(permission);
+                                            if (permission === "granted") {
+                                              setPushActive(true);
+                                              localStorage.setItem("gm.pushActive", "true");
+                                            } else {
+                                              setPushActive(false);
+                                              localStorage.setItem("gm.pushActive", "false");
+                                            }
+                                          } else {
+                                            const nextActive = !pushActive;
+                                            setPushActive(nextActive);
+                                            localStorage.setItem("gm.pushActive", nextActive ? "true" : "false");
+                                          }
+                                        }}
+                                        className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none ${
+                                          pushActive && pushPermission === "granted"
+                                            ? "bg-emerald-500 justify-end"
+                                            : "bg-slate-300 dark:bg-slate-700 justify-start"
+                                        }`}
+                                        aria-label="Toggle Push Notifications"
+                                      >
+                                        <motion.div
+                                          layout
+                                          className="w-5 h-5 bg-white rounded-full shadow-md"
+                                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                        />
+                                      </button>
+                                    </div>
+
+                                    {/* SWITCH 2: MUTED / SONS DE NOTIFICAÇÃO */}
+                                    <div className="w-full flex items-center justify-between p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/5 dark:border-white/5">
+                                      <div className="text-left">
+                                        <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Sons de Alerta</p>
+                                        <p className={`text-[9px] font-semibold uppercase ${!notificationsMuted ? "text-emerald-500" : "text-amber-500"}`}>
+                                          {!notificationsMuted ? "Ativo (ligado)" : "Desativado (desligado)"}
+                                        </p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = !notificationsMuted;
+                                          localStorage.setItem("gm.notificationsMuted", next ? "true" : "false");
+                                          setNotificationsMuted(next);
+                                        }}
+                                        className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none ${
+                                          !notificationsMuted
+                                            ? "bg-emerald-500 justify-end"
+                                            : "bg-slate-300 dark:bg-slate-700 justify-start"
+                                        }`}
+                                        aria-label="Toggle Warning Sounds"
+                                      >
+                                        <motion.div
+                                          layout
+                                          className="w-5 h-5 bg-white rounded-full shadow-md"
+                                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                        />
+                                      </button>
+                                    </div>
+
+                                    {/* SINGLE ACTION BUTTON: TEST NOTIFICATION (SHAKING) */}
+                                    <motion.button
+                                      type="button"
+                                      animate={shakeTest ? { x: [-6, 6, -6, 6, -4, 4, -2, 2, 0] } : {}}
+                                      transition={{ duration: 0.4 }}
+                                      disabled={testing}
+                                      onClick={async () => {
+                                        setShakeTest(true);
+                                        setTimeout(() => setShakeTest(false), 450);
+                                        
+                                        // Still try to send if permission granted
+                                        if (pushPermission !== "granted") {
+                                          // Prompt permission automatically if they click without it
                                           const permission = await Notification.requestPermission();
                                           setPushPermission(permission);
-                                        }}
-                                        className="gm-btn w-full py-2 text-xs font-bold shadow-md flex items-center justify-center gap-1.5"
-                                      >
-                                        Permitir Notificações
-                                      </button>
-                                    )}
+                                          if (permission !== "granted") return;
+                                        }
 
-                                    <button
-                                      type="button"
-                                      disabled={testing || pushPermission !== "granted"}
-                                      onClick={async () => {
+                                        // If permission is granted but pushActive was off, turn it on!
+                                        if (!pushActive) {
+                                          setPushActive(true);
+                                          localStorage.setItem("gm.pushActive", "true");
+                                        }
+
                                         setTesting(true);
+                                        try { playNotificationSound(activeSound); } catch (e) {}
                                         if ("serviceWorker" in navigator) {
                                           const reg = await navigator.serviceWorker.ready;
                                           reg.active?.postMessage("TEST_NOTIFICATION");
-                                          setTimeout(() => setTesting(false), 1000);
                                         }
+                                        setTimeout(() => setTesting(false), 1000);
                                       }}
-                                      className={`gm-btn-soft py-2 flex items-center justify-center gap-1.5 text-xs font-bold w-full transition-all ${
-                                        pushPermission !== "granted" ? "opacity-30 pointer-events-none" : ""
-                                      }`}
+                                      style={{
+                                        backgroundColor: "var(--gm-primary)",
+                                      }}
+                                      className="py-3 flex items-center justify-center gap-1.5 text-xs font-bold w-full transition-all text-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:brightness-110 active:scale-[0.98] outline-none mt-2"
                                     >
                                       {testing ? <Loader2 size={13} className="animate-spin" /> : <Bell size={13} />}
                                       {testing ? "Testando..." : "Enviar Notificação de Teste"}
-                                    </button>
+                                    </motion.button>
                                   </div>
                                 </div>
                               </Card>
@@ -1973,24 +2142,6 @@ export default function Configuracoes() {
                 </div>
               </motion.div>
             </motion.div>
-          </div>
-
-          {/* PAGINATION DOTS */}
-          <div className="flex justify-center fixed left-0 right-0 z-[110] pointer-events-none pagination-dots-container">
-            <div className="flex gap-1.5 pointer-events-auto">
-              {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setDirection(idx > currentScreen ? 1 : -1);
-                    setCurrentScreen(idx);
-                  }}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    idx === currentScreen ? "w-4 bg-[var(--gm-primary)] shadow-[0_0_8px_var(--gm-primary-30)]" : "w-1 bg-white/50"
-                  }`}
-                />
-              ))}
-            </div>
           </div>
         </div>
       )}

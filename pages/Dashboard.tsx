@@ -283,7 +283,7 @@ const Dashboard = () => {
         <h1 className="text-xl md:text-2xl font-bold leading-tight text-white whitespace-pre-wrap break-words line-clamp-2 md:whitespace-nowrap md:truncate">
           {branding?.company_name || "Visão Geral"}
         </h1>
-        <p className="text-[11px] md:text-sm opacity-70 mt-0.5 md:mt-1 truncate max-w-[220px] md:max-w-none">
+        <p className="text-[11px] md:text-sm opacity-70 mt-0.5 md:mt-1 whitespace-normal break-words max-w-none">
           Resumo de desempenho e atividades
         </p>
       </div>
@@ -696,24 +696,6 @@ const Dashboard = () => {
               })}
               </div>
             </motion.div>
-          </div>
-
-          {/* Pagination dots */}
-          <div className="flex justify-center fixed left-0 right-0 z-[110] pointer-events-none pagination-dots-container">
-            <div className="flex gap-1.5 pointer-events-auto">
-              {[0, 1, 2, 3].map((i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setDirection(i > currentScreen ? 1 : -1);
-                    setCurrentScreen(i);
-                  }}
-                  className={`h-1 rounded-full transition-all duration-300 ${
-                    i === currentScreen ? "w-4 bg-[var(--gm-primary)] shadow-[0_0_8px_var(--gm-primary-30)]" : "w-1 bg-white/50"
-                  }`}
-                />
-              ))}
-            </div>
           </div>
         </div>
       );

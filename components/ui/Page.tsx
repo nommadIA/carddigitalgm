@@ -10,15 +10,20 @@ interface PageProps {
 }
 
 export function Page({ title, subtitle, actions, children, className }: PageProps) {
+  const hasStringTitle = typeof title === 'string';
+
   return (
     <div className={`animate-fade-in min-h-full flex flex-col ${className || ""}`}>
-      <div className="gm-header flex-col items-start justify-between gap-4">
-        <div className="gm-title flex-1 min-w-0 w-full">
-          {typeof title === 'string' ? <h1>{title}</h1> : title}
-          {subtitle && <p>{subtitle}</p>}
+      {(!hasStringTitle || actions) && (
+        <div className="gm-header flex-col items-start justify-between gap-4">
+          {!hasStringTitle && title && (
+            <div className="gm-title flex-1 min-w-0 w-full animate-fade-in">
+              {title}
+            </div>
+          )}
+          {actions && <div className="gm-row shrink-0 w-full overflow-x-auto no-scrollbar pb-1">{actions}</div>}
         </div>
-        {actions && <div className="gm-row shrink-0 w-full overflow-x-auto no-scrollbar pb-1">{actions}</div>}
-      </div>
+      )}
       <div className="flex-1 min-h-0 flex flex-col">{children}</div>
     </div>
   );

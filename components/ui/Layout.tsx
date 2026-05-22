@@ -23,8 +23,11 @@ import {
   ArrowDown,
   ArrowUp,
   ChevronUp,
-  StickyNote
+  StickyNote,
+  Bell,
+  Sparkles
 } from "lucide-react";
+import { playNotificationSound } from "../../lib/audio";
 import { useAuth } from "../../store/AuthContext";
 import { fetchSettingsSupabase, applySettingsToDOM } from "../../lib/settings";
 import AlarmToast from "./AlarmToast";
@@ -39,6 +42,30 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("gm.sidebar") === "1");
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  const handleBellClick = () => {
+    setShowUpdateModal(true);
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        new Notification("CardDigital GM • Nova Versão", {
+          body: "A versão v2.1.0 foi ativada com sucesso! Conectado e funcionando em tempo real.",
+          icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
+        });
+        try { playNotificationSound(); } catch (e) {}
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((perm) => {
+          if (perm === "granted") {
+            new Notification("CardDigital GM • Novo!", {
+              body: "Agora você receberá alertas de nova versão fora do aplicativo.",
+              icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
+            });
+            try { playNotificationSound(); } catch (e) {}
+          }
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     const isCompleted = localStorage.getItem("gm.tutorialCompleted") === "true";
@@ -388,6 +415,18 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             </div>
         </div>
         <div className="flex items-center gap-2">
+            <button
+                type="button"
+                className="gm-btn gm-btn-icon relative bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)]"
+                onClick={handleBellClick}
+                title="Atualizações e Informações"
+                aria-label="Atualizações e Informações"
+                style={{ width: '38px', height: '38px', borderRadius: '10px' }}
+            >
+                <Bell size={18} className="animate-swing" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-black animate-pulse" />
+            </button>
+
             <button 
                 className="gm-btn gm-btn-icon gm-btn-danger"
                 onClick={signOut}
@@ -492,17 +531,43 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
         <div className="gm-sidebar-footer w-full flex flex-col justify-center pb-4 items-center gap-2">
           {collapsed ? (
-            <button
-              className="p-2 border border-white/10 hover:bg-red-500/10 rounded-xl transition-all text-slate-400 hover:text-red-400 shadow-sm shadow-black/50 w-10 flex justify-center items-center group overflow-hidden"
-              type="button" 
-              onClick={signOut} 
-              title="Sair"
-              aria-label="Sair"
-            >
-              <LogOut size={18} className="transition-transform group-hover:scale-110" />
-            </button>
+            <div className="flex flex-col gap-2 items-center">
+              <button
+                type="button"
+                onClick={handleBellClick}
+                className="p-2 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)]/10 rounded-xl transition-all text-[var(--gm-primary)] shadow-sm shadow-black/50 w-10 h-10 flex justify-center items-center relative group"
+                title="Atualizações e Novidades"
+              >
+                <Bell size={18} className="animate-swing" />
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black animate-pulse" />
+              </button>
+
+              <button
+                className="p-2 border border-white/10 hover:bg-red-500/10 rounded-xl transition-all text-slate-400 hover:text-red-400 shadow-sm shadow-black/50 w-10 flex justify-center items-center group overflow-hidden"
+                type="button" 
+                onClick={signOut} 
+                title="Sair"
+                aria-label="Sair"
+              >
+                <LogOut size={18} className="transition-transform group-hover:scale-110" />
+              </button>
+            </div>
           ) : (
-            <div className="w-full flex-col flex items-center">
+            <div className="w-full flex-col flex items-center px-4 gap-2">
+              <button
+                type="button"
+                onClick={handleBellClick}
+                className="w-full p-2.5 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/25 hover:bg-[var(--gm-primary)]/20 rounded-xl transition-all text-slate-200 shadow-sm flex items-center justify-start gap-2.5 group relative"
+                title="Atualizações"
+              >
+                <div className="relative shrink-0">
+                  <Bell size={16} className="text-[var(--gm-primary)] animate-swing" />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />
+                </div>
+                <span className="font-bold text-sm text-[var(--gm-primary)] flex-1 text-left">Atualizações</span>
+                <span className="shrink-0 px-1.5 py-0.5 text-[8px] font-extrabold uppercase bg-red-500 text-white rounded-md animate-pulse">NOVO</span>
+              </button>
+
               <button 
                 className="w-full p-2.5 border border-white/10 hover:bg-red-500/10 rounded-xl transition-all text-slate-400 hover:text-red-400 shadow-sm shadow-black/50 flex justify-center items-center gap-2 group overflow-hidden"
                 type="button" 
@@ -599,6 +664,100 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       <BottomNav />
       <ToastHost />
+
+      {/* UPDATE DIALOG MODAL (GLASS) */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" style={{ zIndex: 1000000 }}>
+          <div className="relative w-full max-w-sm bg-neutral-900/95 border border-white/10 rounded-2xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col gap-4 text-white overflow-hidden font-sans">
+            
+            {/* Ambient Glow */}
+            <div className="absolute -top-12 -left-12 w-28 h-28 bg-[var(--gm-primary)]/25 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="flex items-center justify-between shrink-0 border-b border-white/5 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/25 flex items-center justify-center text-[var(--gm-primary)]">
+                  <Bell size={16} className="animate-swing" style={{ transformOrigin: 'center top' }} />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-bold text-sm leading-tight text-white mb-0">Atualizações do App</h3>
+                  <span className="text-[9px] font-medium text-slate-400">CardDigital GM • Versão v2.1.0</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-slate-400 hover:text-white border border-white/5"
+                onClick={() => setShowUpdateModal(false)}
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto pr-0.5 space-y-3.5 max-h-[300px] no-scrollbar text-left">
+              <div className="p-3 bg-white/5 rounded-xl border border-white/5 space-y-0.5">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-[var(--gm-primary)] uppercase tracking-wider">
+                  <Sparkles size={11} className="text-amber-500 animate-pulse" /> Novidades Ativas
+                </div>
+                <p className="text-[10.5px] text-zinc-300 leading-relaxed font-semibold">
+                  Seu aplicativo foi atualizado com sucesso! Confira as melhorias de visualização e usabilidade que já estão em funcionamento.
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">1</div>
+                  <div className="space-y-0.5 min-w-0 flex-1">
+                    <h4 className="text-[11.5px] font-bold text-slate-100">Controles de Som & Mute</h4>
+                    <p className="text-[10px] text-slate-400 leading-normal">
+                      Adicionado botão "Silenciar Som" para silenciar/ativar instantaneamente todos os toques de alerta nas configurações.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">2</div>
+                  <div className="space-y-0.5 min-w-0 flex-1">
+                    <h4 className="text-[11.5px] font-bold text-slate-100">Layout Mobile Alinhado</h4>
+                    <p className="text-[10px] text-slate-400 leading-normal">
+                      Os cabeçalhos de configurações no smartphone começam sempre abaixo do logo, garantindo que botões importantes e títulos fiquem perfeitamente localizados.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">3</div>
+                  <div className="space-y-0.5 min-w-0 flex-1">
+                    <h4 className="text-[11.5px] font-bold text-slate-100">Dots do Carrossel</h4>
+                    <p className="text-[10px] text-slate-400 leading-normal">
+                      O passador de abas mobile agora é composto por uma linda cápsula escura fosca com as bolinhas indicatórias flutuantes estilo Glassmorphic.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">4</div>
+                  <div className="space-y-0.5 min-w-0 flex-1">
+                    <h4 className="text-[11.5px] font-bold text-slate-100">Notificações Push com Áudio</h4>
+                    <p className="text-[10px] text-slate-400 leading-normal">
+                      Habilitado disparo de aviso fora da página integrado com reprodução sônica instantânea do seu alarme favorito.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="shrink-0 border-t border-white/5 pt-2.5">
+              <button
+                type="button"
+                className="w-full py-2 bg-gradient-to-r from-[var(--gm-primary)] to-[#ff9f43] hover:opacity-95 active:scale-[0.98] text-white rounded-xl text-xs font-bold transition-all shadow-[0_4px_12px_rgba(255,122,0,0.3)] flex items-center justify-center gap-1.5"
+                onClick={() => setShowUpdateModal(false)}
+              >
+                Confirmar e Continuar
+              </button>
+            </div>
+            
+          </div>
+        </div>
+      )}
     </div>
   );
 }
