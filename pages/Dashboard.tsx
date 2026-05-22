@@ -743,23 +743,28 @@ const Dashboard = () => {
       subtitle=""
     >
       {/* Pull to refresh visual indicator */}
-      <div 
-        className="absolute top-0 left-0 right-0 flex justify-center z-50 pointer-events-none transition-all duration-200"
-        style={{ 
-          transform: `translateY(${Math.min(pullProgress, 120)}px)`,
-          opacity: pullProgress > 10 ? 1 : 0
-        }}
-      >
-        <div className="bg-slate-900 border border-[var(--gm-primary)]/40 p-2 rounded-full shadow-[0_0_15px_rgba(var(--gm-primary-rgb),0.3)] flex items-center justify-center">
-          <RefreshCw 
-            className={`text-[var(--gm-primary)] ${isPulling ? 'animate-spin' : ''}`} 
-            style={{ 
-              transform: `rotate(${pullProgress * 2}deg)`,
-              width: '24px', height: '24px'
-            }} 
-          />
+      {viewMode === "smartphone" && (
+        <div 
+          className="absolute top-2 left-0 right-0 flex justify-center z-50 pointer-events-none transition-all duration-150"
+          style={{ 
+            transform: `translateY(${Math.min(pullProgress / 1.5, 90)}px)`,
+            opacity: pullProgress > 15 ? 1 : 0
+          }}
+        >
+          <div className="bg-slate-950/90 backdrop-blur-md border border-[var(--gm-primary)]/40 py-2.5 px-4 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.6)] flex items-center gap-2.5 transition-all border-dashed">
+            <RefreshCw 
+              className={`text-[var(--gm-primary)] ${pullProgress >= 110 ? 'animate-spin text-emerald-400' : ''}`} 
+              style={{ 
+                transform: pullProgress < 110 ? `rotate(${pullProgress * 3}deg)` : undefined,
+                width: '16px', height: '16px'
+              }} 
+            />
+            <span className="text-xs font-bold tracking-wide text-slate-100">
+              {pullProgress >= 110 ? "Solte para atualizar!" : "Puxando para carregar..."}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
       
       <div className={`w-full ${viewMode === 'smartphone' ? 'h-full overflow-hidden' : ''}`}>
         <motion.div

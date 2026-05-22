@@ -316,38 +316,85 @@
 
   <script>
     (function () {
-      function hideSplash() {
-        var el = document.getElementById("gm-splash");
-        if (!el) return;
-        
-        // Wait 2.5 seconds before starting the fade out
-        setTimeout(function() {
-          el.style.opacity = '0';
-          el.style.transition = 'opacity 0.5s ease-in-out';
-          setTimeout(function () {
-            if (el && el.parentNode) el.parentNode.removeChild(el);
-          }, 500);
-        }, 2500);
+      var isReactReady = false;
+      var isAnimationFinished = false;
+      var splashEl = document.getElementById("gm-splash");
+      var subEl = document.getElementById("gm-splash-sub");
+
+      function attemptHide() {
+        if (isReactReady && isAnimationFinished) {
+          if (splashEl) {
+            splashEl.style.opacity = '0';
+            splashEl.style.transition = 'opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+            setTimeout(function () {
+              if (splashEl && splashEl.parentNode) splashEl.parentNode.removeChild(splashEl);
+            }, 400);
+          }
+        }
       }
-  
-      window.__GM_APP_READY__ = function () { hideSplash(); };
-  
-      window.__GM_SPLASH_STATUS__ = function (text) {
-        var p = document.getElementById("gm-splash-sub");
-        if (p) p.textContent = text;
+
+      // Typewriter Effect
+      var textToType = "Sincronizando Informação...";
+      var currentText = "";
+      var i = 0;
+      var typingSpeed = 65; // ms por letra (um pouco mais lento e elegante)
+      var erasingSpeed = 25; // ms por letra para apagar rápido
+      var holdDelay = 650; // pausa antes de apagar para poder ler
+
+      function type() {
+        if (i < textToType.length) {
+          currentText += textToType.charAt(i);
+          if (subEl) subEl.innerHTML = currentText + '<span class="animate-pulse" style="color: var(--gm-primary); margin-left:1px; font-weight:bold;">|</span>';
+          i++;
+          setTimeout(type, typingSpeed);
+        } else {
+          // Terminou de digitar. Pausa e depois apaga.
+          setTimeout(function() {
+            erase();
+          }, holdDelay);
+        }
+      }
+
+      function erase() {
+        if (i > 0) {
+          currentText = currentText.slice(0, -1);
+          if (subEl) subEl.innerHTML = currentText + '<span class="animate-pulse" style="color: var(--gm-primary); margin-left:1px; font-weight:bold;">|</span>';
+          i--;
+          setTimeout(erase, erasingSpeed);
+        } else {
+          if (subEl) subEl.textContent = "";
+          isAnimationFinished = true;
+          attemptHide();
+        }
+      }
+
+      // Inicia a animação de digitação
+      setTimeout(function() {
+        type();
+      }, 300);
+
+      window.__GM_APP_READY__ = function () {
+        isReactReady = true;
+        attemptHide();
       };
-  
+
+      window.__GM_SPLASH_STATUS__ = function (text) {
+        // Custom text overrides can be ignored to preserve typewriter experience
+      };
+
       window.__GM_SPLASH_SET_USER__ = function (name, avatarUrl) {
-        var u = document.getElementById("gm-splash-user");
-        if (u) u.textContent = name ? ("Bem-vindo, " + name) : "";
-  
         var img = document.getElementById("gm-splash-avatar");
         if (img && avatarUrl) {
           img.src = avatarUrl;
         }
       };
-  
-      setTimeout(function () { hideSplash(); }, 8000);
+
+      // Fallback de contingência caso trave por qualquer motivo
+      setTimeout(function () {
+        isReactReady = true;
+        isAnimationFinished = true;
+        attemptHide();
+      }, 6500);
     })();
   </script>
   <video id="gm-video-bg" autoPlay loop muted playsInline style="display: none;"></video>

@@ -53,7 +53,7 @@ export default function PixModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-      <div className="glass rounded-2xl w-full max-w-sm p-6 shadow-2xl bg-slate-900 border border-slate-700">
+      <div className="glass rounded-2xl w-full max-w-sm p-6 shadow-2xl bg-zinc-900 border border-zinc-800">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-white font-bold text-lg">Pagamento Pix</h3>
           <button

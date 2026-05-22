@@ -274,7 +274,7 @@ export default function Expenses() {
       </Card>
 
       {showForm && (
-        <Card className="mb-6 animate-fade-in border-[var(--gm-primary)]/30 bg-slate-900/60 backdrop-blur-xl relative overflow-hidden">
+        <Card className="mb-6 animate-fade-in border-[var(--gm-primary)]/30 bg-zinc-900/60 backdrop-blur-xl relative overflow-hidden">
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--gm-primary)]" />
           <div className="pl-3">
             <div className="flex items-center justify-between mb-4">

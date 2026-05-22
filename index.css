@@ -33,11 +33,11 @@
   --gm-accent-20: rgba(var(--gm-accent-rgb), 0.2);
 
   /* Dark Mode Default - Solid Colors */
-  --gm-bg:#0f1117;
+  --gm-bg:#0a0a0c;
   --gm-text:#ffffff;
-  --gm-surface: #161b22;
-  --gm-surface-2: #21262d;
-  --gm-border: #30363d;
+  --gm-surface: #121215;
+  --gm-surface-2: #1e1e24;
+  --gm-border: #2a2a30;
 
   --gm-font: Inter;
 }

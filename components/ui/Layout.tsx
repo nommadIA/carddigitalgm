@@ -1,6 +1,7 @@
 
 // components/ui/Layout.tsx
 import { WhatsAppIcon } from "./WhatsAppIcon";
+import AppTutorial from "./AppTutorial";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -37,6 +38,17 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   const location = useLocation();
 
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("gm.sidebar") === "1");
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    const isCompleted = localStorage.getItem("gm.tutorialCompleted") === "true";
+    const isForce = localStorage.getItem("gm.tutorialForceStart") === "true";
+    if ((!isCompleted || isForce) && location.pathname === "/") {
+      setShowTutorial(true);
+    } else {
+      setShowTutorial(false);
+    }
+  }, [location.pathname]);
   
   // ✅ 2) Search na Sidebar
   const [menuSearch, setMenuSearch] = useState("");
@@ -325,6 +337,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     <div className="gm-layout">
       {/* Novo componente de alarmes para orçamentos aprovados */}
       <AlarmToast />
+
+      {/* Tutorial Onboarding do Aplicativo */}
+      {showTutorial && <AppTutorial onClose={() => setShowTutorial(false)} />}
 
       {/* GESTO GLOBAL DE VOLTAR (BORDAS LATERAIS) */}
       <div 

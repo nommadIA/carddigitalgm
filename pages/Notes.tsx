@@ -1181,15 +1181,15 @@ export default function Notes() {
                 </div>
 
                 {/* Text Formatting Toolbar */}
-                <div className="flex flex-wrap items-center gap-3 px-6 py-3 bg-black/45 border-b border-white/5 select-none shrink-0" style={{ borderColor: `${color}30` }}>
-                  <div className="flex items-center gap-2 border-r border-white/10 pr-3">
+                <div className="flex flex-col gap-3 px-6 py-3 bg-black/45 border-b border-white/5 select-none shrink-0" style={{ borderColor: `${color}30` }}>
+                  <div className="flex w-full items-center gap-2">
                     <button
                       type="button"
                       onMouseDown={(e) => {
                         e.preventDefault();
                         applyBold();
                       }}
-                      className="p-2 px-4 rounded-xl hover:bg-white/15 text-white font-black text-sm transition-all hover:scale-105 active:scale-95 bg-white/5"
+                      className="flex-1 py-2 px-3 rounded-xl hover:bg-white/15 text-white font-black text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[36px]"
                       title="Negrito"
                     >
                       B
@@ -1200,7 +1200,7 @@ export default function Notes() {
                         e.preventDefault();
                         applyItalic();
                       }}
-                      className="p-2 px-4 rounded-xl hover:bg-white/15 text-white italic font-serif text-sm transition-all hover:scale-105 active:scale-95 bg-white/5"
+                      className="flex-1 py-2 px-3 rounded-xl hover:bg-white/15 text-white italic font-serif text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[36px]"
                       title="Itálico"
                     >
                       I
@@ -1213,8 +1213,8 @@ export default function Notes() {
                           'font-family': "'Caveat', cursive"
                         });
                       }}
-                      className="p-2 px-4 rounded-xl hover:bg-white/15 text-white text-sm transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold"
-                      style={{ fontFamily: 'Caveat, cursive' }}
+                      className="py-2 px-3 rounded-xl hover:bg-white/15 text-white text-xs transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold text-center flex items-center justify-center min-h-[36px]"
+                      style={{ fontFamily: 'Caveat, cursive', flex: 1.4 }}
                       title="Cursiva"
                     >
                       Cursiva
@@ -1225,11 +1225,12 @@ export default function Notes() {
                         e.preventDefault();
                         cycleFontSize();
                       }}
-                      className="p-2 px-4 rounded-xl hover:bg-white/15 text-white text-sm transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold flex items-center gap-1.5"
+                      className="py-2 px-3 rounded-xl hover:bg-white/15 text-white text-xs transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold flex items-center justify-center gap-1 min-h-[36px]"
+                      style={{ flex: 1.4 }}
                       title="Alternar Tamanho (Pequeno, Médio, Grande)"
                     >
                       <span className="text-white/60 text-xs">Aa</span>
-                      <span className="font-bold text-[10px] bg-white/10 px-1.5 py-0.5 rounded uppercase text-white/90">
+                      <span className="font-bold text-[9px] bg-white/10 px-1.5 py-0.5 rounded uppercase text-white/90">
                         {fontSizeMode === 'P' ? 'Peq' : fontSizeMode === 'M' ? 'Méd' : 'Grd'}
                       </span>
                     </button>
@@ -1427,7 +1428,7 @@ export default function Notes() {
                 </div>
 
                 {/* Action Bar */}
-                <div className="p-4 pb-8 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shrink-0 relative z-20"
+                <div className="p-4 pb-28 md:pb-5 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shrink-0 relative z-20"
                   style={{ 
                     borderTop: `1px solid ${color}40`,
                     backgroundColor: 'rgba(0,0,0,0.5)'
