@@ -15,6 +15,7 @@ import {
   Tablet,
   ChevronLeft,
   ChevronRight,
+  FileText,
 } from "lucide-react";
 
 const containerVariants = {
@@ -39,6 +40,7 @@ const itemVariants = {
     },
   },
 };
+import { RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
@@ -50,6 +52,7 @@ import { Grid } from "../components/ui/Grid";
 import CountUp from "../components/ui/CountUp";
 import { pushToast } from "../store/toast";
 import { useSwipeNav } from "../hooks/useSwipeNav";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 
 const Dashboard = () => {
   const { tenantId } = useAuth();
@@ -58,8 +61,18 @@ const Dashboard = () => {
 
   // Responsive view toggle
   const [viewMode, setViewMode] = useState<"desktop" | "smartphone" | "tablet">(
-    "desktop",
+    () => window.innerWidth < 768 ? "smartphone" : "desktop"
   );
+
+  const { pullProgress, isPulling } = usePullToRefresh(() => {
+    window.location.reload();
+  });
+
+  useEffect(() => {
+    const handleResize = () => setViewMode(window.innerWidth < 768 ? "smartphone" : "desktop");
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const [currentScreen, setCurrentScreen] = useState(0); // 0: Faturamento/Fluxo, 1: Atalhos, 2: Resumo Total
   const [direction, setDirection] = useState(0);
 
@@ -253,9 +266,9 @@ const Dashboard = () => {
 
   // ✅ Custom Header com Logo (Clean - Sem Neon)
   const headerContent = (
-    <div className="flex items-center gap-3 md:gap-4">
+    <div className="flex items-center gap-3 md:gap-4 p-1">
       <div className="relative flex items-center justify-center shrink-0">
-        <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden shadow-lg">
+        <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden shadow-lg">
           <img
             src={
               branding?.company_logo_url ||
@@ -266,12 +279,12 @@ const Dashboard = () => {
           />
         </div>
       </div>
-      <div className="flex flex-col justify-center min-w-0">
-        <h1 className="text-xl md:text-2xl font-bold leading-tight text-white truncate">
+      <div className="flex flex-col justify-center min-w-0 pr-2">
+        <h1 className="text-xl md:text-2xl font-bold leading-tight text-white whitespace-pre-wrap break-words line-clamp-2 md:whitespace-nowrap md:truncate">
           {branding?.company_name || "Visão Geral"}
         </h1>
-        <p className="text-[10px] md:text-sm opacity-70 mt-0.5 md:mt-1 truncate">
-          Resumo de desempenho e atividades recentes
+        <p className="text-[11px] md:text-sm opacity-70 mt-0.5 md:mt-1 truncate max-w-[220px] md:max-w-none">
+          Resumo de desempenho e atividades
         </p>
       </div>
     </div>
@@ -486,17 +499,17 @@ const Dashboard = () => {
 
   const AtalhosContent = (
     <div className="w-full flex-shrink-0 flex flex-col no-scrollbar">
-      <h2 className="text-lg font-bold mb-2 shrink-0">Atalhos</h2>
-      <div className={viewMode === "smartphone" ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 md:grid-cols-4 gap-4"}>
+      <h2 className="text-lg font-bold mb-2 shrink-0 px-2 lg:px-0">Atalhos</h2>
+      <div className={viewMode === "smartphone" ? "grid grid-cols-2 gap-4 px-2" : "grid grid-cols-2 md:grid-cols-5 gap-4 px-4 lg:px-0"}>
         {/* Novo Orçamento */}
         <motion.div variants={itemVariants}>
           <Link to="/budgets?new=true" className="group block">
-            <Card className="aspect-square gap-3  transition-all duration-300 group-hover:-translate-y-2 p-0 flex flex-col items-center justify-center  rounded-3xl  hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
-              <div className="w-[70px] h-[70px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-500 group-hover:scale-110 group-hover:rotate-[360deg] group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
-                <Plus size={36} strokeWidth={1.5} />
+            <Card className="aspect-square gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-500 group-hover:scale-110 group-hover:rotate-[360deg] group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <Plus size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300 px-1">
                   Novo Orçamento
                 </h3>
               </div>
@@ -507,12 +520,12 @@ const Dashboard = () => {
         {/* Clientes */}
         <motion.div variants={itemVariants}>
           <Link to="/clients" className="group block">
-            <Card className="aspect-square gap-3  transition-all duration-300 group-hover:-translate-y-2 p-0 flex flex-col items-center justify-center  rounded-3xl  hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
-              <div className="w-[70px] h-[70px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
-                <Users size={36} strokeWidth={1.5} />
+            <Card className="aspect-square gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <Users size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300 px-1">
                   Clientes
                 </h3>
               </div>
@@ -523,12 +536,12 @@ const Dashboard = () => {
         {/* Financeiro */}
         <motion.div variants={itemVariants}>
           <Link to="/financial" className="group block">
-            <Card className="aspect-square gap-3  transition-all duration-300 group-hover:-translate-y-2 p-0 flex flex-col items-center justify-center  rounded-3xl  hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
-              <div className="w-[70px] h-[70px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
-                <Wallet size={36} strokeWidth={1.5} />
+            <Card className="aspect-square gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <Wallet size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300 px-1">
                   Financeiro
                 </h3>
               </div>
@@ -538,14 +551,30 @@ const Dashboard = () => {
 
         {/* Mercado */}
         <motion.div variants={itemVariants}>
-          <Link to="/market" className="group block">
-            <Card className="aspect-square gap-3  transition-all duration-300 group-hover:-translate-y-2 p-0 flex flex-col items-center justify-center  rounded-3xl  hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
-              <div className="w-[70px] h-[70px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
-                <ShoppingCart size={36} strokeWidth={1.5} />
+          <Link to="/market" className="group block h-full">
+            <Card className="h-full aspect-square md:aspect-auto gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <ShoppingCart size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300 px-1">
                   Mercado
+                </h3>
+              </div>
+            </Card>
+          </Link>
+        </motion.div>
+
+        {/* Notas */}
+        <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "col-span-2" : ""}>
+          <Link to="/notes" className="group block h-full">
+            <Card className="h-full gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 py-4 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[44px] h-[44px] md:w-[60px] md:h-[60px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <FileText size={viewMode === "smartphone" ? 26 : 32} strokeWidth={1.5} />
+              </div>
+              <div className="text-center mt-1 md:mt-0">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300 mt-[-6px] md:mt-0 uppercase tracking-wider px-1">
+                  Notas
                 </h3>
               </div>
             </Card>
@@ -712,40 +741,26 @@ const Dashboard = () => {
     <Page
       title={headerContent}
       subtitle=""
-      actions={
-        <div className="flex items-center gap-2">
-          <div className="flex bg-white/5 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode("desktop")}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === "desktop" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`}
-              title="Desktop View"
-            >
-              <Monitor size={16} />
-            </button>
-            <button
-              onClick={() => setViewMode("smartphone")}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === "smartphone" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`}
-              title="Smartphone View"
-            >
-              <Smartphone size={16} />
-            </button>
-          </div>
-          <button
-            onClick={() => {
-              window.location.reload();
-              pushToast({
-                type: "info",
-                title: "Atualizando",
-                message: "Recarregando dados...",
-              });
-            }}
-            className="gm-btn"
-          >
-            Atualizar
-          </button>
-        </div>
-      }
     >
+      {/* Pull to refresh visual indicator */}
+      <div 
+        className="absolute top-0 left-0 right-0 flex justify-center z-50 pointer-events-none transition-all duration-200"
+        style={{ 
+          transform: `translateY(${Math.min(pullProgress, 120)}px)`,
+          opacity: pullProgress > 10 ? 1 : 0
+        }}
+      >
+        <div className="bg-slate-900 border border-[var(--gm-primary)]/40 p-2 rounded-full shadow-[0_0_15px_rgba(var(--gm-primary-rgb),0.3)] flex items-center justify-center">
+          <RefreshCw 
+            className={`text-[var(--gm-primary)] ${isPulling ? 'animate-spin' : ''}`} 
+            style={{ 
+              transform: `rotate(${pullProgress * 2}deg)`,
+              width: '24px', height: '24px'
+            }} 
+          />
+        </div>
+      </div>
+      
       <div className={`w-full ${viewMode === 'smartphone' ? 'h-full overflow-hidden' : ''}`}>
         <motion.div
           variants={containerVariants}

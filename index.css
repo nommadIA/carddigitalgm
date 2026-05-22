@@ -253,6 +253,8 @@ button{ font-family:inherit; }
   display:flex; flex-direction:column;
   gap: var(--gm-space-3);
   z-index: 50;
+  /* Sem transição ao expandir */
+  transition: width 0s, min-width 0s, padding 0s;
 }
 
 /* Força ocultar sidebar no mobile (css specificity fix) */
@@ -265,6 +267,8 @@ button{ font-family:inherit; }
 .gm-sidebar.collapsed{
   width:var(--gm-sidebar-w-collapsed);
   min-width:var(--gm-sidebar-w-collapsed);
+  /* Animação suave apenas ao encolher */
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .gm-main{ flex:1; width:100%; padding: 28px; }
@@ -914,6 +918,30 @@ body{ overflow: hidden; }
 * {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.custom-scroll::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  display: block;
+  width: 4px;
+  height: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+.custom-scroll::-webkit-scrollbar-button,
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+}
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 /* =========================================================

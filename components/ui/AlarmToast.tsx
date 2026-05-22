@@ -3,12 +3,13 @@ import React, { useEffect, useState } from "react";
 import { checkAlarms, markAlarmAsTriggered, toggleAlarmsForBudget } from "../../lib/alarmSystem";
 import { Bell, BellOff, X } from "lucide-react";
 import { BudgetAlarm } from "../../types";
+import { playNotificationSound } from "../../lib/audio";
 
 const AlarmToast = () => {
   const [alarms, setAlarms] = useState<BudgetAlarm[]>([]);
 
   useEffect(() => {
-    // Solicita permissão para notificações do navegador
+    // Solicita permissão para notifications do navegador
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
@@ -20,6 +21,7 @@ const AlarmToast = () => {
         setAlarms((prev) => {
           // Evita duplicatas visuais
           if (prev.find(a => a.id === alarm.id)) return prev;
+          playNotificationSound(); // ✅ Add sound for new alarm
           return [alarm, ...prev];
         });
 

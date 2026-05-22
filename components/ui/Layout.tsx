@@ -1,5 +1,6 @@
 
 // components/ui/Layout.tsx
+import { WhatsAppIcon } from "./WhatsAppIcon";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
@@ -14,6 +15,7 @@ import {
   Settings,
   Moon,
   ChevronLeft,
+  ChevronRight,
   LogOut,
   Search,
   X,
@@ -383,7 +385,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       {/* DESKTOP SIDEBAR */}
       <aside className={`gm-sidebar ${collapsed ? "collapsed" : ""} hidden md:flex`}>
-        {!collapsed && (
+        {!collapsed ? (
           <div className="flex items-center gap-3 px-2 py-1 mb-2">
              <div className="relative flex items-center justify-center shrink-0">
                 <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
@@ -398,24 +400,32 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   <span className="text-lg font-bold text-white">CardDigital <span className="text-[#ff7a00]">GM</span></span>
               </div>
           </div>
+        ) : (
+          <div className="flex justify-center mt-2 mb-4">
+            <div className="relative flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                  <img 
+                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
+                    alt="Logo" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+          </div>
         )}
 
-        <div className="gm-row">
-          <button
-            className="gm-btn gm-btn-icon hidden md:flex"
-            type="button"
-            onClick={() => setCollapsed((v) => !v)}
-            aria-label="Recolher sidebar"
-          >
-            <ChevronLeft size={18} style={{ transform: collapsed ? "rotate(180deg)" : "none" }} />
-          </button>
-          <div className="gm-right" />
-        </div>
-
         {!collapsed && (
-          <div className="px-1 py-2 flex flex-col gap-3">
+          <div className="px-1 py-1 flex flex-col gap-3">
              <div className="flex items-center justify-between gap-2 px-1">
                 <div className="font-extrabold tracking-tight text-sm">Menu</div>
+                <button
+                    className="p-1 hover:bg-white/10 rounded-md transition-all text-[var(--gm-primary)] hover:text-white/80 animate-pulse hover:animate-none"
+                    type="button"
+                    onClick={() => setCollapsed(true)}
+                    aria-label="Recolher sidebar"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
             </div>
 
             <div className="relative hidden md:block">
@@ -438,6 +448,19 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           </div>
         )}
 
+        {collapsed && (
+            <div className="flex justify-center mb-4">
+              <button
+                className="p-2 border border-white/10 hover:bg-[var(--gm-primary)]/10 rounded-xl transition-all text-slate-400 hover:text-[var(--gm-primary)] shadow-sm shadow-black/50 animate-pulse hover:animate-none"
+                type="button"
+                onClick={() => setCollapsed(false)}
+                aria-label="Expandir sidebar"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
+
         <nav className="gm-nav">
           {filteredNav.map(({ to, label, icon: Icon }) => (
             <NavLink
@@ -452,11 +475,33 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="gm-sidebar-footer">
-          <button className="gm-btn" type="button" onClick={signOut} title="Sair">
-            <LogOut size={18} className="text-white" />
-            {!collapsed && <span>Sair</span>}
-          </button>
+        <div className="gm-sidebar-footer w-full flex flex-col justify-center pb-4 items-center gap-2">
+          {collapsed ? (
+            <button
+              className="p-2 border border-white/10 hover:bg-red-500/10 rounded-xl transition-all text-slate-400 hover:text-red-400 shadow-sm shadow-black/50 w-10 flex justify-center items-center group overflow-hidden"
+              type="button" 
+              onClick={signOut} 
+              title="Sair"
+              aria-label="Sair"
+            >
+              <LogOut size={18} className="transition-transform group-hover:scale-110" />
+            </button>
+          ) : (
+            <div className="w-full flex-col flex items-center">
+              <button 
+                className="w-full p-2.5 border border-white/10 hover:bg-red-500/10 rounded-xl transition-all text-slate-400 hover:text-red-400 shadow-sm shadow-black/50 flex justify-center items-center gap-2 group overflow-hidden"
+                type="button" 
+                onClick={signOut} 
+                title="Sair"
+              >
+                <LogOut size={16} className="transition-transform group-hover:scale-110" />
+                <span className="font-medium text-sm">Sair</span>
+              </button>
+              <div className="mt-4 text-[11px] text-slate-500 text-center opacity-60 pointer-events-none">
+                <i>Desenvolvido por</i> <span className="font-bold">CardDigital</span> <span className="font-bold text-[var(--gm-primary)]">GM</span>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -477,7 +522,19 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       
       {/* SCROLL INDICATORS CONTAINER */}
       {createPortal(
-        <div className="fixed right-4 bottom-24 z-[10001] flex flex-col gap-3 lg:hidden pointer-events-none" style={{ zIndex: 10001 }}>
+        <div className="fixed right-4 bottom-24 z-[10001] flex flex-col gap-3 pointer-events-none" style={{ zIndex: 10001 }}>
+          {/* WHATSAPP SUPPORT BUTTON (GLASS) */}
+          <a
+            href="https://wa.me/5598981120686?text=Ol%C3%A1%21%20CardDigital%20GM%2C%20preciso%20de%20outras%20informa%C3%A7%C3%B5es."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-all duration-300 flex items-center justify-center w-12 h-12 rounded-full bg-green-500/80 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:scale-110 pointer-events-auto group"
+            aria-label="Ajuda via WhatsApp"
+            title="Ajuda via WhatsApp"
+          >
+            <WhatsAppIcon size={24} className="text-white animate-pulse group-hover:animate-none" />
+          </a>
+
           {/* BACK TO TOP BUTTON (GLASS) */}
           <button
             onClick={() => {

@@ -1,4 +1,6 @@
 
+import { playNotificationSound } from '../lib/audio';
+
 export type ToastType = "success" | "error" | "info";
 
 export type ToastItem = {
@@ -30,6 +32,9 @@ export function pushToast(input: Omit<ToastItem, "id">) {
 
   toasts = [item, ...toasts].slice(0, 4);
   emit();
+  
+  // Play the notification sound
+  playNotificationSound();
 
   window.setTimeout(() => {
     toasts = toasts.filter(t => t.id !== id);

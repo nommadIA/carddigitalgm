@@ -789,16 +789,16 @@ export default function Notes() {
         </div>
 
         {/* Main Tab Separator */}
-        <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl md:w-fit self-center md:self-start">
+        <div className="flex items-center gap-2 md:gap-4 bg-white/5 p-1 md:p-2 rounded-2xl w-full md:w-fit self-center md:self-start">
           <button
             onClick={() => setMainTab('NOTE')}
-            className={`px-8 py-3 rounded-xl font-bold flex-1 md:flex-none transition-all ${mainTab === 'NOTE' ? 'bg-[#ff6600] text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+            className={`px-4 py-2 md:px-6 md:py-2.5 rounded-xl font-bold flex-1 md:flex-none transition-all text-sm md:text-base ${mainTab === 'NOTE' ? 'bg-[var(--gm-primary)] text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
           >
             NOTAS
           </button>
           <button
              onClick={() => setMainTab('PRODUCTION')}
-             className={`px-8 py-3 rounded-xl font-bold flex-1 md:flex-none transition-all ${mainTab === 'PRODUCTION' ? 'bg-[#ff6600] text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+             className={`px-4 py-2 md:px-6 md:py-2.5 rounded-xl font-bold flex-1 md:flex-none transition-all text-sm md:text-base ${mainTab === 'PRODUCTION' ? 'bg-[var(--gm-primary)] text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
           >
             NOTAS DE PRODUÇÃO
           </button>
@@ -811,7 +811,7 @@ export default function Notes() {
                 <button
                   key={t}
                   onClick={() => setNoteTab(t as any)}
-                  className={`px-4 py-2 font-bold text-sm rounded-xl transition-all whitespace-nowrap ${noteTab === t ? 'bg-[#ff6600]/20 text-[#ff6600] border border-[#ff6600]/50' : 'text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5'}`}
+                  className={`px-4 py-2 font-bold text-xs md:text-sm rounded-xl transition-all whitespace-nowrap ${noteTab === t ? 'bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/50' : 'text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5'}`}
                 >
                   {t}
                 </button>
@@ -820,7 +820,7 @@ export default function Notes() {
                 <button
                   key={t}
                   onClick={() => setProdTab(t as any)}
-                  className={`px-4 py-2 font-bold text-sm rounded-xl transition-all whitespace-nowrap ${prodTab === t ? 'bg-[#ff6600]/20 text-[#ff6600] border border-[#ff6600]/50' : 'text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5'}`}
+                  className={`px-4 py-2 font-bold text-xs md:text-sm rounded-xl transition-all whitespace-nowrap ${prodTab === t ? 'bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/50' : 'text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5'}`}
                 >
                   {t}
                 </button>
@@ -1280,48 +1280,60 @@ export default function Notes() {
                   <div className="p-4 md:px-6 py-4 border-b border-white/5 bg-black/20 flex flex-wrap gap-4 shrink-0">
                     <div className="flex flex-col gap-1 w-[100%] sm:w-auto flex-1 md:flex-none">
                       <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Tipo da Nota</label>
-                      <select 
-                        value={noteType}
-                        onChange={(e) => {
-                           setNoteType(e.target.value as any);
-                           setNoteStatus(e.target.value === 'note' ? 'aguardando' : 'a fazer');
-                        }}
-                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30"
-                      >
-                        <option value="note">Geral (Nota)</option>
-                        <option value="production">Produção</option>
-                      </select>
+                      <div className="relative">
+                        <select 
+                          value={noteType}
+                          onChange={(e) => {
+                             setNoteType(e.target.value as any);
+                             setNoteStatus(e.target.value === 'note' ? 'aguardando' : 'a fazer');
+                          }}
+                          className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 pr-10 outline-none focus:border-white/30 cursor-pointer"
+                        >
+                          <option value="note">Geral (Nota)</option>
+                          <option value="production">Produção</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={16} />
+                      </div>
                     </div>
 
                     <div className="flex flex-col gap-1 w-[100%] sm:w-auto flex-1 md:flex-none">
                       <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Status</label>
-                      <select 
-                        value={noteStatus}
-                        onChange={(e) => setNoteStatus(e.target.value)}
-                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30"
-                      >
-                        {noteType === 'note' 
-                          ? NOTE_STATUSES.filter(s => s !== 'LIXEIRA').map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)
-                          : PROD_STATUSES.filter(s => s !== 'LIXEIRA').map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)
-                        }
-                      </select>
+                      <div className="relative">
+                        <select 
+                          value={noteStatus}
+                          onChange={(e) => setNoteStatus(e.target.value)}
+                          className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 pr-10 outline-none focus:border-white/30 cursor-pointer"
+                        >
+                          {noteType === 'note' 
+                            ? NOTE_STATUSES.filter(s => s !== 'LIXEIRA').map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)
+                            : PROD_STATUSES.filter(s => s !== 'LIXEIRA').map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)
+                          }
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={16} />
+                      </div>
                     </div>
 
                     <div className="flex flex-col gap-1 w-full sm:w-auto">
                       <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Prazo de Entrega</label>
-                      <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                         <input 
-                           type="date"
-                           value={deliveryDate}
-                           onChange={e => setDeliveryDate(e.target.value)}
-                           className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30 [color-scheme:dark] flex-1 min-w-[140px]"
-                         />
-                         <input 
-                           type="time"
-                           value={deliveryTime}
-                           onChange={e => setDeliveryTime(e.target.value)}
-                           className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30 [color-scheme:dark] flex-1 min-w-[100px]"
-                         />
+                      <div className="flex gap-2">
+                         <div className="relative flex-1 min-w-[140px]">
+                           <input 
+                             type="date"
+                             value={deliveryDate}
+                             onChange={e => setDeliveryDate(e.target.value)}
+                             className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-10 pr-3 py-2.5 outline-none focus:border-white/30 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:inset-0"
+                           />
+                           <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={16} />
+                         </div>
+                         <div className="relative flex-1 min-w-[100px]">
+                           <input 
+                             type="time"
+                             value={deliveryTime}
+                             onChange={e => setDeliveryTime(e.target.value)}
+                             className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-10 pr-3 py-2.5 outline-none focus:border-white/30 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:inset-0"
+                           />
+                           <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={16} />
+                         </div>
                       </div>
                     </div>
 
@@ -1445,46 +1457,44 @@ export default function Notes() {
                     })}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 w-full md:w-auto shrink-0 justify-end">
-                    {/* Lembrete Data */}
-                    <div className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/5" style={{ borderColor: `${color}20` }}>
-                      <Calendar 
-                        size={15} 
-                        className="ml-1 transition-all animate-none" 
-                        style={{ 
-                          color: color
-                        }} 
-                      />
-                      <input 
-                        type="date" 
-                        className="bg-transparent text-white/80 outline-none text-xs font-mono border-none [color-scheme:dark] shrink-0"
-                        value={reminderDate}
-                        onChange={(e) => setReminderDate(e.target.value)}
-                        title="Data do Lembrete"
-                      />
-                    </div>
+                  <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto shrink-0 justify-end">
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                      {/* Lembrete Data */}
+                      <div className="flex items-center gap-2 bg-black/40 p-2 py-2.5 rounded-xl border border-white/5 flex-1 relative" style={{ borderColor: `${color}20` }}>
+                        <Calendar 
+                          size={15} 
+                          className="ml-1 transition-all animate-none text-white/40 pointer-events-none" 
+                          style={{ color: color }} 
+                        />
+                        <input 
+                          type="date" 
+                          className="w-full bg-transparent text-white/80 outline-none text-xs sm:text-sm font-mono border-none appearance-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:inset-0"
+                          value={reminderDate}
+                          onChange={(e) => setReminderDate(e.target.value)}
+                          title="Data do Lembrete"
+                        />
+                      </div>
 
-                    {/* Lembrete Hora */}
-                    <div className="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/5" style={{ borderColor: `${color}20` }}>
-                      <Clock 
-                        size={15} 
-                        className="ml-1 transition-all animate-none" 
-                        style={{ 
-                          color: color
-                        }} 
-                      />
-                      <input 
-                        type="time" 
-                        className="bg-transparent text-white/80 outline-none text-xs font-mono border-none [color-scheme:dark] shrink-0"
-                        value={reminderTime}
-                        onChange={(e) => setReminderTime(e.target.value)}
-                        title="Hora do Lembrete"
-                      />
+                      {/* Lembrete Hora */}
+                      <div className="flex items-center gap-2 bg-black/40 p-2 py-2.5 rounded-xl border border-white/5 flex-1 relative" style={{ borderColor: `${color}20` }}>
+                        <Clock 
+                          size={15} 
+                          className="ml-1 transition-all animate-none text-white/40 pointer-events-none" 
+                          style={{ color: color }} 
+                        />
+                        <input 
+                          type="time" 
+                          className="w-full bg-transparent text-white/80 outline-none text-xs sm:text-sm font-mono border-none appearance-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:inset-0"
+                          value={reminderTime}
+                          onChange={(e) => setReminderTime(e.target.value)}
+                          title="Hora do Lembrete"
+                        />
+                      </div>
                     </div>
 
                     <button 
                       onClick={handleSave}
-                      className="px-6 py-2.5 rounded-xl font-bold flex items-center justify-center transition-all shadow-lg text-white bg-green-500 hover:bg-green-600 shadow-green-500/20 hover:shadow-green-500/40 transform hover:-translate-y-0.5 ml-2"
+                      className="w-full md:w-auto px-6 py-2.5 rounded-xl font-bold flex items-center justify-center transition-all shadow-lg text-white bg-green-500 hover:bg-green-600 shadow-green-500/20 hover:shadow-green-500/40 transform hover:-translate-y-0.5 md:ml-1"
                     >
                       Salvar
                     </button>
