@@ -103,6 +103,8 @@ export function buildWhatsappMessage(params: {
 
 export function openWhatsapp(numberE164: string, message: string) {
   const cleanNumber = numberE164.replace(/\D/g, '');
-  const text = encodeURIComponent(message);
-  window.open(`https://wa.me/${cleanNumber}?text=${text}`, "_blank");
+  const event = new CustomEvent('open-whatsapp-picker', {
+    detail: { phone: cleanNumber, text: message }
+  });
+  window.dispatchEvent(event);
 }

@@ -9,7 +9,7 @@ import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash
 import { useAuth } from "../store/AuthContext";
 import { scheduleApprovedBudgetReminders, removeAlarmsForBudget, getBudgetRemindersEnabled, getBudgetReminderTimes, syncAlarmsWithBudgets } from "../lib/alarmSystem";
 import { generateOrcamentoPdf } from "../services/pdfService";
-import { buildWhatsappMessage } from "../services/whatsApp";
+import { buildWhatsappMessage, openWhatsapp } from "../services/whatsApp";
 import { useLocation } from "react-router-dom";
 import NewBudgetModal from "./budgets/NewBudgetModal";
 import ReminderConfigModal from "../components/budgets/ReminderConfigModal";
@@ -735,7 +735,7 @@ export default function Budgets() {
             <div className="p-6 space-y-3">
               <button 
                 onClick={() => {
-                  window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
+                  openWhatsapp("", shareData.message);
                   setShareData(null);
                 }}
                 className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"

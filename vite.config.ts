@@ -21,5 +21,17 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve("."),
       },
     },
+    build: {
+      target: 'esnext',
+      minify: 'esbuild',
+      cssMinify: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom', 'framer-motion', 'lucide-react'],
+          },
+        },
+      },
+    },
   };
 });

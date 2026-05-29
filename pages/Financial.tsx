@@ -12,6 +12,7 @@ import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
 import { generateFinanceReportPdf } from "../services/pdfService";
 import { fetchSettingsSupabase } from "../lib/settings";
+import { openWhatsapp } from "../services/whatsApp";
 import {
   createFinanceReport,
   listFinanceReports,
@@ -663,7 +664,7 @@ export default function Financial() {
             <div className="p-6 space-y-3">
               <button
                 onClick={() => {
-                  window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
+                  openWhatsapp("", shareData.message);
                   setShareData(null);
                 }}
                 className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"

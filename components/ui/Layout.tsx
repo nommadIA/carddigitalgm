@@ -1,6 +1,8 @@
 
 // components/ui/Layout.tsx
 import { WhatsAppIcon } from "./WhatsAppIcon";
+import { WhatsAppSelectorModal } from "./WhatsAppSelectorModal";
+import { openWhatsapp } from "../../services/whatsApp";
 import AppTutorial from "./AppTutorial";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -23,6 +25,7 @@ import {
   ArrowDown,
   ArrowUp,
   ChevronUp,
+  ChevronDown,
   StickyNote,
   Bell,
   Sparkles
@@ -68,10 +71,13 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const isCompleted = localStorage.getItem("gm.tutorialCompleted") === "true";
+    const isNewUser = localStorage.getItem("gm.isNewUser") === "true";
     const isForce = localStorage.getItem("gm.tutorialForceStart") === "true";
-    if ((!isCompleted || isForce) && location.pathname === "/") {
+    if ((isNewUser || isForce) && location.pathname === "/") {
       setShowTutorial(true);
+      if (isNewUser) {
+        localStorage.removeItem("gm.isNewUser");
+      }
     } else {
       setShowTutorial(false);
     }
@@ -604,16 +610,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {createPortal(
         <div className="fixed right-4 bottom-24 z-[10001] flex flex-col gap-3 pointer-events-none" style={{ zIndex: 10001 }}>
           {/* WHATSAPP SUPPORT BUTTON (GLASS) */}
-          <a
-            href="https://wa.me/5598981120686?text=Ol%C3%A1%21%20CardDigital%20GM%2C%20preciso%20de%20outras%20informa%C3%A7%C3%B5es."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transition-all duration-300 flex items-center justify-center w-12 h-12 rounded-full bg-green-500/80 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:scale-110 pointer-events-auto group"
+          <button
+            onClick={() => openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.")}
+            className="transition-all duration-300 flex items-center justify-center w-12 h-12 rounded-full bg-green-500/80 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:scale-110 pointer-events-auto group cursor-pointer"
             aria-label="Ajuda via WhatsApp"
             title="Ajuda via WhatsApp"
           >
             <WhatsAppIcon size={24} className="text-white animate-pulse group-hover:animate-none" />
-          </a>
+          </button>
 
           {/* BACK TO TOP BUTTON (GLASS) */}
           <button
@@ -623,12 +627,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               const activeEl = document.querySelector('[data-active-scroll="true"]');
               if (activeEl) activeEl.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className={`transition-all duration-300 flex items-center justify-center w-12 h-12 rounded-full bg-[var(--gm-primary)]/80 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(255,102,0,0.4)] pointer-events-auto ${
-              canScrollUp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+            className={`transition-all duration-300 flex items-center justify-center w-8 h-8 pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
+              canScrollUp ? "opacity-50 hover:opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
             }`}
             aria-label="Voltar ao topo"
           >
-            <ChevronUp size={24} className="text-white" />
+            <ChevronUp size={22} className="text-[var(--gm-primary)] filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] animate-bounce" />
           </button>
 
           {/* SCROLL DOWN INDICATOR (GLASS) */}
@@ -650,12 +654,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   target.scrollBy({ top: target.clientHeight * 0.8, behavior: "smooth" });
                 }
               }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center w-12 h-12 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.4)] pointer-events-auto ${
-                canScrollDown ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+              className={`transition-all duration-300 flex flex-col items-center justify-center w-8 h-8 pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
+                canScrollDown ? "opacity-50 hover:opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
               }`}
               aria-label="Rolar para baixo"
             >
-              <ArrowDown size={24} className="text-white animate-bounce" />
+              <ChevronDown size={22} className="text-white filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] animate-bounce" />
             </button>
           )}
         </div>,
@@ -758,6 +762,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
       )}
+      <WhatsAppSelectorModal />
     </div>
   );
 }

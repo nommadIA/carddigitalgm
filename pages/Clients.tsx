@@ -9,6 +9,7 @@ import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash
 import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
+import { openWhatsapp } from "../services/whatsApp";
 import ExpandedClientRow from "../components/clients/ExpandedClientRow";
 
 type ClientRow = {
@@ -67,7 +68,7 @@ function openWhatsApp(phoneDigits: string) {
   const d = onlyDigits(phoneDigits);
   if (!d) return;
   const normalized = d.startsWith("55") ? d : `55${d}`;
-  window.open(`https://wa.me/${normalized}`, "_blank", "noopener,noreferrer");
+  openWhatsapp(normalized, "");
 }
 
 // ✅ hook simples para responsivo (sem depender de CSS externo)

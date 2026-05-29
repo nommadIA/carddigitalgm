@@ -28,6 +28,7 @@ export default function Register() {
     setIsLoading(true);
     try {
       await signUpWithEmail(email, password, fullName);
+      localStorage.setItem("gm.isNewUser", "true");
       setTimeout(() => navigate("/login"), 800);
     } catch (err: any) {
       let msg = err?.message || "Erro ao criar conta.";

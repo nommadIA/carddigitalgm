@@ -4,6 +4,7 @@ import { Card } from "../components/ui/Card";
 import { supabase } from "../lib/supabase";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
 import { Plus, Trash2, Pencil, Calendar, Check, Clock, X, Save, RotateCcw } from "lucide-react";
+import { GlassDatePicker } from "../components/ui/GlassDatePicker";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -316,7 +317,7 @@ export default function Expenses() {
 
                 <div>
                   <label className="gm-label ml-1">Vencimento</label>
-                  <input className="gm-input" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                  <GlassDatePicker className="gm-input min-w-[140px]" value={dueDate} onChange={setDueDate} title="Vencimento" />
                 </div>
 
                 <div className="md:col-span-2 flex items-center gap-2">

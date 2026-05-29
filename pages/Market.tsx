@@ -5,6 +5,7 @@ import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { CURRENCY_FORMATTER } from '../constants';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
+import { openWhatsapp } from '../services/whatsApp';
 import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
@@ -1110,7 +1111,7 @@ const Market = () => {
               <div className="p-6 space-y-3">
                 <button 
                   onClick={() => {
-                    window.open(`https://wa.me/?text=${encodeURIComponent(shareData.message)}`, "_blank");
+                    openWhatsapp("", shareData.message);
                     setShareData(null);
                   }}
                   className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
