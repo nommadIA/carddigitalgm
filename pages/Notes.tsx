@@ -722,8 +722,73 @@ export default function Notes() {
       }
 
       const getBase64ImageFormatUrl = async (imageUrl: string) => {
+        if (!imageUrl) return null;
+        if (imageUrl.startsWith("data:")) {
+          let type = "JPEG";
+          if (imageUrl.startsWith("data:image/png")) type = "PNG";
+          else if (imageUrl.startsWith("data:image/webp")) type = "WEBP";
+          return { base64: imageUrl, type };
+        }
+
         let fetchUrl = imageUrl;
         try {
+          let bucket: string | null = null;
+          let path: string | null = null;
+
+          if (imageUrl.includes("/storage/v1/object/")) {
+            const match = imageUrl.match(/storage\/v1\/object\/(?:public|authenticated)\/([^/]+)\/(.+)$/);
+            if (match) {
+              bucket = match[1];
+              path = match[2].split("?")[0];
+            }
+          } else {
+            if (
+              imageUrl.includes("/public/timbrados/") ||
+              imageUrl.includes("/authenticated/timbrados/")
+            ) {
+              bucket = "timbrados";
+            } else if (
+              imageUrl.includes("/public/tenant-assets/") ||
+              imageUrl.includes("/authenticated/tenant-assets/")
+            ) {
+              bucket = "tenant-assets";
+            }
+
+            if (bucket) {
+              const parts = imageUrl.split(`/public/${bucket}/`);
+              const signParts = imageUrl.split(`/authenticated/${bucket}/`);
+              let rawPath = null;
+              if (parts.length > 1) rawPath = parts[1];
+              else if (signParts.length > 1) rawPath = signParts[1];
+              if (rawPath) {
+                path = rawPath.split("?")[0];
+              }
+            }
+          }
+
+          // Directly try supabase storage download first to avoid CORS / public permissions wall
+          if (bucket && path) {
+            try {
+              const { data, error } = await supabase.storage
+                .from(bucket)
+                .download(path);
+              if (!error && data) {
+                const result = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(data);
+                });
+                let type = "JPEG";
+                if (result.startsWith("data:image/png")) type = "PNG";
+                else if (result.startsWith("data:image/webp")) type = "WEBP";
+                return { base64: result, type };
+              }
+            } catch (errSupabase) {
+              console.error("Supabase direct download failed, fallback to url fetch", errSupabase);
+            }
+          }
+
           let res = await fetch(fetchUrl);
           let textSample = "";
           if (res.ok) {
@@ -731,64 +796,42 @@ export default function Notes() {
             textSample = peekContent.slice(0, 100).toLowerCase();
           }
           if (!res.ok || textSample.includes("<html")) {
-            let bucket = null;
-            if (
-              imageUrl.includes("/public/timbrados/") ||
-              imageUrl.includes("/authenticated/timbrados/")
-            )
-              bucket = "timbrados";
-            else if (
-              imageUrl.includes("/public/tenant-assets/") ||
-              imageUrl.includes("/authenticated/tenant-assets/")
-            )
-              bucket = "tenant-assets";
-
-            if (bucket) {
-              const parts = imageUrl.split(`/public/${bucket}/`);
-              const signParts = imageUrl.split(`/authenticated/${bucket}/`);
-              let path = null;
-              if (parts.length > 1) path = parts[1];
-              else if (signParts.length > 1) path = signParts[1];
-
-              if (path) {
-                // remove query string like ?t=123
-                path = path.split("?")[0];
-                const { data } = await supabase.storage
-                  .from(bucket)
-                  .createSignedUrl(path, 60 * 10);
-                if (data?.signedUrl) {
-                  fetchUrl = data.signedUrl;
-                  res = await fetch(fetchUrl);
-                }
+            if (bucket && path) {
+              const { data } = await supabase.storage
+                .from(bucket)
+                .createSignedUrl(path, 60 * 10);
+              if (data?.signedUrl) {
+                fetchUrl = data.signedUrl;
+                res = await fetch(fetchUrl);
               }
             }
           }
 
           const blob = await res.blob();
-          return new Promise<{ base64: string; type: string }>(
-            (resolve, reject) => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const result = reader.result as string;
-                let type = "JPEG";
-                if (result.startsWith("data:image/png")) type = "PNG";
-                else if (result.startsWith("data:image/webp")) type = "WEBP";
-                resolve({ base64: result, type });
-              };
-              reader.onerror = reject;
-              reader.readAsDataURL(blob);
-            },
-          );
+          const base64Str = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          let type = "JPEG";
+          if (base64Str.startsWith("data:image/png")) type = "PNG";
+          else if (base64Str.startsWith("data:image/webp")) type = "WEBP";
+          return { base64: base64Str, type };
         } catch (e) {
-          throw e;
+          console.error("Failed to load and convert image to base64 for PDF", e);
+          return null;
         }
       };
 
       const renderTimbrado = async () => {
         if (timbradoUrl) {
           try {
-            const { base64, type } = await getBase64ImageFormatUrl(timbradoUrl);
-            doc.addImage(base64, type, 0, 0, 210, 297);
+            const resImg = await getBase64ImageFormatUrl(timbradoUrl);
+            if (resImg) {
+              const { base64, type } = resImg;
+              doc.addImage(base64, type, 0, 0, 210, 297);
+            }
           } catch (e) {
             console.error("Failed to load timbrado", e);
           }
@@ -845,23 +888,120 @@ export default function Notes() {
 
       currentY += splitText.length * 6.5 + 10;
 
+      // Extract all images from layouts and body content to render in a 2-column grid
+      const imagesToRender: string[] = [];
       if (note.layout_url) {
-        try {
-          const { base64, type } = await getBase64ImageFormatUrl(
-            note.layout_url,
-          );
-          const finalHeight = 70;
+        imagesToRender.push(note.layout_url);
+      }
 
-          if (currentY + finalHeight > 220) {
+      try {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = note.content || "";
+        const imgElements = tempDiv.getElementsByTagName("img");
+        for (let i = 0; i < imgElements.length; i++) {
+          const src = imgElements[i].getAttribute("src");
+          if (src && !imagesToRender.includes(src)) {
+            imagesToRender.push(src);
+          }
+        }
+      } catch (err) {
+        console.error("Error extracting embedded images from content for PDF:", err);
+      }
+
+      if (imagesToRender.length > 0) {
+        // Render optional title for attachments
+        if (currentY + 15 > 240) {
+          doc.addPage();
+          await renderTimbrado();
+          currentY = 40;
+        }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(80);
+        doc.text("Mídias e Anexos:", 20, currentY);
+        currentY += 8;
+
+        // Load all image data to prepare sizing
+        interface ImageItem {
+          base64: string;
+          type: string;
+          width: number;
+          height: number;
+        }
+        
+        const loadedImages: ImageItem[] = [];
+        for (const imgUrl of imagesToRender) {
+          try {
+            const resImg = await getBase64ImageFormatUrl(imgUrl);
+            if (resImg) {
+              const { base64, type } = resImg;
+              const dimensions = await new Promise<{ w: number; h: number }>((resolve) => {
+                const imgObj = new Image();
+                imgObj.onload = () => resolve({ w: imgObj.naturalWidth, h: imgObj.naturalHeight });
+                imgObj.onerror = () => resolve({ w: 400, h: 300 });
+                imgObj.src = base64;
+              });
+              loadedImages.push({
+                base64,
+                type,
+                width: dimensions.w || 400,
+                height: dimensions.h || 300
+              });
+            }
+          } catch (eImg) {
+            console.error("Error preprocessing image for PDF:", imgUrl, eImg);
+          }
+        }
+
+        // Render images in pairs (2 per row)
+        const colWidth = 82;
+        const colGap = 6;
+        const maxImgHeight = 65; // Max height to keep them smaller and elegant
+
+        for (let i = 0; i < loadedImages.length; i += 2) {
+          const img1 = loadedImages[i];
+          const img2 = loadedImages[i + 1];
+
+          const aspectRatio1 = img1.height / img1.width;
+          const h1 = Math.min(colWidth * aspectRatio1, maxImgHeight);
+
+          let h2 = 0;
+          if (img2) {
+            const aspectRatio2 = img2.height / img2.width;
+            h2 = Math.min(colWidth * aspectRatio2, maxImgHeight);
+          }
+
+          const rowHeight = Math.max(h1, h2);
+
+          // Check overflow
+          if (currentY + rowHeight > 240) {
             doc.addPage();
             await renderTimbrado();
             currentY = 40;
           }
 
-          doc.addImage(base64, type, 20, currentY, 170, finalHeight);
-          currentY += finalHeight + 10;
-        } catch (e) {
-          console.error("Failed to load layout image for PDF");
+          // Draw Image 1 (Left Column)
+          try {
+            // Draw subtle frame border around image
+            doc.setDrawColor(220, 220, 220);
+            doc.setLineWidth(0.15);
+            doc.rect(20, currentY, colWidth, h1);
+            doc.addImage(img1.base64, img1.type, 20.2, currentY + 0.2, colWidth - 0.4, h1 - 0.4);
+          } catch (errAdd) {
+            console.error("Error drawing image 1 inside cell:", errAdd);
+          }
+
+          // Draw Image 2 (Right Column) if exists
+          if (img2) {
+            try {
+              doc.rect(20 + colWidth + colGap, currentY, colWidth, h2);
+              doc.addImage(img2.base64, img2.type, 20 + colWidth + colGap + 0.2, currentY + 0.2, colWidth - 0.4, h2 - 0.4);
+            } catch (errAdd) {
+              console.error("Error drawing image 2 inside cell:", errAdd);
+            }
+          }
+
+          currentY += rowHeight + 8;
         }
       }
 
