@@ -252,7 +252,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <Page title="Dashboard" subtitle="Carregando informações...">
+      <Page title="Início" subtitle="Carregando informações...">
         <Grid cols={3}>
           {[1, 2, 3].map((i) => (
             <Card key={i} className="h-32 flex items-center justify-center">

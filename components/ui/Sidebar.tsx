@@ -20,7 +20,7 @@ import { useAuth } from "../../store/AuthContext";
 type ThemeMode = "dark" | "light";
 
 const items = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/", label: "Início", icon: LayoutDashboard },
   { to: "/budgets", label: "Orçamentos", icon: FileText },
   { to: "/clients", label: "Clientes", icon: Users },
   { to: "/expenses", label: "Despesas", icon: Receipt },

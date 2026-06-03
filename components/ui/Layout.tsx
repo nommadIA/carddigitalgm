@@ -28,7 +28,11 @@ import {
   ChevronDown,
   StickyNote,
   Bell,
-  Sparkles
+  Sparkles,
+  MessageSquare,
+  Clock,
+  Check,
+  CheckCircle2
 } from "lucide-react";
 import { playNotificationSound } from "../../lib/audio";
 import { useAuth } from "../../store/AuthContext";
@@ -36,7 +40,59 @@ import { fetchSettingsSupabase, applySettingsToDOM } from "../../lib/settings";
 import AlarmToast from "./AlarmToast";
 import { ToastHost } from "./Toast";
 import BottomNav from "./BottomNav";
+
+const DEFAULT_NOTIFICATIONS = [
+  {
+    id: "n1",
+    title: "Novo Orçamento Aprovado",
+    message: "O cliente Bolhas Lavanderia visualizou e aprovou o layout enviado. O status foi atualizado para Fazendo.",
+    time: "Há 10 min",
+    read: false,
+    type: "direct"
+  },
+  {
+    id: "n2",
+    title: "Controles de Som & Mute",
+    message: "Novidade: Adicionado botão 'Silenciar Som' para silenciar/ativar instantaneamente todos os toques de alerta nas configurações.",
+    time: "Há 1 hora",
+    read: false,
+    type: "update"
+  },
+  {
+    id: "n3",
+    title: "Alerta de Lembrete Diário",
+    message: "Seu lembrete programado de conferência de notas das 10:26 disparou com sucesso.",
+    time: "Há 2 horas",
+    read: false,
+    type: "alert"
+  },
+  {
+    id: "n4",
+    title: "WhatsApp Conectado",
+    message: "O canal de atendimento via WhatsApp foi sincronizado e o suporte instantâneo está pronto.",
+    time: "Há 4 horas",
+    read: true,
+    type: "direct"
+  },
+  {
+    id: "n5",
+    title: "Layout Mobile Alinhado",
+    message: "Os cabeçalhos de configurações no smartphone começam sempre abaixo do logo, garantindo posicionamento perfeito.",
+    time: "Há 1 dia",
+    read: true,
+    type: "update"
+  },
+  {
+    id: "n6",
+    title: "Dots do Carrossel Style",
+    message: "O passador de abas mobile agora é composto por uma linda cápsula escura fosca com as bolinhas indicatórias flutuantes estilo Glassmorphic.",
+    time: "Há 2 dias",
+    read: true,
+    type: "update"
+  }
+];
 import { useSwipeNav } from "../../hooks/useSwipeNav";
+import { pushToast } from "../../store/toast";
 
 export default function Layout({ children }: { children?: React.ReactNode }) {
   const { signOut, tenantId } = useAuth();
@@ -46,6 +102,53 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("gm.sidebar") === "1");
   const [showTutorial, setShowTutorial] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  const [notifications, setNotifications] = useState<any[]>(() => {
+    const cached = localStorage.getItem("gm.notifications");
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        // fall through
+      }
+    }
+    return DEFAULT_NOTIFICATIONS;
+  });
+
+  const [activeTab, setActiveTab] = useState<"todas" | "nao_lidas" | "diretas">("todas");
+
+  const unreadCount = useMemo(() => {
+    return notifications.filter((n) => !n.read).length;
+  }, [notifications]);
+
+  useEffect(() => {
+    localStorage.setItem("gm.notifications", JSON.stringify(notifications));
+  }, [notifications]);
+
+  const filteredNotifications = useMemo(() => {
+    if (activeTab === "todas") return notifications;
+    if (activeTab === "nao_lidas") return notifications.filter((n) => !n.read);
+    if (activeTab === "diretas") return notifications.filter((n) => n.type === "direct");
+    return notifications;
+  }, [notifications, activeTab]);
+
+  const toggleRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: !n.read } : n))
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications((prev) =>
+      prev.map((n) => ({ ...n, read: true }))
+    );
+    pushToast({
+      type: "success",
+      title: "Notificações",
+      message: "Todas as mensagens foram marcadas como lidas!",
+      ttl: 3000
+    });
+  };
 
   const handleBellClick = () => {
     setShowUpdateModal(true);
@@ -103,9 +206,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       .catch(() => {});
   }, [tenantId]);
 
+
+
   const nav = useMemo(
     () => [
-      { to: "/", label: "Dashboard", icon: LayoutGrid },
+      { to: "/", label: "Início", icon: LayoutGrid },
       { to: "/budgets", label: "Orçamentos", icon: FileText },
       { to: "/clients", label: "Clientes", icon: Users },
       { to: "/expenses", label: "Despesas", icon: Receipt },
@@ -542,10 +647,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 type="button"
                 onClick={handleBellClick}
                 className="p-2 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)]/10 rounded-xl transition-all text-[var(--gm-primary)] shadow-sm shadow-black/50 w-10 h-10 flex justify-center items-center relative group"
-                title="Atualizações e Novidades"
+                title="Notificações e Atualizações"
               >
-                <Bell size={18} className="animate-swing" />
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black animate-pulse" />
+                <Bell size={18} className={unreadCount > 0 ? "animate-swing" : ""} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full border border-black flex items-center justify-center animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
 
               <button
@@ -560,18 +669,29 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             </div>
           ) : (
             <div className="w-full flex-col flex items-center px-4 gap-2">
+
               <button
                 type="button"
                 onClick={handleBellClick}
                 className="w-full p-2.5 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/25 hover:bg-[var(--gm-primary)]/20 rounded-xl transition-all text-slate-200 shadow-sm flex items-center justify-start gap-2.5 group relative"
-                title="Atualizações"
+                title="Notificações e Atualizações"
               >
                 <div className="relative shrink-0">
-                  <Bell size={16} className="text-[var(--gm-primary)] animate-swing" />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />
+                  <Bell size={16} className={`text-[var(--gm-primary)] ${unreadCount > 0 ? "animate-swing" : ""}`} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />
+                  )}
                 </div>
                 <span className="font-bold text-sm text-[var(--gm-primary)] flex-1 text-left">Atualizações</span>
-                <span className="shrink-0 px-1.5 py-0.5 text-[8px] font-extrabold uppercase bg-red-500 text-white rounded-md animate-pulse">NOVO</span>
+                {unreadCount > 0 ? (
+                  <span className="shrink-0 px-1.5 py-0.5 text-[8.5px] font-black uppercase bg-red-500 text-white rounded-md animate-pulse">
+                    {unreadCount} Novas
+                  </span>
+                ) : (
+                  <span className="shrink-0 px-1.5 py-0.5 text-[8px] font-extrabold uppercase bg-neutral-800 text-zinc-400 rounded-md">
+                    Em dia
+                  </span>
+                )}
               </button>
 
               <button 
@@ -610,14 +730,16 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {createPortal(
         <div className="fixed right-4 bottom-24 z-[10001] flex flex-col gap-3 pointer-events-none" style={{ zIndex: 10001 }}>
           {/* WHATSAPP SUPPORT BUTTON (GLASS) */}
-          <button
-            onClick={() => openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.")}
-            className="transition-all duration-300 flex items-center justify-center w-12 h-12 rounded-full bg-green-500/80 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:scale-110 pointer-events-auto group cursor-pointer"
-            aria-label="Ajuda via WhatsApp"
-            title="Ajuda via WhatsApp"
-          >
-            <WhatsAppIcon size={24} className="text-white animate-pulse group-hover:animate-none" />
-          </button>
+          {location.pathname === "/" && (
+            <button
+              onClick={() => openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.")}
+              className="transition-all duration-300 flex items-center justify-center w-12 h-12 rounded-full bg-green-500/80 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:scale-110 pointer-events-auto group cursor-pointer"
+              aria-label="Ajuda via WhatsApp"
+              title="Ajuda via WhatsApp"
+            >
+              <WhatsAppIcon size={24} className="text-white animate-pulse group-hover:animate-none" />
+            </button>
+          )}
 
           {/* BACK TO TOP BUTTON (GLASS) */}
           <button
@@ -669,93 +791,185 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       <BottomNav />
       <ToastHost />
 
-      {/* UPDATE DIALOG MODAL (GLASS) */}
+      {/* UPDATE DIALOG MODAL (NOTIFICAÇÕES CENTER) */}
       {showUpdateModal && (
         <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" style={{ zIndex: 1000000 }}>
-          <div className="relative w-full max-w-sm bg-neutral-900/95 border border-white/10 rounded-2xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col gap-4 text-white overflow-hidden font-sans">
+          <div className="relative w-full max-w-md bg-[#131416]/98 border border-zinc-800 rounded-2xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col gap-4 text-white overflow-hidden font-sans">
             
             {/* Ambient Glow */}
-            <div className="absolute -top-12 -left-12 w-28 h-28 bg-[var(--gm-primary)]/25 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -top-12 -left-12 w-28 h-28 bg-[var(--gm-primary)]/20 rounded-full blur-2xl pointer-events-none" />
             
-            <div className="flex items-center justify-between shrink-0 border-b border-white/5 pb-2.5">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/25 flex items-center justify-center text-[var(--gm-primary)]">
-                  <Bell size={16} className="animate-swing" style={{ transformOrigin: 'center top' }} />
+            {/* Header */}
+            <div className="flex items-center justify-between shrink-0 pb-3 border-b border-zinc-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-zinc-800/40 border border-zinc-700/60 flex items-center justify-center text-zinc-300 relative">
+                  <Bell size={18} className={unreadCount > 0 ? "text-[var(--gm-primary)]" : "text-zinc-400"} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-black animate-pulse" />
+                  )}
                 </div>
                 <div className="text-left">
-                  <h3 className="font-bold text-sm leading-tight text-white mb-0">Atualizações do App</h3>
-                  <span className="text-[9px] font-medium text-slate-400">CardDigital GM • Versão v2.1.0</span>
+                  <h3 className="font-extrabold text-base tracking-tight text-white mb-0">Notificações</h3>
+                  <span className="text-[10px] font-bold text-zinc-400 tracking-wide uppercase">
+                    {unreadCount > 0 ? `${unreadCount} pendentes` : "Tudo em dia"}
+                  </span>
                 </div>
               </div>
               <button
                 type="button"
-                className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-slate-400 hover:text-white border border-white/5"
+                className="w-8 h-8 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 hover:scale-105 active:scale-95 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-zinc-700/60"
                 onClick={() => setShowUpdateModal(false)}
+                title="Fechar Notificações"
               >
                 <X size={14} />
               </button>
             </div>
 
-            <div className="overflow-y-auto pr-0.5 space-y-3.5 max-h-[300px] no-scrollbar text-left">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5 space-y-0.5">
-                <div className="flex items-center gap-1.5 text-[9px] font-bold text-[var(--gm-primary)] uppercase tracking-wider">
-                  <Sparkles size={11} className="text-amber-500 animate-pulse" /> Novidades Ativas
-                </div>
-                <p className="text-[10.5px] text-zinc-300 leading-relaxed font-semibold">
-                  Seu aplicativo foi atualizado com sucesso! Confira as melhorias de visualização e usabilidade que já estão em funcionamento.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex gap-2.5 items-start">
-                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">1</div>
-                  <div className="space-y-0.5 min-w-0 flex-1">
-                    <h4 className="text-[11.5px] font-bold text-slate-100">Controles de Som & Mute</h4>
-                    <p className="text-[10px] text-slate-400 leading-normal">
-                      Adicionado botão "Silenciar Som" para silenciar/ativar instantaneamente todos os toques de alerta nas configurações.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2.5 items-start">
-                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">2</div>
-                  <div className="space-y-0.5 min-w-0 flex-1">
-                    <h4 className="text-[11.5px] font-bold text-slate-100">Layout Mobile Alinhado</h4>
-                    <p className="text-[10px] text-slate-400 leading-normal">
-                      Os cabeçalhos de configurações no smartphone começam sempre abaixo do logo, garantindo que botões importantes e títulos fiquem perfeitamente localizados.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2.5 items-start">
-                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">3</div>
-                  <div className="space-y-0.5 min-w-0 flex-1">
-                    <h4 className="text-[11.5px] font-bold text-slate-100">Dots do Carrossel</h4>
-                    <p className="text-[10px] text-slate-400 leading-normal">
-                      O passador de abas mobile agora é composto por uma linda cápsula escura fosca com as bolinhas indicatórias flutuantes estilo Glassmorphic.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2.5 items-start">
-                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">4</div>
-                  <div className="space-y-0.5 min-w-0 flex-1">
-                    <h4 className="text-[11.5px] font-bold text-slate-100">Notificações Push com Áudio</h4>
-                    <p className="text-[10px] text-slate-400 leading-normal">
-                      Habilitado disparo de aviso fora da página integrado com reprodução sônica instantânea do seu alarme favorito.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="shrink-0 border-t border-white/5 pt-2.5">
+            {/* Tabs Filter Bar */}
+            <div className="flex items-center gap-1 bg-zinc-950/80 border border-zinc-900 rounded-xl p-1 shrink-0">
               <button
                 type="button"
-                className="w-full py-2 bg-gradient-to-r from-[var(--gm-primary)] to-[#ff9f43] hover:opacity-95 active:scale-[0.98] text-white rounded-xl text-xs font-bold transition-all shadow-[0_4px_12px_rgba(255,122,0,0.3)] flex items-center justify-center gap-1.5"
+                onClick={() => setActiveTab("todas")}
+                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 ${
+                  activeTab === "todas"
+                    ? "bg-[#25262a] text-white border border-zinc-700/50 shadow"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Todas
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("nao_lidas")}
+                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 ${
+                  activeTab === "nao_lidas"
+                    ? "bg-[#25262a] text-white border border-zinc-700/50 shadow"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Não lidas
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("diretas")}
+                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 ${
+                  activeTab === "diretas"
+                    ? "bg-[#25262a] text-white border border-zinc-700/50 shadow"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Diretas
+              </button>
+            </div>
+
+            {/* Marcar todas como lidas Button */}
+            {unreadCount > 0 && (
+              <div className="flex justify-end shrink-0 px-1 -mt-1">
+                <button
+                  type="button"
+                  onClick={markAllAsRead}
+                  className="text-[10px] font-black text-[var(--gm-primary)] hover:text-orange-400 transition-all uppercase tracking-wider flex items-center gap-1 hover:underline"
+                >
+                  <Check size={11} className="stroke-[3]" />
+                  Marcar todas como lidas
+                </button>
+              </div>
+            )}
+
+            {/* Notifications Feed Viewport */}
+            <div className="overflow-y-auto pr-0.5 space-y-3 max-h-[320px] no-scrollbar text-left flex-1 min-h-[220px] flex flex-col">
+              {filteredNotifications.length > 0 ? (
+                <div className="space-y-3 w-full">
+                  {filteredNotifications.map((noti) => (
+                    <div
+                      key={noti.id}
+                      onClick={() => toggleRead(noti.id)}
+                      className={`group relative p-3 border rounded-xl hover:bg-zinc-800/40 transition-all flex gap-3 cursor-pointer select-none ${
+                        noti.read
+                          ? "bg-zinc-900/30 border-zinc-800/40 opacity-70"
+                          : "bg-zinc-900/70 border-emerald-500/15 hover:border-emerald-500/30"
+                      }`}
+                    >
+                      {/* Badge Icon based on Type */}
+                      <div className="shrink-0 mt-0.5">
+                        {noti.type === "direct" && (
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
+                            noti.read 
+                              ? "bg-zinc-800/40 border-zinc-700/40 text-zinc-500" 
+                              : "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                          }`}>
+                            <MessageSquare size={14} />
+                          </div>
+                        )}
+                        {noti.type === "update" && (
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
+                            noti.read
+                              ? "bg-zinc-800/40 border-zinc-700/40 text-zinc-500"
+                              : "bg-amber-500/10 border-amber-500/25 text-amber-400"
+                          }`}>
+                            <Sparkles size={14} className={noti.read ? "" : "animate-pulse"} />
+                          </div>
+                        )}
+                        {noti.type === "alert" && (
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
+                            noti.read
+                              ? "bg-zinc-800/40 border-zinc-700/40 text-zinc-500"
+                              : "bg-blue-500/10 border-blue-500/25 text-blue-400"
+                          }`}>
+                            <Clock size={14} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 space-y-0.5 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h4 className={`text-[11.5px] font-black tracking-wide ${noti.read ? "text-zinc-300" : "text-white"}`}>
+                            {noti.title}
+                          </h4>
+                          <span className="text-[8.5px] font-bold text-zinc-550 tracking-normal shrink-0">
+                            {noti.time}
+                          </span>
+                        </div>
+                        <p className={`text-[10px] leading-relaxed break-words pr-2 ${noti.read ? "text-zinc-400 font-medium" : "text-zinc-200 font-extrabold"}`}>
+                          {noti.message}
+                        </p>
+                      </div>
+
+                      {/* Unread circle toggle */}
+                      {!noti.read && (
+                        <span className="absolute top-3.5 right-3.5 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* EMPTY STATE - MATCHING SCREENSHOT EXACTLY */
+                <div className="flex flex-col items-center justify-center py-10 px-4 text-center space-y-3 animate-fade-in my-auto mx-auto w-full h-full min-h-[200px]">
+                  <div className="w-14 h-14 rounded-2xl bg-zinc-800/25 border border-zinc-850 flex items-center justify-center text-zinc-550">
+                    <Bell size={24} className="opacity-30" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-black text-white">Tudo em dia!</h4>
+                    <p className="text-[11px] text-zinc-500 font-bold leading-relaxed">Você está em dia com tudo</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer watermark & CTA close */}
+            <div className="shrink-0 border-t border-zinc-800/80 pt-3 flex items-center justify-between text-[10px] font-bold text-zinc-500 tracking-wider">
+              <span className="flex items-center gap-1">
+                <span className="text-white font-black tracking-normal">CardDigital</span>
+                <span className="text-[var(--gm-primary)] font-black tracking-normal">GM</span>
+                <span className="text-zinc-650 font-medium px-0.5">•</span>
+                <span className="text-zinc-500 lowercase tracking-wide">Notificações</span>
+              </span>
+              <button
+                type="button"
+                className="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800/80 active:scale-95 text-zinc-300 hover:text-white rounded-xl text-[9px] font-black transition-all uppercase tracking-widest shrink-0"
                 onClick={() => setShowUpdateModal(false)}
               >
-                Confirmar e Continuar
+                Fechar
               </button>
             </div>
             

@@ -164,6 +164,9 @@ export default function Notes() {
   const [color, setColor] = useState("#334155"); // default slate-800 format
   const [isPinned, setIsPinned] = useState(false);
   const [reminderTime, setReminderTime] = useState(""); // e.g. "14:30"
+  const [reminderTime2, setReminderTime2] = useState(""); // Second alarm
+  const [reminderTime3, setReminderTime3] = useState(""); // Third alarm
+  const [clocksExpanded, setClocksExpanded] = useState(false); // expands upwards
   const [reminderDate, setReminderDate] = useState(""); // e.g. "2026-05-20"
   const [noteType, setNoteType] = useState<"note" | "production">("note");
   const [noteStatus, setNoteStatus] = useState("aguardando");
@@ -523,6 +526,9 @@ export default function Notes() {
     setColor(COLORS[0]);
     setIsPinned(false);
     setReminderTime("");
+    setReminderTime2("");
+    setReminderTime3("");
+    setClocksExpanded(false);
     setReminderDate("");
     setFontSizeMode("M");
     setNoteType(type);
@@ -551,23 +557,35 @@ export default function Notes() {
     setLayoutUrl(note.layout_url || "");
 
     if (note.reminder_time && note.reminder_time.includes(" ")) {
-      const [rDate, rTime] = note.reminder_time.split(" ");
-      setReminderDate(rDate || "");
-      setReminderTime(rTime || "");
+      const parts = note.reminder_time.split(" ");
+      const rDate = parts[0] || "";
+      const rTime = parts.slice(1).join(" ") || "";
+      setReminderDate(rDate);
+      const times = rTime ? rTime.split(",") : [];
+      setReminderTime(times[0] || "");
+      setReminderTime2(times[1] || "");
+      setReminderTime3(times[2] || "");
     } else {
       setReminderDate("");
-      setReminderTime(note.reminder_time || "");
+      const times = note.reminder_time ? note.reminder_time.split(",") : [];
+      setReminderTime(times[0] || "");
+      setReminderTime2(times[1] || "");
+      setReminderTime3(times[2] || "");
     }
+    setClocksExpanded(false);
     setModalOpen(true);
   }
 
   async function handleSave() {
     if (!tenantId) return;
 
+    const activeTimes = [reminderTime, reminderTime2, reminderTime3].filter(Boolean);
+    const timeStr = activeTimes.join(",");
+
     const savedReminder =
-      reminderDate && reminderTime
-        ? `${reminderDate} ${reminderTime}`
-        : reminderTime || null;
+      reminderDate && timeStr
+        ? `${reminderDate} ${timeStr}`
+        : timeStr || null;
 
     const payload = {
       tenant_id: tenantId,
@@ -615,24 +633,22 @@ export default function Notes() {
       if (savedNote) {
         if (savedNote.reminder_time) {
           const hasDate = savedNote.reminder_time.includes(" ");
+          let rDate: string | null = null;
+          let rTimeStr = savedNote.reminder_time;
           if (hasDate) {
-            const [rDate, rTime] = savedNote.reminder_time.split(" ");
+            const parts = savedNote.reminder_time.split(" ");
+            rDate = parts[0] || null;
+            rTimeStr = parts.slice(1).join(" ") || "";
+          }
+          const times = rTimeStr.split(",").filter((t) => /^\d{2}:\d{2}$/.test(t));
+          if (times.length > 0) {
             addAlarmsForBudget(
               savedNote.id,
               savedNote.title || "Nota",
-              [rTime],
+              times,
               "NOTE",
               undefined,
               rDate,
-            );
-          } else if (/^\d{2}:\d{2}$/.test(savedNote.reminder_time)) {
-            addAlarmsForBudget(
-              savedNote.id,
-              savedNote.title || "Nota",
-              [savedNote.reminder_time],
-              "NOTE",
-              undefined,
-              null,
             );
           } else {
             removeAlarmsForBudget(savedNote.id);
@@ -2015,21 +2031,178 @@ export default function Notes() {
                       />
                     </div>
 
-                    {/* Lembrete Hora */}
-                    <div className="relative flex-1">
-                      <GlassTimePicker
-                        className="w-full bg-black/40 border border-white/5 rounded-xl text-xs sm:text-sm text-white/80 pl-9 pr-3 py-2.5 outline-none transition-all flex items-center min-h-[42px]"
-                        value={reminderTime}
-                        onChange={setReminderTime}
-                        title="Hora do Lembrete"
-                        style={{ borderColor: `${color}20` }}
-                      />
-                      <Clock
-                        size={15}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                        style={{ color: color }}
-                      />
-                    </div>
+                    {/* Lembrete Horários Alarme (Expansível para Cima) */}
+                    {(() => {
+                      const activeClocksCount = [reminderTime, reminderTime2, reminderTime3].filter(Boolean).length;
+                      const hasActiveClocks = activeClocksCount > 0;
+                      return (
+                        <div className="relative flex-1 min-w-[120px] sm:min-w-[140px]">
+                          <button
+                            type="button"
+                            onClick={() => setClocksExpanded(!clocksExpanded)}
+                            className="w-full bg-black/40 border hover:bg-black/50 rounded-xl text-xs sm:text-sm text-white/90 px-3 py-2.5 outline-none transition-all flex items-center justify-between min-h-[42px]"
+                            style={{ 
+                              borderColor: clocksExpanded 
+                                ? (hasActiveClocks ? '#22c55e' : color) 
+                                : (hasActiveClocks ? 'rgba(34, 197, 94, 0.4)' : `${color}20`),
+                              boxShadow: hasActiveClocks ? '0 0 10px rgba(34, 197, 94, 0.15)' : 'none'
+                            }}
+                          >
+                            <div className="flex items-center gap-1.5 overflow-hidden">
+                              <Clock
+                                size={15}
+                                className={`shrink-0 ${hasActiveClocks ? "text-green-500 animate-pulse" : "text-white/50"}`}
+                                style={{ color: hasActiveClocks ? '#22c55e' : color }}
+                              />
+                              <span className={`truncate ${hasActiveClocks ? "text-green-400 font-bold" : "text-white/80"}`}>
+                                Horários
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              {/* numeral count badge */}
+                              {hasActiveClocks && (
+                                <span 
+                                  className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black"
+                                  style={{ 
+                                    backgroundColor: '#22c55e', 
+                                    color: "#000",
+                                    textShadow: "0 1px 0 rgba(255,255,255,0.4)" 
+                                  }}
+                                >
+                                  {activeClocksCount}
+                                </span>
+                              )}
+                              {clocksExpanded ? (
+                                <ChevronDown size={14} className="text-white/70" />
+                              ) : (
+                                <ChevronUp size={14} className="text-white/70 animate-[bounce_2s_infinite]" />
+                              )}
+                            </div>
+                          </button>
+
+                          {/* Expandable Panel (Upward) */}
+                          <AnimatePresence>
+                            {clocksExpanded && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                                className="absolute bottom-full right-0 mb-3 w-64 bg-[#141517] border border-zinc-800 rounded-2xl p-4 space-y-4 z-[100] shadow-[0_25px_50px_rgba(0,0,0,0.95)] text-left"
+                                style={{ borderTopWidth: '3px', borderTopColor: hasActiveClocks ? '#22c55e' : color }}
+                              >
+                                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                                  <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color: hasActiveClocks ? '#22c55e' : color }}>
+                                    <Clock size={13} className={hasActiveClocks ? "animate-pulse" : ""} />
+                                    Configurar Alertas
+                                  </span>
+                                  <span className="text-[10px] bg-zinc-800/80 border border-zinc-700/60 text-zinc-200 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
+                                    Diário
+                                  </span>
+                                </div>
+
+                                <div className="space-y-3.5 text-xs text-white">
+                                  {/* SLOT 1 */}
+                                  <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                      <span className="flex items-center gap-1">
+                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime ? (hasActiveClocks ? '#22c55e' : color) : '#3f3f46' }} />
+                                        Horário 1
+                                      </span>
+                                      {reminderTime && (
+                                        <button
+                                          type="button"
+                                          onClick={() => setReminderTime("")}
+                                          className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30"
+                                        >
+                                          Limpar
+                                        </button>
+                                      )}
+                                    </div>
+                                    <div className="relative">
+                                      <GlassTimePicker
+                                        value={reminderTime}
+                                        onChange={setReminderTime}
+                                        className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
+                                        title="Definir Horário 1"
+                                      />
+                                      <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-450 pointer-events-none" style={{ color: reminderTime ? (hasActiveClocks ? '#22c55e' : color) : '#71717a' }} />
+                                    </div>
+                                  </div>
+
+                                  {/* SLOT 2 */}
+                                  <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                      <span className="flex items-center gap-1">
+                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime2 ? (hasActiveClocks ? '#22c55e' : color) : '#3f3f46' }} />
+                                        Horário 2
+                                      </span>
+                                      {reminderTime2 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => setReminderTime2("")}
+                                          className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30"
+                                        >
+                                          Limpar
+                                        </button>
+                                      )}
+                                    </div>
+                                    <div className="relative">
+                                      <GlassTimePicker
+                                        value={reminderTime2}
+                                        onChange={setReminderTime2}
+                                        className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
+                                        title="Definir Horário 2"
+                                      />
+                                      <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-450 pointer-events-none" style={{ color: reminderTime2 ? (hasActiveClocks ? '#22c55e' : color) : '#71717a' }} />
+                                    </div>
+                                  </div>
+
+                                  {/* SLOT 3 */}
+                                  <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                      <span className="flex items-center gap-1">
+                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime3 ? (hasActiveClocks ? '#22c55e' : color) : '#3f3f46' }} />
+                                        Horário 3
+                                      </span>
+                                      {reminderTime3 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => setReminderTime3("")}
+                                          className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30"
+                                        >
+                                          Limpar
+                                        </button>
+                                      )}
+                                    </div>
+                                    <div className="relative">
+                                      <GlassTimePicker
+                                        value={reminderTime3}
+                                        onChange={setReminderTime3}
+                                        className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
+                                        title="Definir Horário 3"
+                                      />
+                                      <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-450 pointer-events-none" style={{ color: reminderTime3 ? (hasActiveClocks ? '#22c55e' : color) : '#71717a' }} />
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="pt-3 border-t border-zinc-800 flex justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => setClocksExpanded(false)}
+                                    className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 rounded-xl text-[10px] font-black text-zinc-200 hover:text-white transition-all uppercase tracking-widest"
+                                  >
+                                    Fechar
+                                  </button>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <button

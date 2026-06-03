@@ -14,7 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 const items = [
-  { to: "/", label: "Home", icon: LayoutDashboard },
+  { to: "/", label: "Início", icon: LayoutDashboard },
   { to: "/budgets", label: "Orç.", icon: FileText },
   { to: "/clients", label: "Client", icon: Users },
   { to: "/expenses", label: "Desp.", icon: Receipt },
@@ -76,6 +76,8 @@ export default function BottomNav() {
             <div className="w-full flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing">
               <div className="w-40 h-1.5 bg-white/20 rounded-full" />
             </div>
+
+
             
             <div className="flex items-center gap-1 overflow-x-auto px-3 pb-2 no-scrollbar" style={{ scrollSnapType: 'x mandatory' }}>
               {items.map((it) => {
