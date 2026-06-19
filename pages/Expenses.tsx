@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
 import { supabase } from "../lib/supabase";
@@ -55,6 +56,9 @@ export default function Expenses() {
   const [expenses, setExpenses] = useState<ExpenseUI[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [month, setMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -71,6 +75,67 @@ export default function Expenses() {
   const [isPaid, setIsPaid] = useState(false);
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Auto-align month based on deep-linked expense query
+  useEffect(() => {
+    const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+    const params = new URLSearchParams(location.search || window.location.search || hashQuery);
+    const id = params.get("id");
+    if (id) {
+      supabase
+        .from("expenses")
+        .select("due_date, deleted_at")
+        .eq("id", id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            if (data.deleted_at) {
+              setTab("trash");
+            } else {
+              setTab("active");
+            }
+            if (data.due_date) {
+              const parts = data.due_date.split("-");
+              if (parts.length >= 2) {
+                setMonth(`${parts[0]}-${parts[1]}`);
+              }
+            }
+          }
+        });
+    }
+  }, [location.search]);
+
+  // Handle opening the deep-linked expense item
+  useEffect(() => {
+    const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+    const params = new URLSearchParams(location.search || window.location.search || hashQuery);
+    const id = params.get("id");
+    if (id && expenses.length > 0) {
+      const expense = expenses.find((e) => e.id === id);
+      if (expense) {
+        handleEdit(expense);
+      }
+    }
+  }, [location.search, expenses]);
+
+  // Clean up URL parameter when the editor is closed
+  useEffect(() => {
+    if (!showForm) {
+      const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+      const params = new URLSearchParams(location.search || window.location.search || hashQuery);
+      if (params.has("id")) {
+        params.delete("id");
+        const search = params.toString();
+        navigate(
+          {
+            pathname: location.pathname,
+            search: search ? `?${search}` : "",
+          },
+          { replace: true }
+        );
+      }
+    }
+  }, [showForm, location.pathname, location.search, navigate]);
 
   async function loadExpenses() {
     setLoading(true);

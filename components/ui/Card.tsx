@@ -8,11 +8,13 @@ export interface CardProps {
   onClick?: () => void;
   style?: React.CSSProperties;
   key?: React.Key | null | undefined;
+  id?: string;
 }
 
-export const Card = ({ title, right, children, className = "", style, onClick }: CardProps) => {
+export const Card = ({ title, right, children, className = "", style, onClick, id }: CardProps) => {
   return (
     <div
+      id={id}
       className={`gm-card ${className}`}
       onClick={onClick}
       style={{

@@ -10,7 +10,7 @@ import { useAuth } from "../store/AuthContext";
 import { scheduleApprovedBudgetReminders, removeAlarmsForBudget, getBudgetRemindersEnabled, getBudgetReminderTimes, syncAlarmsWithBudgets } from "../lib/alarmSystem";
 import { generateOrcamentoPdf } from "../services/pdfService";
 import { buildWhatsappMessage, openWhatsapp } from "../services/whatsApp";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import NewBudgetModal from "./budgets/NewBudgetModal";
 import ReminderConfigModal from "../components/budgets/ReminderConfigModal";
 import ExpandedBudgetRow from "../components/budgets/ExpandedBudgetRow";
@@ -131,6 +131,7 @@ function pillClass(status: string) {
 export default function Budgets() {
   const { tenantId } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [rows, setRows] = useState<BudgetRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,6 +147,7 @@ export default function Budgets() {
   
   // Hard delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const toggleRow = (id: string) => {
@@ -158,11 +160,104 @@ export default function Budgets() {
   };
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+    const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+    const params = new URLSearchParams(location.search || window.location.search || hashQuery);
     if (params.get("new") === "true") {
       setNewOpen(true);
     }
   }, [location.search]);
+
+  // Listen for query parameter 'id' to highlight a budget from notification clicks
+  useEffect(() => {
+    const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+    const params = new URLSearchParams(location.search || window.location.search || hashQuery);
+    const id = params.get("id");
+    if (id && rows.length > 0) {
+      const budget = rows.find(r => r.id === id);
+      if (budget) {
+        if (budget.deleted_at) {
+          setTab("LIXEIRA");
+        } else {
+          const norm = normalizeStatus(budget.status);
+          if (norm === "AGUARDANDO") {
+            setTab("AGUARDANDO");
+          } else if (norm === "APROVADO") {
+            setTab("APROVADO");
+          } else if (norm === "CONCLUIDO") {
+            setTab("CONCLUIDOS");
+          } else if (norm === "CANCELADO") {
+            setTab("CANCELADOS");
+          } else {
+            setTab("AGUARDANDO");
+          }
+        }
+        
+        // Highlight the selected budget
+        setHighlightedId(id);
+
+        // Wait a brief moment for React to change tabs and render the DOM elements, then scroll smoothly
+        setTimeout(() => {
+          const element = document.getElementById(`budget-card-${id}`) || document.getElementById(`budget-row-${id}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 150);
+
+        // Keep highlighted for 6 seconds, then clear state and cleanup query param from the URL
+        const timer = setTimeout(() => {
+          setHighlightedId(null);
+          
+          const currentHash = window.location.hash;
+          if (currentHash.includes('?')) {
+            const [base, query] = currentHash.split('?');
+            const p = new URLSearchParams(query);
+            if (p.has("id")) {
+              p.delete("id");
+              const remaining = p.toString();
+              window.location.hash = remaining ? `${base}?${remaining}` : base;
+            }
+          }
+          
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.has("id")) {
+            urlParams.delete("id");
+            const remaining = urlParams.toString();
+            navigate(
+              {
+                pathname: location.pathname,
+                search: remaining ? `?${remaining}` : "",
+              },
+              { replace: true }
+            );
+          }
+        }, 6000);
+
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [location, rows]);
+
+  const handleCloseEdit = () => {
+    setEditId(null);
+    const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+    const params = new URLSearchParams(location.search || window.location.search || hashQuery);
+    if (params.has("id")) {
+      params.delete("id");
+      const search = params.toString();
+      if (window.location.hash.includes('?id=')) {
+        const baseHash = window.location.hash.split('?')[0];
+        window.location.hash = search ? `${baseHash}?${search}` : baseHash;
+      } else {
+        navigate(
+          {
+            pathname: location.pathname,
+            search: search ? `?${search}` : "",
+          },
+          { replace: true }
+        );
+      }
+    }
+  };
 
   useEffect(() => {
     load();
@@ -492,8 +587,16 @@ export default function Budgets() {
                     return `${base} gm-btn-soft`;
                   };
 
+                  const isHighlighted = r.id === highlightedId;
+
                   return (
-                    <div key={r.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <div 
+                      key={r.id} 
+                      id={`budget-row-${r.id}`} 
+                      className={`border-b border-white/5 hover:bg-white/5 transition-all duration-500 ${
+                        isHighlighted ? "gm-highlighted-row-glass" : ""
+                      }`}
+                    >
                       <div
                         className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center"
                       >
@@ -579,8 +682,16 @@ export default function Budgets() {
               ...STATUS_OPTIONS.filter((o) => o.value !== currentStatus),
             ];
 
+            const isHighlighted = r.id === highlightedId;
+
             return (
-              <Card key={r.id} className="gm-budget-card flex flex-col justify-between !p-4">
+              <Card 
+                key={r.id} 
+                id={`budget-card-${r.id}`} 
+                className={`gm-budget-card flex flex-col justify-between !p-4 transition-all duration-500 ${
+                  isHighlighted ? "gm-highlighted-budget-glass" : ""
+                }`}
+              >
                 {/* HEADER compacto */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -710,8 +821,8 @@ export default function Budgets() {
         <NewBudgetModal 
           open={true}
           budgetToEditId={editId}
-          onClose={() => setEditId(null)} 
-          onSuccess={() => { setEditId(null); load(); }} 
+          onClose={handleCloseEdit} 
+          onSuccess={() => { handleCloseEdit(); load(); }} 
         />
       )}
 

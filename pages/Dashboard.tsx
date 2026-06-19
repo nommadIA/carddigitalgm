@@ -666,6 +666,7 @@ const Dashboard = () => {
       
       return (
         <div className="relative w-full max-w-[400px] mx-auto h-[calc(100dvh-180px)] mt-2 flex flex-col px-2">
+          {/* Screens slider container */}
           <div className="flex-1 overflow-hidden flex flex-col relative">
             <motion.div
               className="flex w-full h-full"
@@ -696,6 +697,37 @@ const Dashboard = () => {
               })}
               </div>
             </motion.div>
+          </div>
+
+          {/* INDICADOR DE TELAS (PAGINAÇÃO) EXTREMAMENTE POLIDO E MINIMALISTA - AGORA ABAIXO DO BOTÃO NOTAS */}
+          <div className="flex items-center justify-center gap-3 -mt-5 mb-8 shrink-0 bg-transparent py-1 z-20">
+            <div className="flex items-center gap-2 bg-black/50 border border-white/[0.06] backdrop-blur-md px-4 py-1.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.4)] animate-fadeIn">
+              <div className="flex items-center gap-1.5">
+                {screens.map((_, index) => {
+                  const isActive = index === currentScreen;
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => {
+                        setDirection(index > currentScreen ? 1 : -1);
+                        setCurrentScreen(index);
+                      }}
+                      className={`h-[5px] rounded-full transition-all duration-300 cursor-pointer ${
+                        isActive 
+                          ? "w-5 bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]" 
+                          : "w-[5px] bg-white/20 hover:bg-white/40"
+                      }`}
+                      aria-label={`Ir para a tela ${index + 1}`}
+                    />
+                  );
+                })}
+              </div>
+              <div className="w-[1px] h-3 bg-white/10 mx-1" />
+              <span className="text-[9.5px] text-white/40 font-mono font-bold select-none tracking-widest leading-none">
+                {currentScreen + 1}/{screens.length}
+              </span>
+            </div>
           </div>
         </div>
       );

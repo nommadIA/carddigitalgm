@@ -5,6 +5,35 @@ import { Bell, BellOff, X } from "lucide-react";
 import { BudgetAlarm } from "../../types";
 import { playNotificationSound } from "../../lib/audio";
 
+// Fast typing effect for premium notifications
+const TypewriterText = ({ text }: { text: string }) => {
+  const [displayedText, setDisplayedText] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    let i = 0;
+    setDisplayedText("");
+
+    const interval = setInterval(() => {
+      if (active) {
+        if (i < text.length) {
+          setDisplayedText(text.substring(0, i + 1));
+          i++;
+        } else {
+          clearInterval(interval);
+        }
+      }
+    }, 18); // Fluid 18ms speed
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [text]);
+
+  return <span className="transition-all duration-150">{displayedText}</span>;
+};
+
 const AlarmToast = () => {
   const [alarms, setAlarms] = useState<BudgetAlarm[]>([]);
 
@@ -34,15 +63,15 @@ const AlarmToast = () => {
           if (alarm.type === 'NOTE') {
              title = 'Lembrete de Nota';
              body = `Nota: ${alarm.clientName}\nHorário: ${alarm.time}`;
-             hashUrl = '/#/notes';
+             hashUrl = `/#/notes?id=${alarm.budgetId}`;
           } else if (alarm.type === 'EXPENSE') {
              title = 'Lembrete de Despesa';
              body = `Cliente: ${alarm.clientName}\nHorário: ${alarm.time}`;
-             hashUrl = '/#/financeiro';
+             hashUrl = `/#/expenses?id=${alarm.budgetId}`;
           } else {
              title = 'Orçamento Aprovado';
              body = `Olá! Orçamento "${alarm.clientName}" em andamento, conclua antes do prazo "${alarm.deliveryDays || 5} dias"`;
-             hashUrl = '/#/budgets';
+             hashUrl = `/#/budgets?id=${alarm.budgetId}`;
           }
 
           if ('serviceWorker' in navigator) {
@@ -88,91 +117,95 @@ const AlarmToast = () => {
     setAlarms(prev => prev.filter(a => a.id !== id));
   };
 
-  const disableReminder = (alarm: BudgetAlarm) => {
-    toggleAlarmsForBudget(alarm.budgetId, false);
-    dismiss(alarm.id);
+  const getNotificationText = (alarm: BudgetAlarm) => {
+    if (alarm.type === 'EXPENSE') {
+      return `Lembrete: O pagamento da despesa de "${alarm.clientName}" está agendado para às ${alarm.time}.`;
+    }
+    if (alarm.type === 'NOTE') {
+      return `Atenção: O lembrete da nota "${alarm.clientName}" está programado para às ${alarm.time}.`;
+    }
+    return `Olá! O orçamento "${alarm.clientName}" está em andamento. Lembre-se de concluir antes do prazo estipulado de ${alarm.deliveryDays || 5} dias.`;
   };
 
   if (alarms.length === 0) return null;
 
   return (
     <div className="fixed bottom-20 right-4 z-[9999] flex flex-col gap-3 pointer-events-none">
-      {alarms.map((alarm) => (
-        <div
-          key={alarm.id}
-          className="pointer-events-auto w-[360px] max-w-[92vw] rounded-xl border border-white/5 bg-[#151619] shadow-[0_20px_40px_rgba(0,0,0,0.5)] p-4 animate-slide-up"
-          role="status"
-        >
-          <div className="flex items-start gap-4">
-            {/* Icon hardware style */}
-            <div className="h-12 w-12 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center shrink-0 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-[var(--gm-primary)]/10 animate-pulse" />
-              <Bell size={20} className="text-[var(--gm-primary)] relative z-10" />
-            </div>
+      {alarms.map((alarm) => {
+        const descriptionText = getNotificationText(alarm);
 
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between mb-1">
-                <div className="text-[9px] font-mono uppercase tracking-widest text-white/30">
-                  SISTEMA // ALERTA
-                </div>
-                <div className="text-[9px] font-mono text-[var(--gm-primary)] animate-pulse">
-                  Agora
-                </div>
+        return (
+          <div
+            key={alarm.id}
+            className="pointer-events-auto w-[360px] max-w-[92vw] rounded-xl border border-white/10 bg-[#151619]/95 backdrop-blur-md shadow-[0_16px_36px_rgba(0,0,0,0.6)] p-5 animate-slide-up transition-all"
+          >
+            <div className="flex items-start gap-4">
+              {/* Icon with beautiful swinging bell animation */}
+              <div className="h-12 w-12 rounded-xl bg-black/40 border border-white/5 flex items-center justify-center shrink-0 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-[var(--gm-primary)]/10 animate-pulse" />
+                <Bell size={20} className="text-[var(--gm-primary)] relative z-10 animate-bell-ring" />
               </div>
 
-              <div className="text-white font-bold text-xs uppercase tracking-wider mb-2">
-                {alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : alarm.type === 'NOTE' ? 'Lembrete de Nota' : 'Orçamento Aprovado'}
-              </div>
-
-              <div className="space-y-1">
-                {alarm.type === 'EXPENSE' || alarm.type === 'NOTE' ? (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-white/40 uppercase">{alarm.type === 'NOTE' ? 'Nota' : 'Cliente'}</span>
-                      <span className="text-[10px] font-mono text-white truncate max-w-[180px]">{alarm.clientName}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-white/40 uppercase">Horário</span>
-                      <span className="text-[10px] font-mono text-[var(--gm-primary)]/80">{alarm.time}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-[11px] text-white/80 leading-relaxed">
-                    Olá! Orçamento "{alarm.clientName}" em andamento, conclua antes do prazo "{alarm.deliveryDays || 5} dias"
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-end mb-1">
+                  {/* Visually dynamic and larger Agora indicator */}
+                  <div className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[var(--gm-primary)] animate-pulse">
+                    Agora
                   </div>
-                )}
+                </div>
+
+                <div className="text-white font-bold text-[13px] uppercase tracking-wider mb-2">
+                  {alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : alarm.type === 'NOTE' ? 'Lembrete de Nota' : 'Orçamento Aprovado'}
+                </div>
+
+                {/* Clean, fully left-aligned description with smooth Typewriter typing animation */}
+                <div className="text-[11px] text-white/80 leading-relaxed text-left">
+                  <TypewriterText text={descriptionText} />
+                </div>
+
+                <div className="flex gap-2 mt-4">
+                  {/* Flat premium orange buttons (no neon glowing/blooming shadows) */}
+                  <button
+                    className="flex-1 h-9 rounded-lg bg-[var(--gm-primary)] hover:brightness-105 active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center border border-white/10"
+                    onClick={(e) => { e.stopPropagation(); dismiss(alarm.id); }}
+                    type="button"
+                  >
+                    Entendido
+                  </button>
+
+                  <button
+                    className="flex-1 h-9 rounded-lg bg-[var(--gm-primary)] hover:brightness-105 active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center border border-white/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      let hashUrl = '';
+                      if (alarm.type === 'NOTE') {
+                         hashUrl = `/notes?id=${alarm.budgetId}`;
+                      } else if (alarm.type === 'EXPENSE') {
+                         hashUrl = `/expenses?id=${alarm.budgetId}`;
+                      } else {
+                         hashUrl = `/budgets?id=${alarm.budgetId}`;
+                      }
+                      window.location.hash = hashUrl;
+                      dismiss(alarm.id);
+                    }}
+                    type="button"
+                  >
+                    Visualizar
+                  </button>
+                </div>
               </div>
 
-              <div className="flex gap-2 mt-4">
-                <button
-                  className="flex-1 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white/60 text-[10px] font-bold uppercase tracking-widest transition-all"
-                  onClick={() => dismiss(alarm.id)}
-                  type="button"
-                >
-                  Entendido
-                </button>
-
-                <button
-                  className="h-9 px-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400/80 text-[10px] font-bold flex items-center justify-center transition-all"
-                  onClick={() => disableReminder(alarm)}
-                  type="button"
-                  title="Desativar lembretes para este orçamento"
-                >
-                  <BellOff size={14} />
-                </button>
-              </div>
+              <button
+                className="h-6 w-6 rounded-lg hover:bg-white/5 text-white/20 hover:text-white flex items-center justify-center transition-colors -mt-1 -mr-1"
+                onClick={(e) => { e.stopPropagation(); dismiss(alarm.id); }}
+                type="button"
+              >
+                <X size={14} />
+              </button>
             </div>
-
-            <button
-              className="h-6 w-6 rounded-lg hover:bg-white/5 text-white/20 hover:text-white flex items-center justify-center transition-colors -mt-1 -mr-1"
-              onClick={() => dismiss(alarm.id)}
-              type="button"
-            >
-              <X size={14} />
-            </button>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

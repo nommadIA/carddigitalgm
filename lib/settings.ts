@@ -301,7 +301,7 @@ function mergeWithFallbacks(data: any): AppSettings {
  */
 export async function fetchSettingsSupabase(tenantId?: string | null) {
   try {
-    const { data: sess } = await supabase.auth.getSession();
+    const { data: sess } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
     const owner = sess.session?.user?.id;
 
     // 1) tenta direto pelo tenant
@@ -309,12 +309,20 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
       const { data: byTenant, error: errTenant } = await withTimeout<any>(
         supabase.from("app_settings").select("*").eq("tenant_id", tenantId).maybeSingle() as any,
         15000
-      );
+      ).catch((err) => {
+        return { data: null, error: err };
+      });
 
       if (errTenant) {
-        console.warn("fetchSettings warn (tenant):", errTenant);
+        console.warn("fetchSettings warn (tenant):", errTenant?.message || errTenant);
+        const local = readSettingsLocal();
+        if (local) return local;
       } else if (byTenant) {
-        return mergeWithFallbacks(byTenant);
+        const merged = mergeWithFallbacks(byTenant);
+        try {
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
+        } catch {}
+        return merged;
       }
 
       // 2) fallback: tenta por owner (geralmente tenant_id null)
@@ -322,10 +330,14 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
         const { data: byOwner, error: errOwner } = await withTimeout<any>(
           supabase.from("app_settings").select("*").eq("owner", owner).maybeSingle() as any,
           15000
-        );
+        ).catch((err) => {
+          return { data: null, error: err };
+        });
 
         if (errOwner) {
-          console.warn("fetchSettings warn (owner):", errOwner);
+          console.warn("fetchSettings warn (owner):", errOwner?.message || errOwner);
+          const local = readSettingsLocal();
+          if (local) return local;
           return DEFAULT_SETTINGS;
         }
 
@@ -339,22 +351,40 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
           clone.tenant_id = tenantId;
           clone.owner = owner;
 
-          const { data: migrated, error: errUpsert } = await supabase
-            .from("app_settings")
-            .upsert(clone, { onConflict: "tenant_id" })
-            .select("*")
-            .single();
+          let migrated: any = null;
+          let errUpsert: any = null;
+          try {
+            const res = await supabase
+              .from("app_settings")
+              .upsert(clone, { onConflict: "tenant_id" })
+              .select("*")
+              .single();
+            migrated = res.data;
+            errUpsert = res.error;
+          } catch (err) {
+            errUpsert = err;
+          }
 
           if (errUpsert) {
             console.error("settings migrate error:", errUpsert);
             // se falhar migração, pelo menos devolve o do owner para não travar
-            return mergeWithFallbacks(byOwner);
+            const fallbackOwner = mergeWithFallbacks(byOwner);
+            try {
+              localStorage.setItem(LOCAL_KEY, JSON.stringify(fallbackOwner));
+            } catch {}
+            return fallbackOwner;
           }
 
-          return mergeWithFallbacks(migrated);
+          const merged = mergeWithFallbacks(migrated);
+          try {
+            localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
+          } catch {}
+          return merged;
         }
       }
 
+      const local = readSettingsLocal();
+      if (local) return local;
       return DEFAULT_SETTINGS;
     }
 
@@ -364,16 +394,26 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
     if (owner) q = q.eq("owner", owner);
     else q = q.is("tenant_id", null);
 
-    const { data, error } = await withTimeout<any>(q.maybeSingle() as any, 15000);
+    const { data, error } = await withTimeout<any>(q.maybeSingle() as any, 15000).catch((err) => {
+      return { data: null, error: err };
+    });
 
     if (error) {
-      console.warn("fetchSettings warn:", error);
+      console.warn("fetchSettings warn:", error?.message || error);
+      const local = readSettingsLocal();
+      if (local) return local;
       return DEFAULT_SETTINGS;
     }
 
-    return mergeWithFallbacks(data);
+    const merged = mergeWithFallbacks(data);
+    try {
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
+    } catch {}
+    return merged;
   } catch (e: any) {
     console.warn("fetchSettings warn:", e?.message || e);
+    const local = readSettingsLocal();
+    if (local) return local;
     return DEFAULT_SETTINGS; // ✅ nunca trava
   }
 }

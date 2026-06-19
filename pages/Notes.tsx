@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
 import { Page } from "../components/ui/Page";
@@ -28,6 +29,17 @@ import {
   Calendar,
   Image as ImageIcon,
   Loader2,
+  Underline,
+  Strikethrough,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  List,
+  ListOrdered,
+  Highlighter,
+  Upload,
+  Type,
 } from "lucide-react";
 import { Note } from "../types";
 import ReactMarkdown from "react-markdown";
@@ -142,21 +154,119 @@ function htmlToPlainFormatedText(html: string): string {
 
 export default function Notes() {
   const { tenantId, user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [mainTab, setMainTab] = useState<"NOTE" | "PRODUCTION">("NOTE");
   const [noteTab, setNoteTab] = useState<
-    "AGUARDANDO" | "APROVADO" | "CONCLUÍDOS" | "CANCELADOS" | "LIXEIRA"
-  >("AGUARDANDO");
+    "A FAZER" | "CONCLUÍDOS" | "LIXEIRA"
+  >("A FAZER");
   const [prodTab, setProdTab] = useState<
-    "A FAZER" | "PRODUÇÃO" | "CONCLUÍDOS" | "CANCELADOS" | "LIXEIRA"
+    "A FAZER" | "PRODUÇÃO" | "CONCLUÍDOS" | "LIXEIRA"
   >("A FAZER");
   const [newNoteModalOpen, setNewNoteModalOpen] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  // Listen for query parameter 'id' to open note
+  useEffect(() => {
+    const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+    const params = new URLSearchParams(location.search || window.location.search || hashQuery);
+    const id = params.get("id");
+    if (id && notes.length > 0) {
+      const noteToOpen = notes.find((n) => n.id === id);
+      if (noteToOpen) {
+        // Automatically switch main tabs and category tabs to show note context smoothly
+        const typeStr = (noteToOpen.type || "note").toUpperCase();
+        if (typeStr === "PRODUCTION" || typeStr === "PRODUÇÃO") {
+          setMainTab("PRODUCTION");
+          if (noteToOpen.deleted_at) {
+            setProdTab("LIXEIRA");
+          } else {
+            const normStatus = normalizeStatus(noteToOpen.status || "a fazer");
+            if (normStatus === "PRODUCAO" || normStatus === "EM PRODUCAO") {
+              setProdTab("PRODUÇÃO");
+            } else if (normStatus === "CONCLUIDOS" || normStatus === "CONCLUIDO") {
+              setProdTab("CONCLUÍDOS");
+            } else {
+              setProdTab("A FAZER");
+            }
+          }
+        } else {
+          setMainTab("NOTE");
+          if (noteToOpen.deleted_at) {
+            setNoteTab("LIXEIRA");
+          } else {
+            const normStatus = normalizeStatus(noteToOpen.status || "a fazer");
+            if (normStatus === "CONCLUIDOS" || normStatus === "CONCLUIDO") {
+              setNoteTab("CONCLUÍDOS");
+            } else {
+              setNoteTab("A FAZER");
+            }
+          }
+        }
+
+        // Highlight the selected note
+        setHighlightedId(id);
+
+        // Wait a brief moment for React to change tabs and render the DOM elements, then scroll smoothly
+        const scrollTimer = setTimeout(() => {
+          const element = document.getElementById(`note-card-${id}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 150);
+
+        // Open the editor after a brief delay to let the user see the gorgeous diagnostic highlight animation sweep
+        const openTimer = setTimeout(() => {
+          openEdit(noteToOpen);
+        }, 1000);
+
+        // Keep highlighted for 6 seconds, then clear state
+        const clearHighlightTimer = setTimeout(() => {
+          setHighlightedId(null);
+        }, 6000);
+
+        return () => {
+          clearTimeout(scrollTimer);
+          clearTimeout(openTimer);
+          clearTimeout(clearHighlightTimer);
+        };
+      }
+    }
+  }, [location, notes]);
+
+  // Clean up URL parameter when the editor modal is closed
+  useEffect(() => {
+    if (!modalOpen) {
+      const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+      const params = new URLSearchParams(location.search || window.location.search || hashQuery);
+      if (params.has("id")) {
+        params.delete("id");
+        const newSearch = params.toString();
+        
+        // Clear from hash directly if it was part of the hash to ensure HashRouter syncs
+        if (window.location.hash.includes('?id=')) {
+          const baseHash = window.location.hash.split('?')[0];
+          window.location.hash = newSearch ? `${baseHash}?${newSearch}` : baseHash;
+        } else {
+          navigate(
+            {
+              pathname: location.pathname,
+              search: newSearch ? `?${newSearch}` : "",
+            },
+            { replace: true }
+          );
+        }
+      }
+    }
+  }, [modalOpen, location.pathname, location.search, navigate]);
 
   // Note Form
   const [title, setTitle] = useState("");
@@ -169,7 +279,7 @@ export default function Notes() {
   const [clocksExpanded, setClocksExpanded] = useState(false); // expands upwards
   const [reminderDate, setReminderDate] = useState(""); // e.g. "2026-05-20"
   const [noteType, setNoteType] = useState<"note" | "production">("note");
-  const [noteStatus, setNoteStatus] = useState("aguardando");
+  const [noteStatus, setNoteStatus] = useState("a fazer");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
   const [responsibleName, setResponsibleName] = useState("");
@@ -183,6 +293,8 @@ export default function Notes() {
 
   const [selectedTextColor, setSelectedTextColor] = useState("#ffffff");
   const [fontSizeMode, setFontSizeMode] = useState<"P" | "M" | "G">("M");
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [fontSelectorOpen, setFontSelectorOpen] = useState(false);
 
   useEffect(() => {
     const handleGlobalPaste = async (e: ClipboardEvent) => {
@@ -306,7 +418,26 @@ export default function Notes() {
         );
         setNotes([]);
       } else if (data) {
-        setNotes(data);
+        const mappedData = data.map(n => {
+          const st = normalizeStatus(n.status);
+          if (st === "APROVADO") {
+            return { ...n, type: "production" as any, status: "PRODUÇÃO" };
+          }
+          if (st === "AGUARDANDO") {
+            return { ...n, status: "A FAZER" };
+          }
+          return n;
+        });
+        setNotes(mappedData);
+        
+        const toMigrate = data.filter(n => normalizeStatus(n.status) === "APROVADO" || normalizeStatus(n.status) === "AGUARDANDO");
+        for (const note of toMigrate) {
+          const st = normalizeStatus(note.status);
+          const updates = st === "APROVADO" 
+            ? { type: "production", status: "PRODUÇÃO" }
+            : { status: "A FAZER" };
+          supabase.from("notes").update(updates).eq("id", note.id).then();
+        }
       }
     } catch (e) {
       console.error(e);
@@ -486,6 +617,48 @@ export default function Notes() {
     }
   };
 
+  const applyUnderline = () => {
+    document.execCommand("underline", false);
+    if (contentRef.current) {
+      const val = contentRef.current.innerHTML;
+      setContent(val);
+      pushToHistory(val, true);
+    }
+  };
+
+  const applyStrikeThrough = () => {
+    document.execCommand("strikeThrough", false);
+    if (contentRef.current) {
+      const val = contentRef.current.innerHTML;
+      setContent(val);
+      pushToHistory(val, true);
+    }
+  };
+
+  const applyAlign = (align: "left" | "center" | "right" | "justify") => {
+    const cmd = align === "left" ? "justifyLeft" : align === "center" ? "justifyCenter" : align === "right" ? "justifyRight" : "justifyFull";
+    document.execCommand(cmd, false);
+    if (contentRef.current) {
+      const val = contentRef.current.innerHTML;
+      setContent(val);
+      pushToHistory(val, true);
+    }
+  };
+
+  const applyList = (type: "bullet" | "ordered") => {
+    const cmd = type === "bullet" ? "insertUnorderedList" : "insertOrderedList";
+    document.execCommand(cmd, false);
+    if (contentRef.current) {
+      const val = contentRef.current.innerHTML;
+      setContent(val);
+      pushToHistory(val, true);
+    }
+  };
+
+  const applyHighlight = (bgColor: string) => {
+    applyStyleToSelection({ "background-color": bgColor });
+  };
+
   const cycleFontSize = () => {
     let nextSize: "P" | "M" | "G" = "M";
     let sizeValue = "16px";
@@ -532,7 +705,7 @@ export default function Notes() {
     setReminderDate("");
     setFontSizeMode("M");
     setNoteType(type);
-    setNoteStatus(type === "note" ? "aguardando" : "a fazer");
+    setNoteStatus("a fazer");
     setDeliveryDate("");
     setDeliveryTime("");
     setResponsibleName("");
@@ -549,7 +722,7 @@ export default function Notes() {
     setFontSizeMode("M");
     setNoteType(note.type || "note");
     setNoteStatus(
-      note.status || (note.type === "production" ? "a fazer" : "aguardando"),
+      note.status || "a fazer",
     );
     setDeliveryDate(note.delivery_date || "");
     setDeliveryTime(note.delivery_time || "");
@@ -606,27 +779,40 @@ export default function Notes() {
     let savedNote: Note | null = null;
 
     try {
+      let result;
       if (editingNote) {
-        const { data, error } = await supabase
+        result = await supabase
           .from("notes")
           .update(payload)
           .eq("id", editingNote.id)
           .select()
           .single();
-        if (error) throw error;
-        savedNote = data;
+          
+        if (result.error && result.error.code === "42703") {
+          // Retry without layout_url
+          const { layout_url, ...fallbackPayload } = payload;
+          result = await supabase.from("notes").update(fallbackPayload).eq("id", editingNote.id).select().single();
+        }
+        if (result.error) throw result.error;
+        savedNote = result.data;
         setNotes((prev) =>
-          prev.map((n) => (n.id === editingNote.id ? data : n)),
+          prev.map((n) => (n.id === editingNote.id ? result.data : n)),
         );
       } else {
-        const { data, error } = await supabase
+        result = await supabase
           .from("notes")
           .insert(payload)
           .select()
           .single();
-        if (error) throw error;
-        savedNote = data;
-        setNotes((prev) => [data, ...prev]);
+          
+        if (result.error && result.error.code === "42703") {
+           // Retry without layout_url
+           const { layout_url, ...fallbackPayload } = payload;
+           result = await supabase.from("notes").insert(fallbackPayload).select().single();
+        }
+        if (result.error) throw result.error;
+        savedNote = result.data;
+        setNotes((prev) => [result.data, ...prev]);
       }
 
       // Update Alarm Schedule if reminder format is valid
@@ -1074,7 +1260,7 @@ export default function Notes() {
       const normalizedActiveTab = normalizeStatus(activeTab);
       base = base.filter((n) => {
         let st = normalizeStatus(
-          n.status || (mainTab === "NOTE" ? "aguardando" : "a fazer"),
+          n.status || "a fazer",
         );
         if (normalizedActiveTab === "PRODUCAO" && st === "EM PRODUCAO")
           return true;
@@ -1100,21 +1286,20 @@ export default function Notes() {
       );
     });
 
+    console.log("Filtered notes:", { mainTab, activeTab, normalizedActiveTab: normalizeStatus(activeTab), results: base.length, allNotes: notes });
+
     return base;
   }, [notes, searchTerm, mainTab, noteTab, prodTab]);
 
   const NOTE_STATUSES = [
-    "AGUARDANDO",
-    "APROVADO",
+    "A FAZER",
     "CONCLUÍDOS",
-    "CANCELADOS",
     "LIXEIRA",
   ] as const;
   const PROD_STATUSES = [
     "A FAZER",
     "PRODUÇÃO",
     "CONCLUÍDOS",
-    "CANCELADOS",
     "LIXEIRA",
   ] as const;
 
@@ -1210,20 +1395,25 @@ export default function Notes() {
                   onClick={() => openEdit(note)}
                 >
                   <div
-                    className={`rounded-3xl p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full ${isExpanded ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]" : "overflow-hidden min-h-[280px]"}`}
+                    id={`note-card-${note.id}`}
+                    className={`rounded-3xl p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full ${
+                      isExpanded
+                        ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]"
+                        : "overflow-hidden min-h-[280px]"
+                    } ${note.id === highlightedId ? "gm-highlighted-budget-glass" : ""}`}
                     style={{
                       backgroundColor: "rgba(17, 19, 24, 0.7)",
                       backdropFilter: "blur(12px)",
                       borderColor: noteColor,
                       borderWidth: "1px",
                       borderStyle: "solid",
-                      boxShadow: `0 0 20px ${noteColor}40, inset 0 0 20px ${noteColor}20`,
+                      boxShadow: `0 0 8px ${noteColor}20, inset 0 0 8px ${noteColor}10`,
                     }}
                   >
                     {/* Pin Toggle */}
                     <button
                       onClick={(e) => togglePin(note, e)}
-                      className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors z-10"
+                      className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors z-10 animate-fade-in"
                       style={{
                         color: note.is_pinned
                           ? noteColor
@@ -1231,28 +1421,14 @@ export default function Notes() {
                       }}
                     >
                       {note.is_pinned ? (
-                        <Pin size={20} fill={noteColor} />
+                        <Pin size={13} fill={noteColor} />
                       ) : (
-                        <PinOff size={20} />
+                        <PinOff size={13} />
                       )}
                     </button>
 
                     {/* Title */}
                     <div className="flex flex-col gap-1 pr-8">
-                      {note.status && (
-                        <div className="flex items-center">
-                          <span
-                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
-                            style={{
-                              backgroundColor: `${noteColor}20`,
-                              color: noteColor,
-                              border: `1px solid ${noteColor}40`,
-                            }}
-                          >
-                            {note.status.replace(/_/g, " ")}
-                          </span>
-                        </div>
-                      )}
                       <h3 className="font-bold text-lg text-white leading-tight mt-1">
                         {note.title || "Sem título"}
                       </h3>
@@ -1327,28 +1503,21 @@ export default function Notes() {
                     )}
 
                     {/* Footer: Reminder + Actions */}
-                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-white/10 opacity-60 group-hover:opacity-100 transition-opacity relative z-10">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-white/50 uppercase tracking-widest font-mono">
-                          {new Date(note.created_at).toLocaleDateString()}
-                        </span>
+                    <div className="mt-auto pt-4 flex flex-col gap-3 border-t border-white/10 opacity-80 group-hover:opacity-100 transition-opacity relative z-10 w-full">
+                      {/* Text details for high contrast and perfect legibility */}
+                      <div className="flex flex-col gap-1.5 min-w-0 w-full text-left">
+                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-white/50 tracking-wider">
+                          <span>Criado em:</span>
+                          <span className="font-mono text-white/90">
+                            {new Date(note.created_at).toLocaleDateString("pt-BR")}
+                          </span>
+                        </div>
                         {note.reminder_time &&
                           (() => {
                             const hasSpace = note.reminder_time.includes(" ");
-                            let displayStr = note.reminder_time;
-                            if (hasSpace) {
-                              const [rDate, rTime] =
-                                note.reminder_time.split(" ");
-                              if (rDate && rTime) {
-                                const [y, m, d] = rDate.split("-");
-                                displayStr = `${d}/${m}/${y} @ ${rTime}`;
-                              }
-                            } else {
-                              displayStr = `Diário @ ${note.reminder_time}`;
-                            }
                             return (
-                              <span
-                                className="text-[10px] uppercase flex items-center gap-1 font-bold tracking-widest mt-0.5"
+                              <div
+                                className="flex items-start gap-2 font-bold tracking-wider mt-1 text-[9px]"
                                 title={
                                   hasSpace
                                     ? "Lembrete Único"
@@ -1356,129 +1525,171 @@ export default function Notes() {
                                 }
                                 style={{ color: noteColor }}
                               >
-                                {hasSpace ? (
-                                  <Calendar
-                                    size={11}
-                                    className="animate-pulse"
-                                    style={{ color: noteColor }}
-                                  />
-                                ) : (
-                                  <Clock
-                                    size={11}
-                                    className="animate-pulse"
-                                    style={{ color: noteColor }}
-                                  />
-                                )}
-                                {displayStr}
-                              </span>
+                                <div className="mt-0.5 shrink-0">
+                                  {hasSpace ? (
+                                    <Calendar
+                                      size={12}
+                                      className="animate-pulse"
+                                      style={{ color: noteColor }}
+                                    />
+                                  ) : (
+                                    <Clock
+                                      size={12}
+                                      className="animate-pulse"
+                                      style={{ color: noteColor }}
+                                    />
+                                  )}
+                                </div>
+                                <div className="flex flex-col gap-0.5 leading-tight min-w-0 w-full">
+                                  <span className="uppercase text-white/40 tracking-widest font-mono text-[8px]">
+                                    {hasSpace ? "Lembrete Único" : "Lembrete Diário"}
+                                  </span>
+                                  <span className="text-white font-mono tracking-normal text-[10px] break-words">
+                                    {hasSpace ? (
+                                      (() => {
+                                        const [rDate, rTime] =
+                                          note.reminder_time.split(" ");
+                                        if (rDate && rTime) {
+                                          const [y, m, d] = rDate.split("-");
+                                          const formattedTimes = rTime.replace(/,/g, " • ");
+                                          return `${d}/${m}/${y} às ${formattedTimes}`;
+                                        }
+                                        return note.reminder_time;
+                                      })()
+                                    ) : (
+                                      note.reminder_time.replace(/,/g, " • ")
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
                             );
                           })()}
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        {(mainTab === "NOTE" ? noteTab : prodTab) ===
-                        "LIXEIRA" ? (
-                          <>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRestore(note.id);
+                      {/* Action buttons on their own line with generous spacing */}
+                      <div className="flex items-center justify-between gap-2.5 w-full pt-2.5 border-t border-white/5">
+                        {/* Status label displayed next to action buttons */}
+                        {note.status ? (
+                          <div className="flex items-center">
+                            <span
+                              className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-md shrink-0 select-none"
+                              style={{
+                                backgroundColor: `${noteColor}15`,
+                                color: noteColor,
+                                border: `1px solid ${noteColor}32`,
                               }}
-                              className="text-green-400 hover:text-green-300 p-2 bg-green-500/10 rounded-xl transition-all hover:scale-110 hover:bg-green-500/20 z-20 relative pointer-events-auto"
-                              title="Restaurar"
                             >
-                              <RefreshCcw size={18} />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteConfirmId(note.id);
-                              }}
-                              className="text-red-500 hover:text-red-400 p-2 bg-red-500/10 rounded-xl transition-all hover:scale-110 hover:bg-red-500/20 z-20 relative pointer-events-auto"
-                              title="Excluir Definitivamente"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </>
+                              {note.status.replace(/_/g, " ")}
+                            </span>
+                          </div>
                         ) : (
-                          <>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleShareClick(note);
-                              }}
-                              className="p-2 rounded-xl transition-all hover:scale-110 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
-                              style={{
-                                color: noteColor,
-                                backgroundColor: `${noteColor}1a`,
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = `${noteColor}33`;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = `${noteColor}1a`;
-                              }}
-                              title="Compartilhar Nota"
-                            >
-                              <Share2 size={18} />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handlePdf(note);
-                              }}
-                              className="p-2 rounded-xl transition-all hover:scale-110 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
-                              style={{
-                                color: noteColor,
-                                backgroundColor: `${noteColor}1a`,
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = `${noteColor}33`;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = `${noteColor}1a`;
-                              }}
-                              title="Exportar PDF"
-                            >
-                              {/* Lucide FileDown icon logic since it might not be imported directly, reusing another or importing. Let's use Download or similar if needed. We have Mail, Copy, AlertTriangle. Let's just use text or download icon. Wait, I will use Copy. No, I'll add a simple SVG. */}
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                              </svg>
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSoftDelete(note.id);
-                              }}
-                              className="p-2 rounded-xl transition-all hover:scale-110 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
-                              style={{
-                                color: noteColor,
-                                backgroundColor: `${noteColor}1a`,
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = `${noteColor}33`;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = `${noteColor}1a`;
-                              }}
-                              title="Mover para Lixeira"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </>
+                          <div />
                         )}
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {(mainTab === "NOTE" ? noteTab : prodTab) ===
+                          "LIXEIRA" ? (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRestore(note.id);
+                                }}
+                                className="text-green-400 hover:text-green-300 h-8 w-8 flex items-center justify-center bg-green-500/10 rounded-lg transition-all hover:scale-105 hover:bg-green-500/20 z-20 relative pointer-events-auto"
+                                title="Restaurar"
+                              >
+                                <RefreshCcw size={14} />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteConfirmId(note.id);
+                                }}
+                                className="text-red-500 hover:text-red-400 h-8 w-8 flex items-center justify-center bg-red-500/10 rounded-lg transition-all hover:scale-105 hover:bg-red-500/20 z-20 relative pointer-events-auto"
+                                title="Excluir Definitivamente"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShareClick(note);
+                                }}
+                                className="h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:scale-105 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
+                                style={{
+                                  color: noteColor,
+                                  backgroundColor: `${noteColor}1a`,
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = `${noteColor}33`;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = `${noteColor}1a`;
+                                }}
+                                title="Compartilhar Nota"
+                              >
+                                <Share2 size={14} />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePdf(note);
+                                }}
+                                className="h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:scale-105 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
+                                style={{
+                                  color: noteColor,
+                                  backgroundColor: `${noteColor}1a`,
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = `${noteColor}33`;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = `${noteColor}1a`;
+                                }}
+                                title="Exportar PDF"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                  <polyline points="7 10 12 15 17 10"></polyline>
+                                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSoftDelete(note.id);
+                                }}
+                                className="h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:scale-105 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
+                                style={{
+                                  color: noteColor,
+                                  backgroundColor: `${noteColor}1a`,
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = `${noteColor}33`;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = `${noteColor}1a`;
+                                }}
+                                title="Mover para Lixeira"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1588,11 +1799,11 @@ export default function Notes() {
                 borderWidth: window.innerWidth < 768 ? "0px" : "1px",
                 borderTopWidth: window.innerWidth < 768 ? "2px" : "1px",
                 borderStyle: "solid",
-                boxShadow: `0 0 40px ${color}50, inset 0 0 30px ${color}20`,
+                boxShadow: `0 0 15px ${color}20, inset 0 0 10px ${color}10`,
               }}
             >
               <div
-                className="p-4 flex items-center justify-between shrink-0"
+                className="p-4 md:px-6 flex items-center justify-between shrink-0"
                 style={{
                   borderBottom: `1px solid ${color}40`,
                   backgroundColor: `${color}10`,
@@ -1629,58 +1840,214 @@ export default function Notes() {
 
               {/* Text Formatting Toolbar */}
               <div
-                className="flex flex-col gap-3 px-6 py-3 bg-black/45 border-b border-white/5 select-none shrink-0"
+                className="flex flex-col gap-3 px-4 md:px-6 py-3 bg-black/45 border-b border-white/5 select-none shrink-0"
                 style={{ borderColor: `${color}30` }}
               >
-                <div className="flex w-full items-center gap-2">
+                {/* Core Formatting Controls Group */}
+                <div className="flex flex-wrap items-center justify-center gap-2 py-1 relative z-30">
+                  {/* Bold */}
                   <button
                     type="button"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       applyBold();
                     }}
-                    className="flex-1 py-2 px-3 rounded-xl hover:bg-white/15 text-white font-black text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[36px]"
+                    className="py-1.5 px-3 rounded-lg hover:bg-white/15 text-white font-extrabold text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
                     title="Negrito"
                   >
                     B
                   </button>
+
+                  {/* Italic */}
                   <button
                     type="button"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       applyItalic();
                     }}
-                    className="flex-1 py-2 px-3 rounded-xl hover:bg-white/15 text-white italic font-serif text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[36px]"
+                    className="py-1.5 px-3 rounded-lg hover:bg-white/15 text-white italic font-serif text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
                     title="Itálico"
                   >
                     I
                   </button>
+
+                  {/* Underline */}
                   <button
                     type="button"
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      applyStyleToSelection({
-                        "font-family": "'Caveat', cursive",
-                      });
+                      applyUnderline();
                     }}
-                    className="py-2 px-3 rounded-xl hover:bg-white/15 text-white text-xs transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold text-center flex items-center justify-center min-h-[36px]"
-                    style={{ fontFamily: "Caveat, cursive", flex: 1.4 }}
-                    title="Cursiva"
+                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                    title="Sublinhar"
                   >
-                    Cursiva
+                    <Underline size={15} />
                   </button>
+
+                  {/* Strikethrough */}
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      applyStrikeThrough();
+                    }}
+                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                    title="Tachado"
+                  >
+                    <Strikethrough size={15} />
+                  </button>
+
+                  {/* Cores do Texto Dropdown */}
+                  <div className="relative shrink-0">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setColorPickerOpen(!colorPickerOpen);
+                        setFontSelectorOpen(false);
+                      }}
+                      className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px]"
+                      title="Cor do Texto"
+                    >
+                      <Palette size={15} className="text-white/60" />
+                      <span
+                        className="w-3 h-3 rounded-full border border-white/30"
+                        style={{ backgroundColor: selectedTextColor }}
+                      />
+                      <ChevronDown size={11} className="text-white/40" />
+                    </button>
+
+                    {colorPickerOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-[9990]"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setColorPickerOpen(false);
+                          }}
+                        />
+                        <div className="absolute top-10 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-1.5 shadow-2xl z-[9991] backdrop-blur-md min-w-[124px]">
+                          <div className="px-1 py-0.5 text-[8px] font-extrabold uppercase tracking-widest text-white/30 border-b border-white/5">
+                            Cor do Texto
+                          </div>
+                          <div className="grid grid-cols-4 gap-1.5 p-0.5">
+                            {[
+                              "#ffffff", // White
+                              "#ff003c", // Red
+                              "#ff6600", // Orange
+                              "#ffff00", // Yellow
+                              "#00ff66", // Green
+                              "#00e5ff", // Cyan
+                              "#b400ff", // Violet
+                              "#ff00a0", // Pink
+                            ].map((hex) => {
+                              const isActive = selectedTextColor === hex;
+                              return (
+                                <button
+                                  key={hex}
+                                  type="button"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setSelectedTextColor(hex);
+                                    applyStyleToSelection({ color: hex });
+                                    setColorPickerOpen(false);
+                                  }}
+                                  className={`w-5 h-5 rounded-full border border-solid transition-all duration-200 shrink-0 ${
+                                    isActive
+                                      ? "border-white scale-105 z-10"
+                                      : "border-white/20 hover:border-white/45 opacity-60 hover:opacity-100"
+                                  }`}
+                                  style={{
+                                    backgroundColor: hex,
+                                    boxShadow: isActive ? `0 0 6px ${hex}` : "none",
+                                  }}
+                                  title={hex}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Font Gallery Dropdown */}
+                  <div className="relative shrink-0">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setFontSelectorOpen(!fontSelectorOpen);
+                        setColorPickerOpen(false);
+                      }}
+                      className="py-1.5 px-3.5 rounded-lg hover:bg-white/15 text-white text-[12px] transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-bold flex items-center justify-center gap-1.5 min-h-[38px]"
+                      title="Galeria de Fontes"
+                    >
+                      <Type size={13} className="text-white/60" />
+                      <span>Fontes</span>
+                      <ChevronDown size={12} className="text-white/40" />
+                    </button>
+
+                    {fontSelectorOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-[9990]"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setFontSelectorOpen(false);
+                          }}
+                        />
+                        <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-0.5 shadow-2xl z-[9995] backdrop-blur-md min-w-[200px] max-h-[280px] overflow-y-auto scrollbar-hide">
+                          <div className="px-2.5 py-1.5 text-[9px] font-extrabold uppercase tracking-widest text-white/40 border-b border-white/5 mb-1.5">
+                            Selecione a Fonte
+                          </div>
+                          {[
+                            { name: "Inter", value: "Inter, sans-serif", label: "Inter (Padrão)" },
+                            { name: "Plus Jakarta Sans", value: "'Plus Jakarta Sans', sans-serif", label: "Plus Jakarta" },
+                            { name: "Montserrat", value: "Montserrat, sans-serif", label: "Montserrat" },
+                            { name: "Raleway", value: "Raleway, sans-serif", label: "Raleway" },
+                            { name: "Playfair Display", value: "'Playfair Display', serif", label: "Playfair (Serif)" },
+                            { name: "Hubot Sans", value: "'Hubot Sans', sans-serif", label: "Hubot Sans" },
+                            { name: "Funnel Display", value: "'Funnel Display', sans-serif", label: "Funnel Display" },
+                            { name: "Open Sans", value: "'Open Sans', sans-serif", label: "Open Sans" },
+                            { name: "Roboto", value: "Roboto, sans-serif", label: "Roboto" },
+                            { name: "Fira Code", value: "'Fira Code', monospace", label: "Fira Code (Mono)" },
+                          ].map((f) => (
+                            <button
+                              key={f.name}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                applyStyleToSelection({ "font-family": f.value });
+                                setFontSelectorOpen(false);
+                              }}
+                              className="text-left w-full px-3 py-2 rounded-lg text-[13px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                              style={{ fontFamily: f.value }}
+                            >
+                              {f.label}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Size Cycle */}
                   <button
                     type="button"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       cycleFontSize();
                     }}
-                    className="py-2 px-3 rounded-xl hover:bg-white/15 text-white text-xs transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold flex items-center justify-center gap-1 min-h-[36px]"
-                    style={{ flex: 1.4 }}
-                    title="Alternar Tamanho (Pequeno, Médio, Grande)"
+                    className="py-1.5 px-3.5 rounded-lg hover:bg-white/15 text-white text-[11px] transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold flex items-center justify-center gap-1.5 min-h-[38px]"
+                    title="Tamanho da Fonte"
                   >
-                    <span className="text-white/60 text-xs">Aa</span>
-                    <span className="font-bold text-[9px] bg-white/10 px-1.5 py-0.5 rounded uppercase text-white/90">
+                    <span className="text-white/60 text-[11px] font-bold">Aa</span>
+                    <span className="font-extrabold text-[10px] bg-white/10 px-1.5 py-0.5 rounded uppercase text-white">
                       {fontSizeMode === "P"
                         ? "Peq"
                         : fontSizeMode === "M"
@@ -1688,48 +2055,152 @@ export default function Notes() {
                           : "Grd"}
                     </span>
                   </button>
-                </div>
 
-                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
-                  <span className="text-xs uppercase text-white/50 font-semibold tracking-wider font-sans mr-1 shrink-0">
-                    Cores:
-                  </span>
-                  {[
-                    "#ffffff", // White
-                    "#ff003c", // Red
-                    "#ff6600", // Orange
-                    "#ffff00", // Yellow
-                    "#00ff66", // Green
-                    "#00e5ff", // Cyan
-                    "#b400ff", // Violet
-                    "#ff00a0", // Pink
-                  ].map((hex) => {
-                    const isActive = selectedTextColor === hex;
-                    return (
+                  <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
+
+                  {/* Align Left */}
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      applyAlign("left");
+                    }}
+                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                    title="Alinhar à Esquerda"
+                  >
+                    <AlignLeft size={15} />
+                  </button>
+
+                  {/* Align Center */}
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      applyAlign("center");
+                    }}
+                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                    title="Centralizar"
+                  >
+                    <AlignCenter size={15} />
+                  </button>
+
+                  {/* Align Right */}
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      applyAlign("right");
+                    }}
+                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                    title="Alinhar à Direita"
+                  >
+                    <AlignRight size={15} />
+                  </button>
+
+                  {/* Align Justify */}
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      applyAlign("justify");
+                    }}
+                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                    title="Justificar"
+                  >
+                    <AlignJustify size={15} />
+                  </button>
+
+                  <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
+
+                  {/* Bullet List */}
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      applyList("bullet");
+                    }}
+                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                    title="Lista de Marcadores"
+                  >
+                    <List size={15} />
+                  </button>
+
+                  {/* Numbered List */}
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      applyList("ordered");
+                    }}
+                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                    title="Lista Numerada"
+                  >
+                    <ListOrdered size={15} />
+                  </button>
+
+                  <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
+
+                  {/* Highlighter Text Option Group */}
+                  <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg shrink-0 mr-1.5">
+                    <Highlighter size={13} className="text-white/60 mr-1" />
+                    {[
+                      { hex: "transparent", label: "Limpar" },
+                      { hex: "#fef08a", label: "Amarelo" },
+                      { hex: "#bbf7d0", label: "Verde" },
+                      { hex: "#fbcfe8", label: "Rosa" },
+                      { hex: "#cffafe", label: "Azul" },
+                    ].map((marker) => (
                       <button
-                        key={hex}
+                        key={marker.hex}
                         type="button"
                         onMouseDown={(e) => {
                           e.preventDefault();
-                          setSelectedTextColor(hex);
-                          applyStyleToSelection({ color: hex });
+                          applyHighlight(marker.hex);
                         }}
-                        className={`rounded-full border-2 border-solid transition-all duration-300 shrink-0 ${
-                          isActive
-                            ? "w-[22px] h-[22px] border-white z-10 opacity-100"
-                            : "w-[18px] h-[18px] border-white/20 hover:scale-105 hover:border-white/50 opacity-40 hover:opacity-90 hover:filter-none"
-                        }`}
+                        className="w-5 h-5 rounded-full border border-white/20 transition-all hover:scale-110"
                         style={{
-                          backgroundColor: hex,
-                          filter: isActive ? "none" : "blur(0.8px)",
-                          boxShadow: isActive
-                            ? "inset 0 0 4px rgba(255,255,255,0.6)"
-                            : "none",
+                          backgroundColor: marker.hex === "transparent" ? "rgba(255,255,255,0.1)" : marker.hex,
                         }}
-                        title={`Cor ${hex}`}
+                        title={`Marcador ${marker.label}`}
                       />
-                    );
-                  })}
+                    ))}
+                  </div>
+
+
+                </div>
+
+                {/* Compact Cores da Nota Block */}
+                <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/5 mt-1.5 px-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full select-none" style={{ backgroundColor: color }} />
+                    <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-sans">
+                      Cores da Nota
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
+                    {COLORS.map((c) => {
+                      const isActive = color === c;
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setColor(c)}
+                          className={`rounded-full border border-solid transition-all duration-200 shrink-0 flex-none ${
+                            isActive
+                              ? "w-6 h-6 border-2 border-white z-10 opacity-100 scale-110"
+                              : "w-5 h-5 border border-white/20 hover:border-white/50 hover:scale-105 opacity-60 hover:opacity-100"
+                          }`}
+                          style={{
+                            backgroundColor: c,
+                            boxShadow: isActive
+                              ? `0 0 8px ${c}b5`
+                              : "none",
+                          }}
+                          title={`Mudar cor de fundo para ${c}`}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -1742,240 +2213,297 @@ export default function Notes() {
                 }}
               >
                 {/* Metadata Fields */}
-                <div className="p-4 md:px-6 py-4 border-b border-white/5 bg-black/20 flex flex-wrap gap-4 shrink-0">
-                  <div className="flex flex-col gap-1 w-[100%] sm:w-auto flex-1 md:flex-none">
-                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
-                      Tipo da Nota
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={noteType}
-                        onChange={(e) => {
-                          setNoteType(e.target.value as any);
-                          setNoteStatus(
-                            e.target.value === "note"
-                              ? "aguardando"
-                              : "a fazer",
-                          );
-                        }}
-                        className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 pr-10 outline-none focus:border-white/30 cursor-pointer"
-                      >
-                        <option value="note">Geral (Nota)</option>
-                        <option value="production">Produção</option>
-                      </select>
-                      <ChevronDown
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                        size={16}
-                      />
+                <div className="p-4 md:px-6 py-4 border-b border-white/5 bg-black/20 flex flex-col gap-4 shrink-0 w-full animate-fadeIn">
+                  {/* Linha Superior: Tipo de Nota, Status e Prazo de Entrega */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Tipo da Nota */}
+                    <div className="flex flex-col gap-1 w-full">
+                      <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                        Tipo da Nota
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={noteType}
+                          onChange={(e) => {
+                            setNoteType(e.target.value as any);
+                            setNoteStatus(
+                              e.target.value === "note"
+                                ? "a fazer"
+                                : "a fazer",
+                            );
+                          }}
+                          className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-white/30 cursor-pointer font-bold transition-all"
+                        >
+                          <option value="note">GERAL</option>
+                          <option value="production">PRODUÇÃO</option>
+                        </select>
+                        <ChevronDown
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+                          size={16}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col gap-1 w-[100%] sm:w-auto flex-1 md:flex-none">
-                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
-                      Status
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={noteStatus}
-                        onChange={(e) => setNoteStatus(e.target.value)}
-                        className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 pr-10 outline-none focus:border-white/30 cursor-pointer"
-                      >
-                        {noteType === "note"
-                          ? NOTE_STATUSES.filter((s) => s !== "LIXEIRA").map(
-                              (s) => (
-                                <option key={s} value={s.toLowerCase()}>
-                                  {s}
-                                </option>
-                              ),
-                            )
-                          : PROD_STATUSES.filter((s) => s !== "LIXEIRA").map(
-                              (s) => (
-                                <option key={s} value={s.toLowerCase()}>
-                                  {s}
-                                </option>
-                              ),
-                            )}
-                      </select>
-                      <ChevronDown
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                        size={16}
-                      />
+                    {/* Status */}
+                    <div className="flex flex-col gap-1 w-full">
+                      <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                        Status
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={noteStatus}
+                          onChange={(e) => setNoteStatus(e.target.value)}
+                          className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-white/30 cursor-pointer font-bold transition-all"
+                        >
+                          {noteType === "note"
+                            ? NOTE_STATUSES.filter((s) => s !== "LIXEIRA").map(
+                                (s) => (
+                                  <option key={s} value={s.toLowerCase()}>
+                                    {s}
+                                  </option>
+                                ),
+                              )
+                            : PROD_STATUSES.filter((s) => s !== "LIXEIRA").map(
+                                (s) => (
+                                  <option key={s} value={s.toLowerCase()}>
+                                    {s}
+                                  </option>
+                                ),
+                              )}
+                        </select>
+                        <ChevronDown
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+                          size={16}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col gap-1 w-full sm:w-auto">
-                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
-                      Prazo de Entrega
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1 min-w-[140px]">
+                    {/* Prazo de Entrega */}
+                    <div className="flex flex-col gap-1 w-full">
+                      <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                        Prazo de Entrega
+                      </label>
+                      <div className="relative">
                         <GlassDatePicker
                           value={deliveryDate}
                           onChange={setDeliveryDate}
-                          className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-10 pr-3 py-2.5 outline-none focus:border-white/30 select-none"
+                          className="w-full bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-9 pr-3.5 h-[44px] flex items-center outline-none focus:border-white/30 select-none font-bold transition-all"
                           title="Prazo"
+                          themeColor={color}
                         />
                         <Calendar
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                          size={16}
-                        />
-                      </div>
-                      <div className="relative flex-1 min-w-[100px]">
-                        <GlassTimePicker
-                          value={deliveryTime}
-                          onChange={setDeliveryTime}
-                          className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-10 pr-3 py-2.5 outline-none focus:border-white/30"
-                        />
-                        <Clock
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                          size={16}
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+                          size={14}
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1 w-full sm:flex-1">
-                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
-                      Responsável
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nome do responsável"
-                      value={responsibleName}
-                      onChange={(e) => setResponsibleName(e.target.value)}
-                      className="bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-white/30 w-full"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1 w-full sm:w-auto">
-                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
-                      Layout
-                    </label>
-                    <div className="flex items-center gap-2 w-full">
-                      <label
-                        className={`bg-black/40 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none hover:bg-white/5 cursor-pointer flex items-center w-full justify-center gap-2 h-auto transition-all ${uploadingLayout ? "opacity-50 pointer-events-none" : ""}`}
-                      >
-                        {uploadingLayout ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                          <ImageIcon size={16} />
-                        )}
-                        {uploadingLayout ? "Enviando..." : "Enviar Mídia"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          multiple
-                          disabled={uploadingLayout}
-                          onChange={async (e) => {
-                            const files = e.target.files;
-                            if (files && files.length > 0 && tenantId) {
-                              setUploadingLayout(true);
-                              try {
-                                let firstUrl = layoutUrl;
-                                const options = {
-                                  maxSizeMB: 1,
-                                  maxWidthOrHeight: 1600,
-                                  useWebWorker: true,
-                                };
-                                for (let i = 0; i < files.length; i++) {
-                                  const compressedFile = await imageCompression(
-                                    files[i],
-                                    options,
-                                  );
-                                  const url = await uploadNoteAsset(
-                                    tenantId,
-                                    compressedFile,
-                                  );
-
-                                  const imgHtml = `<span contenteditable="false" class="note-img-wrapper group" style="position: relative; display: inline-block; max-width: 100%; min-width: 100px; min-height: 100px; padding: 4px; border: 1px dashed rgba(255,255,255,0.3); border-radius: 8px; resize: both; overflow: hidden; margin-top: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.2);"><span class="note-img-number" style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.8); color: white; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; pointer-events: none; z-index: 10; border: 1px solid rgba(255,255,255,0.2);"></span><button class="note-img-delete" onclick="this.parentElement.remove()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,0,0,0.8); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 10; font-size: 14px; font-weight: bold; opacity: 0.8;">✕</button><img src="${url}" alt="layout" style="width: 100%; height: 100%; object-fit: contain; display: block;" /></span>&nbsp;`;
-
-                                  if (!firstUrl) {
-                                    firstUrl = url;
-                                    setLayoutUrl(url);
-                                  } else {
-                                    if (contentRef.current) {
-                                      contentRef.current.innerHTML += `<br>${imgHtml}`;
-                                    }
-                                  }
-                                }
-                                if (contentRef.current) {
-                                  const val = contentRef.current.innerHTML;
-                                  setContent(val);
-                                  pushToHistory(val, true);
-                                }
-                              } catch (err) {
-                                alert("Erro ao enviar layout.");
-                              } finally {
-                                setUploadingLayout(false);
-                                e.target.value = "";
-                              }
-                            }
-                          }}
-                        />
+                  {/* Linha Inferior: Responsável e Horário de Entrega */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Responsável */}
+                    <div className="flex flex-col gap-1 w-full md:col-span-2 animate-fadeIn">
+                      <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                        Responsável
                       </label>
+                      <input
+                        type="text"
+                        placeholder="Nome do responsável"
+                        value={responsibleName}
+                        onChange={(e) => setResponsibleName(e.target.value)}
+                        className="bg-black/40 border border-white/10 rounded-lg text-[14px] text-white px-3.5 h-[44px] outline-none focus:border-white/30 w-full font-bold transition-all"
+                      />
+                    </div>
+
+                    {/* Horário de Entrega */}
+                    <div className="flex flex-col gap-1 w-full animate-fadeIn">
+                      <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                        Horário de Entrega
+                      </label>
+                      <div className="relative">
+                        <GlassTimePicker
+                          value={deliveryTime}
+                          onChange={setDeliveryTime}
+                          className="w-full bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-white/30 font-bold transition-all"
+                        />
+                        <Clock
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+                          size={14}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Content Editor */}
-                <div className="p-6 flex flex-col gap-4 relative flex-1 touch-pan-y">
-                  {layoutUrl && (
-                    <div
-                      className="w-full relative group rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-xl"
-                      style={{ backgroundColor: "transparent" }}
-                    >
-                      <img
-                        src={layoutUrl}
-                        alt="Layout"
-                        className="w-full h-auto max-h-[600px] object-cover"
+                {/* Campo para Inserção do Layout */}
+                <div className="p-4 md:px-6 py-4 border-b border-white/5 bg-black/10 flex flex-col gap-2 shrink-0">
+                  <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-mono">
+                    Campo para Inserção do Layout
+                  </span>
+                  <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        placeholder="Cole aqui a URL/link da imagem para o layout..."
+                        value={layoutUrl}
+                        onChange={(e) => setLayoutUrl(e.target.value)}
+                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-9 pr-3 py-2.5 outline-none focus:border-white/30 w-full"
                       />
-                      <button
-                        onClick={() => setLayoutUrl("")}
-                        className="absolute top-4 right-4 bg-black/60 hover:bg-red-500/80 p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all text-white backdrop-blur-md"
-                        title="Remover Layout"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={14} />
                     </div>
-                  )}
-                  <div
-                    ref={(el) => {
-                      contentRef.current = el;
-                      if (el && el.innerHTML !== content) {
-                        el.innerHTML = content;
-                      }
-                    }}
-                    key={editingNote ? editingNote.id : "new-note"}
-                    contentEditable
-                    onKeyDown={(e) => {
-                      if (
-                        (e.ctrlKey || e.metaKey) &&
-                        !e.shiftKey &&
-                        e.key.toLowerCase() === "z"
-                      ) {
-                        e.preventDefault();
-                        performUndo();
-                      } else if (
-                        ((e.ctrlKey || e.metaKey) &&
-                          e.key.toLowerCase() === "y") ||
-                        ((e.ctrlKey || e.metaKey) &&
-                          e.shiftKey &&
-                          e.key.toLowerCase() === "z")
-                      ) {
-                        e.preventDefault();
-                        performRedo();
-                      }
-                    }}
-                    onInput={(e) => {
-                      const val = e.currentTarget.innerHTML;
-                      setContent(val);
-                      pushToHistory(val);
-                    }}
-                    className="w-full h-full min-h-[150px] md:min-h-[300px] bg-transparent outline-none text-white/90 focus:outline-none relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0"
-                    {...{ placeholder: "Escreva sua nota aqui..." }}
-                    style={{ minHeight: "150px" }}
-                  />
+
+                    <label
+                      className={`bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 rounded-lg text-sm text-blue-300 px-4 py-2.5 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 ${uploadingLayout ? "opacity-50 pointer-events-none" : ""}`}
+                    >
+                      {uploadingLayout ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Upload size={14} />
+                      )}
+                      <span>{uploadingLayout ? "Enviando..." : "Enviar Layout"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        multiple
+                        disabled={uploadingLayout}
+                        onChange={async (e) => {
+                          const files = e.target.files;
+                          if (files && files.length > 0 && tenantId) {
+                            setUploadingLayout(true);
+                            try {
+                              let firstUrl = layoutUrl;
+                              const options = {
+                                maxSizeMB: 1,
+                                maxWidthOrHeight: 1600,
+                                useWebWorker: true,
+                              };
+                              for (let i = 0; i < files.length; i++) {
+                                const compressedFile = await imageCompression(
+                                  files[i],
+                                  options,
+                                );
+                                const url = await uploadNoteAsset(
+                                  tenantId,
+                                  compressedFile,
+                                );
+
+                                const imgHtml = `<span contenteditable="false" class="note-img-wrapper group" style="position: relative; display: inline-block; max-width: 100%; min-width: 100px; min-height: 100px; padding: 4px; border: 1px dashed rgba(255,255,255,0.3); border-radius: 8px; resize: both; overflow: hidden; margin-top: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.2);"><span class="note-img-number" style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.8); color: white; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; pointer-events: none; z-index: 10; border: 1px solid rgba(255,255,255,0.2);"></span><button class="note-img-delete" onclick="this.parentElement.remove()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,0,0,0.8); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 10; font-size: 14px; font-weight: bold; opacity: 0.8;">✕</button><img src="${url}" alt="layout" style="width: 100%; height: 100%; object-fit: contain; display: block;" /></span>&nbsp;`;
+
+                                if (!firstUrl) {
+                                  firstUrl = url;
+                                  setLayoutUrl(url);
+                                } else {
+                                  if (contentRef.current) {
+                                    contentRef.current.innerHTML += `<br>${imgHtml}`;
+                                  }
+                                }
+                              }
+                              if (contentRef.current) {
+                                const val = contentRef.current.innerHTML;
+                                setContent(val);
+                                pushToHistory(val, true);
+                              }
+                            } catch (err) {
+                              alert("Erro ao enviar layout.");
+                            } finally {
+                              setUploadingLayout(false);
+                              e.target.value = "";
+                            }
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Stacked Layout Block: Layout Top (Large) & Typing Editor Bottom */}
+                <div className="p-4 md:p-6 flex flex-col gap-6 flex-1 touch-pan-y">
+                  {/* Row 1: Layout Preview Panel */}
+                  <div className="flex flex-col gap-2 w-full">
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-sans">
+                        LAYOUT
+                      </span>
+                      {layoutUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setLayoutUrl("")}
+                          className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[11px] font-extrabold flex items-center gap-1.5 transition-all active:scale-95 shadow-md border border-red-500/20 cursor-pointer animate-fadeIn"
+                          title="Remover Layout"
+                        >
+                          <Trash2 size={12} />
+                          REMOVER
+                        </button>
+                      )}
+                    </div>
+                    <div className="w-full rounded-xl border border-white/5 bg-black/25 p-4 flex flex-col items-center justify-center relative overflow-hidden group min-h-[220px]">
+                      {layoutUrl ? (
+                        <div className="w-full flex justify-center items-center py-2 animate-fadeIn">
+                          <img
+                            src={layoutUrl}
+                            alt="Layout"
+                            className="w-full max-h-[380px] md:max-h-[580px] object-contain rounded-lg shadow-md"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-center p-6 text-white/20 gap-2">
+                          <ImageIcon size={36} className="text-white/10 animate-pulse" />
+                          <span className="text-xs font-bold text-white/40 tracking-wider">NENHUM LAYOUT CARREGADO</span>
+                          <span className="text-[10.5px] text-white/20 max-w-[280px]">Adicione um link ou faça upload de uma imagem acima para visualizar o layout aqui.</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Row 2: Content Text Typing Panel */}
+                  <div className="flex flex-col gap-2 w-full">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-sans">
+                        DIGITAÇÃO
+                      </span>
+                    </div>
+
+                    <div className="w-full rounded-xl border border-white/5 bg-black/15 p-4 focus-within:border-white/12 transition-all flex flex-col min-h-[220px] h-auto">
+                      <div
+                        ref={(el) => {
+                          contentRef.current = el;
+                          if (el && el.innerHTML !== content) {
+                            el.innerHTML = content;
+                          }
+                        }}
+                        key={editingNote ? editingNote.id : "new-note"}
+                        contentEditable
+                        onKeyDown={(e) => {
+                          if (
+                            (e.ctrlKey || e.metaKey) &&
+                            !e.shiftKey &&
+                            e.key.toLowerCase() === "z"
+                          ) {
+                            e.preventDefault();
+                            performUndo();
+                          } else if (
+                            ((e.ctrlKey || e.metaKey) &&
+                              e.key.toLowerCase() === "y") ||
+                          ((e.ctrlKey || e.metaKey) &&
+                            e.shiftKey &&
+                            e.key.toLowerCase() === "z")
+                          ) {
+                            e.preventDefault();
+                            performRedo();
+                          }
+                        }}
+                        onInput={(e) => {
+                          const val = e.currentTarget.innerHTML;
+                          setContent(val);
+                          pushToHistory(val);
+                        }}
+                        className="w-full h-auto min-h-[180px] bg-transparent outline-none text-white/95 focus:outline-none relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0 text-[15.5px] md:text-[16.5px] font-medium leading-relaxed"
+                        {...{ placeholder: "Escreva seu texto aqui..." }}
+                        style={{ minHeight: "180px" }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1987,46 +2515,21 @@ export default function Notes() {
                   backgroundColor: "rgba(0,0,0,0.5)",
                 }}
               >
-                {/* Colors */}
-                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide w-full md:max-w-[50%] p-2">
-                  {COLORS.map((c) => {
-                    const isActive = color === c;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setColor(c)}
-                        className={`rounded-full border-2 border-solid transition-all duration-300 shrink-0 flex-none ${
-                          isActive
-                            ? "w-[22px] h-[22px] border-white z-10 opacity-100"
-                            : "w-[18px] h-[18px] border-white/20 hover:scale-105 hover:border-white/50 opacity-40 hover:opacity-90 hover:filter-none"
-                        }`}
-                        style={{
-                          backgroundColor: c,
-                          filter: isActive ? "none" : "blur(0.8px)",
-                          boxShadow: isActive
-                            ? "inset 0 0 4px rgba(255,255,255,0.6)"
-                            : "none",
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-
-                <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto shrink-0 justify-end">
-                  <div className="flex items-center gap-2 w-full md:w-auto">
+                <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto flex-1">
+                  <div className="flex items-center gap-2 w-full md:w-auto flex-1">
                     {/* Lembrete Data */}
                     <div className="relative flex-1">
                       <GlassDatePicker
-                        className="w-full bg-black/40 border border-white/5 rounded-xl text-xs sm:text-sm text-white/80 pl-9 pr-3 py-2.5 outline-none transition-all flex items-center min-h-[42px] select-none"
+                        className="w-full bg-black/40 border border-white/5 rounded-xl text-[15.5px] font-bold text-white/95 pl-10 pr-3.5 py-2.5 outline-none transition-all flex items-center min-h-[46px] select-none"
                         value={reminderDate}
                         onChange={setReminderDate}
                         title="Data do Lembrete"
                         style={{ borderColor: `${color}20` }}
+                        themeColor={color}
                       />
                       <Calendar
-                        size={15}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+                        size={16}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
                         style={{ color: color }}
                       />
                     </div>
@@ -2040,7 +2543,7 @@ export default function Notes() {
                           <button
                             type="button"
                             onClick={() => setClocksExpanded(!clocksExpanded)}
-                            className="w-full bg-black/40 border hover:bg-black/50 rounded-xl text-xs sm:text-sm text-white/90 px-3 py-2.5 outline-none transition-all flex items-center justify-between min-h-[42px]"
+                            className="w-full bg-black/40 border hover:bg-black/50 rounded-xl text-[15.5px] font-bold text-white/95 px-3.5 py-2.5 outline-none transition-all flex items-center justify-between min-h-[46px]"
                             style={{ 
                               borderColor: clocksExpanded 
                                 ? (hasActiveClocks ? '#22c55e' : color) 
@@ -2050,7 +2553,7 @@ export default function Notes() {
                           >
                             <div className="flex items-center gap-1.5 overflow-hidden">
                               <Clock
-                                size={15}
+                                size={16}
                                 className={`shrink-0 ${hasActiveClocks ? "text-green-500 animate-pulse" : "text-white/50"}`}
                                 style={{ color: hasActiveClocks ? '#22c55e' : color }}
                               />
@@ -2063,7 +2566,7 @@ export default function Notes() {
                               {/* numeral count badge */}
                               {hasActiveClocks && (
                                 <span 
-                                  className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black"
+                                  className="w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-black"
                                   style={{ 
                                     backgroundColor: '#22c55e', 
                                     color: "#000",
@@ -2204,10 +2707,12 @@ export default function Notes() {
                       );
                     })()}
                   </div>
+                </div>
 
+                <div className="w-full md:w-auto">
                   <button
                     onClick={handleSave}
-                    className="w-full md:w-auto px-6 py-2.5 rounded-xl font-bold flex items-center justify-center transition-all shadow-lg text-white bg-green-500 hover:bg-green-600 shadow-green-500/20 hover:shadow-green-500/40 transform hover:-translate-y-0.5 md:ml-1"
+                    className="w-full md:w-auto px-8 py-3 rounded-xl text-base font-extrabold flex items-center justify-center transition-all shadow-xl text-white bg-green-500 hover:bg-green-600 shadow-green-500/25 hover:shadow-green-500/45 transform hover:-translate-y-0.5 md:ml-1 active:scale-95"
                   >
                     Salvar
                   </button>

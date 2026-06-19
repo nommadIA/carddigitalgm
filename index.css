@@ -1604,3 +1604,196 @@ body {
   padding: 0 !important;
   box-shadow: none !important;
 }
+
+/* =========================================================
+   Glassmorphism Aurora & Fluid Light for Active Budgets
+   ========================================================= */
+.gm-highlighted-budget-glass {
+  position: relative !important;
+  overflow: hidden !important;
+  background: rgba(10, 10, 10, 0.45) !important;
+  backdrop-filter: blur(20px) saturate(1.8) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;
+  border: 1px solid rgba(var(--gm-primary-rgb), 0.2) !important;
+  border-radius: 12px !important;
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(var(--gm-primary-rgb), 0.12) !important;
+  transform: scale(1.025) !important;
+  z-index: 20 !important;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Force children to stack safely above the background glow sweep */
+.gm-highlighted-budget-glass > * {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* Saturated orange/primary smoky aura circulating from Point A (Top-Left) to Point B (Bottom-Right) and back, with liquid morphing shapes */
+.gm-highlighted-budget-glass::before {
+  content: "" !important;
+  position: absolute !important;
+  width: 360px !important;
+  height: 360px !important;
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--gm-primary-rgb), 0.72) 0%,
+    rgba(var(--gm-primary-rgb), 0.28) 45%,
+    rgba(var(--gm-primary-rgb), 0.04) 70%,
+    transparent 100%
+  ) !important;
+  filter: blur(45px) !important;
+  mix-blend-mode: plus-lighter !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  animation: gm-aura-circulate 6s forwards ease-in-out !important;
+}
+
+/* Apply same elegant, fluid behavior to rows */
+.gm-highlighted-row-glass {
+  position: relative !important;
+  overflow: hidden !important;
+  background: rgba(10, 10, 10, 0.35) !important;
+  backdrop-filter: blur(16px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.6) !important;
+  border-top: 1px solid rgba(var(--gm-primary-rgb), 0.15) !important;
+  border-bottom: 1px solid rgba(var(--gm-primary-rgb), 0.15) !important;
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.4),
+    0 0 10px rgba(var(--gm-primary-rgb), 0.08) !important;
+  transform: scale(1.01) !important;
+  z-index: 20 !important;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.gm-highlighted-row-glass > * {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.gm-highlighted-row-glass::before {
+  content: "" !important;
+  position: absolute !important;
+  width: 250px !important;
+  height: 250px !important;
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--gm-primary-rgb), 0.65) 0%,
+    rgba(var(--gm-primary-rgb), 0.25) 45%,
+    rgba(var(--gm-primary-rgb), 0.04) 70%,
+    transparent 100%
+  ) !important;
+  filter: blur(35px) !important;
+  mix-blend-mode: plus-lighter !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  animation: gm-aura-circulate-row 6s forwards ease-in-out !important;
+}
+
+@keyframes gm-aura-circulate {
+  0% {
+    top: -180px;
+    left: -180px;
+    transform: scale(0.6) rotate(0deg);
+    border-radius: 50% 50% 50% 50%;
+    opacity: 0;
+  }
+  15% {
+    top: -180px;
+    left: -180px;
+    transform: scale(1.15) rotate(45deg);
+    border-radius: 40% 60% 70% 30% / 40% 40% 65% 55%;
+    opacity: 0.95;
+  }
+  50% {
+    top: calc(100% - 180px);
+    left: calc(100% - 180px);
+    transform: scale(1.35) rotate(180deg);
+    border-radius: 65% 35% 45% 55% / 55% 45% 55% 45%;
+    opacity: 1;
+  }
+  85% {
+    top: -180px;
+    left: -180px;
+    transform: scale(1.15) rotate(315deg);
+    border-radius: 35% 65% 55% 45% / 60% 35% 65% 40%;
+    opacity: 0.95;
+  }
+  100% {
+    top: -180px;
+    left: -180px;
+    transform: scale(0.6) rotate(360deg);
+    border-radius: 50% 50% 50% 50%;
+    opacity: 0;
+  }
+}
+
+@keyframes gm-aura-circulate-row {
+  0% {
+    top: -125px;
+    left: -125px;
+    transform: scale(0.5) rotate(0deg);
+    border-radius: 50% 50% 50% 50%;
+    opacity: 0;
+  }
+  15% {
+    top: -125px;
+    left: -125px;
+    transform: scale(1.1) rotate(40deg);
+    border-radius: 40% 60% 70% 30% / 45% 35% 65% 55%;
+    opacity: 0.9;
+  }
+  50% {
+    top: calc(100% - 125px);
+    left: calc(100% - 125px);
+    transform: scale(1.3) rotate(180deg);
+    border-radius: 65% 35% 45% 55% / 55% 45% 55% 45%;
+    opacity: 0.98;
+  }
+  85% {
+    top: -125px;
+    left: -125px;
+    transform: scale(1.1) rotate(320deg);
+    border-radius: 55% 45% 65% 35% / 45% 55% 45% 55%;
+    opacity: 0.88;
+  }
+  100% {
+    top: -125px;
+    left: -125px;
+    transform: scale(0.5) rotate(360deg);
+    border-radius: 50% 50% 50% 50%;
+    opacity: 0;
+  }
+}
+
+/* Elegant swinging/ringing animation for notification icons */
+@keyframes gm-bell-ring {
+  0% { transform: rotate(0); }
+  6% { transform: rotate(18deg); }
+  12% { transform: rotate(-18deg); }
+  18% { transform: rotate(14deg); }
+  24% { transform: rotate(-14deg); }
+  30% { transform: rotate(10deg); }
+  36% { transform: rotate(-10deg); }
+  42% { transform: rotate(6deg); }
+  48% { transform: rotate(-6deg); }
+  54% { transform: rotate(0); }
+  100% { transform: rotate(0); }
+}
+
+.animate-bell-ring {
+  animation: gm-bell-ring 2.2s infinite ease-in-out;
+  transform-origin: top center;
+}
+
+/* Hide default native icons for time fields to avoid duplicate clock indicators */
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-inner-spin-button,
+input[type="time"]::-webkit-clear-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  background: transparent !important;
+}
+
+
