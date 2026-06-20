@@ -362,8 +362,41 @@ button{ font-family:inherit; }
 }
 .gm-sidebar.collapsed .gm-nav a span{ display:none; }
 .gm-sidebar.collapsed .gm-nav a{ justify-content:center; padding:11px; }
+.gm-nav a.active::after {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3.5px;
+  height: 16px;
+  background: var(--gm-primary);
+  border-radius: 99px;
+  box-shadow: 0 0 8px var(--gm-primary), 0 0 14px rgba(255, 123, 0, 0.45);
+  z-index: 10;
+}
+.gm-sidebar.collapsed .gm-nav a.active::after {
+  left: 3.5px;
+  height: 14px;
+}
 
 .gm-sidebar-footer{ margin-top:auto; display:grid; gap:10px; }
+
+/* Custom subtle micro animations for menu arrows */
+@keyframes gm-arrow-bounce-right {
+  0%, 100% { transform: translateX(0); opacity: 0.85; }
+  50% { transform: translateX(2.5px); opacity: 1; }
+}
+@keyframes gm-arrow-bounce-left {
+  0%, 100% { transform: translateX(0); opacity: 0.85; }
+  50% { transform: translateX(-2.5px); opacity: 1; }
+}
+.animate-arrow-right {
+  animation: gm-arrow-bounce-right 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.animate-arrow-left {
+  animation: gm-arrow-bounce-left 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
 
 /* =========================================================
    GRID

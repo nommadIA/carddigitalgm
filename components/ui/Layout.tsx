@@ -549,9 +549,23 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       </div>
 
       {/* DESKTOP SIDEBAR */}
-      <aside className={`gm-sidebar ${collapsed ? "collapsed" : ""} hidden md:flex`}>
+      <aside className={`gm-sidebar ${collapsed ? "collapsed" : ""} hidden md:flex !relative`}>
+        {/* Overlapping vertical border collapse/expand Toggle Button - Perfectly sized, Positioned precisely, with a thicker style-guide Orange border */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute top-1/2 -translate-y-1/2 -right-[10.5px] w-[21px] h-[21px] rounded-full bg-[#0b0e14] border-[2.5px] border-[#ff7a00]/60 hover:border-[#ff7a00] flex items-center justify-center text-[#ff7a00] transition-all z-[100] shadow-[0_2px_12px_rgba(255,122,0,0.25)] hover:shadow-[0_2px_16px_rgba(255,122,0,0.45)] cursor-pointer"
+          type="button"
+          aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+        >
+          {collapsed ? (
+            <ChevronRight size={10} className="animate-arrow-right" />
+          ) : (
+            <ChevronLeft size={10} className="animate-arrow-left" />
+          )}
+        </button>
+
         {!collapsed ? (
-          <div className="flex items-center gap-3 px-2 py-1 mb-2">
+          <div className="flex items-center gap-3 px-2 py-1 mb-4">
              <div className="relative flex items-center justify-center shrink-0">
                 <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
                   <img 
@@ -566,7 +580,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </div>
           </div>
         ) : (
-          <div className="flex justify-center mt-2 mb-4">
+          <div className="flex justify-center mt-2 mb-6">
             <div className="relative flex items-center justify-center shrink-0">
                 <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
                   <img 
@@ -578,53 +592,6 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </div>
           </div>
         )}
-
-        {!collapsed && (
-          <div className="px-1 py-1 flex flex-col gap-3">
-             <div className="flex items-center justify-between gap-2 px-1">
-                <div className="font-extrabold tracking-tight text-sm">Menu</div>
-                <button
-                    className="p-1 hover:bg-white/10 rounded-md transition-all text-[var(--gm-primary)] hover:text-white/80 animate-pulse hover:animate-none"
-                    type="button"
-                    onClick={() => setCollapsed(true)}
-                    aria-label="Recolher sidebar"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-            </div>
-
-            <div className="relative hidden md:block">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input 
-                className="gm-input h-9 text-sm !pl-9"
-                placeholder="Buscar menu..."
-                value={menuSearch}
-                onChange={e => setMenuSearch(e.target.value)}
-                />
-                {menuSearch && (
-                <button 
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-                    onClick={() => setMenuSearch("")}
-                >
-                    <X size={12} />
-                </button>
-                )}
-            </div>
-          </div>
-        )}
-
-        {collapsed && (
-            <div className="flex justify-center mb-4">
-              <button
-                className="p-2 border border-white/10 hover:bg-[var(--gm-primary)]/10 rounded-xl transition-all text-slate-400 hover:text-[var(--gm-primary)] shadow-sm shadow-black/50 animate-pulse hover:animate-none"
-                type="button"
-                onClick={() => setCollapsed(false)}
-                aria-label="Expandir sidebar"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          )}
 
         <nav className="gm-nav">
           {filteredNav.map(({ to, label, icon: Icon }) => (
@@ -640,69 +607,80 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="gm-sidebar-footer w-full flex flex-col justify-center pb-4 items-center gap-2">
+        <div className="gm-sidebar-footer w-full flex flex-col pb-4 gap-2 mt-auto">
           {collapsed ? (
-            <div className="flex flex-col gap-2 items-center">
-              <button
-                type="button"
-                onClick={handleBellClick}
-                className="p-2 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)]/10 rounded-xl transition-all text-[var(--gm-primary)] shadow-sm shadow-black/50 w-10 h-10 flex justify-center items-center relative group"
+            <div className="gm-nav w-full">
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleBellClick();
+                }}
+                className="active"
                 title="Notificações e Atualizações"
               >
-                <Bell size={18} className={unreadCount > 0 ? "animate-swing" : ""} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full border border-black flex items-center justify-center animate-pulse">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
+                <div className="relative shrink-0 flex items-center justify-center">
+                  <Bell size={18} className={unreadCount > 0 ? "animate-swing" : ""} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black flex items-center justify-center animate-pulse" />
+                  )}
+                </div>
+              </a>
 
-              <button
-                className="p-2 border border-white/10 hover:bg-red-500/10 rounded-xl transition-all text-slate-400 hover:text-red-400 shadow-sm shadow-black/50 w-10 flex justify-center items-center group overflow-hidden"
-                type="button" 
-                onClick={signOut} 
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  signOut();
+                }}
+                className="active"
                 title="Sair"
                 aria-label="Sair"
               >
-                <LogOut size={18} className="transition-transform group-hover:scale-110" />
-              </button>
+                <LogOut size={18} className="transition-transform hover:scale-110" />
+              </a>
             </div>
           ) : (
-            <div className="w-full flex-col flex items-center px-4 gap-2">
-
-              <button
-                type="button"
-                onClick={handleBellClick}
-                className="w-full p-2.5 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/25 hover:bg-[var(--gm-primary)]/20 rounded-xl transition-all text-slate-200 shadow-sm flex items-center justify-start gap-2.5 group relative"
+            <div className="gm-nav w-full">
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleBellClick();
+                }}
+                className="active text-left"
                 title="Notificações e Atualizações"
               >
-                <div className="relative shrink-0">
-                  <Bell size={16} className={`text-[var(--gm-primary)] ${unreadCount > 0 ? "animate-swing" : ""}`} />
+                <div className="relative shrink-0 flex items-center">
+                  <Bell size={18} className={unreadCount > 0 ? "animate-swing" : ""} />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black animate-pulse" />
                   )}
                 </div>
-                <span className="font-bold text-sm text-[var(--gm-primary)] flex-1 text-left">Atualizações</span>
+                <span className="text-sm flex-1 text-left">Atualizações</span>
                 {unreadCount > 0 ? (
-                  <span className="shrink-0 px-1.5 py-0.5 text-[8.5px] font-black uppercase bg-red-500 text-white rounded-md animate-pulse">
+                  <span className="shrink-0 px-2 py-0.5 text-[9px] font-black uppercase bg-red-500 text-white rounded-md z-10">
                     {unreadCount} Novas
                   </span>
                 ) : (
-                  <span className="shrink-0 px-1.5 py-0.5 text-[8px] font-extrabold uppercase bg-neutral-800 text-zinc-400 rounded-md">
+                  <span className="shrink-0 px-2 py-0.5 text-[8.5px] font-extrabold uppercase bg-neutral-800 text-zinc-400 rounded-md z-10">
                     Em dia
                   </span>
                 )}
-              </button>
+              </a>
 
-              <button 
-                className="w-full p-2.5 border border-white/10 hover:bg-red-500/10 rounded-xl transition-all text-slate-400 hover:text-red-400 shadow-sm shadow-black/50 flex justify-center items-center gap-2 group overflow-hidden"
-                type="button" 
-                onClick={signOut} 
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  signOut();
+                }}
+                className="active text-left"
                 title="Sair"
               >
-                <LogOut size={16} className="transition-transform group-hover:scale-110" />
-                <span className="font-medium text-sm">Sair</span>
-              </button>
+                <LogOut size={18} className="transition-transform hover:scale-110" />
+                <span className="text-sm text-left">Sair</span>
+              </a>
               <div className="mt-4 text-[11px] text-slate-500 text-center opacity-60 pointer-events-none">
                 <i>Desenvolvido por</i> <span className="font-bold">CardDigital</span> <span className="font-bold text-[var(--gm-primary)]">GM</span>
               </div>
