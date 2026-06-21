@@ -687,7 +687,7 @@ const Market = () => {
                                                                e.stopPropagation();
                                                                handleShareList(list);
                                                            }}
-                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
+                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
                                                            title="Compartilhar esta compra"
                                                        >
                                                            <Share2 size={14} />

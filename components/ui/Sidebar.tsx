@@ -26,6 +26,7 @@ const items = [
   { to: "/expenses", label: "Despesas", icon: Receipt },
   { to: "/market", label: "Mercado", icon: ShoppingCart },
   { to: "/notes", label: "Notas", icon: StickyNote },
+  { to: "/minha-bio", label: "Minha Bio", icon: Sparkles },
   { to: "/financial", label: "Financeiro", icon: BarChart3 },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];

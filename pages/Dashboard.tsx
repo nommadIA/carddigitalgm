@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Sparkles,
 } from "lucide-react";
 
 const containerVariants = {
@@ -566,15 +567,31 @@ const Dashboard = () => {
         </motion.div>
 
         {/* Notas */}
-        <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "col-span-2" : ""}>
+        <motion.div variants={itemVariants}>
           <Link to="/notes" className="group block h-full">
+            <Card className="h-full aspect-square md:aspect-auto gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                <FileText size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
+              </div>
+              <div className="text-center mt-1 md:mt-0">
+                <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300 px-1">
+                  Notas
+                </h3>
+              </div>
+            </Card>
+          </Link>
+        </motion.div>
+
+        {/* Minha Bio */}
+        <motion.div variants={itemVariants} className={viewMode === "smartphone" ? "col-span-2" : ""}>
+          <Link to="/minha-bio" className="group block h-full">
             <Card className="h-full gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 py-4 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
               <div className="w-[44px] h-[44px] md:w-[60px] md:h-[60px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
-                <FileText size={viewMode === "smartphone" ? 26 : 32} strokeWidth={1.5} />
+                <Sparkles size={viewMode === "smartphone" ? 26 : 32} strokeWidth={1.5} />
               </div>
               <div className="text-center mt-1 md:mt-0">
                 <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300 mt-[-6px] md:mt-0 uppercase tracking-wider px-1">
-                  Notas
+                  Minha Bio
                 </h3>
               </div>
             </Card>

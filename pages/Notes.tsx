@@ -2337,7 +2337,7 @@ export default function Notes() {
                     </div>
 
                     <label
-                      className={`bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/25 rounded-lg text-sm text-blue-300 px-4 py-2.5 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 ${uploadingLayout ? "opacity-50 pointer-events-none" : ""}`}
+                      className={`bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/25 rounded-lg text-sm text-orange-300 px-4 py-2.5 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 ${uploadingLayout ? "opacity-50 pointer-events-none" : ""}`}
                     >
                       {uploadingLayout ? (
                         <Loader2 size={16} className="animate-spin" />

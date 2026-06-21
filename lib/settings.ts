@@ -55,6 +55,9 @@ export type AppSettings = {
   budget_approved_reminder_enabled?: boolean | null;
   budget_approved_reminder_times?: string[] | null;
 
+  // Bio Info
+  bio_config?: Record<string, any> | null;
+
   created_at?: string;
   updated_at?: string;
 };
@@ -100,6 +103,7 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   button_style: "solid",
   budget_approved_reminder_enabled: false,
   budget_approved_reminder_times: DEFAULT_REMINDER_TIMES,
+  bio_config: {},
 
   // compat antigos (se algum código ainda usar)
   primary_color: "#ff7a00",

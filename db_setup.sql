@@ -187,6 +187,7 @@ create table if not exists public.app_settings (
   mobile_app_background_blur numeric default 10,
   budget_approved_reminder_enabled boolean default false,
   budget_approved_reminder_times jsonb default '[]',
+  bio_config jsonb default '{}',
   app_scale numeric default 1.0,
   mobile_scale numeric default 1.5,
   created_at timestamptz default now(),
@@ -213,6 +214,8 @@ create policy "settings_update" on public.app_settings
     (tenant_id is not null and public.is_tenant_member(tenant_id)) or
     (owner = auth.uid())
   );
+
+alter table public.app_settings add column if not exists bio_config jsonb default '{}';
 
 -- Clients
 alter table public.clients 

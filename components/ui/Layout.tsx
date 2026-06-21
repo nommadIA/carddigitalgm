@@ -32,7 +32,8 @@ import {
   MessageSquare,
   Clock,
   Check,
-  CheckCircle2
+  CheckCircle2,
+  Smartphone
 } from "lucide-react";
 import { playNotificationSound } from "../../lib/audio";
 import { useAuth } from "../../store/AuthContext";
@@ -217,6 +218,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       { to: "/market", label: "Mercado", icon: ShoppingCart },
       { to: "/notes", label: "Notas", icon: StickyNote },
       { to: "/financial", label: "Financeiro", icon: Wallet },
+      { to: "/minha-bio", label: "Minha Bio", icon: Smartphone },
       { to: "/configuracoes", label: "Configurações", icon: Settings }
     ],
     []
@@ -892,7 +894,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                           <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
                             noti.read
                               ? "bg-zinc-800/40 border-zinc-700/40 text-zinc-500"
-                              : "bg-blue-500/10 border-blue-500/25 text-blue-400"
+                              : "bg-orange-500/10 border-orange-500/25 text-orange-400"
                           }`}>
                             <Clock size={14} />
                           </div>

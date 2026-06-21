@@ -9,7 +9,9 @@ import {
   ShoppingCart,
   BarChart3,
   Settings,
-  StickyNote
+  StickyNote,
+  Smartphone,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -21,6 +23,7 @@ const items = [
   { to: "/market", label: "Mkt", icon: ShoppingCart },
   { to: "/notes", label: "Notas", icon: StickyNote },
   { to: "/financial", label: "Fin.", icon: BarChart3 },
+  { to: "/minha-bio", label: "Bio", icon: Smartphone },
   { to: "/configuracoes", label: "Conf.", icon: Settings },
 ];
 

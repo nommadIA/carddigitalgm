@@ -18,6 +18,8 @@ const Financial = lazy(() => import('./pages/Financial'));
 const Expenses = lazy(() => import('./pages/Expenses'));
 const Configuracoes = lazy(() => import('./pages/Configuracoes'));
 const Notes = lazy(() => import('./pages/Notes'));
+const Bio = lazy(() => import('./pages/Bio'));
+const PublicBio = lazy(() => import('./pages/PublicBio'));
 const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
 const PixCopy = lazy(() => import('./pages/PixCopy'));
@@ -66,6 +68,7 @@ const PrivateRoutes = () => {
                 <Route path="/market" element={<Market />} />
                 <Route path="/notes" element={<Notes />} />
                 <Route path="/financial" element={<Financial />} />
+                <Route path="/minha-bio" element={<Bio />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
@@ -102,6 +105,7 @@ const AppRoutes = () => {
             <Route path="/pix" element={<PixCopy />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/bio/:tenantId" element={<PublicBio />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/*" element={<PrivateRoutes />} />
