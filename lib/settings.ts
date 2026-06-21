@@ -314,7 +314,10 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
       });
 
       if (errTenant) {
-        console.warn("fetchSettings warn (tenant):", errTenant?.message || errTenant);
+        const errorMsg = errTenant?.message || String(errTenant);
+        if (!errorMsg.includes("Failed to fetch")) {
+          console.warn("fetchSettings warn (tenant):", errorMsg);
+        }
         const local = readSettingsLocal();
         if (local) return local;
       } else if (byTenant) {
@@ -335,7 +338,10 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
         });
 
         if (errOwner) {
-          console.warn("fetchSettings warn (owner):", errOwner?.message || errOwner);
+          const errorMsg = errOwner?.message || String(errOwner);
+          if (!errorMsg.includes("Failed to fetch")) {
+            console.warn("fetchSettings warn (owner):", errorMsg);
+          }
           const local = readSettingsLocal();
           if (local) return local;
           return DEFAULT_SETTINGS;
@@ -399,7 +405,10 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
     });
 
     if (error) {
-      console.warn("fetchSettings warn:", error?.message || error);
+      const errorMsg = error?.message || String(error);
+      if (!errorMsg.includes("Failed to fetch")) {
+        console.warn("fetchSettings warn:", errorMsg);
+      }
       const local = readSettingsLocal();
       if (local) return local;
       return DEFAULT_SETTINGS;
@@ -411,7 +420,10 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
     } catch {}
     return merged;
   } catch (e: any) {
-    console.warn("fetchSettings warn:", e?.message || e);
+    const errorMsg = e?.message || String(e);
+    if (!errorMsg.includes("Failed to fetch")) {
+      console.warn("fetchSettings warn:", errorMsg);
+    }
     const local = readSettingsLocal();
     if (local) return local;
     return DEFAULT_SETTINGS; // ✅ nunca trava

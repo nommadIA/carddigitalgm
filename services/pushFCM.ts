@@ -180,7 +180,12 @@ export async function forceSavePushToken(tenantId: string, userId: string) {
 
     return { ok: true };
   } catch (err: any) {
-    if (err?.message?.includes("Failed to fetch") || err?.code === "messaging/token-subscribe-failed") {
+    const errorMsg = err?.message || String(err);
+    if (errorMsg.includes("API key expired")) {
+      console.warn("Push notifications setup disabled: API key expired.");
+      return { ok: false, reason: "api_key_expired" };
+    }
+    if (errorMsg.includes("Failed to fetch") || err?.code === "messaging/token-subscribe-failed") {
       console.warn("Push notifications blocked by browser or adblocker (Failed to fetch). This is normal if you have tracking protection enabled.");
       return { ok: false, reason: "network_or_adblocker" };
     }

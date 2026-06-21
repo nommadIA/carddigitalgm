@@ -184,13 +184,13 @@ const Dashboard = () => {
       const [settingsRes, budgetsRes, clientsRes] = await Promise.all([
         fetchSettingsSupabase(tenantId).catch(() => null),
         supabase.from("budgets").select("*").eq("tenant_id", tenantId).is("deleted_at", null),
-        supabase.from("clients").select("*").eq("tenant_id", tenantId).is("deleted_at", null)
+        supabase.from("clients").select("id", { count: 'exact', head: true }).eq("tenant_id", tenantId).is("deleted_at", null)
       ]);
 
       if (settingsRes) setBranding(settingsRes);
       
       const budgets = budgetsRes.data || [];
-      const clients = clientsRes.data || [];
+      const clientsCount = clientsRes.count || 0;
 
       if (budgets) {
         syncAlarmsWithBudgets(budgets);
@@ -228,7 +228,7 @@ const Dashboard = () => {
 
         setStats({
           faturamentoMensal,
-          clientesTotal: clients?.length || 0,
+          clientesTotal: clientsCount || 0,
           projetosAndamentoMensal,
           fila: budgets.filter((b: any) => normalizeStatus(b.status) === "AGUARDANDO").length,
           fazendo: budgets.filter((b: any) => {

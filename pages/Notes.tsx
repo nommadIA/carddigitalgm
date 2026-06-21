@@ -1330,22 +1330,6 @@ export default function Notes() {
           </button>
         </div>
 
-        {/* Main Tab Separator */}
-        <div className="flex items-center gap-2 md:gap-4 bg-white/5 p-1 md:p-2 rounded-2xl w-full md:w-fit self-center md:self-start">
-          <button
-            onClick={() => setMainTab("NOTE")}
-            className={`px-4 py-2 md:px-6 md:py-2.5 rounded-xl font-bold flex-1 md:flex-none transition-all text-sm md:text-base ${mainTab === "NOTE" ? "bg-[var(--gm-primary)] text-white shadow-lg" : "text-white/60 hover:text-white hover:bg-white/5"}`}
-          >
-            NOTAS
-          </button>
-          <button
-            onClick={() => setMainTab("PRODUCTION")}
-            className={`px-4 py-2 md:px-6 md:py-2.5 rounded-xl font-bold flex-1 md:flex-none transition-all text-sm md:text-base ${mainTab === "PRODUCTION" ? "bg-[var(--gm-primary)] text-white shadow-lg" : "text-white/60 hover:text-white hover:bg-white/5"}`}
-          >
-            NOTAS DE PRODUÇÃO
-          </button>
-        </div>
-
         {/* Workflow Tabs */}
         <div className="flex items-center gap-2 border-b border-white/5 pb-2 overflow-x-auto scrollbar-hide">
           {mainTab === "NOTE"

@@ -269,6 +269,8 @@ button{ font-family:inherit; }
   min-width:var(--gm-sidebar-w-collapsed);
   /* Animação suave apenas ao encolher */
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: width, min-width, padding;
+  transform: translateZ(0);
 }
 
 .gm-main{ flex:1; width:100%; padding: 28px; }
@@ -1827,6 +1829,15 @@ input[type="time"]::-webkit-clear-button {
   display: none !important;
   -webkit-appearance: none !important;
   background: transparent !important;
+}
+
+@layer utilities {
+  .gpu-accelerate {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    will-change: transform, opacity;
+  }
 }
 
 
