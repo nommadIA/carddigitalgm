@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight } from "lucide-react";
+import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 
 export const formatExternalUrl = (url: string | undefined): string | undefined => {
   if (!url) return undefined;
@@ -38,6 +38,7 @@ export const getPlatformIcon = (platform: string) => {
 
 export default function BioRenderer({ data, asPreview = false }: { data: any, asPreview?: boolean }) {
   const [copiedPix, setCopiedPix] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
 
   const bio = data?.bio_config || {};
   const logo = data?.company_logo_url;
@@ -45,6 +46,87 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
   const desc = bio.description || "";
   const brandColor = bio.color || data?.brand_primary || "#ff7a00";
   const theme = bio.theme || "dark";
+
+  const hexToRgb = (hex: string) => {
+    let cleanHex = hex.replace("#", "");
+    if (cleanHex.length === 3) {
+      cleanHex = cleanHex.split("").map(c => c + c).join("");
+    }
+    const r = parseInt(cleanHex.substring(0, 2), 16);
+    const g = parseInt(cleanHex.substring(2, 4), 16);
+    const b = parseInt(cleanHex.substring(4, 6), 16);
+    return isNaN(r) || isNaN(g) || isNaN(b) ? "255, 123, 0" : `${r}, ${g}, ${b}`;
+  };
+  const pulseColorRgb = hexToRgb(brandColor);
+
+  useEffect(() => {
+    let activeTouchElement: HTMLElement | null = null;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const element = document.elementFromPoint(touch.clientX, touch.clientY);
+      const button = element?.closest(".bio-button") as HTMLElement | null;
+      
+      if (button) {
+        button.style.transform = "scale(1.045)";
+        activeTouchElement = button;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const element = document.elementFromPoint(touch.clientX, touch.clientY);
+      const button = element?.closest(".bio-button") as HTMLElement | null;
+
+      if (button !== activeTouchElement) {
+        if (activeTouchElement) {
+          activeTouchElement.style.transform = "";
+        }
+        if (button) {
+          button.style.transform = "scale(1.045)";
+        }
+        activeTouchElement = button;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (activeTouchElement) {
+        activeTouchElement.style.transform = "";
+        activeTouchElement = null;
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
+    };
+  }, []);
+
+  const handleShareBio = () => {
+    const url = window.location.href;
+    if (navigator.share && !asPreview) {
+      navigator.share({
+        title: companyName,
+        text: desc,
+        url: url
+      }).catch((err) => {
+        console.log("Error sharing", err);
+      });
+    } else {
+      navigator.clipboard.writeText(url);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2000);
+    }
+  };
 
   const themeClasses = {
     dark: {
@@ -110,7 +192,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
         href={asPreview ? undefined : formattedHref}
         target={href ? "_blank" : undefined}
         rel={href ? "noreferrer" : undefined}
-        className={`w-full flex items-center p-3 sm:p-4 transition-all rounded-full border group select-none cursor-pointer ${t.cardBg} ${t.cardBgHover} ${t.cardBorder} ${t.cardBorderHover}`}
+        className={`w-full flex items-center p-3 sm:p-4 rounded-full border group select-none cursor-pointer bio-button ${t.cardBg} ${t.cardBgHover} ${t.cardBorder} ${t.cardBorderHover}`}
         onClick={(e: any) => { if (asPreview && href) e.preventDefault(); }}
       >
         <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${t.iconBg}`} style={{ color: brandColor, backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}>
@@ -155,7 +237,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
            scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
       }
-    }, 3000);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [bio.catalog_items]);
@@ -195,9 +277,24 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
               </div>
             )}
           </div>
-          <div className="px-2">
+          <div className="px-2 space-y-3">
             <h1 className={`text-xl sm:text-2xl font-bold tracking-tight ${t.textTitle}`}>{companyName}</h1>
             {desc && <p className={`mt-2 text-sm max-w-xs mx-auto leading-relaxed ${t.textDesc}`}>{desc}</p>}
+            
+            {/* Share Bio Button */}
+            <div className="pt-1 flex justify-center">
+              <button 
+                onClick={handleShareBio}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border shadow-sm cursor-pointer bio-button ${t.cardBg} ${t.cardBgHover} ${t.cardBorder}`}
+                style={{ 
+                  color: brandColor, 
+                  borderColor: `${brandColor}40`
+                }}
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                {copiedShare ? "Link Copiado!" : "Compartilhar Bio"}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -209,7 +306,6 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
           <ContactCard icon={Mail} title="E-mail" value={bio.email} href={bio.email ? `mailto:${bio.email}` : undefined} />
           <ContactCard icon={Instagram} title="Instagram" value={bio.instagram} href={bio.instagram?.includes('http') ? bio.instagram : `https://instagram.com/${bio.instagram?.replace('@','')}`} />
           <ContactCard icon={Facebook} title="Facebook" value={bio.facebook} href={bio.facebook?.includes('http') ? bio.facebook : `https://facebook.com/${bio.facebook}`} />
-          <ContactCard icon={MapPin} title="Endereço" value={bio.address} href={bio.address_url ? bio.address_url : (bio.address ? `https://maps.google.com/?q=${encodeURIComponent(bio.address)}` : undefined)} />
           <ContactCard icon={Box} title="Portfólio" value={bio.portfolio_url ? 'Acessar Portfólio' : ''} href={bio.portfolio_url} />
           <ContactCard icon={FileText} title="Catálogo" value={bio.catalog_url ? 'Ver Catálogo' : ''} href={bio.catalog_url} />
           <ContactCard icon={Globe} title="Website" value={bio.website ? 'Visitar Site' : ''} href={bio.website} />
@@ -227,6 +323,33 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
               />
             );
           })}
+
+          {/* Endereço sempre será o ultimo botão, abaixo do botão, adicione uma miniatura no formato quadrado com as bordas arredodadas do mapa "endereço" */}
+          {bio.address && (
+            <div className="space-y-4 pt-1">
+              <ContactCard 
+                icon={MapPin} 
+                title="Endereço" 
+                value={bio.address} 
+                href={bio.address_url ? bio.address_url : `https://maps.google.com/?q=${encodeURIComponent(bio.address)}`} 
+              />
+              
+              <div 
+                className="w-full aspect-square rounded-[2rem] overflow-hidden border shadow-inner relative z-0" 
+                style={{ 
+                  borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' 
+                }}
+              >
+                <iframe
+                  title="Localização Comercial"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(bio.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  className="w-full h-full border-0 rounded-[2rem]"
+                  allowFullScreen={false}
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Catalog Section */}
@@ -288,10 +411,10 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
         {pixKey && (
           <div className={`p-5 sm:p-6 rounded-[2rem] text-center space-y-4 shadow-xl mt-4 relative overflow-hidden group border ${t.cardBg} ${t.cardBorder}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}10` : undefined }}>
             <div className="absolute top-0 left-0 w-full h-[4px] opacity-80 group-hover:opacity-100 transition-opacity" style={{ background: brandColor }} />
-            <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-1 ${t.iconBg}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}>
+            <div className="flex items-center justify-center mb-1">
               <div style={{
-                width: '44px',
-                height: '44px',
+                width: '128px',
+                height: '48px',
                 backgroundColor: brandColor,
                 maskImage: 'url(https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg)',
                 WebkitMaskImage: 'url(https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg)',
@@ -310,8 +433,12 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
             </div>
             <button 
               onClick={handleCopyPix}
-              className={`w-full flex items-center justify-center p-3 sm:p-4 rounded-xl transition-all font-bold border hover:scale-[1.02] ${t.iconBg}`}
-              style={{ color: brandColor, borderColor: `${brandColor}40`, backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}
+              className={`w-full flex items-center justify-center p-3 sm:p-4 rounded-xl font-bold border bio-button ${t.iconBg}`}
+              style={{ 
+                color: brandColor, 
+                borderColor: `${brandColor}40`, 
+                backgroundColor: theme === 'dark' ? `${brandColor}15` : undefined
+              }}
             >
               {copiedPix ? <Check className="w-5 h-5 mr-2" /> : <Copy className="w-5 h-5 mr-2" />}
               {copiedPix ? "Chave copiada!" : "Copiar Chave"}

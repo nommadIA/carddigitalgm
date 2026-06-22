@@ -136,6 +136,24 @@ button{ font-family:inherit; }
   animation: gmHeartbeat 2s ease-in-out infinite;
 }
 
+/* Custom elegant bio button hover scale */
+.bio-button {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .bio-button:hover {
+    transform: scale(1.04) !important;
+  }
+}
+
+.bio-button:active {
+  transform: scale(0.97) !important;
+  transition: transform 0.08s ease !important;
+}
+
 /* Neon Verified Animation */
 @keyframes neonVerified {
   0% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 2px var(--gm-accent)); }

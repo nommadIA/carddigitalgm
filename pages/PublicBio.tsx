@@ -46,8 +46,8 @@ export default function PublicBio() {
             fetchedData = data;
           }
         } else {
-          // Look up by slug: carddigitalgm-[name]
-          const cleanParam = tenantId.toLowerCase().replace(/^carddigitalgm-/, "");
+          // Look up by slug: carddigitalgm-[name], resolving in a hyphen-insensitive way
+          const cleanParam = tenantId.toLowerCase().replace(/^carddigitalgm-/, "").replace(/-/g, "");
 
           const { data: allSettings, error } = await supabase
             .from("app_settings")
@@ -73,9 +73,9 @@ export default function PublicBio() {
             });
 
             fetchedData = sortedSettings.find(s => {
-              const compSlug = sanitizeSlug(s.company_name);
-              const bioTitleSlug = s.bio_config?.title ? sanitizeSlug(s.bio_config.title) : "";
-              const resolvedTitleSlug = sanitizeSlug(s.bio_config?.title || s.company_name || "");
+              const compSlug = sanitizeSlug(s.company_name).replace(/-/g, "");
+              const bioTitleSlug = s.bio_config?.title ? sanitizeSlug(s.bio_config.title).replace(/-/g, "") : "";
+              const resolvedTitleSlug = sanitizeSlug(s.bio_config?.title || s.company_name || "").replace(/-/g, "");
               return compSlug === cleanParam || bioTitleSlug === cleanParam || resolvedTitleSlug === cleanParam;
             });
           }
@@ -125,26 +125,32 @@ export default function PublicBio() {
             </p>
           </div>
 
-          {/* Help instructions for the administrator */}
-          <div className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-4 text-left space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-orange-400">Instruções do Administrador:</h4>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              O link público requer que as políticas de acesso do Supabase (RLS) do seu projeto permitam leitura pública (SELECT) para a tabela <code className="bg-black/40 text-orange-300 px-1 py-0.5 rounded">app_settings</code>. 
-            </p>
-            <div className="text-xs text-slate-400 space-y-1">
-              <span className="block font-medium">Como resolver no Painel do Supabase:</span>
-              <ol className="list-decimal pl-4 space-y-1 mt-1 text-slate-300">
-                <li>Vá no menu <strong className="text-white">SQL Editor</strong> do seu Supabase.</li>
-                <li>Cole e execute o trecho abaixo para liberar o acesso:</li>
-              </ol>
-            </div>
-            <pre className="bg-black/60 p-3 rounded-lg text-[10px] text-green-400 overflow-x-auto font-mono select-all">
-{`drop policy if exists "settings_select" on public.app_settings;
+          {/* Help instructions for the administrator (Expandable) */}
+          <details className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-4 text-left cursor-pointer group transition-all duration-300 overflow-hidden">
+            <summary className="text-xs font-bold uppercase tracking-wider text-orange-400 select-none outline-none list-none flex items-center justify-between">
+              <span>Suporte e Diagnóstico Técnico</span>
+              <span className="text-[10px] text-orange-500 group-open:rotate-180 transition-transform duration-200">▼</span>
+            </summary>
+            
+            <div className="mt-3 space-y-3 pt-3 border-t border-orange-500/10 cursor-default" onClick={(e) => e.stopPropagation()}>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                O link público requer que as políticas de acesso do Supabase (RLS) do seu projeto permitam leitura pública (SELECT) para a tabela <code className="bg-black/40 text-orange-300 px-1 py-0.5 rounded">app_settings</code>. 
+              </p>
+              <div className="text-xs text-slate-400 space-y-1">
+                <span className="block font-medium">Como resolver no Painel do Supabase:</span>
+                <ol className="list-decimal pl-4 space-y-1 mt-1 text-slate-300">
+                  <li>Vá no menu <strong className="text-white">SQL Editor</strong> do seu Supabase.</li>
+                  <li>Cole e execute o trecho abaixo para liberar o acesso:</li>
+                </ol>
+              </div>
+              <pre className="bg-black/60 p-3 rounded-lg text-[10px] text-green-400 overflow-x-auto font-mono select-all">
+drop policy if exists "settings_select" on public.app_settings;
 
 create policy "settings_select" on public.app_settings
-  for select using (true);`}
-            </pre>
-          </div>
+  for select using (true);
+              </pre>
+            </div>
+          </details>
 
           <div className="text-[10px] text-slate-500 font-mono">
             {errorDetails ? `Log do Sistema: ${errorDetails}` : `Link buscado: ${tenantId}`}

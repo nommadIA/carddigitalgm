@@ -253,6 +253,11 @@
   <body class="bg-app text-muted transition-colors duration-200">
     
     <div id="gm-splash">
+      <script>
+        if (window.location.href.indexOf('/bio') !== -1 || window.location.hash.indexOf('/bio') !== -1) {
+          document.getElementById('gm-splash').style.display = 'none';
+        }
+      </script>
       <div class="gm-card-splash">
         <div class="gm-logo-container">
           <div style="position: relative; display: flex; align-items: center; justify-content: center;">
@@ -288,6 +293,19 @@
       var isAnimationFinished = false;
       var splashEl = document.getElementById("gm-splash");
       var subEl = document.getElementById("gm-splash-sub");
+
+      var isBioRoute = window.location.href.indexOf('/bio') !== -1 || window.location.hash.indexOf('/bio') !== -1;
+
+      if (isBioRoute) {
+        if (splashEl) {
+          splashEl.style.display = 'none';
+          try {
+            if (splashEl.parentNode) splashEl.parentNode.removeChild(splashEl);
+          } catch (e) {}
+        }
+        isReactReady = true;
+        isAnimationFinished = true;
+      }
 
       // Generates the subtle AI dotted background grid using high-performance GPU canvas
       function createDottedGrid() {
@@ -381,7 +399,9 @@
 
       // Initialize dotted grid immediately for maximum visual impact as page loads
       try {
-        createDottedGrid();
+        if (!isBioRoute) {
+          createDottedGrid();
+        }
       } catch (e) {
         console.error("Dotted grid init failed", e);
       }
@@ -435,11 +455,14 @@
 
       // Inicia a animação de digitação
       setTimeout(function() {
-        type();
+        if (!isBioRoute) {
+          type();
+        }
       }, 300);
 
       window.__GM_APP_READY__ = function () {
         isReactReady = true;
+        isAnimationFinished = true;
         attemptHide();
       };
 
@@ -459,7 +482,7 @@
         isReactReady = true;
         isAnimationFinished = true;
         attemptHide();
-      }, 6500);
+      }, isBioRoute ? 0 : 6500);
     })();
   </script>
   <video id="gm-video-bg" autoPlay loop muted playsInline style="display: none;"></video>

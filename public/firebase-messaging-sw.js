@@ -3,10 +3,10 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-comp
 
 // Configuração idêntica à do app principal
 const firebaseConfig = {
-  apiKey: "AIzaSyAx0InWwYapH0LNfIL_D3s9sfQjmIRi-w",
-  authDomain: "easy-market-gm.firebaseapp.com",
-  projectId: "easy-market-gm",
-  storageBucket: "easy-market-gm.firebasestorage.app",
+  apiKey: "AIzaSyAx0InWwWYapHOlNfIL_D3s9sfQjmIRi-w",
+  authDomain: "gen-lang-client-0508823448.firebaseapp.com",
+  projectId: "gen-lang-client-0508823448",
+  storageBucket: "gen-lang-client-0508823448.firebasestorage.app",
   messagingSenderId: "594745417419",
   appId: "1:594745417419:web:08a669177a34794a57454e"
 };

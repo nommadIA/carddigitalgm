@@ -7,7 +7,6 @@ import { fetchSettingsSupabase, upsertSettingsSupabase, AppSettings } from "../l
 import { pushToast } from "../store/toast";
 import BioRenderer, { getPlatformIcon } from "../components/bio/BioRenderer";
 import { supabase } from "../lib/supabase";
-import imageCompression from "browser-image-compression";
 import { motion, AnimatePresence } from "motion/react";
 
 const formatBRL = (value: string): string => {
@@ -71,20 +70,85 @@ export default function Bio() {
     bg_image_url: "",
   });
 
+  const compressImageFidelity = (file: File, maxWidth = 1200, maxQuality = 0.82): Promise<Blob | File> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith("image/")) {
+        resolve(file);
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > maxWidth || height > maxWidth) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxWidth) / height);
+              height = maxWidth;
+            }
+          }
+          
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(file);
+            return;
+          }
+          
+          // Preenchar com fundo branco para garantir que transparências de PNGs fiquem bonitas em JPEG
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, width, height);
+          
+          // Desenhar a imagem no canvas com as novas dimensões
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Exportar para JPEG de alta performance e tamanho reduzido
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                resolve(file);
+              }
+            },
+            "image/jpeg",
+            maxQuality
+          );
+        };
+        
+        img.onerror = () => {
+          resolve(file);
+        };
+        
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = () => {
+        resolve(file);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const uploadImage = async (file: File): Promise<string> => {
     if (!tenantId) throw new Error("Sem tenant id");
-    const options = {
-      maxSizeMB: 0.5,
-      maxWidthOrHeight: 1024,
-      useWebWorker: true,
-    };
-    const compressed = await imageCompression(file, options);
     
-    const ext = file.name.split(".").pop();
+    // Comprime usando nossa rotina de alta fidelidade baseada em canvas
+    const compressed = await compressImageFidelity(file, 1200, 0.82);
+    
+    const ext = "jpg"; // Forçamos extensão JPG pois convertemos para JPEG de alta compressão
     const filename = `bio_image_${Date.now()}_${Math.random().toString(36).substring(2,8)}.${ext}`;
     const path = `${tenantId}/bio/${filename}`;
     
-    const { error } = await supabase.storage.from("tenant-assets").upload(path, compressed, { contentType: file.type });
+    const { error } = await supabase.storage.from("tenant-assets").upload(path, compressed, { contentType: "image/jpeg" });
     if (error) throw error;
     
     const { data } = supabase.storage.from("tenant-assets").getPublicUrl(path);
@@ -184,7 +248,10 @@ export default function Bio() {
   const getCustomSlug = () => {
     const title = bioConfig.title || settings?.company_name || "";
     const suffix = sanitizeSlug(title);
-    return suffix ? `carddigitalgm-${suffix}` : tenantId;
+    if (suffix === "gm-edificacao" || suffix === "carddigitalgm-gm-edificacao" || suffix === "gmedificacao") {
+      return "gmedificacao";
+    }
+    return suffix ? suffix : tenantId;
   };
 
   const handleCopyLink = () => {
