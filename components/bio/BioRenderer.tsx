@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight } from "lucide-react";
 
 export const getPlatformIcon = (platform: string) => {
   switch (platform?.toLowerCase()) {
@@ -120,6 +120,47 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
   const customLinks = bio.custom_links || [];
   const bgImg = bio.bg_image_url;
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!bio.catalog_items || bio.catalog_items.length <= 1) return;
+    
+    let isReversing = false;
+    let interval = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        const maxScroll = scrollWidth - clientWidth;
+        const scrollAmount = clientWidth * 0.8;
+        
+        if (!isReversing && scrollLeft >= maxScroll - 10) {
+           isReversing = true;
+        } else if (isReversing && scrollLeft <= 10) {
+           isReversing = false;
+        }
+
+        if (isReversing) {
+           scrollRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        } else {
+           scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [bio.catalog_items]);
+
+  const scrollLeftNav = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -scrollRef.current.clientWidth * 0.8, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRightNav = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: scrollRef.current.clientWidth * 0.8, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div 
       className={`w-full h-full relative ${t.bg} ${!asPreview ? 'min-h-screen py-10 px-4' : 'overflow-y-auto no-scrollbar py-6 px-4'} selection:bg-orange-500/30 font-sans`}
@@ -179,9 +220,26 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
 
         {/* Catalog Section */}
         {bio.catalog_items && bio.catalog_items.length > 0 && (
-          <div className="pt-4 space-y-3">
-            {bio.catalog_title && <h2 className={`text-lg font-bold px-2 ${t.textTitle}`}>{bio.catalog_title}</h2>}
-            <div className="grid grid-cols-2 gap-3">
+          <div className="pt-4 space-y-3 relative group/catalog">
+            <div className="flex items-center justify-between px-2">
+              {bio.catalog_title && <h2 className={`text-lg font-bold ${t.textTitle}`}>{bio.catalog_title}</h2>}
+            </div>
+            
+            <div className="relative">
+              {bio.catalog_items.length > 1 && (
+                <>
+                  <button onClick={(e) => { e.preventDefault(); scrollLeftNav(); }} className={`absolute -left-3 top-1/2 -translate-y-1/2 z-10 p-1.5 sm:p-2 rounded-full shadow-xl bg-black/40 backdrop-blur-md text-white hover:opacity-100 opacity-90 transition-opacity border border-white/20`} style={{ backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)', color: theme === 'dark' ? 'white' : 'black' }}>
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button onClick={(e) => { e.preventDefault(); scrollRightNav(); }} className={`absolute -right-3 top-1/2 -translate-y-1/2 z-10 p-1.5 sm:p-2 rounded-full shadow-xl bg-black/40 backdrop-blur-md text-white hover:opacity-100 opacity-90 transition-opacity border border-white/20`} style={{ backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)', color: theme === 'dark' ? 'white' : 'black' }}>
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+              <div 
+                ref={scrollRef}
+                className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-4 no-scrollbar items-stretch"
+              >
               {bio.catalog_items.map((item: any) => (
                 <a 
                   key={item.id}
@@ -189,7 +247,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                   target={item.url ? "_blank" : undefined}
                   rel={item.url ? "noreferrer" : undefined}
                   onClick={(e: any) => { if (asPreview && item.url) e.preventDefault(); }}
-                  className={`block overflow-hidden rounded-2xl border transition-all ${t.cardBg} ${t.cardBorder} ${item.url ? 'cursor-pointer hover:scale-[1.02]' : 'cursor-default'}`}
+                  className={`snap-center shrink-0 w-[80%] max-w-[260px] block overflow-hidden rounded-2xl border transition-all flex flex-col ${t.cardBg} ${t.cardBorder} ${item.url ? 'cursor-pointer hover:scale-[1.02]' : 'cursor-default'}`}
                 >
                   {item.image_url ? (
                     <div className={`w-full aspect-square ${t.iconBg}`}>
@@ -200,13 +258,14 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                       <ShoppingCart className="w-8 h-8 opacity-20 text-slate-400" />
                     </div>
                   )}
-                  <div className="p-3">
+                  <div className="p-3 flex flex-col flex-1">
                     <div className={`font-semibold text-sm truncate ${t.cardTitle}`}>{item.name || 'Produto sem nome'}</div>
                     {item.description && <div className={`text-xs mt-1 line-clamp-2 ${t.cardSub}`}>{item.description}</div>}
-                    {item.price && <div className="text-[13px] font-bold mt-1.5" style={{ color: brandColor }}>{item.price}</div>}
+                    <div className="mt-auto pt-1.5 font-bold text-[13px]" style={{ color: brandColor }}>{item.price}</div>
                   </div>
                 </a>
               ))}
+              </div>
             </div>
           </div>
         )}
@@ -215,8 +274,20 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
         {pixKey && (
           <div className={`p-5 sm:p-6 rounded-[2rem] text-center space-y-4 shadow-xl mt-4 relative overflow-hidden group border ${t.cardBg} ${t.cardBorder}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}10` : undefined }}>
             <div className="absolute top-0 left-0 w-full h-[4px] opacity-80 group-hover:opacity-100 transition-opacity" style={{ background: brandColor }} />
-            <div className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full mb-1 ${t.iconBg}`} style={{ color: brandColor, backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}>
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M16.14 2h-8.28a2 2 0 0 0-1.42.59l-5.85 5.85a2 2 0 0 0-.59 1.42v8.28a2 2 0 0 0 .59 1.42l5.85 5.85a2 2 0 0 0 1.42.59h8.28a2 2 0 0 0 1.42-.59l5.85-5.85a2 2 0 0 0 .59-1.42v-8.28a2 2 0 0 0-.59-1.42l-5.85-5.85A2 2 0 0 0 16.14 2zm-8.28 2H16.14l5.85 5.85v8.28l-5.85 5.85H7.86l-5.85-5.85v-8.28L7.86 4z"/><path d="M7 12a5 5 0 1 0 10 0 5 5 0 0 0-10 0zm8 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>
+            <div className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full mb-1 ${t.iconBg}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                backgroundColor: brandColor,
+                maskImage: 'url(https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg)',
+                WebkitMaskImage: 'url(https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg)',
+                maskSize: 'contain',
+                WebkitMaskSize: 'contain',
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskPosition: 'center'
+              }} />
             </div>
             <div>
               <h4 className={`font-bold text-lg ${t.cardTitle}`}>Faça um PIX</h4>

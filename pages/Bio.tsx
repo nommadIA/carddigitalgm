@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Page } from "../components/ui/Page";
 import { Link } from "react-router-dom";
-import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, Save, Smartphone, Layout, Link as LinkIcon, ShoppingBag, MapPin } from "lucide-react";
+import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, Save, Smartphone, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
 import { fetchSettingsSupabase, upsertSettingsSupabase, AppSettings } from "../lib/settings";
 import { pushToast } from "../store/toast";
@@ -20,12 +20,12 @@ export default function Bio() {
 
   // Accordion state
   const [openSections, setOpenSections] = useState({
-    basic: true,
-    appearance: true,
-    contacts: true,
-    otherLinks: true,
-    catalog: true,
-    address: true,
+    basic: false,
+    appearance: false,
+    contacts: false,
+    otherLinks: false,
+    catalog: false,
+    address: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -210,7 +210,7 @@ export default function Bio() {
   };
 
   if (loading) {
-    return <Page title="Minha Bio"><div className="p-4 text-slate-400">Carregando...</div></Page>;
+    return <Page title="Meu CardDigital GM"><div className="p-4 text-slate-400">Carregando...</div></Page>;
   }
 
   const platforms = [
@@ -233,26 +233,32 @@ export default function Bio() {
   ];
 
   return (
-    <Page title="Minha Bio">
-      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 pb-20 items-start">
+    <Page title="Meu CardDigital GM">
+      <div className="w-full max-w-6xl mx-auto pb-20 space-y-6">
+
+        {/* HEADER PANEL SPANNING FULL WIDTH */}
+        <div className="gm-card p-4 sm:p-6 text-center space-y-4 relative overflow-hidden">
+           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-rose-500" />
+           <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2">
+              <Sparkles className="w-6 h-6 text-orange-400" /> Meu CardDigital GM
+           </h3>
+           <p className="text-slate-400 text-sm">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
+           
+           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+             <button onClick={handleCopyLink} className="gm-btn gm-btn-primary flex items-center justify-center min-w-[200px]">
+               {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+               {copied ? "Link Copiado!" : "Copiar Link Público"}
+             </button>
+             <Link to={`/bio/${tenantId}`} target="_blank" className="gm-btn gm-btn-outline flex items-center justify-center min-w-[200px]">
+               <Globe className="w-4 h-4 mr-2" /> Ver Tela Inteira
+             </Link>
+           </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
         
         {/* COLUNA ESQUERDA */}
         <div className="space-y-6">
-          <div className="gm-card p-4 sm:p-6 text-center space-y-4 relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-rose-500" />
-             <h3 className="text-lg font-bold text-white">Sua Página Pública</h3>
-             <p className="text-slate-400 text-sm">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
-             
-             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-               <button onClick={handleCopyLink} className="gm-btn gm-btn-primary flex items-center justify-center min-w-[200px]">
-                 {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                 {copied ? "Link Copiado!" : "Copiar Link Público"}
-               </button>
-               <Link to={`/bio/${tenantId}`} target="_blank" className="gm-btn gm-btn-outline flex items-center justify-center">
-                 Ver Tela Inteira
-               </Link>
-             </div>
-          </div>
 
           <div className="gm-card p-4 sm:p-6 space-y-4">
             <button
@@ -325,9 +331,9 @@ export default function Bio() {
           <div className="gm-card p-4 sm:p-6 space-y-4">
             <button
                onClick={() => toggleSection('contacts')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white"
+               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
             >
-              <span>Contatos e Redes</span>
+              <span className="flex items-center gap-2"><Phone className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Contatos e Redes</span>
               {openSections.contacts ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
             
@@ -641,7 +647,7 @@ export default function Bio() {
               disabled={saving}
               className="gm-btn gm-btn-primary min-w-[140px]"
             >
-              {saving ? "Salvando..." : "Salvar Minha Bio"}
+              {saving ? "Salvando..." : "Salvar Meu CardDigital GM"}
             </button>
           </div>
         </div>
@@ -677,28 +683,34 @@ export default function Bio() {
             </button>
 
             {/* Smartphone frame */}
-            <div className="w-full h-full border-[10px] border-slate-900 rounded-[3rem] shadow-2xl overflow-hidden bg-[#0a0a0c] relative">
-               <div className="absolute top-0 w-full h-6 bg-slate-900 z-10 flex justify-center items-center rounded-b-[1.5rem] px-4">
-                  <div className="w-16 h-4 bg-black rounded-full" />
-               </div>
-               
-               <div className="w-full h-full pt-6">
-                  <BioRenderer 
-                    asPreview={true}
-                    data={{
-                      company_name: settings?.company_name,
-                      company_logo_url: settings?.company_logo_url,
-                      pix_key: bioConfig.pix_key || settings?.pix_key,
-                      pix_type: bioConfig.pix_type || settings?.pix_type,
-                      brand_primary: settings?.brand_primary,
-                      bio_config: bioConfig
-                    }} 
-                  />
-               </div>
+            <div className="w-full h-full p-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[3rem] shadow-2xl relative">
+              <div className="w-full h-full overflow-hidden rounded-[2.6rem] bg-[#0a0a0c] relative">
+                 {/* Notch Minimalista */}
+                 <div className="absolute top-0 w-full h-6 z-20 flex justify-center items-start">
+                    <div className="w-24 h-5 bg-black rounded-b-xl flex items-center justify-center">
+                       <div className="w-2 h-2 rounded-full bg-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]" />
+                    </div>
+                 </div>
+                 
+                 <div className="w-full h-full">
+                    <BioRenderer 
+                      asPreview={true}
+                      data={{
+                        company_name: settings?.company_name,
+                        company_logo_url: settings?.company_logo_url,
+                        pix_key: bioConfig.pix_key || settings?.pix_key,
+                        pix_type: bioConfig.pix_type || settings?.pix_type,
+                        brand_primary: settings?.brand_primary,
+                        bio_config: bioConfig
+                      }} 
+                    />
+                 </div>
+              </div>
             </div>
           </div>
         </div>
       )}
+      </div>
     </Page>
   );
 }
