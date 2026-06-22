@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight } from "lucide-react";
 
+export const formatExternalUrl = (url: string | undefined): string | undefined => {
+  if (!url) return undefined;
+  const trimmed = url.trim();
+  if (!trimmed) return undefined;
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(trimmed)) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+};
+
 export const getPlatformIcon = (platform: string) => {
   switch (platform?.toLowerCase()) {
     case 'whatsapp': return MessageCircle;
@@ -92,11 +102,12 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
     if (!value && !href) return null;
     
     const Wrapper = href ? "a" : "div";
+    const formattedHref = formatExternalUrl(href);
     
     return (
         // @ts-ignore
       <Wrapper 
-        href={asPreview ? undefined : href}
+        href={asPreview ? undefined : formattedHref}
         target={href ? "_blank" : undefined}
         rel={href ? "noreferrer" : undefined}
         className={`w-full flex items-center p-3 sm:p-4 transition-all rounded-full border group select-none cursor-pointer ${t.cardBg} ${t.cardBgHover} ${t.cardBorder} ${t.cardBorderHover}`}
@@ -163,7 +174,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
 
   return (
     <div 
-      className={`w-full h-full relative ${t.bg} ${!asPreview ? 'min-h-screen py-10 px-4' : 'overflow-y-auto no-scrollbar py-6 px-4'} selection:bg-orange-500/30 font-sans`}
+      className={`w-full ${!asPreview ? "fixed inset-0 overflow-y-auto py-10 px-4" : "relative h-full overflow-y-auto no-scrollbar py-6 px-4"} ${t.bg} selection:bg-orange-500/30 font-sans`}
     >
       {bgImg && (
         <div 
@@ -240,31 +251,34 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                 ref={scrollRef}
                 className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-4 no-scrollbar items-stretch"
               >
-              {bio.catalog_items.map((item: any) => (
-                <a 
-                  key={item.id}
-                  href={asPreview ? undefined : (item.url || undefined)}
-                  target={item.url ? "_blank" : undefined}
-                  rel={item.url ? "noreferrer" : undefined}
-                  onClick={(e: any) => { if (asPreview && item.url) e.preventDefault(); }}
-                  className={`snap-center shrink-0 w-[80%] max-w-[260px] block overflow-hidden rounded-2xl border transition-all flex flex-col ${t.cardBg} ${t.cardBorder} ${item.url ? 'cursor-pointer hover:scale-[1.02]' : 'cursor-default'}`}
-                >
-                  {item.image_url ? (
-                    <div className={`w-full aspect-square ${t.iconBg}`}>
-                      <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+              {bio.catalog_items.map((item: any) => {
+                const itemHref = formatExternalUrl(item.url);
+                return (
+                  <a 
+                    key={item.id}
+                    href={asPreview ? undefined : itemHref}
+                    target={itemHref ? "_blank" : undefined}
+                    rel={itemHref ? "noreferrer" : undefined}
+                    onClick={(e: any) => { if (asPreview && itemHref) e.preventDefault(); }}
+                    className={`snap-center shrink-0 w-[80%] max-w-[260px] block overflow-hidden rounded-2xl border transition-all flex flex-col ${t.cardBg} ${t.cardBorder} ${itemHref ? 'cursor-pointer hover:scale-[1.02] border-orange-500/30' : 'cursor-default'}`}
+                  >
+                    {item.image_url ? (
+                      <div className={`w-full aspect-square ${t.iconBg}`}>
+                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className={`w-full aspect-square ${t.iconBg} flex items-center justify-center`}>
+                        <ShoppingCart className="w-8 h-8 opacity-20 text-slate-400" />
+                      </div>
+                    )}
+                    <div className="p-3 flex flex-col flex-1">
+                      <div className={`font-semibold text-sm truncate ${t.cardTitle}`}>{item.name || 'Produto sem nome'}</div>
+                      {item.description && <div className={`text-xs mt-1 line-clamp-2 ${t.cardSub}`}>{item.description}</div>}
+                      <div className="mt-auto pt-1.5 font-bold text-[13px]" style={{ color: brandColor }}>{item.price}</div>
                     </div>
-                  ) : (
-                    <div className={`w-full aspect-square ${t.iconBg} flex items-center justify-center`}>
-                      <ShoppingCart className="w-8 h-8 opacity-20 text-slate-400" />
-                    </div>
-                  )}
-                  <div className="p-3 flex flex-col flex-1">
-                    <div className={`font-semibold text-sm truncate ${t.cardTitle}`}>{item.name || 'Produto sem nome'}</div>
-                    {item.description && <div className={`text-xs mt-1 line-clamp-2 ${t.cardSub}`}>{item.description}</div>}
-                    <div className="mt-auto pt-1.5 font-bold text-[13px]" style={{ color: brandColor }}>{item.price}</div>
-                  </div>
-                </a>
-              ))}
+                  </a>
+                );
+              })}
               </div>
             </div>
           </div>
@@ -274,10 +288,10 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
         {pixKey && (
           <div className={`p-5 sm:p-6 rounded-[2rem] text-center space-y-4 shadow-xl mt-4 relative overflow-hidden group border ${t.cardBg} ${t.cardBorder}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}10` : undefined }}>
             <div className="absolute top-0 left-0 w-full h-[4px] opacity-80 group-hover:opacity-100 transition-opacity" style={{ background: brandColor }} />
-            <div className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full mb-1 ${t.iconBg}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}>
+            <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-1 ${t.iconBg}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}>
               <div style={{
-                width: '32px',
-                height: '32px',
+                width: '44px',
+                height: '44px',
                 backgroundColor: brandColor,
                 maskImage: 'url(https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg)',
                 WebkitMaskImage: 'url(https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg)',

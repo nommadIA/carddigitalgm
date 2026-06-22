@@ -218,7 +218,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       { to: "/market", label: "Mercado", icon: ShoppingCart },
       { to: "/notes", label: "Notas", icon: StickyNote },
       { to: "/financial", label: "Financeiro", icon: Wallet },
-      { to: "/minha-bio", label: "Meu CardDigital GM", icon: Smartphone },
+      { to: "/minha-bio", label: "Bio", icon: Smartphone },
       { to: "/configuracoes", label: "Configurações", icon: Settings }
     ],
     []

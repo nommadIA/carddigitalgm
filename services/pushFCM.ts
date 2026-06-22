@@ -5,12 +5,12 @@ import { supabase } from "../lib/supabase";
 const sanitize = (val: any) => typeof val === "string" ? val.trim().replace(/['"]/g, "") : val;
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDOGFwwRtGhXed5XFsR_9HGGP6tAd_-59o",
-  authDomain: "easy-market-gm.firebaseapp.com",
-  projectId: "easy-market-gm",
-  storageBucket: "easy-market-gm.firebasestorage.app",
-  messagingSenderId: "594745417419",
-  appId: "1:594745417419:web:08a669177a34794a57454e",
+  apiKey: sanitize(import.meta.env.VITE_FIREBASE_API_KEY) || "AIzaSyAx0InWwYapH0LNfIL_D3s9sfQjmIRi-w",
+  authDomain: sanitize(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) || "easy-market-gm.firebaseapp.com",
+  projectId: sanitize(import.meta.env.VITE_FIREBASE_PROJECT_ID) || "easy-market-gm",
+  storageBucket: sanitize(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) || "easy-market-gm.firebasestorage.app",
+  messagingSenderId: sanitize(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || "594745417419",
+  appId: sanitize(import.meta.env.VITE_FIREBASE_APP_ID) || "1:594745417419:web:08a669177a34794a57454e",
 };
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;

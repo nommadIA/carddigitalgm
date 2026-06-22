@@ -3,7 +3,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-comp
 
 // Configuração idêntica à do app principal
 const firebaseConfig = {
-  apiKey: "AIzaSyDOGFwwRtGhXed5XFsR_9HGGP6tAd_-59o",
+  apiKey: "AIzaSyAx0InWwYapH0LNfIL_D3s9sfQjmIRi-w",
   authDomain: "easy-market-gm.firebaseapp.com",
   projectId: "easy-market-gm",
   storageBucket: "easy-market-gm.firebasestorage.app",

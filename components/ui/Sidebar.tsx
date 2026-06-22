@@ -7,7 +7,7 @@ import {
   Users,
   Receipt,
   ShoppingCart,
-  Sparkles,
+  Smartphone,
   BarChart3,
   Settings,
   StickyNote,
@@ -26,7 +26,7 @@ const items = [
   { to: "/expenses", label: "Despesas", icon: Receipt },
   { to: "/market", label: "Mercado", icon: ShoppingCart },
   { to: "/notes", label: "Notas", icon: StickyNote },
-  { to: "/minha-bio", label: "Meu CardDigital GM", icon: Sparkles },
+  { to: "/minha-bio", label: "Bio", icon: Smartphone },
   { to: "/financial", label: "Financeiro", icon: BarChart3 },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];

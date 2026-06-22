@@ -581,6 +581,24 @@ const Dashboard = () => {
             </Card>
           </Link>
         </motion.div>
+
+        {/* CardDigital GM (Somente no Smartphone) */}
+        {viewMode === "smartphone" && (
+          <motion.div variants={itemVariants}>
+            <Link to="/minha-bio" className="group block h-full">
+              <Card className="h-full aspect-square gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+                <div className="w-[50px] h-[50px] flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
+                  <Smartphone size={28} strokeWidth={1.5} />
+                </div>
+                <div className="text-center mt-1">
+                  <h3 className="font-bold text-sm md:text-base text-[var(--gm-primary)] transition-colors duration-300 px-1 leading-tight">
+                    BIO
+                  </h3>
+                </div>
+              </Card>
+            </Link>
+          </motion.div>
+        )}
       </div>
     </div>
   );

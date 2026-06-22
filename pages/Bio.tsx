@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { Page } from "../components/ui/Page";
 import { Link } from "react-router-dom";
-import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, Save, Smartphone, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone } from "lucide-react";
+import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, Save, Smartphone, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
 import { fetchSettingsSupabase, upsertSettingsSupabase, AppSettings } from "../lib/settings";
 import { pushToast } from "../store/toast";
 import BioRenderer, { getPlatformIcon } from "../components/bio/BioRenderer";
 import { supabase } from "../lib/supabase";
 import imageCompression from "browser-image-compression";
+import { motion, AnimatePresence } from "motion/react";
+
+const formatBRL = (value: string): string => {
+  const clean = value.replace(/\D/g, "");
+  if (!clean) return "";
+  const cents = parseInt(clean, 10);
+  if (isNaN(cents)) return "";
+  const valueInReais = cents / 100;
+  return valueInReais.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+};
 
 export default function Bio() {
   const { tenantId } = useAuth();
@@ -17,6 +30,7 @@ export default function Bio() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [iconPickerOpen, setIconPickerOpen] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [isDocked, setIsDocked] = useState(false);
 
   // Accordion state
   const [openSections, setOpenSections] = useState({
@@ -26,6 +40,7 @@ export default function Bio() {
     otherLinks: false,
     catalog: false,
     address: false,
+    payment: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -142,21 +157,38 @@ export default function Bio() {
       };
 
       const res = await upsertSettingsSupabase(tenantId, payload);
-      if (res && res.error && String(JSON.stringify(res.error)).includes("bio_config")) {
-         pushToast({ type: "error", title: "Atenção (Requer SQL)", message: "A coluna bio_config não existe. Execute o db_setup.sql no seu Supabase!" });
-      } else if (res && res.error) {
-         pushToast({ type: "error", title: "Erro", message: "Falha ao salvar." });
-      } else {
-         pushToast({ type: "success", title: "Salvo", message: "Sua Bio foi atualizada com sucesso!" });
-      }
+      pushToast({ type: "success", title: "Salvo", message: "Sua Bio foi atualizada com sucesso!" });
     } catch (e: any) {
-      pushToast({ type: "error", title: "Erro", message: e.message || "Falha ao salvar." });
+      console.error("Save bio error:", e);
+      const errStr = String(JSON.stringify(e));
+      if (errStr.includes("bio_config")) {
+         pushToast({ type: "error", title: "Atenção (Requer SQL)", message: "A coluna bio_config não existe. Execute o db_setup.sql no seu Supabase!" });
+      } else {
+         pushToast({ type: "error", title: "Erro", message: e.message || "Falha ao salvar." });
+      }
     }
     setSaving(false);
   };
 
+  const sanitizeSlug = (name: string) => {
+    if (!name) return "";
+    return name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  };
+
+  const getCustomSlug = () => {
+    const title = bioConfig.title || settings?.company_name || "";
+    const suffix = sanitizeSlug(title);
+    return suffix ? `carddigitalgm-${suffix}` : tenantId;
+  };
+
   const handleCopyLink = () => {
-    const url = `${window.location.origin}/#/bio/${tenantId}`;
+    const url = `${window.location.origin}/#/bio/${getCustomSlug()}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -210,7 +242,7 @@ export default function Bio() {
   };
 
   if (loading) {
-    return <Page title="Meu CardDigital GM"><div className="p-4 text-slate-400">Carregando...</div></Page>;
+    return <Page title="BIO CardDigital GM"><div className="p-4 text-slate-400">Carregando...</div></Page>;
   }
 
   const platforms = [
@@ -233,14 +265,14 @@ export default function Bio() {
   ];
 
   return (
-    <Page title="Meu CardDigital GM">
+    <Page title="BIO CardDigital GM">
       <div className="w-full max-w-6xl mx-auto pb-20 space-y-6">
 
         {/* HEADER PANEL SPANNING FULL WIDTH */}
         <div className="gm-card p-4 sm:p-6 text-center space-y-4 relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-rose-500" />
            <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2">
-              <Sparkles className="w-6 h-6 text-orange-400" /> Meu CardDigital GM
+              <Sparkles className="w-6 h-6 text-orange-400" /> BIO CardDigital GM
            </h3>
            <p className="text-slate-400 text-sm">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
            
@@ -249,17 +281,15 @@ export default function Bio() {
                {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                {copied ? "Link Copiado!" : "Copiar Link Público"}
              </button>
-             <Link to={`/bio/${tenantId}`} target="_blank" className="gm-btn gm-btn-outline flex items-center justify-center min-w-[200px]">
+             <Link to={`/bio/${getCustomSlug()}`} target="_blank" className="gm-btn gm-btn-outline flex items-center justify-center min-w-[200px]">
                <Globe className="w-4 h-4 mr-2" /> Ver Tela Inteira
              </Link>
            </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
         
-        {/* COLUNA ESQUERDA */}
-        <div className="space-y-6">
-
+          {/* 1. INFORMAÇÕES BÁSICAS */}
           <div className="gm-card p-4 sm:p-6 space-y-4">
             <button
                onClick={() => toggleSection('basic')}
@@ -272,7 +302,7 @@ export default function Bio() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
               <div>
                 <label className="gm-label">Título / Nome da Empresa</label>
-                <input type="text" className="gm-input" value={bioConfig.title} onChange={e => handleChange("title", e.target.value)} placeholder="Ex: GM Edificação" />
+                <input type="text" className="gm-input font-medium" value={bioConfig.title} onChange={e => handleChange("title", e.target.value)} placeholder="Ex: GM Edificação" />
               </div>
               <div>
                 <label className="gm-label">Descrição Curta</label>
@@ -282,52 +312,7 @@ export default function Bio() {
             )}
           </div>
 
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('appearance')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-               <span className="flex items-center gap-2"><Eye className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Aparência da Bio</span>
-               {openSections.appearance ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
-            
-            {openSections.appearance && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
-              <div>
-                <label className="gm-label">Cor de Destaque</label>
-                <div className="flex items-center gap-2">
-                  <input type="color" className="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" value={bioConfig.color || settings?.brand_primary || "#ff7a00"} onChange={e => handleChange("color", e.target.value)} />
-                  <input type="text" className="gm-input flex-1" value={bioConfig.color || settings?.brand_primary || "#ff7a00"} onChange={e => handleChange("color", e.target.value)} />
-                </div>
-                <p className="text-[10px] text-slate-500 mt-1">Se vazio, usará a cor principal do sistema.</p>
-              </div>
-              <div>
-                <label className="gm-label">Tema Visual</label>
-                <select className="gm-input w-full" value={bioConfig.theme} onChange={e => handleChange("theme", e.target.value)}>
-                  <option value="dark">Escuro (Padrão)</option>
-                  <option value="light">Claro</option>
-                  <option value="glass">Glassmorphism (Vidro)</option>
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="gm-label">Imagem de Fundo (Fica atrás da bio)</label>
-                <div className="flex gap-2">
-                  <input type="text" className="gm-input flex-1" value={bioConfig.bg_image_url || ''} onChange={e => handleChange("bg_image_url", e.target.value)} placeholder="https://... ou faça upload" />
-                  <label className="gm-btn gm-btn-outline flex items-center justify-center cursor-pointer shrink-0">
-                    <Upload className="w-4 h-4 mr-2" /> Upload
-                    <input type="file" accept="image/*" className="hidden" onChange={handleUploadBg} />
-                  </label>
-                </div>
-              </div>
-            </div>
-            )}
-          </div>
-
-        </div>
-
-        {/* COLUNA DIREITA */}
-        <div className="space-y-6">
-
+          {/* 2. CONTATOS E REDES */}
           <div className="gm-card p-4 sm:p-6 space-y-4">
             <button
                onClick={() => toggleSection('contacts')}
@@ -341,7 +326,7 @@ export default function Bio() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
               <div>
                 <label className="gm-label">WhatsApp (com DDD)</label>
-                <input type="text" className="gm-input" value={bioConfig.whatsapp} onChange={e => handleChange("whatsapp", e.target.value)} placeholder="Ex: 11999999999" />
+                <input type="text" className="gm-input font-medium" value={bioConfig.whatsapp} onChange={e => handleChange("whatsapp", e.target.value)} placeholder="Ex: 11999999999" />
               </div>
               <div>
                 <label className="gm-label">E-mail Comercial</label>
@@ -359,6 +344,49 @@ export default function Bio() {
             )}
           </div>
 
+          {/* 3. APARÊNCIA DA BIO */}
+          <div className="gm-card p-4 sm:p-6 space-y-4">
+            <button
+               onClick={() => toggleSection('appearance')}
+               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
+            >
+               <span className="flex items-center gap-2"><Eye className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Aparência da Bio</span>
+               {openSections.appearance ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+            </button>
+            
+            {openSections.appearance && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
+              <div>
+                <label className="gm-label">Cor de Destaque</label>
+                <div className="flex items-center gap-2">
+                  <input type="color" className="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" value={bioConfig.color || settings?.brand_primary || "#ff7a00"} onChange={e => handleChange("color", e.target.value)} />
+                  <input type="text" className="gm-input flex-1 font-mono text-sm" value={bioConfig.color || settings?.brand_primary || "#ff7a00"} onChange={e => handleChange("color", e.target.value)} />
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1">Se vazio, usará a cor principal do sistema.</p>
+              </div>
+              <div>
+                <label className="gm-label">Tema Visual</label>
+                <select className="gm-input w-full" value={bioConfig.theme} onChange={e => handleChange("theme", e.target.value)}>
+                  <option value="dark">Escuro (Padrão)</option>
+                  <option value="light">Claro</option>
+                  <option value="glass">Glassmorphism (Vidro)</option>
+                </select>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="gm-label">Imagem de Fundo (Fica atrás da bio)</label>
+                <div className="flex gap-2">
+                  <input type="text" className="gm-input flex-1 text-sm font-mono" value={bioConfig.bg_image_url || ''} onChange={e => handleChange("bg_image_url", e.target.value)} placeholder="https://... ou faça upload" />
+                  <label className="gm-btn gm-btn-outline flex items-center justify-center cursor-pointer shrink-0 py-2.5">
+                    <Upload className="w-4 h-4 mr-2" /> Upload
+                    <input type="file" accept="image/*" className="hidden" onChange={handleUploadBg} />
+                  </label>
+                </div>
+              </div>
+            </div>
+            )}
+          </div>
+
+          {/* 4. OUTROS LINKS */}
           <div className="gm-card p-4 sm:p-6 space-y-4">
             <button
                onClick={() => toggleSection('otherLinks')}
@@ -373,7 +401,7 @@ export default function Bio() {
               <div className="flex justify-end mb-4">
                 <button 
                   onClick={addCustomLink}
-                  className="flex items-center text-orange-500 hover:text-orange-400 text-sm font-medium"
+                  className="flex items-center text-orange-500 hover:text-orange-400 text-sm font-medium bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20 transition-all hover:bg-orange-500/20"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Adicionar
@@ -381,7 +409,7 @@ export default function Bio() {
               </div>
             
             {bioConfig.custom_links.length === 0 ? (
-               <div className="text-center py-4 text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
+               <div className="text-center py-6 text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
                  Nenhum link adicional. Clique em "Adicionar" para inserir links customizados.
                </div>
             ) : (
@@ -392,7 +420,7 @@ export default function Bio() {
                      <div key={link.id} className="p-4 bg-[var(--gm-bg)] rounded-xl border border-slate-800/80 space-y-3 relative group">
                        <button 
                          onClick={() => removeCustomLink(link.id)}
-                         className="absolute top-2 right-2 text-slate-500 hover:text-red-400 p-1"
+                         className="absolute top-2 right-2 text-slate-500 hover:text-red-400 p-1 bg-black/30 rounded-full hover:bg-red-500/20 transition-all"
                        >
                          <Trash className="w-4 h-4" />
                        </button>
@@ -462,7 +490,7 @@ export default function Bio() {
                            <label className="text-xs text-slate-400 mb-1 block">URL (Link do botão)</label>
                            <input 
                              type="text" 
-                             className="gm-input w-full !py-2" 
+                             className="gm-input w-full !py-2 text-sm font-mono" 
                              value={link.url} 
                              onChange={e => updateCustomLink(link.id, 'url', e.target.value)} 
                              placeholder="https://..."
@@ -478,22 +506,89 @@ export default function Bio() {
             <div className="grid grid-cols-1 gap-4 pt-4 border-t border-slate-800">
               <div>
                 <label className="gm-label">Site Principal URL</label>
-                <input type="text" className="gm-input" value={bioConfig.website} onChange={e => handleChange("website", e.target.value)} placeholder="https://..." />
+                <input type="text" className="gm-input font-mono text-xs" value={bioConfig.website} onChange={e => handleChange("website", e.target.value)} placeholder="https://..." />
               </div>
-              <div>
-                <label className="gm-label">URL do Portfólio</label>
-                <input type="text" className="gm-input" value={bioConfig.portfolio_url} onChange={e => handleChange("portfolio_url", e.target.value)} placeholder="https://seu-portfolio.com" />
-              </div>
-              <div>
-                <label className="gm-label">URL do Catálogo (PDF ou site)</label>
-                <input type="text" className="gm-input" value={bioConfig.catalog_url} onChange={e => handleChange("catalog_url", e.target.value)} placeholder="https://link-do-catalogo.com" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="gm-label">URL do Portfólio</label>
+                  <input type="text" className="gm-input font-mono text-xs" value={bioConfig.portfolio_url} onChange={e => handleChange("portfolio_url", e.target.value)} placeholder="https://seu-portfolio.com" />
+                </div>
+                <div>
+                  <label className="gm-label">URL do Catálogo (PDF ou site)</label>
+                  <input type="text" className="gm-input font-mono text-xs" value={bioConfig.catalog_url} onChange={e => handleChange("catalog_url", e.target.value)} placeholder="https://link-do-catalogo.com" />
+                </div>
               </div>
             </div>
             </div>
             )}
           </div>
 
+          {/* 5. ENDEREÇO E LOCALIZAÇÃO */}
           <div className="gm-card p-4 sm:p-6 space-y-4">
+            <button
+               onClick={() => toggleSection('address')}
+               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
+            >
+              <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Endereço e Localização</span>
+              {openSections.address ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+            </button>
+            
+            {openSections.address && (
+            <div className="grid grid-cols-1 gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
+              <div className="space-y-4">
+                <div>
+                  <label className="gm-label font-semibold">Nome do Endereço Completo</label>
+                  <textarea className="gm-input min-h-[70px] !py-2.5" value={bioConfig.address} onChange={e => handleChange("address", e.target.value)} placeholder="Rua XYZ, 123 - Cidade/UF" />
+                </div>
+                <div>
+                  <label className="gm-label font-semibold">Link de Localização (Google Maps / Waze)</label>
+                  <input type="text" className="gm-input font-mono text-xs !py-2.5" value={bioConfig.address_url || ''} onChange={e => handleChange("address_url", e.target.value)} placeholder="https://maps.app.goo.gl/..." />
+                  <p className="text-xs text-slate-500 mt-1">Ao receber o clique no endereço, o cliente abrirá esta localização.</p>
+                </div>
+              </div>
+            </div>
+            )}
+          </div>
+
+          {/* 6. DADOS DE PAGAMENTO (PIX) */}
+          <div className="gm-card p-4 sm:p-6 space-y-4">
+            <button
+               onClick={() => toggleSection('payment')}
+               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
+            >
+              <span className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Dados de Pagamento (PIX)</span>
+              {openSections.payment ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+            </button>
+            
+            {openSections.payment && (
+            <div className="grid grid-cols-1 gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
+              <div className="space-y-4">
+                <div>
+                  <label className="gm-label font-semibold">Como deseja receber / Chave PIX</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-medium mb-1 block">Tipo de Chave PIX</label>
+                      <select className="gm-input !py-2" value={bioConfig.pix_type} onChange={e => handleChange("pix_type", e.target.value)}>
+                        <option value="CPF">CPF</option>
+                        <option value="CNPJ">CNPJ</option>
+                        <option value="Email">E-mail</option>
+                        <option value="Telefone">Telefone</option>
+                        <option value="Chave Aleatória">Chave Aleatória</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-medium mb-1 block">Chave PIX</label>
+                      <input type="text" className="gm-input !py-2 text-sm" value={bioConfig.pix_key} onChange={e => handleChange("pix_key", e.target.value)} placeholder="Chave do PIX..." />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            )}
+          </div>
+
+          {/* 7. CATÁLOGO DE PRODUTOS (FULL WIDTH lg:col-span-2) */}
+          <div className="lg:col-span-2 gm-card p-4 sm:p-6 space-y-4">
             <button
                onClick={() => toggleSection('catalog')}
                className="w-full flex justify-between items-center text-lg font-semibold text-white group"
@@ -504,93 +599,129 @@ export default function Bio() {
             
             {openSections.catalog && (
             <div className="animate-in fade-in slide-in-from-top-2 pt-2">
-              <div className="flex justify-end mb-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-800/60">
+                <div className="w-full sm:max-w-sm">
+                  <label className="gm-label">Título da Seção de Catálogo</label>
+                  <input type="text" className="gm-input" value={bioConfig.catalog_title || 'Catálogo'} onChange={e => handleChange("catalog_title", e.target.value)} placeholder="Ex: Meus Produtos" />
+                </div>
                 <button 
                   onClick={addCatalogItem}
-                  className="text-sm text-orange-500 hover:text-orange-400 flex items-center font-medium"
+                  className="w-full sm:w-auto text-sm bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center font-semibold px-4 py-2.5 rounded-xl transition-all"
                 >
-                  <Plus className="w-4 h-4 mr-1" /> Adicionar Produto
+                  <Plus className="w-4 h-4 mr-2" /> Adicionar Produto
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 mb-4">
-              <div>
-                <label className="gm-label">Título da Seção de Catálogo</label>
-                <input type="text" className="gm-input" value={bioConfig.catalog_title || 'Catálogo'} onChange={e => handleChange("catalog_title", e.target.value)} placeholder="Ex: Meus Produtos" />
-              </div>
-            </div>
-
             {bioConfig.catalog_items?.length === 0 ? (
-               <div className="text-center py-4 text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
-                 Nenhum produto no catálogo. Clique em "Adicionar" para exibir fotos e preços.
+               <div className="text-center py-8 text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl space-y-2">
+                 <ShoppingBag className="w-10 h-10 opacity-35 mx-auto text-orange-500" />
+                 <p>Nenhum produto no catálogo. Clique em "Adicionar Produto" para exibir fotos e preços.</p>
                </div>
             ) : (
-               <div className="space-y-4">
+               <div className="grid grid-cols-1 gap-5">
                  {bioConfig.catalog_items?.map((item) => (
-                   <div key={item.id} className="p-4 bg-[var(--gm-bg)] rounded-xl border border-slate-800/80 space-y-3 relative group">
+                   <div key={item.id} className="p-4 bg-zinc-900/80 rounded-2xl border border-zinc-800/80 space-y-4 relative group hover:border-orange-500/20 transition-all">
                      <button 
                        onClick={() => removeCatalogItem(item.id)}
-                       className="absolute top-2 right-2 text-slate-500 hover:text-red-400 p-1 bg-black/20 rounded-full"
+                       className="absolute top-3 right-3 text-slate-400 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-full transition-all"
+                       title="Remover Produto"
                      >
                        <Trash className="w-4 h-4" />
                      </button>
                      
-                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                       <div className="sm:col-span-2">
-                         <label className="text-xs text-slate-400 mb-1 block">Nome do Produto/Serviço</label>
-                         <input 
-                           type="text" 
-                           className="gm-input w-full !py-2" 
-                           value={item.name} 
-                           onChange={e => updateCatalogItem(item.id, 'name', e.target.value)} 
-                           placeholder="Ex: Tênis Nike Air"
-                         />
-                       </div>
-                       <div className="sm:col-span-2">
-                         <label className="text-xs text-slate-400 mb-1 block">Descrição do Produto</label>
-                         <textarea 
-                           className="gm-input w-full !py-2 text-sm" 
-                           value={item.description || ''} 
-                           onChange={e => updateCatalogItem(item.id, 'description', e.target.value)} 
-                           placeholder="Ex: Tênis em couro, ótimo para corridas."
-                           rows={2}
-                         />
-                       </div>
-                       <div>
-                         <label className="text-xs text-slate-400 mb-1 block">Preço (opcional)</label>
-                         <input 
-                           type="text" 
-                           className="gm-input w-full !py-2" 
-                           value={item.price} 
-                           onChange={e => updateCatalogItem(item.id, 'price', e.target.value)} 
-                           placeholder="Ex: R$ 199,90"
-                         />
-                       </div>
-                       <div>
-                         <label className="text-xs text-slate-400 mb-1 block">Imagem</label>
-                         <div className="flex gap-2">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3">
+                       <div className="space-y-4">
+                         <div>
+                           <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Nome do Produto/Serviço</label>
                            <input 
                              type="text" 
-                             className="gm-input flex-1 !py-2" 
-                             value={item.image_url} 
-                             onChange={e => updateCatalogItem(item.id, 'image_url', e.target.value)} 
-                             placeholder="URL..."
+                             className="gm-input w-full !py-2.5 font-medium" 
+                             value={item.name} 
+                             onChange={e => updateCatalogItem(item.id, 'name', e.target.value)} 
+                             placeholder="Ex: Tênis Nike Air"
                            />
-                           <label className="gm-btn gm-btn-outline px-3 flex items-center justify-center cursor-pointer shrink-0">
-                             <Upload className="w-4 h-4" />
-                             <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadProductImage(item.id, e)} />
-                           </label>
+                         </div>
+                         <div>
+                           <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Descrição do Produto</label>
+                           <textarea 
+                             className="gm-input w-full !py-2.5 min-h-[90px]" 
+                             value={item.description || ''} 
+                             onChange={e => updateCatalogItem(item.id, 'description', e.target.value)} 
+                             placeholder="Ex: Tênis em couro, ótimo para corridas."
+                             rows={3}
+                           />
                          </div>
                        </div>
-                       <div className="sm:col-span-2">
-                         <label className="text-xs text-slate-400 mb-1 block">Link Direto (WhatsApp/Compra)</label>
-                         <input 
-                           type="text" 
-                           className="gm-input w-full !py-2" 
-                           value={item.url} 
-                           onChange={e => updateCatalogItem(item.id, 'url', e.target.value)} 
-                           placeholder="Opcional. Link para ir ao clicar"
-                         />
+
+                       <div className="space-y-4">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                           <div>
+                             <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Preço (opcional)</label>
+                             <input 
+                               type="text" 
+                               className="gm-input w-full !py-2.5 text-orange-400 font-mono font-bold" 
+                               value={item.price} 
+                               onChange={e => updateCatalogItem(item.id, 'price', formatBRL(e.target.value))} 
+                               placeholder="R$ 0,00"
+                             />
+                           </div>
+                           <div>
+                             <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Link Direto (WhatsApp/Compra)</label>
+                             <input 
+                               type="text" 
+                               className="gm-input w-full !py-2.5 text-xs font-mono" 
+                               value={item.url} 
+                               onChange={e => updateCatalogItem(item.id, 'url', e.target.value)} 
+                               placeholder="Opcional. Link para ir ao clicar"
+                             />
+                           </div>
+                         </div>
+                         
+                         <div className="font-sans">
+                           <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Imagem do Produto (Miniatura)</label>
+                           <div className="flex gap-4 items-center bg-black/50 p-3 rounded-2xl border border-zinc-800">
+                             {item.image_url ? (
+                               <div className="relative w-28 h-28 rounded-xl overflow-hidden border border-zinc-700 bg-black shrink-0 group/img shadow-md">
+                                 <img 
+                                   src={item.image_url} 
+                                   alt={item.name || "Produto"} 
+                                   className="w-full h-full object-cover" 
+                                   referrerPolicy="no-referrer"
+                                 />
+                                 <button
+                                   type="button"
+                                   onClick={() => updateCatalogItem(item.id, 'image_url', '')}
+                                   className="absolute top-1 right-1 bg-black/85 hover:bg-red-600 text-white rounded-full p-1 transition-colors"
+                                   title="Remover Imagem"
+                                 >
+                                   <X className="w-3 h-3" />
+                                 </button>
+                                </div>
+                             ) : (
+                               <div className="w-28 h-28 rounded-xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-slate-600 shrink-0">
+                                 <ShoppingBag className="w-10 h-10 opacity-45 text-orange-400" />
+                               </div>
+                             )}
+                             
+                             <div className="flex-1 space-y-2 min-w-0">
+                               <div className="flex gap-2">
+                                 <input 
+                                   type="text" 
+                                   className="gm-input flex-1 !py-1 text-xs font-mono" 
+                                   value={item.image_url} 
+                                   onChange={e => updateCatalogItem(item.id, 'image_url', e.target.value)} 
+                                   placeholder="Cole o link da imagem..."
+                                 />
+                                 <label className="gm-btn gm-btn-outline px-3 py-1 text-xs flex items-center justify-center cursor-pointer shrink-0 gap-1.5 hover:bg-orange-500/15">
+                                   <Upload className="w-3.5 h-3.5" />
+                                   <span>Upload</span>
+                                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadProductImage(item.id, e)} />
+                                 </label>
+                               </div>
+                               <p className="text-[10px] text-slate-500">Envie o arquivo ou adicione uma URL válida para ver a miniatura do produto</p>
+                             </div>
+                           </div>
+                         </div>
                        </div>
                      </div>
                    </div>
@@ -601,110 +732,144 @@ export default function Bio() {
             )}
           </div>
 
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('address')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Endereço e Pagamento</span>
-              {openSections.address ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
-            
-            {openSections.address && (
-            <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
-              <div>
-                <label className="gm-label">Nome do Endereço Completo</label>
-                <textarea className="gm-input min-h-[50px]" value={bioConfig.address} onChange={e => handleChange("address", e.target.value)} placeholder="Rua XYZ, 123 - Cidade/UF" />
-              </div>
-              <div>
-                <label className="gm-label">Link de Localização (Google Maps / Waze)</label>
-                <input type="text" className="gm-input" value={bioConfig.address_url || ''} onChange={e => handleChange("address_url", e.target.value)} placeholder="https://maps.app.goo.gl/..." />
-                <p className="text-xs text-slate-500 mt-1">Ao clicar no endereço, o cliente abriá este link.</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                <div>
-                  <label className="gm-label">Tipo de Chave PIX</label>
-                  <select className="gm-input" value={bioConfig.pix_type} onChange={e => handleChange("pix_type", e.target.value)}>
-                    <option value="CPF">CPF</option>
-                    <option value="CNPJ">CNPJ</option>
-                    <option value="Email">E-mail</option>
-                    <option value="Telefone">Telefone</option>
-                    <option value="Chave Aleatória">Chave Aleatória</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="gm-label">Chave PIX</label>
-                  <input type="text" className="gm-input" value={bioConfig.pix_key} onChange={e => handleChange("pix_key", e.target.value)} />
-                </div>
-              </div>
-            </div>
-            )}
-          </div>
-
-          <div className="flex justify-end pt-4 pb-8">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="gm-btn gm-btn-primary min-w-[140px]"
-            >
-              {saving ? "Salvando..." : "Salvar Meu CardDigital GM"}
-            </button>
-          </div>
         </div>
+
+      {/* FLOATING ACTION PANEL WITH TOUCH SWIPE-LEFT/RIGHT TO COLLAPSE AND CLICK-TO-EXPAND */}
+      <div className="fixed top-1/2 -translate-y-1/2 right-0 z-[80] select-none pointer-events-none flex flex-col items-end">
+        <AnimatePresence mode="wait">
+          {isDocked ? (
+            /* Docked State: Thin vertical color bars fixed on the right edge with high touch sensitivity */
+            <motion.div
+              key="docked"
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              onClick={() => setIsDocked(false)}
+              className="pointer-events-auto cursor-pointer flex flex-col items-end group"
+            >
+              {/* Very generous transparent touch/click padding extending to the left */}
+              <div className="flex flex-col gap-2 py-8 pl-12 pr-0 bg-transparent select-none">
+                {/* green track segment for Save - completely glued to right edge */}
+                <div className="w-3 h-16 rounded-l-lg bg-green-500 shadow-[0_0_18px_rgba(34,197,94,0.95)] transition-all group-hover:w-4 group-hover:bg-green-400" />
+                {/* orange track segment for View - completely glued to right edge */}
+                <div className="w-3 h-16 rounded-l-lg bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.95)] transition-all group-hover:w-4 group-hover:bg-orange-400" />
+              </div>
+            </motion.div>
+          ) : (
+            /* Expanded format: Directly draggable circular buttons, swipe left or right to dock, no anchor/labels */
+            <motion.div
+              key="expanded"
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              drag="x"
+              dragConstraints={{ left: -100, right: 100 }}
+              dragElastic={0.15}
+              onDragEnd={(e, info) => {
+                // Swipe left or right to dock (info.offset.x > 30 is swiping right, info.offset.x < -30 is swiping left)
+                if (info.offset.x > 30 || info.offset.x < -30) {
+                  setIsDocked(true);
+                }
+              }}
+              whileDrag={{ scale: 0.95, opacity: 0.9 }}
+              className="pointer-events-auto flex flex-col gap-4 pr-4 pb-4 items-center justify-center cursor-grab active:cursor-grabbing"
+            >
+              {/* SAVE BUTTON (Circular format) */}
+              <div className="relative group">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSave();
+                  }}
+                  disabled={saving}
+                  className="w-14 h-14 bg-green-500 hover:bg-green-600 active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(34,197,94,0.4)] transition-all duration-300 hover:scale-110 disabled:opacity-50"
+                >
+                  <Save className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* PREVIEW BUTTON (Circular format) */}
+              <div className="relative group">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreviewOpen(true);
+                  }}
+                  className="w-14 h-14 bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-40)] active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(255,102,0,0.6)] transition-all duration-300 hover:scale-110"
+                >
+                  <Eye className="w-6 h-6" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-
-      {/* FLOATING SAVE BUTTON */}
-      <button 
-        onClick={handleSave}
-        disabled={saving}
-        className="fixed bottom-[96px] right-6 lg:bottom-[104px] lg:right-10 z-[80] w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(34,197,94,0.3)] transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100"
-      >
-        <Save className="w-6 h-6" />
-      </button>
-
-      {/* FLOATING PREVIEW BUTTON */}
-      <button 
-        onClick={() => setPreviewOpen(true)}
-        className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-[80] w-14 h-14 bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-40)] text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(255,102,0,0.5)] transition-all duration-300 hover:scale-110"
-      >
-        <Eye className="w-6 h-6" />
-      </button>
 
       {/* PREVIEW MODAL */}
       {previewOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-[360px] h-[85vh] max-h-[800px] animate-in zoom-in-95 duration-300">
-            {/* Close Button */}
+        <div 
+          onClick={() => setPreviewOpen(false)}
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+        >
+          {/* Viewport Floating Close Button - Highly visible and guaranteed to display inside developer/user iframe/tab */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewOpen(false);
+            }}
+            className="fixed top-4 right-4 z-[120] bg-slate-800/90 hover:bg-red-600 text-white font-bold px-4 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-2xl transition-all duration-300 pointer-events-auto border border-white/10"
+          >
+            <X className="w-5 h-5" />
+            <span className="text-sm">Fechar Visualização</span>
+          </button>
+
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-[360px] h-[85vh] max-h-[800px] animate-in zoom-in-95 duration-300 cursor-default"
+          >
+            {/* Close Button above phone - fallback copy */}
             <button 
               onClick={() => setPreviewOpen(false)}
-              className="absolute -top-12 right-0 md:-right-12 w-10 h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-full flex items-center justify-center transition-colors shadow-xl"
+              className="absolute -top-12 right-0 w-10 h-10 bg-slate-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow-xl border border-white/10"
+              title="Fechar"
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Smartphone frame */}
             <div className="w-full h-full p-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[3rem] shadow-2xl relative">
+              {/* Quick internal close button directly inside the smartphone bezel */}
+              <button 
+                onClick={() => setPreviewOpen(false)}
+                className="absolute top-4 right-4 z-35 w-8 h-8 bg-black/70 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all border border-white/10"
+                title="Fechar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
               <div className="w-full h-full overflow-hidden rounded-[2.6rem] bg-[#0a0a0c] relative">
-                 {/* Notch Minimalista */}
-                 <div className="absolute top-0 w-full h-6 z-20 flex justify-center items-start">
-                    <div className="w-24 h-5 bg-black rounded-b-xl flex items-center justify-center">
-                       <div className="w-2 h-2 rounded-full bg-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]" />
-                    </div>
-                 </div>
-                 
-                 <div className="w-full h-full">
-                    <BioRenderer 
-                      asPreview={true}
-                      data={{
-                        company_name: settings?.company_name,
-                        company_logo_url: settings?.company_logo_url,
-                        pix_key: bioConfig.pix_key || settings?.pix_key,
-                        pix_type: bioConfig.pix_type || settings?.pix_type,
-                        brand_primary: settings?.brand_primary,
-                        bio_config: bioConfig
-                      }} 
-                    />
-                 </div>
+                  {/* Notch Minimalista */}
+                  <div className="absolute top-0 w-full h-6 z-20 flex justify-center items-start">
+                     <div className="w-24 h-5 bg-black rounded-b-xl flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]" />
+                     </div>
+                  </div>
+                  
+                  <div className="w-full h-full">
+                     <BioRenderer 
+                       asPreview={true}
+                       data={{
+                         company_name: settings?.company_name,
+                         company_logo_url: settings?.company_logo_url,
+                         pix_key: bioConfig.pix_key || settings?.pix_key,
+                         pix_type: bioConfig.pix_type || settings?.pix_type,
+                         brand_primary: settings?.brand_primary,
+                         bio_config: bioConfig
+                       }} 
+                     />
+                  </div>
               </div>
             </div>
           </div>
