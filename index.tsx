@@ -50,7 +50,7 @@ async function bootReal() {
 bootReal();
 
 // Registro do Service Worker para PWA/Netlify
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && window.self === window.top) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(console.error);
     

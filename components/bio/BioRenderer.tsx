@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
+import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, Eye, EyeOff } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
 export const formatExternalUrl = (url: string | undefined): string | undefined => {
   if (!url) return undefined;
@@ -39,13 +40,229 @@ export const getPlatformIcon = (platform: string) => {
 export default function BioRenderer({ data, asPreview = false }: { data: any, asPreview?: boolean }) {
   const [copiedPix, setCopiedPix] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const bio = data?.bio_config || {};
+
+  // Shopping Cart state
+  const [cart, setCart] = useState<{ product: any, quantity: number }[]>(() => {
+    try {
+      const saved = localStorage.getItem(`cart_${bio.tenant_id || 'default'}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [orderName, setOrderName] = useState("");
+  const [orderPhone, setOrderPhone] = useState("");
+  const [deliveryOption, setDeliveryOption] = useState<"pickup" | "delivery">("pickup");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [checkoutStep, setCheckoutStep] = useState<"cart" | "checkout">("cart");
+  const [productQuantity, setProductQuantity] = useState(1);
+
+  // Login Section State
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`cart_${bio.tenant_id || 'default'}`, JSON.stringify(cart));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [cart, bio.tenant_id]);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setProductQuantity(1);
+    }
+  }, [selectedProduct]);
+
+  // Escape key listener to close cart or product detail modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsCartOpen(false);
+        setSelectedProduct(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [setSelectedProduct, setIsCartOpen]);
+
+  // Dynamically update favicon with client's general app logo
+  useEffect(() => {
+    const clientLogo = data?.company_logo_url;
+    if (clientLogo) {
+      const links = document.querySelectorAll("link[rel*='icon']");
+      if (links.length > 0) {
+        links.forEach(link => {
+          (link as HTMLLinkElement).href = clientLogo;
+        });
+      } else {
+        const newLink = document.createElement("link");
+        newLink.rel = "icon";
+        newLink.href = clientLogo;
+        document.head.appendChild(newLink);
+      }
+    }
+  }, [data?.company_logo_url]);
+
+  const addToCart = (product: any, qty: number = 1) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.product.id === product.id);
+      if (existing) {
+        return prev.map(item => 
+          item.product.id === product.id 
+            ? { ...item, quantity: item.quantity + qty } 
+            : item
+        );
+      }
+      return [...prev, { product, quantity: qty }];
+    });
+  };
+
+  const removeFromCart = (productId: string) => {
+    setCart(prev => prev.filter(item => item.product.id !== productId));
+  };
+
+  const updateCartQuantity = (productId: string, qty: number) => {
+    if (qty <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+    setCart(prev => prev.map(item => 
+      item.product.id === productId 
+        ? { ...item, quantity: qty } 
+        : item
+    ));
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    setCheckoutStep("cart");
+  };
+
+  const parsePrice = (priceStr: string | number | undefined): number => {
+    if (!priceStr) return 0;
+    if (typeof priceStr === 'number') return priceStr;
+    const cleaned = priceStr
+      .toString()
+      .replace(/[R$\s]/gi, '')
+      .replace(/\./g, '')
+      .replace(',', '.');
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const formatPrice = (val: number): string => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  };
+
+  const cartTotalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotalPrice = cart.reduce((sum, item) => sum + (parsePrice(item.product.price) * item.quantity), 0);
+
+  const handleCheckoutWhatsApp = () => {
+    if (!orderName.trim()) {
+      alert("Por favor, informe seu nome para o pedido.");
+      return;
+    }
+    if (deliveryOption === "delivery" && !deliveryAddress.trim()) {
+      alert("Por favor, preencha o endereço de entrega.");
+      return;
+    }
+
+    const cleanedWhatsapp = (bio.whatsapp || bio.phone || "").replace(/\D/g, "");
+    if (!cleanedWhatsapp) {
+      alert("Desculpe, este estabelecimento não configurou um número de WhatsApp para receber pedidos.");
+      return;
+    }
+
+    // Format items list
+    const itemsText = cart.map(item => {
+      const itemTotal = parsePrice(item.product.price) * item.quantity;
+      return `• *${item.product.name}* (x${item.quantity}) - ${formatPrice(itemTotal)}`;
+    }).join("\n");
+
+    const header = `*🛍️ NOVO PEDIDO - ${companyName.toUpperCase()}*\n`;
+    const clientDetails = `*Cliente:* ${orderName.trim()}\n${orderPhone.trim() ? `*Telefone:* ${orderPhone.trim()}\n` : ""}`;
+    const deliveryDetails = deliveryOption === "delivery" 
+      ? `*Entrega:* Receber em Casa 🚚\n*Endereço:* ${deliveryAddress.trim()}\n` 
+      : `*Entrega:* Retirar no Local 🏪\n`;
+    
+    const totals = `\n*Total do Pedido: ${formatPrice(cartTotalPrice)}*`;
+    
+    let pixDetails = "";
+    if (pixKey) {
+      pixDetails = `\n\n*💳 FORMA DE PAGAMENTO:* PIX\n*Chave:* \`${pixKey}\` (${pixType})\n_Por favor, realize o pagamento e envie o comprovante de transferência junto com este pedido!_`;
+    }
+
+    const message = `${header}\n${clientDetails}${deliveryDetails}\n*PRODUTOS:*\n${itemsText}${totals}${pixDetails}\n\nAgradeço a preferência!`;
+    const encoded = encodeURIComponent(message);
+    const whatsappClean = (bio.whatsapp || bio.phone || '').replace(/\D/g, '');
+    const whatsappNumber = whatsappClean.startsWith('55') || whatsappClean.length > 11 ? whatsappClean : `55${whatsappClean}`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encoded}`;
+    
+    window.open(whatsappUrl, "_blank");
+  };
   const logo = data?.company_logo_url;
   const companyName = bio.title || data?.company_name || "Perfil";
   const desc = bio.description || "";
   const brandColor = bio.color || data?.brand_primary || "#ff7a00";
   const theme = bio.theme || "dark";
+
+  const generatePixPayload = (key: string, name: string = "GM Edificacao", city: string = "SAO LUIS") => {
+    const cleanKey = key.trim();
+    const formatField = (id: string, val: string) => {
+      const len = val.length.toString().padStart(2, '0');
+      return `${id}${len}${val}`;
+    };
+
+    const gui = formatField("00", "br.gov.bcb.pix");
+    const keyField = formatField("01", cleanKey);
+    const merchantAccountInfo = formatField("26", `${gui}${keyField}`);
+
+    let payload = "000201";
+    payload += merchantAccountInfo;
+    payload += "52040000";
+    payload += "5303986";
+    payload += "5802BR";
+    const normalizedName = name.substring(0, 25).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    const normalizedCity = city.substring(0, 15).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    payload += formatField("59", normalizedName || "CARDDIGITAL GM");
+    payload += formatField("60", normalizedCity || "SAO LUIS");
+    payload += "62070503***";
+    payload += "6304";
+
+    let crc = 0xFFFF;
+    for (let i = 0; i < payload.length; i++) {
+      const charCode = payload.charCodeAt(i);
+      crc ^= (charCode << 8);
+      for (let j = 0; j < 8; j++) {
+        if ((crc & 0x8000) !== 0) {
+          crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+        } else {
+          crc = (crc << 1) & 0xFFFF;
+        }
+      }
+    }
+    const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
+    return payload + crcHex;
+  };
+
+  const pixKey = bio.pix_key || data?.pix_key;
+  const pixType = bio.pix_type || data?.pix_type || "Chave";
+  const pixBrCode = pixKey ? generatePixPayload(pixKey, companyName) : "";
+  const cardUrl = bio.card_url || data?.card_url || "";
 
   const hexToRgb = (hex: string) => {
     let cleanHex = hex.replace("#", "");
@@ -110,6 +327,37 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
       window.removeEventListener("touchcancel", handleTouchEnd);
     };
   }, []);
+
+  const handleWebsiteLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    setLoginSuccess("");
+    setLoginLoading(true);
+    try {
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail.trim(),
+        password: loginPassword,
+      });
+      if (error) throw error;
+      setLoginSuccess("Login realizado com sucesso! Redirecionando...");
+      setTimeout(() => {
+        setIsLoginOpen(false);
+        // Redireciona para o painel administrativo da bio
+        window.location.hash = "/minha-bio";
+      }, 1200);
+    } catch (err: any) {
+      console.error("Login error:", err);
+      let msg = err?.message || "Credenciais inválidas.";
+      if (msg.includes("Invalid login credentials") || msg.includes("invalid-credentials")) {
+        msg = "E-mail ou senha incorretos.";
+      } else if (msg.includes("Email not confirmed")) {
+        msg = "Por favor, confirme seu e-mail antes de fazer login.";
+      }
+      setLoginError(msg);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
   const handleShareBio = () => {
     const url = window.location.href;
@@ -192,26 +440,22 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
         href={asPreview ? undefined : formattedHref}
         target={href ? "_blank" : undefined}
         rel={href ? "noreferrer" : undefined}
-        className={`w-full flex items-center p-3 sm:p-4 rounded-full border group select-none cursor-pointer bio-button ${t.cardBg} ${t.cardBgHover} ${t.cardBorder} ${t.cardBorderHover}`}
+        className={`w-full flex items-center p-4 sm:p-5 rounded-full border group select-none cursor-pointer transition-all duration-300 transform active:scale-98 shadow-sm hover:shadow-md bio-button ${t.cardBg} ${t.cardBgHover} ${t.cardBorder} ${t.cardBorderHover}`}
         onClick={(e: any) => { if (asPreview && href) e.preventDefault(); }}
       >
-        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${t.iconBg}`} style={{ color: brandColor, backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}>
-          <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${t.iconBg}`} style={{ color: brandColor, backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}>
+          <Icon className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
         </div>
-        <div className="flex-1 text-center pr-10 sm:pr-12">
-          <div className={`text-sm sm:text-base font-semibold truncate px-2 ${t.cardTitle}`}>{title}</div>
-          {value && title.toLowerCase() !== value.toLowerCase() && (
-            <div className={`text-[10px] sm:text-xs font-medium truncate px-2 mt-0.5 ${t.cardSub}`}>{value}</div>
-          )}
+        <div className="flex-1 text-center pr-11 sm:pr-12">
+          <div className={`text-base sm:text-lg font-extrabold tracking-wide px-2 ${t.cardTitle}`}>{title}</div>
         </div>
       </Wrapper>
     );
   };
 
-  const pixKey = bio.pix_key || data?.pix_key;
-  const pixType = bio.pix_type || data?.pix_type;
   const customLinks = bio.custom_links || [];
   const bgImg = bio.bg_image_url;
+  const bgMobileImg = bio.bg_mobile_image_url;
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -256,77 +500,262 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
 
   return (
     <div 
-      className={`w-full ${!asPreview ? "fixed inset-0 overflow-y-auto py-10 px-4" : "relative h-full overflow-y-auto no-scrollbar py-6 px-4"} ${t.bg} selection:bg-orange-500/30 font-sans`}
+      className={`w-full ${!asPreview ? "min-h-screen relative py-10 px-4 overflow-y-auto" : "relative h-full overflow-y-auto no-scrollbar py-6 px-4"} ${t.bg} selection:bg-orange-500/30 font-sans`}
     >
+      {/* Background Desktop */}
       {bgImg && (
         <div 
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20" 
-          style={{ backgroundImage: `url(${bgImg})` }} 
+          className={`${asPreview ? "absolute" : "fixed"} inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20 ${bgMobileImg ? "hidden md:block" : "block"}`} 
+          style={{ backgroundImage: `url(${bgImg})`, backgroundAttachment: asPreview ? 'scroll' : 'fixed' }} 
         />
       )}
-      <div className="max-w-md mx-auto relative z-10 space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
-        
-        {/* Profile Header */}
-        <div className="text-center space-y-3 pt-2">
-          <div className={`w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden border-[3px] flex items-center justify-center p-1 shadow-2xl relative ${t.iconBg}`} style={{ borderColor: `${brandColor}50` }}>
-            {logo ? (
-              <img src={logo} alt={companyName} className="w-full h-full object-contain rounded-full" />
-            ) : (
-              <div className="text-3xl font-bold" style={{ color: brandColor }}>
-                {companyName.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-          <div className="px-2 space-y-3">
-            <h1 className={`text-xl sm:text-2xl font-bold tracking-tight ${t.textTitle}`}>{companyName}</h1>
-            {desc && <p className={`mt-2 text-sm max-w-xs mx-auto leading-relaxed ${t.textDesc}`}>{desc}</p>}
+      {/* Background Smartphone */}
+      {bgMobileImg && (
+        <div 
+          className={`${asPreview ? "absolute" : "fixed"} inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20 block md:hidden`} 
+          style={{ backgroundImage: `url(${bgMobileImg})`, backgroundAttachment: asPreview ? 'scroll' : 'fixed' }} 
+        />
+      )}
+      <div className={`${asPreview ? "max-w-md mx-auto" : "max-w-5xl w-full mx-auto px-4 md:px-8"} relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10`}>
+        <div className="space-y-6 sm:space-y-8 w-full">
+          
+          {/* 1. Banners Slider Carousel */}
+          {bio.show_banners && (() => {
+            const desktopBanner = bio.banner_img_url_1;
+            const mobileBanner = bio.mobile_banner_img_url_1;
             
-            {/* Share Bio Button */}
-            <div className="pt-1 flex justify-center">
-              <button 
-                onClick={handleShareBio}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border shadow-sm cursor-pointer bio-button ${t.cardBg} ${t.cardBgHover} ${t.cardBorder}`}
-                style={{ 
-                  color: brandColor, 
-                  borderColor: `${brandColor}40`
-                }}
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                {copiedShare ? "Link Copiado!" : "Compartilhar Bio"}
-              </button>
+            // Fallbacks
+            const finalDesktop = desktopBanner || mobileBanner;
+            const finalMobile = mobileBanner || desktopBanner;
+
+            if (!finalDesktop && !finalMobile) return null;
+
+            return (
+              <>
+                {/* Desktop Banner (md:block hidden) */}
+                {finalDesktop && (
+                  <div className="hidden md:block w-full rounded-[2rem] overflow-hidden border shadow-lg relative group aspect-[21/9] bg-black/10 transition-all duration-300" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                    <div className="w-full h-full relative">
+                      <img src={finalDesktop} alt="Banner Desktop" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile Banner (block md:hidden) */}
+                {finalMobile && (
+                  <div className="block md:hidden w-full rounded-[2rem] overflow-hidden border shadow-lg relative group aspect-[9/16] bg-black/10 transition-all duration-300 max-w-sm mx-auto" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                    <div className="w-full h-full relative">
+                      <img src={finalMobile} alt="Banner Mobile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
+          {/* 2. Profile Header (Main landing hub) */}
+          <div className="text-center space-y-4 pt-2">
+            <div className={`w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-full overflow-hidden border-[3px] flex items-center justify-center p-1 shadow-2xl relative ${t.iconBg}`} style={{ borderColor: `${brandColor}50` }}>
+              {logo ? (
+                <img src={logo} alt={companyName} className="w-full h-full object-contain rounded-full" />
+              ) : (
+                <div className="text-3xl font-bold" style={{ color: brandColor }}>
+                  {companyName.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="px-2 space-y-3">
+              <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${t.textTitle}`}>{companyName}</h1>
+              {desc && <p className={`mt-2 text-sm max-w-md mx-auto leading-relaxed ${t.textDesc}`}>{desc}</p>}
+              
+              {/* Share Bio Button */}
+              <div className="pt-1 flex justify-center">
+                <button 
+                  onClick={handleShareBio}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border shadow-sm cursor-pointer transition-all duration-200 transform active:scale-95 bio-button ${t.cardBg} ${t.cardBgHover} ${t.cardBorder}`}
+                  style={{ 
+                    color: brandColor, 
+                    borderColor: `${brandColor}40`
+                  }}
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  {copiedShare ? "Link Copiado!" : "Compartilhar Bio"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Contacts Grid */}
-        <div className="flex flex-col gap-3 pt-2">
-          {/* Legacy fields display */}
-          <ContactCard icon={MessageCircle} title="WhatsApp" value={bio.whatsapp} href={bio.whatsapp ? `https://wa.me/${bio.whatsapp.replace(/\D/g, '')}` : undefined} />
-          <ContactCard icon={Phone} title="Telefone" value={bio.phone} href={bio.phone ? `tel:${bio.phone.replace(/\D/g, '')}` : undefined} />
-          <ContactCard icon={Mail} title="E-mail" value={bio.email} href={bio.email ? `mailto:${bio.email}` : undefined} />
-          <ContactCard icon={Instagram} title="Instagram" value={bio.instagram} href={bio.instagram?.includes('http') ? bio.instagram : `https://instagram.com/${bio.instagram?.replace('@','')}`} />
-          <ContactCard icon={Facebook} title="Facebook" value={bio.facebook} href={bio.facebook?.includes('http') ? bio.facebook : `https://facebook.com/${bio.facebook}`} />
-          <ContactCard icon={Box} title="Portfólio" value={bio.portfolio_url ? 'Acessar Portfólio' : ''} href={bio.portfolio_url} />
-          <ContactCard icon={FileText} title="Catálogo" value={bio.catalog_url ? 'Ver Catálogo' : ''} href={bio.catalog_url} />
-          <ContactCard icon={Globe} title="Website" value={bio.website ? 'Visitar Site' : ''} href={bio.website} />
+          {/* 3. Contacts & Links Stack (Harmonized, wider container blocks) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+            {/* Legacy contact fields */}
+            <ContactCard icon={MessageCircle} title="WhatsApp" value={bio.whatsapp} href={bio.whatsapp ? `https://wa.me/${bio.whatsapp.replace(/\D/g, '')}` : undefined} />
+            <ContactCard icon={Phone} title="Telefone" value={bio.phone} href={bio.phone ? `tel:${bio.phone.replace(/\D/g, '')}` : undefined} />
+            <ContactCard icon={Mail} title="E-mail" value={bio.email} href={bio.email ? `mailto:${bio.email}` : undefined} />
+            <ContactCard icon={Instagram} title="Instagram" value={bio.instagram} href={bio.instagram?.includes('http') ? bio.instagram : `https://instagram.com/${bio.instagram?.replace('@','')}`} />
+            <ContactCard icon={Facebook} title="Facebook" value={bio.facebook} href={bio.facebook?.includes('http') ? bio.facebook : `https://facebook.com/${bio.facebook}`} />
+            <ContactCard icon={Box} title="Portfólio" value={bio.portfolio_url ? 'Acessar Portfólio' : ''} href={bio.portfolio_url} />
+            <ContactCard icon={FileText} title="Catálogo" value={bio.catalog_url ? 'Ver Catálogo' : ''} href={bio.catalog_url} />
+            <ContactCard icon={Globe} title="Website" value={bio.website ? 'Visitar Site' : ''} href={bio.website} />
 
-          {/* Dynamic Links */}
-          {customLinks.map((link: any) => {
-            const Icon = getPlatformIcon(link.platform);
-            return (
-              <ContactCard 
-                key={link.id} 
-                icon={Icon} 
-                title={link.label || 'Link'} 
-                value={link.value || undefined} 
-                href={link.url} 
-              />
-            );
-          })}
+            {/* Dynamic Custom Links */}
+            {customLinks.map((link: any) => {
+              const Icon = getPlatformIcon(link.platform);
+              return (
+                <ContactCard 
+                  key={link.id} 
+                  icon={Icon} 
+                  title={link.label || 'Link'} 
+                  value={link.value || undefined} 
+                  href={link.url} 
+                />
+              );
+            })}
+          </div>
 
-          {/* Endereço sempre será o ultimo botão, abaixo do botão, adicione uma miniatura no formato quadrado com as bordas arredodadas do mapa "endereço" */}
+          {/* 4. Products Catalog Section */}
+          {bio.catalog_items && bio.catalog_items.length > 0 && (
+            <div className="pt-4 space-y-4 relative">
+              <div className="flex items-center justify-between px-2">
+                {bio.catalog_title && <h2 className={`text-xl font-extrabold tracking-tight ${t.textTitle}`}>{bio.catalog_title}</h2>}
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-2 items-stretch animate-fade-in">
+                {bio.catalog_items.map((item: any) => {
+                  return (
+                    <div 
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedProduct(item);
+                        setActiveImageIndex(0);
+                      }}
+                      className={`overflow-hidden rounded-[2rem] border transition-all duration-300 flex flex-col cursor-pointer hover:shadow-2xl hover:-translate-y-1 group ${t.cardBg} ${t.cardBorder} hover:border-orange-500/40`}
+                    >
+                      {item.image_url ? (
+                        <div className={`w-full aspect-[4/3] ${t.iconBg} overflow-hidden relative`}>
+                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
+                        </div>
+                      ) : (
+                        <div className={`w-full aspect-[4/3] ${t.iconBg} flex items-center justify-center`}>
+                          <ShoppingCart className="w-10 h-10 opacity-20 text-slate-400" />
+                        </div>
+                      )}
+                      <div className="p-5 flex flex-col flex-1 space-y-2">
+                        <div className={`font-extrabold text-base line-clamp-1 ${t.cardTitle}`}>{item.name || 'Produto sem nome'}</div>
+                        {item.description && <div className={`text-xs leading-relaxed line-clamp-2 ${t.cardSub}`}>{item.description}</div>}
+                        <div className="mt-auto pt-3 flex items-center justify-between border-t border-white/5" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                          <span className="font-black text-base" style={{ color: brandColor }}>{item.price}</span>
+                          <span className="text-xs font-bold bg-orange-500/10 text-orange-500 px-3.5 py-1.5 rounded-full border border-orange-500/10 group-hover:bg-orange-500/20 transition-all">Ver Detalhes</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 5. Payment Card Section */}
+          {(pixKey || cardUrl) && (
+            <div className={`p-6 sm:p-8 rounded-[2.5rem] text-center space-y-6 shadow-xl relative overflow-hidden group border w-full ${t.cardBg} ${t.cardBorder}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}10` : undefined }}>
+              <div className="absolute top-0 left-0 w-full h-[4px] opacity-80 group-hover:opacity-100 transition-opacity" style={{ background: brandColor }} />
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                {/* Payment Header and Title */}
+                <div className="space-y-4 text-center sm:text-left flex-1">
+                  <div className="flex items-center justify-center sm:justify-start gap-3">
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '8px',
+                      borderRadius: '16px',
+                      backgroundColor: 'white',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                    }}>
+                      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 4H3C1.89543 4 1 4.89543 1 6V18C1 19.1046 1.89543 20 3 20H21C22.1046 20 23 19.1046 23 18V6C23 4.89543 22.1046 4 21 4Z" stroke="#32BCAD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M1 10H23" stroke="#32BCAD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className={`font-black text-lg tracking-tight ${t.cardTitle}`}>Meios de Pagamento</h3>
+                      <p className="text-[10px] uppercase font-extrabold text-teal-500 tracking-wider">Seguro • Rápido • Conveniente</p>
+                    </div>
+                  </div>
+                  
+                  <p className={`text-xs leading-relaxed ${t.pixSubtitle}`}>
+                    {pixKey && cardUrl 
+                      ? "Escolha a melhor forma para pagar: realize a transferência instantânea por PIX ou pague via Cartão de Crédito."
+                      : pixKey 
+                      ? "Realize pagamentos escaneando o código ao lado ou copiando a chave Pix comercial listada abaixo."
+                      : "Realize o pagamento de forma segura através do link de pagamento via Cartão de Crédito."}
+                  </p>
+                </div>
+
+                {/* QR Code Box (only if pixKey exists) */}
+                {pixKey && (
+                  <div className="shrink-0 space-y-2">
+                    <div className="bg-white p-3 rounded-[1.5rem] w-40 h-40 flex items-center justify-center shadow-lg border border-slate-200/40">
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=000000&data=${encodeURIComponent(pixKey)}`} 
+                        alt="QR Code PIX" 
+                        className="w-full h-full object-contain"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 block tracking-wide">Aponte a câmera para pagar</span>
+                  </div>
+                )}
+              </div>
+
+              {pixKey && (
+                <div className="space-y-4">
+                  <div className="bg-black/15 dark:bg-black/30 p-4 rounded-2xl border border-white/5 space-y-1" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                    <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Chave PIX ({pixType})</div>
+                    <div className="text-sm sm:text-base font-mono font-bold break-all select-all text-white px-2" style={{ color: brandColor }}>
+                      {pixKey}
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={handleCopyPix}
+                    className={`w-full flex items-center justify-center p-3.5 sm:p-4 rounded-2xl font-bold border transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md bio-button ${t.iconBg}`}
+                    style={{ 
+                      color: brandColor, 
+                      borderColor: `${brandColor}40`, 
+                      backgroundColor: theme === 'dark' ? `${brandColor}15` : undefined
+                    }}
+                  >
+                    {copiedPix ? <Check className="w-5 h-5 mr-2" /> : <Copy className="w-5 h-5 mr-2" />}
+                    {copiedPix ? "Chave copiada!" : "Copiar Chave para Pix Copia e Cola"}
+                  </button>
+                </div>
+              )}
+
+              {cardUrl && (
+                <div className={pixKey ? "border-t border-dashed pt-4 border-slate-700/50" : ""}>
+                  <a 
+                    href={cardUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center p-3.5 sm:p-4 rounded-2xl font-bold text-white transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md border"
+                    style={{ 
+                      backgroundColor: brandColor,
+                      borderColor: brandColor,
+                      boxShadow: `0 4px 14px ${brandColor}40`
+                    }}
+                  >
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Pagar com Cartão de Crédito
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 5.5 Address & Embedded Map Section (At the very bottom) */}
           {bio.address && (
-            <div className="space-y-4 pt-1">
+            <div className="space-y-4 pt-4">
               <ContactCard 
                 icon={MapPin} 
                 title="Endereço" 
@@ -335,7 +764,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
               />
               
               <div 
-                className="w-full aspect-square rounded-[2rem] overflow-hidden border shadow-inner relative z-0" 
+                className="w-full aspect-video rounded-[2rem] overflow-hidden border shadow-inner relative z-0 animate-fade-in" 
                 style={{ 
                   borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' 
                 }}
@@ -350,103 +779,656 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
               </div>
             </div>
           )}
-        </div>
 
-        {/* Catalog Section */}
-        {bio.catalog_items && bio.catalog_items.length > 0 && (
-          <div className="pt-4 space-y-3 relative group/catalog">
-            <div className="flex items-center justify-between px-2">
-              {bio.catalog_title && <h2 className={`text-lg font-bold ${t.textTitle}`}>{bio.catalog_title}</h2>}
+          {/* 6. Admin Area / Login Footer Trigger */}
+          <div className="pt-8 pb-4 text-center space-y-4">
+            <div className="text-xs font-semibold tracking-wider opacity-60 text-slate-400">
+              Desenvolvido por <span className="font-extrabold" style={{ color: brandColor }}>CardDigital GM</span>
             </div>
-            
-            <div className="relative">
-              {bio.catalog_items.length > 1 && (
-                <>
-                  <button onClick={(e) => { e.preventDefault(); scrollLeftNav(); }} className={`absolute -left-3 top-1/2 -translate-y-1/2 z-10 p-1.5 sm:p-2 rounded-full shadow-xl bg-black/40 backdrop-blur-md text-white hover:opacity-100 opacity-90 transition-opacity border border-white/20`} style={{ backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)', color: theme === 'dark' ? 'white' : 'black' }}>
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button onClick={(e) => { e.preventDefault(); scrollRightNav(); }} className={`absolute -right-3 top-1/2 -translate-y-1/2 z-10 p-1.5 sm:p-2 rounded-full shadow-xl bg-black/40 backdrop-blur-md text-white hover:opacity-100 opacity-90 transition-opacity border border-white/20`} style={{ backgroundColor: theme === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)', color: theme === 'dark' ? 'white' : 'black' }}>
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
-              )}
-              <div 
-                ref={scrollRef}
-                className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-4 no-scrollbar items-stretch"
+            <div>
+              <button 
+                onClick={() => setIsLoginOpen(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold opacity-40 hover:opacity-100 hover:text-orange-500 transition-colors cursor-pointer"
               >
-              {bio.catalog_items.map((item: any) => {
-                const itemHref = formatExternalUrl(item.url);
-                return (
-                  <a 
-                    key={item.id}
-                    href={asPreview ? undefined : itemHref}
-                    target={itemHref ? "_blank" : undefined}
-                    rel={itemHref ? "noreferrer" : undefined}
-                    onClick={(e: any) => { if (asPreview && itemHref) e.preventDefault(); }}
-                    className={`snap-center shrink-0 w-[80%] max-w-[260px] block overflow-hidden rounded-2xl border transition-all flex flex-col ${t.cardBg} ${t.cardBorder} ${itemHref ? 'cursor-pointer hover:scale-[1.02] border-orange-500/30' : 'cursor-default'}`}
+                <Lock className="w-3.5 h-3.5" />
+                Área Restrita / Login do Administrador
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* WEBSITE LOGIN MODAL OVERLAY */}
+      {isLoginOpen && (
+        <div className="fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in" onClick={() => setIsLoginOpen(false)}>
+          <div 
+            className={`w-full max-w-md rounded-[2rem] border overflow-hidden shadow-2xl flex flex-col ${theme === 'dark' ? 'bg-[#0e0e11] border-zinc-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-5 flex items-center justify-between border-b" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+              <div className="flex items-center gap-2">
+                <Lock className="w-5 h-5 text-orange-500" />
+                <span className="font-extrabold text-sm tracking-wide uppercase">Login do Administrador</span>
+              </div>
+              <button 
+                onClick={() => setIsLoginOpen(false)}
+                className="p-1.5 rounded-full hover:bg-slate-500/10 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Login Form */}
+            <form onSubmit={handleWebsiteLogin} className="p-6 space-y-4">
+              <p className="text-xs text-slate-400">Entre com as suas credenciais para gerenciar a sua Bio CardDigital GM.</p>
+              
+              {loginError && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-200 text-xs">
+                  {loginError}
+                </div>
+              )}
+
+              {loginSuccess && (
+                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-green-200 text-xs">
+                  {loginSuccess}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider opacity-70">E-mail</label>
+                <div className="relative">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2">
+                    <Mail className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="seu-email@dominio.com"
+                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm border focus:outline-none transition-all ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
+                        : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider opacity-70">Senha</label>
+                <div className="relative">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2">
+                    <Lock className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <input
+                    type={showLoginPassword ? "text" : "password"}
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Sua senha..."
+                    className={`w-full pl-10 pr-10 py-3 rounded-xl text-sm border focus:outline-none transition-all ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
+                        : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white transition-colors"
                   >
-                    {item.image_url ? (
-                      <div className={`w-full aspect-square ${t.iconBg}`}>
-                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className={`w-full aspect-square ${t.iconBg} flex items-center justify-center`}>
-                        <ShoppingCart className="w-8 h-8 opacity-20 text-slate-400" />
-                      </div>
-                    )}
-                    <div className="p-3 flex flex-col flex-1">
-                      <div className={`font-semibold text-sm truncate ${t.cardTitle}`}>{item.name || 'Produto sem nome'}</div>
-                      {item.description && <div className={`text-xs mt-1 line-clamp-2 ${t.cardSub}`}>{item.description}</div>}
-                      <div className="mt-auto pt-1.5 font-bold text-[13px]" style={{ color: brandColor }}>{item.price}</div>
+                    {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loginLoading}
+                className="w-full flex items-center justify-center p-3.5 rounded-xl text-white font-bold transition-all shadow-md hover:brightness-110 active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                style={{ backgroundColor: brandColor }}
+              >
+                {loginLoading ? (
+                  <span className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                ) : (
+                  "Entrar no Painel"
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Product Detail & Photo Gallery Modal */}
+      {selectedProduct && (() => {
+        const productImages = selectedProduct.images && selectedProduct.images.filter((img: string) => img.trim() !== "").length > 0
+          ? selectedProduct.images.filter((img: string) => img.trim() !== "")
+          : (selectedProduct.image_url ? [selectedProduct.image_url] : []);
+        
+        const activeImageUrl = productImages[activeImageIndex] || selectedProduct.image_url;
+        const productLink = formatExternalUrl(selectedProduct.url);
+
+        return (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in" onClick={() => setSelectedProduct(null)}>
+            <div 
+              className={`w-full max-w-lg rounded-[2rem] border overflow-hidden shadow-2xl flex flex-col max-h-[90vh] ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-4 flex items-center justify-between border-b" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                <span className="text-xs font-bold tracking-widest uppercase opacity-60">Detalhes do Produto</span>
+                <button 
+                  onClick={() => setSelectedProduct(null)}
+                  className="p-1.5 rounded-full hover:bg-slate-500/10 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Scrollable Container */}
+              <div className="overflow-y-auto flex-1 no-scrollbar p-5 space-y-5">
+                {/* Image Gallery */}
+                <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black/20 border" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                  {activeImageUrl ? (
+                    <img 
+                      src={activeImageUrl} 
+                      alt={selectedProduct.name} 
+                      className="w-full h-full object-cover" 
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center opacity-30">
+                      <ShoppingCart className="w-12 h-12" />
                     </div>
+                  )}
+
+                  {/* Left / Right Gallery Arrows */}
+                  {productImages.length > 1 && (
+                    <>
+                      <button 
+                        onClick={() => setActiveImageIndex(prev => (prev - 1 + productImages.length) % productImages.length)}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/70 text-white hover:bg-black/90 transition-colors shadow-lg z-10"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={() => setActiveImageIndex(prev => (prev + 1) % productImages.length)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/70 text-white hover:bg-black/90 transition-colors shadow-lg z-10"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Thumbnails Gallery Row */}
+                {productImages.length > 1 && (
+                  <div className="flex gap-2 justify-center overflow-x-auto pb-1 no-scrollbar">
+                    {productImages.map((img: string, idx: number) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveImageIndex(idx)}
+                        className={`relative w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-black/10 ${activeImageIndex === idx ? 'border-orange-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                      >
+                        <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Product Meta */}
+                <div className="space-y-3 pt-1">
+                  <h3 className="text-xl font-extrabold tracking-tight">{selectedProduct.name || 'Produto sem nome'}</h3>
+                  {selectedProduct.price && (
+                    <div className="text-xl font-black text-orange-500" style={{ color: brandColor }}>{selectedProduct.price}</div>
+                  )}
+                  {selectedProduct.description && (
+                    <p className={`text-sm leading-relaxed whitespace-pre-wrap ${theme === 'dark' ? 'text-zinc-300' : 'text-slate-600'}`}>
+                      {selectedProduct.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Quantity Selector */}
+                <div className="pt-3 border-t" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold opacity-80">Quantidade</span>
+                    <div className="flex items-center gap-1 bg-black/10 dark:bg-white/5 rounded-full p-1 border" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                      <button 
+                        onClick={() => setProductQuantity(prev => Math.max(1, prev - 1))}
+                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-lg transition-colors font-bold cursor-pointer"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="w-12 text-center font-bold text-sm">{productQuantity}</span>
+                      <button 
+                        onClick={() => setProductQuantity(prev => prev + 1)}
+                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-lg transition-colors font-bold cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer (Action buttons) */}
+              <div className="p-4 border-t flex flex-col gap-2 shrink-0" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => {
+                      addToCart(selectedProduct, productQuantity);
+                      setSelectedProduct(null);
+                    }}
+                    className={`flex-1 flex items-center justify-center p-3.5 rounded-xl font-bold transition-all shadow-md border cursor-pointer ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-900 hover:bg-zinc-800 text-zinc-100 border-zinc-800' 
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+                    }`}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar
+                  </button>
+                  
+                  <button 
+                    onClick={() => {
+                      addToCart(selectedProduct, productQuantity);
+                      setSelectedProduct(null);
+                      setIsCartOpen(true);
+                    }}
+                    className="flex-1 flex items-center justify-center p-3.5 rounded-xl text-white font-bold transition-all shadow-md hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                    style={{ backgroundColor: brandColor }}
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Comprar Já
+                  </button>
+                </div>
+                
+                {productLink && (
+                  <a 
+                    href={productLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full flex items-center justify-center py-2 text-xs font-semibold opacity-60 hover:opacity-100 transition-opacity"
+                  >
+                    <Globe className="w-3.5 h-3.5 mr-1.5" />
+                    Ver no Site Original
                   </a>
-                );
-              })}
+                )}
+                
+                <button 
+                  onClick={() => setSelectedProduct(null)}
+                  className={`w-full py-2.5 text-xs font-bold rounded-lg border transition-colors cursor-pointer ${
+                    theme === 'dark' 
+                      ? 'bg-transparent text-zinc-400 hover:text-white border-zinc-800 hover:bg-zinc-900' 
+                      : 'bg-transparent text-slate-500 hover:text-slate-800 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  Voltar ao Catálogo
+                </button>
               </div>
             </div>
           </div>
-        )}
+        );
+      })()}
 
-        {/* PIX */}
-        {pixKey && (
-          <div className={`p-5 sm:p-6 rounded-[2rem] text-center space-y-4 shadow-xl mt-4 relative overflow-hidden group border ${t.cardBg} ${t.cardBorder}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}10` : undefined }}>
-            <div className="absolute top-0 left-0 w-full h-[4px] opacity-80 group-hover:opacity-100 transition-opacity" style={{ background: brandColor }} />
-            <div className="flex items-center justify-center mb-1">
-              <div style={{
-                width: '128px',
-                height: '48px',
-                backgroundColor: brandColor,
-                maskImage: 'url(https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg)',
-                WebkitMaskImage: 'url(https://upload.wikimedia.org/wikipedia/commons/5/50/Pix_%28Brazil%29_logo.svg)',
-                maskSize: 'contain',
-                WebkitMaskSize: 'contain',
-                maskRepeat: 'no-repeat',
-                WebkitMaskRepeat: 'no-repeat',
-                maskPosition: 'center',
-                WebkitMaskPosition: 'center'
-              }} />
-            </div>
-            <div>
-              <h4 className={`font-bold text-lg ${t.cardTitle}`}>Faça um PIX</h4>
-              <p className={`text-sm mt-1 ${t.pixSubtitle}`}>Chave {pixType}:</p>
-              <p className="font-bold break-all mt-1" style={{ color: brandColor }}>{pixKey}</p>
-            </div>
-            <button 
-              onClick={handleCopyPix}
-              className={`w-full flex items-center justify-center p-3 sm:p-4 rounded-xl font-bold border bio-button ${t.iconBg}`}
-              style={{ 
-                color: brandColor, 
-                borderColor: `${brandColor}40`, 
-                backgroundColor: theme === 'dark' ? `${brandColor}15` : undefined
-              }}
-            >
-              {copiedPix ? <Check className="w-5 h-5 mr-2" /> : <Copy className="w-5 h-5 mr-2" />}
-              {copiedPix ? "Chave copiada!" : "Copiar Chave"}
-            </button>
+      {/* Floating Shopping Cart FAB Button */}
+      {cartTotalItems > 0 && (
+        <button
+          onClick={() => {
+            setCheckoutStep("cart");
+            setIsCartOpen(true);
+          }}
+          className={`fixed bottom-6 right-6 z-[140] flex items-center gap-2 px-5 py-4 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-transform font-bold text-white cursor-pointer group`}
+          style={{ backgroundColor: brandColor }}
+        >
+          <div className="relative">
+            <ShoppingBag className="w-6 h-6" />
+            <span className="absolute -top-2.5 -right-2.5 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black shadow-md border border-white/10 group-hover:animate-pulse">
+              {cartTotalItems}
+            </span>
           </div>
-        )}
+          <span className="hidden sm:inline-block text-sm ml-1">{formatPrice(cartTotalPrice)}</span>
+        </button>
+      )}
 
-      </div>
+      {/* Shopping Cart Drawer / Modal */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[160] flex justify-end bg-black/75 backdrop-blur-sm animate-fade-in" onClick={() => setIsCartOpen(false)}>
+          <div 
+            className={`w-full max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 ${
+              theme === 'dark' ? 'bg-[#0e0e11] text-white border-l border-zinc-800' : 'bg-white text-slate-900 border-l border-slate-100'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer Header */}
+            <div className="p-5 flex items-center justify-between border-b" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5" style={{ color: brandColor }} />
+                <h3 className="font-extrabold text-lg">Seu Carrinho</h3>
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold" style={{ color: brandColor, backgroundColor: `${brandColor}15` }}>
+                  {cartTotalItems} {cartTotalItems === 1 ? 'item' : 'itens'}
+                </span>
+              </div>
+              <button 
+                onClick={() => setIsCartOpen(false)}
+                className="p-1.5 rounded-full hover:bg-slate-500/10 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content area: Cart items list OR checkout form */}
+            {cart.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-slate-500/10 flex items-center justify-center opacity-40">
+                  <ShoppingBag className="w-8 h-8" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-bold text-base">Seu carrinho está vazio</p>
+                  <p className="text-xs opacity-60 max-w-[240px]">Adicione produtos do catálogo para iniciar seu pedido.</p>
+                </div>
+                <button 
+                  onClick={() => setIsCartOpen(false)}
+                  className="px-6 py-2.5 rounded-full text-xs font-bold text-white transition-all shadow-md hover:brightness-110 cursor-pointer"
+                  style={{ backgroundColor: brandColor }}
+                >
+                  Continuar Navegando
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Checkout flow steps indicator */}
+                <div className="px-5 pt-4 pb-2 flex gap-2">
+                  <button 
+                    onClick={() => setCheckoutStep("cart")}
+                    className={`flex-1 py-1.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+                      checkoutStep === "cart" 
+                        ? 'text-orange-500 border-orange-500' 
+                        : 'border-transparent opacity-50'
+                    }`}
+                    style={checkoutStep === "cart" ? { borderColor: brandColor, color: brandColor } : undefined}
+                  >
+                    1. Carrinho
+                  </button>
+                  <button 
+                    onClick={() => setCheckoutStep("checkout")}
+                    className={`flex-1 py-1.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+                      checkoutStep === "checkout" 
+                        ? 'text-orange-500 border-orange-500' 
+                        : 'border-transparent opacity-50'
+                    }`}
+                    style={checkoutStep === "checkout" ? { borderColor: brandColor, color: brandColor } : undefined}
+                  >
+                    2. Dados de Entrega
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-6">
+                  {checkoutStep === "cart" ? (
+                    <div className="space-y-4">
+                      {cart.map((item, idx) => {
+                        const itemPriceParsed = parsePrice(item.product.price);
+                        const itemTotal = itemPriceParsed * item.quantity;
+                        return (
+                          <div 
+                            key={idx}
+                            className={`flex gap-4 p-4 rounded-3xl border transition-all ${
+                              theme === 'dark' ? 'bg-zinc-900/60 border-zinc-800' : 'bg-slate-50 border-slate-200/60'
+                            }`}
+                          >
+                            {/* Product Thumbnail */}
+                            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-black/10 shrink-0 border border-black/5">
+                              {item.product.image_url ? (
+                                <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center opacity-20">
+                                  <ShoppingCart className="w-8 h-8" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Info & Quantity controls */}
+                            <div className="flex-1 flex flex-col justify-between min-w-0">
+                              <div className="flex items-start justify-between gap-1">
+                                <div className="min-w-0">
+                                  <h4 className="font-extrabold text-sm sm:text-base truncate pr-1">{item.product.name}</h4>
+                                  <p className="text-[11px] opacity-60 mt-0.5">Unitário: {formatPrice(itemPriceParsed)}</p>
+                                </div>
+                                <button 
+                                  onClick={() => removeFromCart(item.product.id)}
+                                  className="text-red-500 hover:text-red-600 transition-colors p-1 cursor-pointer shrink-0"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              
+                              <div className="flex items-end justify-between mt-2">
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] uppercase font-bold tracking-wider opacity-50">Subtotal</span>
+                                  <span className="text-sm font-black" style={{ color: brandColor }}>{formatPrice(itemTotal)}</span>
+                                </div>
+                                
+                                <div className="flex items-center gap-2 bg-black/15 dark:bg-white/10 rounded-full p-1 border" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)' }}>
+                                  <button 
+                                    onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
+                                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-sm font-bold cursor-pointer"
+                                  >
+                                    <Minus className="w-3.5 h-3.5" />
+                                  </button>
+                                  <span className="w-6 text-center font-black text-xs">{item.quantity}</span>
+                                  <button 
+                                    onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
+                                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-sm font-bold cursor-pointer"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Clear cart action */}
+                      <div className="flex justify-end pt-1">
+                        <button 
+                          onClick={clearCart}
+                          className="text-xs font-bold opacity-60 hover:opacity-100 text-red-500 transition-opacity flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Limpar Todo o Carrinho
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-5 animate-fade-in">
+                      {/* Customer info form */}
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider opacity-70 flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5" />
+                            Seu Nome <span className="text-red-500">*</span>
+                          </label>
+                          <input 
+                            type="text" 
+                            placeholder="Como podemos te chamar?"
+                            value={orderName}
+                            onChange={(e) => setOrderName(e.target.value)}
+                            className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all ${
+                              theme === 'dark' 
+                                ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
+                                : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                            }`}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider opacity-70 flex items-center gap-1.5">
+                            <Phone className="w-3.5 h-3.5" />
+                            WhatsApp / Telefone para Contato
+                          </label>
+                          <input 
+                            type="tel" 
+                            placeholder="Ex: (99) 99999-9999"
+                            value={orderPhone}
+                            onChange={(e) => setOrderPhone(e.target.value)}
+                            className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all ${
+                              theme === 'dark' 
+                                ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
+                                : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Delivery Option Selector */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase tracking-wider opacity-70 flex items-center gap-1.5">
+                            <Truck className="w-3.5 h-3.5" />
+                            Opção de Entrega <span className="text-red-500">*</span>
+                          </label>
+                          <div className="grid grid-cols-2 gap-2 bg-black/10 dark:bg-white/5 p-1 rounded-xl border" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                            <button
+                              type="button"
+                              onClick={() => setDeliveryOption("pickup")}
+                              className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                deliveryOption === "pickup"
+                                  ? (theme === 'dark' ? 'bg-zinc-800 text-white shadow' : 'bg-white text-slate-900 shadow')
+                                  : 'opacity-60 hover:opacity-100'
+                              }`}
+                            >
+                              Retirar no Local
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeliveryOption("delivery")}
+                              className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                deliveryOption === "delivery"
+                                  ? (theme === 'dark' ? 'bg-zinc-800 text-white shadow' : 'bg-white text-slate-900 shadow')
+                                  : 'opacity-60 hover:opacity-100'
+                              }`}
+                            >
+                              Receber em Casa
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Delivery Address fields */}
+                        {deliveryOption === "delivery" && (
+                          <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
+                            <label className="text-xs font-bold uppercase tracking-wider opacity-70">
+                              Endereço Completo de Entrega <span className="text-red-500">*</span>
+                            </label>
+                            <textarea 
+                              placeholder="Rua, número, bairro, cidade, referências..."
+                              value={deliveryAddress}
+                              onChange={(e) => setDeliveryAddress(e.target.value)}
+                              rows={3}
+                              className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all resize-none ${
+                                theme === 'dark' 
+                                  ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
+                                  : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                              }`}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Pix section inside the drawer */}
+                      {pixKey && (
+                        <div className={`p-4 rounded-2xl border space-y-3.5 text-center shadow-md relative overflow-hidden bg-black/10 dark:bg-white/5`} style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                          <div className="absolute top-0 left-0 w-full h-[3px]" style={{ background: brandColor }} />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-left">
+                              <CreditCard className="w-4 h-4" style={{ color: brandColor }} />
+                              <span className="text-xs font-bold uppercase tracking-wider">Pagamento via PIX</span>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-500/10 text-green-500">Opcional no site</span>
+                          </div>
+                          <p className="text-xs opacity-75 text-left leading-relaxed">
+                            Pague agora escaneando ou copiando a chave PIX, finalize seu pedido e anexe o comprovante na mensagem!
+                          </p>
+                          <div className="bg-white p-2.5 rounded-xl inline-block shadow border">
+                            <img 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(pixBrCode || pixKey)}`} 
+                              alt="QR Code Pix"
+                              className="w-28 h-28 object-contain"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                          <div>
+                            <span className="text-[10px] opacity-60">Chave PIX:</span>
+                            <div className="font-extrabold text-xs break-all mt-0.5 select-all" style={{ color: brandColor }}>{pixKey}</div>
+                          </div>
+                          <button 
+                            onClick={handleCopyPix}
+                            className={`w-full flex items-center justify-center py-2 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+                              theme === 'dark' ? 'bg-zinc-800 border-zinc-700 hover:bg-zinc-700' : 'bg-slate-100 border-slate-200 hover:bg-slate-200'
+                            }`}
+                          >
+                            {copiedPix ? <Check className="w-4 h-4 mr-1.5 text-green-500" /> : <Copy className="w-4 h-4 mr-1.5" />}
+                            {copiedPix ? "Chave copiada!" : "Copiar Chave PIX"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Drawer Footer with Cart totals & WhatsApp Checkout action */}
+                <div className="p-6 border-t space-y-4 shrink-0 bg-black/10 dark:bg-black/40" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)' }}>
+                  <div className="space-y-2 border-b pb-3" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                    <div className="flex items-center justify-between text-xs opacity-75">
+                      <span>Subtotal dos itens:</span>
+                      <span className="font-bold">{formatPrice(cartTotalPrice)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs opacity-75">
+                      <span>Entrega:</span>
+                      <span className="font-bold text-green-500">A combinar / Grátis</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="font-extrabold text-sm uppercase tracking-wide opacity-80">Total do Pedido:</span>
+                    <span className="text-2xl font-black tracking-tight" style={{ color: brandColor }}>{formatPrice(cartTotalPrice)}</span>
+                  </div>
+
+                  {checkoutStep === "cart" ? (
+                    <button 
+                      onClick={() => setCheckoutStep("checkout")}
+                      className="w-full flex items-center justify-center p-4 rounded-2xl text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                      style={{ backgroundColor: brandColor }}
+                    >
+                      Avançar para Entrega
+                      <ChevronRight className="w-5 h-5 ml-1.5" />
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <button 
+                        onClick={handleCheckoutWhatsApp}
+                        className="w-full flex items-center justify-center p-4 rounded-2xl text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer bg-green-600 hover:bg-green-700"
+                      >
+                        <MessageCircle className="w-5 h-5 mr-2" />
+                        Finalizar e Enviar via WhatsApp
+                      </button>
+                      
+                      <button 
+                        onClick={() => setCheckoutStep("cart")}
+                        className="w-full py-2 text-xs font-bold opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        Voltar para o Carrinho
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

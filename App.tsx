@@ -134,9 +134,11 @@ function BootReady() {
         })
         .catch(() => {});
 
-      import('./services/pushFCM')
-        .then(({ startPush }) => startPush({ tenantId, userId: user.id }))
-        .catch(console.error);
+      if (window.self === window.top) {
+        import('./services/pushFCM')
+          .then(({ startPush }) => startPush({ tenantId, userId: user.id }))
+          .catch(console.error);
+      }
     }
 
     setTimeout(() => window.__GM_APP_READY__?.(), 500);

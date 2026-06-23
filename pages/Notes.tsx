@@ -50,6 +50,7 @@ import {
   toggleAlarmsForBudget,
   checkAlarms,
   removeAlarmsForBudget,
+  syncAlarmsWithNotes,
 } from "../lib/alarmSystem";
 import { uploadNoteAsset } from "../services/storageService";
 import imageCompression from "browser-image-compression";
@@ -429,6 +430,7 @@ export default function Notes() {
           return n;
         });
         setNotes(mappedData);
+        syncAlarmsWithNotes(mappedData);
         
         const toMigrate = data.filter(n => normalizeStatus(n.status) === "APROVADO" || normalizeStatus(n.status) === "AGUARDANDO");
         for (const note of toMigrate) {
@@ -1238,6 +1240,7 @@ export default function Notes() {
     if (!deleteConfirmId) return;
     const id = deleteConfirmId;
     setNotes((prev) => prev.filter((n) => n.id !== id));
+    removeAlarmsForBudget(id);
     try {
       await supabase.from("notes").delete().eq("id", id);
     } catch (e) {}

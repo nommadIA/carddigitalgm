@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Page } from "../components/ui/Page";
 import { Link } from "react-router-dom";
 import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, Save, Smartphone, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard } from "lucide-react";
@@ -29,7 +29,9 @@ export default function Bio() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [iconPickerOpen, setIconPickerOpen] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState<"smartphone" | "pc">("smartphone");
   const [isDocked, setIsDocked] = useState(false);
+  const isDraggingRef = useRef(false);
 
   // Accordion state
   const [openSections, setOpenSections] = useState({
@@ -62,12 +64,21 @@ export default function Bio() {
     address_url: "", // NEW
     pix_key: "",
     pix_type: "CPF",
+    card_url: "", // NEW
     custom_links: [] as any[],
     theme: "dark",
     color: "",
     catalog_title: "Catálogo",
     catalog_items: [] as any[],
     bg_image_url: "",
+    bg_mobile_image_url: "",
+    show_banners: false,
+    banner_img_url_1: "",
+    banner_img_url_2: "",
+    banner_img_url_3: "",
+    mobile_banner_img_url_1: "",
+    mobile_banner_img_url_2: "",
+    mobile_banner_img_url_3: "",
   });
 
   const compressImageFidelity = (file: File, maxWidth = 1200, maxQuality = 0.82): Promise<Blob | File> => {
@@ -155,15 +166,30 @@ export default function Bio() {
     return data.publicUrl;
   };
 
-  const handleUploadBg = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadBg = async (isMobile: boolean, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     try {
       pushToast({ type: "info", title: "Upload", message: "Enviando imagem de fundo..." });
       const url = await uploadImage(e.target.files[0]);
-      handleChange("bg_image_url", url);
+      handleChange(isMobile ? "bg_mobile_image_url" : "bg_image_url", url);
       pushToast({ type: "success", title: "Sucesso", message: "Imagem enviada" });
     } catch(err) {
       pushToast({ type: "error", title: "Erro", message: "Erro ao enviar imagem" });
+    }
+  };
+
+  const handleUploadBanner = async (index: 1 | 2 | 3, isMobile: boolean, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    try {
+      const typeLabel = isMobile ? "Smartphone" : "Desktop";
+      pushToast({ type: "info", title: "Upload", message: `Enviando Banner ${typeLabel} ${index}...` });
+      const url = await uploadImage(e.target.files[0]);
+      const fieldName = isMobile ? `mobile_banner_img_url_${index}` : `banner_img_url_${index}`;
+      handleChange(fieldName, url);
+      pushToast({ type: "success", title: "Sucesso", message: `Banner ${typeLabel} ${index} enviado!` });
+    } catch(err) {
+      console.error(err);
+      pushToast({ type: "error", title: "Erro", message: `Erro ao enviar Banner ${index}` });
     }
   };
 
@@ -262,7 +288,7 @@ export default function Bio() {
     pushToast({ type: "success", title: "Copiado", message: "Link da bio copiado!" });
   };
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: any) => {
     setBioConfig(prev => ({ ...prev, [field]: value }));
   };
 
@@ -290,7 +316,7 @@ export default function Bio() {
   const addCatalogItem = () => {
     setBioConfig(prev => ({
       ...prev,
-      catalog_items: [...prev.catalog_items, { id: Date.now().toString(), name: '', price: '', image_url: '', url: '' }]
+      catalog_items: [...prev.catalog_items, { id: Date.now().toString(), name: '', price: '', image_url: '', url: '', description: '', images: [''] }]
     }));
   };
 
@@ -306,6 +332,75 @@ export default function Bio() {
       ...prev,
       catalog_items: prev.catalog_items.map(i => i.id === id ? { ...i, [field]: value } : i)
     }));
+  };
+
+  const updateCatalogItemImage = (itemId: string, index: number, value: string) => {
+    setBioConfig(prev => {
+      const updatedItems = (prev.catalog_items || []).map(item => {
+        if (item.id === itemId) {
+          const currentImages = [...(item.images || (item.image_url ? [item.image_url] : ['']))];
+          currentImages[index] = value;
+          const primaryUrl = currentImages[0] || '';
+          return { 
+            ...item, 
+            image_url: primaryUrl, 
+            images: currentImages 
+          };
+        }
+        return item;
+      });
+      return { ...prev, catalog_items: updatedItems };
+    });
+  };
+
+  const addCatalogItemImageSlot = (itemId: string) => {
+    setBioConfig(prev => {
+      const updatedItems = (prev.catalog_items || []).map(item => {
+        if (item.id === itemId) {
+          const currentImages = [...(item.images || (item.image_url ? [item.image_url] : ['']))];
+          if (currentImages.length < 5) {
+            currentImages.push('');
+            return { ...item, images: currentImages };
+          }
+        }
+        return item;
+      });
+      return { ...prev, catalog_items: updatedItems };
+    });
+  };
+
+  const removeCatalogItemImage = (itemId: string, index: number) => {
+    setBioConfig(prev => {
+      const updatedItems = (prev.catalog_items || []).map(item => {
+        if (item.id === itemId) {
+          const currentImages = [...(item.images || (item.image_url ? [item.image_url] : ['']))];
+          currentImages.splice(index, 1);
+          if (currentImages.length === 0) {
+            currentImages.push('');
+          }
+          const primaryUrl = currentImages[0] || '';
+          return { 
+            ...item, 
+            image_url: primaryUrl, 
+            images: currentImages 
+          };
+        }
+        return item;
+      });
+      return { ...prev, catalog_items: updatedItems };
+    });
+  };
+
+  const handleUploadProductImageAtIndex = async (itemId: string, index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    try {
+      pushToast({ type: "info", title: "Upload", message: "Enviando imagem do produto..." });
+      const url = await uploadImage(e.target.files[0]);
+      updateCatalogItemImage(itemId, index, url);
+      pushToast({ type: "success", title: "Sucesso", message: "Imagem de produto enviada" });
+    } catch(err) {
+      pushToast({ type: "error", title: "Erro", message: "Erro ao enviar imagem" });
+    }
   };
 
   if (loading) {
@@ -354,7 +449,7 @@ export default function Bio() {
            </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+        <div className="flex flex-col gap-6 items-stretch w-full max-w-4xl mx-auto">
         
           {/* 1. INFORMAÇÕES BÁSICAS */}
           <div className="gm-card p-4 sm:p-6 space-y-4">
@@ -374,38 +469,6 @@ export default function Bio() {
               <div>
                 <label className="gm-label">Descrição Curta</label>
                 <input type="text" className="gm-input" value={bioConfig.description} onChange={e => handleChange("description", e.target.value)} placeholder="Sua frase de destaque..." />
-              </div>
-            </div>
-            )}
-          </div>
-
-          {/* 2. CONTATOS E REDES */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('contacts')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><Phone className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Contatos e Redes</span>
-              {openSections.contacts ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
-            
-            {openSections.contacts && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
-              <div>
-                <label className="gm-label">WhatsApp (com DDD)</label>
-                <input type="text" className="gm-input font-medium" value={bioConfig.whatsapp} onChange={e => handleChange("whatsapp", e.target.value)} placeholder="Ex: 11999999999" />
-              </div>
-              <div>
-                <label className="gm-label">E-mail Comercial</label>
-                <input type="email" className="gm-input" value={bioConfig.email} onChange={e => handleChange("email", e.target.value)} />
-              </div>
-              <div>
-                <label className="gm-label">Instagram (URL ou @)</label>
-                <input type="text" className="gm-input" value={bioConfig.instagram} onChange={e => handleChange("instagram", e.target.value)} />
-              </div>
-              <div>
-                <label className="gm-label">Facebook</label>
-                <input type="text" className="gm-input" value={bioConfig.facebook} onChange={e => handleChange("facebook", e.target.value)} />
               </div>
             </div>
             )}
@@ -439,15 +502,263 @@ export default function Bio() {
                   <option value="glass">Glassmorphism (Vidro)</option>
                 </select>
               </div>
-              <div className="sm:col-span-2">
-                <label className="gm-label">Imagem de Fundo (Fica atrás da bio)</label>
-                <div className="flex gap-2">
-                  <input type="text" className="gm-input flex-1 text-sm font-mono" value={bioConfig.bg_image_url || ''} onChange={e => handleChange("bg_image_url", e.target.value)} placeholder="https://... ou faça upload" />
-                  <label className="gm-btn gm-btn-outline flex items-center justify-center cursor-pointer shrink-0 py-2.5">
-                    <Upload className="w-4 h-4 mr-2" /> Upload
-                    <input type="file" accept="image/*" className="hidden" onChange={handleUploadBg} />
-                  </label>
+              {/* Seção Desktop (Plano de Fundo & Banner Principal) */}
+              <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 space-y-4">
+                <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/50 pb-2.5">
+                    <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                      <Layout className="w-4 h-4 text-orange-400" /> Mídias Versão Desktop (Computador)
+                    </span>
+                    <span className="text-[10px] font-semibold text-zinc-400 bg-zinc-800/60 px-2.5 py-1 rounded-full border border-zinc-700/30">
+                      Tamanho Sugerido: <strong className="text-orange-400">1920x500 px</strong> (Proporção 21:9)
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Plano de Fundo Desktop */}
+                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-xs font-bold text-zinc-300">Plano de Fundo Desktop</span>
+                          {bioConfig.bg_image_url && (
+                            <button 
+                              type="button" 
+                              onClick={() => handleChange("bg_image_url", "")} 
+                              className="text-red-500 hover:text-red-400 text-[10px] font-bold"
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </div>
+                        
+                        {bioConfig.bg_image_url ? (
+                          <div className="w-full aspect-[21/9] rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
+                            <img src={bioConfig.bg_image_url} alt="Plano de Fundo Desktop" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-full aspect-[21/9] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
+                            <Layout className="w-4 h-4 mb-1 opacity-40 text-orange-400" />
+                            Sem plano de fundo desktop
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-1.5 pt-3">
+                        <input 
+                          type="text" 
+                          className="gm-input !py-1.5 !px-2 text-[10px] font-mono flex-1" 
+                          value={bioConfig.bg_image_url || ''} 
+                          onChange={e => handleChange("bg_image_url", e.target.value)} 
+                          placeholder="URL ou Upload" 
+                        />
+                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-orange-500/60 hover:border-orange-500 hover:bg-orange-500/10 transition-all">
+                          <Upload className="w-3.5 h-3.5 text-orange-500" />
+                          <span className="font-bold text-white">Upload</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBg(false, e)} />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Banner Desktop Principal */}
+                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-xs font-bold text-zinc-300">Banner Desktop Principal</span>
+                          {bioConfig.banner_img_url_1 && (
+                            <button 
+                              type="button" 
+                              onClick={() => handleChange("banner_img_url_1", "")} 
+                              className="text-red-500 hover:text-red-400 text-[10px] font-bold"
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </div>
+                        
+                        {bioConfig.banner_img_url_1 ? (
+                          <div className="w-full aspect-[21/9] rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
+                            <img src={bioConfig.banner_img_url_1} alt="Banner Desktop" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-full aspect-[21/9] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
+                            <Sparkles className="w-4 h-4 mb-1 opacity-40 text-orange-400" />
+                            Sem banner desktop
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-1.5 pt-3">
+                        <input 
+                          type="text" 
+                          className="gm-input !py-1.5 !px-2 text-[10px] font-mono flex-1" 
+                          value={bioConfig.banner_img_url_1 || ''} 
+                          onChange={e => handleChange("banner_img_url_1", e.target.value)} 
+                          placeholder="URL ou Upload" 
+                        />
+                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-orange-500/60 hover:border-orange-500 hover:bg-orange-500/10 transition-all">
+                          <Upload className="w-3.5 h-3.5 text-orange-500" />
+                          <span className="font-bold text-white">Upload</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBanner(1, false, e)} />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              {/* Seção Smartphone (Plano de Fundo & Banner Principal) */}
+              <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 space-y-4">
+                <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/50 pb-2.5">
+                    <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                      <Smartphone className="w-4 h-4 text-orange-400" /> Mídias Versão Smartphone (Celular)
+                    </span>
+                    <span className="text-[10px] font-semibold text-zinc-400 bg-zinc-800/60 px-2.5 py-1 rounded-full border border-zinc-700/30">
+                      Tamanho Sugerido: <strong className="text-orange-400">1080x1920 px</strong> (Proporção 9:16)
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Plano de Fundo Smartphone */}
+                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-xs font-bold text-zinc-300">Plano de Fundo Smartphone</span>
+                          {bioConfig.bg_mobile_image_url && (
+                            <button 
+                              type="button" 
+                              onClick={() => handleChange("bg_mobile_image_url", "")} 
+                              className="text-red-500 hover:text-red-400 text-[10px] font-bold"
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </div>
+                        
+                        {bioConfig.bg_mobile_image_url ? (
+                          <div className="w-full aspect-[9/16] rounded-lg overflow-hidden border border-zinc-800 bg-black/40 max-w-[140px] mx-auto">
+                            <img src={bioConfig.bg_mobile_image_url} alt="Plano de Fundo Smartphone" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-full aspect-[9/16] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10 max-w-[140px] mx-auto">
+                            <Smartphone className="w-4 h-4 mb-1 opacity-40 text-orange-400" />
+                            Sem plano de fundo smartphone
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-1.5 pt-3">
+                        <input 
+                          type="text" 
+                          className="gm-input !py-1.5 !px-2 text-[10px] font-mono flex-1" 
+                          value={bioConfig.bg_mobile_image_url || ''} 
+                          onChange={e => handleChange("bg_mobile_image_url", e.target.value)} 
+                          placeholder="URL ou Upload" 
+                        />
+                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-orange-500/60 hover:border-orange-500 hover:bg-orange-500/10 transition-all">
+                          <Upload className="w-3.5 h-3.5 text-orange-500" />
+                          <span className="font-bold text-white">Upload</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBg(true, e)} />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Banner Smartphone Principal */}
+                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-xs font-bold text-zinc-300">Banner Smartphone Principal</span>
+                          {bioConfig.mobile_banner_img_url_1 && (
+                            <button 
+                              type="button" 
+                              onClick={() => handleChange("mobile_banner_img_url_1", "")} 
+                              className="text-red-500 hover:text-red-400 text-[10px] font-bold"
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </div>
+                        
+                        {bioConfig.mobile_banner_img_url_1 ? (
+                          <div className="w-full aspect-[9/16] rounded-lg overflow-hidden border border-zinc-800 bg-black/40 max-w-[140px] mx-auto">
+                            <img src={bioConfig.mobile_banner_img_url_1} alt="Banner Smartphone" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                        ) : (
+                          <div className="w-full aspect-[9/16] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10 max-w-[140px] mx-auto">
+                            <Sparkles className="w-4 h-4 mb-1 opacity-40 text-orange-400" />
+                            Sem banner smartphone
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-1.5 pt-3">
+                        <input 
+                          type="text" 
+                          className="gm-input !py-1.5 !px-2 text-[10px] font-mono flex-1" 
+                          value={bioConfig.mobile_banner_img_url_1 || ''} 
+                          onChange={e => handleChange("mobile_banner_img_url_1", e.target.value)} 
+                          placeholder="URL ou Upload" 
+                        />
+                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-orange-500/60 hover:border-orange-500 hover:bg-orange-500/10 transition-all">
+                          <Upload className="w-3.5 h-3.5 text-orange-500" />
+                          <span className="font-bold text-white">Upload</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBanner(1, true, e)} />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Toggle Exibir Banners */}
+              <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-orange-400" /> Exibir Banners de Destaque no Site
+                  </span>
+                  <p className="text-[11px] text-zinc-400">Ative para exibir o carrossel de banners promocionais no topo do seu site.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer"
+                    checked={!!bioConfig.show_banners}
+                    onChange={(e) => handleChange("show_banners", e.target.checked)}
+                  />
+                  <div className="w-9 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                </label>
+              </div>
+            </div>
+            )}
+          </div>
+
+          {/* 2. CONTATOS E REDES */}
+          <div className="gm-card p-4 sm:p-6 space-y-4">
+            <button
+               onClick={() => toggleSection('contacts')}
+               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
+            >
+              <span className="flex items-center gap-2"><Phone className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Contatos e Redes</span>
+              {openSections.contacts ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+            </button>
+            
+            {openSections.contacts && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
+              <div>
+                <label className="gm-label">WhatsApp (com DDD)</label>
+                <input type="text" className="gm-input font-medium" value={bioConfig.whatsapp} onChange={e => handleChange("whatsapp", e.target.value)} placeholder="Ex: 11999999999" />
+              </div>
+              <div>
+                <label className="gm-label">E-mail Comercial</label>
+                <input type="email" className="gm-input" value={bioConfig.email} onChange={e => handleChange("email", e.target.value)} />
+              </div>
+              <div>
+                <label className="gm-label">Instagram (URL ou @)</label>
+                <input type="text" className="gm-input" value={bioConfig.instagram} onChange={e => handleChange("instagram", e.target.value)} />
+              </div>
+              <div>
+                <label className="gm-label">Facebook</label>
+                <input type="text" className="gm-input" value={bioConfig.facebook} onChange={e => handleChange("facebook", e.target.value)} />
               </div>
             </div>
             )}
@@ -590,72 +901,8 @@ export default function Bio() {
             )}
           </div>
 
-          {/* 5. ENDEREÇO E LOCALIZAÇÃO */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('address')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Endereço e Localização</span>
-              {openSections.address ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
-            
-            {openSections.address && (
-            <div className="grid grid-cols-1 gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
-              <div className="space-y-4">
-                <div>
-                  <label className="gm-label font-semibold">Nome do Endereço Completo</label>
-                  <textarea className="gm-input min-h-[70px] !py-2.5" value={bioConfig.address} onChange={e => handleChange("address", e.target.value)} placeholder="Rua XYZ, 123 - Cidade/UF" />
-                </div>
-                <div>
-                  <label className="gm-label font-semibold">Link de Localização (Google Maps / Waze)</label>
-                  <input type="text" className="gm-input font-mono text-xs !py-2.5" value={bioConfig.address_url || ''} onChange={e => handleChange("address_url", e.target.value)} placeholder="https://maps.app.goo.gl/..." />
-                  <p className="text-xs text-slate-500 mt-1">Ao receber o clique no endereço, o cliente abrirá esta localização.</p>
-                </div>
-              </div>
-            </div>
-            )}
-          </div>
-
-          {/* 6. DADOS DE PAGAMENTO (PIX) */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('payment')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Dados de Pagamento (PIX)</span>
-              {openSections.payment ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
-            
-            {openSections.payment && (
-            <div className="grid grid-cols-1 gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
-              <div className="space-y-4">
-                <div>
-                  <label className="gm-label font-semibold">Como deseja receber / Chave PIX</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] text-slate-400 font-medium mb-1 block">Tipo de Chave PIX</label>
-                      <select className="gm-input !py-2" value={bioConfig.pix_type} onChange={e => handleChange("pix_type", e.target.value)}>
-                        <option value="CPF">CPF</option>
-                        <option value="CNPJ">CNPJ</option>
-                        <option value="Email">E-mail</option>
-                        <option value="Telefone">Telefone</option>
-                        <option value="Chave Aleatória">Chave Aleatória</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-400 font-medium mb-1 block">Chave PIX</label>
-                      <input type="text" className="gm-input !py-2 text-sm" value={bioConfig.pix_key} onChange={e => handleChange("pix_key", e.target.value)} placeholder="Chave do PIX..." />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            )}
-          </div>
-
           {/* 7. CATÁLOGO DE PRODUTOS (FULL WIDTH lg:col-span-2) */}
-          <div className="lg:col-span-2 gm-card p-4 sm:p-6 space-y-4">
+          <div className="gm-card p-4 sm:p-6 space-y-4">
             <button
                onClick={() => toggleSection('catalog')}
                className="w-full flex justify-between items-center text-lg font-semibold text-white group"
@@ -697,6 +944,7 @@ export default function Bio() {
                      </button>
                      
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3">
+                       {/* LADO ESQUERDO DO CONTAINER: Nome, Preço, Link Direto, Descrição */}
                        <div className="space-y-4">
                          <div>
                            <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Nome do Produto/Serviço</label>
@@ -708,19 +956,7 @@ export default function Bio() {
                              placeholder="Ex: Tênis Nike Air"
                            />
                          </div>
-                         <div>
-                           <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Descrição do Produto</label>
-                           <textarea 
-                             className="gm-input w-full !py-2.5 min-h-[90px]" 
-                             value={item.description || ''} 
-                             onChange={e => updateCatalogItem(item.id, 'description', e.target.value)} 
-                             placeholder="Ex: Tênis em couro, ótimo para corridas."
-                             rows={3}
-                           />
-                         </div>
-                       </div>
 
-                       <div className="space-y-4">
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                            <div>
                              <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Preço (opcional)</label>
@@ -743,58 +979,184 @@ export default function Bio() {
                              />
                            </div>
                          </div>
-                         
-                         <div className="font-sans">
-                           <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Imagem do Produto (Miniatura)</label>
-                           <div className="flex gap-4 items-center bg-black/50 p-3 rounded-2xl border border-zinc-800">
-                             {item.image_url ? (
-                               <div className="relative w-28 h-28 rounded-xl overflow-hidden border border-zinc-700 bg-black shrink-0 group/img shadow-md">
-                                 <img 
-                                   src={item.image_url} 
-                                   alt={item.name || "Produto"} 
-                                   className="w-full h-full object-cover" 
-                                   referrerPolicy="no-referrer"
-                                 />
-                                 <button
-                                   type="button"
-                                   onClick={() => updateCatalogItem(item.id, 'image_url', '')}
-                                   className="absolute top-1 right-1 bg-black/85 hover:bg-red-600 text-white rounded-full p-1 transition-colors"
-                                   title="Remover Imagem"
-                                 >
-                                   <X className="w-3 h-3" />
-                                 </button>
-                                </div>
-                             ) : (
-                               <div className="w-28 h-28 rounded-xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-slate-600 shrink-0">
-                                 <ShoppingBag className="w-10 h-10 opacity-45 text-orange-400" />
-                               </div>
-                             )}
-                             
-                             <div className="flex-1 space-y-2 min-w-0">
-                               <div className="flex gap-2">
-                                 <input 
-                                   type="text" 
-                                   className="gm-input flex-1 !py-1 text-xs font-mono" 
-                                   value={item.image_url} 
-                                   onChange={e => updateCatalogItem(item.id, 'image_url', e.target.value)} 
-                                   placeholder="Cole o link da imagem..."
-                                 />
-                                 <label className="gm-btn gm-btn-outline px-3 py-1 text-xs flex items-center justify-center cursor-pointer shrink-0 gap-1.5 hover:bg-orange-500/15">
-                                   <Upload className="w-3.5 h-3.5" />
-                                   <span>Upload</span>
-                                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadProductImage(item.id, e)} />
-                                 </label>
-                               </div>
-                               <p className="text-[10px] text-slate-500">Envie o arquivo ou adicione uma URL válida para ver a miniatura do produto</p>
-                             </div>
-                           </div>
+
+                         <div>
+                           <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Descrição do Produto</label>
+                           <textarea 
+                             className="gm-input w-full !py-2.5 min-h-[100px]" 
+                             value={item.description || ''} 
+                             onChange={e => updateCatalogItem(item.id, 'description', e.target.value)} 
+                             placeholder="Ex: Tênis em couro, ótimo para corridas."
+                             rows={3}
+                           />
                          </div>
+                       </div>
+
+                       <div className="space-y-4">
+                         
+                                                   <div className="font-sans space-y-3">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-semibold text-slate-400 block">Fotos do Produto (Máximo 5)</label>
+                              {((item.images || (item.image_url ? [item.image_url] : [""])).length < 5) && (
+                                <button 
+                                  type="button"
+                                  onClick={() => addCatalogItemImageSlot(item.id)}
+                                  className="text-xs text-orange-500 hover:text-orange-400 flex items-center font-semibold bg-orange-500/10 hover:bg-orange-500/20 px-2 py-1 rounded-lg transition-all"
+                                >
+                                  <Plus className="w-3 h-3 mr-1" /> Adicionar Foto
+                                </button>
+                              )}
+                            </div>
+                            
+                            <div className="grid grid-cols-1 gap-3">
+                              {(item.images || (item.image_url ? [item.image_url] : [""])).map((imgUrl, idx) => (
+                                <div key={idx} className="bg-black/50 p-4 rounded-2xl border border-zinc-800 space-y-3.5 flex flex-col">
+                                  {/* 1. FOTO MINIATURA */}
+                                  <div className="flex items-center gap-3">
+                                    {imgUrl ? (
+                                      <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-zinc-700 bg-black shrink-0 group/img shadow-md">
+                                        <img 
+                                          src={imgUrl} 
+                                          alt={"Foto " + (idx + 1)} 
+                                          className="w-full h-full object-cover" 
+                                          referrerPolicy="no-referrer"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => removeCatalogItemImage(item.id, idx)}
+                                          className="absolute top-1 right-1 bg-black/85 hover:bg-red-600 text-white rounded-full p-1 transition-colors"
+                                          title="Remover Foto"
+                                        >
+                                          <X className="w-2.5 h-2.5" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div className="w-16 h-16 rounded-xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-slate-600 shrink-0">
+                                        <ShoppingBag className="w-6 h-6 opacity-45 text-orange-400" />
+                                      </div>
+                                    )}
+                                    <div>
+                                      <p className="text-xs font-bold text-slate-300">Foto {idx + 1} de 5</p>
+                                      <p className="text-[10px] text-slate-500">
+                                        {imgUrl ? "Miniatura carregada" : "Nenhuma imagem vinculada"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* 2. ÁREA LINK WEB IMAGEM */}
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Link Web da Imagem</label>
+                                    <input 
+                                      type="text" 
+                                      className="gm-input w-full !py-2 text-xs font-mono" 
+                                      value={imgUrl || ""} 
+                                      onChange={e => updateCatalogItemImage(item.id, idx, e.target.value)} 
+                                      placeholder={"Cole o link da foto " + (idx + 1) + "..."}
+                                    />
+                                  </div>
+
+                                  {/* 3. UPLOAD e EXCLUIR */}
+                                  <div className="flex gap-2">
+                                    <label className="gm-btn gm-btn-outline flex-1 px-3 py-2 text-xs flex items-center justify-center cursor-pointer gap-1.5 hover:bg-orange-500/15">
+                                      <Upload className="w-3.5 h-3.5" />
+                                      <span>Upload</span>
+                                      <input 
+                                        type="file" 
+                                        accept="image/*"
+                                        className="hidden" 
+                                        onChange={(e) => handleUploadProductImageAtIndex(item.id, idx, e)} 
+                                      />
+                                    </label>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeCatalogItemImage(item.id, idx)}
+                                      className="gm-btn border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 px-3 py-2 text-xs flex items-center justify-center gap-1.5"
+                                      title="Excluir Foto"
+                                    >
+                                      <Trash className="w-3.5 h-3.5 text-red-400" />
+                                      <span>Excluir</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                        </div>
                      </div>
                    </div>
                  ))}
                </div>
             )}
+            </div>
+            )}
+          </div>
+
+          {/* 5. DADOS DE PAGAMENTO (PIX) */}
+          <div className="gm-card p-4 sm:p-6 space-y-4">
+            <button
+               onClick={() => toggleSection('payment')}
+               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
+            >
+              <span className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Dados de Pagamento (PIX)</span>
+              {openSections.payment ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+            </button>
+            
+            {openSections.payment && (
+            <div className="grid grid-cols-1 gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
+              <div className="space-y-4">
+                <div>
+                  <label className="gm-label font-semibold">Como deseja receber / Chave PIX</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-medium mb-1 block">Tipo de Chave PIX</label>
+                      <select className="gm-input !py-2" value={bioConfig.pix_type} onChange={e => handleChange("pix_type", e.target.value)}>
+                        <option value="CPF">CPF</option>
+                        <option value="CNPJ">CNPJ</option>
+                        <option value="Email">E-mail</option>
+                        <option value="Telefone">Telefone</option>
+                        <option value="Chave Aleatória">Chave Aleatória</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-400 font-medium mb-1 block">Chave PIX</label>
+                      <input type="text" className="gm-input !py-2 text-sm" value={bioConfig.pix_key} onChange={e => handleChange("pix_key", e.target.value)} placeholder="Chave do PIX..." />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-800/60 pt-4">
+                  <label className="gm-label font-semibold">Link para Pagamento (Cartão de Crédito URL)</label>
+                  <input type="text" className="gm-input font-mono text-xs !py-2.5" value={bioConfig.card_url || ''} onChange={e => handleChange("card_url", e.target.value)} placeholder="https://link.mercadopago.com/... ou stripe..." />
+                  <p className="text-xs text-slate-500 mt-1">Ao receber o clique no botão do cartão de crédito, o cliente será redirecionado para este link de pagamento.</p>
+                </div>
+              </div>
+            </div>
+            )}
+          </div>
+
+          {/* 6. ENDEREÇO E LOCALIZAÇÃO */}
+          <div className="gm-card p-4 sm:p-6 space-y-4">
+            <button
+               onClick={() => toggleSection('address')}
+               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
+            >
+              <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Endereço e Localização</span>
+              {openSections.address ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+            </button>
+            
+            {openSections.address && (
+            <div className="grid grid-cols-1 gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
+              <div className="space-y-4">
+                <div>
+                  <label className="gm-label font-semibold">Nome do Endereço Completo</label>
+                  <textarea className="gm-input min-h-[70px] !py-2.5" value={bioConfig.address} onChange={e => handleChange("address", e.target.value)} placeholder="Rua XYZ, 123 - Cidade/UF" />
+                </div>
+                <div>
+                  <label className="gm-label font-semibold">Link de Localização (Google Maps / Waze)</label>
+                  <input type="text" className="gm-input font-mono text-xs !py-2.5" value={bioConfig.address_url || ''} onChange={e => handleChange("address_url", e.target.value)} placeholder="https://maps.app.goo.gl/..." />
+                  <p className="text-xs text-slate-500 mt-1">Ao receber o clique no endereço, o cliente abrirá esta localização.</p>
+                </div>
+              </div>
             </div>
             )}
           </div>
@@ -812,15 +1174,34 @@ export default function Bio() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85 }}
               transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              onClick={() => setIsDocked(false)}
-              className="pointer-events-auto cursor-pointer flex flex-col items-end group"
+              drag="x"
+              dragConstraints={{ left: -150, right: 0 }}
+              dragElastic={0.15}
+              onDragStart={() => {
+                isDraggingRef.current = true;
+              }}
+              onDragEnd={(e, info) => {
+                // Drag left (negative offset X) to restore button visual
+                if (info.offset.x < -20) {
+                  setIsDocked(false);
+                }
+                setTimeout(() => {
+                  isDraggingRef.current = false;
+                }, 100);
+              }}
+              onClick={() => {
+                if (isDraggingRef.current) return;
+                setIsDocked(false);
+              }}
+              whileDrag={{ scale: 1.02 }}
+              className="pointer-events-auto cursor-grab active:cursor-grabbing flex flex-col items-end group"
             >
               {/* Very generous transparent touch/click padding extending to the left */}
-              <div className="flex flex-col gap-2 py-8 pl-12 pr-0 bg-transparent select-none">
+              <div className="flex flex-col gap-2 py-8 pl-12 pr-2 bg-transparent select-none">
                 {/* green track segment for Save - completely glued to right edge */}
-                <div className="w-3 h-16 rounded-l-lg bg-green-500 shadow-[0_0_18px_rgba(34,197,94,0.95)] transition-all group-hover:w-4 group-hover:bg-green-400" />
+                <div className="w-3 h-16 rounded-full bg-green-500 transition-all group-hover:w-4 group-hover:bg-green-400" />
                 {/* orange track segment for View - completely glued to right edge */}
-                <div className="w-3 h-16 rounded-l-lg bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.95)] transition-all group-hover:w-4 group-hover:bg-orange-400" />
+                <div className="w-3 h-16 rounded-full bg-orange-500 transition-all group-hover:w-4 group-hover:bg-orange-400" />
               </div>
             </motion.div>
           ) : (
@@ -834,11 +1215,17 @@ export default function Bio() {
               drag="x"
               dragConstraints={{ left: -100, right: 100 }}
               dragElastic={0.15}
+              onDragStart={() => {
+                isDraggingRef.current = true;
+              }}
               onDragEnd={(e, info) => {
                 // Swipe left or right to dock (info.offset.x > 30 is swiping right, info.offset.x < -30 is swiping left)
                 if (info.offset.x > 30 || info.offset.x < -30) {
                   setIsDocked(true);
                 }
+                setTimeout(() => {
+                  isDraggingRef.current = false;
+                }, 100);
               }}
               whileDrag={{ scale: 0.95, opacity: 0.9 }}
               className="pointer-events-auto flex flex-col gap-4 pr-4 pb-4 items-center justify-center cursor-grab active:cursor-grabbing"
@@ -848,6 +1235,7 @@ export default function Bio() {
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (isDraggingRef.current) return;
                     handleSave();
                   }}
                   disabled={saving}
@@ -862,6 +1250,7 @@ export default function Bio() {
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (isDraggingRef.current) return;
                     setPreviewOpen(true);
                   }}
                   className="w-14 h-14 bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-40)] active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(255,102,0,0.6)] transition-all duration-300 hover:scale-110"
@@ -880,6 +1269,35 @@ export default function Bio() {
           onClick={() => setPreviewOpen(false)}
           className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
         >
+          {/* Top Center Device Switcher */}
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] bg-zinc-950/90 backdrop-blur-xl border border-zinc-800/80 p-1.5 rounded-full flex items-center gap-1.5 shadow-2xl pointer-events-auto"
+          >
+            <button
+              onClick={() => setPreviewMode("smartphone")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
+                previewMode === "smartphone"
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Smartphone className="w-4 h-4" />
+              SMARTPHONE
+            </button>
+            <button
+              onClick={() => setPreviewMode("pc")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
+                previewMode === "pc"
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Layout className="w-4 h-4" />
+              DESKTOP PC
+            </button>
+          </div>
+
           {/* Viewport Floating Close Button - Highly visible and guaranteed to display inside developer/user iframe/tab */}
           <button 
             onClick={(e) => {
@@ -889,57 +1307,101 @@ export default function Bio() {
             className="fixed top-4 right-4 z-[120] bg-slate-800/90 hover:bg-red-600 text-white font-bold px-4 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-2xl transition-all duration-300 pointer-events-auto border border-white/10"
           >
             <X className="w-5 h-5" />
-            <span className="text-sm">Fechar Visualização</span>
+            <span className="text-sm">Fechar</span>
           </button>
 
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-[360px] h-[85vh] max-h-[800px] animate-in zoom-in-95 duration-300 cursor-default"
-          >
-            {/* Close Button above phone - fallback copy */}
-            <button 
-              onClick={() => setPreviewOpen(false)}
-              className="absolute -top-12 right-0 w-10 h-10 bg-slate-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow-xl border border-white/10"
-              title="Fechar"
+          {previewMode === "smartphone" ? (
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-[360px] h-[85vh] max-h-[800px] animate-in zoom-in-95 duration-300 cursor-default"
             >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Smartphone frame */}
-            <div className="w-full h-full p-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[3rem] shadow-2xl relative">
-              {/* Quick internal close button directly inside the smartphone bezel */}
+              {/* Close Button above phone - fallback copy */}
               <button 
                 onClick={() => setPreviewOpen(false)}
-                className="absolute top-4 right-4 z-35 w-8 h-8 bg-black/70 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all border border-white/10"
+                className="absolute -top-12 right-0 w-10 h-10 bg-slate-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow-xl border border-white/10"
                 title="Fechar"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
 
-              <div className="w-full h-full overflow-hidden rounded-[2.6rem] bg-[#0a0a0c] relative">
-                  {/* Notch Minimalista */}
-                  <div className="absolute top-0 w-full h-6 z-20 flex justify-center items-start">
-                     <div className="w-24 h-5 bg-black rounded-b-xl flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]" />
-                     </div>
-                  </div>
-                  
-                  <div className="w-full h-full">
-                     <BioRenderer 
-                       asPreview={true}
-                       data={{
-                         company_name: settings?.company_name,
-                         company_logo_url: settings?.company_logo_url,
-                         pix_key: bioConfig.pix_key || settings?.pix_key,
-                         pix_type: bioConfig.pix_type || settings?.pix_type,
-                         brand_primary: settings?.brand_primary,
-                         bio_config: bioConfig
-                       }} 
-                     />
-                  </div>
+              {/* Smartphone frame */}
+              <div className="w-full h-full p-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[3rem] shadow-2xl relative">
+                {/* Quick internal close button directly inside the smartphone bezel */}
+                <button 
+                  onClick={() => setPreviewOpen(false)}
+                  className="absolute top-4 right-4 z-35 w-8 h-8 bg-black/70 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all border border-white/10"
+                  title="Fechar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="w-full h-full overflow-hidden rounded-[2.6rem] bg-[#0a0a0c] relative">
+                    {/* Notch Minimalista */}
+                    <div className="absolute top-0 w-full h-6 z-20 flex justify-center items-start">
+                       <div className="w-24 h-5 bg-black rounded-b-xl flex items-center justify-center">
+                          <div className="w-2 h-2 rounded-full bg-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]" />
+                       </div>
+                    </div>
+                    
+                    <div className="w-full h-full">
+                       <BioRenderer 
+                         asPreview={true}
+                         data={{
+                           company_name: settings?.company_name,
+                           company_logo_url: settings?.company_logo_url,
+                           pix_key: bioConfig.pix_key || settings?.pix_key,
+                           pix_type: bioConfig.pix_type || settings?.pix_type,
+                           brand_primary: settings?.brand_primary,
+                           bio_config: bioConfig
+                         }} 
+                       />
+                    </div>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-5xl h-[85vh] max-h-[850px] animate-in zoom-in-95 duration-300 cursor-default bg-[#0a0a0c] border border-white/15 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            >
+              {/* Browser Top Window Controls */}
+              <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800 shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-red-500/80 block"></span>
+                  <span className="w-3 h-3 rounded-full bg-yellow-500/80 block"></span>
+                  <span className="w-3 h-3 rounded-full bg-green-500/80 block"></span>
+                  
+                  <div className="ml-4 px-3 py-1 bg-zinc-950/80 rounded-md text-[10px] font-mono text-zinc-400 select-all flex items-center gap-1.5 border border-zinc-800">
+                    <Globe className="w-3 h-3 text-zinc-500" />
+                    <span>https://gmedificacao.bio/{tenantId || "preview"}</span>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => setPreviewOpen(false)}
+                  className="p-1.5 rounded-lg hover:bg-red-600/10 hover:text-red-500 transition-colors cursor-pointer text-zinc-400"
+                  title="Fechar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* PC Content frame */}
+              <div className="flex-1 overflow-auto bg-[#0a0a0c]">
+                 <BioRenderer 
+                   asPreview={true}
+                   data={{
+                     company_name: settings?.company_name,
+                     company_logo_url: settings?.company_logo_url,
+                     pix_key: bioConfig.pix_key || settings?.pix_key,
+                     pix_type: bioConfig.pix_type || settings?.pix_type,
+                     brand_primary: settings?.brand_primary,
+                     bio_config: bioConfig
+                   }} 
+                 />
+              </div>
+            </div>
+          )}
         </div>
       )}
       </div>

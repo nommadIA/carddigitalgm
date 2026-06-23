@@ -183,6 +183,51 @@ export const syncAlarmsWithBudgets = (budgets: any[]) => {
   saveAlarms([...nonBudgetAlarms, ...newAlarms]);
 };
 
+// ✅ NOVO: Sincroniza alarmes com a lista real de notas do banco de dados
+export const syncAlarmsWithNotes = (notes: any[]) => {
+  const currentAlarms = getAlarms();
+  const nonNoteAlarms = currentAlarms.filter(a => a.type !== "NOTE");
+  const noteAlarms = currentAlarms.filter(a => a.type === "NOTE");
+
+  const newAlarms: BudgetAlarm[] = [];
+  const existingAlarmsMap = new Map<string, BudgetAlarm>();
+  noteAlarms.forEach(a => {
+    existingAlarmsMap.set(`${a.budgetId}_${a.time}`, a);
+  });
+
+  notes.forEach(note => {
+    if (!note.deleted_at && note.reminder_time) {
+      const hasDate = note.reminder_time.includes(" ");
+      let rDate: string | null = null;
+      let rTimeStr = note.reminder_time;
+      if (hasDate) {
+        const parts = note.reminder_time.split(" ");
+        rDate = parts[0] || null;
+        rTimeStr = parts.slice(1).join(" ") || "";
+      }
+      
+      const times = rTimeStr.split(",").map((t: string) => t.trim()).filter((t: string) => /^\d{2}:\d{2}$/.test(t));
+      
+      times.forEach((time: string) => {
+        const existing = existingAlarmsMap.get(`${note.id}_${time}`);
+        newAlarms.push({
+          id: existing ? existing.id : crypto.randomUUID(),
+          budgetId: note.id,
+          clientName: note.title || "Nota",
+          time,
+          active: existing ? existing.active : true,
+          triggered: existing ? existing.triggered : false,
+          type: "NOTE",
+          date: rDate,
+          lastTriggeredOn: existing ? existing.lastTriggeredOn : null as any,
+        });
+      });
+    }
+  });
+
+  saveAlarms([...nonNoteAlarms, ...newAlarms]);
+};
+
 export const toggleAlarmsForBudget = (budgetId: string, active: boolean) => {
   const current = getAlarms();
   const updated = current.map((a) => (a.budgetId === budgetId ? { ...a, active } : a));
