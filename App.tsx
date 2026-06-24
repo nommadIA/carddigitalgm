@@ -90,6 +90,16 @@ const getRouteKey = (pathname: string) => {
 
 const AppRoutes = () => {
   const location = useLocation();
+  const { user } = useAuth();
+
+  // Detect if the user is on a mobile device
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+  // If a mobile user is not logged in and opens the root, redirect directly to the public bio page
+  if (isMobile && !user && (location.pathname === '/' || location.pathname === '')) {
+    return <Navigate to="/bio/gmedificacao" replace />;
+  }
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
