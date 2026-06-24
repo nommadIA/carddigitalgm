@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, Eye, EyeOff } from "lucide-react";
+import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 export const formatExternalUrl = (url: string | undefined): string | undefined => {
@@ -447,7 +447,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
           <Icon className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
         </div>
         <div className="flex-1 text-center pr-11 sm:pr-12">
-          <div className={`text-base sm:text-lg font-extrabold tracking-wide px-2 ${t.cardTitle}`}>{title}</div>
+          <div className={`text-lg sm:text-xl md:text-2xl font-black tracking-wide px-2 py-0.5 ${t.cardTitle}`}>{title}</div>
         </div>
       </Wrapper>
     );
@@ -458,6 +458,38 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
   const bgMobileImg = bio.bg_mobile_image_url;
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  const handleScroll = () => {
+    const el = mainScrollRef.current;
+    if (el) {
+      setCanScrollUp(el.scrollTop > 10);
+      setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 10);
+    }
+  };
+
+  useEffect(() => {
+    const el = mainScrollRef.current;
+    if (el) {
+      const timer = setTimeout(() => {
+        setCanScrollUp(el.scrollTop > 10);
+        setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 10);
+      }, 500);
+
+      const resizeObserver = new ResizeObserver(() => {
+        setCanScrollUp(el.scrollTop > 10);
+        setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 10);
+      });
+      resizeObserver.observe(el);
+
+      return () => {
+        clearTimeout(timer);
+        resizeObserver.disconnect();
+      };
+    }
+  }, [data, isCartOpen, selectedProduct]);
 
   useEffect(() => {
     if (!bio.catalog_items || bio.catalog_items.length <= 1) return;
@@ -500,8 +532,33 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
 
   return (
     <div 
-      className={`w-full ${!asPreview ? "min-h-screen relative py-10 px-4 overflow-y-auto" : "relative h-full overflow-y-auto no-scrollbar py-6 px-4"} ${t.bg} selection:bg-orange-500/30 font-sans`}
+      ref={mainScrollRef}
+      onScroll={handleScroll}
+      className={`w-full ${!asPreview ? "fixed inset-0 overflow-y-auto py-10 px-4 custom-scroll" : "relative h-full overflow-y-auto no-scrollbar py-6 px-4"} ${t.bg} selection-brand font-sans`}
     >
+      <style>{`
+        .selection-brand::selection, .selection-brand *::selection {
+          background-color: ${brandColor}35 !important;
+        }
+        .focus-border-brand:focus {
+          border-color: ${brandColor} !important;
+          box-shadow: 0 0 0 2px ${brandColor}15 !important;
+        }
+        .catalog-card-item:hover {
+          border-color: ${brandColor}60 !important;
+        }
+        .details-btn {
+          color: ${brandColor} !important;
+          background-color: ${brandColor}12 !important;
+          border-color: ${brandColor}25 !important;
+        }
+        .group:hover .details-btn {
+          background-color: ${brandColor}25 !important;
+        }
+        .hover-text-brand:hover {
+          color: ${brandColor} !important;
+        }
+      `}</style>
       {/* Background Desktop */}
       {bgImg && (
         <div 
@@ -516,77 +573,108 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
           style={{ backgroundImage: `url(${bgMobileImg})`, backgroundAttachment: asPreview ? 'scroll' : 'fixed' }} 
         />
       )}
-      <div className={`${asPreview ? "max-w-md mx-auto" : "max-w-5xl w-full mx-auto px-4 md:px-8"} relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10`}>
+      <div className={`${asPreview ? "max-w-md mx-auto" : "max-w-[1150px] w-full mx-auto px-4 md:px-8 lg:px-12"} relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10`}>
         <div className="space-y-6 sm:space-y-8 w-full">
           
-          {/* 1. Banners Slider Carousel */}
-          {bio.show_banners && (() => {
-            const desktopBanner = bio.banner_img_url_1;
-            const mobileBanner = bio.mobile_banner_img_url_1;
-            
-            // Fallbacks
-            const finalDesktop = desktopBanner || mobileBanner;
-            const finalMobile = mobileBanner || desktopBanner;
+          {/* Header & Banner Wrapper to overlay profile on top of the banner when enabled */}
+          <div className="flex flex-col gap-6 sm:gap-8 w-full">
+            {(() => {
+              const desktopBanner = bio.banner_img_url_1;
+              const mobileBanner = bio.mobile_banner_img_url_1;
+              const finalDesktop = desktopBanner || mobileBanner;
+              const finalMobile = mobileBanner || desktopBanner;
+              const hasBanners = bio.show_banners && (desktopBanner || mobileBanner);
 
-            if (!finalDesktop && !finalMobile) return null;
-
-            return (
-              <>
-                {/* Desktop Banner (md:block hidden) */}
-                {finalDesktop && (
-                  <div className="hidden md:block w-full rounded-[2rem] overflow-hidden border shadow-lg relative group aspect-[21/9] bg-black/10 transition-all duration-300" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
-                    <div className="w-full h-full relative">
-                      <img src={finalDesktop} alt="Banner Desktop" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              // Helper to render the Profile Header with optional over-banner styles
+              const renderProfileHeader = (isOverBanner: boolean) => (
+                <div className={`text-center space-y-4 ${isOverBanner ? "relative z-20 text-white w-full px-4" : "pt-2"}`}>
+                  <div 
+                    className={`w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-full overflow-hidden border-[3px] flex items-center justify-center p-1 shadow-2xl relative ${isOverBanner ? "bg-black/30 backdrop-blur-sm border-white/50" : t.iconBg}`} 
+                    style={{ borderColor: isOverBanner ? undefined : `${brandColor}50` }}
+                  >
+                    {logo ? (
+                      <img src={logo} alt={companyName} className="w-full h-full object-contain rounded-full" />
+                    ) : (
+                      <div className="text-3xl font-bold" style={{ color: isOverBanner ? '#ffffff' : brandColor }}>
+                        {companyName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="px-2 space-y-3">
+                    <h1 className={`text-3xl sm:text-4xl md:text-5xl font-black tracking-tight ${isOverBanner ? "text-white drop-shadow-md" : t.textTitle}`}>{companyName}</h1>
+                    {desc && <p className={`mt-2 text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed ${isOverBanner ? "text-zinc-100 drop-shadow-sm font-semibold" : `${t.textDesc} font-semibold`}`}>{desc}</p>}
+                    
+                    {/* Share Bio Button */}
+                    <div className="pt-1 flex justify-center">
+                      <button 
+                        onClick={handleShareBio}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold border shadow-sm cursor-pointer transition-all duration-200 transform active:scale-95 bio-button ${isOverBanner ? "bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm" : `${t.cardBg} ${t.cardBgHover} ${t.cardBorder}`}`}
+                        style={{ 
+                          color: isOverBanner ? '#ffffff' : brandColor, 
+                          borderColor: isOverBanner ? 'rgba(255,255,255,0.25)' : `${brandColor}40`
+                        }}
+                      >
+                        <Share2 className="w-4 h-4" />
+                        {copiedShare ? "Link Copiado!" : "Compartilhar Bio"}
+                      </button>
                     </div>
                   </div>
-                )}
-
-                {/* Mobile Banner (block md:hidden) */}
-                {finalMobile && (
-                  <div className="block md:hidden w-full rounded-[2rem] overflow-hidden border shadow-lg relative group aspect-[9/16] bg-black/10 transition-all duration-300 max-w-sm mx-auto" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
-                    <div className="w-full h-full relative">
-                      <img src={finalMobile} alt="Banner Mobile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                  </div>
-                )}
-              </>
-            );
-          })()}
-
-          {/* 2. Profile Header (Main landing hub) */}
-          <div className="text-center space-y-4 pt-2">
-            <div className={`w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-full overflow-hidden border-[3px] flex items-center justify-center p-1 shadow-2xl relative ${t.iconBg}`} style={{ borderColor: `${brandColor}50` }}>
-              {logo ? (
-                <img src={logo} alt={companyName} className="w-full h-full object-contain rounded-full" />
-              ) : (
-                <div className="text-3xl font-bold" style={{ color: brandColor }}>
-                  {companyName.charAt(0).toUpperCase()}
                 </div>
-              )}
-            </div>
-            <div className="px-2 space-y-3">
-              <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${t.textTitle}`}>{companyName}</h1>
-              {desc && <p className={`mt-2 text-sm max-w-md mx-auto leading-relaxed ${t.textDesc}`}>{desc}</p>}
-              
-              {/* Share Bio Button */}
-              <div className="pt-1 flex justify-center">
-                <button 
-                  onClick={handleShareBio}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border shadow-sm cursor-pointer transition-all duration-200 transform active:scale-95 bio-button ${t.cardBg} ${t.cardBgHover} ${t.cardBorder}`}
-                  style={{ 
-                    color: brandColor, 
-                    borderColor: `${brandColor}40`
-                  }}
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  {copiedShare ? "Link Copiado!" : "Compartilhar Bio"}
-                </button>
-              </div>
-            </div>
+              );
+
+              if (!hasBanners) {
+                // If banners are disabled or non-existent, fallback to normal top header
+                return renderProfileHeader(false);
+              }
+
+              return (
+                <>
+                  {/* Desktop Banner overlay (md:block hidden) */}
+                  {finalDesktop && (
+                    <div 
+                      className="hidden md:block w-full rounded-[2rem] overflow-hidden border shadow-lg relative group aspect-[21/9] bg-black/10 transition-all duration-300" 
+                      style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+                    >
+                      <div className="w-full h-full relative">
+                        <img src={finalDesktop} alt="Banner Desktop" className="w-full h-full object-cover absolute inset-0" referrerPolicy="no-referrer" />
+                        
+                        {/* Leve sombra interna debaixo para cima (gradient overlay shadow) */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 z-10" />
+                        
+                        {/* Overlaid Profile Content */}
+                        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center py-6">
+                          {renderProfileHeader(true)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mobile Banner overlay (block md:hidden) */}
+                  {finalMobile && (
+                    <div 
+                      className="block md:hidden w-full rounded-[2rem] overflow-hidden border shadow-lg relative group aspect-[9/16] bg-black/10 transition-all duration-300 max-w-sm mx-auto" 
+                      style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+                    >
+                      <div className="w-full h-full relative">
+                        <img src={finalMobile} alt="Banner Mobile" className="w-full h-full object-cover absolute inset-0" referrerPolicy="no-referrer" />
+                        
+                        {/* Leve sombra interna debaixo para cima */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/10 z-10" />
+                        
+                        {/* Overlaid Profile Content */}
+                        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center py-8">
+                          {renderProfileHeader(true)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           {/* 3. Contacts & Links Stack (Harmonized, wider container blocks) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4.5 pt-2">
             {/* Legacy contact fields */}
             <ContactCard icon={MessageCircle} title="WhatsApp" value={bio.whatsapp} href={bio.whatsapp ? `https://wa.me/${bio.whatsapp.replace(/\D/g, '')}` : undefined} />
             <ContactCard icon={Phone} title="Telefone" value={bio.phone} href={bio.phone ? `tel:${bio.phone.replace(/\D/g, '')}` : undefined} />
@@ -616,7 +704,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
           {bio.catalog_items && bio.catalog_items.length > 0 && (
             <div className="pt-4 space-y-4 relative">
               <div className="flex items-center justify-between px-2">
-                {bio.catalog_title && <h2 className={`text-xl font-extrabold tracking-tight ${t.textTitle}`}>{bio.catalog_title}</h2>}
+                {bio.catalog_title && <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${t.textTitle}`}>{bio.catalog_title}</h2>}
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-2 items-stretch animate-fade-in">
@@ -628,23 +716,23 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                         setSelectedProduct(item);
                         setActiveImageIndex(0);
                       }}
-                      className={`overflow-hidden rounded-[2rem] border transition-all duration-300 flex flex-col cursor-pointer hover:shadow-2xl hover:-translate-y-1 group ${t.cardBg} ${t.cardBorder} hover:border-orange-500/40`}
+                      className={`overflow-hidden rounded-[2rem] border transition-all duration-300 flex flex-col cursor-pointer hover:shadow-2xl hover:-translate-y-1 group ${t.cardBg} ${t.cardBorder} catalog-card-item`}
                     >
                       {item.image_url ? (
-                        <div className={`w-full aspect-[4/3] ${t.iconBg} overflow-hidden relative`}>
-                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
+                        <div className="w-full aspect-square bg-white overflow-hidden relative flex items-center justify-center p-1.5 rounded-[1.5rem]">
+                          <img src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
                         </div>
                       ) : (
-                        <div className={`w-full aspect-[4/3] ${t.iconBg} flex items-center justify-center`}>
+                        <div className={`w-full aspect-square ${t.iconBg} flex items-center justify-center`}>
                           <ShoppingCart className="w-10 h-10 opacity-20 text-slate-400" />
                         </div>
                       )}
                       <div className="p-5 flex flex-col flex-1 space-y-2">
-                        <div className={`font-extrabold text-base line-clamp-1 ${t.cardTitle}`}>{item.name || 'Produto sem nome'}</div>
-                        {item.description && <div className={`text-xs leading-relaxed line-clamp-2 ${t.cardSub}`}>{item.description}</div>}
+                        <div className={`font-black text-lg sm:text-xl line-clamp-1 ${t.cardTitle}`}>{item.name || 'Produto sem nome'}</div>
+                        {item.description && <div className={`text-sm leading-relaxed line-clamp-2 ${t.cardSub}`}>{item.description}</div>}
                         <div className="mt-auto pt-3 flex items-center justify-between border-t border-white/5" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-                          <span className="font-black text-base" style={{ color: brandColor }}>{item.price}</span>
-                          <span className="text-xs font-bold bg-orange-500/10 text-orange-500 px-3.5 py-1.5 rounded-full border border-orange-500/10 group-hover:bg-orange-500/20 transition-all">Ver Detalhes</span>
+                          <span className="font-black text-lg sm:text-xl" style={{ color: brandColor }}>{item.price}</span>
+                          <span className="text-xs sm:text-sm font-extrabold px-4 py-2 rounded-full border transition-all details-btn">Ver Detalhes</span>
                         </div>
                       </div>
                     </div>
@@ -656,45 +744,71 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
 
           {/* 5. Payment Card Section */}
           {(pixKey || cardUrl) && (
-            <div className={`p-6 sm:p-8 rounded-[2.5rem] text-center space-y-6 shadow-xl relative overflow-hidden group border w-full ${t.cardBg} ${t.cardBorder}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}10` : undefined }}>
+            <div className={`p-6 sm:p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group border w-full ${t.cardBg} ${t.cardBorder}`} style={{ backgroundColor: theme === 'dark' ? `${brandColor}10` : undefined }}>
               <div className="absolute top-0 left-0 w-full h-[4px] opacity-80 group-hover:opacity-100 transition-opacity" style={{ background: brandColor }} />
               
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                {/* Payment Header and Title */}
-                <div className="space-y-4 text-center sm:text-left flex-1">
-                  <div className="flex items-center justify-center sm:justify-start gap-3">
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '8px',
-                      borderRadius: '16px',
-                      backgroundColor: 'white',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-                    }}>
-                      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 4H3C1.89543 4 1 4.89543 1 6V18C1 19.1046 1.89543 20 3 20H21C22.1046 20 23 19.1046 23 18V6C23 4.89543 22.1046 4 21 4Z" stroke="#32BCAD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M1 10H23" stroke="#32BCAD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+              <div className="flex flex-col md:flex-row items-stretch justify-between gap-6 sm:gap-8">
+                {/* Left Side: Payment Info, Key Display and Copy Button */}
+                <div className="flex-1 flex flex-col justify-between space-y-5 text-left w-full">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '8px',
+                        borderRadius: '16px',
+                        backgroundColor: 'white',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                      }}>
+                        <svg className="w-8 h-8" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M38.8 50L50 38.8L61.2 50L50 61.2L38.8 50Z" fill="#32BCAD"/>
+                          <path d="M50 15L85 50L50 85L15 50L50 15ZM25.6 50L50 74.4L74.4 50L50 25.6L25.6 50Z" fill="#32BCAD"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className={`font-black text-xl sm:text-2xl tracking-tight ${t.cardTitle}`}>Meios de Pagamento</h3>
+                        <p className="text-xs sm:text-sm uppercase font-black text-teal-500 tracking-widest">Seguro • Rápido • Conveniente</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className={`font-black text-lg tracking-tight ${t.cardTitle}`}>Meios de Pagamento</h3>
-                      <p className="text-[10px] uppercase font-extrabold text-teal-500 tracking-wider">Seguro • Rápido • Conveniente</p>
-                    </div>
+                    
+                    <p className={`text-sm sm:text-base leading-relaxed font-medium ${t.pixSubtitle}`}>
+                      {pixKey && cardUrl 
+                        ? "Escolha a melhor forma para pagar: realize a transferência instantânea por PIX ou pague via Cartão de Crédito."
+                        : pixKey 
+                        ? "Realize pagamentos escaneando o código ao lado ou copiando a chave Pix comercial listada abaixo."
+                        : "Realize o pagamento de forma segura através do link de pagamento via Cartão de Crédito."}
+                    </p>
                   </div>
-                  
-                  <p className={`text-xs leading-relaxed ${t.pixSubtitle}`}>
-                    {pixKey && cardUrl 
-                      ? "Escolha a melhor forma para pagar: realize a transferência instantânea por PIX ou pague via Cartão de Crédito."
-                      : pixKey 
-                      ? "Realize pagamentos escaneando o código ao lado ou copiando a chave Pix comercial listada abaixo."
-                      : "Realize o pagamento de forma segura através do link de pagamento via Cartão de Crédito."}
-                  </p>
+
+                  {pixKey && (
+                    <div className="space-y-3">
+                      <div className="bg-black/15 dark:bg-black/35 p-4 rounded-2xl border border-white/5 space-y-1 text-left" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                        <div className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Chave PIX ({pixType})</div>
+                        <div className="text-base sm:text-lg md:text-xl font-mono font-black break-all select-all text-white" style={{ color: brandColor }}>
+                          {pixKey}
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={handleCopyPix}
+                        className={`w-full flex items-center justify-center p-4 sm:p-4.5 rounded-2xl font-black text-base sm:text-lg border transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md bio-button ${t.iconBg}`}
+                        style={{ 
+                          color: brandColor, 
+                          borderColor: `${brandColor}40`, 
+                          backgroundColor: theme === 'dark' ? `${brandColor}15` : undefined
+                        }}
+                      >
+                        {copiedPix ? <Check className="w-5 h-5 mr-2" /> : <Copy className="w-5 h-5 mr-2" />}
+                        {copiedPix ? "Chave copiada!" : "Copiar Chave para Pix Copia e Cola"}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {/* QR Code Box (only if pixKey exists) */}
+                {/* Right Side: QR Code Box (only if pixKey exists) */}
                 {pixKey && (
-                  <div className="shrink-0 space-y-2">
+                  <div className="shrink-0 flex flex-col items-center justify-center gap-2 bg-black/5 dark:bg-black/20 p-5 rounded-[2rem] border border-white/5 w-full md:w-auto" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
                     <div className="bg-white p-3 rounded-[1.5rem] w-40 h-40 flex items-center justify-center shadow-lg border border-slate-200/40">
                       <img 
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=000000&data=${encodeURIComponent(pixKey)}`} 
@@ -703,42 +817,18 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                         referrerPolicy="no-referrer"
                       />
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400 block tracking-wide">Aponte a câmera para pagar</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-300 block tracking-wide text-center">Aponte a câmera para pagar</span>
                   </div>
                 )}
               </div>
 
-              {pixKey && (
-                <div className="space-y-4">
-                  <div className="bg-black/15 dark:bg-black/30 p-4 rounded-2xl border border-white/5 space-y-1" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-                    <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Chave PIX ({pixType})</div>
-                    <div className="text-sm sm:text-base font-mono font-bold break-all select-all text-white px-2" style={{ color: brandColor }}>
-                      {pixKey}
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={handleCopyPix}
-                    className={`w-full flex items-center justify-center p-3.5 sm:p-4 rounded-2xl font-bold border transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md bio-button ${t.iconBg}`}
-                    style={{ 
-                      color: brandColor, 
-                      borderColor: `${brandColor}40`, 
-                      backgroundColor: theme === 'dark' ? `${brandColor}15` : undefined
-                    }}
-                  >
-                    {copiedPix ? <Check className="w-5 h-5 mr-2" /> : <Copy className="w-5 h-5 mr-2" />}
-                    {copiedPix ? "Chave copiada!" : "Copiar Chave para Pix Copia e Cola"}
-                  </button>
-                </div>
-              )}
-
               {cardUrl && (
-                <div className={pixKey ? "border-t border-dashed pt-4 border-slate-700/50" : ""}>
+                <div className={pixKey ? "border-t border-dashed pt-4 border-slate-700/50 mt-6" : "mt-6"}>
                   <a 
                     href={cardUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center p-3.5 sm:p-4 rounded-2xl font-bold text-white transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md border"
+                    className="w-full flex items-center justify-center p-4 sm:p-5 rounded-2xl font-black text-base sm:text-lg text-white transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md border"
                     style={{ 
                       backgroundColor: brandColor,
                       borderColor: brandColor,
@@ -782,15 +872,15 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
 
           {/* 6. Admin Area / Login Footer Trigger */}
           <div className="pt-8 pb-4 text-center space-y-4">
-            <div className="text-xs font-semibold tracking-wider opacity-60 text-slate-400">
+            <div className="text-sm sm:text-base font-bold tracking-wider opacity-70 text-slate-400">
               Desenvolvido por <span className="font-extrabold" style={{ color: brandColor }}>CardDigital GM</span>
             </div>
             <div>
               <button 
                 onClick={() => setIsLoginOpen(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold opacity-40 hover:opacity-100 hover:text-orange-500 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold opacity-40 hover:opacity-100 hover-text-brand transition-colors cursor-pointer"
               >
-                <Lock className="w-3.5 h-3.5" />
+                <Lock className="w-4 h-4" />
                 Área Restrita / Login do Administrador
               </button>
             </div>
@@ -809,7 +899,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
             {/* Modal Header */}
             <div className="p-5 flex items-center justify-between border-b" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
               <div className="flex items-center gap-2">
-                <Lock className="w-5 h-5 text-orange-500" />
+                <Lock className="w-5 h-5" style={{ color: brandColor }} />
                 <span className="font-extrabold text-sm tracking-wide uppercase">Login do Administrador</span>
               </div>
               <button 
@@ -848,10 +938,10 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     placeholder="seu-email@dominio.com"
-                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm border focus:outline-none transition-all ${
+                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm border focus:outline-none transition-all focus-border-brand ${
                       theme === 'dark' 
-                        ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
-                        : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                        ? 'bg-zinc-900 border-zinc-800 text-white' 
+                        : 'bg-slate-50 border-slate-200 text-slate-900'
                     }`}
                   />
                 </div>
@@ -869,10 +959,10 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="Sua senha..."
-                    className={`w-full pl-10 pr-10 py-3 rounded-xl text-sm border focus:outline-none transition-all ${
+                    className={`w-full pl-10 pr-10 py-3 rounded-xl text-sm border focus:outline-none transition-all focus-border-brand ${
                       theme === 'dark' 
-                        ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
-                        : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                        ? 'bg-zinc-900 border-zinc-800 text-white' 
+                        : 'bg-slate-50 border-slate-200 text-slate-900'
                     }`}
                   />
                   <button
@@ -931,17 +1021,17 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
               {/* Scrollable Container */}
               <div className="overflow-y-auto flex-1 no-scrollbar p-5 space-y-5">
                 {/* Image Gallery */}
-                <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black/20 border" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white border flex items-center justify-center p-2" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
                   {activeImageUrl ? (
                     <img 
                       src={activeImageUrl} 
                       alt={selectedProduct.name} 
-                      className="w-full h-full object-cover" 
+                      className="max-w-full max-h-full object-contain" 
                       referrerPolicy="no-referrer"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center opacity-30">
-                      <ShoppingCart className="w-12 h-12" />
+                      <ShoppingCart className="w-12 h-12 text-slate-400" />
                     </div>
                   )}
 
@@ -971,9 +1061,10 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                       <button
                         key={idx}
                         onClick={() => setActiveImageIndex(idx)}
-                        className={`relative w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-black/10 ${activeImageIndex === idx ? 'border-orange-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                        className={`relative w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-white p-0.5 flex items-center justify-center ${activeImageIndex === idx ? 'scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                        style={activeImageIndex === idx ? { borderColor: brandColor } : undefined}
                       >
-                        <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={img} alt={`Thumbnail ${idx + 1}`} className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
                       </button>
                     ))}
                   </div>
@@ -983,7 +1074,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                 <div className="space-y-3 pt-1">
                   <h3 className="text-xl font-extrabold tracking-tight">{selectedProduct.name || 'Produto sem nome'}</h3>
                   {selectedProduct.price && (
-                    <div className="text-xl font-black text-orange-500" style={{ color: brandColor }}>{selectedProduct.price}</div>
+                    <div className="text-xl font-black" style={{ color: brandColor }}>{selectedProduct.price}</div>
                   )}
                   {selectedProduct.description && (
                     <p className={`text-sm leading-relaxed whitespace-pre-wrap ${theme === 'dark' ? 'text-zinc-300' : 'text-slate-600'}`}>
@@ -1082,7 +1173,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
             setCheckoutStep("cart");
             setIsCartOpen(true);
           }}
-          className={`fixed bottom-6 right-6 z-[140] flex items-center gap-2 px-5 py-4 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-transform font-bold text-white cursor-pointer group`}
+          className={`fixed bottom-6 right-20 z-[140] flex items-center gap-2 px-5 py-4 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-transform font-bold text-white cursor-pointer group`}
           style={{ backgroundColor: brandColor }}
         >
           <div className="relative">
@@ -1147,8 +1238,8 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                     onClick={() => setCheckoutStep("cart")}
                     className={`flex-1 py-1.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${
                       checkoutStep === "cart" 
-                        ? 'text-orange-500 border-orange-500' 
-                        : 'border-transparent opacity-50'
+                        ? "" 
+                        : "border-transparent opacity-50"
                     }`}
                     style={checkoutStep === "cart" ? { borderColor: brandColor, color: brandColor } : undefined}
                   >
@@ -1158,8 +1249,8 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                     onClick={() => setCheckoutStep("checkout")}
                     className={`flex-1 py-1.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${
                       checkoutStep === "checkout" 
-                        ? 'text-orange-500 border-orange-500' 
-                        : 'border-transparent opacity-50'
+                        ? "" 
+                        : "border-transparent opacity-50"
                     }`}
                     style={checkoutStep === "checkout" ? { borderColor: brandColor, color: brandColor } : undefined}
                   >
@@ -1181,12 +1272,12 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                             }`}
                           >
                             {/* Product Thumbnail */}
-                            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-black/10 shrink-0 border border-black/5">
+                            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white shrink-0 border border-black/5 flex items-center justify-center p-1">
                               {item.product.image_url ? (
-                                <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                <img src={item.product.image_url} alt={item.product.name} className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center opacity-20">
-                                  <ShoppingCart className="w-8 h-8" />
+                                  <ShoppingCart className="w-8 h-8 text-slate-400" />
                                 </div>
                               )}
                             </div>
@@ -1258,10 +1349,10 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                             placeholder="Como podemos te chamar?"
                             value={orderName}
                             onChange={(e) => setOrderName(e.target.value)}
-                            className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all ${
+                            className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all focus-border-brand ${
                               theme === 'dark' 
-                                ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
-                                : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                                ? 'bg-zinc-900 border-zinc-800 text-white' 
+                                : 'bg-slate-50 border-slate-200 text-slate-900'
                             }`}
                           />
                         </div>
@@ -1276,10 +1367,10 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                             placeholder="Ex: (99) 99999-9999"
                             value={orderPhone}
                             onChange={(e) => setOrderPhone(e.target.value)}
-                            className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all ${
+                            className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all focus-border-brand ${
                               theme === 'dark' 
-                                ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
-                                : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                                ? 'bg-zinc-900 border-zinc-800 text-white' 
+                                : 'bg-slate-50 border-slate-200 text-slate-900'
                             }`}
                           />
                         </div>
@@ -1327,10 +1418,10 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                               value={deliveryAddress}
                               onChange={(e) => setDeliveryAddress(e.target.value)}
                               rows={3}
-                              className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all resize-none ${
+                              className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all resize-none focus-border-brand ${
                                 theme === 'dark' 
-                                  ? 'bg-zinc-900 border-zinc-800 text-white focus:border-orange-500' 
-                                  : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500'
+                                  ? 'bg-zinc-900 border-zinc-800 text-white' 
+                                  : 'bg-slate-50 border-slate-200 text-slate-900'
                               }`}
                             />
                           </div>
@@ -1429,6 +1520,43 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
           </div>
         </div>
       )}
+
+      {/* Indicadores de rolagem vertical (Público & Preview) */}
+      <div className="fixed bottom-6 right-6 z-[999] flex flex-col gap-2 pointer-events-none">
+        {/* Seta para Cima */}
+        <button
+          type="button"
+          onClick={() => {
+            if (mainScrollRef.current) {
+              mainScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
+          className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-black/75 border border-zinc-800/80 shadow-lg pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
+            canScrollUp ? "opacity-100 translate-y-0 animate-bounce" : "opacity-0 translate-y-4 pointer-events-none"
+          }`}
+          style={{ color: brandColor }}
+          title="Rolar para o topo"
+        >
+          <ChevronUp className="w-5 h-5" />
+        </button>
+
+        {/* Seta para Baixo */}
+        <button
+          type="button"
+          onClick={() => {
+            if (mainScrollRef.current) {
+              mainScrollRef.current.scrollBy({ top: mainScrollRef.current.clientHeight * 0.7, behavior: "smooth" });
+            }
+          }}
+          className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-black/75 border border-zinc-800/80 shadow-lg pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
+            canScrollDown ? "opacity-100 translate-y-0 animate-bounce" : "opacity-0 -translate-y-4 pointer-events-none"
+          }`}
+          style={{ color: brandColor }}
+          title="Rolar para baixo"
+        >
+          <ChevronDown className="w-5 h-5" />
+        </button>
+      </div>
     </div>
   );
 }

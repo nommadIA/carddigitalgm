@@ -149,17 +149,32 @@ export default function Bio() {
     });
   };
 
-  const uploadImage = async (file: File): Promise<string> => {
+  const uploadImage = async (file: File, isHighQuality = false): Promise<string> => {
     if (!tenantId) throw new Error("Sem tenant id");
     
-    // Comprime usando nossa rotina de alta fidelidade baseada em canvas
-    const compressed = await compressImageFidelity(file, 1200, 0.82);
+    let compressed;
+    let ext;
+    let contentType;
     
-    const ext = "jpg"; // Forçamos extensão JPG pois convertemos para JPEG de alta compressão
+    // Se for PNG ou GIF, preservamos o arquivo original de forma lossless para manter fundos transparentes (PNG) e animações (GIF)
+    if (file.type === "image/png" || file.type === "image/gif") {
+      ext = file.type === "image/png" ? "png" : "gif";
+      contentType = file.type;
+      compressed = file; 
+    } else {
+      ext = "jpg";
+      contentType = "image/jpeg";
+      if (isHighQuality) {
+        compressed = await compressImageFidelity(file, 2400, 0.95);
+      } else {
+        compressed = await compressImageFidelity(file, 1200, 0.82);
+      }
+    }
+    
     const filename = `bio_image_${Date.now()}_${Math.random().toString(36).substring(2,8)}.${ext}`;
     const path = `${tenantId}/bio/${filename}`;
     
-    const { error } = await supabase.storage.from("tenant-assets").upload(path, compressed, { contentType: "image/jpeg" });
+    const { error } = await supabase.storage.from("tenant-assets").upload(path, compressed, { contentType });
     if (error) throw error;
     
     const { data } = supabase.storage.from("tenant-assets").getPublicUrl(path);
@@ -358,7 +373,7 @@ export default function Bio() {
       const updatedItems = (prev.catalog_items || []).map(item => {
         if (item.id === itemId) {
           const currentImages = [...(item.images || (item.image_url ? [item.image_url] : ['']))];
-          if (currentImages.length < 5) {
+          if (currentImages.length < 4) {
             currentImages.push('');
             return { ...item, images: currentImages };
           }
@@ -394,8 +409,8 @@ export default function Bio() {
   const handleUploadProductImageAtIndex = async (itemId: string, index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     try {
-      pushToast({ type: "info", title: "Upload", message: "Enviando imagem do produto..." });
-      const url = await uploadImage(e.target.files[0]);
+      pushToast({ type: "info", title: "Upload", message: "Enviando imagem do produto (alta qualidade)..." });
+      const url = await uploadImage(e.target.files[0], true);
       updateCatalogItemImage(itemId, index, url);
       pushToast({ type: "success", title: "Sucesso", message: "Imagem de produto enviada" });
     } catch(err) {
@@ -943,7 +958,7 @@ export default function Bio() {
                        <Trash className="w-4 h-4" />
                      </button>
                      
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3">
+                     <div className="flex flex-col gap-6 pt-3">
                        {/* LADO ESQUERDO DO CONTAINER: Nome, Preço, Link Direto, Descrição */}
                        <div className="space-y-4">
                          <div>
@@ -983,69 +998,77 @@ export default function Bio() {
                          <div>
                            <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Descrição do Produto</label>
                            <textarea 
-                             className="gm-input w-full !py-2.5 min-h-[100px]" 
-                             value={item.description || ''} 
-                             onChange={e => updateCatalogItem(item.id, 'description', e.target.value)} 
-                             placeholder="Ex: Tênis em couro, ótimo para corridas."
-                             rows={3}
-                           />
+                              className="gm-input w-full !py-2.5 min-h-[100px] resize-none overflow-y-hidden" 
+                              value={item.description || ''} 
+                              onChange={e => {
+                                updateCatalogItem(item.id, 'description', e.target.value);
+                                e.target.style.height = 'auto';
+                                e.target.style.height = e.target.scrollHeight + 'px';
+                              }}
+                              ref={el => {
+                                if (el) {
+                                  el.style.height = 'auto';
+                                  el.style.height = el.scrollHeight + 'px';
+                                }
+                              }}
+                              placeholder="Ex: Tênis em couro, ótimo para corridas."
+                            />
                          </div>
                        </div>
 
-                       <div className="space-y-4">
-                         
-                                                   <div className="font-sans space-y-3">
+                       <div className="space-y-4 border-t border-zinc-800/65 pt-5">
+                          <div className="font-sans space-y-3">
                             <div className="flex items-center justify-between">
-                              <label className="text-xs font-semibold text-slate-400 block">Fotos do Produto (Máximo 5)</label>
-                              {((item.images || (item.image_url ? [item.image_url] : [""])).length < 5) && (
+                              <label className="text-sm font-bold text-slate-300 block">Fotos do Produto (Máximo 4)</label>
+                              {((item.images || (item.image_url ? [item.image_url] : [""])).length < 4) && (
                                 <button 
                                   type="button"
                                   onClick={() => addCatalogItemImageSlot(item.id)}
-                                  className="text-xs text-orange-500 hover:text-orange-400 flex items-center font-semibold bg-orange-500/10 hover:bg-orange-500/20 px-2 py-1 rounded-lg transition-all"
+                                  className="text-xs text-orange-500 hover:text-orange-400 flex items-center font-semibold bg-orange-500/10 hover:bg-orange-500/20 px-2.5 py-1.5 rounded-lg transition-all"
                                 >
-                                  <Plus className="w-3 h-3 mr-1" /> Adicionar Foto
+                                  <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar Foto
                                 </button>
                               )}
                             </div>
                             
-                            <div className="grid grid-cols-1 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {(item.images || (item.image_url ? [item.image_url] : [""])).map((imgUrl, idx) => (
-                                <div key={idx} className="bg-black/50 p-4 rounded-2xl border border-zinc-800 space-y-3.5 flex flex-col">
+                                <div key={idx} className="bg-black/50 p-4 rounded-2xl border border-zinc-800 space-y-4 flex flex-col justify-between">
                                   {/* 1. FOTO MINIATURA */}
-                                  <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-3.5">
                                     {imgUrl ? (
-                                      <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-zinc-700 bg-black shrink-0 group/img shadow-md">
+                                      <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border border-zinc-300 bg-white shrink-0 group/img shadow-md flex items-center justify-center p-1">
                                         <img 
                                           src={imgUrl} 
                                           alt={"Foto " + (idx + 1)} 
-                                          className="w-full h-full object-cover" 
+                                          className="max-w-full max-h-full object-contain" 
                                           referrerPolicy="no-referrer"
                                         />
                                         <button
                                           type="button"
                                           onClick={() => removeCatalogItemImage(item.id, idx)}
-                                          className="absolute top-1 right-1 bg-black/85 hover:bg-red-600 text-white rounded-full p-1 transition-colors"
+                                          className="absolute top-1 right-1 bg-black/85 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors"
                                           title="Remover Foto"
                                         >
                                           <X className="w-2.5 h-2.5" />
                                         </button>
                                       </div>
                                     ) : (
-                                      <div className="w-16 h-16 rounded-xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-slate-600 shrink-0">
-                                        <ShoppingBag className="w-6 h-6 opacity-45 text-orange-400" />
+                                      <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-slate-600 shrink-0">
+                                        <ShoppingBag className="w-8 h-8 opacity-45 text-orange-400" />
                                       </div>
                                     )}
-                                    <div>
-                                      <p className="text-xs font-bold text-slate-300">Foto {idx + 1} de 5</p>
-                                      <p className="text-[10px] text-slate-500">
-                                        {imgUrl ? "Miniatura carregada" : "Nenhuma imagem vinculada"}
+                                    <div className="space-y-0.5">
+                                      <p className="text-sm font-black text-slate-200">Foto {idx + 1} de 4</p>
+                                      <p className="text-xs text-slate-400 font-medium">
+                                        {imgUrl ? "⚡ Miniatura carregada" : "⚠️ Nenhuma imagem vinculada"}
                                       </p>
                                     </div>
                                   </div>
                                   
                                   {/* 2. ÁREA LINK WEB IMAGEM */}
-                                  <div className="space-y-1">
-                                    <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Link Web da Imagem</label>
+                                  <div className="space-y-1.5">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Link Web da Imagem</label>
                                     <input 
                                       type="text" 
                                       className="gm-input w-full !py-2 text-xs font-mono" 
@@ -1056,10 +1079,10 @@ export default function Bio() {
                                   </div>
 
                                   {/* 3. UPLOAD e EXCLUIR */}
-                                  <div className="flex gap-2">
-                                    <label className="gm-btn gm-btn-outline flex-1 px-3 py-2 text-xs flex items-center justify-center cursor-pointer gap-1.5 hover:bg-orange-500/15">
-                                      <Upload className="w-3.5 h-3.5" />
-                                      <span>Upload</span>
+                                  <div className="grid grid-cols-2 gap-3 w-full">
+                                    <label className="gm-btn gm-btn-outline w-full px-3 py-2.5 text-xs flex items-center justify-center cursor-pointer gap-1.5 hover:bg-orange-500/15">
+                                      <Upload className="w-4 h-4" />
+                                      <span className="font-bold">Upload</span>
                                       <input 
                                         type="file" 
                                         accept="image/*"
@@ -1070,18 +1093,19 @@ export default function Bio() {
                                     <button
                                       type="button"
                                       onClick={() => removeCatalogItemImage(item.id, idx)}
-                                      className="gm-btn border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 px-3 py-2 text-xs flex items-center justify-center gap-1.5"
+                                      className="gm-btn w-full border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 px-3 py-2.5 text-xs flex items-center justify-center gap-1.5"
                                       title="Excluir Foto"
                                     >
-                                      <Trash className="w-3.5 h-3.5 text-red-400" />
-                                      <span>Excluir</span>
+                                      <Trash className="w-4 h-4 text-red-400" />
+                                      <span className="font-bold">Excluir</span>
                                     </button>
                                   </div>
                                 </div>
                               ))}
                             </div>
                           </div>
-                       </div>
+                        </div>
+
                      </div>
                    </div>
                  ))}
