@@ -74,8 +74,8 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   company_name: "GM edificação",
   pix_type: "CPF",
   pix_key: "",
-  brand_primary: "#ff7a00",
-  brand_accent: "#3B82F6",
+  brand_primary: "#32BCAD",
+  brand_accent: "#32BCAD",
   brand_bg: "#0b1220",
   font_family: "Inter",
   avatar_url: null,
@@ -106,7 +106,7 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   bio_config: {},
 
   // compat antigos (se algum código ainda usar)
-  primary_color: "#ff7a00",
+  primary_color: "#32BCAD",
   background_url: "",
   logo_url: "",
 };

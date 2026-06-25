@@ -57,6 +57,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [orderName, setOrderName] = useState("");
   const [orderPhone, setOrderPhone] = useState("");
+  const [orderCpfCnpj, setOrderCpfCnpj] = useState("");
   const [deliveryOption, setDeliveryOption] = useState<"pickup" | "delivery">("pickup");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "checkout">("cart");
@@ -190,11 +191,12 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
     // Format items list
     const itemsText = cart.map(item => {
       const itemTotal = parsePrice(item.product.price) * item.quantity;
-      return `• *${item.product.name}* (x${item.quantity}) - ${formatPrice(itemTotal)}`;
+      const itemImage = item.product.image_url ? `\n  📸 Foto: ${item.product.image_url}` : "";
+      return `• *${item.product.name}* (x${item.quantity}) - ${formatPrice(itemTotal)}${itemImage}`;
     }).join("\n");
 
     const header = `*🛍️ NOVO PEDIDO - ${companyName.toUpperCase()}*\n`;
-    const clientDetails = `*Cliente:* ${orderName.trim()}\n${orderPhone.trim() ? `*Telefone:* ${orderPhone.trim()}\n` : ""}`;
+    const clientDetails = `*Cliente:* ${orderName.trim()}\n${orderPhone.trim() ? `*Telefone:* ${orderPhone.trim()}\n` : ""}${orderCpfCnpj.trim() ? `*CPF/CNPJ:* ${orderCpfCnpj.trim()}\n` : ""}`;
     const deliveryDetails = deliveryOption === "delivery" 
       ? `*Entrega:* Receber em Casa 🚚\n*Endereço:* ${deliveryAddress.trim()}\n` 
       : `*Entrega:* Retirar no Local 🏪\n`;
@@ -210,18 +212,46 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
     const encoded = encodeURIComponent(message);
     const whatsappClean = (bio.whatsapp || bio.phone || '').replace(/\D/g, '');
     const whatsappNumber = whatsappClean.startsWith('55') || whatsappClean.length > 11 ? whatsappClean : `55${whatsappClean}`;
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encoded}`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encoded}`;
     
     window.open(whatsappUrl, "_blank");
   };
   const logo = data?.company_logo_url;
   const companyName = bio.title || data?.company_name || "Perfil";
   const desc = bio.description || "";
-  const brandColor = bio.color || data?.brand_primary || "#ff7a00";
+  const brandColor = bio.color || data?.brand_primary || "#32BCAD";
   const theme = bio.theme || "dark";
+  const buttonStyle = data?.button_style || "solid";
 
   const generatePixPayload = (key: string, name: string = "GM Edificacao", city: string = "SAO LUIS") => {
-    const cleanKey = key.trim();
+    let cleanKey = key.trim();
+    const typeStr = (pixType || "").toLowerCase();
+    
+    // Auto-detect or use explicit type
+    const isEmail = cleanKey.includes("@") || typeStr.includes("email") || typeStr.includes("e-mail");
+    const isEvp = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(cleanKey) || typeStr.includes("aleat");
+    
+    if (isEmail) {
+      // Keep email as is
+    } else if (isEvp) {
+      // Keep random key as is
+    } else {
+      // Strip all non-digits
+      const digits = cleanKey.replace(/\D/g, "");
+      
+      if (typeStr.includes("telefone") || typeStr.includes("phone") || (digits.length >= 10 && digits.length <= 11 && !digits.startsWith("0") && !typeStr.includes("cpf") && !typeStr.includes("cnpj"))) {
+        // Brazilian phone number format: +55 + DDD + Number
+        if (digits.startsWith("55") && digits.length >= 12) {
+          cleanKey = `+${digits}`;
+        } else {
+          cleanKey = `+55${digits}`;
+        }
+      } else {
+        // Default to just numbers (CPF, CNPJ)
+        cleanKey = digits;
+      }
+    }
+
     const formatField = (id: string, val: string) => {
       const len = val.length.toString().padStart(2, '0');
       return `${id}${len}${val}`;
@@ -421,7 +451,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
   const t = themeClasses[theme as keyof typeof themeClasses] || themeClasses.dark;
 
   const handleCopyPix = () => {
-    const pix = bio.pix_key || data?.pix_key;
+    const pix = pixBrCode || bio.pix_key || data?.pix_key;
     if (!pix) return;
     navigator.clipboard.writeText(pix);
     setCopiedPix(true);
@@ -433,6 +463,30 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
     
     const Wrapper = href ? "a" : "div";
     const formattedHref = formatExternalUrl(href);
+    const isNeon = buttonStyle === "neon";
+
+    // Dynamic styles based on buttonStyle
+    const containerStyle = isNeon ? {
+      borderColor: brandColor,
+      backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.35)' : 'rgba(255, 255, 255, 0.75)',
+    } : {
+      backgroundColor: brandColor,
+      borderColor: brandColor,
+    };
+
+    const textStyle = isNeon ? {
+      color: brandColor,
+    } : {
+      color: '#ffffff',
+    };
+
+    const iconStyle = isNeon ? {
+      color: brandColor,
+      backgroundColor: theme === 'dark' ? `${brandColor}20` : `${brandColor}10`,
+    } : {
+      color: brandColor,
+      backgroundColor: '#ffffff',
+    };
     
     return (
         // @ts-ignore
@@ -440,14 +494,23 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
         href={asPreview ? undefined : formattedHref}
         target={href ? "_blank" : undefined}
         rel={href ? "noreferrer" : undefined}
-        className={`w-full flex items-center p-4 sm:p-5 rounded-full border group select-none cursor-pointer transition-all duration-300 transform active:scale-98 shadow-sm hover:shadow-md bio-button ${t.cardBg} ${t.cardBgHover} ${t.cardBorder} ${t.cardBorderHover}`}
+        className={`w-full flex items-center p-4 sm:p-5 rounded-full border group select-none cursor-pointer transition-all duration-300 transform active:scale-98 shadow-sm hover:shadow-md bio-button`}
+        style={containerStyle}
         onClick={(e: any) => { if (asPreview && href) e.preventDefault(); }}
       >
-        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${t.iconBg}`} style={{ color: brandColor, backgroundColor: theme === 'dark' ? `${brandColor}20` : undefined }}>
+        <div 
+          className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform" 
+          style={iconStyle}
+        >
           <Icon className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
         </div>
         <div className="flex-1 text-center pr-11 sm:pr-12">
-          <div className={`text-lg sm:text-xl md:text-2xl font-black tracking-wide px-2 py-0.5 ${t.cardTitle}`}>{title}</div>
+          <div 
+            className="text-lg sm:text-xl md:text-2xl font-black tracking-wide px-2 py-0.5" 
+            style={textStyle}
+          >
+            {title}
+          </div>
         </div>
       </Wrapper>
     );
@@ -676,7 +739,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
           {/* 3. Contacts & Links Stack (Harmonized, wider container blocks) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4.5 pt-2">
             {/* Legacy contact fields */}
-            <ContactCard icon={MessageCircle} title="WhatsApp" value={bio.whatsapp} href={bio.whatsapp ? `https://wa.me/${bio.whatsapp.replace(/\D/g, '')}` : undefined} />
+            <ContactCard icon={MessageCircle} title="WhatsApp" value={bio.whatsapp} href={bio.whatsapp ? `https://api.whatsapp.com/send?phone=${bio.whatsapp.replace(/\D/g, '')}` : undefined} />
             <ContactCard icon={Phone} title="Telefone" value={bio.phone} href={bio.phone ? `tel:${bio.phone.replace(/\D/g, '')}` : undefined} />
             <ContactCard icon={Mail} title="E-mail" value={bio.email} href={bio.email ? `mailto:${bio.email}` : undefined} />
             <ContactCard icon={Instagram} title="Instagram" value={bio.instagram} href={bio.instagram?.includes('http') ? bio.instagram : `https://instagram.com/${bio.instagram?.replace('@','')}`} />
@@ -811,7 +874,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                   <div className="shrink-0 flex flex-col items-center justify-center gap-2 bg-black/5 dark:bg-black/20 p-5 rounded-[2rem] border border-white/5 w-full md:w-auto" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
                     <div className="bg-white p-3 rounded-[1.5rem] w-40 h-40 flex items-center justify-center shadow-lg border border-slate-200/40">
                       <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=000000&data=${encodeURIComponent(pixKey)}`} 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=000000&data=${encodeURIComponent(pixBrCode || pixKey)}`} 
                         alt="QR Code PIX" 
                         className="w-full h-full object-contain"
                         referrerPolicy="no-referrer"
@@ -1367,6 +1430,24 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                             placeholder="Ex: (99) 99999-9999"
                             value={orderPhone}
                             onChange={(e) => setOrderPhone(e.target.value)}
+                            className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all focus-border-brand ${
+                              theme === 'dark' 
+                                ? 'bg-zinc-900 border-zinc-800 text-white' 
+                                : 'bg-slate-50 border-slate-200 text-slate-900'
+                            }`}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider opacity-70 flex items-center gap-1.5">
+                            <FileText className="w-3.5 h-3.5" />
+                            CPF / CNPJ
+                          </label>
+                          <input 
+                            type="text" 
+                            placeholder="Ex: 000.000.000-00 ou 00.000.000/0000-00"
+                            value={orderCpfCnpj}
+                            onChange={(e) => setOrderCpfCnpj(e.target.value)}
                             className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none transition-all focus-border-brand ${
                               theme === 'dark' 
                                 ? 'bg-zinc-900 border-zinc-800 text-white' 

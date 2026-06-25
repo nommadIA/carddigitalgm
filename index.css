@@ -20,10 +20,10 @@
 ========================================================= */
 
 :root{
-  --gm-primary:#ff7b00;
-  --gm-primary-rgb: 255, 123, 0;
-  --gm-accent:#ff9a1a;
-  --gm-accent-rgb: 255, 154, 26;
+  --gm-primary:#32BCAD;
+  --gm-primary-rgb: 50, 188, 173;
+  --gm-accent:#32BCAD;
+  --gm-accent-rgb: 50, 188, 173;
   
   /* Theme Utilities */
   --gm-primary-10: rgba(var(--gm-primary-rgb), 0.1);
@@ -392,7 +392,7 @@ button{ font-family:inherit; }
   height: 16px;
   background: var(--gm-primary);
   border-radius: 99px;
-  box-shadow: 0 0 8px var(--gm-primary), 0 0 14px rgba(255, 123, 0, 0.45);
+  box-shadow: 0 0 8px var(--gm-primary), 0 0 14px rgba(50, 188, 173, 0.45);
   z-index: 10;
 }
 .gm-sidebar.collapsed .gm-nav a.active::after {

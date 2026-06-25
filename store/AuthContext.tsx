@@ -24,8 +24,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const lastUserIdRef = React.useRef<string | null | undefined>(undefined);
 
   const initializeUser = async (sessionUser: any) => {
+    const currentId = sessionUser?.id || null;
+    if (lastUserIdRef.current === currentId && checked) {
+      return;
+    }
+    lastUserIdRef.current = currentId;
+
     try {
       if (!sessionUser?.email) {
         setUser(null);
@@ -90,10 +97,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     let mounted = true;
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted) initializeUser(data.session?.user);
-    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {

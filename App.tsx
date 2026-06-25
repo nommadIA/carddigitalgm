@@ -25,9 +25,7 @@ const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
 const PixCopy = lazy(() => import('./pages/PixCopy'));
 
 const PageLoader = () => (
-  <div className="w-full h-full flex items-center justify-center min-h-[50vh]">
-    <Loader2 size={32} className="animate-spin text-[var(--gm-primary)] opacity-50" />
-  </div>
+  <div className="fixed inset-0 bg-[#050507]" />
 );
 
 const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {

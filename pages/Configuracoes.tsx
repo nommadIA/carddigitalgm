@@ -167,8 +167,8 @@ export default function Configuracoes() {
   const [pixType, setPixType] = useState("CPF");
   const [pixKey, setPixKey] = useState("");
 
-  const [brandPrimary, setBrandPrimary] = useState("#ff7b00");
-  const [brandAccent, setBrandAccent] = useState("#ff9a1a");
+  const [brandPrimary, setBrandPrimary] = useState("#32BCAD");
+  const [brandAccent, setBrandAccent] = useState("#32BCAD");
   const [brandBg, setBrandBg] = useState("#0f1117");
   const [fontFamily, setFontFamily] = useState("Inter");
   const [previewFont, setPreviewFont] = useState<string | null>(null);
@@ -319,8 +319,8 @@ export default function Configuracoes() {
         setPixType(s.pix_type || "CPF");
         setPixKey(s.pix_key || "");
 
-        setBrandPrimary(s.brand_primary || "#ff7b00");
-        setBrandAccent(s.brand_accent || "#ff9a1a");
+        setBrandPrimary(s.brand_primary || "#32BCAD");
+        setBrandAccent(s.brand_accent || "#32BCAD");
         setBrandBg(s.brand_bg || "#0f1117");
         setFontFamily(s.font_family || "Inter");
         setButtonStyle(
@@ -1909,10 +1909,10 @@ export default function Configuracoes() {
                               style={{ 
                                 backgroundColor: 'rgba(17, 19, 24, 0.7)',
                                 backdropFilter: 'blur(12px)',
-                                borderColor: brandPrimary || '#ff7b00',
+                                borderColor: brandPrimary || '#32BCAD',
                                 borderWidth: '1px',
                                 borderStyle: 'solid',
-                                boxShadow: `0 0 20px ${brandPrimary || '#ff7b00'}40, inset 0 0 20px ${brandPrimary || '#ff7b00'}20`
+                                boxShadow: `0 0 20px ${brandPrimary || '#32BCAD'}40, inset 0 0 20px ${brandPrimary || '#32BCAD'}20`
                               }}
                             >
                               {index === 0 && (

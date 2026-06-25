@@ -21,6 +21,40 @@ const formatBRL = (value: string): string => {
   });
 };
 
+function OptimizedImage({ src, alt, className, width = 360 }: { src: string; alt: string; className?: string; width?: number }) {
+  const [imgSrc, setImgSrc] = useState(() => {
+    if (src && src.includes("/storage/v1/object/public/")) {
+      return src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + `?width=${width}&quality=75`;
+    }
+    return src;
+  });
+
+  const handleError = () => {
+    if (imgSrc !== src) {
+      setImgSrc(src);
+    }
+  };
+
+  useEffect(() => {
+    if (src && src.includes("/storage/v1/object/public/")) {
+      setImgSrc(src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + `?width=${width}&quality=75`);
+    } else {
+      setImgSrc(src);
+    }
+  }, [src, width]);
+
+  return (
+    <img 
+      src={imgSrc} 
+      alt={alt} 
+      className={className} 
+      onError={handleError} 
+      referrerPolicy="no-referrer" 
+      loading="lazy"
+    />
+  );
+}
+
 export default function Bio() {
   const { tenantId } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -342,7 +376,7 @@ export default function Bio() {
     }));
   };
 
-  const updateCatalogItem = (id: string, field: string, value: string) => {
+  const updateCatalogItem = (id: string, field: string, value: any) => {
     setBioConfig(prev => ({
       ...prev,
       catalog_items: prev.catalog_items.map(i => i.id === id ? { ...i, [field]: value } : i)
@@ -373,7 +407,7 @@ export default function Bio() {
       const updatedItems = (prev.catalog_items || []).map(item => {
         if (item.id === itemId) {
           const currentImages = [...(item.images || (item.image_url ? [item.image_url] : ['']))];
-          if (currentImages.length < 4) {
+          if (currentImages.length < 8) {
             currentImages.push('');
             return { ...item, images: currentImages };
           }
@@ -418,14 +452,21 @@ export default function Bio() {
     }
   };
 
+  const primaryColor = settings?.brand_primary || "#FF6900";
+
   if (loading) {
-    return <Page title="BIO CardDigital GM"><div className="p-4 text-slate-400">Carregando...</div></Page>;
+    return (
+      <Page title="BIO CardDigital GM">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: primaryColor }} />
+        </div>
+      </Page>
+    );
   }
 
   const platforms = [
-    { value: 'whatsapp', label: 'WhatsApp' },
-    { value: 'telegram', label: 'Telegram' },
     { value: 'instagram', label: 'Instagram' },
+    { value: 'whatsapp', label: 'WhatsApp' },
     { value: 'facebook', label: 'Facebook' },
     { value: 'tiktok', label: 'TikTok' },
     { value: 'youtube', label: 'YouTube' },
@@ -443,13 +484,47 @@ export default function Bio() {
 
   return (
     <Page title="BIO CardDigital GM">
-      <div className="w-full max-w-6xl mx-auto pb-20 space-y-6">
+      <div 
+        className="w-full max-w-6xl mx-auto pb-20 space-y-6"
+        style={{
+          '--primary-color': primaryColor,
+          '--primary-color-hover': `${primaryColor}cc`,
+          '--primary-color-10': `${primaryColor}1a`,
+          '--primary-color-20': `${primaryColor}33`,
+          '--primary-color-60': `${primaryColor}99`,
+        } as React.CSSProperties}>
 
         {/* HEADER PANEL SPANNING FULL WIDTH */}
-        <div className="gm-card p-4 sm:p-6 text-center space-y-4 relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-rose-500" />
-           <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2">
-              <Sparkles className="w-6 h-6 text-orange-400" /> BIO CardDigital GM
+        <div className="gm-card p-4 sm:p-6 pb-7 sm:pb-9 text-center space-y-4 relative overflow-hidden">
+           <style>{`
+             @keyframes color-loop {
+               0% { background-position: 0% 50%; }
+               50% { background-position: 100% 50%; }
+               100% { background-position: 0% 50%; }
+             }
+           `}</style>
+           <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2.5 flex-wrap">
+              <span 
+                className="text-3xl font-black bg-clip-text text-transparent select-none"
+                style={{
+                  backgroundImage: `linear-gradient(90deg, ${primaryColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${primaryColor})`,
+                  backgroundSize: '300% 300%',
+                  animation: 'color-loop 5s ease infinite',
+                }}
+              >
+                BiO
+              </span>
+              <span className="text-zinc-600 text-2xl font-light mx-0.5">|</span>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
+                <img 
+                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
+                  alt="Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span className="text-lg font-bold text-white tracking-wide">
+                CardDigital <span className="text-[#ff7a00]">GM</span>
+              </span>
            </h3>
            <p className="text-slate-400 text-sm">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
            
@@ -462,6 +537,20 @@ export default function Bio() {
                <Globe className="w-4 h-4 mr-2" /> Ver Tela Inteira
              </Link>
            </div>
+
+           <div 
+             style={{
+               position: 'absolute',
+               bottom: 0,
+               left: 0,
+               right: 0,
+               height: '8px',
+               zIndex: 10,
+               background: `linear-gradient(90deg, ${primaryColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${primaryColor})`,
+               backgroundSize: '300% 300%',
+               animation: 'color-loop 5s ease infinite',
+             }}
+           />
         </div>
 
         <div className="flex flex-col gap-6 items-stretch w-full max-w-4xl mx-auto">
@@ -472,7 +561,7 @@ export default function Bio() {
                onClick={() => toggleSection('basic')}
                className="w-full flex justify-between items-center text-lg font-semibold text-white group"
             >
-               <span className="flex items-center gap-2"><Info className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Informações Básicas</span>
+               <span className="flex items-center gap-2"><Info className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Informações Básicas</span>
                {openSections.basic ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
             {openSections.basic && (
@@ -495,7 +584,7 @@ export default function Bio() {
                onClick={() => toggleSection('appearance')}
                className="w-full flex justify-between items-center text-lg font-semibold text-white group"
             >
-               <span className="flex items-center gap-2"><Eye className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Aparência da Bio</span>
+               <span className="flex items-center gap-2"><Eye className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Aparência da Bio</span>
                {openSections.appearance ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
             
@@ -504,8 +593,8 @@ export default function Bio() {
               <div>
                 <label className="gm-label">Cor de Destaque</label>
                 <div className="flex items-center gap-2">
-                  <input type="color" className="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" value={bioConfig.color || settings?.brand_primary || "#ff7a00"} onChange={e => handleChange("color", e.target.value)} />
-                  <input type="text" className="gm-input flex-1 font-mono text-sm" value={bioConfig.color || settings?.brand_primary || "#ff7a00"} onChange={e => handleChange("color", e.target.value)} />
+                  <input type="color" className="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" value={bioConfig.color || settings?.brand_primary || "#FF6900"} onChange={e => handleChange("color", e.target.value)} />
+                  <input type="text" className="gm-input flex-1 font-mono text-sm" value={bioConfig.color || settings?.brand_primary || "#FF6900"} onChange={e => handleChange("color", e.target.value)} />
                 </div>
                 <p className="text-[10px] text-slate-500 mt-1">Se vazio, usará a cor principal do sistema.</p>
               </div>
@@ -522,10 +611,10 @@ export default function Bio() {
                 <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/50 pb-2.5">
                     <span className="text-sm font-bold text-white flex items-center gap-1.5">
-                      <Layout className="w-4 h-4 text-orange-400" /> Mídias Versão Desktop (Computador)
+                      <Layout className="w-4 h-4 text-[var(--primary-color)]" /> Mídias Versão Desktop (Computador)
                     </span>
                     <span className="text-[10px] font-semibold text-zinc-400 bg-zinc-800/60 px-2.5 py-1 rounded-full border border-zinc-700/30">
-                      Tamanho Sugerido: <strong className="text-orange-400">1920x500 px</strong> (Proporção 21:9)
+                      Tamanho Sugerido: <strong className="text-[var(--primary-color)]">1920x500 px</strong> (Proporção 21:9)
                     </span>
                   </div>
 
@@ -548,11 +637,11 @@ export default function Bio() {
                         
                         {bioConfig.bg_image_url ? (
                           <div className="w-full aspect-[21/9] rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
-                            <img src={bioConfig.bg_image_url} alt="Plano de Fundo Desktop" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <OptimizedImage src={bioConfig.bg_image_url} alt="Plano de Fundo Desktop" className="w-full h-full object-cover" width={400} />
                           </div>
                         ) : (
                           <div className="w-full aspect-[21/9] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
-                            <Layout className="w-4 h-4 mb-1 opacity-40 text-orange-400" />
+                            <Layout className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem plano de fundo desktop
                           </div>
                         )}
@@ -566,8 +655,8 @@ export default function Bio() {
                           onChange={e => handleChange("bg_image_url", e.target.value)} 
                           placeholder="URL ou Upload" 
                         />
-                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-orange-500/60 hover:border-orange-500 hover:bg-orange-500/10 transition-all">
-                          <Upload className="w-3.5 h-3.5 text-orange-500" />
+                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all">
+                          <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
                           <span className="font-bold text-white">Upload</span>
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBg(false, e)} />
                         </label>
@@ -592,11 +681,11 @@ export default function Bio() {
                         
                         {bioConfig.banner_img_url_1 ? (
                           <div className="w-full aspect-[21/9] rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
-                            <img src={bioConfig.banner_img_url_1} alt="Banner Desktop" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <OptimizedImage src={bioConfig.banner_img_url_1} alt="Banner Desktop" className="w-full h-full object-cover" width={400} />
                           </div>
                         ) : (
                           <div className="w-full aspect-[21/9] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
-                            <Sparkles className="w-4 h-4 mb-1 opacity-40 text-orange-400" />
+                            <Sparkles className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem banner desktop
                           </div>
                         )}
@@ -610,8 +699,8 @@ export default function Bio() {
                           onChange={e => handleChange("banner_img_url_1", e.target.value)} 
                           placeholder="URL ou Upload" 
                         />
-                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-orange-500/60 hover:border-orange-500 hover:bg-orange-500/10 transition-all">
-                          <Upload className="w-3.5 h-3.5 text-orange-500" />
+                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all">
+                          <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
                           <span className="font-bold text-white">Upload</span>
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBanner(1, false, e)} />
                         </label>
@@ -626,10 +715,10 @@ export default function Bio() {
                 <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/50 pb-2.5">
                     <span className="text-sm font-bold text-white flex items-center gap-1.5">
-                      <Smartphone className="w-4 h-4 text-orange-400" /> Mídias Versão Smartphone (Celular)
+                      <Smartphone className="w-4 h-4 text-[var(--primary-color)]" /> Mídias Versão Smartphone (Celular)
                     </span>
                     <span className="text-[10px] font-semibold text-zinc-400 bg-zinc-800/60 px-2.5 py-1 rounded-full border border-zinc-700/30">
-                      Tamanho Sugerido: <strong className="text-orange-400">1080x1920 px</strong> (Proporção 9:16)
+                      Tamanho Sugerido: <strong className="text-[var(--primary-color)]">1080x1920 px</strong> (Proporção 9:16)
                     </span>
                   </div>
 
@@ -652,11 +741,11 @@ export default function Bio() {
                         
                         {bioConfig.bg_mobile_image_url ? (
                           <div className="w-full aspect-[9/16] rounded-lg overflow-hidden border border-zinc-800 bg-black/40 max-w-[140px] mx-auto">
-                            <img src={bioConfig.bg_mobile_image_url} alt="Plano de Fundo Smartphone" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <OptimizedImage src={bioConfig.bg_mobile_image_url} alt="Plano de Fundo Smartphone" className="w-full h-full object-cover" width={240} />
                           </div>
                         ) : (
                           <div className="w-full aspect-[9/16] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10 max-w-[140px] mx-auto">
-                            <Smartphone className="w-4 h-4 mb-1 opacity-40 text-orange-400" />
+                            <Smartphone className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem plano de fundo smartphone
                           </div>
                         )}
@@ -670,8 +759,8 @@ export default function Bio() {
                           onChange={e => handleChange("bg_mobile_image_url", e.target.value)} 
                           placeholder="URL ou Upload" 
                         />
-                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-orange-500/60 hover:border-orange-500 hover:bg-orange-500/10 transition-all">
-                          <Upload className="w-3.5 h-3.5 text-orange-500" />
+                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all">
+                          <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
                           <span className="font-bold text-white">Upload</span>
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBg(true, e)} />
                         </label>
@@ -696,11 +785,11 @@ export default function Bio() {
                         
                         {bioConfig.mobile_banner_img_url_1 ? (
                           <div className="w-full aspect-[9/16] rounded-lg overflow-hidden border border-zinc-800 bg-black/40 max-w-[140px] mx-auto">
-                            <img src={bioConfig.mobile_banner_img_url_1} alt="Banner Smartphone" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <OptimizedImage src={bioConfig.mobile_banner_img_url_1} alt="Banner Smartphone" className="w-full h-full object-cover" width={240} />
                           </div>
                         ) : (
                           <div className="w-full aspect-[9/16] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10 max-w-[140px] mx-auto">
-                            <Sparkles className="w-4 h-4 mb-1 opacity-40 text-orange-400" />
+                            <Sparkles className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem banner smartphone
                           </div>
                         )}
@@ -714,8 +803,8 @@ export default function Bio() {
                           onChange={e => handleChange("mobile_banner_img_url_1", e.target.value)} 
                           placeholder="URL ou Upload" 
                         />
-                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-orange-500/60 hover:border-orange-500 hover:bg-orange-500/10 transition-all">
-                          <Upload className="w-3.5 h-3.5 text-orange-500" />
+                        <label className="gm-btn gm-btn-outline shrink-0 !py-1.5 !px-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all">
+                          <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
                           <span className="font-bold text-white">Upload</span>
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBanner(1, true, e)} />
                         </label>
@@ -729,7 +818,7 @@ export default function Bio() {
               <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 flex items-center justify-between">
                 <div className="space-y-0.5">
                   <span className="text-sm font-bold text-white flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-orange-400" /> Exibir Banners de Destaque no Site
+                    <Sparkles className="w-4 h-4 text-[var(--primary-color)]" /> Exibir Banners de Destaque no Site
                   </span>
                   <p className="text-[11px] text-zinc-400">Ative para exibir o carrossel de banners promocionais no topo do seu site.</p>
                 </div>
@@ -740,7 +829,7 @@ export default function Bio() {
                     checked={!!bioConfig.show_banners}
                     onChange={(e) => handleChange("show_banners", e.target.checked)}
                   />
-                  <div className="w-9 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                  <div className="w-9 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--primary-color)]"></div>
                 </label>
               </div>
             </div>
@@ -753,7 +842,7 @@ export default function Bio() {
                onClick={() => toggleSection('contacts')}
                className="w-full flex justify-between items-center text-lg font-semibold text-white group"
             >
-              <span className="flex items-center gap-2"><Phone className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Contatos e Redes</span>
+              <span className="flex items-center gap-2"><Phone className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Contatos e Redes</span>
               {openSections.contacts ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
             
@@ -785,7 +874,7 @@ export default function Bio() {
                onClick={() => toggleSection('otherLinks')}
                className="w-full flex justify-between items-center text-lg font-semibold text-white group"
             >
-              <span className="flex items-center gap-2"><LinkIcon className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Outros Links</span>
+              <span className="flex items-center gap-2"><LinkIcon className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Outros Links</span>
               {openSections.otherLinks ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
             
@@ -794,7 +883,7 @@ export default function Bio() {
               <div className="flex justify-end mb-4">
                 <button 
                   onClick={addCustomLink}
-                  className="flex items-center text-orange-500 hover:text-orange-400 text-sm font-medium bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20 transition-all hover:bg-orange-500/20"
+                  className="flex items-center text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] text-sm font-medium bg-[var(--primary-color-10)] px-3 py-1.5 rounded-lg border border-[var(--primary-color-20)] transition-all hover:bg-[var(--primary-color-20)]"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Adicionar
@@ -922,7 +1011,7 @@ export default function Bio() {
                onClick={() => toggleSection('catalog')}
                className="w-full flex justify-between items-center text-lg font-semibold text-white group"
             >
-              <span className="flex items-center gap-2"><ShoppingBag className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Catálogo de Produtos</span>
+              <span className="flex items-center gap-2"><ShoppingBag className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Catálogo de Produtos</span>
               {openSections.catalog ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
             
@@ -935,7 +1024,7 @@ export default function Bio() {
                 </div>
                 <button 
                   onClick={addCatalogItem}
-                  className="w-full sm:w-auto text-sm bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center font-semibold px-4 py-2.5 rounded-xl transition-all"
+                  className="w-full sm:w-auto text-sm bg-[var(--primary-color)] hover:bg-[var(--primary-color-hover)] text-white flex items-center justify-center font-semibold px-4 py-2.5 rounded-xl transition-all"
                 >
                   <Plus className="w-4 h-4 mr-2" /> Adicionar Produto
                 </button>
@@ -943,13 +1032,13 @@ export default function Bio() {
 
             {bioConfig.catalog_items?.length === 0 ? (
                <div className="text-center py-8 text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl space-y-2">
-                 <ShoppingBag className="w-10 h-10 opacity-35 mx-auto text-orange-500" />
+                 <ShoppingBag className="w-10 h-10 opacity-35 mx-auto text-[var(--primary-color)]" />
                  <p>Nenhum produto no catálogo. Clique em "Adicionar Produto" para exibir fotos e preços.</p>
                </div>
             ) : (
                <div className="grid grid-cols-1 gap-5">
                  {bioConfig.catalog_items?.map((item) => (
-                   <div key={item.id} className="p-4 bg-zinc-900/80 rounded-2xl border border-zinc-800/80 space-y-4 relative group hover:border-orange-500/20 transition-all">
+                   <div key={item.id} className="p-4 bg-zinc-900/80 rounded-2xl border border-zinc-800/80 space-y-4 relative group hover:border-[var(--primary-color)]/20 transition-all">
                      <button 
                        onClick={() => removeCatalogItem(item.id)}
                        className="absolute top-3 right-3 text-slate-400 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-full transition-all"
@@ -977,7 +1066,7 @@ export default function Bio() {
                              <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Preço (opcional)</label>
                              <input 
                                type="text" 
-                               className="gm-input w-full !py-2.5 text-orange-400 font-mono font-bold" 
+                               className="gm-input w-full !py-2.5 text-[var(--primary-color)] font-mono font-bold" 
                                value={item.price} 
                                onChange={e => updateCatalogItem(item.id, 'price', formatBRL(e.target.value))} 
                                placeholder="R$ 0,00"
@@ -1013,18 +1102,82 @@ export default function Bio() {
                               }}
                               placeholder="Ex: Tênis em couro, ótimo para corridas."
                             />
-                         </div>
-                       </div>
+                          </div>
 
-                       <div className="space-y-4 border-t border-zinc-800/65 pt-5">
+                          {/* CADASTRO POR QUANTIDADE / VARIAÇÕES */}
+                          <div className="border-t border-zinc-800/40 pt-4 mt-2">
+                            <div className="flex items-center justify-between mb-3">
+                              <label className="text-xs font-extrabold text-slate-400 block uppercase tracking-wider">Cadastro por Quantidade / Variações</label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentOptions = item.options || [];
+                                  const updatedOptions = [...currentOptions, { id: Date.now().toString(), quantity: '', price: '' }];
+                                  updateCatalogItem(item.id, 'options', updatedOptions);
+                                }}
+                                className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1 rounded-lg transition-all"
+                              >
+                                <Plus className="w-3 h-3 mr-1" /> Add Opção
+                              </button>
+                            </div>
+                            
+                            {(item.options || []).length > 0 ? (
+                              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 no-scrollbar">
+                                {(item.options || []).map((opt: any, optIdx: number) => (
+                                  <div key={opt.id || optIdx} className="flex gap-2 items-center">
+                                    <input
+                                      type="text"
+                                      placeholder="Ex: 250 un"
+                                      className="gm-input flex-1 !py-1.5 text-xs font-semibold"
+                                      value={opt.quantity}
+                                      onChange={e => {
+                                        const updated = (item.options || []).map((o: any, idx: number) => 
+                                          idx === optIdx ? { ...o, quantity: e.target.value } : o
+                                        );
+                                        updateCatalogItem(item.id, 'options', updated);
+                                      }}
+                                    />
+                                    <input
+                                      type="text"
+                                      placeholder="R$ 0,00"
+                                      className="gm-input w-28 !py-1.5 text-xs text-[var(--primary-color)] font-mono font-bold"
+                                      value={opt.price}
+                                      onChange={e => {
+                                        const updated = (item.options || []).map((o: any, idx: number) => 
+                                          idx === optIdx ? { ...o, price: formatBRL(e.target.value) } : o
+                                        );
+                                        updateCatalogItem(item.id, 'options', updated);
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updated = (item.options || []).filter((_: any, idx: number) => idx !== optIdx);
+                                        updateCatalogItem(item.id, 'options', updated);
+                                      }}
+                                      className="text-red-400 hover:text-red-300 p-1.5 hover:bg-red-500/10 rounded-lg transition-all"
+                                      title="Remover Opção"
+                                    >
+                                      <Trash className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-slate-500 leading-normal">Se o seu produto tem preços que variam por quantidade (ex: 250, 500, 1000 cartões), adicione as opções acima. Caso contrário, use apenas o preço fixo padrão.</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4 border-t border-zinc-800/65 pt-5">
                           <div className="font-sans space-y-3">
                             <div className="flex items-center justify-between">
-                              <label className="text-sm font-bold text-slate-300 block">Fotos do Produto (Máximo 4)</label>
-                              {((item.images || (item.image_url ? [item.image_url] : [""])).length < 4) && (
+                              <label className="text-sm font-bold text-slate-300 block">Fotos do Produto (Máximo 8)</label>
+                              {((item.images || (item.image_url ? [item.image_url] : [""])).length < 8) && (
                                 <button 
                                   type="button"
                                   onClick={() => addCatalogItemImageSlot(item.id)}
-                                  className="text-xs text-orange-500 hover:text-orange-400 flex items-center font-semibold bg-orange-500/10 hover:bg-orange-500/20 px-2.5 py-1.5 rounded-lg transition-all"
+                                  className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-semibold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-lg transition-all"
                                 >
                                   <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar Foto
                                 </button>
@@ -1038,11 +1191,11 @@ export default function Bio() {
                                   <div className="flex items-center gap-3.5">
                                     {imgUrl ? (
                                       <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border border-zinc-300 bg-white shrink-0 group/img shadow-md flex items-center justify-center p-1">
-                                        <img 
+                                        <OptimizedImage 
                                           src={imgUrl} 
                                           alt={"Foto " + (idx + 1)} 
                                           className="max-w-full max-h-full object-contain" 
-                                          referrerPolicy="no-referrer"
+                                          width={200}
                                         />
                                         <button
                                           type="button"
@@ -1055,11 +1208,11 @@ export default function Bio() {
                                       </div>
                                     ) : (
                                       <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-slate-600 shrink-0">
-                                        <ShoppingBag className="w-8 h-8 opacity-45 text-orange-400" />
+                                        <ShoppingBag className="w-8 h-8 opacity-45 text-[var(--primary-color)]" />
                                       </div>
                                     )}
                                     <div className="space-y-0.5">
-                                      <p className="text-sm font-black text-slate-200">Foto {idx + 1} de 4</p>
+                                      <p className="text-sm font-black text-slate-200">Foto {idx + 1} de 8</p>
                                       <p className="text-xs text-slate-400 font-medium">
                                         {imgUrl ? "⚡ Miniatura carregada" : "⚠️ Nenhuma imagem vinculada"}
                                       </p>
@@ -1080,7 +1233,7 @@ export default function Bio() {
 
                                   {/* 3. UPLOAD e EXCLUIR */}
                                   <div className="grid grid-cols-2 gap-3 w-full">
-                                    <label className="gm-btn gm-btn-outline w-full px-3 py-2.5 text-xs flex items-center justify-center cursor-pointer gap-1.5 hover:bg-orange-500/15">
+                                    <label className="gm-btn gm-btn-outline w-full px-3 py-2.5 text-xs flex items-center justify-center cursor-pointer gap-1.5 hover:bg-[var(--primary-color)]/15">
                                       <Upload className="w-4 h-4" />
                                       <span className="font-bold">Upload</span>
                                       <input 
@@ -1121,7 +1274,7 @@ export default function Bio() {
                onClick={() => toggleSection('payment')}
                className="w-full flex justify-between items-center text-lg font-semibold text-white group"
             >
-              <span className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Dados de Pagamento (PIX)</span>
+              <span className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Dados de Pagamento (PIX)</span>
               {openSections.payment ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
             
@@ -1164,7 +1317,7 @@ export default function Bio() {
                onClick={() => toggleSection('address')}
                className="w-full flex justify-between items-center text-lg font-semibold text-white group"
             >
-              <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-orange-400 group-hover:scale-110 transition-transform" /> Endereço e Localização</span>
+              <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Endereço e Localização</span>
               {openSections.address ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
             
@@ -1224,8 +1377,8 @@ export default function Bio() {
               <div className="flex flex-col gap-2 py-8 pl-12 pr-2 bg-transparent select-none">
                 {/* green track segment for Save - completely glued to right edge */}
                 <div className="w-3 h-16 rounded-full bg-green-500 transition-all group-hover:w-4 group-hover:bg-green-400" />
-                {/* orange track segment for View - completely glued to right edge */}
-                <div className="w-3 h-16 rounded-full bg-orange-500 transition-all group-hover:w-4 group-hover:bg-orange-400" />
+                {/* green/teal track segment for View - completely glued to right edge */}
+                <div className="w-3 h-16 rounded-full bg-[var(--primary-color)] transition-all group-hover:w-4 group-hover:bg-[var(--primary-color-hover)]" />
               </div>
             </motion.div>
           ) : (
@@ -1263,7 +1416,7 @@ export default function Bio() {
                     handleSave();
                   }}
                   disabled={saving}
-                  className="w-14 h-14 bg-green-500 hover:bg-green-600 active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(34,197,94,0.4)] transition-all duration-300 hover:scale-110 disabled:opacity-50"
+                  className="w-14 h-14 bg-green-500 hover:bg-green-600 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50"
                 >
                   <Save className="w-6 h-6" />
                 </button>
@@ -1277,7 +1430,7 @@ export default function Bio() {
                     if (isDraggingRef.current) return;
                     setPreviewOpen(true);
                   }}
-                  className="w-14 h-14 bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-40)] active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(255,102,0,0.6)] transition-all duration-300 hover:scale-110"
+                  className="w-14 h-14 bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-40)] active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110"
                 >
                   <Eye className="w-6 h-6" />
                 </button>
@@ -1302,7 +1455,7 @@ export default function Bio() {
               onClick={() => setPreviewMode("smartphone")}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
                 previewMode === "smartphone"
-                  ? "bg-orange-500 text-white shadow-md"
+                  ? "bg-[var(--primary-color)] text-white shadow-md"
                   : "text-zinc-400 hover:text-white hover:bg-white/5"
               }`}
             >
@@ -1313,7 +1466,7 @@ export default function Bio() {
               onClick={() => setPreviewMode("pc")}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
                 previewMode === "pc"
-                  ? "bg-orange-500 text-white shadow-md"
+                  ? "bg-[var(--primary-color)] text-white shadow-md"
                   : "text-zinc-400 hover:text-white hover:bg-white/5"
               }`}
             >

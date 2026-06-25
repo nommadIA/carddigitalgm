@@ -19,15 +19,18 @@ function sanitizeSlug(name: string): string {
 export default function PublicBio() {
   const { tenantId } = useParams();
   const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [apiLoading, setApiLoading] = useState(true);
+  const [introExiting, setIntroExiting] = useState(false);
+  const [introFinished, setIntroFinished] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
 
   useEffect(() => {
+    let apiDone = false;
+    let timerDone = false;
+    let fetchedDataResult: any = null;
+
     async function load() {
       if (!tenantId) return;
-      setLoading(true);
-      setErrorDetails(null);
-
       try {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantId);
         let fetchedData = null;
@@ -35,7 +38,7 @@ export default function PublicBio() {
         if (isUUID) {
           const { data, error } = await supabase
             .from("app_settings")
-            .select("company_name, company_logo_url, pix_key, pix_type, bio_config, brand_primary, tenant_id")
+            .select("company_name, company_logo_url, pix_key, pix_type, bio_config, brand_primary, tenant_id, button_style")
             .eq("tenant_id", tenantId)
             .maybeSingle();
 
@@ -51,7 +54,7 @@ export default function PublicBio() {
 
           const { data: allSettings, error } = await supabase
             .from("app_settings")
-            .select("company_name, company_logo_url, pix_key, pix_type, bio_config, brand_primary, tenant_id");
+            .select("company_name, company_logo_url, pix_key, pix_type, bio_config, brand_primary, tenant_id, button_style");
 
           if (error) {
             console.error("Erro RLS/Supabase ao listar:", error);
@@ -82,7 +85,7 @@ export default function PublicBio() {
         }
 
         if (fetchedData) {
-          setData(fetchedData);
+          fetchedDataResult = fetchedData;
           if (fetchedData.brand_primary) {
             document.documentElement.style.setProperty("--primary", fetchedData.brand_primary);
           }
@@ -91,30 +94,45 @@ export default function PublicBio() {
         console.error("Falha ao recuperar a bio:", err);
         setErrorDetails(err.message || String(err));
       } finally {
-        setLoading(false);
+        apiDone = true;
+        checkCompletion();
       }
     }
+
+    // Set a guaranteed cinematic timer of 2.5 seconds for the single-run logo animation to play fully
+    const introTimer = setTimeout(() => {
+      timerDone = true;
+      checkCompletion();
+    }, 2500);
+
+    function checkCompletion() {
+      if (apiDone && timerDone) {
+        setData(fetchedDataResult);
+        setApiLoading(false);
+        // Start the elegant fade-out transition of the overlay
+        setIntroExiting(true);
+        // Fully remove the splash screen overlay from the DOM after transition complete (500ms)
+        setTimeout(() => {
+          setIntroFinished(true);
+        }, 500);
+      }
+    }
+
     load();
+
+    return () => clearTimeout(introTimer);
   }, [tenantId]);
 
-  if (loading) {
+  // If loading is finished but no data found, display the Page Not Found error layout
+  if (!apiLoading && !data) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0c] text-slate-400 gap-3">
-        <div className="w-10 h-10 rounded-full border-t-2 border-orange-500 animate-spin" />
-        <span className="text-sm font-medium tracking-wide">Carregando CardDigital GM...</span>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0c] text-white p-6 relative overflow-hidden">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0c] text-white p-6 relative overflow-hidden animate-[gm-fade-in_0.5s_ease-out_forwards]">
         {/* Decorative ambient spots */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-orange-600/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-md w-full bg-[#121215] border border-white/5 rounded-[2rem] p-6 text-center space-y-6 shadow-2xl relative z-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-500/10 text-[#ff7a00]">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#32BCAD]/10 text-[#32BCAD]">
             <Sparkles className="w-8 h-8" />
           </div>
 
@@ -126,15 +144,15 @@ export default function PublicBio() {
           </div>
 
           {/* Help instructions for the administrator (Expandable) */}
-          <details className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-4 text-left cursor-pointer group transition-all duration-300 overflow-hidden">
-            <summary className="text-xs font-bold uppercase tracking-wider text-orange-400 select-none outline-none list-none flex items-center justify-between">
+          <details className="bg-[#32BCAD]/5 border border-[#32BCAD]/20 rounded-2xl p-4 text-left cursor-pointer group transition-all duration-300 overflow-hidden">
+            <summary className="text-xs font-bold uppercase tracking-wider text-[#32BCAD] select-none outline-none list-none flex items-center justify-between">
               <span>Suporte e Diagnóstico Técnico</span>
-              <span className="text-[10px] text-orange-500 group-open:rotate-180 transition-transform duration-200">▼</span>
+              <span className="text-[10px] text-[#32BCAD] group-open:rotate-180 transition-transform duration-200">▼</span>
             </summary>
             
-            <div className="mt-3 space-y-3 pt-3 border-t border-orange-500/10 cursor-default" onClick={(e) => e.stopPropagation()}>
+            <div className="mt-3 space-y-3 pt-3 border-t border-[#32BCAD]/10 cursor-default" onClick={(e) => e.stopPropagation()}>
               <p className="text-xs text-slate-300 leading-relaxed">
-                O link público requer que as políticas de acesso do Supabase (RLS) do seu projeto permitam leitura pública (SELECT) para a tabela <code className="bg-black/40 text-orange-300 px-1 py-0.5 rounded">app_settings</code>. 
+                O link público requer que as políticas de acesso do Supabase (RLS) do seu projeto permitam leitura pública (SELECT) para a tabela <code className="bg-black/40 text-[#32BCAD] px-1 py-0.5 rounded">app_settings</code>. 
               </p>
               <div className="text-xs text-slate-400 space-y-1">
                 <span className="block font-medium">Como resolver no Painel do Supabase:</span>
@@ -160,5 +178,88 @@ create policy "settings_select" on public.app_settings
     );
   }
 
-  return <BioRenderer data={data} asPreview={false} />;
+  return (
+    <>
+      {/* Global CSS style block that is always mounted to ensure styles never disappear when overlay unmounts */}
+      <style>{`
+        @keyframes gm-draw-reveal {
+          0% {
+            clip-path: inset(0 100% 0 0);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          45% {
+            clip-path: inset(0 0 0 0);
+            opacity: 1;
+          }
+          75% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+
+        @keyframes gm-solid-fade {
+          0%, 40% {
+            opacity: 0;
+          }
+          60%, 75% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+
+        @keyframes gm-fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+
+      {/* Render actual Bio component directly to avoid wrapping layout issues */}
+      {data && <BioRenderer data={data} asPreview={false} />}
+
+      {/* Cinematic Splash Overlay containing only the animated logo */}
+      {!introFinished && (
+        <div 
+          className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050507] transition-opacity duration-500 ease-in-out ${
+            introExiting ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+        >
+          {/* Center Logo Area - Increased size slightly */}
+          <div className="relative w-56 h-56 flex items-center justify-center select-none">
+            {/* Traced Logo (Trim Path Draw effect) */}
+            <img 
+              src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/sign/Logo%20GM/marca%20GM%20SVG%20tracado.svg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV82NDdiYWI0ZC1iZTIwLTRhNDItYWY4Ny0zMGRmNTMwNzU0YjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMb2dvIEdNL21hcmNhIEdNIFNWRyB0cmFjYWRvLnN2ZyIsInNjb3BlIjoiZG93bmxvYWQiLCJpYXQiOjE3ODI0MDIxNTIsImV4cCI6MzMzMTg0MDIxNTJ9.bhVqyQnf_8qjJ2XZir_Szwk-MWCSulVeqnCJ0ZMt9Gw"
+              alt="GM Traced Draw"
+              className="absolute w-44 h-44 z-10"
+              style={{
+                animation: 'gm-draw-reveal 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards',
+              }}
+            />
+
+            {/* Solid Logo (Fill effect) */}
+            <img 
+              src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/sign/Logo%20GM/marca%20GM%20SVG%20solido.svg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV82NDdiYWI0ZC1iZTIwLTRhNDItYWY4Ny0zMGRmNTMwNzU0YjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJMb2dvIEdNL21hcmNhIEdNIFNWRyBzb2xpZG8uc3ZnIiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4MjQwMjEzNSwiZXhwIjozMzMxODQwMjEzNX0.eNOkFVBpwHIymayUxliixXaD5k3YQCKV-BzZ81QMNuw"
+              alt="GM Solid"
+              className="absolute w-44 h-44 z-20"
+              style={{
+                animation: 'gm-solid-fade 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards',
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

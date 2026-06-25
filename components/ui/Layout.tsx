@@ -555,7 +555,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         {/* Overlapping vertical border collapse/expand Toggle Button - Perfectly sized, Positioned precisely, with a thicker style-guide Orange border */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-1/2 -translate-y-1/2 -right-[10.5px] w-[21px] h-[21px] rounded-full bg-[#0b0e14] border-[2.5px] border-[#ff7a00]/60 hover:border-[#ff7a00] flex items-center justify-center text-[#ff7a00] transition-all z-[100] shadow-[0_2px_12px_rgba(255,122,0,0.25)] hover:shadow-[0_2px_16px_rgba(255,122,0,0.45)] cursor-pointer"
+          className="absolute top-1/2 -translate-y-1/2 -right-[10.5px] w-[21px] h-[21px] rounded-full bg-[#0b0e14] border-[2.5px] border-[var(--gm-primary)]/60 hover:border-[var(--gm-primary)] flex items-center justify-center text-[var(--gm-primary)] transition-all z-[100] shadow-[0_2px_12px_rgba(50,188,173,0.25)] hover:shadow-[0_2px_16px_rgba(50,188,173,0.45)] cursor-pointer"
           type="button"
           aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
         >
