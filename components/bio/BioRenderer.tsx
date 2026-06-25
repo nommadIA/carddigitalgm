@@ -58,6 +58,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
   const [orderName, setOrderName] = useState("");
   const [orderPhone, setOrderPhone] = useState("");
   const [orderCpfCnpj, setOrderCpfCnpj] = useState("");
+  const [customAlert, setCustomAlert] = useState<{ title: string; message: string } | null>(null);
   const [deliveryOption, setDeliveryOption] = useState<"pickup" | "delivery">("pickup");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "checkout">("cart");
@@ -100,9 +101,30 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
     };
   }, [setSelectedProduct, setIsCartOpen]);
 
-  // Dynamically update favicon with client's general app logo
+  // Dynamically update favicon and Open Graph meta tags with client's general app logo and name
   useEffect(() => {
     const clientLogo = data?.company_logo_url;
+    const clientName = data?.company_name || bio.title || "GM EDIFICAÇÃO";
+    
+    // Dynamically update document title
+    document.title = `Informações do seu pedido - ${clientName}`;
+
+    const updateMetaTag = (property: string, content: string) => {
+      let element = document.querySelector(`meta[property='${property}']`);
+      if (!element) {
+        element = document.createElement("meta");
+        element.setAttribute("property", property);
+        document.head.appendChild(element);
+      }
+      element.setAttribute("content", content);
+    };
+
+    updateMetaTag("og:title", `Informações do seu pedido - ${clientName}`);
+    updateMetaTag("og:description", "Acesse nosso catálogo e faça seu pedido de forma rápida e segura!");
+    if (clientLogo) {
+      updateMetaTag("og:image", clientLogo);
+    }
+
     if (clientLogo) {
       const links = document.querySelectorAll("link[rel*='icon']");
       if (links.length > 0) {
@@ -116,7 +138,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
         document.head.appendChild(newLink);
       }
     }
-  }, [data?.company_logo_url]);
+  }, [data?.company_logo_url, data?.company_name, bio.title]);
 
   const addToCart = (product: any, qty: number = 1) => {
     setCart(prev => {
@@ -174,17 +196,26 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
 
   const handleCheckoutWhatsApp = () => {
     if (!orderName.trim()) {
-      alert("Por favor, informe seu nome para o pedido.");
+      setCustomAlert({
+        title: companyName,
+        message: "Por favor, informe seu nome e preencha os dados para o pedido."
+      });
       return;
     }
     if (deliveryOption === "delivery" && !deliveryAddress.trim()) {
-      alert("Por favor, preencha o endereço de entrega.");
+      setCustomAlert({
+        title: companyName,
+        message: "Por favor, preencha o endereço de entrega."
+      });
       return;
     }
 
     const cleanedWhatsapp = (bio.whatsapp || bio.phone || "").replace(/\D/g, "");
     if (!cleanedWhatsapp) {
-      alert("Desculpe, este estabelecimento não configurou um número de WhatsApp para receber pedidos.");
+      setCustomAlert({
+        title: companyName,
+        message: "Desculpe, este estabelecimento não configurou um número de WhatsApp para receber pedidos."
+      });
       return;
     }
 
@@ -196,6 +227,8 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
     }).join("\n");
 
     const header = `*🛍️ NOVO PEDIDO - ${companyName.toUpperCase()}*\n`;
+    const storeUrl = window.location.href.split('?')[0].split('&')[0];
+    const storeLink = `🔗 *Site:* ${storeUrl}\n`;
     const clientDetails = `*Cliente:* ${orderName.trim()}\n${orderPhone.trim() ? `*Telefone:* ${orderPhone.trim()}\n` : ""}${orderCpfCnpj.trim() ? `*CPF/CNPJ:* ${orderCpfCnpj.trim()}\n` : ""}`;
     const deliveryDetails = deliveryOption === "delivery" 
       ? `*Entrega:* Receber em Casa 🚚\n*Endereço:* ${deliveryAddress.trim()}\n` 
@@ -208,7 +241,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
       pixDetails = `\n\n*💳 FORMA DE PAGAMENTO:* PIX\n*Chave:* \`${pixKey}\` (${pixType})\n_Por favor, realize o pagamento e envie o comprovante de transferência junto com este pedido!_`;
     }
 
-    const message = `${header}\n${clientDetails}${deliveryDetails}\n*PRODUTOS:*\n${itemsText}${totals}${pixDetails}\n\nAgradeço a preferência!`;
+    const message = `${header}${storeLink}\n${clientDetails}${deliveryDetails}\n*PRODUTOS:*\n${itemsText}${totals}${pixDetails}\n\nAgradeço a preferência!`;
     const encoded = encodeURIComponent(message);
     const whatsappClean = (bio.whatsapp || bio.phone || '').replace(/\D/g, '');
     const whatsappNumber = whatsappClean.startsWith('55') || whatsappClean.length > 11 ? whatsappClean : `55${whatsappClean}`;
@@ -600,6 +633,16 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
       className={`w-full ${!asPreview ? "fixed inset-0 overflow-y-auto py-10 px-4 custom-scroll" : "relative h-full overflow-y-auto no-scrollbar py-6 px-4"} ${t.bg} selection-brand font-sans`}
     >
       <style>{`
+        @keyframes color-loop {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes vertical-color-loop {
+          0% { background-position: 50% 0%; }
+          50% { background-position: 50% 100%; }
+          100% { background-position: 50% 0%; }
+        }
         .selection-brand::selection, .selection-brand *::selection {
           background-color: ${brandColor}35 !important;
         }
@@ -811,7 +854,7 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
               <div className="absolute top-0 left-0 w-full h-[4px] opacity-80 group-hover:opacity-100 transition-opacity" style={{ background: brandColor }} />
               
               <div className="flex flex-col md:flex-row items-stretch justify-between gap-6 sm:gap-8">
-                {/* Left Side: Payment Info, Key Display and Copy Button */}
+                {/* Left Side: Payment Info, Key Display and Buttons */}
                 <div className="flex-1 flex flex-col justify-between space-y-5 text-left w-full">
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
@@ -844,37 +887,62 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                     </p>
                   </div>
 
-                  {pixKey && (
+                  {(pixKey || cardUrl) && (
                     <div className="space-y-3">
-                      <div className="bg-black/15 dark:bg-black/35 p-4 rounded-2xl border border-white/5 space-y-1 text-left" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-                        <div className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Chave PIX ({pixType})</div>
-                        <div className="text-base sm:text-lg md:text-xl font-mono font-black break-all select-all text-white" style={{ color: brandColor }}>
-                          {pixKey}
+                      
+                      {pixKey && (
+                        <div className="bg-black/15 dark:bg-black/35 p-4 rounded-2xl border border-white/5 space-y-1 text-left" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                          <div className="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Chave PIX ({pixType})</div>
+                          <div className="text-base sm:text-lg md:text-xl font-mono font-black break-all select-all text-white" style={{ color: brandColor }}>
+                            {pixKey}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      <button 
-                        onClick={handleCopyPix}
-                        className={`w-full flex items-center justify-center p-4 sm:p-4.5 rounded-2xl font-black text-base sm:text-lg border transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md bio-button ${t.iconBg}`}
-                        style={{ 
-                          color: brandColor, 
-                          borderColor: `${brandColor}40`, 
-                          backgroundColor: theme === 'dark' ? `${brandColor}15` : undefined
-                        }}
-                      >
-                        {copiedPix ? <Check className="w-5 h-5 mr-2" /> : <Copy className="w-5 h-5 mr-2" />}
-                        {copiedPix ? "Chave copiada!" : "Copiar Chave para Pix Copia e Cola"}
-                      </button>
+                      {pixKey && (
+                        <button 
+                          onClick={handleCopyPix}
+                          className="w-full flex items-center justify-center h-14 sm:h-16 rounded-2xl text-base sm:text-lg font-black transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer text-white border-0 shadow-md"
+                          style={{ 
+                            background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                            backgroundSize: '300% 300%',
+                            animation: 'color-loop 5s ease infinite',
+                          }}
+                        >
+                          {copiedPix ? <Check className="w-5 h-5 mr-2 font-bold" /> : <Copy className="w-5 h-5 mr-2 font-bold" />}
+                          <span className="font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                            {copiedPix ? "Chave copiada!" : "Copiar Chave para Pix Copia e Cola"}
+                          </span>
+                        </button>
+                      )}
+
+                      {cardUrl && (
+                        <a 
+                          href={cardUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full flex items-center justify-center h-14 sm:h-16 rounded-2xl font-black text-base sm:text-lg text-white transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98] border-0 shadow-md"
+                          style={{ 
+                            backgroundColor: brandColor,
+                            boxShadow: `0 4px 14px ${brandColor}40`
+                          }}
+                        >
+                          <CreditCard className="w-5 h-5 mr-2 font-bold" />
+                          <span className="font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                            Pagar com Cartão de Crédito
+                          </span>
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>
 
                 {/* Right Side: QR Code Box (only if pixKey exists) */}
                 {pixKey && (
-                  <div className="shrink-0 flex flex-col items-center justify-center gap-2 bg-black/5 dark:bg-black/20 p-5 rounded-[2rem] border border-white/5 w-full md:w-auto" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-                    <div className="bg-white p-3 rounded-[1.5rem] w-40 h-40 flex items-center justify-center shadow-lg border border-slate-200/40">
+                  <div className="shrink-0 flex flex-col items-center justify-center gap-3 bg-black/5 dark:bg-black/20 p-6 sm:p-8 rounded-[2rem] border border-white/5 w-full md:w-auto" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                    <div className="bg-white p-4 rounded-[1.5rem] w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center shadow-lg border border-slate-200/40">
                       <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=000000&data=${encodeURIComponent(pixBrCode || pixKey)}`} 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=000000&data=${encodeURIComponent(pixBrCode || pixKey)}`} 
                         alt="QR Code PIX" 
                         className="w-full h-full object-contain"
                         referrerPolicy="no-referrer"
@@ -884,25 +952,6 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                   </div>
                 )}
               </div>
-
-              {cardUrl && (
-                <div className={pixKey ? "border-t border-dashed pt-4 border-slate-700/50 mt-6" : "mt-6"}>
-                  <a 
-                    href={cardUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center p-4 sm:p-5 rounded-2xl font-black text-base sm:text-lg text-white transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md border"
-                    style={{ 
-                      backgroundColor: brandColor,
-                      borderColor: brandColor,
-                      boxShadow: `0 4px 14px ${brandColor}40`
-                    }}
-                  >
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    Pagar com Cartão de Crédito
-                  </a>
-                </div>
-              )}
             </div>
           )}
 
@@ -1251,13 +1300,22 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
 
       {/* Shopping Cart Drawer / Modal */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-[160] flex justify-end bg-black/75 backdrop-blur-sm animate-fade-in" onClick={() => setIsCartOpen(false)}>
+        <div className="fixed inset-0 z-[160] flex justify-end pointer-events-none animate-fade-in" onClick={() => setIsCartOpen(false)}>
           <div 
-            className={`w-full max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 ${
-              theme === 'dark' ? 'bg-[#0e0e11] text-white border-l border-zinc-800' : 'bg-white text-slate-900 border-l border-slate-100'
+            className={`w-[88%] sm:w-full max-w-md h-full flex flex-col shadow-2xl pointer-events-auto relative pl-[6px] animate-in slide-in-from-right duration-300 ${
+              theme === 'dark' ? 'bg-[#0e0e11] text-white' : 'bg-white text-slate-900'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Animated Left Border/Bar with the same color-loop effect as the Pix button */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 w-[6px] z-10"
+              style={{
+                background: `linear-gradient(180deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                backgroundSize: '100% 300%',
+                animation: 'vertical-color-loop 5s ease infinite',
+              }}
+            />
             {/* Drawer Header */}
             <div className="p-5 flex items-center justify-between border-b" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
               <div className="flex items-center gap-2">
@@ -1537,12 +1595,17 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
                           </div>
                           <button 
                             onClick={handleCopyPix}
-                            className={`w-full flex items-center justify-center py-2 px-3 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
-                              theme === 'dark' ? 'bg-zinc-800 border-zinc-700 hover:bg-zinc-700' : 'bg-slate-100 border-slate-200 hover:bg-slate-200'
-                            }`}
+                            className="w-full flex items-center justify-center py-2.5 px-3 rounded-xl text-xs font-black transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md hover:brightness-110 active:scale-[0.98] cursor-pointer text-white border-0 shadow"
+                            style={{ 
+                              background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                              backgroundSize: '300% 300%',
+                              animation: 'color-loop 5s ease infinite',
+                            }}
                           >
-                            {copiedPix ? <Check className="w-4 h-4 mr-1.5 text-green-500" /> : <Copy className="w-4 h-4 mr-1.5" />}
-                            {copiedPix ? "Chave copiada!" : "Copiar Chave PIX"}
+                            {copiedPix ? <Check className="w-4 h-4 mr-1.5 font-bold" /> : <Copy className="w-4 h-4 mr-1.5 font-bold" />}
+                            <span className="font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
+                              {copiedPix ? "Chave copiada!" : "Copiar Chave PIX"}
+                            </span>
                           </button>
                         </div>
                       )}
@@ -1603,7 +1666,13 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
       )}
 
       {/* Indicadores de rolagem vertical (Público & Preview) */}
-      <div className="fixed bottom-6 right-6 z-[999] flex flex-col gap-2 pointer-events-none">
+      <div 
+        className={`fixed z-[999] flex flex-col gap-2.5 pointer-events-none transition-all duration-300 ${
+          isCartOpen 
+            ? "right-[calc(88vw+12px)] sm:right-[464px] bottom-10" 
+            : "right-6 bottom-6"
+        }`}
+      >
         {/* Seta para Cima */}
         <button
           type="button"
@@ -1612,13 +1681,13 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
               mainScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
             }
           }}
-          className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-black/75 border border-zinc-800/80 shadow-lg pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
+          className={`transition-all duration-300 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/75 border border-zinc-800/80 shadow-lg pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
             canScrollUp ? "opacity-100 translate-y-0 animate-bounce" : "opacity-0 translate-y-4 pointer-events-none"
           }`}
           style={{ color: brandColor }}
           title="Rolar para o topo"
         >
-          <ChevronUp className="w-5 h-5" />
+          <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Seta para Baixo */}
@@ -1629,15 +1698,53 @@ export default function BioRenderer({ data, asPreview = false }: { data: any, as
               mainScrollRef.current.scrollBy({ top: mainScrollRef.current.clientHeight * 0.7, behavior: "smooth" });
             }
           }}
-          className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-black/75 border border-zinc-800/80 shadow-lg pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
+          className={`transition-all duration-300 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/75 border border-zinc-800/80 shadow-lg pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
             canScrollDown ? "opacity-100 translate-y-0 animate-bounce" : "opacity-0 -translate-y-4 pointer-events-none"
           }`}
           style={{ color: brandColor }}
           title="Rolar para baixo"
         >
-          <ChevronDown className="w-5 h-5" />
+          <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
+
+      {/* Elegant Custom Alert Modal */}
+      {customAlert && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setCustomAlert(null)}>
+          <div 
+            className={`w-full max-w-sm rounded-[2rem] border overflow-hidden shadow-2xl p-6 flex flex-col items-center text-center gap-4 animate-scale-up ${
+              theme === 'dark' 
+                ? 'bg-zinc-950 border-zinc-800 text-white' 
+                : 'bg-white border-slate-200 text-slate-900'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Elegant Header with Warn Icon */}
+            <div className="w-14 h-14 rounded-full flex items-center justify-center bg-amber-500/10 border border-amber-500/20 text-amber-500 animate-pulse">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            <div className="space-y-1.5">
+              <h4 className="text-base font-extrabold tracking-tight uppercase" style={{ color: brandColor }}>
+                {customAlert.title}
+              </h4>
+              <p className="text-sm font-medium opacity-80 leading-relaxed max-w-xs">
+                {customAlert.message}
+              </p>
+            </div>
+            
+            <button
+              onClick={() => setCustomAlert(null)}
+              className="w-full py-3 px-4 rounded-xl text-white font-bold text-sm shadow-md transition-all hover:brightness-110 active:scale-[0.98] cursor-pointer"
+              style={{ backgroundColor: brandColor }}
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
