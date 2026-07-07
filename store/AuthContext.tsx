@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
-        window.location.replace(`${window.location.origin}/#/update-password`);
+        window.location.replace(`${window.location.origin}/update-password`);
       }
       if (mounted) initializeUser(session?.user);
     });
@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   const signInWithGoogle = async () => {
-    const REDIRECT_URL = `${window.location.origin}/#/auth/callback`;
+    const REDIRECT_URL = `${window.location.origin}/auth/callback`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

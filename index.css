@@ -1,6 +1,7 @@
 
 
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -13,6 +14,7 @@
   --color-dark-card: var(--gm-surface);
   --color-dark-text: var(--gm-text);
   --font-sans: var(--gm-font), ui-sans-serif, system-ui, sans-serif;
+  --font-funnel: "Funnel Display", sans-serif;
 }
 
 /* =========================================================

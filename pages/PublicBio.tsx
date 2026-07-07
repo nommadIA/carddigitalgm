@@ -18,7 +18,7 @@ function sanitizeSlug(name: string): string {
 
 export default function PublicBio() {
   const { tenantId } = useParams();
-  const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<any>(null);
   const [apiLoading, setApiLoading] = useState(true);
   const [introExiting, setIntroExiting] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);
@@ -228,6 +228,7 @@ create policy "settings_select" on public.app_settings
 
       {/* Render actual Bio component directly to avoid wrapping layout issues */}
       {data && <BioRenderer data={data} asPreview={false} />}
+  
 
       {/* Cinematic Splash Overlay containing only the animated logo */}
       {!introFinished && (

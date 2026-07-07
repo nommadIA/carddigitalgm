@@ -625,6 +625,17 @@ export default function Budgets() {
                           <div className="flex items-center gap-2">
                             {tab !== "LIXEIRA" ? (
                               <>
+                                {tab === "CANCELADOS" && (
+                                  <button
+                                    className="gm-btn bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1 px-3 flex items-center gap-1.5 h-10"
+                                    title="Restaurar Orçamento (Voltar para Aguardando)"
+                                    onClick={() => updateStatusInstant(r.id, "AGUARDANDO")}
+                                    type="button"
+                                  >
+                                    <RotateCcw size={15} />
+                                    <span className="font-bold">Restaurar</span>
+                                  </button>
+                                )}
                                 <button className={listBtnClass("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
                                   <Pencil size={16} />
                                 </button>
