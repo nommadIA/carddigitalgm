@@ -1010,6 +1010,20 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           text-shadow: none !important;
           box-shadow: none !important;
         }
+
+        /* Optimize images and vector icons rendering for absolute crispness */
+        img, svg {
+          image-rendering: -webkit-optimize-contrast;
+          image-rendering: auto;
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+          transform: translateZ(0);
+        }
+        /* Smooth, hardware-accelerated scroll and rendering */
+        .custom-scroll, .no-scrollbar {
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+        }
       `}</style>
       
       {/* Background Animated Gradient / Aurora */}
@@ -1029,20 +1043,28 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       {/* Background Desktop (supports Parallax) */}
       {bgImg && (
         <div 
-          className={`absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20 transition-transform duration-100 ease-out ${bgAnimation === "parallax" ? "scale-[1.15]" : ""} ${bgMobileImg ? (asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block') : "block"}`} 
+          className={`absolute z-0 bg-cover bg-center bg-no-repeat opacity-20 transition-all duration-75 ease-out ${
+            bgAnimation === "parallax" 
+              ? "-top-[15%] -bottom-[15%] left-0 right-0 h-[130%] scale-[1.15]" 
+              : "inset-0"
+          } ${bgMobileImg ? (asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block') : "block"}`} 
           style={{ 
             backgroundImage: `url(${bgImg})`,
-            transform: bgAnimation === "parallax" ? `translateY(${scrollTop * 0.05}px)` : 'none'
+            transform: bgAnimation === "parallax" ? `translate3d(0, ${Math.max(-150, -scrollTop * 0.06)}px, 0)` : 'none'
           }} 
         />
       )}
       {/* Background Smartphone (supports Parallax) */}
       {bgMobileImg && (
         <div 
-          className={`absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20 transition-transform duration-100 ease-out ${bgAnimation === "parallax" ? "scale-[1.15]" : ""} ${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'}`} 
+          className={`absolute z-0 bg-cover bg-center bg-no-repeat opacity-20 transition-all duration-75 ease-out ${
+            bgAnimation === "parallax" 
+              ? "-top-[15%] -bottom-[15%] left-0 right-0 h-[130%] scale-[1.15]" 
+              : "inset-0"
+          } ${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'}`} 
           style={{ 
             backgroundImage: `url(${bgMobileImg})`,
-            transform: bgAnimation === "parallax" ? `translateY(${scrollTop * 0.05}px)` : 'none'
+            transform: bgAnimation === "parallax" ? `translate3d(0, ${Math.max(-120, -scrollTop * 0.06)}px, 0)` : 'none'
           }} 
         />
       )}
@@ -1168,7 +1190,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 return (
                   <div className="w-full flex flex-col space-y-6">
                     {/* Minimal Desktop Top Navbar */}
-                    <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full h-24 sm:h-28 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30`}>
+                    <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full h-28 sm:h-32 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30`}>
                       <div className="flex items-center gap-4 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
                         {logo ? (
                           <img src={logo} alt={companyName} className="h-14 sm:h-16 w-auto object-contain rounded-md shadow-sm" />
@@ -1206,10 +1228,20 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           <Share2 className="w-5 h-5" /> Compartilhar
                         </button>
                       </div>
+                      
+                      {/* Thin animated bar */}
+                      <div 
+                        className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50"
+                        style={{
+                          background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                          backgroundSize: '300% 300%',
+                          animation: 'color-loop 5s ease infinite',
+                        }}
+                      />
                     </div>
 
                     {/* Minimal Mobile Top Navbar */}
-                    <div className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'} w-full h-18 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-4 relative z-30`}>
+                    <div className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'} w-full h-[88px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-4 relative z-30`}>
                       <div className="flex items-center gap-2 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
                         {logo ? (
                           <img src={logo} alt={companyName} className="h-10 w-auto object-contain rounded-md" />
@@ -1242,6 +1274,16 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           Contato
                         </button>
                       </div>
+                      
+                      {/* Thin animated bar */}
+                      <div 
+                        className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50"
+                        style={{
+                          background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                          backgroundSize: '300% 300%',
+                          animation: 'color-loop 5s ease infinite',
+                        }}
+                      />
                     </div>
 
                     {activeView === "bio" && renderProfileHeader(false)}
@@ -1255,7 +1297,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   {finalDesktop && (
                     <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full flex flex-col`}>
                       {/* Desktop Top Navbar */}
-                      <div className="w-full h-18 sm:h-22 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30">
+                      <div className="w-full h-24 sm:h-28 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30">
                         <div className="flex items-center gap-4 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
                           {logo ? (
                             <img src={logo} alt={companyName} className="h-10 sm:h-12 w-auto object-contain rounded-md shadow-sm transition-all" />
@@ -1324,6 +1366,16 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                              </div>
                            )}
                         </div>
+                        
+                        {/* Thin animated bar */}
+                        <div 
+                          className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50"
+                          style={{
+                            background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                            backgroundSize: '300% 300%',
+                            animation: 'color-loop 5s ease infinite',
+                          }}
+                        />
                       </div>
 
                       {/* Desktop Hero Section */}
@@ -1385,7 +1437,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'} w-full relative group transition-all duration-300 flex flex-col`}
                     >
                       {/* Mobile Top Navbar with Desktop Glass/Blur Effect */}
-                      <div className="w-full h-[72px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-5 relative z-40">
+                      <div className="w-full h-[88px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-5 relative z-40">
                         <div className="flex items-center gap-2 cursor-pointer" onClick={handleLogoClick}>
                           {logo ? (
                             <img src={logo} alt={companyName} className="h-7 w-auto object-contain rounded" />
@@ -1412,7 +1464,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                         {/* Hamburger Slide Down Dropdown Menu */}
                         {isMobileMenuOpen && (
-                          <div className={`absolute top-[72px] inset-x-0 z-50 flex flex-col p-6 space-y-4 shadow-xl animate-in slide-in-from-top-4 duration-300 border-b ${theme === 'dark' || theme === 'glass' ? 'bg-zinc-950/95 backdrop-blur-md border-white/10' : 'bg-white border-zinc-100'}`}>
+                          <div className={`absolute top-[88px] inset-x-0 z-50 flex flex-col p-6 space-y-4 shadow-xl animate-in slide-in-from-top-4 duration-300 border-b ${theme === 'dark' || theme === 'glass' ? 'bg-zinc-950/95 backdrop-blur-md border-white/10' : 'bg-white border-zinc-100'}`}>
                             <button 
                               onClick={() => {
                                 setActiveView("bio");
@@ -1475,6 +1527,16 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             )}
                           </div>
                         )}
+                        
+                        {/* Thin animated bar */}
+                        <div 
+                          className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50"
+                          style={{
+                            background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                            backgroundSize: '300% 300%',
+                            animation: 'color-loop 5s ease infinite',
+                          }}
+                        />
                       </div>
 
                       {/* Main Banner Hero Area */}
@@ -1631,16 +1693,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             </div>
           ) : activeView === "contact" ? (
             <div className="animate-fade-in py-6 sm:py-12 w-full">
-              {/* Custom Contact Page Banner if provided */}
-              {bio.contact_banner_img_url && (
-                <div className="w-full rounded-[2rem] overflow-hidden mb-12 shadow-2xl relative aspect-[16/6] md:aspect-[1920/450]">
-                  <img src={bio.contact_banner_img_url} alt={bio.contact_title || "Fale com a gente"} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start max-w-6xl mx-auto px-2 sm:px-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center max-w-6xl mx-auto px-2 sm:px-6">
                 
-                {/* Left column: Title, Text & Quick Contact Channels */}
+                {/* Left column: Title, Text */}
                 <div className="lg:col-span-5 flex flex-col space-y-10">
                   <div className="space-y-6">
                     <h2 className={`text-5xl sm:text-6xl lg:text-7xl font-sans font-black tracking-tight leading-none ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
@@ -1650,57 +1705,6 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       <p className={`text-base sm:text-lg font-medium leading-relaxed opacity-85 ${theme === 'dark' || theme === 'glass' ? 'text-zinc-300' : 'text-slate-600'}`}>
                         {bio.contact_desc}
                       </p>
-                    )}
-                  </div>
-
-                  {/* Quick Contact Cards */}
-                  <div className="space-y-4 pt-2">
-                    {bio.email && (
-                      <div className={`p-5 rounded-2xl border flex items-center gap-4 transition-all duration-300 hover:scale-[1.02] ${
-                        theme === 'glass' ? 'bg-[#0a0b10]/35 border-white/10' : theme === 'dark' ? 'bg-zinc-950/50 border-zinc-900' : 'bg-white border-slate-100 shadow-sm'
-                      }`}>
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-orange-500/10 text-orange-500 shrink-0">
-                          <Mail className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">E-mail Comercial</span>
-                          <a href={`mailto:${bio.email}`} className={`text-sm sm:text-base font-extrabold hover:underline truncate block ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
-                            {bio.email}
-                          </a>
-                        </div>
-                      </div>
-                    )}
-
-                    {bio.phone && (
-                      <div className={`p-5 rounded-2xl border flex items-center gap-4 transition-all duration-300 hover:scale-[1.02] ${
-                        theme === 'glass' ? 'bg-[#0a0b10]/35 border-white/10' : theme === 'dark' ? 'bg-zinc-950/50 border-zinc-900' : 'bg-white border-slate-100 shadow-sm'
-                      }`}>
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-orange-500/10 text-orange-500 shrink-0">
-                          <Phone className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Telefone para Contato</span>
-                          <a href={`tel:${bio.phone.replace(/\D/g, '')}`} className={`text-sm sm:text-base font-extrabold hover:underline truncate block ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
-                            {bio.phone}
-                          </a>
-                        </div>
-                      </div>
-                    )}
-
-                    {bio.whatsapp && (
-                      <div className={`p-5 rounded-2xl border flex items-center gap-4 transition-all duration-300 hover:scale-[1.02] ${
-                        theme === 'glass' ? 'bg-[#0a0b10]/35 border-white/10' : theme === 'dark' ? 'bg-zinc-950/50 border-zinc-900' : 'bg-white border-slate-100 shadow-sm'
-                      }`}>
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-orange-500/10 text-orange-500 shrink-0">
-                          <MessageCircle className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">WhatsApp Oficial</span>
-                          <a href={`https://api.whatsapp.com/send?phone=${bio.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className={`text-sm sm:text-base font-extrabold hover:underline truncate block ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
-                            {bio.whatsapp}
-                          </a>
-                        </div>
-                      </div>
                     )}
                   </div>
                 </div>
@@ -1769,21 +1773,21 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           </div>
                         )}
 
-                        <div className="space-y-5">
-                          {/* Name Field */}
+                        <div className="space-y-6">
+                                                  {/* Name Field */}
                           <div>
                             <input 
                               type="text"
                               id="contact_name"
                               required
-                              placeholder="Name"
+                              placeholder="Nome"
                               value={contactName}
                               onChange={(e) => setContactName(e.target.value)}
-                              className={`w-full px-4 py-3.5 border focus:outline-none transition-all focus:ring-0 ${
+                              className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all focus:ring-0 ${
                                 theme === 'glass'
-                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-xl'
+                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-2xl'
                                   : theme === 'dark' 
-                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-xl' 
+                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-2xl' 
                                     : 'bg-transparent border-zinc-300 text-slate-900 placeholder-zinc-400 focus:border-[#FE540B] rounded-none'
                               }`}
                               style={{ borderColor: (theme === 'glass' || theme === 'dark') ? undefined : undefined }}
@@ -1799,11 +1803,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               placeholder="Email"
                               value={contactEmail}
                               onChange={(e) => setContactEmail(e.target.value)}
-                              className={`w-full px-4 py-3.5 border focus:outline-none transition-all focus:ring-0 ${
+                              className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all focus:ring-0 ${
                                 theme === 'glass'
-                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-xl'
+                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-2xl'
                                   : theme === 'dark' 
-                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-xl' 
+                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-2xl' 
                                     : 'bg-transparent border-zinc-300 text-slate-900 placeholder-zinc-400 focus:border-[#FE540B] rounded-none'
                               }`}
                             />
@@ -1814,15 +1818,15 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             <textarea 
                               id="contact_message"
                               required
-                              rows={5}
-                              placeholder="Message"
+                              rows={12}
+                              placeholder="Mensagem"
                               value={contactMessage}
                               onChange={(e) => setContactMessage(e.target.value)}
-                              className={`w-full px-4 py-3.5 border focus:outline-none transition-all focus:ring-0 resize-none ${
+                              className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all focus:ring-0 resize-none ${
                                 theme === 'glass'
-                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-xl'
+                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-2xl'
                                   : theme === 'dark' 
-                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-xl' 
+                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-2xl' 
                                     : 'bg-transparent border-zinc-300 text-slate-900 placeholder-zinc-400 focus:border-[#FE540B] rounded-none'
                               }`}
                             />
@@ -1847,10 +1851,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                 </svg>
-                                <span>Sending...</span>
+                                <span>Enviando...</span>
                               </>
                             ) : (
-                              <span>Send</span>
+                              <span>Enviar</span>
                             )}
                           </button>
                         </div>
@@ -2990,9 +2994,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   color: bio.chat_balloon_text_color || "#FFFFFF"
                 }}
               >
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[11px] opacity-90 font-medium tracking-wide">Powered by</span>
-                  <span className="text-[15px] font-black tracking-tight" style={{ fontFamily: "Georgia, serif, system-ui" }}>Join.chat</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[13px] font-black tracking-tight">Chat by CardDigital GM</span>
                 </div>
                 <button 
                   onClick={() => setIsChatWidgetOpen(false)}
