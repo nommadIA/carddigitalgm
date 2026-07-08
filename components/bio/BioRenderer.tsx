@@ -60,6 +60,11 @@ export const getPlatformIcon = (platform: string) => {
 };
 
 export default function BioRenderer({ data, asPreview = false, previewMode }: { data: any, asPreview?: boolean, previewMode?: "smartphone" | "pc" }) {
+  const bio = data?.bio_config || {};
+  const siteFont = bio.site_font || "inter";
+  const siteFontSize = bio.site_font_size || "md";
+  const bgAnimation = bio.bg_animation || "parallax";
+
   const [copiedPix, setCopiedPix] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
@@ -72,6 +77,40 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(true);
   const [contactName, setContactName] = useState("");
   const [scrollTop, setScrollTop] = useState(0);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [catalogIndex, setCatalogIndex] = useState(0);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isMobileUA = /android|iphone|ipad|ipod|windows phone/i.test(userAgent);
+      const isMobileWidth = window.innerWidth < 1024;
+      setIsMobileDevice(isMobileUA || isMobileWidth);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const isMobileView = isMobileDevice || (asPreview && previewMode === 'smartphone');
+  
+  const maxCatalogIndex = bio.catalog_items 
+    ? (isMobileView 
+        ? Math.max(0, bio.catalog_items.length - 1) 
+        : Math.max(0, bio.catalog_items.length - 3)) 
+    : 0;
+
+  useEffect(() => {
+    if (maxCatalogIndex <= 0) return;
+    const interval = setInterval(() => {
+      setCatalogIndex((prev) => (prev >= maxCatalogIndex ? 0 : prev + 1));
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [catalogIndex, maxCatalogIndex]);
+
+  useEffect(() => {
+    setCatalogIndex(0);
+  }, [bio.catalog_items?.length, isMobileView]);
   const [contactEmail, setContactEmail] = useState("");
   const [contactMessage, setContactMessage] = useState("");
   const [contactSubmitting, setContactSubmitting] = useState(false);
@@ -79,11 +118,6 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const [contactError, setContactError] = useState("");
   const [needsActivation, setNeedsActivation] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
-
-  const bio = data?.bio_config || {};
-  const siteFont = bio.site_font || "inter";
-  const siteFontSize = bio.site_font_size || "md";
-  const bgAnimation = bio.bg_animation || "parallax";
 
   const customSvgs: Record<string, string> = {
     whatsapp: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/whatsapp.svg",
@@ -95,8 +129,30 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   };
 
   const socialIcons = [
-    { key: "whatsapp", icon: BrandWhatsAppIcon, label: "WhatsApp", value: bio.whatsapp, href: bio.whatsapp ? `https://api.whatsapp.com/send?phone=${bio.whatsapp.replace(/\D/g, '')}` : undefined, svgUrl: customSvgs.whatsapp },
-    { key: "instagram", icon: BrandInstagramIcon, label: "Instagram", value: bio.instagram, href: bio.instagram ? (bio.instagram.includes('http') ? bio.instagram : `https://instagram.com/${bio.instagram.replace('@','')}`) : undefined, svgUrl: customSvgs.instagram },
+    { 
+      key: "whatsapp", 
+      icon: BrandWhatsAppIcon, 
+      label: "WhatsApp", 
+      value: bio.whatsapp, 
+      href: bio.whatsapp 
+        ? (isMobileDevice 
+            ? `whatsapp://send?phone=${bio.whatsapp.replace(/\D/g, '')}` 
+            : `https://api.whatsapp.com/send?phone=${bio.whatsapp.replace(/\D/g, '')}`) 
+        : undefined, 
+      svgUrl: customSvgs.whatsapp 
+    },
+    { 
+      key: "instagram", 
+      icon: BrandInstagramIcon, 
+      label: "Instagram", 
+      value: bio.instagram, 
+      href: bio.instagram 
+        ? (isMobileDevice 
+            ? `instagram://user?username=${bio.instagram.replace('@','').split('/').pop()?.split('?')[0]}` 
+            : (bio.instagram.includes('http') ? bio.instagram : `https://instagram.com/${bio.instagram.replace('@','')}`)) 
+        : undefined, 
+      svgUrl: customSvgs.instagram 
+    },
     { key: "telegram", icon: BrandTelegramIcon, label: "Telegram", value: bio.telegram, href: bio.telegram ? (bio.telegram.includes('http') ? bio.telegram : `https://t.me/${bio.telegram.replace('@', '')}`) : undefined, svgUrl: customSvgs.telegram },
     { key: "email", icon: Mail, label: "E-mail", value: bio.email, href: bio.email ? `mailto:${bio.email}` : undefined, svgUrl: customSvgs.email },
     { key: "facebook", icon: Facebook, label: "Facebook", value: bio.facebook, href: bio.facebook ? (bio.facebook.includes('http') ? bio.facebook : `https://facebook.com/${bio.facebook}`) : undefined, svgUrl: customSvgs.facebook },
@@ -185,23 +241,30 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   // Dynamically update favicon and Open Graph meta tags with client's general app logo and name
   useEffect(() => {
     const clientLogo = data?.company_logo_url;
-    const clientName = data?.company_name || bio.title || "GM EDIFICAÇÃO";
+    const clientName = data?.company_name || bio.title || "GM Edificação";
     
-    // Dynamically update document title
-    document.title = `Informações do seu pedido - ${clientName}`;
+    // Dynamically update document title to show company name
+    document.title = clientName;
 
     const updateMetaTag = (property: string, content: string) => {
-      let element = document.querySelector(`meta[property='${property}']`);
+      let element = document.querySelector(`meta[property='${property}']`) || document.querySelector(`meta[name='${property}']`);
       if (!element) {
         element = document.createElement("meta");
-        element.setAttribute("property", property);
+        if (property.startsWith("og:")) {
+          element.setAttribute("property", property);
+        } else {
+          element.setAttribute("name", property);
+        }
         document.head.appendChild(element);
       }
       element.setAttribute("content", content);
     };
 
-    updateMetaTag("og:title", `Informações do seu pedido - ${clientName}`);
-    updateMetaTag("og:description", "Acesse nosso catálogo e faça seu pedido de forma rápida e segura!");
+    const descriptionText = "Orçamentos, serviços e atendimento em um único lugar.\nDesign de Marcas | Material Gráfico | Comunicação Visual\n\nAcesse nosso site de forma rápida e segura!";
+
+    updateMetaTag("description", descriptionText);
+    updateMetaTag("og:title", clientName);
+    updateMetaTag("og:description", descriptionText);
     if (clientLogo) {
       updateMetaTag("og:image", clientLogo);
     }
@@ -557,8 +620,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       setLoginSuccess("Login realizado com sucesso! Redirecionando...");
       setTimeout(() => {
         setIsLoginOpen(false);
-        // Redireciona para o painel administrativo da bio
-        window.location.hash = "/minha-bio";
+        // Redireciona para a página inicial do aplicativo
+        window.location.href = "/";
       }, 1200);
     } catch (err: any) {
       console.error("Login error:", err);
@@ -1666,11 +1729,32 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           </div>
                         </div>
 
-                        <div className="w-full flex flex-col items-center">
-                           {images.map((img, idx) => (
-                             <img key={img.id || idx} src={img.image_url} alt={`Banner ${idx+1}`} className="w-full max-w-[1600px] h-auto object-contain block mx-auto" loading={idx === 0 ? "eager" : "lazy"} />
-                           ))}
-                        </div>
+                        {bgAnimation === "sticky-gallery" ? (
+                          <div className="relative w-full">
+                            {images.map((img, idx) => (
+                              <div 
+                                key={img.id || idx} 
+                                className="sticky top-0 h-screen w-full flex flex-col items-center justify-center bg-zinc-950/90 backdrop-blur-md p-4"
+                                style={{
+                                  zIndex: idx + 1,
+                                }}
+                              >
+                                <img 
+                                  src={img.image_url} 
+                                  alt={`Banner ${idx+1}`} 
+                                  className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl block mx-auto border border-white/5" 
+                                  loading={idx === 0 ? "eager" : "lazy"} 
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="w-full flex flex-col items-center">
+                             {images.map((img, idx) => (
+                               <img key={img.id || idx} src={img.image_url} alt={`Banner ${idx+1}`} className="w-full max-w-[1600px] h-auto object-contain block mx-auto" loading={idx === 0 ? "eager" : "lazy"} />
+                             ))}
+                          </div>
+                        )}
 
                         {(prevPortfolio || nextPortfolio) && (
                           <div className="max-w-[1600px] mx-auto w-full px-4 md:px-8 lg:px-12 py-16 flex items-center justify-between font-bold text-xl sm:text-2xl md:text-3xl" style={{ color: brandColor || 'var(--primary-color)' }}>
@@ -1929,42 +2013,81 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
           {/* 4. Products Catalog Section */}
           {bio.catalog_items && bio.catalog_items.length > 0 && (
-            <div className="pt-4 space-y-4 relative">
+            <div className="pt-4 space-y-4 relative w-full">
               <div className="flex items-center justify-between px-2">
                 {bio.catalog_title && <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${t.textTitle}`}>{bio.catalog_title}</h2>}
               </div>
               
-              <div className={`grid gap-6 pb-2 items-stretch animate-fade-in ${asPreview && previewMode === 'smartphone' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
-                {bio.catalog_items.map((item: any) => {
-                  return (
-                    <div 
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedProduct(item);
-                        setActiveImageIndex(0);
+              <div className="relative w-full overflow-hidden px-1 sm:px-12 py-4">
+                <div className="overflow-hidden w-full">
+                  <div 
+                    className="flex transition-transform duration-500 ease-in-out will-change-transform"
+                    style={{
+                      transform: `translate3d(-${catalogIndex * (isMobileView ? 100 : 100 / 3)}%, 0px, 0px)`
+                    }}
+                  >
+                    {bio.catalog_items.map((item: any) => {
+                      return (
+                        <div 
+                          key={item.id} 
+                          className={`${isMobileView ? 'w-full' : 'w-1/3'} flex-shrink-0 p-2.5 sm:p-3 flex flex-col`}
+                        >
+                          <div 
+                            onClick={() => {
+                              setSelectedProduct(item);
+                              setActiveImageIndex(0);
+                            }}
+                            className={`overflow-hidden rounded-[2rem] border transition-[transform,box-shadow,border-color] duration-300 flex flex-col h-full cursor-pointer hover:shadow-2xl hover:-translate-y-1 group ${t.cardBg} ${t.cardBorder} catalog-card-item flex-1`}
+                          >
+                            {item.image_url ? (
+                              <div className="w-full aspect-square overflow-hidden relative flex items-center justify-center p-1.5 rounded-[1.5rem] border" style={{ backgroundColor: theme === 'dark' ? `${brandColor}08` : '#ffffff', borderColor: theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.05)' }}>
+                                <img src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
+                              </div>
+                            ) : (
+                              <div className={`w-full aspect-square ${t.iconBg} flex items-center justify-center`}>
+                                <ShoppingCart className="w-10 h-10 opacity-20 text-slate-400" />
+                              </div>
+                            )}
+                            <div className="p-5 flex flex-col flex-1 space-y-2">
+                              <div className={`font-black text-lg sm:text-xl line-clamp-1 ${t.cardTitle}`}>{item.name || 'Produto sem nome'}</div>
+                              {item.description && <div className={`text-sm leading-relaxed line-clamp-2 ${t.cardSub}`}>{item.description}</div>}
+                              <div className="mt-auto pt-3 flex items-center justify-between border-t border-white/5" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                                <span className="font-black text-lg sm:text-xl" style={{ color: brandColor }}>{item.price}</span>
+                                <span className="text-xs sm:text-sm font-extrabold px-4 py-2 rounded-full border transition-[color,background-color,border-color] duration-200 details-btn">Ver Detalhes</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {maxCatalogIndex > 0 && (
+                  <>
+                    {/* Left Arrow */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCatalogIndex((prev) => (prev <= 0 ? maxCatalogIndex : prev - 1));
                       }}
-                      className={`overflow-hidden rounded-[2rem] border transition-all duration-300 flex flex-col cursor-pointer hover:shadow-2xl hover:-translate-y-1 group ${t.cardBg} ${t.cardBorder} catalog-card-item`}
+                      className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 text-white shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md"
                     >
-                      {item.image_url ? (
-                        <div className="w-full aspect-square overflow-hidden relative flex items-center justify-center p-1.5 rounded-[1.5rem] border" style={{ backgroundColor: theme === 'dark' ? `${brandColor}08` : '#ffffff', borderColor: theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.05)' }}>
-                          <img src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
-                        </div>
-                      ) : (
-                        <div className={`w-full aspect-square ${t.iconBg} flex items-center justify-center`}>
-                          <ShoppingCart className="w-10 h-10 opacity-20 text-slate-400" />
-                        </div>
-                      )}
-                      <div className="p-5 flex flex-col flex-1 space-y-2">
-                        <div className={`font-black text-lg sm:text-xl line-clamp-1 ${t.cardTitle}`}>{item.name || 'Produto sem nome'}</div>
-                        {item.description && <div className={`text-sm leading-relaxed line-clamp-2 ${t.cardSub}`}>{item.description}</div>}
-                        <div className="mt-auto pt-3 flex items-center justify-between border-t border-white/5" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-                          <span className="font-black text-lg sm:text-xl" style={{ color: brandColor }}>{item.price}</span>
-                          <span className="text-xs sm:text-sm font-extrabold px-4 py-2 rounded-full border transition-all details-btn">Ver Detalhes</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: brandColor || '#FE540B' }} />
+                    </button>
+
+                    {/* Right Arrow */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCatalogIndex((prev) => (prev >= maxCatalogIndex ? 0 : prev + 1));
+                      }}
+                      className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 text-white shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md"
+                    >
+                      <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: brandColor || '#FE540B' }} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}

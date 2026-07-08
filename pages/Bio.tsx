@@ -1219,11 +1219,12 @@ export default function Bio() {
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label className="gm-label">Tipo de Animação do Background</label>
+                <label className="gm-label">Efeitos do Site</label>
                 <select className="gm-input w-full" value={bioConfig.bg_animation || "parallax"} onChange={e => handleChange("bg_animation", e.target.value)}>
                   <option value="parallax">Rolagem Suave / Parallax (Acompanha a rolagem vertical)</option>
                   <option value="particles">Partículas Flutuantes / Aura (Névoa flutuante moderna)</option>
                   <option value="aurora">Gradiente Animado / Aurora (Loop de degradê dinâmico)</option>
+                  <option value="sticky-gallery">Efeito Sticky na Galeria (Imagens empilhadas ao rolar)</option>
                 </select>
               </div>
               {/* Seção Desktop (Plano de Fundo & Banner Principal) */}
