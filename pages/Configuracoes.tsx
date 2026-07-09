@@ -1252,6 +1252,10 @@ export default function Configuracoes() {
                                 muted
                                 playsInline
                                 className="w-full h-full object-cover"
+                                style={{ transform: "translate3d(0, 0, 0)", backfaceVisibility: "hidden" }}
+                                controlsList="nodownload"
+                                disablePictureInPicture
+                                onContextMenu={(e) => e.preventDefault()}
                               />
                             ) : (
                               <img
@@ -2186,6 +2190,10 @@ export default function Configuracoes() {
                                                       muted
                                                       playsInline
                                                       className="w-full h-auto block"
+                                                      style={{ transform: "translate3d(0, 0, 0)", backfaceVisibility: "hidden" }}
+                                                      controlsList="nodownload"
+                                                      disablePictureInPicture
+                                                      onContextMenu={(e) => e.preventDefault()}
                                                     />
                                                   ) : (
                                                     <img

@@ -61,6 +61,86 @@ export const getPlatformIcon = (platform: string) => {
   }
 };
 
+export function OptimizedMedia({ 
+  src, 
+  alt, 
+  className, 
+  width = 1200, 
+  quality = 75,
+  isCover = false,
+  loading = "lazy",
+  onClick
+}: { 
+  src: string; 
+  alt: string; 
+  className?: string; 
+  width?: number; 
+  quality?: number;
+  isCover?: boolean;
+  loading?: "lazy" | "eager";
+  onClick?: () => void;
+}) {
+  const isVideo = !!(src && (src.endsWith(".mp4") || src.includes(".mp4?") || src.includes("video/mp4") || src.endsWith(".webm") || src.includes(".webm?") || src.includes("video/webm")));
+  const isGif = !!(src && (src.endsWith(".gif") || src.includes(".gif?") || src.includes("image/gif")));
+
+  const [mediaSrc, setMediaSrc] = useState(() => {
+    if (src && src.includes("/storage/v1/object/public/") && !isVideo && !isGif) {
+      return src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + `?width=${width}&quality=${quality}`;
+    }
+    return src;
+  });
+
+  const handleError = () => {
+    if (mediaSrc !== src) {
+      setMediaSrc(src);
+    }
+  };
+
+  useEffect(() => {
+    if (src && src.includes("/storage/v1/object/public/") && !isVideo && !isGif) {
+      setMediaSrc(src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + `?width=${width}&quality=${quality}`);
+    } else {
+      setMediaSrc(src);
+    }
+  }, [src, width, quality, isVideo, isGif]);
+
+  if (isVideo) {
+    return (
+      <video
+        src={src}
+        className={className}
+        muted
+        loop
+        playsInline
+        autoPlay
+        controls={!isCover}
+        controlsList="nodownload"
+        disablePictureInPicture
+        onContextMenu={(e) => e.preventDefault()}
+        preload="auto"
+        style={{
+          transform: "translate3d(0, 0, 0)",
+          backfaceVisibility: "hidden",
+          ...(isCover ? { pointerEvents: "none" } : {})
+        }}
+        onClick={onClick}
+      />
+    );
+  }
+
+  return (
+    <img 
+      src={mediaSrc} 
+      alt={alt} 
+      className={className} 
+      onError={handleError} 
+      referrerPolicy="no-referrer" 
+      loading={loading}
+      onClick={onClick}
+    />
+  );
+}
+
 export default function BioRenderer({ data, asPreview = false, previewMode }: { data: any, asPreview?: boolean, previewMode?: "smartphone" | "pc" }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -463,8 +543,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   };
 
   const logo = data?.company_logo_url;
-  const companyName = bio.title || data?.company_name || "Perfil";
-  const desc = bio.description || "";
+  const companyName = (isMobileView && bio.title_mobile) 
+    ? bio.title_mobile 
+    : (bio.title || data?.company_name || "Perfil");
+  const desc = (isMobileView && bio.description_mobile) 
+    ? bio.description_mobile 
+    : (bio.description || "");
   const brandColor = bio.color || data?.brand_primary || "#32BCAD";
   const theme = bio.theme || "dark";
   const buttonStyle = data?.button_style || "solid";
@@ -1754,7 +1838,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   zIndex: idx + 1,
                                 }}
                               >
-                                <img 
+                                <OptimizedMedia 
                                   src={img.image_url} 
                                   alt={`Banner ${idx+1}`} 
                                   className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl block mx-auto border border-white/5" 
@@ -1766,7 +1850,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         ) : (
                           <div className="w-full flex flex-col items-center">
                              {images.map((img, idx) => (
-                               <img key={img.id || idx} src={img.image_url} alt={`Banner ${idx+1}`} className="w-full max-w-[1600px] h-auto object-contain block mx-auto" loading={idx === 0 ? "eager" : "lazy"} />
+                               <OptimizedMedia key={img.id || idx} src={img.image_url} alt={`Banner ${idx+1}`} className="w-full max-w-[1600px] h-auto object-contain block mx-auto" loading={idx === 0 ? "eager" : "lazy"} />
                              ))}
                           </div>
                         )}
@@ -2056,7 +2140,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           >
                             {item.image_url ? (
                               <div className="w-full aspect-square overflow-hidden relative flex items-center justify-center p-1.5 rounded-[1.5rem] border" style={{ backgroundColor: theme === 'dark' ? `${brandColor}08` : '#ffffff', borderColor: theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.05)' }}>
-                                <img src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
+                                <OptimizedMedia src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" width={400} isCover={true} />
                               </div>
                             ) : (
                               <div className={`w-full aspect-square ${t.iconBg} flex items-center justify-center`}>
@@ -2137,11 +2221,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                        style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                      >
                        {coverImg ? (
-                         <img 
+                         <OptimizedMedia 
                            src={coverImg} 
                            alt={item.title || "Portfolio item"} 
                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                           referrerPolicy="no-referrer" 
+                           isCover={true}
                          />
                        ) : (
                          <div className="w-full h-full flex flex-col items-center justify-center bg-black/5 dark:bg-white/5">
@@ -2156,11 +2240,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           </span>
                           {(isMobileView && hasMobileLayers) ? (
                             <span className="text-white/70 text-xs font-semibold">
-                              {item.mobile_layers.length} {item.mobile_layers.length === 1 ? 'imagem' : 'imagens'}
+                              {item.mobile_layers.length} {item.mobile_layers.length === 1 ? 'mídia' : 'mídias'}
                             </span>
                           ) : (isNewFormat && item.layers && (
                             <span className="text-white/70 text-xs font-semibold">
-                              {item.layers.length} {item.layers.length === 1 ? 'imagem' : 'imagens'}
+                              {item.layers.length} {item.layers.length === 1 ? 'mídia' : 'mídias'}
                             </span>
                           ))}
                        </div>
@@ -2487,11 +2571,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       }}
                     >
                       {activeImageUrl ? (
-                        <img 
+                        <OptimizedMedia 
                           src={activeImageUrl} 
                           alt={selectedProduct.name} 
                           className="max-w-full max-h-full object-contain cursor-zoom-in transition-transform duration-300 hover:scale-102" 
-                          referrerPolicy="no-referrer"
                           onClick={() => setZoomedImage(activeImageUrl)}
                         />
                       ) : (
@@ -2547,7 +2630,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               borderColor: activeImageIndex === idx ? brandColor : 'transparent'
                             }}
                           >
-                            <img src={img} alt={`Thumbnail ${idx + 1}`} className="max-w-full max-h-full object-contain rounded-lg" referrerPolicy="no-referrer" />
+                            <OptimizedMedia src={img} alt={`Thumbnail ${idx + 1}`} className="max-w-full max-h-full object-contain rounded-lg" width={150} isCover={true} />
                           </button>
                         ))}
                       </div>
@@ -2686,11 +2769,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           </button>
           
           <div className="relative max-w-4xl max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <img 
+            <OptimizedMedia 
               src={zoomedImage} 
               alt="Imagem detalhada" 
               className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl animate-scale-up" 
-              referrerPolicy="no-referrer"
             />
           </div>
         </div>
@@ -2830,7 +2912,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               }}
                             >
                               {item.product.image_url ? (
-                                <img src={item.product.image_url} alt={item.product.name} className="max-w-full max-h-full object-contain" referrerPolicy="no-referrer" />
+                                <OptimizedMedia src={item.product.image_url} alt={item.product.name} className="max-w-full max-h-full object-contain" width={150} isCover={true} />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center opacity-20">
                                   <ShoppingCart className="w-8 h-8 text-slate-400" />

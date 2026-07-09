@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Page } from "../components/ui/Page";
 import { Link } from "react-router-dom";
-import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, Save, Smartphone, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard, List, PlusCircle, Trash2, RotateCcw, Edit3, AlignLeft, AlignCenter, AlignRight, Bold, Italic } from "lucide-react";
+import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, Save, Smartphone, Monitor, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard, List, PlusCircle, Trash2, RotateCcw, Edit3, AlignLeft, AlignCenter, AlignRight, Bold, Italic } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
 import { fetchSettingsSupabase, upsertSettingsSupabase, AppSettings } from "../lib/settings";
 import { pushToast } from "../store/toast";
@@ -22,8 +22,11 @@ const formatBRL = (value: string): string => {
 };
 
 function OptimizedImage({ src, alt, className, width = 360 }: { src: string; alt: string; className?: string; width?: number }) {
+  const isVideo = !!(src && (src.endsWith(".mp4") || src.includes(".mp4?") || src.includes("video/mp4") || src.endsWith(".webm") || src.includes(".webm?") || src.includes("video/webm")));
+  const isGif = !!(src && (src.endsWith(".gif") || src.includes(".gif?") || src.includes("image/gif")));
+
   const [imgSrc, setImgSrc] = useState(() => {
-    if (src && src.includes("/storage/v1/object/public/")) {
+    if (src && src.includes("/storage/v1/object/public/") && !isVideo && !isGif) {
       return src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + `?width=${width}&quality=75`;
     }
     return src;
@@ -36,12 +39,30 @@ function OptimizedImage({ src, alt, className, width = 360 }: { src: string; alt
   };
 
   useEffect(() => {
-    if (src && src.includes("/storage/v1/object/public/")) {
+    if (src && src.includes("/storage/v1/object/public/") && !isVideo && !isGif) {
       setImgSrc(src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + `?width=${width}&quality=75`);
     } else {
       setImgSrc(src);
     }
-  }, [src, width]);
+  }, [src, width, isVideo, isGif]);
+
+  if (isVideo) {
+    return (
+      <video
+        src={src}
+        className={className}
+        muted
+        loop
+        playsInline
+        autoPlay
+        preload="auto"
+        controlsList="nodownload"
+        disablePictureInPicture
+        onContextMenu={(e) => e.preventDefault()}
+        style={{ transform: "translate3d(0, 0, 0)", backfaceVisibility: "hidden" }}
+      />
+    );
+  }
 
   return (
     <img 
@@ -134,7 +155,9 @@ export default function Bio() {
   // Campos principais
   const [bioConfig, setBioConfig] = useState({
     title: "",
+    title_mobile: "",
     description: "",
+    description_mobile: "",
     description_align: "center" as "center" | "left" | "right",
     description_bold: false,
     description_italic: false,
@@ -187,6 +210,7 @@ export default function Bio() {
 
   const editorRef = useRef<HTMLDivElement>(null);
   const lastHtmlRef = useRef("");
+  const [basicInfoTab, setBasicInfoTab] = useState<"desktop" | "mobile">("desktop");
   const [isSelectionBold, setIsSelectionBold] = useState(false);
   const [isSelectionItalic, setIsSelectionItalic] = useState(false);
   const [selectionFont, setSelectionFont] = useState<string>("");
@@ -238,12 +262,13 @@ export default function Bio() {
   useEffect(() => {
     if (editorRef.current) {
       const currentHTML = editorRef.current.innerHTML;
-      if (bioConfig.description !== lastHtmlRef.current || currentHTML !== (bioConfig.description || "")) {
-        editorRef.current.innerHTML = bioConfig.description || "";
-        lastHtmlRef.current = bioConfig.description || "";
+      const targetDesc = basicInfoTab === "desktop" ? (bioConfig.description || "") : (bioConfig.description_mobile || "");
+      if (targetDesc !== lastHtmlRef.current || currentHTML !== targetDesc) {
+        editorRef.current.innerHTML = targetDesc;
+        lastHtmlRef.current = targetDesc;
       }
     }
-  }, [bioConfig.description, openSections.basic]);
+  }, [bioConfig.description, bioConfig.description_mobile, openSections.basic, basicInfoTab]);
 
   const hasActiveSelection = () => {
     const sel = window.getSelection();
@@ -323,7 +348,11 @@ export default function Bio() {
   const handleEditorInput = (e: React.FormEvent<HTMLDivElement>) => {
     const html = e.currentTarget.innerHTML;
     lastHtmlRef.current = html;
-    handleChange("description", html);
+    if (basicInfoTab === "desktop") {
+      handleChange("description", html);
+    } else {
+      handleChange("description_mobile", html);
+    }
   };
 
   const compressImageFidelity = (file: File, maxWidth = 1200, maxQuality = 0.82): Promise<Blob | File> => {
@@ -394,6 +423,146 @@ export default function Bio() {
     });
   };
 
+  const compressVideoFidelity = (file: File): Promise<Blob | File> => {
+    return new Promise((resolve) => {
+      if (
+        typeof window === "undefined" ||
+        !window.MediaRecorder ||
+        !HTMLCanvasElement.prototype.captureStream
+      ) {
+        console.warn("MediaRecorder ou captureStream não suportado pelo navegador. Usando arquivo original.");
+        resolve(file);
+        return;
+      }
+
+      pushToast({ 
+        type: "info", 
+        title: "Otimizando Vídeo", 
+        message: "Iniciando compressão de alta fidelidade..." 
+      });
+
+      const video = document.createElement("video");
+      const objectUrl = URL.createObjectURL(file);
+      video.src = objectUrl;
+      video.muted = true;
+      video.playsInline = true;
+      video.autoplay = true;
+
+      video.onloadedmetadata = () => {
+        const width = video.videoWidth;
+        const height = video.videoHeight;
+        const duration = video.duration || 5;
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          URL.revokeObjectURL(objectUrl);
+          resolve(file);
+          return;
+        }
+
+        const stream = canvas.captureStream(24);
+        
+        let mimeType = "video/webm;codecs=vp9";
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = "video/webm;codecs=vp8";
+        }
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = "video/webm";
+        }
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = "video/mp4";
+        }
+
+        const targetBitrate = 1200000; // 1.2 Mbps - excelente equilíbrio de fidelidade, resolução e leveza para web
+        const options = {
+          mimeType,
+          videoBitsPerSecond: targetBitrate,
+        };
+
+        try {
+          const mediaRecorder = new MediaRecorder(stream, options);
+          const chunks: Blob[] = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              chunks.push(e.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            URL.revokeObjectURL(objectUrl);
+            const compressedBlob = new Blob(chunks, { type: mimeType });
+            
+            if (compressedBlob.size > 100) {
+              const originalSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+              const compressedSizeMB = (compressedBlob.size / (1024 * 1024)).toFixed(1);
+              pushToast({
+                type: "success",
+                title: "Vídeo Otimizado",
+                message: `Resolução: ${width}x${height}. Tamanho reduzido de ${originalSizeMB}MB para ${compressedSizeMB}MB!`
+              });
+              resolve(compressedBlob);
+            } else {
+              resolve(file);
+            }
+          };
+
+          // Rodar em velocidade normal para garantir que nenhuma frame seja pulada ou travada durante a captura do canvas!
+          video.playbackRate = 1.0; 
+
+          video.onplay = () => {
+            mediaRecorder.start();
+            
+            const drawFrame = () => {
+              if (video.paused || video.ended) {
+                if (mediaRecorder.state !== "inactive") {
+                  mediaRecorder.stop();
+                }
+                return;
+              }
+              
+              ctx.drawImage(video, 0, 0, width, height);
+              requestAnimationFrame(drawFrame);
+            };
+
+            drawFrame();
+          };
+
+          video.onended = () => {
+            if (mediaRecorder.state !== "inactive") {
+              mediaRecorder.stop();
+            }
+          };
+
+          video.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            resolve(file);
+          };
+
+          video.play().catch((err) => {
+            console.error("Erro ao reproduzir vídeo para compressão:", err);
+            URL.revokeObjectURL(objectUrl);
+            resolve(file);
+          });
+
+        } catch (recorderError) {
+          console.error("Erro ao instanciar MediaRecorder:", recorderError);
+          URL.revokeObjectURL(objectUrl);
+          resolve(file);
+        }
+      };
+
+      video.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(file);
+      };
+    });
+  };
+
   const uploadImage = async (file: File, isHighQuality = false): Promise<string> => {
     if (!tenantId) throw new Error("Sem tenant id");
     
@@ -401,8 +570,35 @@ export default function Bio() {
     let ext;
     let contentType;
     
-    // Se for PNG ou GIF, preservamos o arquivo original de forma lossless para manter fundos transparentes (PNG) e animações (GIF)
-    if (file.type === "image/png" || file.type === "image/gif") {
+    const isVideo = file.type.startsWith("video/") || file.name.endsWith(".mp4") || file.name.endsWith(".webm");
+    
+    if (isVideo) {
+      // Se o vídeo for menor ou igual a 12MB, não roda compressão para preservar a fluidez original de 60FPS
+      if (file.size <= 12 * 1024 * 1024) {
+        compressed = file;
+        ext = file.name.split('.').pop()?.toLowerCase() || "mp4";
+        contentType = file.type || `video/${ext}`;
+      } else {
+        try {
+          compressed = await compressVideoFidelity(file);
+          if (compressed.type && compressed.type.includes("webm")) {
+            ext = "webm";
+            contentType = "video/webm";
+          } else if (compressed.type && compressed.type.includes("mp4")) {
+            ext = "mp4";
+            contentType = "video/mp4";
+          } else {
+            ext = "mp4";
+            contentType = "video/mp4";
+          }
+        } catch (err) {
+          console.error("Erro ao comprimir vídeo, enviando original:", err);
+          compressed = file;
+          ext = file.name.split('.').pop()?.toLowerCase() || "mp4";
+          contentType = file.type || `video/${ext}`;
+        }
+      }
+    } else if (file.type === "image/png" || file.type === "image/gif") {
       ext = file.type === "image/png" ? "png" : "gif";
       contentType = file.type;
       compressed = file; 
@@ -1097,20 +1293,67 @@ export default function Bio() {
                {openSections.basic ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
             {openSections.basic && (
-             <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
+             <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
+               
+               {/* Seletor de Versão (Desktop / Smartphone) */}
+               <div className="flex bg-[#0d0e12]/80 p-1 rounded-2xl border border-white/5 w-fit gap-1 shadow-inner self-start">
+                 <button
+                   type="button"
+                   onClick={() => setBasicInfoTab("desktop")}
+                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                     basicInfoTab === "desktop"
+                       ? "bg-[var(--primary-color)] text-white shadow-md"
+                       : "text-slate-400 hover:text-white hover:bg-white/5"
+                   }`}
+                 >
+                   <Monitor className="w-4 h-4" />
+                   Desktop
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => setBasicInfoTab("mobile")}
+                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                     basicInfoTab === "mobile"
+                       ? "bg-[var(--primary-color)] text-white shadow-md"
+                       : "text-slate-400 hover:text-white hover:bg-white/5"
+                   }`}
+                 >
+                   <Smartphone className="w-4 h-4" />
+                   Smartphone (Mobile)
+                 </button>
+               </div>
+
                <div>
-                 <label className="gm-label">Título / Nome da Empresa</label>
-                 <input type="text" className="gm-input font-medium" value={bioConfig.title} onChange={e => handleChange("title", e.target.value)} placeholder="Ex: GM Edificação" />
+                 <label className="gm-label">
+                   {basicInfoTab === "desktop" ? "Título / Nome da Empresa (Desktop)" : "Título / Nome da Empresa (Smartphone)"}
+                 </label>
+                 <input 
+                   type="text" 
+                   className="gm-input font-medium" 
+                   value={basicInfoTab === "desktop" ? bioConfig.title : (bioConfig.title_mobile || "")} 
+                   onChange={e => handleChange(basicInfoTab === "desktop" ? "title" : "title_mobile", e.target.value)} 
+                   placeholder={basicInfoTab === "desktop" ? "Ex: GM Edificação" : "Deixe em branco para usar o mesmo do Desktop"} 
+                 />
+                 {basicInfoTab === "mobile" && (
+                   <p className="text-xs text-slate-400 mt-1.5 ml-1">
+                     Se deixado em branco, será utilizado o título configurado na versão Desktop.
+                   </p>
+                 )}
                </div>
                <div>
-                 <label className="gm-label">Descrição</label>
+                 <label className="gm-label">{basicInfoTab === "desktop" ? "Descrição (Desktop)" : "Descrição (Smartphone)"}</label>
                  <div ref={editorRef} contentEditable onInput={handleEditorInput} onBlur={handleEditorInput} className={`gm-input bio-desc-editor min-h-[160px] !py-3 w-full transition-all duration-200 overflow-y-auto whitespace-pre-wrap outline-none border border-white/10 focus:border-[var(--primary-color)] rounded-xl ${
                     bioConfig.description_align === "left" ? "text-left" : bioConfig.description_align === "right" ? "text-right" : "text-center"
                   } ${
                     bioConfig.description_bold ? "font-bold" : "font-medium"
                   } ${
                     bioConfig.description_italic ? "italic" : "not-italic"
-                  } ${getFontSizeClass(bioConfig.description_size)} bio-desc-font-${bioConfig.description_font || "ui"}`} data-placeholder="Sua frase de destaque..." style={{ outline: 'none' }}></div>
+                  } ${getFontSizeClass(bioConfig.description_size)} bio-desc-font-${bioConfig.description_font || "ui"}`} data-placeholder={basicInfoTab === "desktop" ? "Sua frase de destaque..." : "Deixe em branco para usar a mesma descrição do Desktop..."} style={{ outline: 'none' }}></div>
+                  {basicInfoTab === "mobile" && (
+                    <p className="text-xs text-slate-400 mt-1.5 ml-1 mb-2">
+                      Se deixado em branco, será utilizada a descrição configurada na versão Desktop.
+                    </p>
+                  )}
                   
                   {/* Barra de Formatação */}
                   <div className="flex flex-wrap items-center gap-3 bg-[#0d0e12]/60 p-3 rounded-2xl border border-white/5 mt-2">
@@ -1981,7 +2224,7 @@ export default function Bio() {
                                               <span className="font-bold">Upload</span>
                                               <input 
                                                 type="file" 
-                                                accept="image/*"
+                                                accept="image/*,video/mp4"
                                                 className="hidden" 
                                                 onChange={(e) => handleUploadProductImageAtIndex(item.id, idx, e)} 
                                               />
@@ -2187,7 +2430,7 @@ export default function Bio() {
                                   <span className="font-bold">Upload</span>
                                   <input 
                                     type="file" 
-                                    accept="image/*"
+                                    accept="image/*,video/mp4"
                                     className="hidden" 
                                     onChange={(e) => handleUploadNewProductImageAtIndex(idx, e)} 
                                   />
@@ -2429,7 +2672,7 @@ export default function Bio() {
                                       <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
                                         <Upload className="w-4 h-4" />
                                         Adicionar Banner Desktop
-                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
+                                        <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
                                       </label>
                                     </div>
                                     
@@ -2468,7 +2711,7 @@ export default function Bio() {
                                       <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
                                         <Upload className="w-4 h-4" />
                                         Adicionar Banner Smartphone
-                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMobileLayer(item.id, e)} />
+                                        <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioMobileLayer(item.id, e)} />
                                       </label>
                                     </div>
                                     
