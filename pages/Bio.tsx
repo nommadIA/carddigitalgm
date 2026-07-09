@@ -513,6 +513,46 @@ export default function Bio() {
     }));
   };
 
+  const handleUploadPortfolioMobileLayer = async (portfolioId: string, e: any) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    try {
+      pushToast({ type: "info", title: "Upload", message: "Enviando banner smartphone..." });
+      const url = await uploadImage(e.target.files[0]);
+      
+      const current = bioConfig.portfolio_items || [];
+      const normalized = current.map((p: any) => p.image_url && !p.layers ? { id: p.id, title: 'Portfólio', layers: [{ id: Date.now().toString() + Math.random(), image_url: p.image_url }] } : p);
+      
+      handleChange("portfolio_items", normalized.map((p: any) => {
+        if (p.id === portfolioId) {
+          return {
+            ...p,
+            mobile_layers: [...(p.mobile_layers || []), { id: Date.now().toString(), image_url: url }]
+          };
+        }
+        return p;
+      }));
+      
+      pushToast({ type: "success", title: "Sucesso", message: "Banner smartphone adicionado" });
+    } catch(err) {
+      pushToast({ type: "error", title: "Erro", message: "Erro ao enviar banner smartphone" });
+    }
+  };
+
+  const handleRemovePortfolioMobileLayer = (portfolioId: string, layerId: string) => {
+    const current = bioConfig.portfolio_items || [];
+    const normalized = current.map((p: any) => p.image_url && !p.layers ? { id: p.id, title: 'Portfólio', layers: [{ id: Date.now().toString() + Math.random(), image_url: p.image_url }] } : p);
+    
+    handleChange("portfolio_items", normalized.map((p: any) => {
+      if (p.id === portfolioId) {
+        return {
+          ...p,
+          mobile_layers: (p.mobile_layers || []).filter((l: any) => l.id !== layerId)
+        };
+      }
+      return p;
+    }));
+  };
+
 
   const handleUploadPortfolioItem = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -2378,41 +2418,85 @@ export default function Bio() {
                                   </div>
                                 </div>
                                 
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 border-t border-zinc-800/50 pt-4">
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-semibold text-slate-300">Banners internos ({item.layers?.length || 0})</span>
-                                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Recomendado: 1600x900px</span>
-                                  </div>
-                                  <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
-                                    <Upload className="w-4 h-4" />
-                                    Adicionar Camada (Banner)
-                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
-                                  </label>
-                                </div>
-                                
-                                {item.layers && item.layers.length > 0 ? (
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                    {(item.layers || []).map((layer: any) => (
-                                      <div key={layer.id} className="relative group aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
-                                        <OptimizedImage src={layer.image_url} alt="Layer" className="w-full h-full object-cover" width={300} />
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                          <button
-                                            type="button"
-                                            onClick={() => handleRemovePortfolioLayer(item.id, layer.id)}
-                                            className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
-                                          >
-                                            <Trash className="w-4 h-4" />
-                                            Remover
-                                          </button>
-                                        </div>
+                                <div className="space-y-6 pt-4 border-t border-zinc-800/50">
+                                  {/* Section for Desktop Banners */}
+                                  <div className="space-y-3">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-semibold text-slate-300">Banners Internos Desktop ({item.layers?.length || 0})</span>
+                                        <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Recomendado: 1600x900px</span>
                                       </div>
-                                    ))}
+                                      <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
+                                        <Upload className="w-4 h-4" />
+                                        Adicionar Banner Desktop
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
+                                      </label>
+                                    </div>
+                                    
+                                    {item.layers && item.layers.length > 0 ? (
+                                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                        {(item.layers || []).map((layer: any) => (
+                                          <div key={layer.id} className="relative group aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
+                                            <OptimizedImage src={layer.image_url} alt="Layer Desktop" className="w-full h-full object-cover" width={300} />
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                              <button
+                                                type="button"
+                                                onClick={() => handleRemovePortfolioLayer(item.id, layer.id)}
+                                                className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
+                                              >
+                                                <Trash className="w-4 h-4" />
+                                                Remover
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
+                                        Nenhum banner desktop inserido neste portfólio.
+                                      </div>
+                                    )}
                                   </div>
-                                ) : (
-                                  <div className="py-6 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
-                                    Nenhum banner inserido neste portfólio.
+
+                                  {/* Section for Smartphone Banners */}
+                                  <div className="space-y-3 pt-4 border-t border-zinc-800/20">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-semibold text-slate-300">Banners Internos Smartphone ({item.mobile_layers?.length || 0})</span>
+                                        <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Recomendado: 1080x1920px (Proporção 9:16)</span>
+                                      </div>
+                                      <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
+                                        <Upload className="w-4 h-4" />
+                                        Adicionar Banner Smartphone
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMobileLayer(item.id, e)} />
+                                      </label>
+                                    </div>
+                                    
+                                    {item.mobile_layers && item.mobile_layers.length > 0 ? (
+                                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                                        {(item.mobile_layers || []).map((layer: any) => (
+                                          <div key={layer.id} className="relative group aspect-[9/16] max-w-[120px] rounded-lg overflow-hidden bg-black border border-zinc-800 mx-auto w-full">
+                                            <OptimizedImage src={layer.image_url} alt="Layer Smartphone" className="w-full h-full object-cover" width={150} />
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                              <button
+                                                type="button"
+                                                onClick={() => handleRemovePortfolioMobileLayer(item.id, layer.id)}
+                                                className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
+                                              >
+                                                <Trash className="w-4 h-4" />
+                                                Remover
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
+                                        Nenhum banner smartphone inserido neste portfólio.
+                                      </div>
+                                    )}
                                   </div>
-                                )}
+                                </div>
                               </div>
                             </div>
                           ))}

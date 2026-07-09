@@ -88,10 +88,22 @@ const getRouteKey = (pathname: string) => {
 
 const AppRoutes = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, checked } = useAuth();
 
   // Detect if the user is on a mobile device
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+  // Wait for auth to be fully initialized before making routing decisions or redirecting
+  if (!checked) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-[#050507]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#FE540B]" />
+          <span className="text-xs text-zinc-500 font-medium">Carregando...</span>
+        </div>
+      </div>
+    );
+  }
 
   // If a mobile user is not logged in and opens the root, redirect directly to the public bio page
   if (isMobile && !user && (location.pathname === '/' || location.pathname === '')) {

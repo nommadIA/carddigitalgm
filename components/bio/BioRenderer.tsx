@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../store/AuthContext";
 import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, Eye, EyeOff, ZoomIn , Layout, ExternalLink, Menu, Home } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
@@ -60,6 +62,8 @@ export const getPlatformIcon = (platform: string) => {
 };
 
 export default function BioRenderer({ data, asPreview = false, previewMode }: { data: any, asPreview?: boolean, previewMode?: "smartphone" | "pc" }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const bio = data?.bio_config || {};
   const siteFont = bio.site_font || "inter";
   const siteFontSize = bio.site_font_size || "md";
@@ -209,6 +213,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const [loginError, setLoginError] = useState("");
   const [loginSuccess, setLoginSuccess] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showAppRedirectScreen, setShowAppRedirectScreen] = useState(false);
 
   useEffect(() => {
     try {
@@ -618,10 +623,17 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       });
       if (error) throw error;
       setLoginSuccess("Login realizado com sucesso! Redirecionando...");
+      
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+
       setTimeout(() => {
         setIsLoginOpen(false);
-        // Redireciona para a página inicial do aplicativo
-        window.location.href = "/";
+        if (isMobileDevice && !isStandalone) {
+          setShowAppRedirectScreen(true);
+        } else {
+          // No app instalado ou desktop, vai direto para a home
+          navigate("/");
+        }
       }, 1200);
     } catch (err: any) {
       console.error("Login error:", err);
@@ -1603,7 +1615,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       </div>
 
                       {/* Main Banner Hero Area */}
-                      <div className="w-full relative min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center overflow-hidden">
+                      <div className="w-full relative aspect-[9/16] sm:aspect-auto min-h-[550px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center overflow-hidden">
                         <img 
                           src={activeView === "contact" ? (bio.contact_banner_img_url || finalMobile) : finalMobile} 
                           alt="Banner Mobile" 
@@ -1623,7 +1635,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             
                             {desc && (
                               <div className="w-full flex flex-col items-center space-y-3.5 pt-6 max-w-sm border-t border-white/10 mt-6">
-                                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-sans uppercase">
+                                <h2 className="hidden sm:block text-xl sm:text-2xl font-black tracking-tight text-white font-sans uppercase">
                                   Sobre a
                                 </h2>
                                 <div 
@@ -1673,7 +1685,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   const nextPortfolio = currentIndex !== -1 && currentIndex < (bio.portfolio_items || []).length - 1 ? bio.portfolio_items[currentIndex + 1] : null;
                   
                   const isNewFormat = !!portfolioItem.layers;
-                  const images = isNewFormat ? portfolioItem.layers : [{ id: portfolioItem.id, image_url: portfolioItem.image_url }];
+                  const hasMobileLayers = !!portfolioItem.mobile_layers && portfolioItem.mobile_layers.length > 0;
+                  const images = (isMobileView && hasMobileLayers)
+                    ? portfolioItem.mobile_layers
+                    : (isNewFormat ? portfolioItem.layers : [{ id: portfolioItem.id, image_url: portfolioItem.image_url }]);
                   
                   const descriptionAlignClass = portfolioItem.description_align === "left" ? "text-left" : portfolioItem.description_align === "right" ? "text-right" : "text-center";
                   const descriptionBoldClass = portfolioItem.description_bold ? "font-bold" : "font-medium";
@@ -2105,7 +2120,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               <div className={`grid gap-6 ${asPreview && previewMode === 'smartphone' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                 {bio.portfolio_items.map((item: any) => {
                    const isNewFormat = !!item.layers;
-                   const coverImg = isNewFormat && item.layers.length > 0 ? item.layers[0].image_url : item.image_url;
+                   const hasMobileLayers = !!item.mobile_layers && item.mobile_layers.length > 0;
+                   const coverImg = (isMobileView && hasMobileLayers)
+                     ? item.mobile_layers[0].image_url
+                     : (isNewFormat && item.layers.length > 0 ? item.layers[0].image_url : item.image_url);
                    
                    return (
                      <div 
@@ -2132,15 +2150,19 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                        )}
                        
                        {/* Overlay with Portfolio Title */}
-                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity flex flex-col justify-end p-4">
-                         <span className="text-white font-bold text-sm sm:text-base drop-shadow-md">
-                           {item.title || "Portfólio"}
-                         </span>
-                         {isNewFormat && item.layers && (
-                           <span className="text-white/70 text-xs font-semibold">
-                             {item.layers.length} {item.layers.length === 1 ? 'imagem' : 'imagens'}
-                           </span>
-                         )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity flex flex-col justify-end p-4">
+                          <span className="text-white font-bold text-sm sm:text-base drop-shadow-md">
+                            {item.title || "Portfólio"}
+                          </span>
+                          {(isMobileView && hasMobileLayers) ? (
+                            <span className="text-white/70 text-xs font-semibold">
+                              {item.mobile_layers.length} {item.mobile_layers.length === 1 ? 'imagem' : 'imagens'}
+                            </span>
+                          ) : (isNewFormat && item.layers && (
+                            <span className="text-white/70 text-xs font-semibold">
+                              {item.layers.length} {item.layers.length === 1 ? 'imagem' : 'imagens'}
+                            </span>
+                          ))}
                        </div>
                        
 
@@ -2191,7 +2213,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             </div>
             <div>
               <button 
-                onClick={() => setIsLoginOpen(true)}
+                onClick={() => {
+                  if (user) {
+                    navigate("/");
+                  } else {
+                    setIsLoginOpen(true);
+                  }
+                }}
                 className="inline-flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer"
               >
                 <Lock className="w-5 h-5 text-white/50" />
@@ -2322,6 +2350,90 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 )}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* PWA / MOBILE APP LAUNCH REDIRECT MODAL */}
+      {showAppRedirectScreen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
+          <div 
+            className={`w-full max-w-md rounded-[2.5rem] border p-8 flex flex-col items-center text-center shadow-2xl relative ${
+              theme === 'glass'
+                ? 'bg-[#0a0b10]/80 backdrop-blur-3xl border-white/12 text-white shadow-[0_24px_50px_-12px_rgba(0,0,0,0.8)]'
+                : theme === 'dark'
+                  ? 'bg-[#0d0e12] border-zinc-800 text-white'
+                  : 'bg-white border-slate-200 text-slate-900'
+            }`}
+          >
+            {/* Ambient background glow matching CardDigital GM */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#FE540B]/10 rounded-full blur-[60px] pointer-events-none" />
+
+            {/* Glowing Logo Icon */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-[#FE540B]/20 rounded-3xl blur-md scale-105" />
+              <div className="relative w-20 h-20 rounded-3xl border border-white/10 bg-[#0c0d12] flex items-center justify-center p-2.5 overflow-hidden">
+                <img 
+                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
+                  alt="CardDigital GM" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl font-extrabold tracking-tight mb-2 text-white">
+              Acesso Autorizado! 🚀
+            </h3>
+            <p className="text-sm font-semibold opacity-80 mb-6 font-funnel uppercase tracking-wider" style={{ color: "#FE540B" }}>
+              CardDigital GM
+            </p>
+
+            {/* Content text */}
+            <div className="space-y-4 mb-8 text-xs sm:text-sm leading-relaxed text-left bg-white/5 dark:bg-black/25 p-5 rounded-[1.5rem] border border-white/5 text-slate-300">
+              <p className="font-semibold text-center text-white">
+                Como você está acessando de um celular, recomendamos usar o aplicativo instalado:
+              </p>
+              <div className="space-y-2 mt-3 text-[11px] opacity-80 border-t border-white/5 pt-3">
+                <div className="flex items-start gap-2">
+                  <span className="text-[#FE540B] font-bold">1.</span>
+                  <span>Se o aplicativo já está instalado no seu smartphone, toque no botão abaixo para tentar abri-lo diretamente ou abra pelo ícone de atalho na sua tela inicial.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[#FE540B] font-bold">2.</span>
+                  <span>Caso prefira usar no próprio navegador por enquanto, basta clicar em <strong>"Continuar no Navegador"</strong>.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="w-full space-y-3">
+              <button
+                onClick={() => {
+                  // Direct standard web link opening, triggering installed PWA deep-linking on supported browsers
+                  window.location.href = window.location.origin + "/";
+                }}
+                className="w-full py-4 px-6 rounded-2xl text-white font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                style={{ backgroundColor: "#FE540B" }}
+              >
+                <ExternalLink className="w-5 h-5" />
+                <span>Abrir no Aplicativo Instalado</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowAppRedirectScreen(false);
+                  navigate("/");
+                }}
+                className={`w-full py-3.5 px-6 rounded-2xl text-xs font-bold transition-all border hover:bg-white/5 active:scale-[0.98] cursor-pointer ${
+                  theme === 'glass' || theme === 'dark'
+                    ? 'border-white/10 text-white/70 hover:text-white'
+                    : 'border-slate-200 text-slate-600 hover:text-slate-900 bg-slate-50'
+                }`}
+              >
+                Continuar no Navegador
+              </button>
+            </div>
           </div>
         </div>
       )}
