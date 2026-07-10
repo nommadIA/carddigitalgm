@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../store/AuthContext";
 import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, Eye, EyeOff, ZoomIn , Layout, ExternalLink, Menu, Home } from "lucide-react";
@@ -141,6 +142,86 @@ export function OptimizedMedia({
   );
 }
 
+const customSocialIcons: Record<string, { white: string; orange: string; black: string }> = {
+  whatsapp: {
+    white: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg",
+    orange: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20LARANJA/Whatsapp%20laranja.svg",
+    black: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20PRETO/Whatsapp%20preto.svg"
+  },
+  instagram: {
+    white: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Intagram%20branco.svg",
+    orange: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20LARANJA/Instagram%20laranja.svg",
+    black: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20PRETO/Instagram%20preto.svg"
+  },
+  telegram: {
+    white: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/telegram%20branco.svg",
+    orange: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20LARANJA/Telegram%20laranja.svg",
+    black: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20PRETO/Telegram%20preto.svg"
+  },
+  email: {
+    white: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/email%20branco.svg",
+    orange: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20LARANJA/Email%20laranja.svg",
+    black: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20PRETO/email%20preto.svg"
+  },
+  facebook: {
+    white: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/facebook%20branco.svg",
+    orange: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20LARANJA/Facebook%20laranja.svg",
+    black: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20PRETO/Facebook%20preto.svg"
+  },
+  address: {
+    white: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Localizacao%20branco.svg",
+    orange: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20LARANJA/Localizacao%20laranja.svg",
+    black: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20PRETO/Localizacao%20preto.svg"
+  }
+};
+
+function InteractiveSocialIcon({
+  itemKey,
+  label,
+  theme,
+  sizeClass = "w-5.5 h-5.5 sm:w-6 sm:h-6",
+  fallbackIcon: FallbackIcon
+}: {
+  itemKey: string;
+  label: string;
+  theme: string;
+  sizeClass?: string;
+  fallbackIcon: React.ComponentType<any>;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const isDark = theme === 'dark' || theme === 'glass';
+  const hasCustom = !!customSocialIcons[itemKey];
+
+  if (hasCustom) {
+    const urls = customSocialIcons[itemKey];
+    const srcUrl = hovered ? urls.orange : (isDark ? urls.white : urls.black);
+
+    return (
+      <img
+        src={srcUrl}
+        alt={label}
+        className={`${sizeClass} object-contain transition-all duration-300 transform ${hovered ? 'scale-110' : ''}`}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      />
+    );
+  }
+
+  const colorClass = hovered
+    ? "text-[#FE540B]"
+    : (isDark ? "text-white" : "text-slate-900");
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="transition-colors duration-300"
+    >
+      <FallbackIcon className={`${sizeClass} transition-colors duration-300 ${colorClass}`} />
+    </div>
+  );
+}
+
 export default function BioRenderer({ data, asPreview = false, previewMode }: { data: any, asPreview?: boolean, previewMode?: "smartphone" | "pc" }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -159,6 +240,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(true);
+  const [isHoveringChat, setIsHoveringChat] = useState(false);
   const [contactName, setContactName] = useState("");
   const [scrollTop, setScrollTop] = useState(0);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
@@ -262,6 +344,56 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       default:
         return "text-[14pt] sm:text-[16pt]";
     }
+  };
+
+  const getResponsiveFontSizeClass = (desktopSize?: string, mobileSize?: string) => {
+    const resolvedDesktop = desktopSize ? (desktopSize === "sm" ? "12 pt" : desktopSize === "base" ? "14 pt" : desktopSize === "lg" ? "16 pt" : desktopSize === "xl" ? "24 pt" : desktopSize) : "16 pt";
+    const resolvedMobile = mobileSize ? (mobileSize === "sm" ? "12 pt" : mobileSize === "base" ? "14 pt" : mobileSize === "lg" ? "16 pt" : mobileSize === "xl" ? "24 pt" : mobileSize) : resolvedDesktop;
+
+    const getRawMobileValue = (sz: string) => {
+      switch (sz) {
+        case "10 pt": return "10pt";
+        case "12 pt": return "11pt";
+        case "14 pt": return "12pt";
+        case "16 pt": return "14pt";
+        case "18 pt": return "15pt";
+        case "20 pt": return "16pt";
+        case "24 pt": return "18pt";
+        case "30 pt": return "22pt";
+        case "36 pt": return "26pt";
+        case "48 pt": return "32pt";
+        default: return "14pt";
+      }
+    };
+
+    const getRawDesktopValue = (sz: string) => {
+      switch (sz) {
+        case "10 pt": return "10pt";
+        case "12 pt": return "12pt";
+        case "14 pt": return "14pt";
+        case "16 pt": return "16pt";
+        case "18 pt": return "18pt";
+        case "20 pt": return "20pt";
+        case "24 pt": return "24pt";
+        case "30 pt": return "30pt";
+        case "36 pt": return "36pt";
+        case "48 pt": return "48pt";
+        default: return "16pt";
+      }
+    };
+
+    const mobileVal = getRawMobileValue(resolvedMobile);
+    const desktopVal = getRawDesktopValue(resolvedDesktop);
+
+    if (asPreview) {
+      if (previewMode === "smartphone") {
+        return `text-[${mobileVal}]`;
+      } else if (previewMode === "pc") {
+        return `text-[${desktopVal}]`;
+      }
+    }
+
+    return `text-[${mobileVal}] sm:text-[${desktopVal}]`;
   };
 
   // Shopping Cart state
@@ -912,10 +1044,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   useEffect(() => {
     if (activeView === "portfolio" && activePortfolioId) {
       const timer = setTimeout(() => {
-        const el = document.getElementById("portfolio-detail-section");
-        if (el && mainScrollRef.current) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (mainScrollRef.current) {
+          mainScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
         }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
+        document.body.scrollTo({ top: 0, behavior: "smooth" });
       }, 150);
       return () => clearTimeout(timer);
     }
@@ -1035,40 +1169,40 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         }
 
         /* Font Size Scales */
-        .site-size-sm { font-size: 14px !important; }
-        .site-size-md { font-size: 16px !important; }
-        .site-size-lg { font-size: 18px !important; }
-        .site-size-xl { font-size: 20px !important; }
+        .site-size-sm { font-size: 15.5px !important; }
+        .site-size-md { font-size: 17.5px !important; }
+        .site-size-lg { font-size: 19.5px !important; }
+        .site-size-xl { font-size: 21.5px !important; }
 
-        .site-size-sm .text-xs { font-size: 0.65rem !important; }
-        .site-size-sm .text-sm { font-size: 0.75rem !important; }
-        .site-size-sm .text-base { font-size: 0.85rem !important; }
-        .site-size-sm .text-lg { font-size: 0.95rem !important; }
-        .site-size-sm .text-xl { font-size: 1.1rem !important; }
-        .site-size-sm .text-2xl { font-size: 1.3rem !important; }
-        .site-size-sm .text-3xl { font-size: 1.6rem !important; }
-        .site-size-sm .text-4xl { font-size: 2rem !important; }
-        .site-size-sm .text-5xl { font-size: 2.5rem !important; }
+        .site-size-sm .text-xs { font-size: 0.7rem !important; }
+        .site-size-sm .text-sm { font-size: 0.8rem !important; }
+        .site-size-sm .text-base { font-size: 0.9rem !important; }
+        .site-size-sm .text-lg { font-size: 1.0rem !important; }
+        .site-size-sm .text-xl { font-size: 1.15rem !important; }
+        .site-size-sm .text-2xl { font-size: 1.35rem !important; }
+        .site-size-sm .text-3xl { font-size: 1.65rem !important; }
+        .site-size-sm .text-4xl { font-size: 2.1rem !important; }
+        .site-size-sm .text-5xl { font-size: 2.6rem !important; }
 
-        .site-size-lg .text-xs { font-size: 0.8rem !important; }
-        .site-size-lg .text-sm { font-size: 0.95rem !important; }
-        .site-size-lg .text-base { font-size: 1.1rem !important; }
-        .site-size-lg .text-lg { font-size: 1.25rem !important; }
-        .site-size-lg .text-xl { font-size: 1.4rem !important; }
-        .site-size-lg .text-2xl { font-size: 1.7rem !important; }
-        .site-size-lg .text-3xl { font-size: 2.2rem !important; }
-        .site-size-lg .text-4xl { font-size: 2.8rem !important; }
-        .site-size-lg .text-5xl { font-size: 3.5rem !important; }
+        .site-size-lg .text-xs { font-size: 0.85rem !important; }
+        .site-size-lg .text-sm { font-size: 1.0rem !important; }
+        .site-size-lg .text-base { font-size: 1.15rem !important; }
+        .site-size-lg .text-lg { font-size: 1.3rem !important; }
+        .site-size-lg .text-xl { font-size: 1.45rem !important; }
+        .site-size-lg .text-2xl { font-size: 1.75rem !important; }
+        .site-size-lg .text-3xl { font-size: 2.3rem !important; }
+        .site-size-lg .text-4xl { font-size: 2.9rem !important; }
+        .site-size-lg .text-5xl { font-size: 3.6rem !important; }
 
-        .site-size-xl .text-xs { font-size: 0.85rem !important; }
-        .site-size-xl .text-sm { font-size: 1rem !important; }
-        .site-size-xl .text-base { font-size: 1.2rem !important; }
-        .site-size-xl .text-lg { font-size: 1.4rem !important; }
-        .site-size-xl .text-xl { font-size: 1.6rem !important; }
-        .site-size-xl .text-2xl { font-size: 1.9rem !important; }
-        .site-size-xl .text-3xl { font-size: 2.5rem !important; }
-        .site-size-xl .text-4xl { font-size: 3.2rem !important; }
-        .site-size-xl .text-5xl { font-size: 4rem !important; }
+        .site-size-xl .text-xs { font-size: 0.9rem !important; }
+        .site-size-xl .text-sm { font-size: 1.05rem !important; }
+        .site-size-xl .text-base { font-size: 1.25rem !important; }
+        .site-size-xl .text-lg { font-size: 1.45rem !important; }
+        .site-size-xl .text-xl { font-size: 1.65rem !important; }
+        .site-size-xl .text-2xl { font-size: 1.95rem !important; }
+        .site-size-xl .text-3xl { font-size: 2.6rem !important; }
+        .site-size-xl .text-4xl { font-size: 3.3rem !important; }
+        .site-size-xl .text-5xl { font-size: 4.1rem !important; }
 
         /* Background Animations */
         @keyframes aurora-bg {
@@ -1243,15 +1377,46 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               const mobileBanner = bio.mobile_banner_img_url_1;
               const finalDesktop = desktopBanner || mobileBanner;
               const finalMobile = mobileBanner || desktopBanner;
-              const hasBanners = bio.show_banners && (desktopBanner || mobileBanner);
+
+              const currentPortfolioItem = activePortfolioId ? (bio.portfolio_items || []).find((p: any) => p.id === activePortfolioId) : null;
+              const portfolioDesktopBanner = currentPortfolioItem?.main_banner_url || currentPortfolioItem?.layers?.[0]?.image_url;
+              const portfolioMobileBanner = currentPortfolioItem?.main_banner_mobile_url || currentPortfolioItem?.main_banner_url || currentPortfolioItem?.layers?.[0]?.image_url;
+
+              const hasBanners = (bio.show_banners && (desktopBanner || mobileBanner)) || (activeView === "portfolio");
 
               // Helper to render the Profile Header with optional over-banner styles
               const renderProfileHeader = (isOverBanner: boolean) => {
-                const descAlignClass = bio.description_align === "left" ? "text-left" : bio.description_align === "right" ? "text-right" : "text-center";
-                const descBoldClass = bio.description_bold ? "font-bold" : "font-semibold";
-                const descItalicClass = bio.description_italic ? "italic" : "not-italic";
-                const descFontClass = `bio-desc-font-${bio.description_font || "ui"}`;
-                const descMarginClass = bio.description_align === "left" ? "mr-auto" : bio.description_align === "right" ? "ml-auto" : "mx-auto";
+                const mobAlign = bio.description_align_mobile || "center";
+                const deskAlign = bio.description_align || "center";
+                const mobAlignClass = mobAlign === "left" ? "text-left" : mobAlign === "right" ? "text-right" : "text-center";
+                const deskAlignClass = deskAlign === "left" ? "sm:text-left" : deskAlign === "right" ? "sm:text-right" : "sm:text-center";
+                const descAlignClass = asPreview 
+                  ? (previewMode === "smartphone" ? mobAlignClass : (deskAlign === "left" ? "text-left" : deskAlign === "right" ? "text-right" : "text-center"))
+                  : `${mobAlignClass} ${deskAlignClass}`;
+
+                const mobBold = bio.description_bold_mobile ? "font-bold" : "font-semibold";
+                const deskBold = bio.description_bold ? "sm:font-bold" : "sm:font-semibold";
+                const descBoldClass = asPreview
+                  ? (previewMode === "smartphone" ? mobBold : (bio.description_bold ? "font-bold" : "font-semibold"))
+                  : `${mobBold} ${deskBold}`;
+
+                const mobItalic = bio.description_italic_mobile ? "italic" : "not-italic";
+                const deskItalic = bio.description_italic ? "sm:italic" : "sm:not-italic";
+                const descItalicClass = asPreview
+                  ? (previewMode === "smartphone" ? mobItalic : (bio.description_italic ? "italic" : "not-italic"))
+                  : `${mobItalic} ${deskItalic}`;
+
+                const mobFont = `bio-desc-font-${bio.description_font_mobile || "ui"}`;
+                const deskFont = `sm:bio-desc-font-${bio.description_font || "ui"}`;
+                const descFontClass = asPreview
+                  ? (previewMode === "smartphone" ? mobFont : `bio-desc-font-${bio.description_font || "ui"}`)
+                  : `${mobFont} ${deskFont}`;
+
+                const mobMargin = mobAlign === "left" ? "mr-auto ml-0" : mobAlign === "right" ? "ml-auto mr-0" : "mx-auto";
+                const deskMargin = deskAlign === "left" ? "sm:mr-auto sm:ml-0" : deskAlign === "right" ? "sm:ml-auto sm:mr-0" : "sm:mx-auto";
+                const descMarginClass = asPreview 
+                  ? (previewMode === "smartphone" ? mobMargin : (deskAlign === "left" ? "mr-auto" : deskAlign === "right" ? "ml-auto" : "mx-auto"))
+                  : `${mobMargin} ${deskMargin}`;
 
                 return (
                   <div className={`text-center space-y-3.5 sm:space-y-4 ${isOverBanner ? "relative z-20 text-white w-full px-4" : "pt-2"}`}>
@@ -1271,7 +1436,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       <h1 className={`text-2xl sm:text-3xl md:text-5xl font-black tracking-tight ${isOverBanner ? "text-white drop-shadow-md" : t.textTitle}`}>{companyName}</h1>
                       {desc && (
                         <div 
-                          className={`mt-1.5 ${getFontSizeClass(bio.description_size)} max-w-4xl leading-relaxed whitespace-pre-wrap tracking-wide ${descMarginClass} ${descAlignClass} ${descBoldClass} ${descItalicClass} ${descFontClass} ${isOverBanner ? "text-zinc-100/95 drop-shadow-sm" : `${t.textDesc}`}`}
+                          className={`mt-1.5 ${getResponsiveFontSizeClass(bio.description_size, bio.description_size_mobile)} max-w-4xl leading-relaxed whitespace-pre-wrap tracking-wide ${descMarginClass} ${descAlignClass} ${descBoldClass} ${descItalicClass} ${descFontClass} ${isOverBanner ? "text-zinc-100/95 drop-shadow-sm" : `${t.textDesc}`}`}
                           dangerouslySetInnerHTML={{ __html: desc }}
                         />
                       )}
@@ -1311,7 +1476,6 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     {socialIcons.length > 0 && (
                       <div className="flex flex-wrap justify-center items-center gap-3 pt-3">
                         {socialIcons.map((item) => {
-                          const IconComp = item.icon;
                           const formattedHref = formatExternalUrl(item.href);
                           return (
                             <a
@@ -1320,22 +1484,20 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               target="_blank"
                               rel="noreferrer"
                               title={item.label}
-                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 border transform hover:scale-110 hover:border-orange-500/50 active:scale-95 shadow-lg backdrop-blur-md"
+                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300 border transform hover:scale-110 hover:border-[#FE540B]/50 active:scale-95 shadow-lg backdrop-blur-md"
                               style={{
                                 backgroundColor: 'rgba(12, 12, 15, 0.75)',
                                 borderColor: 'rgba(255, 255, 255, 0.12)',
                               }}
                               onClick={(e) => { if (asPreview) e.preventDefault(); }}
                             >
-                              {item.svgUrl ? (
-                                <img 
-                                  src={item.svgUrl} 
-                                  alt={item.label} 
-                                  className="w-7 h-7 sm:w-8 sm:h-8 object-contain" 
-                                />
-                              ) : (
-                                <IconComp className="w-5 h-5 sm:w-5.5 sm:h-5.5" style={{ color: brandColor || '#ff6900' }} />
-                              )}
+                              <InteractiveSocialIcon 
+                                itemKey={item.key} 
+                                label={item.label} 
+                                theme="dark" 
+                                sizeClass="w-7 h-7 sm:w-8 sm:h-8"
+                                fallbackIcon={item.icon} 
+                              />
                             </a>
                           );
                         })}
@@ -1349,42 +1511,78 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 return (
                   <div className="w-full flex flex-col space-y-6">
                     {/* Minimal Desktop Top Navbar */}
-                    <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full h-28 sm:h-32 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30`}>
+                    <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full h-32 sm:h-36 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30`}>
                       <div className="flex items-center gap-4 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
                         {logo ? (
-                          <img src={logo} alt={companyName} className="h-14 sm:h-16 w-auto object-contain rounded-md shadow-sm" />
+                          <img src={logo} alt={companyName} className="h-16 sm:h-[72px] w-auto object-contain rounded-md shadow-sm" />
                         ) : (
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-xl sm:text-2xl text-white" style={{ backgroundColor: brandColor }}>
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-2xl sm:text-3xl text-white" style={{ backgroundColor: brandColor }}>
                             {companyName.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span className={`font-extrabold text-xl sm:text-2xl tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
+                        <span className={`font-extrabold text-2xl sm:text-3xl tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
                       </div>
-                      <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-5 mr-4 border-r border-black/10 dark:border-white/10 pr-6">
-                          <button 
-                            onClick={() => setActiveView("bio")} 
-                            className={`text-base font-bold transition-all hover:opacity-100 cursor-pointer ${
-                              (activeView as string) === "bio" 
-                                ? "opacity-100 border-b-2 font-black" 
-                                : "opacity-60"
-                            } ${theme === 'dark' || theme === 'glass' ? 'text-white border-white' : 'text-slate-900 border-slate-900'}`}
-                          >
-                            Início
-                          </button>
-                          <button 
-                            onClick={() => setActiveView("contact")} 
-                            className={`text-base font-bold transition-all hover:opacity-100 cursor-pointer ${
-                              (activeView as string) === "contact" 
-                                ? "opacity-100 border-b-2 font-black" 
-                                : "opacity-60"
-                            } ${theme === 'dark' || theme === 'glass' ? 'text-white border-white' : 'text-slate-900 border-slate-900'}`}
-                          >
-                            Contato
-                          </button>
-                        </div>
-                        <button onClick={handleShareBio} className={`text-base font-bold opacity-70 hover:opacity-100 transition-opacity flex items-center gap-2 cursor-pointer ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
-                          <Share2 className="w-5 h-5" /> Compartilhar
+                      <div className="flex items-center gap-7 sm:gap-8 md:gap-9">
+                        <button 
+                          onClick={() => {
+                            setActiveView("bio");
+                            setActivePortfolioId(null);
+                          }} 
+                          className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                            (activeView as string) === "bio" 
+                              ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                              : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                          } hover:text-[#FE540B]`}
+                        >
+                          Início
+                          <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'bio' ? 'scaleX(1)' : undefined }} />
+                        </button>
+
+                        <button 
+                          onClick={() => setActiveView("contact")} 
+                          className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                            (activeView as string) === "contact" 
+                              ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                              : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                          } hover:text-[#FE540B]`}
+                        >
+                          Contato
+                          <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'contact' ? 'scaleX(1)' : undefined }} />
+                        </button>
+
+                        <button 
+                          onClick={() => {
+                            const el = document.getElementById("portfolio-section");
+                            if (el) {
+                              el.scrollIntoView({ behavior: 'smooth' });
+                            } else {
+                              setActiveView("bio");
+                              setTimeout(() => {
+                                const el2 = document.getElementById("portfolio-section");
+                                if (el2) el2.scrollIntoView({ behavior: 'smooth' });
+                              }, 120);
+                            }
+                          }} 
+                          className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                            (activeView as string) === "portfolio" 
+                              ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                              : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                          } hover:text-[#FE540B]`}
+                        >
+                          Vitrine
+                          <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'portfolio' ? 'scaleX(1)' : undefined }} />
+                        </button>
+
+                        <button 
+                          onClick={handleShareBio} 
+                          className={`text-base sm:text-lg font-bold transition-colors flex items-center gap-3.5 cursor-pointer duration-300 ${
+                            theme === 'dark' || theme === 'glass' 
+                              ? 'text-white opacity-70 hover:opacity-100 hover:text-[#FE540B]' 
+                              : 'text-slate-900 opacity-70 hover:opacity-100 hover:text-[#FE540B]'
+                          }`}
+                        >
+                          <Share2 className="w-5 h-5 transition-colors duration-300" style={{ color: "inherit" }} /> 
+                          <span>Compartilhar</span>
                         </button>
                       </div>
                       
@@ -1400,21 +1598,21 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     </div>
 
                     {/* Minimal Mobile Top Navbar */}
-                    <div className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'} w-full h-[88px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-4 relative z-30`}>
+                    <div className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'} w-full h-[96px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-4 relative z-30`}>
                       <div className="flex items-center gap-2 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
                         {logo ? (
-                          <img src={logo} alt={companyName} className="h-10 w-auto object-contain rounded-md" />
+                          <img src={logo} alt={companyName} className="h-12 w-auto object-contain rounded-md" />
                         ) : (
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm text-white" style={{ backgroundColor: brandColor }}>
+                          <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-base text-white" style={{ backgroundColor: brandColor }}>
                             {companyName.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span className={`font-extrabold text-sm tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
+                        <span className={`font-extrabold text-base tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <button 
                           onClick={() => setActiveView("bio")} 
-                          className={`text-xs font-bold transition-all hover:opacity-100 cursor-pointer ${
+                          className={`text-sm font-bold transition-all hover:opacity-100 cursor-pointer ${
                             (activeView as string) === "bio" 
                               ? "opacity-100 border-b-2 font-black border-slate-900 dark:border-white text-slate-900 dark:text-white" 
                               : "opacity-60 text-slate-500 dark:text-slate-400"
@@ -1424,7 +1622,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         </button>
                         <button 
                           onClick={() => setActiveView("contact")} 
-                          className={`text-xs font-bold transition-all hover:opacity-100 cursor-pointer ${
+                          className={`text-sm font-bold transition-all hover:opacity-100 cursor-pointer ${
                             (activeView as string) === "contact" 
                               ? "opacity-100 border-b-2 font-black border-slate-900 dark:border-white text-slate-900 dark:text-white" 
                               : "opacity-60 text-slate-500 dark:text-slate-400"
@@ -1456,74 +1654,100 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   {finalDesktop && (
                     <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full flex flex-col`}>
                       {/* Desktop Top Navbar */}
-                      <div className="w-full h-24 sm:h-28 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30">
+                      <div className="w-full h-36 sm:h-40 md:h-[140px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30">
                         <div className="flex items-center gap-4 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
                           {logo ? (
-                            <img src={logo} alt={companyName} className="h-10 sm:h-12 w-auto object-contain rounded-md shadow-sm transition-all" />
+                            <img src={logo} alt={companyName} className="h-16 sm:h-20 w-auto object-contain rounded-md shadow-sm transition-all" />
                           ) : (
-                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg flex items-center justify-center font-bold text-lg sm:text-xl text-white shadow-sm" style={{ backgroundColor: brandColor }}>
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center font-bold text-2xl sm:text-3xl text-white shadow-sm" style={{ backgroundColor: brandColor }}>
                               {companyName.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <span className={`font-extrabold text-lg sm:text-xl tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
+                          <span className={`font-extrabold text-2xl sm:text-3xl tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
                         </div>
-                        <div className="flex items-center gap-6">
-                           {/* Navigation Menu */}
-                           <div className="flex items-center gap-4 mr-4 border-r border-black/10 dark:border-white/10 pr-6">
-                             <button 
-                               onClick={() => setActiveView("bio")} 
-                               className={`text-sm sm:text-base font-bold transition-all hover:opacity-100 cursor-pointer ${
-                                 (activeView as string) === "bio" 
-                                   ? "opacity-100 border-b-2 font-black" 
-                                   : "opacity-60"
-                               } ${theme === 'dark' || theme === 'glass' ? 'text-white border-white' : 'text-slate-900 border-slate-900'}`}
-                             >
-                               Início
-                             </button>
-                             <button 
-                               onClick={() => setActiveView("contact")} 
-                               className={`text-sm sm:text-base font-bold transition-all hover:opacity-100 cursor-pointer ${
-                                 (activeView as string) === "contact" 
-                                   ? "opacity-100 border-b-2 font-black" 
-                                   : "opacity-60"
-                               } ${theme === 'dark' || theme === 'glass' ? 'text-white border-white' : 'text-slate-900 border-slate-900'}`}
-                             >
-                               Contato
-                             </button>
-                           </div>
+                        <div className="flex items-center">
+                          {/* Navigation Links Group */}
+                          <div className="flex items-center gap-7 sm:gap-8 md:gap-9">
+                            {/* Início */}
+                            <button 
+                              onClick={() => {
+                                setActiveView("bio");
+                                setActivePortfolioId(null);
+                              }} 
+                              className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                                (activeView as string) === "bio" 
+                                  ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                              } hover:text-[#FE540B]`}
+                            >
+                              Início
+                              <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'bio' ? 'scaleX(1)' : undefined }} />
+                            </button>
 
-                           <button onClick={handleShareBio} className={`text-sm sm:text-base font-bold opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1.5 cursor-pointer ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
-                             <Share2 className="w-4 h-4" /> Compartilhar
-                           </button>
-                           {socialIcons.length > 0 && (
-                             <div className="flex items-center gap-4 border-l border-black/10 dark:border-white/10 pl-6">
-                               {socialIcons.map((item) => {
-                                 const IconComp = item.icon;
-                                 const colorToUse = "#FE540B"; // Bright orange as requested
-                                 return (
-                                   <a 
-                                     key={item.key} 
-                                     href={asPreview ? undefined : formatExternalUrl(item.href)} 
-                                     target="_blank" 
-                                     rel="noreferrer" 
-                                     title={item.label} 
-                                     className="flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer" 
-                                     onClick={(e) => { if (asPreview) e.preventDefault(); }}
-                                   >
-                                     {item.svgUrl ? (
-                                       <img 
-                                         src={item.svgUrl} 
-                                         alt={item.label} 
-                                         className="w-6 h-6 sm:w-6.5 sm:h-6.5 object-contain" 
-                                       />
-                                     ) : (
-                                       <IconComp className="w-5 h-5 sm:w-5.5 sm:h-5.5" style={{ color: colorToUse }} />
-                                     )}
-                                   </a>
-                                 )
-                               })}
-                             </div>
-                           )}
+                            {/* Contato */}
+                            <button 
+                              onClick={() => setActiveView("contact")} 
+                              className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                                (activeView as string) === "contact" 
+                                  ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                              } hover:text-[#FE540B]`}
+                            >
+                              Contato
+                              <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'contact' ? 'scaleX(1)' : undefined }} />
+                            </button>
+
+                            {/* Vitrine */}
+                            <button 
+                              onClick={() => {
+                                const el = document.getElementById("portfolio-section");
+                                if (el) {
+                                  el.scrollIntoView({ behavior: 'smooth' });
+                                } else {
+                                  setActiveView("bio");
+                                  setTimeout(() => {
+                                    const el2 = document.getElementById("portfolio-section");
+                                    if (el2) el2.scrollIntoView({ behavior: 'smooth' });
+                                  }, 120);
+                                }
+                              }} 
+                              className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                                (activeView as string) === "portfolio" 
+                                  ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                              } hover:text-[#FE540B]`}
+                            >
+                              Vitrine
+                              <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'portfolio' ? 'scaleX(1)' : undefined }} />
+                            </button>
+                          </div>
+
+                          {/* Beautiful Distancing Spacer matches the second screenshot */}
+                          <div className="w-12 sm:w-16 md:w-20 lg:w-24" />
+
+                          {/* Social Icons Group */}
+                          <div className="flex items-center gap-5 sm:gap-6 md:gap-7">
+                            {socialIcons.length > 0 && socialIcons.map((item) => {
+                              return (
+                                <a 
+                                  key={item.key} 
+                                  href={asPreview ? undefined : formatExternalUrl(item.href)} 
+                                  target="_blank" 
+                                  rel="noreferrer" 
+                                  title={item.label} 
+                                  className="flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110" 
+                                  onClick={(e) => { if (asPreview) e.preventDefault(); }}
+                                 >
+                                  <InteractiveSocialIcon 
+                                    itemKey={item.key} 
+                                    label={item.label} 
+                                    theme={theme} 
+                                    fallbackIcon={item.icon} 
+                                  />
+                                </a>
+                              )
+                            })}
+                          </div>
                         </div>
                         
                         {/* Thin animated bar */}
@@ -1538,53 +1762,71 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       </div>
 
                       {/* Desktop Hero Section */}
-                      <div className="w-full relative group bg-black/10 transition-all duration-300" style={{ aspectRatio: "1920 / 680" }}>
+                      <div className={`w-full relative group bg-black/10 transition-all duration-1000 ease-in-out ${activeView === "contact" ? "md:h-[35vh] md:min-h-[250px]" : "md:h-[calc(105.3vh-140px)] md:min-h-[500px]"}`} style={{}}>
                         <div className="w-full h-full relative">
                           <img 
-                            src={activeView === "contact" ? (bio.contact_banner_img_url || finalDesktop) : finalDesktop} 
+                            src={activeView === "contact" ? (bio.contact_banner_img_url || finalDesktop) : (activeView === "portfolio" ? (portfolioDesktopBanner || finalDesktop) : finalDesktop)} 
                             alt="Banner Desktop" 
                             className="w-full h-full object-cover absolute inset-0" 
                             referrerPolicy="no-referrer" 
                           />
                           
-                          {/* Gradient overlay for text readability */}
-                          {activeView !== "contact" && (
-                            <div className={`absolute inset-0 z-10 ${bio.description_align === 'center' ? 'bg-black/40' : bio.description_align === 'right' ? 'bg-gradient-to-l from-black/80 via-black/40 to-transparent' : 'bg-gradient-to-r from-black/80 via-black/40 to-transparent'}`} />
-                          )}
-                          
-                          {/* Overlaid Profile Content (Hero Text) */}
-                          {activeView !== "contact" && (
-                            <div className="absolute inset-0 z-20 flex flex-col justify-center py-6">
-                              <div className={`w-full max-w-[1150px] mx-auto px-4 md:px-8 lg:px-12 flex flex-col ${bio.description_align === 'center' ? 'items-center text-center' : bio.description_align === 'right' ? 'items-end text-right' : 'items-start text-left'}`}>
-                                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-2xl leading-tight">
-                                   {companyName}
-                                 </h1>
-                                 {desc && (
-                                   <div 
-                                     className={`mt-4 text-base md:text-lg lg:text-xl text-zinc-100 max-w-2xl leading-relaxed whitespace-pre-wrap ${bio.description_bold ? 'font-bold' : 'font-medium'} ${bio.description_italic ? 'italic' : ''}`}
-                                     dangerouslySetInnerHTML={{ __html: desc }}
-                                   />
-                                 )}
-                                 
-                                 {bio.portfolio_items && bio.portfolio_items.length > 0 && (
-                                   <div className="mt-8 flex">
-                                     <button 
-                                       onClick={() => {
-                                         const el = document.getElementById("portfolio-section");
-                                         if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                       }}
-                                       className="flex items-center px-8 py-3.5 rounded-full text-lg font-extrabold shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 text-white bg-gradient-to-r"
-                                       style={{ 
-                                         backgroundImage: `linear-gradient(to right, ${brandColor}, ${brandColor}dd)`,
-                                       }}
-                                     >
-                                       Veja nosso Portfólio
-                                     </button>
-                                   </div>
-                                 )}
-                              </div>
-                            </div>
-                          )}
+                          {(() => {
+                            const heroAlign = asPreview
+                              ? (previewMode === "smartphone" ? (bio.description_align_mobile || "center") : (bio.description_align || "center"))
+                              : (bio.description_align || "center");
+
+                            const heroBold = asPreview
+                              ? (previewMode === "smartphone" ? bio.description_bold_mobile : bio.description_bold)
+                              : bio.description_bold;
+
+                            const heroItalic = asPreview
+                              ? (previewMode === "smartphone" ? bio.description_italic_mobile : bio.description_italic)
+                              : bio.description_italic;
+
+                            return (
+                              <>
+                                {/* Gradient overlay for text readability */}
+                                {activeView !== "contact" && activeView !== "portfolio" && (
+                                  <div className={`absolute inset-0 z-10 ${heroAlign === 'center' ? 'bg-black/40' : heroAlign === 'right' ? 'bg-gradient-to-l from-black/80 via-black/40 to-transparent' : 'bg-gradient-to-r from-black/80 via-black/40 to-transparent'}`} />
+                                )}
+                                
+                                {/* Overlaid Profile Content (Hero Text) */}
+                                {activeView !== "contact" && activeView !== "portfolio" && (
+                                  <div className="absolute inset-0 z-20 flex flex-col justify-center py-6">
+                                    <div className={`w-full max-w-[1150px] mx-auto px-4 md:px-8 lg:px-12 flex flex-col ${heroAlign === 'center' ? 'items-center text-center' : heroAlign === 'right' ? 'items-end text-right' : 'items-start text-left'}`}>
+                                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-2xl leading-tight">
+                                         {companyName}
+                                       </h1>
+                                       {desc && (
+                                         <div 
+                                           className={`mt-4 text-base md:text-lg lg:text-xl text-zinc-100 max-w-2xl leading-relaxed whitespace-pre-wrap ${heroBold ? 'font-bold' : 'font-medium'} ${heroItalic ? 'italic' : ''}`}
+                                           dangerouslySetInnerHTML={{ __html: desc }}
+                                         />
+                                       )}
+                                       
+                                       {bio.portfolio_items && bio.portfolio_items.length > 0 && (
+                                         <div className="mt-8 flex">
+                                           <button 
+                                             onClick={() => {
+                                               const el = document.getElementById("portfolio-section");
+                                               if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                             }}
+                                             className="flex items-center px-8 py-3.5 rounded-full text-lg font-extrabold shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 text-white bg-gradient-to-r"
+                                             style={{ 
+                                               backgroundImage: `linear-gradient(to right, ${brandColor}, ${brandColor}dd)`,
+                                             }}
+                                           >
+                                             Veja nosso Portfólio
+                                           </button>
+                                         </div>
+                                       )}
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1659,7 +1901,6 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             {socialIcons.length > 0 && (
                               <div className="flex items-center gap-3.5 pt-3">
                                 {socialIcons.map((item) => {
-                                  const IconComp = item.icon;
                                   return (
                                     <a 
                                       key={item.key} 
@@ -1670,15 +1911,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                       className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer border ${theme === 'dark' || theme === 'glass' ? 'bg-zinc-900 border-white/10' : 'bg-zinc-50 border-zinc-100'}`} 
                                       onClick={(e) => { if (asPreview) e.preventDefault(); }}
                                     >
-                                      {item.svgUrl ? (
-                                        <img 
-                                          src={item.svgUrl} 
-                                          alt={item.label} 
-                                          className="w-5.5 h-5.5 object-contain" 
-                                        />
-                                      ) : (
-                                        <IconComp className={`w-5 h-5 ${theme === 'dark' || theme === 'glass' ? 'text-zinc-300' : 'text-zinc-700'}`} />
-                                      )}
+                                      <InteractiveSocialIcon 
+                                        itemKey={item.key} 
+                                        label={item.label} 
+                                        theme={theme} 
+                                        sizeClass="w-5.5 h-5.5"
+                                        fallbackIcon={item.icon} 
+                                      />
                                     </a>
                                   );
                                 })}
@@ -1699,19 +1938,27 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       </div>
 
                       {/* Main Banner Hero Area */}
-                      <div className="w-full relative aspect-[9/16] sm:aspect-auto min-h-[550px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center overflow-hidden">
+                      <div className={`w-full relative overflow-hidden transition-all duration-1000 ease-in-out ${
+                        activeView === "portfolio" 
+                          ? "aspect-[9/16] min-h-[480px] py-0 px-0" 
+                          : activeView === "contact"
+                            ? "aspect-[21/9] sm:aspect-auto min-h-[220px] sm:min-h-[260px] py-6 px-6 flex flex-col items-center justify-center text-center"
+                            : "aspect-[9/16] sm:aspect-auto min-h-[550px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center"
+                      }`}>
                         <img 
-                          src={activeView === "contact" ? (bio.contact_banner_img_url || finalMobile) : finalMobile} 
+                          src={activeView === "contact" ? (bio.contact_banner_img_url || finalMobile) : (activeView === "portfolio" ? (portfolioMobileBanner || finalMobile) : finalMobile)} 
                           alt="Banner Mobile" 
                           className="w-full h-full object-cover absolute inset-0 z-0" 
                           referrerPolicy="no-referrer" 
                         />
                         
                         {/* High-Contrast Progressive Black Gradient Overlay for Impeccable Readability */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/85 z-10" />
+                        {activeView !== "portfolio" && (
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/85 z-10" />
+                        )}
                         
                         {/* Overlaid Hero Content - Centered with title, about section, and button on top of the banner */}
-                        {activeView !== "contact" && (
+                        {activeView !== "contact" && activeView !== "portfolio" && (
                           <div className="relative z-20 w-full flex flex-col items-center justify-center text-center space-y-6">
                             <h1 className="text-[34px] sm:text-[38px] font-black tracking-tight text-white leading-[1.1] select-none max-w-[95%] text-center drop-shadow-md">
                               {bio.title || companyName || "Criando marcas que conectam"}
@@ -1755,7 +2002,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           <div className={`${asPreview && previewMode !== 'pc' ? (activeView === "portfolio" ? "-mx-4 w-[calc(100%+2rem)]" : "") : activeView === "portfolio" ? "w-full max-w-none px-0 mt-2 sm:mt-4" : "max-w-[1150px] mx-auto px-4 md:px-8 lg:px-12 mt-6 sm:mt-10"} space-y-6 sm:space-y-8 w-full`}>
 
           {activeView === "portfolio" ? (
-            <div className="animate-fade-in w-full pb-10">
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full pb-10"
+            >
                {(() => {
                   let portfolioItem = null;
                   if (bio.portfolio_items) {
@@ -1791,6 +2043,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                              <button 
                                onClick={() => { 
                                  setActivePortfolioId(prevPortfolio.id); 
+                                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                                 document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+                                 document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                                 if (mainScrollRef.current) {
+                                   mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                                 }
                                }} 
                                className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer"
                              >
@@ -1805,6 +2063,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                              <button 
                                onClick={() => { 
                                  setActivePortfolioId(nextPortfolio.id); 
+                                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                                 document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+                                 document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                                 if (mainScrollRef.current) {
+                                   mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                                 }
                                }} 
                                className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer text-right"
                              >
@@ -1841,16 +2105,22 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 <OptimizedMedia 
                                   src={img.image_url} 
                                   alt={`Banner ${idx+1}`} 
-                                  className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl block mx-auto border border-white/5" 
+                                  className="max-w-full max-h-[72vh] object-contain rounded-2xl shadow-2xl block mx-auto border border-white/5" 
                                   loading={idx === 0 ? "eager" : "lazy"} 
                                 />
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div className="w-full flex flex-col items-center">
+                          <div className="w-full flex flex-col items-center gap-6 sm:gap-10">
                              {images.map((img, idx) => (
-                               <OptimizedMedia key={img.id || idx} src={img.image_url} alt={`Banner ${idx+1}`} className="w-full max-w-[1600px] h-auto object-contain block mx-auto" loading={idx === 0 ? "eager" : "lazy"} />
+                               <OptimizedMedia 
+                                 key={img.id || idx} 
+                                 src={img.image_url} 
+                                 alt={`Banner ${idx+1}`} 
+                                 className="w-full max-w-[1600px] max-h-[70vh] md:max-h-[560px] h-auto object-contain block mx-auto rounded-lg sm:rounded-xl shadow-lg border border-black/5 dark:border-white/5" 
+                                 loading={idx === 0 ? "eager" : "lazy"} 
+                               />
                              ))}
                           </div>
                         )}
@@ -1858,13 +2128,29 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         {(prevPortfolio || nextPortfolio) && (
                           <div className="max-w-[1600px] mx-auto w-full px-4 md:px-8 lg:px-12 py-16 flex items-center justify-between font-bold text-xl sm:text-2xl md:text-3xl" style={{ color: brandColor || 'var(--primary-color)' }}>
                              {prevPortfolio ? (
-                                <button onClick={() => { setActivePortfolioId(prevPortfolio.id); if (mainScrollRef.current) mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer">
+                                <button onClick={() => { 
+                                  setActivePortfolioId(prevPortfolio.id); 
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+                                  document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                                  if (mainScrollRef.current) {
+                                    mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }
+                                }} className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer">
                                   <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" /> {prevPortfolio.title || "Anterior"}
                                 </button>
                              ) : <div />}
 
                              {nextPortfolio ? (
-                                <button onClick={() => { setActivePortfolioId(nextPortfolio.id); if (mainScrollRef.current) mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer text-right">
+                                <button onClick={() => { 
+                                  setActivePortfolioId(nextPortfolio.id); 
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+                                  document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                                  if (mainScrollRef.current) {
+                                    mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }
+                                }} className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer text-right">
                                   {nextPortfolio.title || "Próximo"} <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
                                 </button>
                              ) : <div />}
@@ -1873,27 +2159,30 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                      </div>
                   );
                })()}
-            </div>
+            </motion.div>
           ) : activeView === "contact" ? (
-            <div className="animate-fade-in py-6 sm:py-12 w-full">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center max-w-6xl mx-auto px-2 sm:px-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="py-6 sm:py-12 w-full flex flex-col items-center"
+            >
+              <div className="flex flex-col items-center gap-10 lg:gap-14 max-w-6xl w-full mx-auto px-4 sm:px-6">
                 
-                {/* Left column: Title, Text */}
-                <div className="lg:col-span-5 flex flex-col space-y-10">
-                  <div className="space-y-6">
-                    <h2 className={`text-5xl sm:text-6xl lg:text-7xl font-sans font-black tracking-tight leading-none ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
-                      {bio.contact_title || "Fale com a gente"}
-                    </h2>
-                    {bio.contact_desc && (
-                      <p className={`text-base sm:text-lg font-medium leading-relaxed opacity-85 ${theme === 'dark' || theme === 'glass' ? 'text-zinc-300' : 'text-slate-600'}`}>
-                        {bio.contact_desc}
-                      </p>
-                    )}
-                  </div>
+                {/* Title & Text */}
+                <div className="w-full flex flex-col items-center text-center space-y-6 overflow-hidden">
+                  <h2 className={`text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-sans font-black tracking-tight leading-none whitespace-nowrap select-none ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
+                    {bio.contact_title || "Fale com a gente"}
+                  </h2>
+                  {bio.contact_desc && (
+                    <p className={`text-base sm:text-lg lg:text-xl font-medium leading-relaxed opacity-85 max-w-2xl ${theme === 'dark' || theme === 'glass' ? 'text-zinc-300' : 'text-slate-600'}`}>
+                      {bio.contact_desc}
+                    </p>
+                  )}
                 </div>
 
                 {/* Right column: Form */}
-                <div className={`lg:col-span-7 ${
+                <div className={`w-full max-w-5xl ${
                   theme === 'glass'
                     ? 'p-6 sm:p-10 rounded-[2.5rem] border bg-[#0a0b10]/45 backdrop-blur-2xl border-white/10 shadow-xl'
                     : theme === 'dark'
@@ -2056,8 +2345,6 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     {activeSocials.length > 0 && (
                       <div className="flex items-center justify-center gap-6">
                         {activeSocials.map((item) => {
-                          const IconComp = item.icon;
-                          const colorToUse = "#FE540B";
                           return (
                             <a 
                               key={item.key} 
@@ -2068,15 +2355,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               className="transition-all duration-300 hover:scale-115 cursor-pointer" 
                               onClick={(e) => { if (asPreview) e.preventDefault(); }}
                             >
-                              {item.svgUrl ? (
-                                <img 
-                                  src={item.svgUrl} 
-                                  alt={item.label} 
-                                  className="w-6 h-6 sm:w-6.5 sm:h-6.5 object-contain" 
-                                />
-                              ) : (
-                                <IconComp className="w-5 h-5 sm:w-5.5 sm:h-5.5" style={{ color: colorToUse }} />
-                              )}
+                              <InteractiveSocialIcon 
+                                itemKey={item.key} 
+                                label={item.label} 
+                                theme={theme} 
+                                sizeClass="w-6 h-6 sm:w-6.5 sm:h-6.5"
+                                fallbackIcon={item.icon} 
+                              />
                             </a>
                           );
                         })}
@@ -2085,9 +2370,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   </div>
                 );
               })()}
-            </div>
+            </motion.div>
           ) : (
-            <>
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full"
+            >
               {/* 3. Contacts & Links Stack (Harmonized, wider container blocks) */}
           <div className={`grid gap-4.5 pt-2 ${asPreview && previewMode === 'smartphone' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
             {/* Legacy contact fields - Portfolio, Catalog, and Website remain as buttons */}
@@ -2215,7 +2505,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                        onClick={() => {
                          setActivePortfolioId(item.id);
                          setActiveView("portfolio");
-                         if (mainScrollRef.current) mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                         window.scrollTo({ top: 0, behavior: 'smooth' });
+                         document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+                         document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                         if (mainScrollRef.current) {
+                           mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                         }
                        }}
                        className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden border shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-center"
                        style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
@@ -2257,7 +2552,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             </div>
           )}
 
-            </>
+            </motion.div>
           )}
 
           {/* 5.5 Address & Embedded Map Section (At the very bottom, rendered only on Contato view) */}
@@ -3295,130 +3590,264 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       {/* Floating Chat Inteligente (only visible on Contact page and if enabled) */}
       {activeView === "contact" && bio.chat_balloon_enabled !== false && (
         <>
-          {isChatWidgetOpen ? (
-            <div 
-              className="fixed bottom-6 right-[76px] sm:right-20 z-[150] w-[calc(100%-5.5rem)] sm:w-full max-w-[340px] sm:max-w-[360px] rounded-[1.8rem] overflow-hidden shadow-[0_24px_50px_-12px_rgba(0,0,0,0.5)] border border-slate-100 animate-scale-up"
-              style={{
-                backgroundColor: "#FBF7F4",
-                fontFamily: "Inter, sans-serif"
-              }}
-            >
-              {/* Widget Header (Join.chat bar with custom color) */}
+          {/* Custom style sheet injected safely for laser scanner and custom transitions */}
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes qr-scan {
+              0% { top: 6%; opacity: 0; }
+              15% { opacity: 1; }
+              85% { opacity: 1; }
+              100% { top: 94%; opacity: 0; }
+            }
+            .animate-qr-scan {
+              animation: qr-scan 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            }
+            .chat-glass-shine {
+              position: absolute;
+              top: 0;
+              left: -150%;
+              width: 50%;
+              height: 100%;
+              background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.25),
+                transparent
+              );
+              transform: skewX(-25deg);
+              transition: 0.75s;
+              pointer-events: none;
+              z-index: 200;
+            }
+            .chat-widget-hoverable:hover .chat-glass-shine {
+              left: 200%;
+            }
+          `}} />
+
+          {(() => {
+            const getChatQrUrl = () => {
+              if (bio.chat_balloon_qr_link) {
+                return formatExternalUrl(bio.chat_balloon_qr_link) || "";
+              }
+              const whatsappClean = (bio.whatsapp || bio.phone || "").replace(/\D/g, "");
+              if (!whatsappClean) {
+                return "";
+              }
+              const textMsg = bio.chat_balloon_qr_msg || "Olá! Estou vindo do site GM edificação, quero saber mais.";
+              return `https://api.whatsapp.com/send?phone=${whatsappClean}&text=${encodeURIComponent(textMsg)}`;
+            };
+
+            const qrUrl = getChatQrUrl();
+            const brandThemeColor = bio.chat_balloon_bg_color || "#FE540B";
+
+            return isChatWidgetOpen ? (
+              /* Big Chat Widget with hover QR Code overlay (exactly matching the print style!) */
               <div 
-                className="px-5 py-4 flex items-center justify-between"
-                style={{ 
-                  backgroundColor: bio.chat_balloon_bg_color || "#FE540B",
-                  color: bio.chat_balloon_text_color || "#FFFFFF"
+                onMouseEnter={() => setIsHoveringChat(true)}
+                onMouseLeave={() => setIsHoveringChat(false)}
+                className="chat-widget-hoverable fixed bottom-6 right-6 sm:right-20 z-[150] w-[calc(100%-3rem)] sm:w-[350px] rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] border border-slate-200/50 flex flex-col justify-between overflow-visible bg-[#FBF7F4] transition-all duration-300 hover:shadow-[0_30px_70px_rgba(254,84,11,0.15)]"
+                style={{
+                  fontFamily: "Inter, sans-serif"
                 }}
               >
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-[13px] font-black tracking-tight">Chat by CardDigital GM</span>
-                </div>
-                <button 
-                  onClick={() => setIsChatWidgetOpen(false)}
-                  className="w-7 h-7 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/35 transition-all cursor-pointer"
-                  style={{ color: bio.chat_balloon_text_color || "#FFFFFF" }}
-                  title="Fechar Chat"
+                {/* 1. Glass shiny sheen effect */}
+                <div className="chat-glass-shine" />
+
+                {/* 2. QR Code Overlay Card (Fades in/out on hover - identical to print layout) */}
+                <div 
+                  onClick={() => {
+                    if (qrUrl) {
+                      window.open(qrUrl, "_blank");
+                    }
+                  }}
+                  className={`absolute -top-[215px] right-[20px] z-[160] w-[185px] h-[210px] bg-white rounded-[2.2rem] shadow-[0_15px_45px_rgba(0,0,0,0.22)] border border-slate-100/60 flex flex-col items-center justify-between p-4 cursor-pointer transition-all duration-300 ease-out origin-bottom ${
+                    isHoveringChat && bio.chat_balloon_show_qrcode !== false
+                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 scale-95 translate-y-3 pointer-events-none"
+                  }`}
                 >
-                  <X className="w-4 h-4 stroke-[2.5]" />
-                </button>
-              </div>
-
-              {/* Widget Body */}
-              <div className="p-5 space-y-4">
-                <div className="flex items-start gap-3">
-                  {/* Avatar with company logo */}
-                  <div className="shrink-0 relative mt-1">
-                    {logo ? (
-                      <img 
-                        src={logo} 
-                        alt={companyName} 
-                        className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md" 
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center bg-white border-2 border-white text-xs font-black uppercase shadow-md"
-                        style={{ color: bio.chat_balloon_bg_color || "#FE540B" }}
-                      >
-                        {companyName.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    {/* Online indicator dot */}
-                    <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-[#FBF7F4]" />
+                  {/* Clean, high-fidelity QR Code block */}
+                  <div className="bg-white p-2 rounded-2xl flex items-center justify-center border border-slate-50/50 flex-1 w-full max-w-[130px] max-h-[130px] aspect-square">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrUrl || "https://carddigitalgm.com")}`}
+                      alt="WhatsApp QR Code"
+                      className="w-full h-full object-contain select-none pointer-events-none"
+                    />
                   </div>
+                  
+                  {/* Styled label matching "Scan the code" under the code */}
+                  <span className="text-[12px] font-semibold text-slate-500 tracking-tight leading-none mb-1 select-none">
+                    Scan the code
+                  </span>
 
-                  {/* Chat speech bubble */}
+                  {/* Speech bubble pointy arrow at the bottom of the QR card */}
                   <div 
-                    className="relative bg-white text-slate-800 p-4 rounded-[1.25rem] rounded-tl-none shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] border border-slate-100/40 text-sm font-semibold max-w-[240px]"
-                  >
-                    {/* Speech bubble arrow pointing left */}
-                    <div className="absolute left-[-6px] top-0 w-3 h-3 bg-white rotate-45 border-l border-t border-slate-100/40" />
-                    <div className="space-y-1 text-slate-800 font-medium leading-relaxed whitespace-pre-wrap">
-                      {bio.chat_balloon_text ? (
-                        bio.chat_balloon_text
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-1 text-[14px]">
-                            Olá <span className="animate-bounce">👋</span>
-                          </div>
-                          <div className="text-slate-600 text-[13.5px] font-semibold">
-                            Sou Denis, como posso te ajudar hoje?
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                    className="absolute bottom-[-7px] right-[45px] w-4 h-4 bg-white rotate-45 border-r border-b border-slate-100" 
+                    style={{ boxShadow: "3px 3px 6px rgba(0,0,0,0.03)" }}
+                  />
                 </div>
 
-                {/* Open Chat Action Button positioned in bottom-right style */}
-                <div className="flex justify-end pt-1">
-                  <button 
-                    onClick={() => {
-                      const whatsappClean = (bio.whatsapp || bio.phone || "").replace(/\D/g, "");
-                      if (!whatsappClean) {
-                        setCustomAlert({
-                          title: "WhatsApp não configurado",
-                          message: "O administrador não cadastrou um número de WhatsApp para contato nesta Bio."
-                        });
-                        return;
-                      }
-                      const textMsg = bio.chat_balloon_text || "Olá! Estou na sua página de contato e gostaria de iniciar um atendimento.";
-                      const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappClean}&text=${encodeURIComponent(textMsg)}`;
-                      window.open(whatsappUrl, "_blank");
-                    }}
-                    className="px-6 py-3 rounded-full font-extrabold text-[13px] sm:text-sm flex items-center gap-2.5 transition-all duration-300 hover:scale-105 hover:brightness-105 active:scale-95 cursor-pointer shadow-lg"
+                {/* 3. Primary Chat Box Shell */}
+                <div className="w-full h-full flex flex-col justify-between rounded-[2.5rem] overflow-hidden border border-slate-100/10">
+                  {/* Header with Join.chat style */}
+                  <div 
+                    className="px-6 py-4 flex items-center justify-between shadow-sm shrink-0"
                     style={{ 
-                      backgroundColor: bio.chat_balloon_bg_color || "#FE540B",
+                      backgroundColor: brandThemeColor,
                       color: bio.chat_balloon_text_color || "#FFFFFF"
                     }}
                   >
-                    <span>{bio.chat_balloon_button_text || "Abrir chat"}</span>
-                    {/* Speech bubble outline circle */}
-                    <div className="w-6 h-6 rounded-full border flex items-center justify-center shrink-0" style={{ borderColor: `${bio.chat_balloon_text_color || '#FFFFFF'}aa` }}>
-                      <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5" stroke={bio.chat_balloon_text_color || "#FFFFFF"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                      </svg>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] opacity-90 font-normal leading-none">
+                        Powered by <strong className="font-serif font-black text-[12.5px] tracking-wide">Join.chat</strong>
+                      </span>
                     </div>
-                  </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsChatWidgetOpen(false);
+                      }}
+                      className="w-7 h-7 flex items-center justify-center rounded-full bg-black/15 hover:bg-black/25 transition-all cursor-pointer"
+                      style={{ color: bio.chat_balloon_text_color || "#FFFFFF" }}
+                      title="Fechar Chat"
+                    >
+                      <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                  </div>
+
+                  {/* Conversation & Action Area */}
+                  <div className="p-6 flex-1 flex flex-col justify-between gap-4">
+                    {/* Speech Bubble Area */}
+                    <div className="flex items-start gap-3">
+                      {/* Avatar with company logo */}
+                      <div className="shrink-0 relative mt-0.5">
+                        {logo ? (
+                          <img 
+                            src={logo} 
+                            alt={companyName} 
+                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" 
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div 
+                            className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-slate-200 text-[11px] font-black uppercase shadow-sm"
+                            style={{ color: brandThemeColor }}
+                          >
+                            {companyName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Chat speech bubble */}
+                      <div 
+                        className="relative bg-white text-slate-800 p-4.5 rounded-[1.6rem] rounded-tl-none shadow-[0_8px_22px_-6px_rgba(0,0,0,0.1)] border border-slate-100/50 text-[13.5px] font-medium max-w-[240px]"
+                      >
+                        {/* Speech bubble arrow pointing left */}
+                        <div className="absolute left-[-5px] top-4 w-2.5 h-2.5 bg-white rotate-45 border-l border-t border-slate-100/50" />
+                        <div className="space-y-1 text-slate-700 leading-relaxed whitespace-pre-wrap">
+                          {bio.chat_balloon_text ? (
+                            bio.chat_balloon_text
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-1 text-[14px] font-bold text-slate-800">
+                                Olá <span className="animate-bounce">👋</span>
+                              </div>
+                              <div className="text-slate-600 font-medium">
+                                Como podemos te ajudar hoje?
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Open Chat Action Button with Thick Black Border */}
+                    <div className="flex justify-end">
+                      <button 
+                        onClick={() => {
+                          if (!qrUrl) {
+                            setCustomAlert({
+                              title: "Contato não configurado",
+                              message: "O administrador não cadastrou um número de WhatsApp ou link para contato nesta Bio."
+                            });
+                            return;
+                          }
+                          window.open(qrUrl, "_blank");
+                        }}
+                        className="px-7 py-2.5 rounded-full font-extrabold text-[13.5px] sm:text-[14px] flex items-center gap-3 border-[2.5px] border-slate-950 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-md"
+                        style={{ 
+                          backgroundColor: brandThemeColor,
+                          color: bio.chat_balloon_text_color || "#FFFFFF"
+                        }}
+                      >
+                        <span>{bio.chat_balloon_button_text || "Open chat"}</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-white" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="22" y1="2" x2="11" y2="13"></line>
+                          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            /* Minimized state: Beautiful chat balloon styled floating button */
-            <button
-              onClick={() => setIsChatWidgetOpen(true)}
-              className="fixed bottom-6 right-[76px] sm:right-20 z-[140] flex items-center justify-center p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all text-white cursor-pointer group animate-bounce"
-              style={{ backgroundColor: bio.chat_balloon_bg_color || "#25D366" }}
-              title="Abrir Atendimento"
-            >
-              <MessageCircle className="w-7 h-7" />
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-              </span>
-            </button>
-          )}
+            ) : (
+              /* Minimized state: floating button with hover QR Code overlay exactly matching print */
+              <div 
+                className="fixed bottom-6 right-6 sm:right-20 z-[140] flex items-center justify-center overflow-visible"
+                onMouseEnter={() => setIsHoveringChat(true)}
+                onMouseLeave={() => setIsHoveringChat(false)}
+              >
+                {/* QR Code Overlay Card above minimized balloon (Fades in/out on hover) */}
+                <div 
+                  onClick={() => {
+                    if (qrUrl) {
+                      window.open(qrUrl, "_blank");
+                    }
+                  }}
+                  className={`absolute bottom-[96px] right-2 z-[160] w-[170px] h-[190px] bg-white rounded-[2rem] shadow-[0_15px_45px_rgba(0,0,0,0.22)] border border-slate-100/60 flex flex-col items-center justify-between p-4 cursor-pointer transition-all duration-300 ease-out origin-bottom ${
+                    isHoveringChat && bio.chat_balloon_show_qrcode !== false
+                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 scale-95 translate-y-3 pointer-events-none"
+                  }`}
+                >
+                  <div className="bg-white p-2 rounded-2xl flex items-center justify-center border border-slate-50/50 flex-1 w-full max-w-[115px] max-h-[115px] aspect-square">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl || "https://carddigitalgm.com")}`}
+                      alt="WhatsApp QR Code"
+                      className="w-full h-full object-contain select-none pointer-events-none"
+                    />
+                  </div>
+                  
+                  <span className="text-[11.5px] font-semibold text-slate-500 tracking-tight leading-none mb-1 select-none">
+                    Scan the code
+                  </span>
+
+                  {/* Speech bubble pointy arrow pointing down to the green circle */}
+                  <div 
+                    className="absolute bottom-[-7px] right-[30px] w-4 h-4 bg-white rotate-45 border-r border-b border-slate-100" 
+                    style={{ boxShadow: "3px 3px 6px rgba(0,0,0,0.03)" }}
+                  />
+                </div>
+
+                {/* Minimized round floating button with bouncy engaging hover effect */}
+                <button
+                  onClick={() => {
+                    setIsChatWidgetOpen(true);
+                  }}
+                  className="w-[72px] h-[72px] sm:w-[82px] sm:h-[82px] rounded-full flex items-center justify-center text-white cursor-pointer shadow-2xl transition-all duration-500 hover:scale-115 active:scale-95 animate-bounce border border-white/15"
+                  style={{ 
+                    backgroundColor: brandThemeColor,
+                  }}
+                  title="Abrir Atendimento"
+                >
+                  <MessageCircle className="w-9 h-9 sm:w-[42px] sm:h-[42px]" />
+                  <span className="absolute top-1 right-1 flex h-3.5 w-3.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-sky-500"></span>
+                  </span>
+                </button>
+              </div>
+            );
+          })()}
         </>
       )}
 

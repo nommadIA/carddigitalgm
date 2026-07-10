@@ -159,10 +159,15 @@ export default function Bio() {
     description: "",
     description_mobile: "",
     description_align: "center" as "center" | "left" | "right",
+    description_align_mobile: "center" as "center" | "left" | "right",
     description_bold: false,
+    description_bold_mobile: false,
     description_italic: false,
+    description_italic_mobile: false,
     description_font: "ui",
+    description_font_mobile: "ui",
     description_size: "lg",
+    description_size_mobile: "lg",
     phone: "",
     email: "",
     whatsapp: "",
@@ -202,6 +207,9 @@ export default function Bio() {
     contact_title: "",
     contact_desc: "",
     chat_balloon_enabled: true,
+    chat_balloon_show_qrcode: true,
+    chat_balloon_qr_link: "",
+    chat_balloon_qr_msg: "Olá! Estou vindo do site GM edificação, quero saber mais.",
     chat_balloon_bg_color: "#FE540B",
     chat_balloon_text_color: "#FFFFFF",
     chat_balloon_text: "Olá 👋\nSou Denis, como posso te ajudar hoje?",
@@ -285,11 +293,15 @@ export default function Bio() {
       if (editorRef.current) {
         const html = editorRef.current.innerHTML;
         lastHtmlRef.current = html;
-        handleChange("description", html);
+        handleChange(basicInfoTab === "desktop" ? "description" : "description_mobile", html);
       }
       setTimeout(updateSelectionStates, 0);
     } else {
-      handleChange("description_bold", !bioConfig.description_bold);
+      if (basicInfoTab === "desktop") {
+        handleChange("description_bold", !bioConfig.description_bold);
+      } else {
+        handleChange("description_bold_mobile", !bioConfig.description_bold_mobile);
+      }
     }
   };
 
@@ -299,11 +311,15 @@ export default function Bio() {
       if (editorRef.current) {
         const html = editorRef.current.innerHTML;
         lastHtmlRef.current = html;
-        handleChange("description", html);
+        handleChange(basicInfoTab === "desktop" ? "description" : "description_mobile", html);
       }
       setTimeout(updateSelectionStates, 0);
     } else {
-      handleChange("description_italic", !bioConfig.description_italic);
+      if (basicInfoTab === "desktop") {
+        handleChange("description_italic", !bioConfig.description_italic);
+      } else {
+        handleChange("description_italic_mobile", !bioConfig.description_italic_mobile);
+      }
     }
   };
 
@@ -333,7 +349,7 @@ export default function Bio() {
           if (editorRef.current) {
             const html = editorRef.current.innerHTML;
             lastHtmlRef.current = html;
-            handleChange("description", html);
+            handleChange(basicInfoTab === "desktop" ? "description" : "description_mobile", html);
           }
           setTimeout(updateSelectionStates, 0);
         } catch (err) {
@@ -341,7 +357,11 @@ export default function Bio() {
         }
       }
     } else {
-      handleChange("description_font", fontValue);
+      if (basicInfoTab === "desktop") {
+        handleChange("description_font", fontValue);
+      } else {
+        handleChange("description_font_mobile", fontValue);
+      }
     }
   };
 
@@ -743,6 +763,86 @@ export default function Bio() {
         return {
           ...p,
           mobile_layers: (p.mobile_layers || []).filter((l: any) => l.id !== layerId)
+        };
+      }
+      return p;
+    }));
+  };
+
+  const handleUploadPortfolioMainBanner = async (portfolioId: string, e: any) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    try {
+      pushToast({ type: "info", title: "Upload", message: "Enviando banner principal..." });
+      const url = await uploadImage(e.target.files[0]);
+      
+      const current = bioConfig.portfolio_items || [];
+      const normalized = current.map((p: any) => p.image_url && !p.layers ? { id: p.id, title: 'Portfólio', layers: [{ id: Date.now().toString() + Math.random(), image_url: p.image_url }] } : p);
+      
+      handleChange("portfolio_items", normalized.map((p: any) => {
+        if (p.id === portfolioId) {
+          return {
+            ...p,
+            main_banner_url: url
+          };
+        }
+        return p;
+      }));
+      
+      pushToast({ type: "success", title: "Sucesso", message: "Banner principal atualizado" });
+    } catch(err) {
+      pushToast({ type: "error", title: "Erro", message: "Erro ao enviar banner" });
+    }
+  };
+
+  const handleRemovePortfolioMainBanner = (portfolioId: string) => {
+    const current = bioConfig.portfolio_items || [];
+    const normalized = current.map((p: any) => p.image_url && !p.layers ? { id: p.id, title: 'Portfólio', layers: [{ id: Date.now().toString() + Math.random(), image_url: p.image_url }] } : p);
+    
+    handleChange("portfolio_items", normalized.map((p: any) => {
+      if (p.id === portfolioId) {
+        return {
+          ...p,
+          main_banner_url: ""
+        };
+      }
+      return p;
+    }));
+  };
+
+  const handleUploadPortfolioMainMobileBanner = async (portfolioId: string, e: any) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    try {
+      pushToast({ type: "info", title: "Upload", message: "Enviando banner smartphone principal..." });
+      const url = await uploadImage(e.target.files[0]);
+      
+      const current = bioConfig.portfolio_items || [];
+      const normalized = current.map((p: any) => p.image_url && !p.layers ? { id: p.id, title: 'Portfólio', layers: [{ id: Date.now().toString() + Math.random(), image_url: p.image_url }] } : p);
+      
+      handleChange("portfolio_items", normalized.map((p: any) => {
+        if (p.id === portfolioId) {
+          return {
+            ...p,
+            main_banner_mobile_url: url
+          };
+        }
+        return p;
+      }));
+      
+      pushToast({ type: "success", title: "Sucesso", message: "Banner smartphone atualizado" });
+    } catch(err) {
+      pushToast({ type: "error", title: "Erro", message: "Erro ao enviar banner" });
+    }
+  };
+
+  const handleRemovePortfolioMainMobileBanner = (portfolioId: string) => {
+    const current = bioConfig.portfolio_items || [];
+    const normalized = current.map((p: any) => p.image_url && !p.layers ? { id: p.id, title: 'Portfólio', layers: [{ id: Date.now().toString() + Math.random(), image_url: p.image_url }] } : p);
+    
+    handleChange("portfolio_items", normalized.map((p: any) => {
+      if (p.id === portfolioId) {
+        return {
+          ...p,
+          main_banner_mobile_url: ""
         };
       }
       return p;
@@ -1343,12 +1443,12 @@ export default function Bio() {
                <div>
                  <label className="gm-label">{basicInfoTab === "desktop" ? "Descrição (Desktop)" : "Descrição (Smartphone)"}</label>
                  <div ref={editorRef} contentEditable onInput={handleEditorInput} onBlur={handleEditorInput} className={`gm-input bio-desc-editor min-h-[160px] !py-3 w-full transition-all duration-200 overflow-y-auto whitespace-pre-wrap outline-none border border-white/10 focus:border-[var(--primary-color)] rounded-xl ${
-                    bioConfig.description_align === "left" ? "text-left" : bioConfig.description_align === "right" ? "text-right" : "text-center"
+                    (basicInfoTab === "desktop" ? bioConfig.description_align : (bioConfig.description_align_mobile || "center")) === "left" ? "text-left" : (basicInfoTab === "desktop" ? bioConfig.description_align : (bioConfig.description_align_mobile || "center")) === "right" ? "text-right" : "text-center"
                   } ${
-                    bioConfig.description_bold ? "font-bold" : "font-medium"
+                    (basicInfoTab === "desktop" ? bioConfig.description_bold : bioConfig.description_bold_mobile) ? "font-bold" : "font-medium"
                   } ${
-                    bioConfig.description_italic ? "italic" : "not-italic"
-                  } ${getFontSizeClass(bioConfig.description_size)} bio-desc-font-${bioConfig.description_font || "ui"}`} data-placeholder={basicInfoTab === "desktop" ? "Sua frase de destaque..." : "Deixe em branco para usar a mesma descrição do Desktop..."} style={{ outline: 'none' }}></div>
+                    (basicInfoTab === "desktop" ? bioConfig.description_italic : bioConfig.description_italic_mobile) ? "italic" : "not-italic"
+                  } ${getFontSizeClass(basicInfoTab === "desktop" ? bioConfig.description_size : (bioConfig.description_size_mobile || "lg"))} bio-desc-font-${(basicInfoTab === "desktop" ? bioConfig.description_font : (bioConfig.description_font_mobile || "ui"))}`} data-placeholder={basicInfoTab === "desktop" ? "Sua frase de destaque..." : "Deixe em branco para usar a mesma descrição do Desktop..."} style={{ outline: 'none' }}></div>
                   {basicInfoTab === "mobile" && (
                     <p className="text-xs text-slate-400 mt-1.5 ml-1 mb-2">
                       Se deixado em branco, será utilizada a descrição configurada na versão Desktop.
@@ -1361,24 +1461,24 @@ export default function Bio() {
                     <div className="flex items-center gap-1 bg-[#161920] p-1 rounded-xl border border-white/5 shadow-inner">
                       <button
                         type="button"
-                        onClick={() => handleChange("description_align", "left")}
-                        className={`p-2 rounded-lg transition-all duration-200 ${(!bioConfig.description_align || bioConfig.description_align === 'left') ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        onClick={() => handleChange(basicInfoTab === "desktop" ? "description_align" : "description_align_mobile", "left")}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'left') ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                         title="Alinhar à Esquerda"
                       >
                         <AlignLeft className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleChange("description_align", "center")}
-                        className={`p-2 rounded-lg transition-all duration-200 ${bioConfig.description_align === 'center' ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        onClick={() => handleChange(basicInfoTab === "desktop" ? "description_align" : "description_align_mobile", "center")}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'center' || !(basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile)) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                         title="Centralizado"
                       >
                         <AlignCenter className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleChange("description_align", "right")}
-                        className={`p-2 rounded-lg transition-all duration-200 ${bioConfig.description_align === 'right' ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        onClick={() => handleChange(basicInfoTab === "desktop" ? "description_align" : "description_align_mobile", "right")}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'right') ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                         title="Alinhar à Direita"
                       >
                         <AlignRight className="w-4 h-4" />
@@ -1390,7 +1490,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={handleBoldClick}
-                        className={`p-2 rounded-lg transition-all duration-200 ${(bioConfig.description_bold || isSelectionBold) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_bold : bioConfig.description_bold_mobile) || isSelectionBold) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                         title="Negrito"
                       >
                         <Bold className="w-4 h-4 font-bold" />
@@ -1398,7 +1498,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={handleItalicClick}
-                        className={`p-2 rounded-lg transition-all duration-200 ${(bioConfig.description_italic || isSelectionItalic) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_italic : bioConfig.description_italic_mobile) || isSelectionItalic) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                         title="Itálico"
                       >
                         <Italic className="w-4 h-4 italic" />
@@ -1425,29 +1525,32 @@ export default function Bio() {
                       </select>
                     </div>
 
-                    {/* Tamanho da Fonte */}
-                    <div className="flex-1 min-w-[150px]">
-                      <select
-                        className={`gm-input !h-10 !py-0 !px-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                          (bioConfig.description_size && bioConfig.description_size !== "lg" && bioConfig.description_size !== "16 pt")
-                            ? 'border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5'
-                            : 'border-white/10'
-                        }`}
-                        value={getSelectSizeValue(bioConfig.description_size)}
-                        onChange={e => handleChange("description_size", e.target.value)}
-                      >
-                        <option value="10 pt">10 pt</option>
-                        <option value="12 pt">12 pt</option>
-                        <option value="14 pt">14 pt</option>
-                        <option value="16 pt">16 pt (Padrão)</option>
-                        <option value="18 pt">18 pt</option>
-                        <option value="20 pt">20 pt</option>
-                        <option value="24 pt">24 pt</option>
-                        <option value="30 pt">30 pt</option>
-                        <option value="36 pt">36 pt</option>
-                        <option value="48 pt">48 pt</option>
-                      </select>
-                    </div>
+                     {/* Tamanho da Fonte */}
+                     <div className="flex-1 min-w-[150px]">
+                       <select
+                         className={`gm-input !h-10 !py-0 !px-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                           (basicInfoTab === "desktop"
+                             ? (bioConfig.description_size && bioConfig.description_size !== "lg" && bioConfig.description_size !== "16 pt")
+                             : (bioConfig.description_size_mobile && bioConfig.description_size_mobile !== "lg" && bioConfig.description_size_mobile !== "16 pt")
+                           )
+                             ? 'border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5'
+                             : 'border-white/10'
+                         }`}
+                         value={getSelectSizeValue(basicInfoTab === "desktop" ? bioConfig.description_size : (bioConfig.description_size_mobile || "lg"))}
+                         onChange={e => handleChange(basicInfoTab === "desktop" ? "description_size" : "description_size_mobile", e.target.value)}
+                       >
+                         <option value="10 pt">10 pt</option>
+                         <option value="12 pt">12 pt</option>
+                         <option value="14 pt">14 pt</option>
+                         <option value="16 pt">16 pt (Padrão)</option>
+                         <option value="18 pt">18 pt</option>
+                         <option value="20 pt">20 pt</option>
+                         <option value="24 pt">24 pt</option>
+                         <option value="30 pt">30 pt</option>
+                         <option value="36 pt">36 pt</option>
+                         <option value="48 pt">48 pt</option>
+                       </select>
+                     </div>
                   </div>
                </div>
              </div>
@@ -2662,6 +2765,70 @@ export default function Bio() {
                                 </div>
                                 
                                 <div className="space-y-6 pt-4 border-t border-zinc-800/50">
+                                  {/* Section for Portfolio Main Banner (Desktop & Smartphone) */}
+                                  <div className="space-y-4">
+                                    <div className="flex flex-col gap-1">
+                                      <span className="text-xs font-bold text-slate-200">Banner Principal do Portfólio</span>
+                                      <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site.</span>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      {/* Main Banner Desktop */}
+                                      <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-[11px] font-semibold text-slate-400">Desktop (1920x500px)</span>
+                                          {item.main_banner_url && (
+                                            <button 
+                                              type="button" 
+                                              onClick={() => handleRemovePortfolioMainBanner(item.id)}
+                                              className="text-[10px] text-red-400 hover:text-red-300 font-bold"
+                                            >
+                                              Remover
+                                            </button>
+                                          )}
+                                        </div>
+                                        {item.main_banner_url ? (
+                                          <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
+                                            <img src={item.main_banner_url} alt="Main Banner Desktop" className="w-full h-full object-cover" />
+                                          </div>
+                                        ) : (
+                                          <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
+                                            <Upload className="w-5 h-5 text-zinc-500 mb-1" />
+                                            <span className="text-xs text-zinc-400 font-bold">Enviar Banner Desktop</span>
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainBanner(item.id, e)} />
+                                          </label>
+                                        )}
+                                      </div>
+
+                                      {/* Main Banner Mobile */}
+                                      <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-[11px] font-semibold text-slate-400">Smartphone (1080x1920px)</span>
+                                          {item.main_banner_mobile_url && (
+                                            <button 
+                                              type="button" 
+                                              onClick={() => handleRemovePortfolioMainMobileBanner(item.id)}
+                                              className="text-[10px] text-red-400 hover:text-red-300 font-bold"
+                                            >
+                                              Remover
+                                            </button>
+                                          )}
+                                        </div>
+                                        {item.main_banner_mobile_url ? (
+                                          <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
+                                            <img src={item.main_banner_mobile_url} alt="Main Banner Mobile" className="w-full h-full object-cover" />
+                                          </div>
+                                        ) : (
+                                          <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
+                                            <Upload className="w-5 h-5 text-zinc-500 mb-1" />
+                                            <span className="text-xs text-zinc-400 font-bold">Enviar Banner Smartphone</span>
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainMobileBanner(item.id, e)} />
+                                          </label>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
                                   {/* Section for Desktop Banners */}
                                   <div className="space-y-3">
                                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -2887,7 +3054,7 @@ export default function Bio() {
             >
               <span className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> 
-                Página de Contato & Balão de Chat
+                Chat CardDigital GM
               </span>
               {openSections.contactSection ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
             </button>
@@ -2975,15 +3142,27 @@ export default function Bio() {
                   </h4>
                   <p className="text-xs text-slate-400">Personalize o widget do Join.chat exibido na página de contato do seu site.</p>
                   
-                  <div className="flex items-center gap-3 bg-zinc-950/40 p-3 rounded-2xl border border-zinc-800">
-                    <input 
-                      type="checkbox" 
-                      id="chat_balloon_enabled" 
-                      checked={bioConfig.chat_balloon_enabled !== false} 
-                      onChange={e => handleChange("chat_balloon_enabled", e.target.checked)}
-                      className="w-4 h-4 rounded text-[var(--primary-color)] bg-zinc-850 border-zinc-700 focus:ring-0 cursor-pointer" 
-                    />
-                    <label htmlFor="chat_balloon_enabled" className="text-xs font-bold text-white cursor-pointer select-none">Habilitar Balão de Chat Join.chat</label>
+                  <div className="flex flex-col sm:flex-row gap-4 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="checkbox" 
+                        id="chat_balloon_enabled" 
+                        checked={bioConfig.chat_balloon_enabled !== false} 
+                        onChange={e => handleChange("chat_balloon_enabled", e.target.checked)}
+                        className="w-4 h-4 rounded text-[var(--primary-color)] bg-zinc-850 border-zinc-700 focus:ring-0 cursor-pointer" 
+                      />
+                      <label htmlFor="chat_balloon_enabled" className="text-xs font-bold text-white cursor-pointer select-none">Habilitar Chat Balão</label>
+                    </div>
+                    <div className="sm:border-l sm:border-zinc-800 sm:pl-4 flex items-center gap-3">
+                      <input 
+                        type="checkbox" 
+                        id="chat_balloon_show_qrcode" 
+                        checked={bioConfig.chat_balloon_show_qrcode !== false} 
+                        onChange={e => handleChange("chat_balloon_show_qrcode", e.target.checked)}
+                        className="w-4 h-4 rounded text-[var(--primary-color)] bg-zinc-850 border-zinc-700 focus:ring-0 cursor-pointer" 
+                      />
+                      <label htmlFor="chat_balloon_show_qrcode" className="text-xs font-bold text-white cursor-pointer select-none">Mostrar QR Code ao passar o mouse (PC)</label>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3027,21 +3206,43 @@ export default function Bio() {
                     <div>
                       <label className="gm-label font-semibold">Texto do Balão do Chat</label>
                       <textarea 
-                        className="gm-input min-h-[90px] !py-2.5" 
+                        className="gm-input min-h-[140px] !py-2.5" 
                         value={bioConfig.chat_balloon_text || ''} 
                         onChange={e => handleChange("chat_balloon_text", e.target.value)} 
                         placeholder="Ex: Olá 👋&#10;Sou Denis, como posso te ajudar hoje?" 
                       />
                     </div>
-                    <div>
-                      <label className="gm-label font-semibold">Texto do Botão de Ação</label>
-                      <input 
-                        type="text" 
-                        className="gm-input font-medium" 
-                        value={bioConfig.chat_balloon_button_text || "Abrir chat"} 
-                        onChange={e => handleChange("chat_balloon_button_text", e.target.value)} 
-                        placeholder="Ex: Abrir chat" 
-                      />
+                    <div className="space-y-4">
+                      <div>
+                        <label className="gm-label font-semibold">Texto do Botão de Ação</label>
+                        <input 
+                          type="text" 
+                          className="gm-input font-medium" 
+                          value={bioConfig.chat_balloon_button_text || "Abrir chat"} 
+                          onChange={e => handleChange("chat_balloon_button_text", e.target.value)} 
+                          placeholder="Ex: Abrir chat" 
+                        />
+                      </div>
+                      <div>
+                        <label className="gm-label font-semibold">Link de Contato para QR Code</label>
+                        <input 
+                          type="text" 
+                          className="gm-input font-medium text-xs" 
+                          value={bioConfig.chat_balloon_qr_link || ""} 
+                          onChange={e => handleChange("chat_balloon_qr_link", e.target.value)} 
+                          placeholder="Deixe em branco para usar o WhatsApp padrão" 
+                        />
+                      </div>
+                      <div>
+                        <label className="gm-label font-semibold">Mensagem automática do WhatsApp (QR Code)</label>
+                        <input 
+                          type="text" 
+                          className="gm-input font-medium text-xs" 
+                          value={bioConfig.chat_balloon_qr_msg || ""} 
+                          onChange={e => handleChange("chat_balloon_qr_msg", e.target.value)} 
+                          placeholder="Ex: Olá! Estou vindo do site GM edificação..." 
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
