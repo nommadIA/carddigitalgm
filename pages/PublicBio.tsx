@@ -22,12 +22,35 @@ export default function PublicBio() {
   // Custom subdomain detection logic
   const getSubdomainTenantId = () => {
     const hostname = window.location.hostname;
+    
+    // Ignore common system/development hostnames
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.includes(".run.app") || // AI Studio previews
+      hostname === "carddigitalgmapp.netlify.app" ||
+      hostname === "carddigitalgm.netlify.app"
+    ) {
+      return null;
+    }
+
+    // If it's a Netlify subdomain (e.g., gmedificacao.netlify.app)
     if (hostname.endsWith(".netlify.app")) {
       const subdomain = hostname.split(".")[0];
-      if (subdomain !== "carddigitalgmapp" && subdomain !== "carddigitalgm") {
-        return subdomain;
-      }
+      return subdomain;
     }
+
+    // For custom domains (e.g., gmedificacao.com, www.gmedificacao.com, or gmedificacao.carddigitalgm.com.br)
+    let cleanHost = hostname;
+    if (cleanHost.startsWith("www.")) {
+      cleanHost = cleanHost.slice(4);
+    }
+
+    const parts = cleanHost.split(".");
+    if (parts.length > 0) {
+      return parts[0];
+    }
+
     return null;
   };
 

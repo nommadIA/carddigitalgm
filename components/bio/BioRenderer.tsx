@@ -194,18 +194,25 @@ function InteractiveSocialIcon({
   const isDark = theme === 'dark' || theme === 'glass';
   const hasCustom = !!customSocialIcons[itemKey];
 
+  const handleMouseEnter = () => setHovered(true);
+  const handleMouseLeave = () => setHovered(false);
+
   if (hasCustom) {
     const urls = customSocialIcons[itemKey];
     const srcUrl = hovered ? urls.orange : (isDark ? urls.white : urls.black);
 
     return (
-      <img
-        src={srcUrl}
-        alt={label}
-        className={`${sizeClass} object-contain transition-all duration-300 ${disableScale ? '' : 'transform ' + (hovered ? 'scale-110' : '')}`}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      />
+      <div 
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className="flex items-center justify-center cursor-pointer"
+      >
+        <img
+          src={srcUrl}
+          alt={label}
+          className={`${sizeClass} object-contain transition-all duration-300 ${disableScale ? '' : 'transform ' + (hovered ? 'scale-110' : '')}`}
+        />
+      </div>
     );
   }
 
@@ -215,9 +222,9 @@ function InteractiveSocialIcon({
 
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="transition-colors duration-300"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="transition-colors duration-300 flex items-center justify-center cursor-pointer"
     >
       <FallbackIcon className={`${sizeClass} transition-colors duration-300 ${colorClass}`} />
     </div>

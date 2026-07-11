@@ -1,5 +1,5 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './store/AuthContext';
 import Layout from './components/ui/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -78,6 +78,21 @@ const PrivateRoutes = () => {
   );
 };
 
+const DirectTenantBio = () => {
+  const { tenantId } = useParams();
+  const reserved = [
+    'pix', 'login', 'register', 'bio', 'auth', 'update-password', 
+    'budgets', 'clients', 'expenses', 'market', 'notes', 'financial', 
+    'minha-bio', 'configuracoes', 'dashboard'
+  ];
+
+  if (tenantId && reserved.includes(tenantId.toLowerCase())) {
+    return <PrivateRoutes />;
+  }
+
+  return <PublicBio />;
+};
+
 const getRouteKey = (pathname: string) => {
   const base = pathname.split('/')[1];
   if (['login', 'register', 'auth', 'update-password'].includes(base)) {
@@ -96,12 +111,35 @@ const AppRoutes = () => {
   // Custom subdomain detection logic
   const getSubdomainTenantId = () => {
     const hostname = window.location.hostname;
+    
+    // Ignore common system/development hostnames
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.includes(".run.app") || // AI Studio previews
+      hostname === "carddigitalgmapp.netlify.app" ||
+      hostname === "carddigitalgm.netlify.app"
+    ) {
+      return null;
+    }
+
+    // If it's a Netlify subdomain (e.g., gmedificacao.netlify.app)
     if (hostname.endsWith(".netlify.app")) {
       const subdomain = hostname.split(".")[0];
-      if (subdomain !== "carddigitalgmapp" && subdomain !== "carddigitalgm") {
-        return subdomain;
-      }
+      return subdomain;
     }
+
+    // For custom domains (e.g., gmedificacao.com, www.gmedificacao.com, or gmedificacao.carddigitalgm.com.br)
+    let cleanHost = hostname;
+    if (cleanHost.startsWith("www.")) {
+      cleanHost = cleanHost.slice(4);
+    }
+
+    const parts = cleanHost.split(".");
+    if (parts.length > 0) {
+      return parts[0];
+    }
+
     return null;
   };
 
@@ -121,7 +159,7 @@ const AppRoutes = () => {
 
   // If a mobile user is not logged in and opens the root, redirect directly to the public bio page
   if (isMobile && !user && !subdomainTenant && (location.pathname === '/' || location.pathname === '')) {
-    return <Navigate to="/bio/gmedificacao" replace />;
+    return <Navigate to="/gmedificacao" replace />;
   }
 
   return (
@@ -145,6 +183,7 @@ const AppRoutes = () => {
             <Route path="/bio/:tenantId" element={<PublicBio />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/update-password" element={<UpdatePassword />} />
+            <Route path="/:tenantId" element={<DirectTenantBio />} />
             <Route path="/*" element={<PrivateRoutes />} />
           </Routes>
         </Suspense>
