@@ -893,7 +893,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       }
       return suffix ? suffix : (data?.tenant_id || "gmedificacao");
     };
-    const url = `https://${getCustomSlug()}.netlify.app`;
+    const url = `https://carddigitalgmapp.netlify.app/${getCustomSlug()}`;
     if (navigator.share && !asPreview) {
       navigator.share({
         title: companyName,

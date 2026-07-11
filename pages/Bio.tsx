@@ -1013,7 +1013,7 @@ export default function Bio() {
   };
 
   const handleCopyLink = () => {
-    const url = `https://${getCustomSlug()}.netlify.app`;
+    const url = `https://carddigitalgmapp.netlify.app/${getCustomSlug()}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -1370,7 +1370,7 @@ export default function Bio() {
                {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                {copied ? "Link Copiado!" : "Copiar Link Público"}
              </button>
-             <a href={`https://${getCustomSlug()}.netlify.app`} target="_blank" rel="noopener noreferrer" className="gm-btn gm-btn-outline flex items-center justify-center min-w-[200px]">
+             <a href={`https://carddigitalgmapp.netlify.app/${getCustomSlug()}`} target="_blank" rel="noopener noreferrer" className="gm-btn gm-btn-outline flex items-center justify-center min-w-[200px]">
                <Globe className="w-4 h-4 mr-2" /> Ver Tela Inteira
              </a>
            </div>
@@ -3618,7 +3618,7 @@ export default function Bio() {
                   
                   <div className="ml-4 px-3 py-1 bg-zinc-950/80 rounded-md text-[10px] font-mono text-zinc-400 select-all flex items-center gap-1.5 border border-zinc-800">
                     <Globe className="w-3 h-3 text-zinc-500" />
-                    <span>https://{getCustomSlug()}.netlify.app</span>
+                    <span>https://carddigitalgmapp.netlify.app/{getCustomSlug()}</span>
                   </div>
                 </div>
                 

@@ -78,21 +78,6 @@ const PrivateRoutes = () => {
   );
 };
 
-const DirectTenantBio = () => {
-  const { tenantId } = useParams();
-  const reserved = [
-    'pix', 'login', 'register', 'bio', 'auth', 'update-password', 
-    'budgets', 'clients', 'expenses', 'market', 'notes', 'financial', 
-    'minha-bio', 'configuracoes', 'dashboard'
-  ];
-
-  if (tenantId && reserved.includes(tenantId.toLowerCase())) {
-    return <PrivateRoutes />;
-  }
-
-  return <PublicBio />;
-};
-
 const getRouteKey = (pathname: string) => {
   const base = pathname.split('/')[1];
   if (['login', 'register', 'auth', 'update-password'].includes(base)) {
@@ -162,6 +147,34 @@ const AppRoutes = () => {
     return <Navigate to="/gmedificacao" replace />;
   }
 
+  // Intercept direct tenant URLs (e.g., /gmedificacao) that are not reserved administrative/auth pages
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+  const firstSegment = pathSegments[0]?.toLowerCase();
+  const reserved = [
+    'pix', 'login', 'register', 'bio', 'auth', 'update-password', 
+    'budgets', 'clients', 'expenses', 'market', 'notes', 'financial', 
+    'minha-bio', 'configuracoes', 'dashboard'
+  ];
+
+  if (firstSegment && !reserved.includes(firstSegment)) {
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="public-bio-direct"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="w-full h-full"
+        >
+          <Suspense fallback={<PageLoader />}>
+            <PublicBio />
+          </Suspense>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -183,7 +196,8 @@ const AppRoutes = () => {
             <Route path="/bio/:tenantId" element={<PublicBio />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/update-password" element={<UpdatePassword />} />
-            <Route path="/:tenantId" element={<DirectTenantBio />} />
+            
+            {/* Catch-all to PrivateRoutes (matched base is "/") */}
             <Route path="/*" element={<PrivateRoutes />} />
           </Routes>
         </Suspense>

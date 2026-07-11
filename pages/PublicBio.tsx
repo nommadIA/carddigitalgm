@@ -54,7 +54,23 @@ export default function PublicBio() {
     return null;
   };
 
-  const tenantId = routeTenantId || getSubdomainTenantId();
+  // Fallback to extracting the tenantId from the first segment of the pathname
+  const getPathTenantId = () => {
+    const segment = window.location.pathname.split('/').filter(Boolean)[0];
+    if (segment) {
+      const reserved = [
+        'pix', 'login', 'register', 'bio', 'auth', 'update-password', 
+        'budgets', 'clients', 'expenses', 'market', 'notes', 'financial', 
+        'minha-bio', 'configuracoes', 'dashboard'
+      ];
+      if (!reserved.includes(segment.toLowerCase())) {
+        return segment;
+      }
+    }
+    return null;
+  };
+
+  const tenantId = routeTenantId || getSubdomainTenantId() || getPathTenantId();
   const [data, setData] = useState<any>(null);
   const [apiLoading, setApiLoading] = useState(true);
   const [introExiting, setIntroExiting] = useState(false);
