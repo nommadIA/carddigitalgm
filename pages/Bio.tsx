@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Page } from "../components/ui/Page";
 import { Link } from "react-router-dom";
-import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, Save, Smartphone, Monitor, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard, List, PlusCircle, Trash2, RotateCcw, Edit3, AlignLeft, AlignCenter, AlignRight, Bold, Italic } from "lucide-react";
+import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, ChevronLeft, Save, Smartphone, Monitor, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard, List, PlusCircle, Trash2, RotateCcw, Edit3, AlignLeft, AlignCenter, AlignRight, Bold, Italic, ArrowLeft } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
 import { fetchSettingsSupabase, upsertSettingsSupabase, AppSettings } from "../lib/settings";
 import { pushToast } from "../store/toast";
@@ -85,6 +85,7 @@ export default function Bio() {
   const [iconPickerOpen, setIconPickerOpen] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<"smartphone" | "pc">("smartphone");
+  const [selectedView, setSelectedView] = useState<"none" | "smartphone" | "computador">("none");
   const [isDocked, setIsDocked] = useState(false);
   const isDraggingRef = useRef(false);
 
@@ -219,6 +220,14 @@ export default function Bio() {
   const editorRef = useRef<HTMLDivElement>(null);
   const lastHtmlRef = useRef("");
   const [basicInfoTab, setBasicInfoTab] = useState<"desktop" | "mobile">("desktop");
+
+  useEffect(() => {
+    if (selectedView === "computador") {
+      setBasicInfoTab("desktop");
+    } else if (selectedView === "smartphone") {
+      setBasicInfoTab("mobile");
+    }
+  }, [selectedView]);
   const [isSelectionBold, setIsSelectionBold] = useState(false);
   const [isSelectionItalic, setIsSelectionItalic] = useState(false);
   const [selectionFont, setSelectionFont] = useState<string>("");
@@ -1004,7 +1013,7 @@ export default function Bio() {
   };
 
   const handleCopyLink = () => {
-    const url = `${window.location.origin}/bio/${getCustomSlug()}`;
+    const url = `https://${getCustomSlug()}.netlify.app`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -1282,7 +1291,7 @@ export default function Bio() {
   return (
     <Page title="BIO CardDigital GM">
       <div 
-        className="w-full max-w-6xl mx-auto pb-20 space-y-6"
+        className="w-full max-w-[1440px] mx-auto pb-20 space-y-6 px-4 sm:px-6"
         style={{
           '--primary-color': primaryColor,
           '--primary-color-hover': `${primaryColor}cc`,
@@ -1361,9 +1370,9 @@ export default function Bio() {
                {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                {copied ? "Link Copiado!" : "Copiar Link Público"}
              </button>
-             <Link to={`/bio/${getCustomSlug()}`} target="_blank" className="gm-btn gm-btn-outline flex items-center justify-center min-w-[200px]">
+             <a href={`https://${getCustomSlug()}.netlify.app`} target="_blank" rel="noopener noreferrer" className="gm-btn gm-btn-outline flex items-center justify-center min-w-[200px]">
                <Globe className="w-4 h-4 mr-2" /> Ver Tela Inteira
-             </Link>
+             </a>
            </div>
 
            <div 
@@ -1381,9 +1390,83 @@ export default function Bio() {
            />
         </div>
 
-        <div className="flex flex-col gap-6 items-stretch w-full max-w-4xl mx-auto">
-        
-          {/* 1. INFORMAÇÕES BÁSICAS */}
+        {selectedView === "none" ? (
+          <div className="flex flex-col gap-6 items-stretch w-full max-w-[1440px] mx-auto animate-in fade-in duration-300">
+            <div className="text-center py-6">
+              <h2 className="text-2xl font-bold text-white mb-2">Configurar Página BiO</h2>
+              <p className="text-slate-400">Escolha qual versão você deseja gerenciar e personalizar.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Botão 1: Bio smartphone */}
+              <button
+                className="group relative p-8 rounded-3xl border border-white/10 bg-zinc-950/40 hover:bg-[var(--primary-color)]/10 hover:border-[var(--primary-color)]/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-black/40 cursor-pointer"
+                onClick={() => {
+                  setSelectedView("smartphone");
+                  setPreviewMode("smartphone");
+                }}
+              >
+                <div className="w-16 h-16 rounded-2xl bg-[var(--primary-color)]/20 text-[var(--primary-color)] flex items-center justify-center border border-[var(--primary-color)]/20 group-hover:scale-110 group-hover:bg-[var(--primary-color)]/30 transition-all duration-300">
+                  <Smartphone size={32} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-extrabold text-white group-hover:text-[var(--primary-color)] transition-colors">
+                    Bio smartphone
+                  </h3>
+                  <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+                    Personalize títulos, biografia, imagens de fundo e banners exclusivos para a versão móvel e celulares.
+                  </p>
+                </div>
+                <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-bold text-[var(--primary-color)] opacity-70 group-hover:opacity-100 transition-opacity">
+                  Configurar Smartphone <Sparkles className="w-4 h-4" />
+                </div>
+              </button>
+
+              {/* Botão 2: Bio computador */}
+              <button
+                className="group relative p-8 rounded-3xl border border-white/10 bg-zinc-950/40 hover:bg-[var(--primary-color)]/10 hover:border-[var(--primary-color)]/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-black/40 cursor-pointer"
+                onClick={() => {
+                  setSelectedView("computador");
+                  setPreviewMode("pc");
+                }}
+              >
+                <div className="w-16 h-16 rounded-2xl bg-[var(--primary-color)]/20 text-[var(--primary-color)] flex items-center justify-center border border-[var(--primary-color)]/20 group-hover:scale-110 group-hover:bg-[var(--primary-color)]/30 transition-all duration-300">
+                  <Monitor size={32} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-extrabold text-white group-hover:text-[var(--primary-color)] transition-colors">
+                    Bio computador
+                  </h3>
+                  <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+                    Personalize títulos, biografia, efeitos de animação e mídias de alta definição para a versão desktop.
+                  </p>
+                </div>
+                <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-bold text-[var(--primary-color)] opacity-70 group-hover:opacity-100 transition-opacity">
+                  Configurar Computador <Sparkles className="w-4 h-4" />
+                </div>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6 items-stretch w-full max-w-[1440px] mx-auto animate-in fade-in duration-300">
+            {/* VOLTAR BUTTON & STATUS HEADER */}
+            <div className="flex items-center justify-between bg-zinc-950/40 p-4 rounded-2xl border border-white/5 shadow-md">
+              <button
+                onClick={() => setSelectedView("none")}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 cursor-pointer"
+              >
+                <ChevronLeft className="w-5 h-5 text-[var(--primary-color)] animate-pulse" />
+                Voltar para Seleção
+              </button>
+              <div className="flex items-center gap-2.5">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-xs font-extrabold tracking-wider text-zinc-400 uppercase">
+                  Editando: <strong className="text-white">{selectedView === "smartphone" ? "Bio smartphone" : "Bio computador"}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* 1. INFORMAÇÕES BÁSICAS */}
           <div className="gm-card p-4 sm:p-6 space-y-4">
             <button
                onClick={() => toggleSection('basic')}
@@ -1394,34 +1477,6 @@ export default function Bio() {
             </button>
             {openSections.basic && (
              <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
-               
-               {/* Seletor de Versão (Desktop / Smartphone) */}
-               <div className="flex bg-[#0d0e12]/80 p-1 rounded-2xl border border-white/5 w-fit gap-1 shadow-inner self-start">
-                 <button
-                   type="button"
-                   onClick={() => setBasicInfoTab("desktop")}
-                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                     basicInfoTab === "desktop"
-                       ? "bg-[var(--primary-color)] text-white shadow-md"
-                       : "text-slate-400 hover:text-white hover:bg-white/5"
-                   }`}
-                 >
-                   <Monitor className="w-4 h-4" />
-                   Desktop
-                 </button>
-                 <button
-                   type="button"
-                   onClick={() => setBasicInfoTab("mobile")}
-                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                     basicInfoTab === "mobile"
-                       ? "bg-[var(--primary-color)] text-white shadow-md"
-                       : "text-slate-400 hover:text-white hover:bg-white/5"
-                   }`}
-                 >
-                   <Smartphone className="w-4 h-4" />
-                   Smartphone (Mobile)
-                 </button>
-               </div>
 
                <div>
                  <label className="gm-label">
@@ -1614,18 +1669,19 @@ export default function Bio() {
                 </select>
               </div>
               {/* Seção Desktop (Plano de Fundo & Banner Principal) */}
-              <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 space-y-4">
-                <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/50 pb-2.5">
-                    <span className="text-sm font-bold text-white flex items-center gap-1.5">
-                      <Layout className="w-4 h-4 text-[var(--primary-color)]" /> Mídias Versão Desktop (Computador)
-                    </span>
-                    <span className="text-[10px] font-semibold text-zinc-400 bg-zinc-800/60 px-2.5 py-1 rounded-full border border-zinc-700/30">
-                      Tamanho Sugerido: <strong className="text-[var(--primary-color)]">1920x500 px</strong>
-                    </span>
-                  </div>
+              {selectedView === "computador" && (
+                <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 space-y-4">
+                  <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/50 pb-2.5">
+                      <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                        <Layout className="w-4 h-4 text-[var(--primary-color)]" /> Mídias Versão Desktop (Computador)
+                      </span>
+                      <span className="text-[10px] font-semibold text-zinc-400 bg-zinc-800/60 px-2.5 py-1 rounded-full border border-zinc-700/30">
+                        Tamanho Sugerido: <strong className="text-[var(--primary-color)]">1920x500 px</strong>
+                      </span>
+                    </div>
 
-                  <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                     {/* Plano de Fundo Desktop */}
                     <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
                       <div>
@@ -1701,16 +1757,18 @@ export default function Bio() {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Seção Smartphone (Plano de Fundo & Banner Principal) */}
-              <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 space-y-4">
-                <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
+              {selectedView === "smartphone" && (
+                <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 space-y-4">
+                  <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/50 pb-2.5">
                     <span className="text-sm font-bold text-white flex items-center gap-1.5">
                       <Smartphone className="w-4 h-4 text-[var(--primary-color)]" /> Mídias Versão Smartphone (Celular)
                     </span>
                     <span className="text-[10px] font-semibold text-zinc-400 bg-zinc-800/60 px-2.5 py-1 rounded-full border border-zinc-700/30">
-                      Tamanho Sugerido: <strong className="text-[var(--primary-color)]">1080x1920 px</strong> (Proporção 9:16)
+                      Plano de Fundo: <strong className="text-[var(--primary-color)]">1080x1920 px (9:16)</strong> | Banner Principal: <strong className="text-[var(--primary-color)]">1080x900 px (6:5)</strong>
                     </span>
                   </div>
 
@@ -1756,7 +1814,7 @@ export default function Bio() {
                     <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-xs font-bold text-zinc-300">Banner Smartphone Principal</span>
+                          <span className="text-xs font-bold text-zinc-300">Banner Smartphone Principal (1080x900 px)</span>
                           {bioConfig.mobile_banner_img_url_1 && (
                             <button 
                               type="button" 
@@ -1769,11 +1827,11 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.mobile_banner_img_url_1 ? (
-                          <div className="w-full aspect-[9/16] rounded-lg overflow-hidden border border-zinc-800 bg-black/40 flex items-center justify-center p-1">
+                          <div className="w-full aspect-[6/5] rounded-lg overflow-hidden border border-zinc-800 bg-black/40 flex items-center justify-center p-1">
                             <OptimizedImage src={bioConfig.mobile_banner_img_url_1} alt="Banner Smartphone" className="max-w-full max-h-full object-contain" width={240} />
                           </div>
                         ) : (
-                          <div className="w-full aspect-[9/16] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
+                          <div className="w-full aspect-[6/5] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
                             <Sparkles className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem banner smartphone
                           </div>
@@ -1791,6 +1849,7 @@ export default function Bio() {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Toggle Exibir Banners */}
               <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 flex items-center justify-between">
@@ -2695,219 +2754,314 @@ export default function Bio() {
                       return (
                         <div className="space-y-4">
                           {normalized.map((item: any) => (
-                            <div key={item.id} className="border border-zinc-800 bg-zinc-900/40 rounded-xl overflow-hidden p-4 space-y-4">
-                              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                                <div className="flex-1 w-full">
-                                  <input 
-                                    type="text" 
-                                    className="bg-transparent text-white font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-zinc-700 pb-1 w-full"
-                                    value={item.title || ''}
-                                    onChange={e => handleUpdatePortfolioCollection(item.id, { title: e.target.value })}
-                                    placeholder="Nome do Portfólio (ex: Portfólio 1)"
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemovePortfolioCollection(item.id)}
-                                  className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2"
-                                  title="Excluir Portfólio (Move para Lixeira)"
-                                >
-                                  <Trash className="w-4 h-4" />
-                                  <span className="text-xs font-bold sm:hidden">Excluir</span>
-                                </button>
-                              </div>
+                            <div key={item.id} className="border border-zinc-800 bg-zinc-900/40 rounded-xl overflow-hidden p-4 space-y-4 animate-in fade-in duration-300">
                               
-                              <div className="bg-zinc-950/50 p-3 sm:p-4 rounded-xl border border-zinc-800/50">
-                                <div className="mb-6">
-                                  <label className="gm-label mb-2 block text-xs">Descrição do Portfólio</label>
-                                  <textarea 
-                                    className={`gm-input min-h-[120px] w-full resize-y rounded-xl p-3 bg-zinc-900/50 border border-zinc-800 focus:border-[var(--primary-color)] outline-none transition-colors ${item.description_align === "left" ? "text-left" : item.description_align === "right" ? "text-right" : "text-center"} ${item.description_bold ? "font-bold" : "font-medium"} ${item.description_italic ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size)} bio-desc-font-${item.description_font || "ui"}`}
-                                    value={item.description || ''}
-                                    onChange={(e) => handleUpdatePortfolioCollection(item.id, { description: e.target.value })}
-                                    placeholder="Descreva o projeto..."
-                                  />
-                                  <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
-                                    <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                      <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "left" })} className={`p-1.5 rounded-md transition-colors ${(!item.description_align || item.description_align === 'left') ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
-                                      <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "center" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
-                                      <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "right" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
-                                    </div>
-                                    <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                      <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold: !item.description_bold })} className={`p-1.5 rounded-md transition-colors ${item.description_bold ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                      <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic: !item.description_italic })} className={`p-1.5 rounded-md transition-colors ${item.description_italic ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
-                                    </div>
-                                    <div className="flex-1 min-w-[140px]">
-                                      <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font: e.target.value })}>
-                                        <option value="ui">Inter (Sistema)</option>
-                                        <option value="funnel">Funnel (Títulos)</option>
-                                        <option value="roboto">Roboto</option>
-                                        <option value="montserrat">Montserrat</option>
-                                        <option value="poppins">Poppins</option>
-                                        <option value="playfair">Playfair Display</option>
-                                        <option value="outfit">Outfit</option>
-                                      </select>
-                                    </div>
-                                    <div className="w-[80px]">
-                                      <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size: e.target.value })}>
-                                        <option value="10 pt">10 pt</option>
-                                        <option value="12 pt">12 pt</option>
-                                        <option value="14 pt">14 pt</option>
-                                        <option value="16 pt">16 pt</option>
-                                        <option value="18 pt">18 pt</option>
-                                        <option value="20 pt">20 pt</option>
-                                        <option value="24 pt">24 pt</option>
-                                        <option value="30 pt">30 pt</option>
-                                        <option value="36 pt">36 pt</option>
-                                        <option value="48 pt">48 pt</option>
-                                      </select>
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                <div className="space-y-6 pt-4 border-t border-zinc-800/50">
-                                  {/* Section for Portfolio Main Banner (Desktop & Smartphone) */}
-                                  <div className="space-y-4">
-                                    <div className="flex flex-col gap-1">
-                                      <span className="text-xs font-bold text-slate-200">Banner Principal do Portfólio</span>
-                                      <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site.</span>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                      {/* Main Banner Desktop */}
-                                      <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                          <span className="text-[11px] font-semibold text-slate-400">Desktop (1920x500px)</span>
-                                          {item.main_banner_url && (
-                                            <button 
-                                              type="button" 
-                                              onClick={() => handleRemovePortfolioMainBanner(item.id)}
-                                              className="text-[10px] text-red-400 hover:text-red-300 font-bold"
-                                            >
-                                              Remover
-                                            </button>
-                                          )}
-                                        </div>
-                                        {item.main_banner_url ? (
-                                          <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
-                                            <img src={item.main_banner_url} alt="Main Banner Desktop" className="w-full h-full object-cover" />
-                                          </div>
-                                        ) : (
-                                          <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
-                                            <Upload className="w-5 h-5 text-zinc-500 mb-1" />
-                                            <span className="text-xs text-zinc-400 font-bold">Enviar Banner Desktop</span>
-                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainBanner(item.id, e)} />
-                                          </label>
-                                        )}
-                                      </div>
-
-                                      {/* Main Banner Mobile */}
-                                      <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                          <span className="text-[11px] font-semibold text-slate-400">Smartphone (1080x1920px)</span>
-                                          {item.main_banner_mobile_url && (
-                                            <button 
-                                              type="button" 
-                                              onClick={() => handleRemovePortfolioMainMobileBanner(item.id)}
-                                              className="text-[10px] text-red-400 hover:text-red-300 font-bold"
-                                            >
-                                              Remover
-                                            </button>
-                                          )}
-                                        </div>
-                                        {item.main_banner_mobile_url ? (
-                                          <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
-                                            <img src={item.main_banner_mobile_url} alt="Main Banner Mobile" className="w-full h-full object-cover" />
-                                          </div>
-                                        ) : (
-                                          <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
-                                            <Upload className="w-5 h-5 text-zinc-500 mb-1" />
-                                            <span className="text-xs text-zinc-400 font-bold">Enviar Banner Smartphone</span>
-                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainMobileBanner(item.id, e)} />
-                                          </label>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Section for Desktop Banners */}
-                                  <div className="space-y-3">
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                      <div className="flex flex-col">
-                                        <span className="text-xs font-semibold text-slate-300">Banners Internos Desktop ({item.layers?.length || 0})</span>
-                                        <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Recomendado: 1600x900px</span>
-                                      </div>
-                                      <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
-                                        <Upload className="w-4 h-4" />
-                                        Adicionar Banner Desktop
-                                        <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
+                              {selectedView === "smartphone" ? (
+                                <>
+                                  {/* Versão Smartphone do Portfólio */}
+                                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                                    <div className="flex-1 w-full">
+                                      <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-extrabold uppercase tracking-wider">
+                                        <Smartphone className="w-3.5 h-3.5" /> Título Smartphone
                                       </label>
+                                      <input 
+                                        type="text" 
+                                        className="bg-transparent text-white font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-zinc-700 pb-1 w-full"
+                                        value={item.title_mobile !== undefined ? item.title_mobile : (item.title || '')}
+                                        onChange={e => handleUpdatePortfolioCollection(item.id, { title_mobile: e.target.value })}
+                                        placeholder="Nome do Portfólio no Celular (ex: Jah do Açaí)"
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemovePortfolioCollection(item.id)}
+                                      className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer"
+                                      title="Excluir Portfólio (Move para Lixeira)"
+                                    >
+                                      <Trash className="w-4 h-4" />
+                                      <span>Excluir Portfólio</span>
+                                    </button>
+                                  </div>
+                                  
+                                  <div className="bg-zinc-950/50 p-3 sm:p-4 rounded-xl border border-zinc-800/50">
+                                    <div className="mb-6">
+                                      <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-slate-300">
+                                        Descrição do Portfólio (Smartphone)
+                                      </label>
+                                      <textarea 
+                                        className={`gm-input min-h-[120px] w-full resize-y rounded-xl p-3 bg-zinc-900/50 border border-zinc-800 focus:border-[var(--primary-color)] outline-none transition-colors ${(item.description_align_mobile || item.description_align || "left") === "left" ? "text-left" : (item.description_align_mobile || item.description_align) === "right" ? "text-right" : "text-center"} ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? "font-bold" : "font-medium"} ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size_mobile || item.description_size || "16 pt")} bio-desc-font-${item.description_font_mobile || item.description_font || "ui"}`}
+                                        value={item.description_mobile !== undefined ? item.description_mobile : (item.description || '')}
+                                        onChange={(e) => handleUpdatePortfolioCollection(item.id, { description_mobile: e.target.value })}
+                                        placeholder="Descreva o projeto para exibição em smartphones..."
+                                      />
+                                      <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "left" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align || 'left') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "center" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "right" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold_mobile: !(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) })} className={`p-1.5 rounded-md transition-colors ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic_mobile: !(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) })} className={`p-1.5 rounded-md transition-colors ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
+                                        </div>
+                                        <div className="flex-1 min-w-[140px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_font_mobile || item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font_mobile: e.target.value })}>
+                                            <option value="ui">Inter (Sistema)</option>
+                                            <option value="funnel">Funnel (Títulos)</option>
+                                            <option value="roboto">Roboto</option>
+                                            <option value="montserrat">Montserrat</option>
+                                            <option value="poppins">Poppins</option>
+                                            <option value="playfair">Playfair Display</option>
+                                            <option value="outfit">Outfit</option>
+                                          </select>
+                                        </div>
+                                        <div className="w-[80px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_size_mobile || item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size_mobile: e.target.value })}>
+                                            <option value="10 pt">10 pt</option>
+                                            <option value="12 pt">12 pt</option>
+                                            <option value="14 pt">14 pt</option>
+                                            <option value="16 pt">16 pt</option>
+                                            <option value="18 pt">18 pt</option>
+                                            <option value="20 pt">20 pt</option>
+                                            <option value="24 pt">24 pt</option>
+                                            <option value="30 pt">30 pt</option>
+                                            <option value="36 pt">36 pt</option>
+                                            <option value="48 pt">48 pt</option>
+                                          </select>
+                                        </div>
+                                      </div>
                                     </div>
                                     
-                                    {item.layers && item.layers.length > 0 ? (
-                                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                        {(item.layers || []).map((layer: any) => (
-                                          <div key={layer.id} className="relative group aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
-                                            <OptimizedImage src={layer.image_url} alt="Layer Desktop" className="w-full h-full object-cover" width={300} />
-                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                              <button
-                                                type="button"
-                                                onClick={() => handleRemovePortfolioLayer(item.id, layer.id)}
-                                                className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
+                                    <div className="space-y-6 pt-4 border-t border-zinc-800/50">
+                                      {/* Section for Portfolio Main Banner (Smartphone) */}
+                                      <div className="space-y-4">
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-xs font-bold text-slate-200">Banner Principal do Portfólio (Smartphone)</span>
+                                          <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão celular.</span>
+                                        </div>
+                                        
+                                        <div className="space-y-2 max-w-sm">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[11px] font-semibold text-slate-400">Smartphone (1080x900 px) - Proporção 6:5</span>
+                                            {item.main_banner_mobile_url && (
+                                              <button 
+                                                type="button" 
+                                                onClick={() => handleRemovePortfolioMainMobileBanner(item.id)}
+                                                className="text-[10px] text-red-400 hover:text-red-300 font-bold"
                                               >
-                                                <Trash className="w-4 h-4" />
                                                 Remover
                                               </button>
-                                            </div>
+                                            )}
                                           </div>
-                                        ))}
+                                          {item.main_banner_mobile_url ? (
+                                            <div className="relative aspect-[6/5] max-w-[200px] rounded-lg overflow-hidden bg-black border border-zinc-800">
+                                              <img src={item.main_banner_mobile_url} alt="Main Banner Mobile" className="w-full h-full object-cover" />
+                                            </div>
+                                          ) : (
+                                            <label className="flex flex-col items-center justify-center aspect-[6/5] max-w-[200px] rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
+                                              <Upload className="w-5 h-5 text-zinc-500 mb-1" />
+                                              <span className="text-xs text-zinc-400 font-bold">Enviar Banner Smartphone</span>
+                                              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainMobileBanner(item.id, e)} />
+                                            </label>
+                                          )}
+                                        </div>
                                       </div>
-                                    ) : (
-                                      <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
-                                        Nenhum banner desktop inserido neste portfólio.
-                                      </div>
-                                    )}
-                                  </div>
 
-                                  {/* Section for Smartphone Banners */}
-                                  <div className="space-y-3 pt-4 border-t border-zinc-800/20">
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                      <div className="flex flex-col">
-                                        <span className="text-xs font-semibold text-slate-300">Banners Internos Smartphone ({item.mobile_layers?.length || 0})</span>
-                                        <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Recomendado: 1080x1920px (Proporção 9:16)</span>
+                                      {/* Section for Smartphone Banners */}
+                                      <div className="space-y-3 pt-4 border-t border-zinc-800/20">
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                          <div className="flex flex-col">
+                                            <span className="text-xs font-semibold text-slate-300">Banners Internos Smartphone ({item.mobile_layers?.length || 0})</span>
+                                            <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Tamanho Recomendado: 1080x1920 px (Proporção 9:16)</span>
+                                          </div>
+                                          <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
+                                            <Upload className="w-4 h-4" />
+                                            Adicionar Banner Smartphone
+                                            <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioMobileLayer(item.id, e)} />
+                                          </label>
+                                        </div>
+                                        
+                                        {item.mobile_layers && item.mobile_layers.length > 0 ? (
+                                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                                            {(item.mobile_layers || []).map((layer: any) => (
+                                              <div key={layer.id} className="relative group aspect-[9/16] max-w-[120px] rounded-lg overflow-hidden bg-black border border-zinc-800 mx-auto w-full">
+                                                <OptimizedImage src={layer.image_url} alt="Layer Smartphone" className="w-full h-full object-cover" width={150} />
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => handleRemovePortfolioMobileLayer(item.id, layer.id)}
+                                                    className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
+                                                  >
+                                                    <Trash className="w-4 h-4" />
+                                                    Remover
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
+                                            Nenhum banner smartphone inserido neste portfólio.
+                                          </div>
+                                        )}
                                       </div>
-                                      <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
-                                        <Upload className="w-4 h-4" />
-                                        Adicionar Banner Smartphone
-                                        <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioMobileLayer(item.id, e)} />
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  {/* Versão Desktop (Computador) do Portfólio */}
+                                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                                    <div className="flex-1 w-full">
+                                      <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-extrabold uppercase tracking-wider">
+                                        <Monitor className="w-3.5 h-3.5" /> Título Desktop
                                       </label>
+                                      <input 
+                                        type="text" 
+                                        className="bg-transparent text-white font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-zinc-700 pb-1 w-full"
+                                        value={item.title || ''}
+                                        onChange={e => handleUpdatePortfolioCollection(item.id, { title: e.target.value })}
+                                        placeholder="Nome do Portfólio no Computador (ex: Jah do Açaí)"
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemovePortfolioCollection(item.id)}
+                                      className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer"
+                                      title="Excluir Portfólio (Move para Lixeira)"
+                                    >
+                                      <Trash className="w-4 h-4" />
+                                      <span>Excluir Portfólio</span>
+                                    </button>
+                                  </div>
+                                  
+                                  <div className="bg-zinc-950/50 p-3 sm:p-4 rounded-xl border border-zinc-800/50">
+                                    <div className="mb-6">
+                                      <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-slate-300">
+                                        Descrição do Portfólio (Computador)
+                                      </label>
+                                      <textarea 
+                                        className={`gm-input min-h-[120px] w-full resize-y rounded-xl p-3 bg-zinc-900/50 border border-zinc-800 focus:border-[var(--primary-color)] outline-none transition-colors ${item.description_align === "left" ? "text-left" : item.description_align === "right" ? "text-right" : "text-center"} ${item.description_bold ? "font-bold" : "font-medium"} ${item.description_italic ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size)} bio-desc-font-${item.description_font || "ui"}`}
+                                        value={item.description || ''}
+                                        onChange={(e) => handleUpdatePortfolioCollection(item.id, { description: e.target.value })}
+                                        placeholder="Descreva o projeto para exibição em computadores..."
+                                      />
+                                      <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "left" })} className={`p-1.5 rounded-md transition-colors ${(!item.description_align || item.description_align === 'left') ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "center" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "right" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold: !item.description_bold })} className={`p-1.5 rounded-md transition-colors ${item.description_bold ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic: !item.description_italic })} className={`p-1.5 rounded-md transition-colors ${item.description_italic ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
+                                        </div>
+                                        <div className="flex-1 min-w-[140px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font: e.target.value })}>
+                                            <option value="ui">Inter (Sistema)</option>
+                                            <option value="funnel">Funnel (Títulos)</option>
+                                            <option value="roboto">Roboto</option>
+                                            <option value="montserrat">Montserrat</option>
+                                            <option value="poppins">Poppins</option>
+                                            <option value="playfair">Playfair Display</option>
+                                            <option value="outfit">Outfit</option>
+                                          </select>
+                                        </div>
+                                        <div className="w-[80px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size: e.target.value })}>
+                                            <option value="10 pt">10 pt</option>
+                                            <option value="12 pt">12 pt</option>
+                                            <option value="14 pt">14 pt</option>
+                                            <option value="16 pt">16 pt</option>
+                                            <option value="18 pt">18 pt</option>
+                                            <option value="20 pt">20 pt</option>
+                                            <option value="24 pt">24 pt</option>
+                                            <option value="30 pt">30 pt</option>
+                                            <option value="36 pt">36 pt</option>
+                                            <option value="48 pt">48 pt</option>
+                                          </select>
+                                        </div>
+                                      </div>
                                     </div>
                                     
-                                    {item.mobile_layers && item.mobile_layers.length > 0 ? (
-                                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                                        {(item.mobile_layers || []).map((layer: any) => (
-                                          <div key={layer.id} className="relative group aspect-[9/16] max-w-[120px] rounded-lg overflow-hidden bg-black border border-zinc-800 mx-auto w-full">
-                                            <OptimizedImage src={layer.image_url} alt="Layer Smartphone" className="w-full h-full object-cover" width={150} />
-                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                              <button
-                                                type="button"
-                                                onClick={() => handleRemovePortfolioMobileLayer(item.id, layer.id)}
-                                                className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
+                                    <div className="space-y-6 pt-4 border-t border-zinc-800/50">
+                                      {/* Section for Portfolio Main Banner (Desktop) */}
+                                      <div className="space-y-4">
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-xs font-bold text-slate-200">Banner Principal do Portfólio (Desktop)</span>
+                                          <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão computador.</span>
+                                        </div>
+                                        
+                                        <div className="space-y-2">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[11px] font-semibold text-slate-400">Desktop (Tamanho Lógico e Funcional: 1920x500 px a 1920x800 px para preenchimento widescreen perfeito)</span>
+                                            {item.main_banner_url && (
+                                              <button 
+                                                type="button" 
+                                                onClick={() => handleRemovePortfolioMainBanner(item.id)}
+                                                className="text-[10px] text-red-400 hover:text-red-300 font-bold"
                                               >
-                                                <Trash className="w-4 h-4" />
                                                 Remover
                                               </button>
-                                            </div>
+                                            )}
                                           </div>
-                                        ))}
+                                          {item.main_banner_url ? (
+                                            <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
+                                              <img src={item.main_banner_url} alt="Main Banner Desktop" className="w-full h-full object-cover" />
+                                            </div>
+                                          ) : (
+                                            <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
+                                              <Upload className="w-5 h-5 text-zinc-500 mb-1" />
+                                              <span className="text-xs text-zinc-400 font-bold">Enviar Banner Desktop</span>
+                                              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainBanner(item.id, e)} />
+                                            </label>
+                                          )}
+                                        </div>
                                       </div>
-                                    ) : (
-                                      <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
-                                        Nenhum banner smartphone inserido neste portfólio.
+
+                                      {/* Section for Desktop Banners */}
+                                      <div className="space-y-3">
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                          <div className="flex flex-col">
+                                            <span className="text-xs font-semibold text-slate-300">Banners Internos Desktop ({item.layers?.length || 0})</span>
+                                            <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Tamanho Lógico e Funcional: 1600x900 px (Proporção 16:9) ou 1600x560 px para encaixe excelente nas proporções do computador</span>
+                                          </div>
+                                          <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
+                                            <Upload className="w-4 h-4" />
+                                            Adicionar Banner Desktop
+                                            <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
+                                          </label>
+                                        </div>
+                                        
+                                        {item.layers && item.layers.length > 0 ? (
+                                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                            {(item.layers || []).map((layer: any) => (
+                                              <div key={layer.id} className="relative group aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
+                                                <OptimizedImage src={layer.image_url} alt="Layer Desktop" className="w-full h-full object-cover" width={300} />
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => handleRemovePortfolioLayer(item.id, layer.id)}
+                                                    className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
+                                                  >
+                                                    <Trash className="w-4 h-4" />
+                                                    Remover
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
+                                            Nenhum banner desktop inserido neste portfólio.
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
+                                    </div>
                                   </div>
-                                </div>
-                              </div>
+                                </>
+                              )}
+
                             </div>
                           ))}
                         </div>
@@ -3251,6 +3405,7 @@ export default function Bio() {
           </div>
 
         </div>
+        )}
 
       {/* FLOATING ACTION PANEL WITH TOUCH SWIPE-LEFT/RIGHT TO COLLAPSE AND CLICK-TO-EXPAND */}
       <div className="fixed top-1/2 -translate-y-1/2 right-0 z-[80] select-none pointer-events-none flex flex-col items-end">
@@ -3463,7 +3618,7 @@ export default function Bio() {
                   
                   <div className="ml-4 px-3 py-1 bg-zinc-950/80 rounded-md text-[10px] font-mono text-zinc-400 select-all flex items-center gap-1.5 border border-zinc-800">
                     <Globe className="w-3 h-3 text-zinc-500" />
-                    <span>https://gmedificacao.bio/{tenantId || "preview"}</span>
+                    <span>https://{getCustomSlug()}.netlify.app</span>
                   </div>
                 </div>
                 

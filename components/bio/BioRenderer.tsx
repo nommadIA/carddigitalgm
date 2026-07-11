@@ -866,7 +866,25 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   };
 
   const handleShareBio = () => {
-    const url = window.location.href;
+    const sanitizeSlug = (name: string) => {
+      if (!name) return "";
+      return name
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+    };
+    const getCustomSlug = () => {
+      const title = bio.title || data?.company_name || "";
+      const suffix = sanitizeSlug(title);
+      if (suffix === "gm-edificacao" || suffix === "carddigitalgm-gm-edificacao" || suffix === "gmedificacao") {
+        return "gmedificacao";
+      }
+      return suffix ? suffix : (data?.tenant_id || "gmedificacao");
+    };
+    const url = `https://${getCustomSlug()}.netlify.app`;
     if (navigator.share && !asPreview) {
       navigator.share({
         title: companyName,
@@ -1940,10 +1958,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       {/* Main Banner Hero Area */}
                       <div className={`w-full relative overflow-hidden transition-all duration-1000 ease-in-out ${
                         activeView === "portfolio" 
-                          ? "aspect-[9/16] min-h-[480px] py-0 px-0" 
+                          ? "aspect-[6/5] min-h-[280px] py-0 px-0" 
                           : activeView === "contact"
                             ? "aspect-[21/9] sm:aspect-auto min-h-[220px] sm:min-h-[260px] py-6 px-6 flex flex-col items-center justify-center text-center"
-                            : "aspect-[9/16] sm:aspect-auto min-h-[550px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center"
+                            : "aspect-[6/5] sm:aspect-auto min-h-[320px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center"
                       }`}>
                         <img 
                           src={activeView === "contact" ? (bio.contact_banner_img_url || finalMobile) : (activeView === "portfolio" ? (portfolioMobileBanner || finalMobile) : finalMobile)} 
@@ -2026,11 +2044,27 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     ? portfolioItem.mobile_layers
                     : (isNewFormat ? portfolioItem.layers : [{ id: portfolioItem.id, image_url: portfolioItem.image_url }]);
                   
-                  const descriptionAlignClass = portfolioItem.description_align === "left" ? "text-left" : portfolioItem.description_align === "right" ? "text-right" : "text-center";
-                  const descriptionBoldClass = portfolioItem.description_bold ? "font-bold" : "font-medium";
-                  const descriptionItalicClass = portfolioItem.description_italic ? "italic" : "not-italic";
-                  const descriptionFontClass = `bio-desc-font-${portfolioItem.description_font || "ui"}`;
-                  const descriptionSizeClass = getFontSizeClass(portfolioItem.description_size);
+                  const finalAlign = isMobileView 
+                    ? (portfolioItem.description_align_mobile || portfolioItem.description_align || "left")
+                    : (portfolioItem.description_align || "left");
+                  const finalBold = isMobileView 
+                    ? (portfolioItem.description_bold_mobile !== undefined ? portfolioItem.description_bold_mobile : portfolioItem.description_bold)
+                    : portfolioItem.description_bold;
+                  const finalItalic = isMobileView 
+                    ? (portfolioItem.description_italic_mobile !== undefined ? portfolioItem.description_italic_mobile : portfolioItem.description_italic)
+                    : portfolioItem.description_italic;
+                  const finalFont = isMobileView 
+                    ? (portfolioItem.description_font_mobile || portfolioItem.description_font || "ui")
+                    : (portfolioItem.description_font || "ui");
+                  const finalSize = isMobileView 
+                    ? (portfolioItem.description_size_mobile || portfolioItem.description_size || "16 pt")
+                    : (portfolioItem.description_size || "16 pt");
+
+                  const descriptionAlignClass = finalAlign === "left" ? "text-left" : finalAlign === "right" ? "text-right" : "text-center";
+                  const descriptionBoldClass = finalBold ? "font-bold" : "font-medium";
+                  const descriptionItalicClass = finalItalic ? "italic" : "not-italic";
+                  const descriptionFontClass = `bio-desc-font-${finalFont}`;
+                  const descriptionSizeClass = getFontSizeClass(finalSize);
 
                   return (
                      <div className="space-y-0 w-full" id="portfolio-detail-section">
@@ -2082,11 +2116,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         <div className="max-w-[1600px] mx-auto w-full px-4 md:px-8 lg:px-12 pb-12 sm:pb-20">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-start">
                             <h2 className={`text-4xl sm:text-5xl md:text-6xl font-black tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
-                              {portfolioItem.title || "Portfólio"}
+                              {(isMobileView && portfolioItem.title_mobile) ? portfolioItem.title_mobile : (portfolioItem.title || "Portfólio")}
                             </h2>
-                            {portfolioItem.description && (
+                            {((isMobileView && portfolioItem.description_mobile !== undefined) ? portfolioItem.description_mobile : portfolioItem.description) && (
                               <div className={`whitespace-pre-wrap ${descriptionAlignClass} ${descriptionBoldClass} ${descriptionItalicClass} ${descriptionSizeClass} ${descriptionFontClass} ${theme === 'dark' || theme === 'glass' ? 'text-slate-300' : 'text-slate-700'}`}>
-                                {portfolioItem.description}
+                                {(isMobileView && portfolioItem.description_mobile !== undefined) ? portfolioItem.description_mobile : portfolioItem.description}
                               </div>
                             )}
                           </div>
@@ -2531,7 +2565,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                        {/* Overlay with Portfolio Title */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity flex flex-col justify-end p-4">
                           <span className="text-white font-bold text-sm sm:text-base drop-shadow-md">
-                            {item.title || "Portfólio"}
+                            {(isMobileView && item.title_mobile) ? item.title_mobile : (item.title || "Portfólio")}
                           </span>
                           {(isMobileView && hasMobileLayers) ? (
                             <span className="text-white/70 text-xs font-semibold">
