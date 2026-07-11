@@ -93,6 +93,20 @@ const AppRoutes = () => {
   // Detect if the user is on a mobile device
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
+  // Custom subdomain detection logic
+  const getSubdomainTenantId = () => {
+    const hostname = window.location.hostname;
+    if (hostname.endsWith(".netlify.app")) {
+      const subdomain = hostname.split(".")[0];
+      if (subdomain !== "carddigitalgmapp" && subdomain !== "carddigitalgm") {
+        return subdomain;
+      }
+    }
+    return null;
+  };
+
+  const subdomainTenant = getSubdomainTenantId();
+
   // Wait for auth to be fully initialized before making routing decisions or redirecting
   if (!checked) {
     return (
@@ -106,7 +120,7 @@ const AppRoutes = () => {
   }
 
   // If a mobile user is not logged in and opens the root, redirect directly to the public bio page
-  if (isMobile && !user && (location.pathname === '/' || location.pathname === '')) {
+  if (isMobile && !user && !subdomainTenant && (location.pathname === '/' || location.pathname === '')) {
     return <Navigate to="/bio/gmedificacao" replace />;
   }
 
@@ -122,6 +136,9 @@ const AppRoutes = () => {
       >
         <Suspense fallback={<PageLoader />}>
           <Routes location={location}>
+            {subdomainTenant && (
+              <Route path="/" element={<PublicBio />} />
+            )}
             <Route path="/pix" element={<PixCopy />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

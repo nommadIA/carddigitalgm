@@ -17,8 +17,22 @@ function sanitizeSlug(name: string): string {
 }
 
 export default function PublicBio() {
-  const { tenantId } = useParams();
-    const [data, setData] = useState<any>(null);
+  const { tenantId: routeTenantId } = useParams();
+
+  // Custom subdomain detection logic
+  const getSubdomainTenantId = () => {
+    const hostname = window.location.hostname;
+    if (hostname.endsWith(".netlify.app")) {
+      const subdomain = hostname.split(".")[0];
+      if (subdomain !== "carddigitalgmapp" && subdomain !== "carddigitalgm") {
+        return subdomain;
+      }
+    }
+    return null;
+  };
+
+  const tenantId = routeTenantId || getSubdomainTenantId();
+  const [data, setData] = useState<any>(null);
   const [apiLoading, setApiLoading] = useState(true);
   const [introExiting, setIntroExiting] = useState(false);
   const [introFinished, setIntroFinished] = useState(false);

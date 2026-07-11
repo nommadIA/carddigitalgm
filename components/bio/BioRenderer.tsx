@@ -180,13 +180,15 @@ function InteractiveSocialIcon({
   label,
   theme,
   sizeClass = "w-5.5 h-5.5 sm:w-6 sm:h-6",
-  fallbackIcon: FallbackIcon
+  fallbackIcon: FallbackIcon,
+  disableScale = false
 }: {
   itemKey: string;
   label: string;
   theme: string;
   sizeClass?: string;
   fallbackIcon: React.ComponentType<any>;
+  disableScale?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const isDark = theme === 'dark' || theme === 'glass';
@@ -200,7 +202,7 @@ function InteractiveSocialIcon({
       <img
         src={srcUrl}
         alt={label}
-        className={`${sizeClass} object-contain transition-all duration-300 transform ${hovered ? 'scale-110' : ''}`}
+        className={`${sizeClass} object-contain transition-all duration-300 ${disableScale ? '' : 'transform ' + (hovered ? 'scale-110' : '')}`}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       />
@@ -1753,7 +1755,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   target="_blank" 
                                   rel="noreferrer" 
                                   title={item.label} 
-                                  className="flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110" 
+                                  className="flex items-center justify-center transition-all duration-300 cursor-pointer" 
                                   onClick={(e) => { if (asPreview) e.preventDefault(); }}
                                  >
                                   <InteractiveSocialIcon 
@@ -1761,6 +1763,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     label={item.label} 
                                     theme={theme} 
                                     fallbackIcon={item.icon} 
+                                    disableScale={true}
                                   />
                                 </a>
                               )
