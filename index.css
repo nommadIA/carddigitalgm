@@ -808,7 +808,7 @@ select.gm-input option {
   border-color: var(--gm-primary);
 }
 
-.gm-label{ display:block; font-size:13px; opacity:.8; margin-bottom:6px; font-weight: 600; }
+.gm-label{ display:block; font-size:15px; opacity:1; margin-bottom:6px; font-weight: 700; color: #ffffff; }
 
 /* Range Input Styling */
 input[type="range"] {
@@ -1858,6 +1858,23 @@ input[type="time"]::-webkit-clear-button {
     perspective: 1000px;
     will-change: transform, opacity;
   }
+}
+
+/* Custom Textarea Resizer */
+textarea::-webkit-resizer,
+.bio-desc-editor::-webkit-resizer,
+[contenteditable]::-webkit-resizer {
+  background-color: transparent !important;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 4px,
+    var(--primary-color, var(--gm-primary, #ff6900)) 4px,
+    var(--primary-color, var(--gm-primary, #ff6900)) 6px
+  ) !important;
+  width: 20px !important;
+  height: 20px !important;
+  cursor: nwse-resize !important;
 }
 
 

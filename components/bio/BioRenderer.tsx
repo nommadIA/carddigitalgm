@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../store/AuthContext";
-import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, Eye, EyeOff, ZoomIn , Layout, ExternalLink, Menu, Home } from "lucide-react";
+import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, Eye, EyeOff, ZoomIn , Layout, ExternalLink, Menu, Home, Maximize2, Minimize2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 export const formatExternalUrl = (url: string | undefined): string | undefined => {
@@ -242,14 +242,56 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const [copiedPix, setCopiedPix] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [selectedProductOption, setSelectedProductOption] = useState<any | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [portfolioLightbox, setPortfolioLightbox] = useState<{ images: string[], currentIndex: number } | null>(null);
+  const [lightboxFit, setLightboxFit] = useState<"cover" | "contain">("cover");
+
+  // Keyboard navigation for portfolio lightbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!portfolioLightbox) return;
+      if (e.key === "Escape") {
+        setPortfolioLightbox(null);
+      } else if (e.key === "ArrowRight") {
+        setPortfolioLightbox(prev => {
+          if (!prev) return null;
+          const nextIdx = (prev.currentIndex + 1) % prev.images.length;
+          return { ...prev, currentIndex: nextIdx };
+        });
+      } else if (e.key === "ArrowLeft") {
+        setPortfolioLightbox(prev => {
+          if (!prev) return null;
+          const prevIdx = (prev.currentIndex - 1 + prev.images.length) % prev.images.length;
+          return { ...prev, currentIndex: prevIdx };
+        });
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [portfolioLightbox]);
 
   const [activeView, setActiveView] = useState<"bio" | "contact" | "portfolio">("bio");
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(true);
+  const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
+  const [isChatIconVisible, setIsChatIconVisible] = useState(false);
   const [isHoveringChat, setIsHoveringChat] = useState(false);
+
+  useEffect(() => {
+    if (activeView === "contact") {
+      setIsChatWidgetOpen(false);
+      setIsChatIconVisible(false);
+      const timer = setTimeout(() => {
+        setIsChatIconVisible(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    } else {
+      setIsChatIconVisible(false);
+      setIsChatWidgetOpen(false);
+    }
+  }, [activeView]);
   const [contactName, setContactName] = useState("");
   const [scrollTop, setScrollTop] = useState(0);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
@@ -406,7 +448,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   };
 
   // Shopping Cart state
-  const [cart, setCart] = useState<{ product: any, quantity: number }[]>(() => {
+  const [cart, setCart] = useState<{ product: any, quantity: number, selectedOption?: any }[]>(() => {
     try {
       const saved = localStorage.getItem(`cart_${bio.tenant_id || 'default'}`);
       return saved ? JSON.parse(saved) : [];
@@ -447,6 +489,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   useEffect(() => {
     if (selectedProduct) {
       setProductQuantity(1);
+      if (selectedProduct.options && selectedProduct.options.length > 0) {
+        setSelectedProductOption(selectedProduct.options[0]);
+      } else {
+        setSelectedProductOption(null);
+      }
+    } else {
+      setSelectedProductOption(null);
     }
   }, [selectedProduct]);
 
@@ -510,31 +559,37 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     }
   }, [data?.company_logo_url, data?.company_name, bio.title]);
 
-  const addToCart = (product: any, qty: number = 1) => {
+  const addToCart = (product: any, qty: number = 1, selectedOption?: any) => {
     setCart(prev => {
-      const existing = prev.find(item => item.product.id === product.id);
+      const existing = prev.find(item => 
+        item.product.id === product.id && 
+        (!selectedOption ? !item.selectedOption : item.selectedOption?.id === selectedOption.id)
+      );
       if (existing) {
         return prev.map(item => 
-          item.product.id === product.id 
+          item.product.id === product.id && 
+          (!selectedOption ? !item.selectedOption : item.selectedOption?.id === selectedOption.id)
             ? { ...item, quantity: item.quantity + qty } 
             : item
         );
       }
-      return [...prev, { product, quantity: qty }];
+      return [...prev, { product, quantity: qty, selectedOption }];
     });
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.product.id !== productId));
+  const removeFromCart = (productId: string, optionId?: string) => {
+    setCart(prev => prev.filter(item => 
+      !(item.product.id === productId && (!optionId || item.selectedOption?.id === optionId))
+    ));
   };
 
-  const updateCartQuantity = (productId: string, qty: number) => {
+  const updateCartQuantity = (productId: string, qty: number, optionId?: string) => {
     if (qty <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, optionId);
       return;
     }
     setCart(prev => prev.map(item => 
-      item.product.id === productId 
+      item.product.id === productId && (!optionId || item.selectedOption?.id === optionId)
         ? { ...item, quantity: qty } 
         : item
     ));
@@ -562,7 +617,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   };
 
   const cartTotalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const cartTotalPrice = cart.reduce((sum, item) => sum + (parsePrice(item.product.price) * item.quantity), 0);
+  const cartTotalPrice = cart.reduce((sum, item) => {
+    const unitPrice = item.selectedOption ? parsePrice(item.selectedOption.price) : parsePrice(item.product.price);
+    return sum + (unitPrice * item.quantity);
+  }, 0);
 
   const handleCheckoutWhatsApp = () => {
     if (!orderName.trim()) {
@@ -591,9 +649,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
     // Format items list
     const itemsText = cart.map(item => {
-      const itemTotal = parsePrice(item.product.price) * item.quantity;
+      const unitPrice = item.selectedOption ? parsePrice(item.selectedOption.price) : parsePrice(item.product.price);
+      const itemTotal = unitPrice * item.quantity;
       const itemImage = item.product.image_url ? `\n  📸 Foto: ${item.product.image_url}` : "";
-      return `• *${item.product.name}* (x${item.quantity}) - ${formatPrice(itemTotal)}${itemImage}`;
+      const optionLabel = item.selectedOption ? ` (${item.selectedOption.quantity})` : "";
+      return `• *${item.product.name}${optionLabel}* (x${item.quantity}) - ${formatPrice(itemTotal)}${itemImage}`;
     }).join("\n");
 
     const header = `*🛍️ NOVO PEDIDO - ${companyName.toUpperCase()}*\n`;
@@ -1555,9 +1615,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             setActiveView("bio");
                             setActivePortfolioId(null);
                           }} 
-                          className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                          className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
                             (activeView as string) === "bio" 
-                              ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                              ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
                               : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
                           } hover:text-[#FE540B]`}
                         >
@@ -1567,9 +1627,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                         <button 
                           onClick={() => setActiveView("contact")} 
-                          className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                          className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
                             (activeView as string) === "contact" 
-                              ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                              ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
                               : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
                           } hover:text-[#FE540B]`}
                         >
@@ -1590,9 +1650,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               }, 120);
                             }
                           }} 
-                          className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                          className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
                             (activeView as string) === "portfolio" 
-                              ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                              ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
                               : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
                           } hover:text-[#FE540B]`}
                         >
@@ -1602,7 +1662,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                         <button 
                           onClick={handleShareBio} 
-                          className={`text-base sm:text-lg font-bold transition-colors flex items-center gap-3.5 cursor-pointer duration-300 ${
+                          className={`text-base sm:text-lg font-medium transition-colors flex items-center gap-3.5 cursor-pointer duration-300 ${
                             theme === 'dark' || theme === 'glass' 
                               ? 'text-white opacity-70 hover:opacity-100 hover:text-[#FE540B]' 
                               : 'text-slate-900 opacity-70 hover:opacity-100 hover:text-[#FE540B]'
@@ -1639,9 +1699,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       <div className="flex items-center gap-3">
                         <button 
                           onClick={() => setActiveView("bio")} 
-                          className={`text-sm font-bold transition-all hover:opacity-100 cursor-pointer ${
+                          className={`text-sm font-medium transition-all hover:opacity-100 cursor-pointer ${
                             (activeView as string) === "bio" 
-                              ? "opacity-100 border-b-2 font-black border-slate-900 dark:border-white text-slate-900 dark:text-white" 
+                              ? "opacity-100 border-b-2 font-semibold border-slate-900 dark:border-white text-slate-900 dark:text-white" 
                               : "opacity-60 text-slate-500 dark:text-slate-400"
                           }`}
                         >
@@ -1649,9 +1709,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         </button>
                         <button 
                           onClick={() => setActiveView("contact")} 
-                          className={`text-sm font-bold transition-all hover:opacity-100 cursor-pointer ${
+                          className={`text-sm font-medium transition-all hover:opacity-100 cursor-pointer ${
                             (activeView as string) === "contact" 
-                              ? "opacity-100 border-b-2 font-black border-slate-900 dark:border-white text-slate-900 dark:text-white" 
+                              ? "opacity-100 border-b-2 font-semibold border-slate-900 dark:border-white text-slate-900 dark:text-white" 
                               : "opacity-60 text-slate-500 dark:text-slate-400"
                           }`}
                         >
@@ -1701,9 +1761,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 setActiveView("bio");
                                 setActivePortfolioId(null);
                               }} 
-                              className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                              className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
                                 (activeView as string) === "bio" 
-                                  ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
                                   : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
                               } hover:text-[#FE540B]`}
                             >
@@ -1714,9 +1774,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             {/* Contato */}
                             <button 
                               onClick={() => setActiveView("contact")} 
-                              className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                              className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
                                 (activeView as string) === "contact" 
-                                  ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
                                   : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
                               } hover:text-[#FE540B]`}
                             >
@@ -1738,9 +1798,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   }, 120);
                                 }
                               }} 
-                              className={`relative py-1 text-base sm:text-lg font-bold transition-all duration-300 cursor-pointer group ${
+                              className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
                                 (activeView as string) === "portfolio" 
-                                  ? `opacity-100 font-black ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
                                   : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
                               } hover:text-[#FE540B]`}
                             >
@@ -1753,7 +1813,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           <div className="w-12 sm:w-16 md:w-20 lg:w-24" />
 
                           {/* Social Icons Group */}
-                          <div className="flex items-center gap-5 sm:gap-6 md:gap-7">
+                          <div className="flex items-center gap-4 sm:gap-4.5 md:gap-5">
                             {socialIcons.length > 0 && socialIcons.map((item) => {
                               return (
                                 <a 
@@ -1769,6 +1829,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     itemKey={item.key} 
                                     label={item.label} 
                                     theme={theme} 
+                                    sizeClass="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]"
                                     fallbackIcon={item.icon} 
                                     disableScale={true}
                                   />
@@ -1900,7 +1961,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 setIsMobileMenuOpen(false);
                                 setActivePortfolioId(null);
                               }}
-                              className={`text-left text-sm font-bold uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'bio' ? 'text-[#FE540B] dark:text-[#FE540B]' : ''}`}
+                              className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'bio' ? 'text-[#FE540B] dark:text-[#FE540B]' : ''}`}
                             >
                               Início
                             </button>
@@ -1909,7 +1970,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 setActiveView("contact");
                                 setIsMobileMenuOpen(false);
                               }}
-                              className={`text-left text-sm font-bold uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'contact' ? 'text-[#FE540B] dark:text-[#FE540B]' : ''}`}
+                              className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'contact' ? 'text-[#FE540B] dark:text-[#FE540B]' : ''}`}
                             >
                               Contato
                             </button>
@@ -1920,14 +1981,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   const el = document.getElementById("portfolio-section");
                                   if (el) el.scrollIntoView({ behavior: 'smooth' });
                                 }}
-                                className={`text-left text-sm font-bold uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'}`}
+                                className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'}`}
                               >
                                 Portfólio
                               </button>
                             )}
                             
                             {socialIcons.length > 0 && (
-                              <div className="flex items-center gap-3.5 pt-3">
+                              <div className="flex items-center gap-3 pt-2.5">
                                 {socialIcons.map((item) => {
                                   return (
                                     <a 
@@ -1936,14 +1997,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                       target="_blank" 
                                       rel="noreferrer" 
                                       title={item.label} 
-                                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer border ${theme === 'dark' || theme === 'glass' ? 'bg-zinc-900 border-white/10' : 'bg-zinc-50 border-zinc-100'}`} 
+                                      className={`w-8.5 h-8.5 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer border ${theme === 'dark' || theme === 'glass' ? 'bg-zinc-900 border-white/10' : 'bg-zinc-50 border-zinc-100'}`} 
                                       onClick={(e) => { if (asPreview) e.preventDefault(); }}
                                     >
                                       <InteractiveSocialIcon 
                                         itemKey={item.key} 
                                         label={item.label} 
                                         theme={theme} 
-                                        sizeClass="w-5.5 h-5.5"
+                                        sizeClass="w-4.5 h-4.5"
                                         fallbackIcon={item.icon} 
                                       />
                                     </a>
@@ -2029,11 +2090,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
           <div className={`${asPreview && previewMode !== 'pc' ? (activeView === "portfolio" ? "-mx-4 w-[calc(100%+2rem)]" : "") : activeView === "portfolio" ? "w-full max-w-none px-0 mt-2 sm:mt-4" : "max-w-[1150px] mx-auto px-4 md:px-8 lg:px-12 mt-6 sm:mt-10"} space-y-6 sm:space-y-8 w-full`}>
 
+          <AnimatePresence mode="wait">
           {activeView === "portfolio" ? (
             <motion.div 
+              key="portfolio-view"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="w-full pb-10"
             >
                {(() => {
@@ -2141,7 +2205,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             {images.map((img, idx) => (
                               <div 
                                 key={img.id || idx} 
-                                className="sticky top-0 h-screen w-full flex flex-col items-center justify-center bg-zinc-950/90 backdrop-blur-md p-4"
+                                className="sticky top-0 h-screen w-full flex flex-col items-center justify-center bg-black overflow-hidden"
                                 style={{
                                   zIndex: idx + 1,
                                 }}
@@ -2149,8 +2213,15 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 <OptimizedMedia 
                                   src={img.image_url} 
                                   alt={`Banner ${idx+1}`} 
-                                  className="max-w-full max-h-[72vh] object-contain rounded-2xl shadow-2xl block mx-auto border border-white/5" 
+                                  className="w-full h-full object-cover block mx-auto cursor-zoom-in transition-transform hover:scale-[1.01] duration-500" 
                                   loading={idx === 0 ? "eager" : "lazy"} 
+                                  onClick={() => {
+                                    const imageUrls = images.map((i: any) => i.image_url);
+                                    setPortfolioLightbox({
+                                      images: imageUrls,
+                                      currentIndex: idx
+                                    });
+                                  }}
                                 />
                               </div>
                             ))}
@@ -2162,8 +2233,15 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                  key={img.id || idx} 
                                  src={img.image_url} 
                                  alt={`Banner ${idx+1}`} 
-                                 className="w-full max-w-[1600px] max-h-[70vh] md:max-h-[560px] h-auto object-contain block mx-auto rounded-lg sm:rounded-xl shadow-lg border border-black/5 dark:border-white/5" 
+                                 className="w-full max-w-[1600px] max-h-[70vh] md:max-h-[560px] h-auto object-contain block mx-auto rounded-lg sm:rounded-xl shadow-lg border border-black/5 dark:border-white/5 cursor-zoom-in transition-transform hover:scale-[1.01] duration-300" 
                                  loading={idx === 0 ? "eager" : "lazy"} 
+                                 onClick={() => {
+                                   const imageUrls = images.map((i: any) => i.image_url);
+                                   setPortfolioLightbox({
+                                     images: imageUrls,
+                                     currentIndex: idx
+                                   });
+                                 }}
                                />
                              ))}
                           </div>
@@ -2206,9 +2284,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             </motion.div>
           ) : activeView === "contact" ? (
             <motion.div 
+              key="contact-view"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="py-6 sm:py-12 w-full flex flex-col items-center"
             >
               <div className="flex flex-col items-center gap-10 lg:gap-14 max-w-6xl w-full mx-auto px-4 sm:px-6">
@@ -2378,16 +2458,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     )}
                   </form>
                 </div>
-
               </div>
-
-              {/* Centered Footer Social Icons & Copyright */}
+                          {/* Centered Footer Social Icons & Copyright */}
               {(() => {
                 const activeSocials = socialIcons.filter(item => item.value && item.href);
                 return (
                   <div className="mt-24 pt-10 border-t border-black/5 dark:border-white/5 flex flex-col items-center justify-center gap-5 text-center max-w-6xl mx-auto px-4">
                     {activeSocials.length > 0 && (
-                      <div className="flex items-center justify-center gap-6">
+                      <div className="flex items-center justify-center gap-5 sm:gap-6 md:gap-7">
                         {activeSocials.map((item) => {
                           return (
                             <a 
@@ -2403,7 +2481,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 itemKey={item.key} 
                                 label={item.label} 
                                 theme={theme} 
-                                sizeClass="w-6 h-6 sm:w-6.5 sm:h-6.5"
+                                sizeClass="w-[23px] h-[23px] sm:w-[25px] sm:h-[25px]"
                                 fallbackIcon={item.icon} 
                               />
                             </a>
@@ -2417,9 +2495,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             </motion.div>
           ) : (
             <motion.div
+              key="bio-view"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="w-full"
             >
               {/* 3. Contacts & Links Stack (Harmonized, wider container blocks) */}
@@ -2598,6 +2678,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
             </motion.div>
           )}
+          </AnimatePresence>
 
           {/* 5.5 Address & Embedded Map Section (At the very bottom, rendered only on Contato view) */}
           {activeView === "contact" && bio.address && (
@@ -2884,7 +2965,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             >
               {/* Modal Header */}
               <div className="p-5 flex items-center justify-between border-b shrink-0" style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
-                <span className="text-xs font-bold tracking-widest uppercase opacity-60">Detalhes do Produto</span>
+                <span className="text-sm font-bold tracking-wider opacity-85">Detalhes do produto</span>
                 <button 
                   onClick={() => setSelectedProduct(null)}
                   className="p-1.5 rounded-full hover:bg-slate-500/10 transition-colors cursor-pointer"
@@ -2927,9 +3008,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         <button
                           onClick={() => setZoomedImage(activeImageUrl)}
                           className="absolute bottom-3.5 right-3.5 p-3 rounded-full bg-black/75 hover:bg-black/90 text-white border border-white/10 transition-all hover:scale-110 active:scale-95 shadow-xl flex items-center justify-center cursor-pointer z-20 group"
-                          title="Ver imagem ampliada (Lupa)"
+                          title="Ver imagem ampliada"
                         >
-                          <ZoomIn className="w-5.5 h-5.5 text-orange-500" style={{ color: brandColor || '#ff6900' }} />
+                          <ZoomIn className="w-5.5 h-5.5" style={{ color: brandColor || '#ff6900' }} />
                         </button>
                       )}
 
@@ -2983,15 +3064,62 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     <div className="space-y-4 text-left">
                       <h3 className="text-2xl font-black tracking-tight leading-tight">{selectedProduct.name || 'Produto sem nome'}</h3>
                       
-                      {selectedProduct.price && (
-                        <div className="text-3xl font-black" style={{ color: brandColor || '#ff6900' }}>
-                          {selectedProduct.price}
+                      {(selectedProductOption?.price || selectedProduct.price) && (
+                        <div className="space-y-1.5 animate-in fade-in duration-300">
+                          <div className="text-3xl font-black tracking-tight" style={{ color: brandColor || '#ff6900' }}>
+                            {selectedProductOption ? selectedProductOption.price : selectedProduct.price}
+                          </div>
+                          {selectedProductOption && (
+                            <div className="text-xs font-bold tracking-wide text-zinc-400 flex items-center gap-1.5 bg-white/5 py-1 px-2.5 rounded-lg border border-white/5 w-fit">
+                              <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: brandColor || '#ff6900' }} />
+                              Opção selecionada: <span className="text-white font-black">{selectedProductOption.quantity}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* VARIATIONS / OPTIONS SELECTOR */}
+                      {selectedProduct.options && selectedProduct.options.length > 0 && (
+                        <div className="pt-2">
+                          <span className="text-xs font-bold tracking-wide opacity-60 block mb-2.5">Selecione a quantidade / variação</span>
+                          <div className="grid grid-cols-2 gap-2.5">
+                            {selectedProduct.options.map((opt: any) => {
+                              const isSelected = selectedProductOption?.id === opt.id;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={() => setSelectedProductOption(opt)}
+                                  className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer group ${
+                                    isSelected 
+                                      ? 'text-white' 
+                                      : 'border-white/5 bg-zinc-900/40 hover:bg-zinc-900/80 hover:border-white/10 text-zinc-300'
+                                  }`}
+                                  style={isSelected ? { 
+                                    borderColor: brandColor, 
+                                    backgroundColor: `${brandColor}12`,
+                                    boxShadow: `0 0 0 1px ${brandColor}, 0 0 12px ${brandColor}25`
+                                  } : undefined}
+                                >
+                                  <span className="text-[10px] font-semibold tracking-wide block opacity-50 mb-1 group-hover:opacity-75 transition-opacity">Qtd / opção</span>
+                                  <span className="text-sm font-black block truncate leading-tight mb-2 text-white">{opt.quantity}</span>
+                                  <span className="text-xs font-bold block mt-auto" style={{ color: isSelected ? (brandColor || '#ff6900') : '#a1a1aa' }}>{opt.price}</span>
+                                  {isSelected && (
+                                    <span 
+                                      className="absolute top-3.5 right-3.5 w-2 h-2 rounded-full animate-pulse" 
+                                      style={{ backgroundColor: brandColor || '#ff6900' }} 
+                                    />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                       
                       {selectedProduct.description && (
                         <div className="pt-2">
-                          <span className="text-xs font-bold uppercase tracking-widest opacity-40 block mb-1.5">Descrição e Outras Informações</span>
+                          <span className="text-xs font-bold tracking-wide opacity-60 block mb-1.5">Descrição e outras informações</span>
                           <p className={`text-sm sm:text-base leading-relaxed whitespace-pre-wrap ${theme === 'glass' ? 'text-zinc-200' : theme === 'dark' ? 'text-zinc-300' : 'text-slate-600'}`}>
                             {selectedProduct.description}
                           </p>
@@ -3004,7 +3132,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       
                       {/* Quantity Selector */}
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-extrabold opacity-80 uppercase tracking-wider">Quantidade</span>
+                        <span className="text-sm font-bold opacity-80 tracking-wide">Quantidade</span>
                         <div className="flex items-center gap-1.5 bg-black/10 dark:bg-white/5 rounded-full p-1 border" style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
                           <button 
                             onClick={() => setProductQuantity(prev => Math.max(1, prev - 1))}
@@ -3027,10 +3155,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         <div className="flex gap-3">
                           <button 
                             onClick={() => {
-                              addToCart(selectedProduct, productQuantity);
+                              addToCart(selectedProduct, productQuantity, selectedProductOption);
                               setSelectedProduct(null);
                             }}
-                            className={`flex-1 flex items-center justify-center p-4 rounded-2xl font-black transition-all shadow-md border cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
+                            className={`flex-1 flex items-center justify-center py-3.5 px-3 rounded-2xl font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md border cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
                               theme === 'glass'
                                 ? 'bg-white/10 hover:bg-white/15 text-white border-white/10'
                                 : theme === 'dark' 
@@ -3038,20 +3166,20 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
                             }`}
                           >
-                            <Plus className="w-4 h-4 mr-2" />
+                            <Plus className="w-4 h-4 mr-1.5 shrink-0" />
                             Adicionar
                           </button>
                           
                           <button 
                             onClick={() => {
-                              addToCart(selectedProduct, productQuantity);
+                              addToCart(selectedProduct, productQuantity, selectedProductOption);
                               setSelectedProduct(null);
                               setIsCartOpen(true);
                             }}
-                            className="flex-1 flex items-center justify-center p-4 rounded-2xl text-white font-black transition-all shadow-md hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                            className="flex-1 flex items-center justify-center py-3.5 px-3 rounded-2xl text-white font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] cursor-pointer"
                             style={{ backgroundColor: brandColor || '#ff6900' }}
                           >
-                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            <ShoppingCart className="w-4 h-4 mr-1.5 shrink-0" />
                             Comprar Já
                           </button>
                         </div>
@@ -3114,6 +3242,139 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl animate-scale-up" 
             />
           </div>
+        </div>
+      )}
+
+      {/* Portfolio Fullscreen Lightbox Overlay */}
+      {portfolioLightbox && (
+        <div 
+          className="fixed inset-0 z-[250] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md animate-fade-in cursor-default select-none"
+          onClick={() => setPortfolioLightbox(null)}
+        >
+          {/* Top panel with details / close button */}
+          <div className="absolute top-0 inset-x-0 p-5 flex items-center justify-between z-30 bg-gradient-to-b from-black/60 to-transparent">
+            {portfolioLightbox.images.length > 1 ? (
+              <span className="text-white/80 font-mono text-sm bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full">
+                {portfolioLightbox.currentIndex + 1} / {portfolioLightbox.images.length}
+              </span>
+            ) : (
+              <div />
+            )}
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxFit(prev => prev === "cover" ? "contain" : "cover");
+                }}
+                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium text-xs sm:text-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-lg flex items-center gap-2 border border-white/5"
+                title={lightboxFit === "cover" ? "Ajustar à tela (Ver imagem inteira)" : "Preencher tela (Fullscreen sem bordas)"}
+              >
+                {lightboxFit === "cover" ? (
+                  <>
+                    <Minimize2 className="w-4 h-4" />
+                    <span>Ajustar à Tela</span>
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 className="w-4 h-4" />
+                    <span>Preencher Tela</span>
+                  </>
+                )}
+              </button>
+
+              <button 
+                onClick={() => setPortfolioLightbox(null)}
+                className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-lg flex items-center justify-center border border-white/5"
+                title="Fechar (Esc)"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+
+          {/* Main image content area */}
+          <div 
+            className="relative w-full h-full flex items-center justify-center overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Left Nav Arrow */}
+            {portfolioLightbox.images.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPortfolioLightbox(prev => {
+                    if (!prev) return null;
+                    const prevIdx = (prev.currentIndex - 1 + prev.images.length) % prev.images.length;
+                    return { ...prev, currentIndex: prevIdx };
+                  });
+                }}
+                className="absolute left-4 sm:left-6 md:left-10 p-3 sm:p-4 rounded-full bg-black/40 hover:bg-black/60 hover:scale-110 active:scale-90 border border-white/10 text-white transition-all cursor-pointer z-30 shadow-2xl flex items-center justify-center"
+                title="Imagem Anterior (Seta Esquerda)"
+              >
+                <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+              </button>
+            )}
+
+            {/* Centered Image */}
+            <div className={`relative w-full h-full flex items-center justify-center ${lightboxFit === 'contain' ? 'p-4 sm:p-8 md:p-12 max-w-[95vw] max-h-[85vh]' : ''}`}>
+              <OptimizedMedia 
+                src={portfolioLightbox.images[portfolioLightbox.currentIndex]} 
+                alt={`Imagem de portfólio ${portfolioLightbox.currentIndex + 1}`} 
+                className={`select-none pointer-events-none animate-scale-up transition-all duration-300 ${
+                  lightboxFit === 'cover' 
+                    ? 'w-full h-full object-cover shadow-2xl' 
+                    : 'max-w-full max-h-[80vh] object-contain rounded-lg sm:rounded-xl shadow-2xl'
+                }`} 
+              />
+            </div>
+
+            {/* Right Nav Arrow */}
+            {portfolioLightbox.images.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPortfolioLightbox(prev => {
+                    if (!prev) return null;
+                    const nextIdx = (prev.currentIndex + 1) % prev.images.length;
+                    return { ...prev, currentIndex: nextIdx };
+                  });
+                }}
+                className="absolute right-4 sm:right-6 md:right-10 p-3 sm:p-4 rounded-full bg-black/40 hover:bg-black/60 hover:scale-110 active:scale-90 border border-white/10 text-white transition-all cursor-pointer z-30 shadow-2xl flex items-center justify-center"
+                title="Próxima Imagem (Seta Direita)"
+              >
+                <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+              </button>
+            )}
+          </div>
+
+          {/* Bottom Thumbnails navigation for multi-image portfolios */}
+          {portfolioLightbox.images.length > 1 && (
+            <div 
+              className="absolute bottom-6 inset-x-0 flex justify-center gap-2 px-4 py-2 overflow-x-auto max-w-full z-30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {portfolioLightbox.images.map((imgUrl, thumbIdx) => (
+                <button
+                  key={thumbIdx}
+                  onClick={() => setPortfolioLightbox(prev => prev ? { ...prev, currentIndex: thumbIdx } : null)}
+                  className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition-all duration-200 cursor-pointer flex-shrink-0 ${
+                    portfolioLightbox.currentIndex === thumbIdx 
+                      ? 'border-orange-500 scale-110 shadow-lg' 
+                      : 'border-white/20 opacity-50 hover:opacity-100 hover:border-white/55'
+                  }`}
+                  style={portfolioLightbox.currentIndex === thumbIdx && brandColor ? { borderColor: brandColor } : {}}
+                >
+                  <img 
+                    src={imgUrl} 
+                    alt={`Miniatura ${thumbIdx + 1}`} 
+                    className="w-full h-full object-cover" 
+                    referrerPolicy="no-referrer"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -3229,8 +3490,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   {checkoutStep === "cart" ? (
                     <div className="space-y-4">
                       {cart.map((item, idx) => {
-                        const itemPriceParsed = parsePrice(item.product.price);
+                        const itemPriceParsed = item.selectedOption ? parsePrice(item.selectedOption.price) : parsePrice(item.product.price);
                         const itemTotal = itemPriceParsed * item.quantity;
+                        const optionLabel = item.selectedOption ? ` (${item.selectedOption.quantity})` : "";
                         return (
                           <div 
                             key={idx}
@@ -3263,11 +3525,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             <div className="flex-1 flex flex-col justify-between min-w-0">
                               <div className="flex items-start justify-between gap-1">
                                 <div className="min-w-0">
-                                  <h4 className="font-extrabold text-sm sm:text-base truncate pr-1">{item.product.name}</h4>
+                                  <h4 className="font-extrabold text-sm sm:text-base truncate pr-1">{item.product.name}{optionLabel}</h4>
                                   <p className="text-[11px] opacity-60 mt-0.5">Unitário: {formatPrice(itemPriceParsed)}</p>
                                 </div>
                                 <button 
-                                  onClick={() => removeFromCart(item.product.id)}
+                                  onClick={() => removeFromCart(item.product.id, item.selectedOption?.id)}
                                   className="text-red-500 hover:text-red-600 transition-colors p-1 cursor-pointer shrink-0"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -3282,14 +3544,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 
                                 <div className="flex items-center gap-2 bg-black/15 dark:bg-white/10 rounded-full p-1 border" style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.12)' : theme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)' }}>
                                   <button 
-                                    onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
+                                    onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.selectedOption?.id)}
                                     className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-sm font-bold cursor-pointer"
                                   >
                                     <Minus className="w-3.5 h-3.5" />
                                   </button>
                                   <span className="w-6 text-center font-black text-xs">{item.quantity}</span>
                                   <button 
-                                    onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
+                                    onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.selectedOption?.id)}
                                     className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-sm font-bold cursor-pointer"
                                   >
                                     <Plus className="w-3.5 h-3.5" />
@@ -3637,33 +3899,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           {/* Custom style sheet injected safely for laser scanner and custom transitions */}
           <style dangerouslySetInnerHTML={{ __html: `
             @keyframes qr-scan {
-              0% { top: 6%; opacity: 0; }
-              15% { opacity: 1; }
-              85% { opacity: 1; }
-              100% { top: 94%; opacity: 0; }
+              0% { top: 6% }
+              100% { top: 94% }
             }
             .animate-qr-scan {
               animation: qr-scan 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-            }
-            .chat-glass-shine {
-              position: absolute;
-              top: 0;
-              left: -150%;
-              width: 50%;
-              height: 100%;
-              background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.25),
-                transparent
-              );
-              transform: skewX(-25deg);
-              transition: 0.75s;
-              pointer-events: none;
-              z-index: 200;
-            }
-            .chat-widget-hoverable:hover .chat-glass-shine {
-              left: 200%;
             }
           `}} />
 
@@ -3683,213 +3923,194 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             const qrUrl = getChatQrUrl();
             const brandThemeColor = bio.chat_balloon_bg_color || "#FE540B";
 
-            return isChatWidgetOpen ? (
-              /* Big Chat Widget with hover QR Code overlay (exactly matching the print style!) */
-              <div 
-                onMouseEnter={() => setIsHoveringChat(true)}
-                onMouseLeave={() => setIsHoveringChat(false)}
-                className="chat-widget-hoverable fixed bottom-6 right-6 sm:right-20 z-[150] w-[calc(100%-3rem)] sm:w-[350px] rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] border border-slate-200/50 flex flex-col justify-between overflow-visible bg-[#FBF7F4] transition-all duration-300 hover:shadow-[0_30px_70px_rgba(254,84,11,0.15)]"
-                style={{
-                  fontFamily: "Inter, sans-serif"
-                }}
-              >
-                {/* 1. Glass shiny sheen effect */}
-                <div className="chat-glass-shine" />
-
-                {/* 2. QR Code Overlay Card (Fades in/out on hover - identical to print layout) */}
-                <div 
-                  onClick={() => {
-                    if (qrUrl) {
-                      window.open(qrUrl, "_blank");
-                    }
-                  }}
-                  className={`absolute -top-[215px] right-[20px] z-[160] w-[185px] h-[210px] bg-white rounded-[2.2rem] shadow-[0_15px_45px_rgba(0,0,0,0.22)] border border-slate-100/60 flex flex-col items-center justify-between p-4 cursor-pointer transition-all duration-300 ease-out origin-bottom ${
-                    isHoveringChat && bio.chat_balloon_show_qrcode !== false
-                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 scale-95 translate-y-3 pointer-events-none"
-                  }`}
-                >
-                  {/* Clean, high-fidelity QR Code block */}
-                  <div className="bg-white p-2 rounded-2xl flex items-center justify-center border border-slate-50/50 flex-1 w-full max-w-[130px] max-h-[130px] aspect-square">
-                    <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrUrl || "https://carddigitalgm.com")}`}
-                      alt="WhatsApp QR Code"
-                      className="w-full h-full object-contain select-none pointer-events-none"
-                    />
-                  </div>
-                  
-                  {/* Styled label matching "Scan the code" under the code */}
-                  <span className="text-[12px] font-semibold text-slate-500 tracking-tight leading-none mb-1 select-none">
-                    Scan the code
-                  </span>
-
-                  {/* Speech bubble pointy arrow at the bottom of the QR card */}
-                  <div 
-                    className="absolute bottom-[-7px] right-[45px] w-4 h-4 bg-white rotate-45 border-r border-b border-slate-100" 
-                    style={{ boxShadow: "3px 3px 6px rgba(0,0,0,0.03)" }}
-                  />
-                </div>
-
-                {/* 3. Primary Chat Box Shell */}
-                <div className="w-full h-full flex flex-col justify-between rounded-[2.5rem] overflow-hidden border border-slate-100/10">
-                  {/* Header with Join.chat style */}
-                  <div 
-                    className="px-6 py-4 flex items-center justify-between shadow-sm shrink-0"
-                    style={{ 
-                      backgroundColor: brandThemeColor,
-                      color: bio.chat_balloon_text_color || "#FFFFFF"
+            return (
+              <AnimatePresence mode="wait">
+                {isChatIconVisible && (
+                  isChatWidgetOpen ? (
+                    /* Big Chat Widget with hover QR Code overlay (exactly matching the print style!) */
+                    <motion.div 
+                      key="chat-balloon-open"
+                      initial={{ opacity: 0, scale: 0.8, y: 15 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: 15, transition: { duration: 0.15, ease: "easeInOut" } }}
+                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="chat-widget-hoverable fixed bottom-4 right-4 sm:bottom-6 sm:right-20 z-[150] w-[calc(100%-2rem)] max-w-[285px] sm:max-w-none sm:w-[310px] rounded-[2rem] sm:rounded-[2.2rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] border border-slate-200/50 flex flex-col justify-between overflow-visible bg-[#FBF7F4] transition-all duration-300"
+                    style={{
+                      fontFamily: "Inter, sans-serif"
                     }}
                   >
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] opacity-90 font-normal leading-none">
-                        Powered by <strong className="font-serif font-black text-[12.5px] tracking-wide">Join.chat</strong>
-                      </span>
-                    </div>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsChatWidgetOpen(false);
-                      }}
-                      className="w-7 h-7 flex items-center justify-center rounded-full bg-black/15 hover:bg-black/25 transition-all cursor-pointer"
-                      style={{ color: bio.chat_balloon_text_color || "#FFFFFF" }}
-                      title="Fechar Chat"
-                    >
-                      <X className="w-3.5 h-3.5 stroke-[2.5]" />
-                    </button>
-                  </div>
-
-                  {/* Conversation & Action Area */}
-                  <div className="p-6 flex-1 flex flex-col justify-between gap-4">
-                    {/* Speech Bubble Area */}
-                    <div className="flex items-start gap-3">
-                      {/* Avatar with company logo */}
-                      <div className="shrink-0 relative mt-0.5">
-                        {logo ? (
-                          <img 
-                            src={logo} 
-                            alt={companyName} 
-                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" 
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-slate-200 text-[11px] font-black uppercase shadow-sm"
-                            style={{ color: brandThemeColor }}
-                          >
-                            {companyName.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Chat speech bubble */}
-                      <div 
-                        className="relative bg-white text-slate-800 p-4.5 rounded-[1.6rem] rounded-tl-none shadow-[0_8px_22px_-6px_rgba(0,0,0,0.1)] border border-slate-100/50 text-[13.5px] font-medium max-w-[240px]"
-                      >
-                        {/* Speech bubble arrow pointing left */}
-                        <div className="absolute left-[-5px] top-4 w-2.5 h-2.5 bg-white rotate-45 border-l border-t border-slate-100/50" />
-                        <div className="space-y-1 text-slate-700 leading-relaxed whitespace-pre-wrap">
-                          {bio.chat_balloon_text ? (
-                            bio.chat_balloon_text
-                          ) : (
-                            <>
-                              <div className="flex items-center gap-1 text-[14px] font-bold text-slate-800">
-                                Olá <span className="animate-bounce">👋</span>
-                              </div>
-                              <div className="text-slate-600 font-medium">
-                                Como podemos te ajudar hoje?
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Open Chat Action Button with Thick Black Border */}
-                    <div className="flex justify-end">
-                      <button 
-                        onClick={() => {
-                          if (!qrUrl) {
-                            setCustomAlert({
-                              title: "Contato não configurado",
-                              message: "O administrador não cadastrou um número de WhatsApp ou link para contato nesta Bio."
-                            });
-                            return;
-                          }
+                    {/* 2. QR Code Overlay Card (Fades in/out on hover of button - identical to print layout) */}
+                    <div 
+                      onClick={() => {
+                        if (qrUrl) {
                           window.open(qrUrl, "_blank");
-                        }}
-                        className="px-7 py-2.5 rounded-full font-extrabold text-[13.5px] sm:text-[14px] flex items-center gap-3 border-[2.5px] border-slate-950 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-md"
+                        }
+                      }}
+                      onMouseEnter={() => setIsHoveringChat(true)}
+                      onMouseLeave={() => setIsHoveringChat(false)}
+                      className={`absolute -top-[195px] right-[20px] z-[160] w-[165px] h-[190px] bg-white rounded-[2rem] shadow-[0_15px_45px_rgba(0,0,0,0.22)] border border-slate-100/60 flex flex-col items-center justify-center p-3 cursor-pointer transition-all duration-300 ease-out origin-bottom ${
+                        isHoveringChat && bio.chat_balloon_show_qrcode !== false
+                          ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                          : "opacity-0 scale-95 translate-y-3 pointer-events-none"
+                      }`}
+                    >
+                      {/* Clean, high-fidelity QR Code block - perfectly centered */}
+                      <div className="bg-white p-1.5 rounded-xl flex items-center justify-center border border-slate-50/50 w-[115px] h-[115px] aspect-square mb-1.5 shrink-0">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl || "https://carddigitalgm.com")}`}
+                          alt="WhatsApp QR Code"
+                          className="w-full h-full object-contain select-none pointer-events-none"
+                        />
+                      </div>
+                      
+                      {/* Styled label matching "Scan the code" under the code */}
+                      <span className="text-[11px] font-semibold text-slate-500 tracking-tight leading-none select-none">
+                        Scan the code
+                      </span>
+
+                      {/* Speech bubble pointy arrow at the bottom of the QR card */}
+                      <div 
+                        className="absolute bottom-[-6px] right-[40px] w-3.5 h-3.5 bg-white rotate-45 border-r border-b border-slate-100" 
+                        style={{ boxShadow: "3px 3px 6px rgba(0,0,0,0.03)" }}
+                      />
+                    </div>
+
+                    {/* 3. Primary Chat Box Shell */}
+                    <div className="w-full h-full flex flex-col justify-between rounded-[2rem] sm:rounded-[2.2rem] overflow-hidden border border-slate-100/10">
+                      {/* Header with Join.chat style */}
+                      <div 
+                        className="px-4.5 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between shadow-sm shrink-0"
                         style={{ 
                           backgroundColor: brandThemeColor,
                           color: bio.chat_balloon_text_color || "#FFFFFF"
                         }}
                       >
-                        <span>{bio.chat_balloon_button_text || "Open chat"}</span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-white" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="22" y1="2" x2="11" y2="13"></line>
-                          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                        </svg>
-                      </button>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11.5px] sm:text-[12.5px] opacity-95 font-semibold leading-none tracking-wide">
+                            Chat CardDigital GM
+                          </span>
+                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsChatWidgetOpen(false);
+                          }}
+                          className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-black/15 hover:bg-black/25 transition-all cursor-pointer"
+                          style={{ color: bio.chat_balloon_text_color || "#FFFFFF" }}
+                          title="Fechar Chat"
+                        >
+                          <X className="w-3 h-3 stroke-[2.5]" />
+                        </button>
+                      </div>
+
+                      {/* Conversation & Action Area */}
+                      <div className="p-3.5 sm:p-5 flex-1 flex flex-col justify-between gap-3 shrink-0">
+                        {/* Speech Bubble Area */}
+                        <div className="flex items-start gap-2.5">
+                          {/* Avatar with company logo */}
+                          <div className="shrink-0 relative mt-0.5">
+                            {logo ? (
+                              <img 
+                                src={logo} 
+                                alt={companyName} 
+                                className="w-7.5 h-7.5 sm:w-9 sm:h-9 rounded-full object-cover border-2 border-white shadow-sm" 
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div 
+                                className="w-7.5 h-7.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-white border border-slate-200 text-[10px] font-black uppercase shadow-sm"
+                                style={{ color: brandThemeColor }}
+                              >
+                                {companyName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Chat speech bubble */}
+                          <div 
+                            className="relative bg-white text-slate-800 p-3 sm:p-4 rounded-[1.1rem] sm:rounded-[1.4rem] rounded-tl-none shadow-[0_8px_22px_-6px_rgba(0,0,0,0.1)] border border-slate-100/50 text-[11.5px] sm:text-[12.5px] font-medium max-w-[185px] sm:max-w-[220px]"
+                          >
+                            {/* Speech bubble arrow pointing left */}
+                            <div className="absolute left-[-4.5px] top-3.5 w-2 h-2 bg-white rotate-45 border-l border-t border-slate-100/50" />
+                            <div className="space-y-1 text-slate-700 leading-relaxed whitespace-pre-wrap">
+                              {bio.chat_balloon_text ? (
+                                bio.chat_balloon_text
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-1 text-[12px] sm:text-[13px] font-bold text-slate-800">
+                                    Olá <span className="animate-bounce">👋</span>
+                                  </div>
+                                  <div className="text-slate-600 font-medium">
+                                    Como podemos te ajudar hoje?
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Open Chat Action Button with Thick Black Border */}
+                        <div className="flex justify-end">
+                          <button 
+                            onClick={() => {
+                              if (!qrUrl) {
+                                setCustomAlert({
+                                  title: "Contato não configurado",
+                                  message: "O administrador não cadastrou um número de WhatsApp ou link para contato nesta Bio."
+                                });
+                                return;
+                              }
+                              window.open(qrUrl, "_blank");
+                            }}
+                            onMouseEnter={() => setIsHoveringChat(true)}
+                            onMouseLeave={() => setIsHoveringChat(false)}
+                            className="px-4.5 py-1.5 sm:px-5.5 sm:py-2 rounded-full font-extrabold text-[11px] sm:text-[12.5px] flex items-center gap-2 border-[2px] border-slate-950 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shadow-md"
+                            style={{ 
+                              backgroundColor: brandThemeColor,
+                              color: bio.chat_balloon_text_color || "#FFFFFF"
+                            }}
+                          >
+                            <span>{bio.chat_balloon_button_text || "Abrir chat"}</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3.5 h-3.5 text-white" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="22" y1="2" x2="11" y2="13"></line>
+                              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Minimized state: floating button with hover QR Code overlay exactly matching print */
-              <div 
-                className="fixed bottom-6 right-6 sm:right-20 z-[140] flex items-center justify-center overflow-visible"
-                onMouseEnter={() => setIsHoveringChat(true)}
-                onMouseLeave={() => setIsHoveringChat(false)}
-              >
-                {/* QR Code Overlay Card above minimized balloon (Fades in/out on hover) */}
-                <div 
-                  onClick={() => {
-                    if (qrUrl) {
-                      window.open(qrUrl, "_blank");
-                    }
-                  }}
-                  className={`absolute bottom-[96px] right-2 z-[160] w-[170px] h-[190px] bg-white rounded-[2rem] shadow-[0_15px_45px_rgba(0,0,0,0.22)] border border-slate-100/60 flex flex-col items-center justify-between p-4 cursor-pointer transition-all duration-300 ease-out origin-bottom ${
-                    isHoveringChat && bio.chat_balloon_show_qrcode !== false
-                      ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 scale-95 translate-y-3 pointer-events-none"
-                  }`}
-                >
-                  <div className="bg-white p-2 rounded-2xl flex items-center justify-center border border-slate-50/50 flex-1 w-full max-w-[115px] max-h-[115px] aspect-square">
-                    <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl || "https://carddigitalgm.com")}`}
-                      alt="WhatsApp QR Code"
-                      className="w-full h-full object-contain select-none pointer-events-none"
-                    />
-                  </div>
-                  
-                  <span className="text-[11.5px] font-semibold text-slate-500 tracking-tight leading-none mb-1 select-none">
-                    Scan the code
-                  </span>
-
-                  {/* Speech bubble pointy arrow pointing down to the green circle */}
-                  <div 
-                    className="absolute bottom-[-7px] right-[30px] w-4 h-4 bg-white rotate-45 border-r border-b border-slate-100" 
-                    style={{ boxShadow: "3px 3px 6px rgba(0,0,0,0.03)" }}
-                  />
-                </div>
-
-                {/* Minimized round floating button with bouncy engaging hover effect */}
-                <button
-                  onClick={() => {
-                    setIsChatWidgetOpen(true);
-                  }}
-                  className="w-[72px] h-[72px] sm:w-[82px] sm:h-[82px] rounded-full flex items-center justify-center text-white cursor-pointer shadow-2xl transition-all duration-500 hover:scale-115 active:scale-95 animate-bounce border border-white/15"
-                  style={{ 
-                    backgroundColor: brandThemeColor,
-                  }}
-                  title="Abrir Atendimento"
-                >
-                  <MessageCircle className="w-9 h-9 sm:w-[42px] sm:h-[42px]" />
-                  <span className="absolute top-1 right-1 flex h-3.5 w-3.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-sky-500"></span>
-                  </span>
-                </button>
-              </div>
+                  </motion.div>
+                  ) : (
+                    /* Minimized state: floating button with smooth 1.5s scale 0 -> 1 transition */
+                    <motion.div 
+                      key="chat-balloon-closed"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0, transition: { duration: 0.15, ease: "easeInOut" } }}
+                      transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+                      className="fixed bottom-6 right-6 sm:right-20 z-[140] flex items-center justify-center overflow-visible"
+                    >
+                      {/* Minimized round floating button with custom sizing & no pulsing / bouncing */}
+                      <button
+                        onClick={() => {
+                          setIsChatWidgetOpen(true);
+                        }}
+                        className="w-[58px] h-[58px] sm:w-[66px] sm:h-[66px] rounded-full flex items-center justify-center text-white cursor-pointer shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 border border-white/15"
+                        style={{ 
+                          backgroundColor: "#25D366",
+                        }}
+                        title="Abrir Atendimento"
+                      >
+                        <img 
+                          src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
+                          alt="WhatsApp" 
+                          className="w-8 h-8 sm:w-[38px] sm:h-[38px] object-contain"
+                        />
+                      </button>
+                    </motion.div>
+                  )
+                )}
+              </AnimatePresence>
             );
           })()}
         </>

@@ -8,6 +8,7 @@ import { pushToast } from "../store/toast";
 import BioRenderer, { getPlatformIcon } from "../components/bio/BioRenderer";
 import { supabase } from "../lib/supabase";
 import { motion, AnimatePresence } from "motion/react";
+import { compressImage } from "../lib/imageCompressor";
 
 const formatBRL = (value: string): string => {
   const clean = value.replace(/\D/g, "");
@@ -123,7 +124,22 @@ export default function Bio() {
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    setOpenSections(prev => {
+      const isOpen = !prev[section];
+      const next = {
+        portfolio: false,
+        basic: false,
+        appearance: false,
+        contacts: false,
+        otherLinks: false,
+        catalog: false,
+        address: false,
+        payment: false,
+        contactSection: false,
+      };
+      next[section] = isOpen;
+      return next;
+    });
   };
 
   const getSelectSizeValue = (size?: string) => {
@@ -627,18 +643,11 @@ export default function Bio() {
           contentType = file.type || `video/${ext}`;
         }
       }
-    } else if (file.type === "image/png" || file.type === "image/gif") {
-      ext = file.type === "image/png" ? "png" : "gif";
-      contentType = file.type;
-      compressed = file; 
     } else {
-      ext = "jpg";
-      contentType = "image/jpeg";
-      if (isHighQuality) {
-        compressed = await compressImageFidelity(file, 2400, 0.95);
-      } else {
-        compressed = await compressImageFidelity(file, 1200, 0.82);
-      }
+      const compressedFile = await compressImage(file, { quality: isHighQuality ? 0.92 : 0.83 });
+      compressed = compressedFile;
+      ext = compressedFile.name.split('.').pop()?.toLowerCase() || "jpg";
+      contentType = compressedFile.type;
     }
     
     const filename = `bio_image_${Date.now()}_${Math.random().toString(36).substring(2,8)}.${ext}`;
@@ -1288,6 +1297,8 @@ export default function Bio() {
     { value: 'address', label: 'Localização' },
   ];
 
+  const hasActiveSection = Object.values(openSections).some(Boolean);
+
   return (
     <Page title="BIO CardDigital GM">
       <div 
@@ -1363,7 +1374,7 @@ export default function Bio() {
                 CardDigital <span className="text-[#ff7a00]">GM</span>
               </span>
            </h3>
-           <p className="text-slate-400 text-sm">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
+           <p className="text-zinc-400 text-sm">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
            
            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
              <button onClick={handleCopyLink} className="gm-btn gm-btn-primary flex items-center justify-center min-w-[200px]">
@@ -1392,57 +1403,81 @@ export default function Bio() {
 
         {selectedView === "none" ? (
           <div className="flex flex-col gap-6 items-stretch w-full max-w-[1440px] mx-auto animate-in fade-in duration-300">
+            {/* SVG Gradient Definition matching the BiO text gradient animation */}
+            <svg width="0" height="0" className="absolute pointer-events-none">
+              <defs>
+                <linearGradient id="bio-icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ff8c00">
+                    <animate 
+                      attributeName="stop-color" 
+                      values="#ff8c00; #22c55e; #32BCAD; #8b5cf6; #ec4899; #ff8c00" 
+                      dur="5s" 
+                      repeatCount="indefinite" 
+                    />
+                  </stop>
+                  <stop offset="100%" stopColor="#22c55e">
+                    <animate 
+                      attributeName="stop-color" 
+                      values="#22c55e; #32BCAD; #8b5cf6; #ec4899; #ff8c00; #22c55e" 
+                      dur="5s" 
+                      repeatCount="indefinite" 
+                    />
+                  </stop>
+                </linearGradient>
+              </defs>
+            </svg>
+
             <div className="text-center py-6">
               <h2 className="text-2xl font-bold text-white mb-2">Configurar Página BiO</h2>
-              <p className="text-slate-400">Escolha qual versão você deseja gerenciar e personalizar.</p>
+              <p className="text-zinc-400">Escolha qual versão você deseja gerenciar e personalizar.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Botão 1: Bio smartphone */}
+              {/* Botão 1: Bio Smartphone */}
               <button
-                className="group relative p-8 rounded-3xl border border-white/10 bg-zinc-950/40 hover:bg-[var(--primary-color)]/10 hover:border-[var(--primary-color)]/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-black/40 cursor-pointer"
+                className="group relative p-8 rounded-3xl border border-white/10 bg-zinc-950/40 hover:bg-zinc-900/20 hover:border-zinc-700/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-black/40 cursor-pointer"
                 onClick={() => {
                   setSelectedView("smartphone");
                   setPreviewMode("smartphone");
                 }}
               >
-                <div className="w-16 h-16 rounded-2xl bg-[var(--primary-color)]/20 text-[var(--primary-color)] flex items-center justify-center border border-[var(--primary-color)]/20 group-hover:scale-110 group-hover:bg-[var(--primary-color)]/30 transition-all duration-300">
-                  <Smartphone size={32} />
+                <div className="w-16 h-16 rounded-2xl bg-zinc-900/60 flex items-center justify-center border border-zinc-800/80 group-hover:scale-110 group-hover:border-zinc-700 group-hover:bg-zinc-800/40 transition-all duration-300">
+                  <Smartphone size={32} style={{ stroke: "url(#bio-icon-gradient)" }} />
                 </div>
                 <div>
                   <h3 className="text-xl font-extrabold text-white group-hover:text-[var(--primary-color)] transition-colors">
-                    Bio smartphone
+                    Bio Smartphone
                   </h3>
-                  <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+                  <p className="text-base text-zinc-300 mt-2 leading-relaxed">
                     Personalize títulos, biografia, imagens de fundo e banners exclusivos para a versão móvel e celulares.
                   </p>
                 </div>
                 <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-bold text-[var(--primary-color)] opacity-70 group-hover:opacity-100 transition-opacity">
-                  Configurar Smartphone <Sparkles className="w-4 h-4" />
+                  Configurar Smartphone
                 </div>
               </button>
 
-              {/* Botão 2: Bio computador */}
+              {/* Botão 2: Bio Computador */}
               <button
-                className="group relative p-8 rounded-3xl border border-white/10 bg-zinc-950/40 hover:bg-[var(--primary-color)]/10 hover:border-[var(--primary-color)]/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-black/40 cursor-pointer"
+                className="group relative p-8 rounded-3xl border border-white/10 bg-zinc-950/40 hover:bg-zinc-900/20 hover:border-zinc-700/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-black/40 cursor-pointer"
                 onClick={() => {
                   setSelectedView("computador");
                   setPreviewMode("pc");
                 }}
               >
-                <div className="w-16 h-16 rounded-2xl bg-[var(--primary-color)]/20 text-[var(--primary-color)] flex items-center justify-center border border-[var(--primary-color)]/20 group-hover:scale-110 group-hover:bg-[var(--primary-color)]/30 transition-all duration-300">
-                  <Monitor size={32} />
+                <div className="w-16 h-16 rounded-2xl bg-zinc-900/60 flex items-center justify-center border border-zinc-800/80 group-hover:scale-110 group-hover:border-zinc-700 group-hover:bg-zinc-800/40 transition-all duration-300">
+                  <Monitor size={32} style={{ stroke: "url(#bio-icon-gradient)" }} />
                 </div>
                 <div>
                   <h3 className="text-xl font-extrabold text-white group-hover:text-[var(--primary-color)] transition-colors">
-                    Bio computador
+                    Bio Computador
                   </h3>
-                  <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+                  <p className="text-base text-zinc-300 mt-2 leading-relaxed">
                     Personalize títulos, biografia, efeitos de animação e mídias de alta definição para a versão desktop.
                   </p>
                 </div>
                 <div className="mt-auto pt-4 flex items-center gap-2 text-xs font-bold text-[var(--primary-color)] opacity-70 group-hover:opacity-100 transition-opacity">
-                  Configurar Computador <Sparkles className="w-4 h-4" />
+                  Configurar Computador
                 </div>
               </button>
             </div>
@@ -1453,30 +1488,305 @@ export default function Bio() {
             <div className="flex items-center justify-between bg-zinc-950/40 p-4 rounded-2xl border border-white/5 shadow-md">
               <button
                 onClick={() => setSelectedView("none")}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-all duration-200 cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-zinc-300 hover:text-white hover:bg-white/5 transition-all duration-200 cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5 text-[var(--primary-color)] animate-pulse" />
                 Voltar para Seleção
               </button>
               <div className="flex items-center gap-2.5">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-extrabold tracking-wider text-zinc-400 uppercase">
-                  Editando: <strong className="text-white">{selectedView === "smartphone" ? "Bio smartphone" : "Bio computador"}</strong>
+                <span className="text-xs font-semibold text-zinc-400">
+                  Editando: <strong className="text-white">{selectedView === "smartphone" ? "Bio Smartphone" : "Bio Computador"}</strong>
                 </span>
               </div>
             </div>
 
+
+            {/* SUBDIVISÃO SUPERIOR: Menu em Cascata Compacta de Seleção (Desktop e Mobile) */}
+            <div className="flex flex-col gap-2.5 bg-zinc-950/40 p-4 sm:p-5 rounded-3xl border border-white/5 shadow-inner">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Painel do Editor de Mídia</span>
+                <span className="text-xs text-zinc-500">
+                  {hasActiveSection 
+                    ? "Clique no painel ativo abaixo para recolher e exibir as outras opções" 
+                    : "Selecione uma seção abaixo para editar"}
+                </span>
+              </div>
+              
+              <div className={hasActiveSection ? "flex flex-col sm:flex-row gap-2.5 justify-center" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5"}>
+                {/* 1. Informações Básicas */}
+                {(!hasActiveSection || openSections.basic) && (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('basic')}
+                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
+                      openSections.basic 
+                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
+                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                    }`}
+                  >
+                    {openSections.basic && (
+                      <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    )}
+                    <span className="flex items-center gap-3">
+                      <Info className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.basic ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                      INFORMAÇÕES BÁSICAS
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {openSections.basic && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-full border border-white/5 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.basic ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                    </div>
+                  </button>
+                )}
+
+                {/* 2. Aparência do Site */}
+                {(!hasActiveSection || openSections.appearance) && (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('appearance')}
+                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
+                      openSections.appearance 
+                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
+                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                    }`}
+                  >
+                    {openSections.appearance && (
+                      <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    )}
+                    <span className="flex items-center gap-3">
+                      <Eye className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.appearance ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                      APARÊNCIA DO SITE
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {openSections.appearance && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-full border border-white/5 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.appearance ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                    </div>
+                  </button>
+                )}
+
+                {/* 3. Contatos e Redes */}
+                {(!hasActiveSection || openSections.contacts) && (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('contacts')}
+                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
+                      openSections.contacts 
+                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
+                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                    }`}
+                  >
+                    {openSections.contacts && (
+                      <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    )}
+                    <span className="flex items-center gap-3">
+                      <Phone className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.contacts ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                      CONTATOS E REDES
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {openSections.contacts && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-full border border-white/5 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.contacts ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                    </div>
+                  </button>
+                )}
+
+                {/* 4. Outros Links */}
+                {(!hasActiveSection || openSections.otherLinks) && (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('otherLinks')}
+                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
+                      openSections.otherLinks 
+                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
+                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                    }`}
+                  >
+                    {openSections.otherLinks && (
+                      <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    )}
+                    <span className="flex items-center gap-3">
+                      <LinkIcon className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.otherLinks ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                      OUTROS LINKS
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {openSections.otherLinks && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-full border border-white/5 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.otherLinks ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                    </div>
+                  </button>
+                )}
+
+                {/* 5. Catálogo de Produtos */}
+                {(!hasActiveSection || openSections.catalog) && (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('catalog')}
+                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
+                      openSections.catalog 
+                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
+                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                    }`}
+                  >
+                    {openSections.catalog && (
+                      <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    )}
+                    <span className="flex items-center gap-3">
+                      <ShoppingBag className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.catalog ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                      CATÁLOGO DE PRODUTOS
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {openSections.catalog && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-full border border-white/5 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.catalog ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                    </div>
+                  </button>
+                )}
+
+                {/* 6. Portfólio */}
+                {(!hasActiveSection || openSections.portfolio) && (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('portfolio')}
+                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
+                      openSections.portfolio 
+                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
+                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                    }`}
+                  >
+                    {openSections.portfolio && (
+                      <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    )}
+                    <span className="flex items-center gap-3">
+                      <Layout className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.portfolio ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                      PORTFÓLIO
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {openSections.portfolio && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-full border border-white/5 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.portfolio ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                    </div>
+                  </button>
+                )}
+
+                {/* 7. Pagamento */}
+                {(!hasActiveSection || openSections.payment) && (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('payment')}
+                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
+                      openSections.payment 
+                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
+                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                    }`}
+                  >
+                    {openSections.payment && (
+                      <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    )}
+                    <span className="flex items-center gap-3">
+                      <CreditCard className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.payment ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                      DADOS DE PAGAMENTO (PIX)
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {openSections.payment && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-full border border-white/5 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.payment ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                    </div>
+                  </button>
+                )}
+
+                {/* 8. Endereço */}
+                {(!hasActiveSection || openSections.address) && (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('address')}
+                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
+                      openSections.address 
+                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
+                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                    }`}
+                  >
+                    {openSections.address && (
+                      <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    )}
+                    <span className="flex items-center gap-3">
+                      <MapPin className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.address ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                      ENDEREÇO E LOCALIZAÇÃO
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {openSections.address && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-full border border-white/5 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.address ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                    </div>
+                  </button>
+                )}
+
+                {/* 9. Chat/Contato */}
+                {(!hasActiveSection || openSections.contactSection) && (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('contactSection')}
+                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
+                      openSections.contactSection 
+                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
+                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                    }`}
+                  >
+                    {openSections.contactSection && (
+                      <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    )}
+                    <span className="flex items-center gap-3">
+                      <Sparkles className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.contactSection ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                      CHAT CARDDIGITAL GM
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {openSections.contactSection && (
+                        <span className="text-[10px] text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded-full border border-white/5 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.contactSection ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Placeholder quando nenhuma seção está expandida */}
+            {!Object.values(openSections).some(Boolean) && (
+              <div className="flex flex-col items-center justify-center py-16 px-4 bg-zinc-950/20 border border-white/5 rounded-[2.5rem] text-center shadow-inner animate-in fade-in duration-300">
+                <div className="w-16 h-16 rounded-full bg-[var(--primary-color)]/10 text-[var(--primary-color)] flex items-center justify-center mb-4 border border-[var(--primary-color)]/20 shadow-lg">
+                  <Sparkles className="w-8 h-8 animate-pulse" />
+                </div>
+                <h3 className="text-xl font-extrabold text-white mb-2">Painel de Edição BiO</h3>
+                <p className="text-sm text-zinc-400 max-w-md leading-relaxed">
+                  Clique em qualquer uma das seções acima para abrir seu respectivo painel de configuração e editar de ponta a ponta.
+                </p>
+              </div>
+            )}
+
+
             {/* 1. INFORMAÇÕES BÁSICAS */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('basic')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-               <span className="flex items-center gap-2"><Info className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Informações Básicas</span>
-               {openSections.basic ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
             {openSections.basic && (
-             <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
+              <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
+                <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
+                  <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                    <Info className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
+                    INFORMAÇÕES BÁSICAS
+                  </span>
+                  <span className="text-xs font-semibold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+                    Edição Ativa
+                  </span>
+                </div>
+                
+                <div className="flex flex-col gap-5">
 
                <div>
                  <label className="gm-label">
@@ -1490,14 +1800,14 @@ export default function Bio() {
                    placeholder={basicInfoTab === "desktop" ? "Ex: GM Edificação" : "Deixe em branco para usar o mesmo do Desktop"} 
                  />
                  {basicInfoTab === "mobile" && (
-                   <p className="text-xs text-slate-400 mt-1.5 ml-1">
+                   <p className="text-xs text-zinc-400 mt-1.5 ml-1">
                      Se deixado em branco, será utilizado o título configurado na versão Desktop.
                    </p>
                  )}
                </div>
                <div>
                  <label className="gm-label">{basicInfoTab === "desktop" ? "Descrição (Desktop)" : "Descrição (Smartphone)"}</label>
-                 <div ref={editorRef} contentEditable onInput={handleEditorInput} onBlur={handleEditorInput} className={`gm-input bio-desc-editor min-h-[160px] !py-3 w-full transition-all duration-200 overflow-y-auto whitespace-pre-wrap outline-none border border-white/10 focus:border-[var(--primary-color)] rounded-xl ${
+                 <div ref={editorRef} contentEditable onInput={handleEditorInput} onBlur={handleEditorInput} className={`gm-input bio-desc-editor min-h-[160px] !py-3 w-full transition-all duration-200 overflow-y-auto whitespace-pre-wrap outline-none border border-white/10 focus:border-[var(--primary-color)] rounded-xl resize-y overflow-auto ${
                     (basicInfoTab === "desktop" ? bioConfig.description_align : (bioConfig.description_align_mobile || "center")) === "left" ? "text-left" : (basicInfoTab === "desktop" ? bioConfig.description_align : (bioConfig.description_align_mobile || "center")) === "right" ? "text-right" : "text-center"
                   } ${
                     (basicInfoTab === "desktop" ? bioConfig.description_bold : bioConfig.description_bold_mobile) ? "font-bold" : "font-medium"
@@ -1505,7 +1815,7 @@ export default function Bio() {
                     (basicInfoTab === "desktop" ? bioConfig.description_italic : bioConfig.description_italic_mobile) ? "italic" : "not-italic"
                   } ${getFontSizeClass(basicInfoTab === "desktop" ? bioConfig.description_size : (bioConfig.description_size_mobile || "lg"))} bio-desc-font-${(basicInfoTab === "desktop" ? bioConfig.description_font : (bioConfig.description_font_mobile || "ui"))}`} data-placeholder={basicInfoTab === "desktop" ? "Sua frase de destaque..." : "Deixe em branco para usar a mesma descrição do Desktop..."} style={{ outline: 'none' }}></div>
                   {basicInfoTab === "mobile" && (
-                    <p className="text-xs text-slate-400 mt-1.5 ml-1 mb-2">
+                    <p className="text-xs text-zinc-400 mt-1.5 ml-1 mb-2">
                       Se deixado em branco, será utilizada a descrição configurada na versão Desktop.
                     </p>
                   )}
@@ -1517,7 +1827,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={() => handleChange(basicInfoTab === "desktop" ? "description_align" : "description_align_mobile", "left")}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'left') ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'left') ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
                         title="Alinhar à Esquerda"
                       >
                         <AlignLeft className="w-4 h-4" />
@@ -1525,7 +1835,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={() => handleChange(basicInfoTab === "desktop" ? "description_align" : "description_align_mobile", "center")}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'center' || !(basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile)) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'center' || !(basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile)) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
                         title="Centralizado"
                       >
                         <AlignCenter className="w-4 h-4" />
@@ -1533,7 +1843,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={() => handleChange(basicInfoTab === "desktop" ? "description_align" : "description_align_mobile", "right")}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'right') ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'right') ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
                         title="Alinhar à Direita"
                       >
                         <AlignRight className="w-4 h-4" />
@@ -1545,7 +1855,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={handleBoldClick}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_bold : bioConfig.description_bold_mobile) || isSelectionBold) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_bold : bioConfig.description_bold_mobile) || isSelectionBold) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
                         title="Negrito"
                       >
                         <Bold className="w-4 h-4 font-bold" />
@@ -1553,7 +1863,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={handleItalicClick}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_italic : bioConfig.description_italic_mobile) || isSelectionItalic) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_italic : bioConfig.description_italic_mobile) || isSelectionItalic) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
                         title="Itálico"
                       >
                         <Italic className="w-4 h-4 italic" />
@@ -1607,30 +1917,32 @@ export default function Bio() {
                        </select>
                      </div>
                   </div>
-               </div>
-             </div>
-             )}
-          </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* 3. APARÊNCIA DO SITE */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('appearance')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-               <span className="flex items-center gap-2"><Eye className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Aparência do Site</span>
-               {openSections.appearance ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
-            
+            {/* 3. APARÊNCIA DO SITE */}
             {openSections.appearance && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
+              <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
+                <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
+                  <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                    <Eye className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
+                    APARÊNCIA DO SITE
+                  </span>
+                  <span className="text-xs font-semibold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+                    Edição Ativa
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
               <div>
                 <label className="gm-label">Cor de Destaque</label>
                 <div className="flex items-center gap-2">
                   <input type="color" className="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" value={bioConfig.color || settings?.brand_primary || "#FF6900"} onChange={e => handleChange("color", e.target.value)} />
                   <input type="text" className="gm-input flex-1 font-mono text-sm" value={bioConfig.color || settings?.brand_primary || "#FF6900"} onChange={e => handleChange("color", e.target.value)} />
                 </div>
-                <p className="text-[10px] text-slate-500 mt-1">Se vazio, usará a cor principal do sistema.</p>
+                <p className="text-[10px] text-zinc-500 mt-1">Se vazio, usará a cor principal do sistema.</p>
               </div>
               <div>
                 <label className="gm-label">Tema Visual</label>
@@ -1699,11 +2011,11 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.bg_image_url ? (
-                          <div className="w-full rounded-lg overflow-hidden border border-zinc-800 bg-black/40 relative" style={{ aspectRatio: "1920 / 500" }}>
-                            <OptimizedImage src={bioConfig.bg_image_url} alt="Plano de Fundo Desktop" className="absolute inset-0 w-full h-full object-cover" width={800} />
+                          <div className="w-full aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
+                            <OptimizedImage src={bioConfig.bg_image_url} alt="Plano de Fundo Desktop" className="w-full h-full object-cover" width={800} />
                           </div>
                         ) : (
-                          <div className="w-full rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10" style={{ aspectRatio: "1920 / 500" }}>
+                          <div className="w-full aspect-video rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
                             <Layout className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem plano de fundo desktop
                           </div>
@@ -1735,11 +2047,11 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.banner_img_url_1 ? (
-                          <div className="w-full rounded-lg overflow-hidden border border-zinc-800 bg-black/40 relative" style={{ aspectRatio: "1920 / 500" }}>
-                            <OptimizedImage src={bioConfig.banner_img_url_1} alt="Banner Desktop" className="absolute inset-0 w-full h-full object-cover" width={800} />
+                          <div className="w-full aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
+                            <OptimizedImage src={bioConfig.banner_img_url_1} alt="Banner Desktop" className="w-full h-full object-cover" width={800} />
                           </div>
                         ) : (
-                          <div className="w-full rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10" style={{ aspectRatio: "1920 / 500" }}>
+                          <div className="w-full aspect-video rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
                             <Sparkles className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem banner desktop
                           </div>
@@ -1790,8 +2102,8 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.bg_mobile_image_url ? (
-                          <div className="w-full aspect-[9/16] rounded-lg overflow-hidden border border-zinc-800 bg-black/40 flex items-center justify-center p-1">
-                            <OptimizedImage src={bioConfig.bg_mobile_image_url} alt="Plano de Fundo Smartphone" className="max-w-full max-h-full object-contain" width={240} />
+                          <div className="w-full aspect-[9/16] rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
+                            <OptimizedImage src={bioConfig.bg_mobile_image_url} alt="Plano de Fundo Smartphone" className="w-full h-full object-cover" width={240} />
                           </div>
                         ) : (
                           <div className="w-full aspect-[9/16] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
@@ -1827,8 +2139,8 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.mobile_banner_img_url_1 ? (
-                          <div className="w-full aspect-[6/5] rounded-lg overflow-hidden border border-zinc-800 bg-black/40 flex items-center justify-center p-1">
-                            <OptimizedImage src={bioConfig.mobile_banner_img_url_1} alt="Banner Smartphone" className="max-w-full max-h-full object-contain" width={240} />
+                          <div className="w-full aspect-[6/5] rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
+                            <OptimizedImage src={bioConfig.mobile_banner_img_url_1} alt="Banner Smartphone" className="w-full h-full object-cover" width={240} />
                           </div>
                         ) : (
                           <div className="w-full aspect-[6/5] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
@@ -1864,26 +2176,28 @@ export default function Bio() {
                     type="checkbox" 
                     className="sr-only peer"
                     checked={!!bioConfig.show_banners}
-                    onChange={(e) => handleChange("show_banners", e.target.checked)}
+                    onChange={e => handleChange("show_banners", e.target.checked)}
                   />
-                  <div className="w-9 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--primary-color)]"></div>
+                  <div className="w-11 h-6 bg-zinc-850 peer-focus:outline-none rounded-full peer peer-checked:after:tranzinc-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-600 after:border-zinc-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary-color)] peer-checked:after:bg-white peer-checked:after:border-white"></div>
                 </label>
               </div>
             </div>
-            )}
           </div>
+        )}
 
-          {/* 2. CONTATOS E REDES */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('contacts')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><Phone className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Contatos e Redes</span>
-              {openSections.contacts ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
+        {/* 2. CONTATOS E REDES */}
+        {openSections.contacts && (
+          <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                <Phone className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
+                CONTATOS E REDES
+              </span>
+              <span className="text-xs font-semibold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+                Edição Ativa
+              </span>
+            </div>
             
-            {openSections.contacts && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 pt-2">
               <div>
                 <label className="gm-label">WhatsApp (com DDD)</label>
@@ -1914,20 +2228,22 @@ export default function Bio() {
                 <input type="text" className="gm-input" value={bioConfig.tiktok || ""} onChange={e => handleChange("tiktok", e.target.value)} placeholder="Ex: @seuusuario" />
               </div>
             </div>
-            )}
           </div>
+        )}
 
-          {/* 4. OUTROS LINKS */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('otherLinks')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><LinkIcon className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Outros Links</span>
-              {openSections.otherLinks ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
+        {/* 4. OUTROS LINKS */}
+        {openSections.otherLinks && (
+          <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                <LinkIcon className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
+                OUTROS LINKS
+              </span>
+              <span className="text-xs font-semibold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+                Edição Ativa
+              </span>
+            </div>
             
-            {openSections.otherLinks && (
             <div className="animate-in fade-in slide-in-from-top-2 pt-2">
               <div className="flex justify-end mb-4">
                 <button 
@@ -1940,7 +2256,7 @@ export default function Bio() {
               </div>
             
             {bioConfig.custom_links.length === 0 ? (
-               <div className="text-center py-6 text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
+               <div className="text-center py-6 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-xl">
                  Nenhum link adicional. Clique em "Adicionar" para inserir links customizados.
                </div>
             ) : (
@@ -1948,21 +2264,21 @@ export default function Bio() {
                  {bioConfig.custom_links.map((link) => {
                    const CurrentIcon = getPlatformIcon(link.platform);
                    return (
-                     <div key={link.id} className="p-4 bg-[var(--gm-bg)] rounded-xl border border-slate-800/80 space-y-3 relative group">
+                     <div key={link.id} className="p-4 bg-[var(--gm-bg)] rounded-xl border border-zinc-800/80 space-y-3 relative group">
                        <button 
                          onClick={() => removeCustomLink(link.id)}
-                         className="absolute top-2 right-2 text-slate-500 hover:text-red-400 p-1 bg-black/30 rounded-full hover:bg-red-500/20 transition-all"
+                         className="absolute top-2 right-2 text-zinc-500 hover:text-red-400 p-1 bg-black/30 rounded-full hover:bg-red-500/20 transition-all"
                        >
                          <Trash className="w-4 h-4" />
                        </button>
                        
                        <div className="grid grid-cols-1 gap-3 pt-2">
                          <div>
-                           <label className="text-xs text-slate-400 mb-1 block">Ícone & Tipo de Link</label>
+                           <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Ícone & Tipo de Link</label>
                            <div className="relative">
                              <button
                                onClick={() => setIconPickerOpen(iconPickerOpen === link.id ? null : link.id)}
-                               className="w-full text-left gm-input flex items-center justify-between !py-2"
+                               className="w-full text-left gm-input flex items-center justify-between !py-2.5 text-sm"
                              >
                                <div className="flex items-center gap-2">
                                  <CurrentIcon className="w-4 h-4 text-[var(--gm-primary)]" />
@@ -1972,7 +2288,7 @@ export default function Bio() {
                              </button>
                              
                              {iconPickerOpen === link.id && (
-                               <div className="absolute z-20 mt-1 w-full bg-[var(--gm-bg)] border border-slate-700/50 rounded-xl p-3 shadow-2xl">
+                               <div className="absolute z-20 mt-1 w-full bg-[var(--gm-bg)] border border-zinc-700/50 rounded-xl p-3 shadow-2xl">
                                  <div className="grid grid-cols-4 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
                                    {platforms.map(p => {
                                      const PIcon = getPlatformIcon(p.value);
@@ -1985,7 +2301,7 @@ export default function Bio() {
                                            setIconPickerOpen(null);
                                          }}
                                          title={p.label}
-                                         className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-colors ${link.platform === p.value ? 'bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)]' : 'border-transparent hover:bg-slate-800/50 text-slate-300'}`}
+                                         className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-colors ${link.platform === p.value ? 'bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)]' : 'border-transparent hover:bg-zinc-800/50 text-zinc-300'}`}
                                        >
                                          <PIcon className="w-5 h-5 mb-1" />
                                          <span className="text-[9px] truncate w-full text-center">{p.label}</span>
@@ -1998,30 +2314,30 @@ export default function Bio() {
                            </div>
                          </div>
                          <div>
-                           <label className="text-xs text-slate-400 mb-1 block">Título do Botão</label>
+                           <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Título do Botão</label>
                            <input 
                              type="text" 
-                             className="gm-input w-full !py-2" 
+                             className="gm-input w-full !py-2.5 text-sm" 
                              value={link.label} 
                              onChange={e => updateCustomLink(link.id, 'label', e.target.value)} 
                              placeholder="Ex: Meu Portfólio"
                            />
                          </div>
                          <div>
-                           <label className="text-xs text-slate-400 mb-1 block">Subtítulo (opcional)</label>
+                           <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Subtítulo (opcional)</label>
                            <input 
                              type="text" 
-                             className="gm-input w-full !py-2" 
+                             className="gm-input w-full !py-2.5 text-sm" 
                              value={link.value || ''} 
                              onChange={e => updateCustomLink(link.id, 'value', e.target.value)} 
                              placeholder="Ex: @gmedificacao"
                            />
                          </div>
                          <div>
-                           <label className="text-xs text-slate-400 mb-1 block">URL (Link do botão)</label>
+                           <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">URL (Link do botão)</label>
                            <input 
                              type="text" 
-                             className="gm-input w-full !py-2 text-sm font-mono" 
+                             className="gm-input w-full !py-2.5 text-sm font-mono" 
                              value={link.url} 
                              onChange={e => updateCustomLink(link.id, 'url', e.target.value)} 
                              placeholder="https://..."
@@ -2034,37 +2350,39 @@ export default function Bio() {
                </div>
             )}
             
-            <div className="grid grid-cols-1 gap-4 pt-4 border-t border-slate-800">
+            <div className="grid grid-cols-1 gap-4 pt-4 border-t border-zinc-800">
               <div>
                 <label className="gm-label">Site Principal URL</label>
-                <input type="text" className="gm-input font-mono text-xs" value={bioConfig.website} onChange={e => handleChange("website", e.target.value)} placeholder="https://..." />
+                <input type="text" className="gm-input font-mono text-sm" value={bioConfig.website} onChange={e => handleChange("website", e.target.value)} placeholder="https://..." />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="gm-label">URL do Portfólio</label>
-                  <input type="text" className="gm-input font-mono text-xs" value={bioConfig.portfolio_url} onChange={e => handleChange("portfolio_url", e.target.value)} placeholder="https://seu-portfolio.com" />
+                  <input type="text" className="gm-input font-mono text-sm" value={bioConfig.portfolio_url} onChange={e => handleChange("portfolio_url", e.target.value)} placeholder="https://seu-portfolio.com" />
                 </div>
                 <div>
                   <label className="gm-label">URL do Catálogo (PDF ou site)</label>
-                  <input type="text" className="gm-input font-mono text-xs" value={bioConfig.catalog_url} onChange={e => handleChange("catalog_url", e.target.value)} placeholder="https://link-do-catalogo.com" />
+                  <input type="text" className="gm-input font-mono text-sm" value={bioConfig.catalog_url} onChange={e => handleChange("catalog_url", e.target.value)} placeholder="https://link-do-catalogo.com" />
                 </div>
               </div>
             </div>
-            </div>
-            )}
           </div>
+        </div>
+      )}
 
-          {/* 7. CATÁLOGO DE PRODUTOS (FULL WIDTH lg:col-span-2) */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('catalog')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><ShoppingBag className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Catálogo de Produtos</span>
-              {openSections.catalog ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
+        {/* 5. CATÁLOGO DE PRODUTOS */}
+        {openSections.catalog && (
+          <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                <ShoppingBag className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
+                CATÁLOGO DE PRODUTOS
+              </span>
+              <span className="text-xs font-semibold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+                Edição Ativa
+              </span>
+            </div>
             
-            {openSections.catalog && (
             <div className="animate-in fade-in slide-in-from-top-2 pt-2 space-y-5">
               {/* Seção Título do Catálogo */}
               <div className="w-full sm:max-w-sm">
@@ -2080,7 +2398,7 @@ export default function Bio() {
                   className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
                     catalogTab === 'list' 
                       ? 'border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5' 
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      : 'border-transparent text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <List className="w-4 h-4" />
@@ -2092,7 +2410,7 @@ export default function Bio() {
                   className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
                     catalogTab === 'add' 
                       ? 'border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5' 
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      : 'border-transparent text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <PlusCircle className="w-4 h-4" />
@@ -2104,7 +2422,7 @@ export default function Bio() {
                   className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer shrink-0 ml-auto ${
                     catalogTab === 'trash' 
                       ? 'border-red-500 text-red-400 bg-red-500/5' 
-                      : 'border-transparent text-slate-400 hover:text-red-400/80'
+                      : 'border-transparent text-zinc-400 hover:text-red-400/80'
                   }`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -2116,9 +2434,9 @@ export default function Bio() {
               {catalogTab === 'list' && (
                 <div className="space-y-4">
                   {(!bioConfig.catalog_items || bioConfig.catalog_items.length === 0) ? (
-                    <div className="text-center py-10 text-slate-500 text-sm border border-dashed border-slate-800 rounded-2xl space-y-3">
+                    <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-2xl space-y-3">
                       <ShoppingBag className="w-12 h-12 opacity-30 mx-auto text-[var(--primary-color)]" />
-                      <p className="font-medium text-slate-400">Nenhum produto cadastrado no momento.</p>
+                      <p className="font-medium text-zinc-400">Nenhum produto cadastrado no momento.</p>
                       <button 
                         type="button"
                         onClick={() => setCatalogTab('add')}
@@ -2164,7 +2482,7 @@ export default function Bio() {
                                   </div>
                                 )}
                                 <div className="min-w-0 flex-1 pr-2">
-                                  <h4 className="font-bold text-sm text-slate-200 truncate">{item.name || <span className="italic text-slate-500 font-normal">Sem Nome</span>}</h4>
+                                  <h4 className="font-bold text-sm text-zinc-200 truncate">{item.name || <span className="italic text-zinc-500 font-normal">Sem Nome</span>}</h4>
                                   <p className="text-xs text-[var(--primary-color)] font-mono font-bold mt-0.5">{item.price || 'Preço sob consulta'}</p>
                                 </div>
                               </div>
@@ -2177,14 +2495,14 @@ export default function Bio() {
                                     e.stopPropagation();
                                     removeCatalogItem(item.id);
                                   }}
-                                  className="text-slate-400 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-xl transition-all mr-1"
+                                  className="text-zinc-400 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-xl transition-all mr-1"
                                   title="Mover para lixeira"
                                 >
                                   <Trash className="w-4 h-4" />
                                 </button>
                                 
                                 {/* EXPANSION INDICATOR */}
-                                <div className="text-slate-400 hover:text-slate-200 p-2 rounded-xl">
+                                <div className="text-zinc-400 hover:text-zinc-200 p-2 rounded-xl">
                                   {isExpanded ? (
                                     <ChevronUp className="w-5 h-5 text-[var(--primary-color)]" />
                                   ) : (
@@ -2199,10 +2517,10 @@ export default function Bio() {
                               <div className="p-4 sm:p-5 bg-zinc-900/40 border-t border-zinc-900/60 space-y-5 animate-in fade-in duration-200">
                                 <div className="space-y-4">
                                   <div>
-                                    <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Nome do Produto/Serviço</label>
+                                    <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Nome do Produto/Serviço</label>
                                     <input 
                                       type="text" 
-                                      className="gm-input w-full !py-2.5 font-medium" 
+                                      className="gm-input w-full !py-2.5 font-medium text-sm" 
                                       value={item.name} 
                                       onChange={e => updateCatalogItem(item.id, 'name', e.target.value)} 
                                       placeholder="Ex: Tênis Nike Air"
@@ -2211,20 +2529,20 @@ export default function Bio() {
 
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                      <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Preço (opcional)</label>
+                                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Preço (opcional)</label>
                                       <input 
                                         type="text" 
-                                        className="gm-input w-full !py-2.5 text-[var(--primary-color)] font-mono font-bold" 
+                                        className="gm-input w-full !py-2.5 text-[var(--primary-color)] font-mono font-bold text-sm" 
                                         value={item.price} 
                                         onChange={e => updateCatalogItem(item.id, 'price', formatBRL(e.target.value))} 
                                         placeholder="R$ 0,00"
                                       />
                                     </div>
                                     <div>
-                                      <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Link Direto (WhatsApp/Compra)</label>
+                                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Link Direto (WhatsApp/Compra)</label>
                                       <input 
                                         type="text" 
-                                        className="gm-input w-full !py-2.5 text-xs font-mono" 
+                                        className="gm-input w-full !py-2.5 text-sm font-mono" 
                                         value={item.url} 
                                         onChange={e => updateCatalogItem(item.id, 'url', e.target.value)} 
                                         placeholder="Opcional. Link para ir ao clicar"
@@ -2233,21 +2551,11 @@ export default function Bio() {
                                   </div>
 
                                   <div>
-                                    <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Descrição do Produto</label>
+                                    <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Descrição do Produto</label>
                                     <textarea 
-                                      className="gm-input w-full !py-2.5 min-h-[100px] resize-none overflow-y-hidden" 
+                                      className="gm-input w-full !py-2.5 min-h-[100px] resize-y text-sm" 
                                       value={item.description || ''} 
-                                      onChange={e => {
-                                        updateCatalogItem(item.id, 'description', e.target.value);
-                                        e.target.style.height = 'auto';
-                                        e.target.style.height = e.target.scrollHeight + 'px';
-                                      }}
-                                      ref={el => {
-                                        if (el) {
-                                          el.style.height = 'auto';
-                                          el.style.height = el.scrollHeight + 'px';
-                                        }
-                                      }}
+                                      onChange={e => updateCatalogItem(item.id, 'description', e.target.value)}
                                       placeholder="Ex: Tênis em couro, ótimo para corridas."
                                     />
                                   </div>
@@ -2255,7 +2563,7 @@ export default function Bio() {
                                   {/* CADASTRO POR QUANTIDADE / VARIAÇÕES */}
                                   <div className="border-t border-zinc-800/40 pt-4 mt-2">
                                     <div className="flex items-center justify-between mb-3">
-                                      <label className="text-xs font-extrabold text-slate-400 block uppercase tracking-wider">Cadastro por Quantidade / Variações</label>
+                                      <label className="text-sm font-extrabold text-zinc-300 block tracking-wide uppercase">Cadastro por Quantidade / Variações</label>
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -2263,56 +2571,58 @@ export default function Bio() {
                                           const updatedOptions = [...currentOptions, { id: Date.now().toString(), quantity: '', price: '' }];
                                           updateCatalogItem(item.id, 'options', updatedOptions);
                                         }}
-                                        className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1 rounded-lg transition-all"
+                                        className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-lg transition-all"
                                       >
-                                        <Plus className="w-3 h-3 mr-1" /> Add Opção
+                                        <Plus className="w-3.5 h-3.5 mr-1" /> Add Opção
                                       </button>
                                     </div>
                                     
                                     {(item.options || []).length > 0 ? (
                                       <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 no-scrollbar">
                                         {(item.options || []).map((opt: any, optIdx: number) => (
-                                          <div key={opt.id || optIdx} className="flex gap-2 items-center">
-                                            <input
-                                              type="text"
-                                              placeholder="Ex: 250 un"
-                                              className="gm-input flex-1 !py-1.5 text-xs font-semibold"
-                                              value={opt.quantity}
-                                              onChange={e => {
-                                                const updated = (item.options || []).map((o: any, idx: number) => 
-                                                  idx === optIdx ? { ...o, quantity: e.target.value } : o
-                                                );
-                                                updateCatalogItem(item.id, 'options', updated);
-                                              }}
-                                            />
-                                            <input
-                                              type="text"
-                                              placeholder="R$ 0,00"
-                                              className="gm-input w-28 !py-1.5 text-xs text-[var(--primary-color)] font-mono font-bold"
-                                              value={opt.price}
-                                              onChange={e => {
-                                                const updated = (item.options || []).map((o: any, idx: number) => 
-                                                  idx === optIdx ? { ...o, price: formatBRL(e.target.value) } : o
-                                                );
-                                                updateCatalogItem(item.id, 'options', updated);
-                                              }}
-                                            />
+                                          <div key={opt.id || optIdx} className="flex gap-2 items-center w-full">
+                                            <div className="grid grid-cols-2 gap-2 flex-1 min-w-0">
+                                              <input
+                                                type="text"
+                                                placeholder="Ex: 500 UND"
+                                                className="gm-input w-full !py-2 text-sm font-semibold pl-3"
+                                                value={opt.quantity}
+                                                onChange={e => {
+                                                  const updated = (item.options || []).map((o: any, idx: number) => 
+                                                    idx === optIdx ? { ...o, quantity: e.target.value } : o
+                                                  );
+                                                  updateCatalogItem(item.id, 'options', updated);
+                                                }}
+                                              />
+                                              <input
+                                                type="text"
+                                                placeholder="R$ 0,00"
+                                                className="gm-input w-full !py-2 text-sm text-[var(--primary-color)] font-mono font-bold pl-3"
+                                                value={opt.price}
+                                                onChange={e => {
+                                                  const updated = (item.options || []).map((o: any, idx: number) => 
+                                                    idx === optIdx ? { ...o, price: formatBRL(e.target.value) } : o
+                                                  );
+                                                  updateCatalogItem(item.id, 'options', updated);
+                                                }}
+                                              />
+                                            </div>
                                             <button
                                               type="button"
                                               onClick={() => {
                                                 const updated = (item.options || []).filter((_: any, idx: number) => idx !== optIdx);
                                                 updateCatalogItem(item.id, 'options', updated);
                                               }}
-                                              className="text-red-400 hover:text-red-300 p-1.5 hover:bg-red-500/10 rounded-lg transition-all"
+                                              className="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded-lg transition-all shrink-0"
                                               title="Remover Opção"
                                             >
-                                              <Trash className="w-3.5 h-3.5" />
+                                              <Trash className="w-4 h-4" />
                                             </button>
                                           </div>
                                         ))}
                                       </div>
                                     ) : (
-                                      <p className="text-[10px] text-slate-500 leading-normal">Se o seu produto tem preços que variam por quantidade (ex: 250, 500, 1000 cartões), adicione as opções acima. Caso contrário, use apenas o preço fixo padrão.</p>
+                                      <p className="text-[10px] text-zinc-500 leading-normal">Se o seu produto tem preços que variam por quantidade (ex: 250, 500, 1000 cartões), adicione as opções acima. Caso contrário, use apenas o preço fixo padrão.</p>
                                     )}
                                   </div>
                                 </div>
@@ -2320,7 +2630,7 @@ export default function Bio() {
                                 <div className="space-y-4 border-t border-zinc-800/65 pt-5">
                                   <div className="font-sans space-y-3">
                                     <div className="flex items-center justify-between">
-                                      <label className="text-sm font-bold text-slate-300 block">Fotos do Produto (Máximo 8)</label>
+                                      <label className="text-sm font-bold text-zinc-300 block">Fotos do Produto (Máximo 8)</label>
                                       {((item.images || (item.image_url ? [item.image_url] : [""])).length < 8) && (
                                         <button 
                                           type="button"
@@ -2355,13 +2665,13 @@ export default function Bio() {
                                                 </button>
                                               </div>
                                             ) : (
-                                              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-slate-600 shrink-0">
+                                              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-zinc-600 shrink-0">
                                                 <ShoppingBag className="w-8 h-8 opacity-45 text-[var(--primary-color)]" />
                                               </div>
                                             )}
                                             <div className="space-y-0.5">
-                                              <p className="text-sm font-black text-slate-200">Foto {idx + 1} de 8</p>
-                                              <p className="text-xs text-slate-400 font-medium">
+                                              <p className="text-sm font-black text-zinc-200">Foto {idx + 1} de 8</p>
+                                              <p className="text-xs text-zinc-400 font-medium">
                                                 {imgUrl ? "⚡ Miniatura carregada" : "⚠️ Nenhuma imagem vinculada"}
                                               </p>
                                             </div>
@@ -2369,7 +2679,7 @@ export default function Bio() {
                                           
                                           {/* 2. ÁREA LINK WEB IMAGEM */}
                                           <div className="space-y-1.5">
-                                            <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Link Web da Imagem</label>
+                                            <label className="text-[10px] font-bold text-zinc-500 tracking-wider block">Link Web da Imagem</label>
                                             <input 
                                               type="text" 
                                               className="gm-input w-full !py-2 text-xs font-mono" 
@@ -2420,7 +2730,7 @@ export default function Bio() {
               {catalogTab === 'add' && (
                 <div className="bg-zinc-950/40 p-4 sm:p-5 rounded-2xl border border-zinc-850/80 space-y-5 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-900">
-                    <h3 className="text-sm font-extrabold text-slate-200 flex items-center gap-2">
+                    <h3 className="text-sm font-extrabold text-zinc-200 flex items-center gap-2">
                       <PlusCircle className="w-4 h-4 text-[var(--primary-color)]" />
                       Novo Cadastro de Produto
                     </h3>
@@ -2428,10 +2738,10 @@ export default function Bio() {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Nome do Produto/Serviço *</label>
+                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Nome do Produto/Serviço *</label>
                       <input 
                         type="text" 
-                        className="gm-input w-full !py-2.5 font-medium" 
+                        className="gm-input w-full !py-2.5 font-medium text-sm" 
                         value={newProduct.name} 
                         onChange={e => setNewProduct(prev => ({ ...prev, name: e.target.value }))} 
                         placeholder="Ex: Tênis Nike Air"
@@ -2440,20 +2750,20 @@ export default function Bio() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Preço (opcional)</label>
+                        <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Preço (opcional)</label>
                         <input 
                           type="text" 
-                          className="gm-input w-full !py-2.5 text-[var(--primary-color)] font-mono font-bold" 
+                          className="gm-input w-full !py-2.5 text-[var(--primary-color)] font-mono font-bold text-sm" 
                           value={newProduct.price} 
                           onChange={e => setNewProduct(prev => ({ ...prev, price: formatBRL(e.target.value) }))} 
                           placeholder="R$ 0,00"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Link Direto (WhatsApp/Compra)</label>
+                        <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Link Direto (WhatsApp/Compra)</label>
                         <input 
                           type="text" 
-                          className="gm-input w-full !py-2.5 text-xs font-mono" 
+                          className="gm-input w-full !py-2.5 text-sm font-mono" 
                           value={newProduct.url} 
                           onChange={e => setNewProduct(prev => ({ ...prev, url: e.target.value }))} 
                           placeholder="Opcional. Link para ir ao clicar"
@@ -2462,9 +2772,9 @@ export default function Bio() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Descrição do Produto</label>
+                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Descrição do Produto</label>
                       <textarea 
-                        className="gm-input w-full !py-2.5 min-h-[100px] resize-none" 
+                        className="gm-input w-full !py-2.5 min-h-[100px] resize-y text-sm" 
                         value={newProduct.description} 
                         onChange={e => setNewProduct(prev => ({ ...prev, description: e.target.value }))} 
                         placeholder="Ex: Tênis em couro, ótimo para corridas."
@@ -2474,47 +2784,49 @@ export default function Bio() {
                     {/* CADASTRO POR QUANTIDADE / VARIAÇÕES (DRAFT FORM) */}
                     <div className="border-t border-zinc-800/40 pt-4 mt-2">
                       <div className="flex items-center justify-between mb-3">
-                        <label className="text-xs font-extrabold text-slate-400 block uppercase tracking-wider">Cadastro por Quantidade / Variações</label>
+                        <label className="text-sm font-extrabold text-zinc-300 block tracking-wide uppercase">Cadastro por Quantidade / Variações</label>
                         <button
                           type="button"
                           onClick={addNewProductOption}
-                          className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1 rounded-lg transition-all"
+                          className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-lg transition-all"
                         >
-                          <Plus className="w-3 h-3 mr-1" /> Add Opção
+                          <Plus className="w-3.5 h-3.5 mr-1" /> Add Opção
                         </button>
                       </div>
                       
                       {(newProduct.options || []).length > 0 ? (
                         <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 no-scrollbar">
                           {newProduct.options.map((opt: any, optIdx: number) => (
-                            <div key={opt.id || optIdx} className="flex gap-2 items-center">
-                              <input
-                                type="text"
-                                placeholder="Ex: 250 un"
-                                className="gm-input flex-1 !py-1.5 text-xs font-semibold"
-                                value={opt.quantity}
-                                onChange={e => updateNewProductOption(optIdx, 'quantity', e.target.value)}
-                              />
-                              <input
-                                type="text"
-                                placeholder="R$ 0,00"
-                                className="gm-input w-28 !py-1.5 text-xs text-[var(--primary-color)] font-mono font-bold"
-                                value={opt.price}
-                                onChange={e => updateNewProductOption(optIdx, 'price', formatBRL(e.target.value))}
-                              />
+                            <div key={opt.id || optIdx} className="flex gap-2 items-center w-full">
+                              <div className="grid grid-cols-2 gap-2 flex-1 min-w-0">
+                                <input
+                                  type="text"
+                                  placeholder="Ex: 500 UND"
+                                  className="gm-input w-full !py-2 text-sm font-semibold pl-3"
+                                  value={opt.quantity}
+                                  onChange={e => updateNewProductOption(optIdx, 'quantity', e.target.value)}
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="R$ 0,00"
+                                  className="gm-input w-full !py-2 text-sm text-[var(--primary-color)] font-mono font-bold pl-3"
+                                  value={opt.price}
+                                  onChange={e => updateNewProductOption(optIdx, 'price', formatBRL(e.target.value))}
+                                />
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => removeNewProductOption(optIdx)}
-                                className="text-red-400 hover:text-red-300 p-1.5 hover:bg-red-500/10 rounded-lg transition-all"
+                                className="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded-lg transition-all shrink-0"
                                 title="Remover Opção"
                               >
-                                <Trash className="w-3.5 h-3.5" />
+                                <Trash className="w-4 h-4" />
                               </button>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-[10px] text-slate-500 leading-normal">Se o seu produto tem preços que variam por quantidade (ex: 250, 500, 1000 cartões), adicione as opções acima. Caso contrário, use apenas o preço fixo padrão.</p>
+                        <p className="text-[10px] text-zinc-500 leading-normal">Se o seu produto tem preços que variam por quantidade (ex: 250, 500, 1000 cartões), adicione as opções acima. Caso contrário, use apenas o preço fixo padrão.</p>
                       )}
                     </div>
 
@@ -2522,7 +2834,7 @@ export default function Bio() {
                     <div className="space-y-4 border-t border-zinc-800/65 pt-5">
                       <div className="font-sans space-y-3">
                         <div className="flex items-center justify-between">
-                          <label className="text-sm font-bold text-slate-300 block">Fotos do Produto (Máximo 8)</label>
+                          <label className="text-sm font-bold text-zinc-300 block">Fotos do Produto (Máximo 8)</label>
                           {newProduct.images.length < 8 && (
                             <button 
                               type="button"
@@ -2557,13 +2869,13 @@ export default function Bio() {
                                     </button>
                                   </div>
                                 ) : (
-                                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-slate-600 shrink-0">
+                                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-zinc-600 shrink-0">
                                     <ShoppingBag className="w-8 h-8 opacity-45 text-[var(--primary-color)]" />
                                   </div>
                                 )}
                                 <div className="space-y-0.5">
-                                  <p className="text-sm font-black text-slate-200">Foto {idx + 1} de 8</p>
-                                  <p className="text-xs text-slate-400 font-medium">
+                                  <p className="text-sm font-black text-zinc-200">Foto {idx + 1} de 8</p>
+                                  <p className="text-xs text-zinc-400 font-medium">
                                     {imgUrl ? "⚡ Miniatura carregada" : "⚠️ Nenhuma imagem vinculada"}
                                   </p>
                                 </div>
@@ -2571,7 +2883,7 @@ export default function Bio() {
                               
                               {/* 2. ÁREA LINK WEB IMAGEM */}
                               <div className="space-y-1.5">
-                                <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Link Web da Imagem</label>
+                                <label className="text-[10px] font-bold text-zinc-500 tracking-wider block">Link Web da Imagem</label>
                                 <input 
                                   type="text" 
                                   className="gm-input w-full !py-2 text-xs font-mono" 
@@ -2631,7 +2943,7 @@ export default function Bio() {
               {catalogTab === 'trash' && (
                 <div className="bg-zinc-950/40 p-4 sm:p-5 rounded-2xl border border-zinc-850/80 space-y-4 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-900">
-                    <h3 className="text-xs font-extrabold text-slate-200 flex items-center gap-2">
+                    <h3 className="text-xs font-extrabold text-zinc-200 flex items-center gap-2">
                       <Trash2 className="w-4 h-4 text-red-400" />
                       Lixeira de Produtos
                     </h3>
@@ -2647,8 +2959,8 @@ export default function Bio() {
                   </div>
 
                   {deletedCatalogItems.length === 0 ? (
-                    <div className="text-center py-10 text-slate-500 text-sm border border-dashed border-slate-800 rounded-2xl space-y-2">
-                      <Trash2 className="w-10 h-10 opacity-20 mx-auto text-slate-400" />
+                    <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-2xl space-y-2">
+                      <Trash2 className="w-10 h-10 opacity-20 mx-auto text-zinc-400" />
                       <p>A lixeira está vazia.</p>
                     </div>
                   ) : (
@@ -2656,8 +2968,8 @@ export default function Bio() {
                       {deletedCatalogItems.map((item, idx) => (
                         <div key={item.id || idx} className="py-3 flex items-center justify-between gap-4">
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-bold text-sm text-slate-300 truncate">{item.name || 'Sem Nome'}</h4>
-                            <p className="text-xs text-slate-500 font-mono mt-0.5">{item.price || 'Sem Preço'}</p>
+                            <h4 className="font-bold text-sm text-zinc-300 truncate">{item.name || 'Sem Nome'}</h4>
+                            <p className="text-xs text-zinc-500 font-mono mt-0.5">{item.price || 'Sem Preço'}</p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <button
@@ -2686,20 +2998,22 @@ export default function Bio() {
                 </div>
               )}
             </div>
-            )}
           </div>
+        )}
 
-                    {/* SEÇÃO DE PORTFÓLIO */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('portfolio')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><Layout className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Portfólio</span>
-              {openSections.portfolio ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
+        {/* 6. PORTFÓLIO */}
+        {openSections.portfolio && (
+          <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                <Layout className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
+                PORTFÓLIO
+              </span>
+              <span className="text-xs font-semibold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+                Edição Ativa
+              </span>
+            </div>
             
-            {openSections.portfolio && (
             <div className="animate-in fade-in slide-in-from-top-2 pt-2 space-y-5">
               {/* Seção Título do Portfólio */}
               <div className="w-full sm:max-w-sm">
@@ -2713,13 +3027,13 @@ export default function Bio() {
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setActivePortfolioTab("active")}
-                      className={`text-sm font-bold pb-2 border-b-2 transition-colors cursor-pointer ${activePortfolioTab === "active" ? "border-[var(--primary-color)] text-white" : "border-transparent text-slate-400 hover:text-slate-300"}`}
+                      className={`text-sm font-bold pb-2 border-b-2 transition-colors cursor-pointer ${activePortfolioTab === "active" ? "border-[var(--primary-color)] text-white" : "border-transparent text-zinc-400 hover:text-zinc-300"}`}
                     >
                       Portfólios Ativos
                     </button>
                     <button
                       onClick={() => setActivePortfolioTab("trash")}
-                      className={`text-sm font-bold pb-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${activePortfolioTab === "trash" ? "border-red-500 text-red-400" : "border-transparent text-slate-400 hover:text-red-400"}`}
+                      className={`text-sm font-bold pb-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${activePortfolioTab === "trash" ? "border-red-500 text-red-400" : "border-transparent text-zinc-400 hover:text-red-400"}`}
                     >
                       <Trash2 className="w-4 h-4" />
                       Lixeira ({deletedPortfolioItems.length})
@@ -2761,7 +3075,7 @@ export default function Bio() {
                                   {/* Versão Smartphone do Portfólio */}
                                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                                     <div className="flex-1 w-full">
-                                      <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-extrabold uppercase tracking-wider">
+                                      <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-bold tracking-wider">
                                         <Smartphone className="w-3.5 h-3.5" /> Título Smartphone
                                       </label>
                                       <input 
@@ -2785,7 +3099,7 @@ export default function Bio() {
                                   
                                   <div className="bg-zinc-950/50 p-3 sm:p-4 rounded-xl border border-zinc-800/50">
                                     <div className="mb-6">
-                                      <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-slate-300">
+                                      <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-zinc-300">
                                         Descrição do Portfólio (Smartphone)
                                       </label>
                                       <textarea 
@@ -2796,16 +3110,16 @@ export default function Bio() {
                                       />
                                       <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
                                         <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "left" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align || 'left') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "center" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "right" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "left" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align || 'left') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "center" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "right" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
                                         </div>
                                         <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold_mobile: !(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) })} className={`p-1.5 rounded-md transition-colors ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic_mobile: !(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) })} className={`p-1.5 rounded-md transition-colors ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold_mobile: !(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) })} className={`p-1.5 rounded-md transition-colors ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic_mobile: !(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) })} className={`p-1.5 rounded-md transition-colors ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
                                         </div>
                                         <div className="flex-1 min-w-[140px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_font_mobile || item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font_mobile: e.target.value })}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_font_mobile || item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font_mobile: e.target.value })}>
                                             <option value="ui">Inter (Sistema)</option>
                                             <option value="funnel">Funnel (Títulos)</option>
                                             <option value="roboto">Roboto</option>
@@ -2816,7 +3130,7 @@ export default function Bio() {
                                           </select>
                                         </div>
                                         <div className="w-[80px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_size_mobile || item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size_mobile: e.target.value })}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_size_mobile || item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size_mobile: e.target.value })}>
                                             <option value="10 pt">10 pt</option>
                                             <option value="12 pt">12 pt</option>
                                             <option value="14 pt">14 pt</option>
@@ -2836,13 +3150,13 @@ export default function Bio() {
                                       {/* Section for Portfolio Main Banner (Smartphone) */}
                                       <div className="space-y-4">
                                         <div className="flex flex-col gap-1">
-                                          <span className="text-xs font-bold text-slate-200">Banner Principal do Portfólio (Smartphone)</span>
+                                          <span className="text-xs font-bold text-zinc-200">Banner Principal do Portfólio (Smartphone)</span>
                                           <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão celular.</span>
                                         </div>
                                         
                                         <div className="space-y-2 max-w-sm">
                                           <div className="flex items-center justify-between">
-                                            <span className="text-[11px] font-semibold text-slate-400">Smartphone (1080x900 px) - Proporção 6:5</span>
+                                            <span className="text-[11px] font-semibold text-zinc-400">Smartphone (1080x900 px) - Proporção 6:5</span>
                                             {item.main_banner_mobile_url && (
                                               <button 
                                                 type="button" 
@@ -2871,10 +3185,10 @@ export default function Bio() {
                                       <div className="space-y-3 pt-4 border-t border-zinc-800/20">
                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                           <div className="flex flex-col">
-                                            <span className="text-xs font-semibold text-slate-300">Banners Internos Smartphone ({item.mobile_layers?.length || 0})</span>
+                                            <span className="text-xs font-semibold text-zinc-300">Banners Internos Smartphone ({item.mobile_layers?.length || 0})</span>
                                             <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Tamanho Recomendado: 1080x1920 px (Proporção 9:16)</span>
                                           </div>
-                                          <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
+                                          <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-zinc-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
                                             <Upload className="w-4 h-4" />
                                             Adicionar Banner Smartphone
                                             <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioMobileLayer(item.id, e)} />
@@ -2913,7 +3227,7 @@ export default function Bio() {
                                   {/* Versão Desktop (Computador) do Portfólio */}
                                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                                     <div className="flex-1 w-full">
-                                      <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-extrabold uppercase tracking-wider">
+                                      <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-bold tracking-wider">
                                         <Monitor className="w-3.5 h-3.5" /> Título Desktop
                                       </label>
                                       <input 
@@ -2937,7 +3251,7 @@ export default function Bio() {
                                   
                                   <div className="bg-zinc-950/50 p-3 sm:p-4 rounded-xl border border-zinc-800/50">
                                     <div className="mb-6">
-                                      <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-slate-300">
+                                      <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-zinc-300">
                                         Descrição do Portfólio (Computador)
                                       </label>
                                       <textarea 
@@ -2948,16 +3262,16 @@ export default function Bio() {
                                       />
                                       <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
                                         <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "left" })} className={`p-1.5 rounded-md transition-colors ${(!item.description_align || item.description_align === 'left') ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "center" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "right" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "left" })} className={`p-1.5 rounded-md transition-colors ${(!item.description_align || item.description_align === 'left') ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "center" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "right" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
                                         </div>
                                         <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold: !item.description_bold })} className={`p-1.5 rounded-md transition-colors ${item.description_bold ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic: !item.description_italic })} className={`p-1.5 rounded-md transition-colors ${item.description_italic ? 'bg-[var(--primary-color)] text-white' : 'text-slate-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold: !item.description_bold })} className={`p-1.5 rounded-md transition-colors ${item.description_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic: !item.description_italic })} className={`p-1.5 rounded-md transition-colors ${item.description_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
                                         </div>
                                         <div className="flex-1 min-w-[140px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font: e.target.value })}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font: e.target.value })}>
                                             <option value="ui">Inter (Sistema)</option>
                                             <option value="funnel">Funnel (Títulos)</option>
                                             <option value="roboto">Roboto</option>
@@ -2968,7 +3282,7 @@ export default function Bio() {
                                           </select>
                                         </div>
                                         <div className="w-[80px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-slate-300 w-full" value={item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size: e.target.value })}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size: e.target.value })}>
                                             <option value="10 pt">10 pt</option>
                                             <option value="12 pt">12 pt</option>
                                             <option value="14 pt">14 pt</option>
@@ -2988,13 +3302,13 @@ export default function Bio() {
                                       {/* Section for Portfolio Main Banner (Desktop) */}
                                       <div className="space-y-4">
                                         <div className="flex flex-col gap-1">
-                                          <span className="text-xs font-bold text-slate-200">Banner Principal do Portfólio (Desktop)</span>
+                                          <span className="text-xs font-bold text-zinc-200">Banner Principal do Portfólio (Desktop)</span>
                                           <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão computador.</span>
                                         </div>
                                         
                                         <div className="space-y-2">
                                           <div className="flex items-center justify-between">
-                                            <span className="text-[11px] font-semibold text-slate-400">Desktop (Tamanho Lógico e Funcional: 1920x500 px a 1920x800 px para preenchimento widescreen perfeito)</span>
+                                            <span className="text-[11px] font-semibold text-zinc-400">Desktop (Tamanho Lógico e Funcional: 1920x500 px a 1920x800 px para preenchimento widescreen perfeito)</span>
                                             {item.main_banner_url && (
                                               <button 
                                                 type="button" 
@@ -3023,10 +3337,10 @@ export default function Bio() {
                                       <div className="space-y-3">
                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                           <div className="flex flex-col">
-                                            <span className="text-xs font-semibold text-slate-300">Banners Internos Desktop ({item.layers?.length || 0})</span>
+                                            <span className="text-xs font-semibold text-zinc-300">Banners Internos Desktop ({item.layers?.length || 0})</span>
                                             <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Tamanho Lógico e Funcional: 1600x900 px (Proporção 16:9) ou 1600x560 px para encaixe excelente nas proporções do computador</span>
                                           </div>
-                                          <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-slate-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
+                                          <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-zinc-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
                                             <Upload className="w-4 h-4" />
                                             Adicionar Banner Desktop
                                             <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
@@ -3082,8 +3396,8 @@ export default function Bio() {
                       )}
                     </div>
                     {deletedPortfolioItems.length === 0 ? (
-                      <div className="text-center py-10 text-slate-500 text-sm border border-dashed border-slate-800 rounded-2xl space-y-2">
-                        <Trash2 className="w-10 h-10 opacity-20 mx-auto text-slate-400" />
+                      <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-2xl space-y-2">
+                        <Trash2 className="w-10 h-10 opacity-20 mx-auto text-zinc-400" />
                         <p>A lixeira está vazia.</p>
                       </div>
                     ) : (
@@ -3096,7 +3410,7 @@ export default function Bio() {
                                   <img src={item.layers[0].image_url} alt="" className="w-full h-full object-cover" />
                                 </div>
                               )}
-                              <h4 className="font-bold text-sm text-slate-300 truncate">{item.title || 'Portfólio Excluído'}</h4>
+                              <h4 className="font-bold text-sm text-zinc-300 truncate">{item.title || 'Portfólio Excluído'}</h4>
                             </div>
                             <div className="flex flex-wrap items-center gap-2 shrink-0">
                               <button
@@ -3126,28 +3440,30 @@ export default function Bio() {
                 )}
               </div>
             </div>
-            )}
           </div>
+        )}
 
-{/* 5. DADOS DE PAGAMENTO (PIX) */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('payment')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Dados de Pagamento (PIX)</span>
-              {openSections.payment ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
+        {/* 7. DADOS DE PAGAMENTO (PIX) */}
+        {openSections.payment && (
+          <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                <CreditCard className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
+                DADOS DE PAGAMENTO (PIX)
+              </span>
+              <span className="text-xs font-semibold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+                Edição Ativa
+              </span>
+            </div>
             
-            {openSections.payment && (
             <div className="grid grid-cols-1 gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
               <div className="space-y-4">
                 <div>
                   <label className="gm-label font-semibold">Como deseja receber / Chave PIX</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-slate-400 font-medium mb-1 block">Tipo de Chave PIX</label>
-                      <select className="gm-input !py-2" value={bioConfig.pix_type} onChange={e => handleChange("pix_type", e.target.value)}>
+                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Tipo de Chave PIX</label>
+                      <select className="gm-input !py-2.5 text-sm" value={bioConfig.pix_type} onChange={e => handleChange("pix_type", e.target.value)}>
                         <option value="CPF">CPF</option>
                         <option value="CNPJ">CNPJ</option>
                         <option value="Email">E-mail</option>
@@ -3156,71 +3472,72 @@ export default function Bio() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-400 font-medium mb-1 block">Chave PIX</label>
-                      <input type="text" className="gm-input !py-2 text-sm" value={bioConfig.pix_key} onChange={e => handleChange("pix_key", e.target.value)} placeholder="Chave do PIX..." />
+                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Chave PIX</label>
+                      <input type="text" className="gm-input !py-2.5 text-sm" value={bioConfig.pix_key} onChange={e => handleChange("pix_key", e.target.value)} placeholder="Chave do PIX..." />
                     </div>
                   </div>
                 </div>
 
-                <div className="border-t border-slate-800/60 pt-4">
+                <div className="border-t border-zinc-800/60 pt-4">
                   <label className="gm-label font-semibold">Link para Pagamento (Cartão de Crédito URL)</label>
-                  <input type="text" className="gm-input font-mono text-xs !py-2.5" value={bioConfig.card_url || ''} onChange={e => handleChange("card_url", e.target.value)} placeholder="https://link.mercadopago.com/... ou stripe..." />
-                  <p className="text-xs text-slate-500 mt-1">Ao receber o clique no botão do cartão de crédito, o cliente será redirecionado para este link de pagamento.</p>
+                  <input type="text" className="gm-input font-mono text-sm !py-2.5" value={bioConfig.card_url || ''} onChange={e => handleChange("card_url", e.target.value)} placeholder="https://link.mercadopago.com/... ou stripe..." />
+                  <p className="text-xs text-zinc-500 mt-1">Ao receber o clique no botão do cartão de crédito, o cliente será redirecionado para este link de pagamento.</p>
                 </div>
               </div>
             </div>
-            )}
           </div>
+        )}
 
-          {/* 6. ENDEREÇO E LOCALIZAÇÃO */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               onClick={() => toggleSection('address')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2"><MapPin className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> Endereço e Localização</span>
-              {openSections.address ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
+        {/* 8. ENDEREÇO E LOCALIZAÇÃO */}
+        {openSections.address && (
+          <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                <MapPin className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
+                ENDEREÇO E LOCALIZAÇÃO
+              </span>
+              <span className="text-xs font-semibold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+                Edição Ativa
+              </span>
+            </div>
             
-            {openSections.address && (
             <div className="grid grid-cols-1 gap-5 animate-in fade-in slide-in-from-top-2 pt-2">
               <div className="space-y-4">
                 <div>
                   <label className="gm-label font-semibold">Nome do Endereço Completo</label>
-                  <textarea className="gm-input min-h-[70px] !py-2.5" value={bioConfig.address} onChange={e => handleChange("address", e.target.value)} placeholder="Rua XYZ, 123 - Cidade/UF" />
+                  <textarea className="gm-input min-h-[70px] !py-2.5 resize-y text-sm" value={bioConfig.address} onChange={e => handleChange("address", e.target.value)} placeholder="Rua XYZ, 123 - Cidade/UF" />
                 </div>
                 <div>
                   <label className="gm-label font-semibold">Link de Localização (Google Maps / Waze)</label>
-                  <input type="text" className="gm-input font-mono text-xs !py-2.5" value={bioConfig.address_url || ''} onChange={e => handleChange("address_url", e.target.value)} placeholder="https://maps.app.goo.gl/..." />
-                  <p className="text-xs text-slate-500 mt-1">Ao receber o clique no endereço, o cliente abrirá esta localização.</p>
+                  <input type="text" className="gm-input font-mono text-sm !py-2.5" value={bioConfig.address_url || ''} onChange={e => handleChange("address_url", e.target.value)} placeholder="https://maps.app.goo.gl/..." />
+                  <p className="text-xs text-zinc-500 mt-1">Ao receber o clique no endereço, o cliente abrirá esta localização.</p>
                 </div>
               </div>
             </div>
-            )}
           </div>
+        )}
 
-          {/* SEÇÃO DA PÁGINA DE CONTATO & CHAT */}
-          <div className="gm-card p-4 sm:p-6 space-y-4">
-            <button
-               type="button"
-               onClick={() => toggleSection('contactSection')}
-               className="w-full flex justify-between items-center text-lg font-semibold text-white group"
-            >
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[var(--primary-color)] group-hover:scale-110 transition-transform" /> 
-                Chat CardDigital GM
+        {/* 9. CHAT CARDDIGITAL GM */}
+        {openSections.contactSection && (
+          <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                <Sparkles className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
+                CHAT CARDDIGITAL GM
               </span>
-              {openSections.contactSection ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
+              <span className="text-xs font-semibold text-zinc-400 bg-white/5 px-3 py-1 rounded-full border border-white/5 shadow-inner">
+                Edição Ativa
+              </span>
+            </div>
             
-            {openSections.contactSection && (
+            {true && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2 pt-2 text-zinc-300">
                 {/* Banner de Contato */}
                 <div className="space-y-4 bg-zinc-905/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
                   <h4 className="text-sm font-bold text-white flex items-center gap-2">
                     <Layout className="w-4 h-4 text-[var(--primary-color)]" /> Banner da Página de Contato
                   </h4>
-                  <p className="text-xs text-slate-400">Envie um banner exclusivo para a página de contato do seu site (caso vazio, usará o banner principal).</p>
+                  <p className="text-xs text-zinc-400">Envie um banner exclusivo para a página de contato do seu site (caso vazio, usará o banner principal).</p>
                   
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
@@ -3239,11 +3556,11 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.contact_banner_img_url ? (
-                          <div className="w-full rounded-lg overflow-hidden border border-zinc-800 bg-black/40 relative" style={{ aspectRatio: "16 / 6" }}>
-                            <OptimizedImage src={bioConfig.contact_banner_img_url} alt="Banner Contato" className="absolute inset-0 w-full h-full object-cover" width={800} />
+                          <div className="w-full aspect-[16/6] rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
+                            <OptimizedImage src={bioConfig.contact_banner_img_url} alt="Banner Contato" className="w-full h-full object-cover" width={800} />
                           </div>
                         ) : (
-                          <div className="w-full rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10" style={{ aspectRatio: "16 / 6" }}>
+                          <div className="w-full aspect-[16/6] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
                             <Layout className="w-5 h-5 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem banner de contato personalizado
                           </div>
@@ -3294,7 +3611,7 @@ export default function Bio() {
                   <h4 className="text-sm font-bold text-white flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--primary-color)]" /> Balão do Chat Flutuante (WhatsApp)
                   </h4>
-                  <p className="text-xs text-slate-400">Personalize o widget do Join.chat exibido na página de contato do seu site.</p>
+                  <p className="text-xs text-zinc-400">Personalize o widget do Join.chat exibido na página de contato do seu site.</p>
                   
                   <div className="flex flex-col sm:flex-row gap-4 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800">
                     <div className="flex items-center gap-3">
@@ -3360,7 +3677,7 @@ export default function Bio() {
                     <div>
                       <label className="gm-label font-semibold">Texto do Balão do Chat</label>
                       <textarea 
-                        className="gm-input min-h-[140px] !py-2.5" 
+                        className="gm-input min-h-[140px] !py-2.5 resize-y" 
                         value={bioConfig.chat_balloon_text || ''} 
                         onChange={e => handleChange("chat_balloon_text", e.target.value)} 
                         placeholder="Ex: Olá 👋&#10;Sou Denis, como posso te ajudar hoje?" 
@@ -3403,12 +3720,13 @@ export default function Bio() {
               </div>
             )}
           </div>
+        )}
 
         </div>
         )}
 
       {/* FLOATING ACTION PANEL WITH TOUCH SWIPE-LEFT/RIGHT TO COLLAPSE AND CLICK-TO-EXPAND */}
-      <div className="fixed top-1/2 -translate-y-1/2 right-0 z-[80] select-none pointer-events-none flex flex-col items-end">
+      <div className="fixed top-1/2 -tranzinc-y-1/2 right-0 z-[80] select-none pointer-events-none flex flex-col items-end">
         <AnimatePresence mode="wait">
           {isDocked ? (
             /* Docked State: Thin vertical color bars fixed on the right edge with high touch sensitivity */
@@ -3516,7 +3834,7 @@ export default function Bio() {
           {/* Top Center Device Switcher */}
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] bg-zinc-950/90 backdrop-blur-xl border border-zinc-800/80 p-1.5 rounded-full flex items-center gap-1.5 shadow-2xl pointer-events-auto"
+            className="fixed top-4 left-1/2 -tranzinc-x-1/2 z-[120] bg-zinc-950/90 backdrop-blur-xl border border-zinc-800/80 p-1.5 rounded-full flex items-center gap-1.5 shadow-2xl pointer-events-auto"
           >
             <button
               onClick={() => setPreviewMode("smartphone")}
@@ -3548,7 +3866,7 @@ export default function Bio() {
               e.stopPropagation();
               setPreviewOpen(false);
             }}
-            className="fixed top-4 right-4 z-[120] bg-slate-800/90 hover:bg-red-600 text-white font-bold px-4 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-2xl transition-all duration-300 pointer-events-auto border border-white/10"
+            className="fixed top-4 right-4 z-[120] bg-zinc-800/90 hover:bg-red-600 text-white font-bold px-4 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-2xl transition-all duration-300 pointer-events-auto border border-white/10"
           >
             <X className="w-5 h-5" />
             <span className="text-sm">Fechar</span>
@@ -3562,7 +3880,7 @@ export default function Bio() {
               {/* Close Button above phone - fallback copy */}
               <button 
                 onClick={() => setPreviewOpen(false)}
-                className="absolute -top-12 right-0 w-10 h-10 bg-slate-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow-xl border border-white/10"
+                className="absolute -top-12 right-0 w-10 h-10 bg-zinc-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow-xl border border-white/10"
                 title="Fechar"
               >
                 <X className="w-5 h-5" />
