@@ -97,6 +97,8 @@ export default function Bio() {
   // Local state for deleted catalog items (trash bin)
   const [deletedCatalogItems, setDeletedCatalogItems] = useState<any[]>([]);
   const [deletedPortfolioItems, setDeletedPortfolioItems] = useState<any[]>([]);
+  const [expandedPortfolioItems, setExpandedPortfolioItems] = useState<string[]>([]);
+  const [isAboutExpanded, setIsAboutExpanded] = useState(false);
   const [activePortfolioTab, setActivePortfolioTab] = useState<"active" | "trash">("active");
   const [editingPortfolioItem, setEditingPortfolioItem] = useState<any>(null);
 
@@ -219,6 +221,8 @@ export default function Bio() {
     mobile_banner_img_url_3: "",
     site_font: "inter",
     site_font_size: "md",
+    site_font_mobile: "",
+    site_font_size_mobile: "",
     bg_animation: "parallax",
     contact_banner_img_url: "",
     contact_title: "",
@@ -231,6 +235,28 @@ export default function Bio() {
     chat_balloon_text_color: "#FFFFFF",
     chat_balloon_text: "Olá 👋\nSou Denis, como posso te ajudar hoje?",
     chat_balloon_button_text: "Abrir chat",
+    show_about: true,
+    about_title: "",
+    about_description: "",
+    about_highlight: "",
+    about_banner_url: "",
+    about_btn_text: "Fale Conosco",
+    about_btn_link: "",
+    about_title_align: "center" as "center" | "left" | "right",
+    about_title_bold: true,
+    about_title_italic: false,
+    about_title_font: "funnel",
+    about_title_size: "30 pt",
+    about_desc_align: "center" as "center" | "left" | "right",
+    about_desc_bold: false,
+    about_desc_italic: false,
+    about_desc_font: "ui",
+    about_desc_size: "16 pt",
+    about_highlight_align: "center" as "center" | "left" | "right",
+    about_highlight_bold: true,
+    about_highlight_italic: false,
+    about_highlight_font: "ui",
+    about_highlight_size: "16 pt",
   });
 
   const editorRef = useRef<HTMLDivElement>(null);
@@ -665,12 +691,15 @@ export default function Bio() {
   const handleAddPortfolioCollection = () => {
     const current = bioConfig.portfolio_items || [];
     const normalized = current.map((p: any) => p.image_url && !p.layers ? { id: p.id, title: 'Portfólio', layers: [{ id: Date.now().toString() + Math.random(), image_url: p.image_url }] } : p);
+    const newId = Date.now().toString();
     const newItem = {
-      id: Date.now().toString(),
+      id: newId,
       title: `Portfólio ${normalized.length + 1}`,
       layers: []
     };
     handleChange("portfolio_items", [...normalized, newItem]);
+    setExpandedPortfolioItems(prev => [...prev, newId]);
+    setIsAboutExpanded(false);
   };
 
   const handleUpdatePortfolioCollection = (id: string, updates: any) => {
@@ -912,6 +941,18 @@ export default function Bio() {
       const url = await uploadImage(e.target.files[0]);
       handleChange("contact_banner_img_url", url);
       pushToast({ type: "success", title: "Sucesso", message: "Banner de contato enviado" });
+    } catch(err) {
+      pushToast({ type: "error", title: "Erro", message: "Erro ao enviar imagem" });
+    }
+  };
+
+  const handleUploadAboutBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    try {
+      pushToast({ type: "info", title: "Upload", message: "Enviando banner institucional..." });
+      const url = await uploadImage(e.target.files[0]);
+      handleChange("about_banner_url", url);
+      pushToast({ type: "success", title: "Sucesso", message: "Banner de fundo enviado" });
     } catch(err) {
       pushToast({ type: "error", title: "Erro", message: "Erro ao enviar imagem" });
     }
@@ -1376,15 +1417,28 @@ export default function Bio() {
            </h3>
            <p className="text-zinc-400 text-sm">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
            
-           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-             <button onClick={handleCopyLink} className="gm-btn gm-btn-primary flex items-center justify-center min-w-[200px]">
-               {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-               {copied ? "Link Copiado!" : "Copiar Link Público"}
-             </button>
-             <a href={`https://carddigitalgmapp.netlify.app/${getCustomSlug()}`} target="_blank" rel="noopener noreferrer" className="gm-btn gm-btn-outline flex items-center justify-center min-w-[200px]">
-               <Globe className="w-4 h-4 mr-2" /> Ver Tela Inteira
-             </a>
-           </div>
+           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button onClick={handleCopyLink} className="gm-btn gm-btn-primary flex items-center justify-center min-w-[180px]">
+                {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                {copied ? "Link Copiado!" : "Copiar Link"}
+              </button>
+              <a href={`https://carddigitalgmapp.netlify.app/${getCustomSlug()}`} target="_blank" rel="noopener noreferrer" className="gm-btn gm-btn-outline flex items-center justify-center min-w-[180px]">
+                <Globe className="w-4 h-4 mr-2" /> Ver Tela Inteira
+              </a>
+              <button 
+                onClick={() => setPreviewOpen(true)} 
+                className="gm-btn bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center min-w-[180px]"
+              >
+                <Eye className="w-4 h-4 mr-2" /> Visualizar Prévia
+              </button>
+              <button 
+                onClick={handleSave} 
+                disabled={saving}
+                className="gm-btn bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white flex items-center justify-center min-w-[180px]"
+              >
+                <Save className="w-4 h-4 mr-2" /> {saving ? "Salvando..." : "Salvar Alterações"}
+              </button>
+            </div>
 
            <div 
              style={{
@@ -1756,6 +1810,8 @@ export default function Bio() {
                     </div>
                   </button>
                 )}
+
+
               </div>
             </div>
 
@@ -1952,7 +2008,7 @@ export default function Bio() {
                 </select>
               </div>
               <div>
-                <label className="gm-label">Fonte do Site</label>
+                <label className="gm-label flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5 text-zinc-400" /> Fonte do Site (Computador)</label>
                 <select className="gm-input w-full" value={bioConfig.site_font || "inter"} onChange={e => handleChange("site_font", e.target.value)}>
                   <option value="inter">Inter (Padrão)</option>
                   <option value="space">Space Grotesk (Tech/Moderno)</option>
@@ -1963,8 +2019,28 @@ export default function Bio() {
                 </select>
               </div>
               <div>
-                <label className="gm-label">Tamanho da Fonte</label>
+                <label className="gm-label flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5 text-zinc-400" /> Tamanho da Fonte (Computador)</label>
                 <select className="gm-input w-full" value={bioConfig.site_font_size || "md"} onChange={e => handleChange("site_font_size", e.target.value)}>
+                  <option value="sm">Pequeno</option>
+                  <option value="md">Médio (Padrão)</option>
+                  <option value="lg">Grande</option>
+                  <option value="xl">Extra Grande</option>
+                </select>
+              </div>
+              <div>
+                <label className="gm-label flex items-center gap-1.5 text-[var(--primary-color)]"><Smartphone className="w-3.5 h-3.5" /> Fonte do Site (Celular)</label>
+                <select className="gm-input w-full border-[var(--primary-color-40)] focus:border-[var(--primary-color)]" value={bioConfig.site_font_mobile || bioConfig.site_font || "inter"} onChange={e => handleChange("site_font_mobile", e.target.value)}>
+                  <option value="inter">Inter (Padrão)</option>
+                  <option value="space">Space Grotesk (Tech/Moderno)</option>
+                  <option value="serif">Playfair Display (Serif/Editorial)</option>
+                  <option value="mono">JetBrains Mono (Código/Técnico)</option>
+                  <option value="montserrat">Montserrat (Clean/Moderno)</option>
+                  <option value="jakarta">Plus Jakarta Sans (Elegante)</option>
+                </select>
+              </div>
+              <div>
+                <label className="gm-label flex items-center gap-1.5 text-[var(--primary-color)]"><Smartphone className="w-3.5 h-3.5" /> Tamanho da Fonte (Celular)</label>
+                <select className="gm-input w-full border-[var(--primary-color-40)] focus:border-[var(--primary-color)]" value={bioConfig.site_font_size_mobile || bioConfig.site_font_size || "md"} onChange={e => handleChange("site_font_size_mobile", e.target.value)}>
                   <option value="sm">Pequeno</option>
                   <option value="md">Médio (Padrão)</option>
                   <option value="lg">Grande</option>
@@ -3057,327 +3133,614 @@ export default function Bio() {
                       const current = bioConfig.portfolio_items || [];
                       const normalized = current.map((p: any) => p.image_url && !p.layers ? { id: p.id, title: 'Portfólio ' + p.id.slice(-3), layers: [{ id: Date.now().toString() + Math.random(), image_url: p.image_url }] } : p);
                       
-                      if (normalized.length === 0) {
-                        return (
-                          <div className="py-8 text-center text-zinc-500 text-xs border border-dashed border-zinc-800 rounded-xl bg-zinc-900/30">
-                            Nenhum portfólio criado ainda.
-                          </div>
-                        );
-                      }
+                      const hasActivePortfolioItem = normalized.some((item: any) => expandedPortfolioItems.includes(item.id));
+                      const activePortfolioItem = normalized.find((item: any) => expandedPortfolioItems.includes(item.id));
 
                       return (
                         <div className="space-y-4">
-                          {normalized.map((item: any) => (
-                            <div key={item.id} className="border border-zinc-800 bg-zinc-900/40 rounded-xl overflow-hidden p-4 space-y-4 animate-in fade-in duration-300">
-                              
-                              {selectedView === "smartphone" ? (
-                                <>
-                                  {/* Versão Smartphone do Portfólio */}
-                                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                                    <div className="flex-1 w-full">
-                                      <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-bold tracking-wider">
-                                        <Smartphone className="w-3.5 h-3.5" /> Título Smartphone
-                                      </label>
-                                      <input 
-                                        type="text" 
-                                        className="bg-transparent text-white font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-zinc-700 pb-1 w-full"
-                                        value={item.title_mobile !== undefined ? item.title_mobile : (item.title || '')}
-                                        onChange={e => handleUpdatePortfolioCollection(item.id, { title_mobile: e.target.value })}
-                                        placeholder="Nome do Portfólio no Celular (ex: Jah do Açaí)"
-                                      />
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemovePortfolioCollection(item.id)}
-                                      className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer"
-                                      title="Excluir Portfólio (Move para Lixeira)"
-                                    >
-                                      <Trash className="w-4 h-4" />
-                                      <span>Excluir Portfólio</span>
-                                    </button>
-                                  </div>
-                                  
-                                  <div className="bg-zinc-950/50 p-3 sm:p-4 rounded-xl border border-zinc-800/50">
-                                    <div className="mb-6">
-                                      <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-zinc-300">
-                                        Descrição do Portfólio (Smartphone)
-                                      </label>
-                                      <textarea 
-                                        className={`gm-input min-h-[120px] w-full resize-y rounded-xl p-3 bg-zinc-900/50 border border-zinc-800 focus:border-[var(--primary-color)] outline-none transition-colors ${(item.description_align_mobile || item.description_align || "left") === "left" ? "text-left" : (item.description_align_mobile || item.description_align) === "right" ? "text-right" : "text-center"} ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? "font-bold" : "font-medium"} ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size_mobile || item.description_size || "16 pt")} bio-desc-font-${item.description_font_mobile || item.description_font || "ui"}`}
-                                        value={item.description_mobile !== undefined ? item.description_mobile : (item.description || '')}
-                                        onChange={(e) => handleUpdatePortfolioCollection(item.id, { description_mobile: e.target.value })}
-                                        placeholder="Descreva o projeto para exibição em smartphones..."
-                                      />
-                                      <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
-                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "left" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align || 'left') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "center" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "right" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
-                                        </div>
-                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold_mobile: !(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) })} className={`p-1.5 rounded-md transition-colors ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic_mobile: !(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) })} className={`p-1.5 rounded-md transition-colors ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
-                                        </div>
-                                        <div className="flex-1 min-w-[140px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_font_mobile || item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font_mobile: e.target.value })}>
-                                            <option value="ui">Inter (Sistema)</option>
-                                            <option value="funnel">Funnel (Títulos)</option>
-                                            <option value="roboto">Roboto</option>
-                                            <option value="montserrat">Montserrat</option>
-                                            <option value="poppins">Poppins</option>
-                                            <option value="playfair">Playfair Display</option>
-                                            <option value="outfit">Outfit</option>
-                                          </select>
-                                        </div>
-                                        <div className="w-[80px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_size_mobile || item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size_mobile: e.target.value })}>
-                                            <option value="10 pt">10 pt</option>
-                                            <option value="12 pt">12 pt</option>
-                                            <option value="14 pt">14 pt</option>
-                                            <option value="16 pt">16 pt</option>
-                                            <option value="18 pt">18 pt</option>
-                                            <option value="20 pt">20 pt</option>
-                                            <option value="24 pt">24 pt</option>
-                                            <option value="30 pt">30 pt</option>
-                                            <option value="36 pt">36 pt</option>
-                                            <option value="48 pt">48 pt</option>
-                                          </select>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="space-y-6 pt-4 border-t border-zinc-800/50">
-                                      {/* Section for Portfolio Main Banner (Smartphone) */}
-                                      <div className="space-y-4">
-                                        <div className="flex flex-col gap-1">
-                                          <span className="text-xs font-bold text-zinc-200">Banner Principal do Portfólio (Smartphone)</span>
-                                          <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão celular.</span>
-                                        </div>
-                                        
-                                        <div className="space-y-2 max-w-sm">
-                                          <div className="flex items-center justify-between">
-                                            <span className="text-[11px] font-semibold text-zinc-400">Smartphone (1080x900 px) - Proporção 6:5</span>
-                                            {item.main_banner_mobile_url && (
-                                              <button 
-                                                type="button" 
-                                                onClick={() => handleRemovePortfolioMainMobileBanner(item.id)}
-                                                className="text-[10px] text-red-400 hover:text-red-300 font-bold"
-                                              >
-                                                Remover
-                                              </button>
-                                            )}
-                                          </div>
-                                          {item.main_banner_mobile_url ? (
-                                            <div className="relative aspect-[6/5] max-w-[200px] rounded-lg overflow-hidden bg-black border border-zinc-800">
-                                              <img src={item.main_banner_mobile_url} alt="Main Banner Mobile" className="w-full h-full object-cover" />
-                                            </div>
-                                          ) : (
-                                            <label className="flex flex-col items-center justify-center aspect-[6/5] max-w-[200px] rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
-                                              <Upload className="w-5 h-5 text-zinc-500 mb-1" />
-                                              <span className="text-xs text-zinc-400 font-bold">Enviar Banner Smartphone</span>
-                                              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainMobileBanner(item.id, e)} />
-                                            </label>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      {/* Section for Smartphone Banners */}
-                                      <div className="space-y-3 pt-4 border-t border-zinc-800/20">
-                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                          <div className="flex flex-col">
-                                            <span className="text-xs font-semibold text-zinc-300">Banners Internos Smartphone ({item.mobile_layers?.length || 0})</span>
-                                            <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Tamanho Recomendado: 1080x1920 px (Proporção 9:16)</span>
-                                          </div>
-                                          <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-zinc-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
-                                            <Upload className="w-4 h-4" />
-                                            Adicionar Banner Smartphone
-                                            <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioMobileLayer(item.id, e)} />
-                                          </label>
-                                        </div>
-                                        
-                                        {item.mobile_layers && item.mobile_layers.length > 0 ? (
-                                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                                            {(item.mobile_layers || []).map((layer: any) => (
-                                              <div key={layer.id} className="relative group aspect-[9/16] max-w-[120px] rounded-lg overflow-hidden bg-black border border-zinc-800 mx-auto w-full">
-                                                <OptimizedImage src={layer.image_url} alt="Layer Smartphone" className="w-full h-full object-cover" width={150} />
-                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => handleRemovePortfolioMobileLayer(item.id, layer.id)}
-                                                    className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
-                                                  >
-                                                    <Trash className="w-4 h-4" />
-                                                    Remover
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        ) : (
-                                          <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
-                                            Nenhum banner smartphone inserido neste portfólio.
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  {/* Versão Desktop (Computador) do Portfólio */}
-                                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                                    <div className="flex-1 w-full">
-                                      <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-bold tracking-wider">
-                                        <Monitor className="w-3.5 h-3.5" /> Título Desktop
-                                      </label>
-                                      <input 
-                                        type="text" 
-                                        className="bg-transparent text-white font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-zinc-700 pb-1 w-full"
-                                        value={item.title || ''}
-                                        onChange={e => handleUpdatePortfolioCollection(item.id, { title: e.target.value })}
-                                        placeholder="Nome do Portfólio no Computador (ex: Jah do Açaí)"
-                                      />
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemovePortfolioCollection(item.id)}
-                                      className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer"
-                                      title="Excluir Portfólio (Move para Lixeira)"
-                                    >
-                                      <Trash className="w-4 h-4" />
-                                      <span>Excluir Portfólio</span>
-                                    </button>
-                                  </div>
-                                  
-                                  <div className="bg-zinc-950/50 p-3 sm:p-4 rounded-xl border border-zinc-800/50">
-                                    <div className="mb-6">
-                                      <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-zinc-300">
-                                        Descrição do Portfólio (Computador)
-                                      </label>
-                                      <textarea 
-                                        className={`gm-input min-h-[120px] w-full resize-y rounded-xl p-3 bg-zinc-900/50 border border-zinc-800 focus:border-[var(--primary-color)] outline-none transition-colors ${item.description_align === "left" ? "text-left" : item.description_align === "right" ? "text-right" : "text-center"} ${item.description_bold ? "font-bold" : "font-medium"} ${item.description_italic ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size)} bio-desc-font-${item.description_font || "ui"}`}
-                                        value={item.description || ''}
-                                        onChange={(e) => handleUpdatePortfolioCollection(item.id, { description: e.target.value })}
-                                        placeholder="Descreva o projeto para exibição em computadores..."
-                                      />
-                                      <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
-                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "left" })} className={`p-1.5 rounded-md transition-colors ${(!item.description_align || item.description_align === 'left') ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "center" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "right" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
-                                        </div>
-                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold: !item.description_bold })} className={`p-1.5 rounded-md transition-colors ${item.description_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                          <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic: !item.description_italic })} className={`p-1.5 rounded-md transition-colors ${item.description_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
-                                        </div>
-                                        <div className="flex-1 min-w-[140px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font: e.target.value })}>
-                                            <option value="ui">Inter (Sistema)</option>
-                                            <option value="funnel">Funnel (Títulos)</option>
-                                            <option value="roboto">Roboto</option>
-                                            <option value="montserrat">Montserrat</option>
-                                            <option value="poppins">Poppins</option>
-                                            <option value="playfair">Playfair Display</option>
-                                            <option value="outfit">Outfit</option>
-                                          </select>
-                                        </div>
-                                        <div className="w-[80px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size: e.target.value })}>
-                                            <option value="10 pt">10 pt</option>
-                                            <option value="12 pt">12 pt</option>
-                                            <option value="14 pt">14 pt</option>
-                                            <option value="16 pt">16 pt</option>
-                                            <option value="18 pt">18 pt</option>
-                                            <option value="20 pt">20 pt</option>
-                                            <option value="24 pt">24 pt</option>
-                                            <option value="30 pt">30 pt</option>
-                                            <option value="36 pt">36 pt</option>
-                                            <option value="48 pt">48 pt</option>
-                                          </select>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="space-y-6 pt-4 border-t border-zinc-800/50">
-                                      {/* Section for Portfolio Main Banner (Desktop) */}
-                                      <div className="space-y-4">
-                                        <div className="flex flex-col gap-1">
-                                          <span className="text-xs font-bold text-zinc-200">Banner Principal do Portfólio (Desktop)</span>
-                                          <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão computador.</span>
-                                        </div>
-                                        
-                                        <div className="space-y-2">
-                                          <div className="flex items-center justify-between">
-                                            <span className="text-[11px] font-semibold text-zinc-400">Desktop (Tamanho Lógico e Funcional: 1920x500 px a 1920x800 px para preenchimento widescreen perfeito)</span>
-                                            {item.main_banner_url && (
-                                              <button 
-                                                type="button" 
-                                                onClick={() => handleRemovePortfolioMainBanner(item.id)}
-                                                className="text-[10px] text-red-400 hover:text-red-300 font-bold"
-                                              >
-                                                Remover
-                                              </button>
-                                            )}
-                                          </div>
-                                          {item.main_banner_url ? (
-                                            <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
-                                              <img src={item.main_banner_url} alt="Main Banner Desktop" className="w-full h-full object-cover" />
-                                            </div>
-                                          ) : (
-                                            <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
-                                              <Upload className="w-5 h-5 text-zinc-500 mb-1" />
-                                              <span className="text-xs text-zinc-400 font-bold">Enviar Banner Desktop</span>
-                                              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainBanner(item.id, e)} />
-                                            </label>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      {/* Section for Desktop Banners */}
-                                      <div className="space-y-3">
-                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                          <div className="flex flex-col">
-                                            <span className="text-xs font-semibold text-zinc-300">Banners Internos Desktop ({item.layers?.length || 0})</span>
-                                            <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Tamanho Lógico e Funcional: 1600x900 px (Proporção 16:9) ou 1600x560 px para encaixe excelente nas proporções do computador</span>
-                                          </div>
-                                          <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-zinc-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
-                                            <Upload className="w-4 h-4" />
-                                            Adicionar Banner Desktop
-                                            <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
-                                          </label>
-                                        </div>
-                                        
-                                        {item.layers && item.layers.length > 0 ? (
-                                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                            {(item.layers || []).map((layer: any) => (
-                                              <div key={layer.id} className="relative group aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
-                                                <OptimizedImage src={layer.image_url} alt="Layer Desktop" className="w-full h-full object-cover" width={300} />
-                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => handleRemovePortfolioLayer(item.id, layer.id)}
-                                                    className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
-                                                  >
-                                                    <Trash className="w-4 h-4" />
-                                                    Remover
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        ) : (
-                                          <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
-                                            Nenhum banner desktop inserido neste portfólio.
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                            {/* BOTÃO SOBRE SUA EMPRESA */}
+                            <div 
+                              onClick={() => {
+                                setIsAboutExpanded(!isAboutExpanded);
+                                setExpandedPortfolioItems([]);
+                              }}
+                              className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium select-none ${
+                                isAboutExpanded 
+                                  ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white shadow-[0_0_15px_rgba(var(--primary-rgb),0.05)]' 
+                                  : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                              }`}
+                            >
+                              {isAboutExpanded && (
+                                <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
                               )}
-
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <Layout className={`w-4 h-4 transition-transform duration-200 ${isAboutExpanded ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                                <span className="font-bold uppercase tracking-wider text-zinc-200 truncate text-[11px] sm:text-xs">Sobre sua empresa</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase ${bioConfig.show_about !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'}`}>
+                                  {bioConfig.show_about !== false ? 'Ativo' : 'Oculto'}
+                                </span>
+                                {isAboutExpanded && (
+                                  <span className="text-[8px] text-zinc-400 bg-zinc-900/80 px-1.5 py-0.5 rounded border border-white/5 uppercase tracking-wide font-bold animate-pulse">ABERTO</span>
+                                )}
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isAboutExpanded ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                              </div>
                             </div>
-                          ))}
+
+                            {/* ITENS DE PORTFÓLIO */}
+                            {normalized.map((item: any) => {
+                              const isExpanded = expandedPortfolioItems.includes(item.id);
+                              const displayTitle = selectedView === "smartphone" 
+                                ? (item.title_mobile !== undefined ? item.title_mobile : (item.title || 'Portfólio Sem Nome'))
+                                : (item.title || 'Portfólio Sem Nome');
+
+                              return (
+                                <div 
+                                  key={item.id}
+                                  onClick={() => {
+                                    setIsAboutExpanded(false);
+                                    setExpandedPortfolioItems(prev => 
+                                      prev.includes(item.id) ? [] : [item.id]
+                                    );
+                                  }}
+                                  className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium select-none ${
+                                    isExpanded 
+                                      ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white shadow-[0_0_15px_rgba(var(--primary-rgb),0.05)]' 
+                                      : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
+                                  }`}
+                                >
+                                  {isExpanded && (
+                                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                                  )}
+                                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    {selectedView === "smartphone" ? (
+                                      <Smartphone className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                                    ) : (
+                                      <Monitor className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                                    )}
+                                    <span className="font-bold uppercase tracking-wider text-zinc-200 truncate text-[11px] sm:text-xs">{displayTitle || "Sem título"}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemovePortfolioCollection(item.id);
+                                      }}
+                                      className="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-500/10 transition-colors cursor-pointer"
+                                      title="Excluir Portfólio (Move para Lixeira)"
+                                    >
+                                      <Trash className="w-3.5 h-3.5" />
+                                    </button>
+                                    {isExpanded && (
+                                      <span className="text-[8px] text-zinc-400 bg-zinc-900/80 px-1.5 py-0.5 rounded border border-white/5 uppercase tracking-wide font-bold animate-pulse">ABERTO</span>
+                                    )}
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* MENSAGEM SE NÃO HOUVER PORTFÓLIOS */}
+                          {normalized.length === 0 && !isAboutExpanded && (
+                            <div className="py-8 text-center text-zinc-500 text-xs border border-dashed border-zinc-850 rounded-xl bg-zinc-900/10">
+                              Nenhum portfólio criado ainda. Clique em "+ Novo Portfólio" acima para criar o seu primeiro projeto.
+                            </div>
+                          )}
+
+                          {/* EDITOR SOBRE SUA EMPRESA */}
+                          {isAboutExpanded && (
+                            <div className="p-4 sm:p-6 space-y-6 bg-zinc-950/20 border border-zinc-900 rounded-xl animate-in fade-in duration-200 text-zinc-300">
+                              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                                <span className="flex items-center gap-2 text-sm font-extrabold text-white uppercase tracking-wider">
+                                  <Layout className="w-4.5 h-4.5 text-[var(--primary-color)]" />
+                                  Sobre Sua Empresa
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    id="show_about" 
+                                    checked={bioConfig.show_about !== false} 
+                                    onChange={e => handleChange("show_about", e.target.checked)}
+                                    className="w-4 h-4 rounded text-[var(--primary-color)] bg-zinc-850 border-zinc-700 focus:ring-0 cursor-pointer" 
+                                  />
+                                  <label htmlFor="show_about" className="text-xs font-bold text-white cursor-pointer select-none">Exibir no site</label>
+                                </div>
+                              </div>
+
+                              {bioConfig.show_about !== false && (
+                                <div className="space-y-5 animate-in fade-in duration-200">
+                                  {/* Conteúdo da Seção */}
+                                  <div className="space-y-6">
+                                    <div>
+                                      <label className="gm-label font-bold text-xs mb-1.5 block">Título Principal</label>
+                                      <input 
+                                        type="text" 
+                                        className={`gm-input transition-all ${(bioConfig.about_title_align || "center") === "left" ? "text-left" : (bioConfig.about_title_align || "center") === "right" ? "text-right" : "text-center"} ${(bioConfig.about_title_bold !== false) ? "font-bold" : "font-medium"} ${(bioConfig.about_title_italic) ? "italic" : "not-italic"} ${getFontSizeClass(bioConfig.about_title_size || "30 pt")} bio-desc-font-${bioConfig.about_title_font || "funnel"}`}
+                                        value={bioConfig.about_title || ''} 
+                                        onChange={e => handleChange("about_title", e.target.value)} 
+                                        placeholder="Sobre a nossa empresa" 
+                                      />
+                                      <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleChange("about_title_align", "left")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_title_align || 'center') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_title_align", "center")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_title_align || 'center') === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_title_align", "right")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_title_align || 'center') === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleChange("about_title_bold", !bioConfig.about_title_bold)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_title_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleChange("about_title_italic", !bioConfig.about_title_italic)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_title_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
+                                        </div>
+                                        <div className="flex-1 min-w-[140px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={bioConfig.about_title_font || "funnel"} onChange={e => handleChange("about_title_font", e.target.value)}>
+                                            <option value="ui">Inter (Sistema)</option>
+                                            <option value="funnel">Funnel (Títulos)</option>
+                                            <option value="roboto">Roboto</option>
+                                            <option value="montserrat">Montserrat</option>
+                                            <option value="poppins">Poppins</option>
+                                            <option value="playfair">Playfair Display</option>
+                                            <option value="outfit">Outfit</option>
+                                          </select>
+                                        </div>
+                                        <div className="w-[80px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={bioConfig.about_title_size || "30 pt"} onChange={e => handleChange("about_title_size", e.target.value)}>
+                                            <option value="10 pt">10 pt</option>
+                                            <option value="12 pt">12 pt</option>
+                                            <option value="14 pt">14 pt</option>
+                                            <option value="16 pt">16 pt</option>
+                                            <option value="18 pt">18 pt</option>
+                                            <option value="20 pt">20 pt</option>
+                                            <option value="24 pt">24 pt</option>
+                                            <option value="30 pt">30 pt</option>
+                                            <option value="36 pt">36 pt</option>
+                                            <option value="48 pt">48 pt</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div>
+                                      <label className="gm-label font-bold text-xs mb-1.5 block">Texto / Descrição Principal</label>
+                                      <textarea 
+                                        className={`gm-input min-h-[100px] !py-2 resize-y transition-all ${(bioConfig.about_desc_align || "center") === "left" ? "text-left" : (bioConfig.about_desc_align || "center") === "right" ? "text-right" : "text-center"} ${bioConfig.about_desc_bold ? "font-bold" : "font-normal"} ${bioConfig.about_desc_italic ? "italic" : "not-italic"} ${getFontSizeClass(bioConfig.about_desc_size || "16 pt")} bio-desc-font-${bioConfig.about_desc_font || "ui"}`}
+                                        value={bioConfig.about_description || ''} 
+                                        onChange={e => handleChange("about_description", e.target.value)} 
+                                        placeholder="Acreditamos que o design é mais do que aparência..." 
+                                      />
+                                      <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleChange("about_desc_align", "left")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_desc_align || 'center') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_desc_align", "center")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_desc_align || 'center') === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_desc_align", "right")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_desc_align || 'center') === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleChange("about_desc_bold", !bioConfig.about_desc_bold)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_desc_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleChange("about_desc_italic", !bioConfig.about_desc_italic)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_desc_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
+                                        </div>
+                                        <div className="flex-1 min-w-[140px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={bioConfig.about_desc_font || "ui"} onChange={e => handleChange("about_desc_font", e.target.value)}>
+                                            <option value="ui">Inter (Sistema)</option>
+                                            <option value="funnel">Funnel (Títulos)</option>
+                                            <option value="roboto">Roboto</option>
+                                            <option value="montserrat">Montserrat</option>
+                                            <option value="poppins">Poppins</option>
+                                            <option value="playfair">Playfair Display</option>
+                                            <option value="outfit">Outfit</option>
+                                          </select>
+                                        </div>
+                                        <div className="w-[80px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={bioConfig.about_desc_size || "16 pt"} onChange={e => handleChange("about_desc_size", e.target.value)}>
+                                            <option value="10 pt">10 pt</option>
+                                            <option value="12 pt">12 pt</option>
+                                            <option value="14 pt">14 pt</option>
+                                            <option value="16 pt">16 pt</option>
+                                            <option value="18 pt">18 pt</option>
+                                            <option value="20 pt">20 pt</option>
+                                            <option value="24 pt">24 pt</option>
+                                            <option value="30 pt">30 pt</option>
+                                            <option value="36 pt">36 pt</option>
+                                            <option value="48 pt">48 pt</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div>
+                                      <label className="gm-label font-bold text-xs mb-1.5 block">Texto de Destaque Inferior (Negrito)</label>
+                                      <input 
+                                        type="text" 
+                                        className={`gm-input transition-all ${(bioConfig.about_highlight_align || "center") === "left" ? "text-left" : (bioConfig.about_highlight_align || "center") === "right" ? "text-right" : "text-center"} ${(bioConfig.about_highlight_bold !== false) ? "font-bold" : "font-medium"} ${(bioConfig.about_highlight_italic) ? "italic" : "not-italic"} ${getFontSizeClass(bioConfig.about_highlight_size || "16 pt")} bio-desc-font-${bioConfig.about_highlight_font || "ui"}`}
+                                        value={bioConfig.about_highlight || ''} 
+                                        onChange={e => handleChange("about_highlight", e.target.value)} 
+                                        placeholder="Comece sua jornada conosco. Vamos criar algo inesquecível." 
+                                      />
+                                      <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleChange("about_highlight_align", "left")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_highlight_align || 'center') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_highlight_align", "center")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_highlight_align || 'center') === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_highlight_align", "right")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_highlight_align || 'center') === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
+                                        </div>
+                                        <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                          <button type="button" onClick={() => handleChange("about_highlight_bold", !bioConfig.about_highlight_bold)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_highlight_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleChange("about_highlight_italic", !bioConfig.about_highlight_italic)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_highlight_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
+                                        </div>
+                                        <div className="flex-1 min-w-[140px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={bioConfig.about_highlight_font || "ui"} onChange={e => handleChange("about_highlight_font", e.target.value)}>
+                                            <option value="ui">Inter (Sistema)</option>
+                                            <option value="funnel">Funnel (Títulos)</option>
+                                            <option value="roboto">Roboto</option>
+                                            <option value="montserrat">Montserrat</option>
+                                            <option value="poppins">Poppins</option>
+                                            <option value="playfair">Playfair Display</option>
+                                            <option value="outfit">Outfit</option>
+                                          </select>
+                                        </div>
+                                        <div className="w-[80px]">
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={bioConfig.about_highlight_size || "16 pt"} onChange={e => handleChange("about_highlight_size", e.target.value)}>
+                                            <option value="10 pt">10 pt</option>
+                                            <option value="12 pt">12 pt</option>
+                                            <option value="14 pt">14 pt</option>
+                                            <option value="16 pt">16 pt</option>
+                                            <option value="18 pt">18 pt</option>
+                                            <option value="20 pt">20 pt</option>
+                                            <option value="24 pt">24 pt</option>
+                                            <option value="30 pt">30 pt</option>
+                                            <option value="36 pt">36 pt</option>
+                                            <option value="48 pt">48 pt</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Botão de Ação */}
+                                  <div className="space-y-3 pt-3 border-t border-zinc-800/40">
+                                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                                      <Phone className="w-3.5 h-3.5 text-[var(--primary-color)]" /> Botão Fale Conosco (WhatsApp)
+                                    </span>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="gm-label font-semibold text-[11px]">Texto do Botão</label>
+                                        <input 
+                                          type="text" 
+                                          className="gm-input font-medium !py-2" 
+                                          value={bioConfig.about_btn_text || 'Fale Conosco'} 
+                                          onChange={e => handleChange("about_btn_text", e.target.value)} 
+                                          placeholder="Fale Conosco" 
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="gm-label font-semibold text-[11px]">Link Personalizado do WhatsApp (Opcional)</label>
+                                        <input 
+                                          type="text" 
+                                          className="gm-input font-medium text-xs !py-2" 
+                                          value={bioConfig.about_btn_link || ''} 
+                                          onChange={e => handleChange("about_btn_link", e.target.value)} 
+                                          placeholder="Ex: https://wa.me/5511999999999" 
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {!isAboutExpanded && hasActivePortfolioItem && activePortfolioItem && (() => {
+                            const item = activePortfolioItem;
+                            return (
+                              <div className="p-4 sm:p-6 space-y-6 bg-zinc-950/20 border border-zinc-900 rounded-xl animate-in fade-in duration-200">
+                                {selectedView === "smartphone" ? (
+                                  <>
+                                    {/* Versão Smartphone do Portfólio */}
+                                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                                      <div className="flex-1 w-full">
+                                        <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-bold tracking-wider">
+                                          <Smartphone className="w-3.5 h-3.5" /> Título Smartphone
+                                        </label>
+                                        <input 
+                                          type="text" 
+                                          className="bg-transparent text-white font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-zinc-700 pb-1 w-full"
+                                          value={item.title_mobile !== undefined ? item.title_mobile : (item.title || '')}
+                                          onChange={e => handleUpdatePortfolioCollection(item.id, { title_mobile: e.target.value })}
+                                          placeholder="Nome do Portfólio no Celular (ex: Jah do Açaí)"
+                                        />
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemovePortfolioCollection(item.id)}
+                                        className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer"
+                                        title="Excluir Portfólio (Move para Lixeira)"
+                                      >
+                                        <Trash className="w-4 h-4" />
+                                        <span>Excluir Portfólio</span>
+                                      </button>
+                                    </div>
+                                    
+                                    <div className="bg-zinc-950/50 p-3 sm:p-4 rounded-xl border border-zinc-800/50">
+                                      <div className="mb-6">
+                                        <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-zinc-300">
+                                          Descrição do Portfólio (Smartphone)
+                                        </label>
+                                        <textarea 
+                                          className={`gm-input min-h-[120px] w-full resize-y rounded-xl p-3 bg-zinc-900/50 border border-zinc-800 focus:border-[var(--primary-color)] outline-none transition-colors ${(item.description_align_mobile || item.description_align || "left") === "left" ? "text-left" : (item.description_align_mobile || item.description_align) === "right" ? "text-right" : "text-center"} ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? "font-bold" : "font-medium"} ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size_mobile || item.description_size || "16 pt")} bio-desc-font-${item.description_font_mobile || item.description_font || "ui"}`}
+                                          value={item.description_mobile !== undefined ? item.description_mobile : (item.description || '')}
+                                          onChange={(e) => handleUpdatePortfolioCollection(item.id, { description_mobile: e.target.value })}
+                                          placeholder="Descreva o projeto para exibição em smartphones..."
+                                        />
+                                        <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
+                                          <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "left" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align || 'left') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "center" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "right" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
+                                          </div>
+                                          <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold_mobile: !(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) })} className={`p-1.5 rounded-md transition-colors ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic_mobile: !(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) })} className={`p-1.5 rounded-md transition-colors ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
+                                          </div>
+                                          <div className="flex-1 min-w-[140px]">
+                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_font_mobile || item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font_mobile: e.target.value })}>
+                                              <option value="ui">Inter (Sistema)</option>
+                                              <option value="funnel">Funnel (Títulos)</option>
+                                              <option value="roboto">Roboto</option>
+                                              <option value="montserrat">Montserrat</option>
+                                              <option value="poppins">Poppins</option>
+                                              <option value="playfair">Playfair Display</option>
+                                              <option value="outfit">Outfit</option>
+                                            </select>
+                                          </div>
+                                          <div className="w-[80px]">
+                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_size_mobile || item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size_mobile: e.target.value })}>
+                                              <option value="10 pt">10 pt</option>
+                                              <option value="12 pt">12 pt</option>
+                                              <option value="14 pt">14 pt</option>
+                                              <option value="16 pt">16 pt</option>
+                                              <option value="18 pt">18 pt</option>
+                                              <option value="20 pt">20 pt</option>
+                                              <option value="24 pt">24 pt</option>
+                                              <option value="30 pt">30 pt</option>
+                                              <option value="36 pt">36 pt</option>
+                                              <option value="48 pt">48 pt</option>
+                                            </select>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="space-y-6 pt-4 border-t border-zinc-800/50">
+                                        {/* Section for Portfolio Main Banner (Smartphone) */}
+                                        <div className="space-y-4">
+                                          <div className="flex flex-col gap-1">
+                                            <span className="text-xs font-bold text-zinc-200">Banner Principal do Portfólio (Smartphone)</span>
+                                            <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão celular.</span>
+                                          </div>
+                                          
+                                          <div className="space-y-2 max-w-sm">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-[11px] font-semibold text-zinc-400">Smartphone (1080x900 px) - Proporção 6:5</span>
+                                              {item.main_banner_mobile_url && (
+                                                <button 
+                                                  type="button" 
+                                                  onClick={() => handleRemovePortfolioMainMobileBanner(item.id)}
+                                                  className="text-[10px] text-red-400 hover:text-red-300 font-bold"
+                                                >
+                                                  Remover
+                                                </button>
+                                              )}
+                                            </div>
+                                            {item.main_banner_mobile_url ? (
+                                              <div className="relative aspect-[6/5] max-w-[200px] rounded-lg overflow-hidden bg-black border border-zinc-800">
+                                                <img src={item.main_banner_mobile_url} alt="Main Banner Mobile" className="w-full h-full object-cover" />
+                                              </div>
+                                            ) : (
+                                              <label className="flex flex-col items-center justify-center aspect-[6/5] max-w-[200px] rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
+                                                <Upload className="w-5 h-5 text-zinc-500 mb-1" />
+                                                <span className="text-xs text-zinc-400 font-bold">Enviar Banner Smartphone</span>
+                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainMobileBanner(item.id, e)} />
+                                              </label>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* Section for Smartphone Banners */}
+                                        <div className="space-y-3 pt-4 border-t border-zinc-800/20">
+                                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                            <div className="flex flex-col">
+                                              <span className="text-xs font-semibold text-zinc-300">Banners Internos Smartphone ({item.mobile_layers?.length || 0})</span>
+                                              <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Tamanho Recomendado: 1080x1920 px (Proporção 9:16)</span>
+                                            </div>
+                                            <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-zinc-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
+                                              <Upload className="w-4 h-4" />
+                                              Adicionar Banner Smartphone
+                                              <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioMobileLayer(item.id, e)} />
+                                            </label>
+                                          </div>
+                                          
+                                          {item.mobile_layers && item.mobile_layers.length > 0 ? (
+                                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                                              {(item.mobile_layers || []).map((layer: any) => (
+                                                <div key={layer.id} className="relative group aspect-[9/16] max-w-[120px] rounded-lg overflow-hidden bg-black border border-zinc-800 mx-auto w-full">
+                                                  <OptimizedImage src={layer.image_url} alt="Layer Smartphone" className="w-full h-full object-cover" width={150} />
+                                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleRemovePortfolioMobileLayer(item.id, layer.id)}
+                                                      className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
+                                                    >
+                                                      <Trash className="w-4 h-4" />
+                                                      Remover
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
+                                              Nenhum banner smartphone inserido neste portfólio.
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    {/* Versão Desktop (Computador) do Portfólio */}
+                                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                                      <div className="flex-1 w-full">
+                                        <label className="gm-label mb-1 text-xs text-[var(--primary-color)] flex items-center gap-1.5 font-bold tracking-wider">
+                                          <Monitor className="w-3.5 h-3.5" /> Título Desktop
+                                        </label>
+                                        <input 
+                                          type="text" 
+                                          className="bg-transparent text-white font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-zinc-700 pb-1 w-full"
+                                          value={item.title || ''}
+                                          onChange={e => handleUpdatePortfolioCollection(item.id, { title: e.target.value })}
+                                          placeholder="Nome do Portfólio no Computador (ex: Jah do Açaí)"
+                                        />
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemovePortfolioCollection(item.id)}
+                                        className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer"
+                                        title="Excluir Portfólio (Move para Lixeira)"
+                                      >
+                                        <Trash className="w-4 h-4" />
+                                        <span>Excluir Portfólio</span>
+                                      </button>
+                                    </div>
+                                    
+                                    <div className="bg-zinc-950/50 p-3 sm:p-4 rounded-xl border border-zinc-800/50">
+                                      <div className="mb-6">
+                                        <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-zinc-300">
+                                          Descrição do Portfólio (Computador)
+                                        </label>
+                                        <textarea 
+                                          className={`gm-input min-h-[120px] w-full resize-y rounded-xl p-3 bg-zinc-900/50 border border-zinc-800 focus:border-[var(--primary-color)] outline-none transition-colors ${item.description_align === "left" ? "text-left" : item.description_align === "right" ? "text-right" : "text-center"} ${item.description_bold ? "font-bold" : "font-medium"} ${item.description_italic ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size)} bio-desc-font-${item.description_font || "ui"}`}
+                                          value={item.description || ''}
+                                          onChange={(e) => handleUpdatePortfolioCollection(item.id, { description: e.target.value })}
+                                          placeholder="Descreva o projeto para exibição em computadores..."
+                                        />
+                                        <div className="flex flex-wrap items-center gap-2 bg-[#0d0e12]/60 p-2 rounded-xl border border-zinc-800/50 mt-2">
+                                          <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "left" })} className={`p-1.5 rounded-md transition-colors ${(!item.description_align || item.description_align === 'left') ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignLeft className="w-4 h-4" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "center" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignCenter className="w-4 h-4" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "right" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><AlignRight className="w-4 h-4" /></button>
+                                          </div>
+                                          <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-lg border border-zinc-800 shadow-inner">
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold: !item.description_bold })} className={`p-1.5 rounded-md transition-colors ${item.description_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic: !item.description_italic })} className={`p-1.5 rounded-md transition-colors ${item.description_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-700'}`}><Italic className="w-4 h-4 italic" /></button>
+                                          </div>
+                                          <div className="flex-1 min-w-[140px]">
+                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font: e.target.value })}>
+                                              <option value="ui">Inter (Sistema)</option>
+                                              <option value="funnel">Funnel (Títulos)</option>
+                                              <option value="roboto">Roboto</option>
+                                              <option value="montserrat">Montserrat</option>
+                                              <option value="poppins">Poppins</option>
+                                              <option value="playfair">Playfair Display</option>
+                                              <option value="outfit">Outfit</option>
+                                            </select>
+                                          </div>
+                                          <div className="w-[80px]">
+                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 w-full" value={item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size: e.target.value })}>
+                                              <option value="10 pt">10 pt</option>
+                                              <option value="12 pt">12 pt</option>
+                                              <option value="14 pt">14 pt</option>
+                                              <option value="16 pt">16 pt</option>
+                                              <option value="18 pt">18 pt</option>
+                                              <option value="20 pt">20 pt</option>
+                                              <option value="24 pt">24 pt</option>
+                                              <option value="30 pt">30 pt</option>
+                                              <option value="36 pt">36 pt</option>
+                                              <option value="48 pt">48 pt</option>
+                                            </select>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="space-y-6 pt-4 border-t border-zinc-800/50">
+                                        {/* Section for Portfolio Main Banner (Desktop) */}
+                                        <div className="space-y-4">
+                                          <div className="flex flex-col gap-1">
+                                            <span className="text-xs font-bold text-zinc-200">Banner Principal do Portfólio (Desktop)</span>
+                                            <span className="text-[10px] text-zinc-500 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão computador.</span>
+                                          </div>
+                                          
+                                          <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-[11px] font-semibold text-zinc-400">Desktop (Tamanho Lógico e Funcional: 1920x500 px a 1920x800 px para preenchimento widescreen perfeito)</span>
+                                              {item.main_banner_url && (
+                                                <button 
+                                                  type="button" 
+                                                  onClick={() => handleRemovePortfolioMainBanner(item.id)}
+                                                  className="text-[10px] text-red-400 hover:text-red-300 font-bold"
+                                                >
+                                                  Remover
+                                                </button>
+                                              )}
+                                            </div>
+                                            {item.main_banner_url ? (
+                                              <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
+                                                <img src={item.main_banner_url} alt="Main Banner Desktop" className="w-full h-full object-cover" />
+                                              </div>
+                                            ) : (
+                                              <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-zinc-800 hover:border-[var(--primary-color)] bg-zinc-900/30 cursor-pointer transition-colors text-center p-4">
+                                                <Upload className="w-5 h-5 text-zinc-500 mb-1" />
+                                                <span className="text-xs text-zinc-400 font-bold">Enviar Banner Desktop</span>
+                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainBanner(item.id, e)} />
+                                              </label>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* Section for Desktop Banners */}
+                                        <div className="space-y-3">
+                                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                            <div className="flex flex-col">
+                                              <span className="text-xs font-semibold text-zinc-300">Banners Internos Desktop ({item.layers?.length || 0})</span>
+                                              <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Tamanho Lógico e Funcional: 1600x900 px (Proporção 16:9) ou 1600x560 px para encaixe excelente nas proporções do computador</span>
+                                            </div>
+                                            <label className="text-xs bg-zinc-800 hover:bg-[var(--primary-color)] hover:text-white text-zinc-300 px-3 py-2 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-zinc-700 hover:border-transparent">
+                                              <Upload className="w-4 h-4" />
+                                              Adicionar Banner Desktop
+                                              <input type="file" accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
+                                            </label>
+                                          </div>
+                                          
+                                          {item.layers && item.layers.length > 0 ? (
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                              {(item.layers || []).map((layer: any) => (
+                                                <div key={layer.id} className="relative group aspect-video rounded-lg overflow-hidden bg-black border border-zinc-800">
+                                                  <OptimizedImage src={layer.image_url} alt="Layer Desktop" className="w-full h-full object-cover" width={300} />
+                                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleRemovePortfolioLayer(item.id, layer.id)}
+                                                      className="text-red-400 hover:text-red-300 p-2 flex flex-col items-center gap-1 font-bold text-xs"
+                                                    >
+                                                      <Trash className="w-4 h-4" />
+                                                      Remover
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <div className="py-4 text-center text-zinc-600 text-xs border border-dashed border-zinc-800 rounded-lg">
+                                              Nenhum banner desktop inserido neste portfólio.
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     })()}

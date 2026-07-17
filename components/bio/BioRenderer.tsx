@@ -181,7 +181,8 @@ function InteractiveSocialIcon({
   theme,
   sizeClass = "w-5.5 h-5.5 sm:w-6 sm:h-6",
   fallbackIcon: FallbackIcon,
-  disableScale = false
+  disableScale = false,
+  instant = false
 }: {
   itemKey: string;
   label: string;
@@ -189,6 +190,7 @@ function InteractiveSocialIcon({
   sizeClass?: string;
   fallbackIcon: React.ComponentType<any>;
   disableScale?: boolean;
+  instant?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const isDark = theme === 'dark' || theme === 'glass';
@@ -210,7 +212,7 @@ function InteractiveSocialIcon({
         <img
           src={srcUrl}
           alt={label}
-          className={`${sizeClass} object-contain transition-all duration-300 ${disableScale ? '' : 'transform ' + (hovered ? 'scale-110' : '')}`}
+          className={`${sizeClass} object-contain ${instant ? 'transition-none duration-0' : 'transition-all duration-300'} ${disableScale ? '' : 'transform ' + (hovered ? 'scale-110' : '')}`}
         />
       </div>
     );
@@ -224,9 +226,9 @@ function InteractiveSocialIcon({
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="transition-colors duration-300 flex items-center justify-center cursor-pointer"
+      className={`${instant ? 'transition-none duration-0' : 'transition-colors duration-300'} flex items-center justify-center cursor-pointer`}
     >
-      <FallbackIcon className={`${sizeClass} transition-colors duration-300 ${colorClass}`} />
+      <FallbackIcon className={`${sizeClass} ${instant ? 'transition-none duration-0' : 'transition-colors duration-300'} ${colorClass}`} />
     </div>
   );
 }
@@ -235,8 +237,6 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const navigate = useNavigate();
   const { user } = useAuth();
   const bio = data?.bio_config || {};
-  const siteFont = bio.site_font || "inter";
-  const siteFontSize = bio.site_font_size || "md";
   const bgAnimation = bio.bg_animation || "parallax";
 
   const [copiedPix, setCopiedPix] = useState(false);
@@ -310,6 +310,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   }, []);
 
   const isMobileView = isMobileDevice || (asPreview && previewMode === 'smartphone');
+  
+  const siteFont = isMobileView ? (bio.site_font_mobile || bio.site_font || "inter") : (bio.site_font || "inter");
+  const siteFontSize = isMobileView ? (bio.site_font_size_mobile || bio.site_font_size || "md") : (bio.site_font_size || "md");
   
   const maxCatalogIndex = bio.catalog_items 
     ? (isMobileView 
@@ -1261,6 +1264,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         .site-size-lg { font-size: 19.5px !important; }
         .site-size-xl { font-size: 21.5px !important; }
 
+        @media (max-width: 768px) {
+          .site-size-sm { font-size: 13.5px !important; }
+          .site-size-md { font-size: 14.5px !important; }
+          .site-size-lg { font-size: 16px !important; }
+          .site-size-xl { font-size: 17.5px !important; }
+        }
+
         .site-size-sm .text-xs { font-size: 0.7rem !important; }
         .site-size-sm .text-sm { font-size: 0.8rem !important; }
         .site-size-sm .text-base { font-size: 0.9rem !important; }
@@ -1466,8 +1476,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               const finalMobile = mobileBanner || desktopBanner;
 
               const currentPortfolioItem = activePortfolioId ? (bio.portfolio_items || []).find((p: any) => p.id === activePortfolioId) : null;
-              const portfolioDesktopBanner = currentPortfolioItem?.main_banner_url || currentPortfolioItem?.layers?.[0]?.image_url;
-              const portfolioMobileBanner = currentPortfolioItem?.main_banner_mobile_url || currentPortfolioItem?.main_banner_url || currentPortfolioItem?.layers?.[0]?.image_url;
+              const hasDesktopLayersForBanner = !!currentPortfolioItem?.layers && currentPortfolioItem.layers.length > 0;
+              const hasMobileLayersForBanner = !!currentPortfolioItem?.mobile_layers && currentPortfolioItem.mobile_layers.length > 0;
+              const firstDesktopLayerUrl = hasDesktopLayersForBanner ? currentPortfolioItem.layers[0].image_url : null;
+              const firstMobileLayerUrl = hasMobileLayersForBanner ? currentPortfolioItem.mobile_layers[0].image_url : null;
+
+              const portfolioDesktopBanner = currentPortfolioItem?.main_banner_url || firstDesktopLayerUrl || firstMobileLayerUrl || currentPortfolioItem?.image_url;
+              const portfolioMobileBanner = currentPortfolioItem?.main_banner_mobile_url || currentPortfolioItem?.main_banner_url || firstMobileLayerUrl || firstDesktopLayerUrl || currentPortfolioItem?.image_url;
 
               const hasBanners = (bio.show_banners && (desktopBanner || mobileBanner)) || (activeView === "portfolio");
 
@@ -1609,68 +1624,103 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         )}
                         <span className={`font-extrabold text-2xl sm:text-3xl tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
                       </div>
-                      <div className="flex items-center gap-7 sm:gap-8 md:gap-9">
-                        <button 
-                          onClick={() => {
-                            setActiveView("bio");
-                            setActivePortfolioId(null);
-                          }} 
-                          className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
-                            (activeView as string) === "bio" 
-                              ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
-                              : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
-                          } hover:text-[#FE540B]`}
-                        >
-                          Início
-                          <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'bio' ? 'scaleX(1)' : undefined }} />
-                        </button>
-
-                        <button 
-                          onClick={() => setActiveView("contact")} 
-                          className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
-                            (activeView as string) === "contact" 
-                              ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
-                              : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
-                          } hover:text-[#FE540B]`}
-                        >
-                          Contato
-                          <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'contact' ? 'scaleX(1)' : undefined }} />
-                        </button>
-
-                        <button 
-                          onClick={() => {
-                            const el = document.getElementById("portfolio-section");
-                            if (el) {
-                              el.scrollIntoView({ behavior: 'smooth' });
-                            } else {
+                      <div className="flex items-center">
+                        <div className="flex items-center gap-7 sm:gap-8 md:gap-9">
+                          <button 
+                            onClick={() => {
                               setActiveView("bio");
-                              setTimeout(() => {
-                                const el2 = document.getElementById("portfolio-section");
-                                if (el2) el2.scrollIntoView({ behavior: 'smooth' });
-                              }, 120);
-                            }
-                          }} 
-                          className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
-                            (activeView as string) === "portfolio" 
-                              ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
-                              : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
-                          } hover:text-[#FE540B]`}
-                        >
-                          Vitrine
-                          <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'portfolio' ? 'scaleX(1)' : undefined }} />
-                        </button>
+                              setActivePortfolioId(null);
+                            }} 
+                            className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
+                              (activeView as string) === "bio" 
+                                ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                                : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                            } hover:text-[#FE540B]`}
+                          >
+                            Início
+                            <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'bio' ? 'scaleX(1)' : undefined }} />
+                          </button>
 
-                        <button 
-                          onClick={handleShareBio} 
-                          className={`text-base sm:text-lg font-medium transition-colors flex items-center gap-3.5 cursor-pointer duration-300 ${
-                            theme === 'dark' || theme === 'glass' 
-                              ? 'text-white opacity-70 hover:opacity-100 hover:text-[#FE540B]' 
-                              : 'text-slate-900 opacity-70 hover:opacity-100 hover:text-[#FE540B]'
-                          }`}
-                        >
-                          <Share2 className="w-5 h-5 transition-colors duration-300" style={{ color: "inherit" }} /> 
-                          <span>Compartilhar</span>
-                        </button>
+                          <button 
+                            onClick={() => setActiveView("contact")} 
+                            className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
+                              (activeView as string) === "contact" 
+                                ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                                : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                            } hover:text-[#FE540B]`}
+                          >
+                            Contato
+                            <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'contact' ? 'scaleX(1)' : undefined }} />
+                          </button>
+
+                          <button 
+                            onClick={() => {
+                              const el = document.getElementById("portfolio-section");
+                              if (el) {
+                                el.scrollIntoView({ behavior: 'smooth' });
+                              } else {
+                                setActiveView("bio");
+                                setTimeout(() => {
+                                  const el2 = document.getElementById("portfolio-section");
+                                  if (el2) el2.scrollIntoView({ behavior: 'smooth' });
+                                }, 120);
+                              }
+                            }} 
+                            className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
+                              (activeView as string) === "portfolio" 
+                                ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
+                                : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                            } hover:text-[#FE540B]`}
+                          >
+                            Vitrine
+                            <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'portfolio' ? 'scaleX(1)' : undefined }} />
+                          </button>
+
+                          <button 
+                            onClick={handleShareBio} 
+                            className={`text-base sm:text-lg font-medium transition-colors flex items-center gap-3.5 cursor-pointer duration-300 ${
+                              theme === 'dark' || theme === 'glass' 
+                                ? 'text-white opacity-70 hover:opacity-100 hover:text-[#FE540B]' 
+                                : 'text-slate-900 opacity-70 hover:opacity-100 hover:text-[#FE540B]'
+                            }`}
+                          >
+                            <Share2 className="w-5 h-5 transition-colors duration-300" style={{ color: "inherit" }} /> 
+                            <span>Compartilhar</span>
+                          </button>
+                        </div>
+
+                        {socialIcons.filter(item => item.value && item.href).length > 0 && (
+                          <div className="w-10 sm:w-12 md:w-14 lg:w-16" />
+                        )}
+
+                        {(() => {
+                          const activeSocials = socialIcons.filter(item => item.value && item.href);
+                          if (activeSocials.length === 0) return null;
+                          return (
+                            <div className="flex items-center gap-5 sm:gap-6 md:gap-7">
+                              {activeSocials.map((item) => (
+                                <a 
+                                  key={item.key} 
+                                  href={asPreview ? undefined : formatExternalUrl(item.href)} 
+                                  target="_blank" 
+                                  rel="noreferrer" 
+                                  title={item.label} 
+                                  className="flex items-center justify-center cursor-pointer transition-none" 
+                                  onClick={(e) => { if (asPreview) e.preventDefault(); }}
+                                >
+                                  <InteractiveSocialIcon 
+                                    itemKey={item.key} 
+                                    label={item.label} 
+                                    theme={theme} 
+                                    sizeClass="w-5.5 h-5.5 sm:w-6 sm:h-6"
+                                    fallbackIcon={item.icon} 
+                                    instant={true}
+                                  />
+                                </a>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                       
                       {/* Thin animated bar */}
@@ -1813,7 +1863,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           <div className="w-12 sm:w-16 md:w-20 lg:w-24" />
 
                           {/* Social Icons Group */}
-                          <div className="flex items-center gap-4 sm:gap-4.5 md:gap-5">
+                          <div className="flex items-center gap-5 sm:gap-6 md:gap-7">
                             {socialIcons.length > 0 && socialIcons.map((item) => {
                               return (
                                 <a 
@@ -1822,16 +1872,16 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   target="_blank" 
                                   rel="noreferrer" 
                                   title={item.label} 
-                                  className="flex items-center justify-center transition-all duration-300 cursor-pointer" 
+                                  className="flex items-center justify-center cursor-pointer transition-none" 
                                   onClick={(e) => { if (asPreview) e.preventDefault(); }}
                                  >
                                   <InteractiveSocialIcon 
                                     itemKey={item.key} 
                                     label={item.label} 
                                     theme={theme} 
-                                    sizeClass="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]"
+                                    sizeClass="w-5.5 h-5.5 sm:w-6 sm:h-6"
                                     fallbackIcon={item.icon} 
-                                    disableScale={true}
+                                    instant={true}
                                   />
                                 </a>
                               )
@@ -1851,7 +1901,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       </div>
 
                       {/* Desktop Hero Section */}
-                      <div className={`w-full relative group bg-black/10 transition-all duration-1000 ease-in-out ${activeView === "contact" ? "md:h-[35vh] md:min-h-[250px]" : "md:h-[calc(105.3vh-140px)] md:min-h-[500px]"}`} style={{}}>
+                      <div className={`w-full relative group bg-black/10 transition-all duration-1000 ease-in-out ${
+                        activeView === "contact" 
+                          ? "md:h-[35vh] md:min-h-[250px]" 
+                          : activeView === "portfolio"
+                            ? "md:h-screen md:min-h-[600px]"
+                            : "md:h-[calc(105.3vh-140px)] md:min-h-[500px]"
+                      }`} style={{}}>
                         <div className="w-full h-full relative">
                           <img 
                             src={activeView === "contact" ? (bio.contact_banner_img_url || finalDesktop) : (activeView === "portfolio" ? (portfolioDesktopBanner || finalDesktop) : finalDesktop)} 
@@ -2029,10 +2085,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       {/* Main Banner Hero Area */}
                       <div className={`w-full relative overflow-hidden transition-all duration-1000 ease-in-out ${
                         activeView === "portfolio" 
-                          ? "aspect-[6/5] min-h-[280px] py-0 px-0" 
+                          ? "h-screen w-full py-0 px-0"
                           : activeView === "contact"
-                            ? "aspect-[21/9] sm:aspect-auto min-h-[220px] sm:min-h-[260px] py-6 px-6 flex flex-col items-center justify-center text-center"
-                            : "aspect-[6/5] sm:aspect-auto min-h-[320px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center"
+                            ? (isMobileView ? "aspect-[16/10] min-h-[320px] py-10 px-6 flex flex-col items-center justify-center text-center" : "aspect-[21/9] sm:aspect-auto min-h-[220px] sm:min-h-[260px] py-6 px-6 flex flex-col items-center justify-center text-center")
+                            : (isMobileView ? "h-screen w-full py-20 px-6 flex flex-col items-center justify-center text-center" : "aspect-[6/5] sm:aspect-auto min-h-[320px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center")
                       }`}>
                         <img 
                           src={activeView === "contact" ? (bio.contact_banner_img_url || finalMobile) : (activeView === "portfolio" ? (portfolioMobileBanner || finalMobile) : finalMobile)} 
@@ -2047,39 +2103,48 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         )}
                         
                         {/* Overlaid Hero Content - Centered with title, about section, and button on top of the banner */}
-                        {activeView !== "contact" && activeView !== "portfolio" && (
-                          <div className="relative z-20 w-full flex flex-col items-center justify-center text-center space-y-6">
-                            <h1 className="text-[34px] sm:text-[38px] font-black tracking-tight text-white leading-[1.1] select-none max-w-[95%] text-center drop-shadow-md">
-                              {bio.title || companyName || "Criando marcas que conectam"}
-                            </h1>
-                            
-                            {desc && (
-                              <div className="w-full flex flex-col items-center space-y-3.5 pt-6 max-w-sm border-t border-white/10 mt-6">
-                                <h2 className="hidden sm:block text-xl sm:text-2xl font-black tracking-tight text-white font-sans uppercase">
-                                  Sobre a
-                                </h2>
-                                <div 
-                                  className="text-[16px] sm:text-lg font-bold leading-relaxed text-zinc-100 whitespace-pre-wrap font-sans text-center drop-shadow-sm px-2"
-                                  dangerouslySetInnerHTML={{ __html: desc }}
-                                />
-                              </div>
-                            )}
+                        {activeView !== "contact" && activeView !== "portfolio" && (() => {
+                          const mobAlign = bio.description_align_mobile || "center";
+                          const mobAlignClass = mobAlign === "left" ? "text-left items-start" : mobAlign === "right" ? "text-right items-end" : "text-center items-center";
+                          const mobBold = bio.description_bold_mobile ? "font-bold" : "font-medium";
+                          const mobItalic = bio.description_italic_mobile ? "italic" : "not-italic";
+                          const mobFont = `bio-desc-font-${bio.description_font_mobile || "ui"}`;
+                          const mobSize = getResponsiveFontSizeClass(bio.description_size, bio.description_size_mobile);
 
-                            <button 
-                              onClick={() => {
-                                const el = document.getElementById("portfolio-section");
-                                if (el) {
-                                  el.scrollIntoView({ behavior: 'smooth' });
-                                } else {
-                                  setActiveView("bio");
-                                }
-                              }}
-                              className="px-8 py-3.5 bg-[#FE540B] hover:bg-[#ff3d00] text-white rounded-full text-base font-extrabold shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer mt-4"
-                            >
-                              Veja nosso Portfólio
-                            </button>
-                          </div>
-                        )}
+                          return (
+                            <div className={`relative z-20 w-full flex flex-col justify-center ${mobAlignClass} space-y-6 px-4`}>
+                              <h1 className="text-[34px] sm:text-[38px] font-black tracking-tight text-white leading-[1.1] select-none max-w-[95%] drop-shadow-md">
+                                {bio.title_mobile || bio.title || companyName || "Criando marcas que conectam"}
+                              </h1>
+                              
+                              {desc && (
+                                <div className={`w-full flex flex-col ${mobAlignClass} space-y-3.5 pt-6 max-w-sm border-t border-white/10 mt-6`}>
+                                  <h2 className="hidden sm:block text-xl sm:text-2xl font-black tracking-tight text-white font-sans uppercase">
+                                    Sobre a
+                                  </h2>
+                                  <div 
+                                    className={`leading-relaxed text-zinc-100 whitespace-pre-wrap font-sans drop-shadow-sm px-2 ${mobSize} ${mobBold} ${mobItalic} ${mobFont}`}
+                                    dangerouslySetInnerHTML={{ __html: desc }}
+                                  />
+                                </div>
+                              )}
+
+                              <button 
+                                onClick={() => {
+                                  const el = document.getElementById("portfolio-section");
+                                  if (el) {
+                                    el.scrollIntoView({ behavior: 'smooth' });
+                                  } else {
+                                    setActiveView("bio");
+                                  }
+                                }}
+                                className="px-8 py-3.5 bg-[#FE540B] hover:bg-[#ff3d00] text-white rounded-full text-base font-extrabold shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer mt-4"
+                              >
+                                Veja nosso Portfólio
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}
@@ -2088,7 +2153,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             })()}
           </div>
 
-          <div className={`${asPreview && previewMode !== 'pc' ? (activeView === "portfolio" ? "-mx-4 w-[calc(100%+2rem)]" : "") : activeView === "portfolio" ? "w-full max-w-none px-0 mt-2 sm:mt-4" : "max-w-[1150px] mx-auto px-4 md:px-8 lg:px-12 mt-6 sm:mt-10"} space-y-6 sm:space-y-8 w-full`}>
+          <div className={activeView === "portfolio" 
+            ? "w-full px-0 mx-0 mt-0 space-y-0" 
+            : `${isMobileView ? "space-y-6" : "max-w-[1150px] mx-auto px-4 md:px-8 lg:px-12 mt-6 sm:mt-10 space-y-6 sm:space-y-8"} w-full`
+          }>
 
           <AnimatePresence mode="wait">
           {activeView === "portfolio" ? (
@@ -2113,10 +2181,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   const nextPortfolio = currentIndex !== -1 && currentIndex < (bio.portfolio_items || []).length - 1 ? bio.portfolio_items[currentIndex + 1] : null;
                   
                   const isNewFormat = !!portfolioItem.layers;
+                  const hasDesktopLayers = !!portfolioItem.layers && portfolioItem.layers.length > 0;
                   const hasMobileLayers = !!portfolioItem.mobile_layers && portfolioItem.mobile_layers.length > 0;
-                  const images = (isMobileView && hasMobileLayers)
-                    ? portfolioItem.mobile_layers
-                    : (isNewFormat ? portfolioItem.layers : [{ id: portfolioItem.id, image_url: portfolioItem.image_url }]);
+                  const images = isMobileView
+                    ? (hasMobileLayers ? portfolioItem.mobile_layers : (hasDesktopLayers ? portfolioItem.layers : [{ id: portfolioItem.id, image_url: portfolioItem.image_url }]))
+                    : (hasDesktopLayers ? portfolioItem.layers : (hasMobileLayers ? portfolioItem.mobile_layers : [{ id: portfolioItem.id, image_url: portfolioItem.image_url }]));
                   
                   const finalAlign = isMobileView 
                     ? (portfolioItem.description_align_mobile || portfolioItem.description_align || "left")
@@ -2143,48 +2212,95 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   return (
                      <div className="space-y-0 w-full" id="portfolio-detail-section">
                         <div 
-                          className="max-w-[1600px] mx-auto w-full px-4 md:px-8 lg:px-12 py-6 sm:py-10 flex items-center justify-between font-bold text-xl sm:text-2xl md:text-3xl"
-                          style={{ color: brandColor || 'var(--primary-color)' }}
+                          className="max-w-[1600px] mx-auto w-full px-4 md:px-8 lg:px-12 py-6 sm:py-10 flex flex-row gap-4 items-stretch justify-between"
                         >
-                           {/* Previous portfolio item button */}
-                           {prevPortfolio ? (
-                             <button 
-                               onClick={() => { 
-                                 setActivePortfolioId(prevPortfolio.id); 
-                                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                                 document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
-                                 document.body.scrollTo({ top: 0, behavior: 'smooth' });
-                                 if (mainScrollRef.current) {
-                                   mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                                 }
-                               }} 
-                               className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer"
-                             >
-                               <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" /> {prevPortfolio.title || "Anterior"}
-                             </button>
-                           ) : (
-                             <div />
-                           )}
+                           {/* Previous portfolio item card */}
+                           {prevPortfolio ? (() => {
+                             const isPrevNewFormat = !!prevPortfolio.layers;
+                             const prevHasDesktop = !!prevPortfolio.layers && prevPortfolio.layers.length > 0;
+                             const prevHasMobile = !!prevPortfolio.mobile_layers && prevPortfolio.mobile_layers.length > 0;
+                             const prevCoverImg = isMobileView
+                               ? (prevPortfolio.main_banner_mobile_url || prevPortfolio.main_banner_url || (prevHasMobile ? prevPortfolio.mobile_layers[0].image_url : (prevHasDesktop ? prevPortfolio.layers[0].image_url : prevPortfolio.image_url)))
+                               : (prevPortfolio.main_banner_url || (prevHasDesktop ? prevPortfolio.layers[0].image_url : (prevHasMobile ? prevPortfolio.mobile_layers[0].image_url : prevPortfolio.image_url)));
+                             return (
+                               <div 
+                                 onClick={() => { 
+                                   setActivePortfolioId(prevPortfolio.id); 
+                                   window.scrollTo({ top: 0, behavior: 'smooth' });
+                                   document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+                                   document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                                   if (mainScrollRef.current) {
+                                     mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                                   }
+                                 }} 
+                                 className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
+                                 style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+                               >
+                                 {prevCoverImg ? (
+                                   <OptimizedMedia 
+                                     src={prevCoverImg} 
+                                     alt={prevPortfolio.title || ""} 
+                                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                     isCover={true}
+                                   />
+                                 ) : (
+                                   <div className="absolute inset-0 w-full h-full bg-black/40" />
+                                 )}
+                                 <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent flex flex-row items-center gap-4 p-4 sm:p-6 md:p-8 lg:p-10 text-white">
+                                       <ChevronLeft className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 text-white/95 transition-transform duration-300 group-hover:-translate-x-2 shrink-0" />
+                                       <div className="flex flex-col justify-center min-w-0">
+                                         <div className="text-base sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight line-clamp-1">
+                                           {prevPortfolio.title}
+                                         </div>
+                                       </div>
+                                     </div>
+                               </div>
+                             );
+                           })() : <div className="flex-1 opacity-0 pointer-events-none" />}
 
-                           {/* Next portfolio item button */}
-                           {nextPortfolio ? (
-                             <button 
-                               onClick={() => { 
-                                 setActivePortfolioId(nextPortfolio.id); 
-                                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                                 document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
-                                 document.body.scrollTo({ top: 0, behavior: 'smooth' });
-                                 if (mainScrollRef.current) {
-                                   mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                                 }
-                               }} 
-                               className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer text-right"
-                             >
-                               {nextPortfolio.title || "Próximo"} <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
-                             </button>
-                           ) : (
-                             <div />
-                           )}
+                           {/* Next portfolio item card */}
+                           {nextPortfolio ? (() => {
+                             const isNextNewFormat = !!nextPortfolio.layers;
+                             const nextHasDesktop = !!nextPortfolio.layers && nextPortfolio.layers.length > 0;
+                             const nextHasMobile = !!nextPortfolio.mobile_layers && nextPortfolio.mobile_layers.length > 0;
+                             const nextCoverImg = isMobileView
+                               ? (nextPortfolio.main_banner_mobile_url || nextPortfolio.main_banner_url || (nextHasMobile ? nextPortfolio.mobile_layers[0].image_url : (nextHasDesktop ? nextPortfolio.layers[0].image_url : nextPortfolio.image_url)))
+                               : (nextPortfolio.main_banner_url || (nextHasDesktop ? nextPortfolio.layers[0].image_url : (nextHasMobile ? nextPortfolio.mobile_layers[0].image_url : nextPortfolio.image_url)));
+                             return (
+                               <div 
+                                 onClick={() => { 
+                                   setActivePortfolioId(nextPortfolio.id); 
+                                   window.scrollTo({ top: 0, behavior: 'smooth' });
+                                   document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+                                   document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                                   if (mainScrollRef.current) {
+                                     mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                                   }
+                                 }} 
+                                 className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
+                                 style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+                               >
+                                 {nextCoverImg ? (
+                                   <OptimizedMedia 
+                                     src={nextCoverImg} 
+                                     alt={nextPortfolio.title || ""} 
+                                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                     isCover={true}
+                                   />
+                                 ) : (
+                                   <div className="absolute inset-0 w-full h-full bg-black/40" />
+                                 )}
+                                 <div className="absolute inset-0 bg-gradient-to-l from-black/85 via-black/45 to-transparent flex flex-row items-center justify-end gap-4 p-4 sm:p-6 md:p-8 lg:p-10 text-white text-right">
+                                       <div className="flex flex-col justify-center min-w-0">
+                                         <div className="text-base sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight line-clamp-1">
+                                           {nextPortfolio.title}
+                                         </div>
+                                       </div>
+                                       <ChevronRight className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 text-white/95 transition-transform duration-300 group-hover:translate-x-2 shrink-0" />
+                                     </div>
+                               </div>
+                             );
+                           })() : <div className="flex-1 opacity-0 pointer-events-none" />}
                         </div>
                         
                         <div className="max-w-[1600px] mx-auto w-full px-4 md:px-8 lg:px-12 pb-12 sm:pb-20">
@@ -2201,11 +2317,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         </div>
 
                         {bgAnimation === "sticky-gallery" ? (
-                          <div className="relative w-full">
+                          <div className="relative w-full px-0 mx-0">
                             {images.map((img, idx) => (
                               <div 
                                 key={img.id || idx} 
-                                className="sticky top-0 h-screen w-full flex flex-col items-center justify-center bg-black overflow-hidden"
+                                className="sticky top-0 h-screen w-full bg-black overflow-hidden relative"
                                 style={{
                                   zIndex: idx + 1,
                                 }}
@@ -2213,7 +2329,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 <OptimizedMedia 
                                   src={img.image_url} 
                                   alt={`Banner ${idx+1}`} 
-                                  className="w-full h-full object-cover block mx-auto cursor-zoom-in transition-transform hover:scale-[1.01] duration-500" 
+                                  className="absolute inset-0 w-full h-full object-cover block cursor-zoom-in transition-transform hover:scale-[1.01] duration-500" 
                                   loading={idx === 0 ? "eager" : "lazy"} 
                                   onClick={() => {
                                     const imageUrls = images.map((i: any) => i.image_url);
@@ -2227,13 +2343,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             ))}
                           </div>
                         ) : (
-                          <div className="w-full flex flex-col items-center gap-6 sm:gap-10">
+                          <div className="w-full flex flex-col items-center gap-0 px-0 mx-0">
                              {images.map((img, idx) => (
                                <OptimizedMedia 
                                  key={img.id || idx} 
                                  src={img.image_url} 
                                  alt={`Banner ${idx+1}`} 
-                                 className="w-full max-w-[1600px] max-h-[70vh] md:max-h-[560px] h-auto object-contain block mx-auto rounded-lg sm:rounded-xl shadow-lg border border-black/5 dark:border-white/5 cursor-zoom-in transition-transform hover:scale-[1.01] duration-300" 
+                                 className="w-full h-auto block cursor-zoom-in transition-transform hover:scale-[1.01] duration-300 rounded-none border-0 shadow-none"
                                  loading={idx === 0 ? "eager" : "lazy"} 
                                  onClick={() => {
                                    const imageUrls = images.map((i: any) => i.image_url);
@@ -2248,34 +2364,96 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         )}
 
                         {(prevPortfolio || nextPortfolio) && (
-                          <div className="max-w-[1600px] mx-auto w-full px-4 md:px-8 lg:px-12 py-16 flex items-center justify-between font-bold text-xl sm:text-2xl md:text-3xl" style={{ color: brandColor || 'var(--primary-color)' }}>
-                             {prevPortfolio ? (
-                                <button onClick={() => { 
-                                  setActivePortfolioId(prevPortfolio.id); 
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                  document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
-                                  document.body.scrollTo({ top: 0, behavior: 'smooth' });
-                                  if (mainScrollRef.current) {
-                                    mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                                  }
-                                }} className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer">
-                                  <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" /> {prevPortfolio.title || "Anterior"}
-                                </button>
-                             ) : <div />}
+                          <div 
+                            className="max-w-[1600px] mx-auto w-full px-4 md:px-8 lg:px-12 py-16 flex flex-row gap-4 items-stretch justify-between"
+                          >
+                             {/* Previous portfolio item card */}
+                             {prevPortfolio ? (() => {
+                               const isPrevNewFormat = !!prevPortfolio.layers;
+                               const prevHasDesktop = !!prevPortfolio.layers && prevPortfolio.layers.length > 0;
+                               const prevHasMobile = !!prevPortfolio.mobile_layers && prevPortfolio.mobile_layers.length > 0;
+                               const prevCoverImg = isMobileView
+                                 ? (prevHasMobile ? prevPortfolio.mobile_layers[0].image_url : (prevHasDesktop ? prevPortfolio.layers[0].image_url : prevPortfolio.image_url))
+                                 : (prevHasDesktop ? prevPortfolio.layers[0].image_url : (prevHasMobile ? prevPortfolio.mobile_layers[0].image_url : prevPortfolio.image_url));
+                               return (
+                                 <div 
+                                   onClick={() => { 
+                                     setActivePortfolioId(prevPortfolio.id); 
+                                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                                     document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+                                     document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                                     if (mainScrollRef.current) {
+                                       mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                                     }
+                                   }} 
+                                   className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
+                                   style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+                                 >
+                                   {prevCoverImg ? (
+                                     <OptimizedMedia 
+                                       src={prevCoverImg} 
+                                       alt={prevPortfolio.title || ""} 
+                                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                       isCover={true}
+                                     />
+                                   ) : (
+                                     <div className="absolute inset-0 w-full h-full bg-black/40" />
+                                   )}
+                                   <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent flex flex-row items-center gap-4 p-4 sm:p-6 md:p-8 lg:p-10 text-white">
+                                      <ChevronLeft className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 text-white/95 transition-transform duration-300 group-hover:-translate-x-2 shrink-0" />
+                                      <div className="flex flex-col justify-center min-w-0">
+                                        <div className="text-base sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight line-clamp-1">
+                                          {prevPortfolio.title}
+                                        </div>
+                                      </div>
+                                    </div>
+                                 </div>
+                               );
+                             })() : <div className="flex-1 opacity-0 pointer-events-none" />}
 
-                             {nextPortfolio ? (
-                                <button onClick={() => { 
-                                  setActivePortfolioId(nextPortfolio.id); 
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                  document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
-                                  document.body.scrollTo({ top: 0, behavior: 'smooth' });
-                                  if (mainScrollRef.current) {
-                                    mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                                  }
-                                }} className="hover:opacity-70 transition-opacity flex items-center gap-2 cursor-pointer text-right">
-                                  {nextPortfolio.title || "Próximo"} <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
-                                </button>
-                             ) : <div />}
+                             {/* Next portfolio item card */}
+                             {nextPortfolio ? (() => {
+                               const isNextNewFormat = !!nextPortfolio.layers;
+                               const nextHasDesktop = !!nextPortfolio.layers && nextPortfolio.layers.length > 0;
+                               const nextHasMobile = !!nextPortfolio.mobile_layers && nextPortfolio.mobile_layers.length > 0;
+                               const nextCoverImg = isMobileView
+                                 ? (nextHasMobile ? nextPortfolio.mobile_layers[0].image_url : (nextHasDesktop ? nextPortfolio.layers[0].image_url : nextPortfolio.image_url))
+                                 : (nextHasDesktop ? nextPortfolio.layers[0].image_url : (nextHasMobile ? nextPortfolio.mobile_layers[0].image_url : nextPortfolio.image_url));
+                               return (
+                                 <div 
+                                   onClick={() => { 
+                                     setActivePortfolioId(nextPortfolio.id); 
+                                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                                     document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+                                     document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                                     if (mainScrollRef.current) {
+                                       mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                                     }
+                                   }} 
+                                   className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
+                                   style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+                                 >
+                                   {nextCoverImg ? (
+                                     <OptimizedMedia 
+                                       src={nextCoverImg} 
+                                       alt={nextPortfolio.title || ""} 
+                                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                       isCover={true}
+                                     />
+                                   ) : (
+                                     <div className="absolute inset-0 w-full h-full bg-black/40" />
+                                   )}
+                                   <div className="absolute inset-0 bg-gradient-to-l from-black/85 via-black/45 to-transparent flex flex-row items-center justify-end gap-4 p-4 sm:p-6 md:p-8 lg:p-10 text-white text-right">
+                                      <div className="flex flex-col justify-center min-w-0">
+                                        <div className="text-base sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight line-clamp-1">
+                                          {nextPortfolio.title}
+                                        </div>
+                                      </div>
+                                      <ChevronRight className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 text-white/95 transition-transform duration-300 group-hover:translate-x-2 shrink-0" />
+                                    </div>
+                                 </div>
+                               );
+                             })() : <div className="flex-1 opacity-0 pointer-events-none" />}
                           </div>
                         )}
                      </div>
@@ -2459,39 +2637,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   </form>
                 </div>
               </div>
-                          {/* Centered Footer Social Icons & Copyright */}
-              {(() => {
-                const activeSocials = socialIcons.filter(item => item.value && item.href);
-                return (
-                  <div className="mt-24 pt-10 border-t border-black/5 dark:border-white/5 flex flex-col items-center justify-center gap-5 text-center max-w-6xl mx-auto px-4">
-                    {activeSocials.length > 0 && (
-                      <div className="flex items-center justify-center gap-5 sm:gap-6 md:gap-7">
-                        {activeSocials.map((item) => {
-                          return (
-                            <a 
-                              key={item.key} 
-                              href={asPreview ? undefined : formatExternalUrl(item.href)} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              title={item.label} 
-                              className="transition-all duration-300 hover:scale-115 cursor-pointer" 
-                              onClick={(e) => { if (asPreview) e.preventDefault(); }}
-                            >
-                              <InteractiveSocialIcon 
-                                itemKey={item.key} 
-                                label={item.label} 
-                                theme={theme} 
-                                sizeClass="w-[23px] h-[23px] sm:w-[25px] sm:h-[25px]"
-                                fallbackIcon={item.icon} 
-                              />
-                            </a>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+
+              {/* Footer spacing */}
+              <div className="mt-16" />
             </motion.div>
           ) : (
             <motion.div
@@ -2524,9 +2672,98 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             })}
           </div>
 
+          {/* 3.5. "Sobre sua empresa" Section */}
+          {bio.show_about !== false && (
+            <div 
+              id="about-company-section" 
+              className="relative w-full my-6 animate-fade-in"
+            >
+              {/* Content Wrapper */}
+              <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-10 md:py-16 max-w-none w-full mx-auto space-y-6 md:space-y-8 h-full">
+                {/* Title */}
+                <h2 
+                  className={`tracking-tight select-none leading-tight ${
+                    theme === 'light' ? 'text-zinc-900' : 'text-white'
+                  } ${
+                    (bio.about_title_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_title_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
+                  } ${
+                    bio.about_title_bold !== false ? 'font-extrabold' : 'font-normal'
+                  } ${
+                    bio.about_title_italic ? 'italic' : 'not-italic'
+                  } ${
+                    getFontSizeClass(bio.about_title_size || "30 pt")
+                  } bio-desc-font-${bio.about_title_font || "funnel"}`}
+                >
+                  {(bio.about_title || `Sobre a ${companyName || 'Sua Empresa'}`).toUpperCase()}
+                </h2>
+
+                {/* Main Description */}
+                {(bio.about_description || !bio.about_title) && (
+                  <p 
+                    className={`leading-relaxed max-w-none w-full mx-auto tracking-wide ${
+                      theme === 'light' ? 'text-zinc-600' : 'text-zinc-200/95'
+                    } ${
+                      (bio.about_desc_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_desc_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
+                    } ${
+                      bio.about_desc_bold ? 'font-bold' : 'font-normal'
+                    } ${
+                      bio.about_desc_italic ? 'italic' : 'not-italic'
+                    } ${
+                      getFontSizeClass(bio.about_desc_size || "16 pt")
+                    } bio-desc-font-${bio.about_desc_font || "ui"}`}
+                  >
+                    {bio.about_description || `Acreditamos que o design é mais do que aparência – é comunicação, engajamento e construção de confiança. Trabalhamos para criar marcas que deixem uma impressão duradoura e que transmitam seu propósito de forma clara e consistente.`}
+                  </p>
+                )}
+
+                {/* Highlight text (Bold) */}
+                {(bio.about_highlight || !bio.about_title) && (
+                  <p 
+                    className={`tracking-wide max-w-none w-full mx-auto ${
+                      theme === 'light' ? 'text-zinc-800' : 'text-white'
+                    } ${
+                      (bio.about_highlight_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_highlight_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
+                    } ${
+                      bio.about_highlight_bold !== false ? 'font-extrabold' : 'font-normal'
+                    } ${
+                      bio.about_highlight_italic ? 'italic' : 'not-italic'
+                    } ${
+                      getFontSizeClass(bio.about_highlight_size || "16 pt")
+                    } bio-desc-font-${bio.about_highlight_font || "ui"}`}
+                  >
+                    {bio.about_highlight || `Comece sua jornada com a ${companyName || 'Sua Empresa'}. Vamos criar algo inesquecível.`}
+                  </p>
+                )}
+
+                {/* Orange rounded-full button identical to the print */}
+                <div className="pt-2">
+                  <a
+                    href={(() => {
+                      if (bio.about_btn_link) {
+                        return bio.about_btn_link;
+                      }
+                      const whatsappClean = (bio.whatsapp || bio.phone || "").replace(/\D/g, "");
+                      if (!whatsappClean) return "#";
+                      const whatsappNumber = whatsappClean.startsWith('55') || whatsappClean.length > 11 ? whatsappClean : `55${whatsappClean}`;
+                      return `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent("Olá! Estou vindo do site, quero saber mais sobre sua empresa.")}`;
+                    })()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-10 py-4 rounded-full text-base sm:text-lg font-bold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30"
+                    style={{
+                      backgroundColor: brandColor || '#FE540B'
+                    }}
+                  >
+                    {bio.about_btn_text || 'Fale Conosco'}
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 4. Products Catalog Section */}
           {bio.catalog_items && bio.catalog_items.length > 0 && (
-            <div className="pt-4 space-y-4 relative w-full">
+            <div id="catalog-section" className="pt-4 space-y-4 relative w-full">
               <div className="flex items-center justify-between px-2">
                 {bio.catalog_title && <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${t.textTitle}`}>{bio.catalog_title}</h2>}
               </div>
@@ -2552,11 +2789,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             }}
                             className={`overflow-hidden rounded-[2rem] border transition-[transform,box-shadow,border-color] duration-300 flex flex-col h-full cursor-pointer hover:shadow-2xl hover:-translate-y-1 group ${t.cardBg} ${t.cardBorder} catalog-card-item flex-1`}
                           >
-                            {item.image_url ? (
-                              <div className="w-full aspect-square overflow-hidden relative flex items-center justify-center p-1.5 rounded-[1.5rem] border" style={{ backgroundColor: theme === 'dark' ? `${brandColor}08` : '#ffffff', borderColor: theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.05)' }}>
-                                <OptimizedMedia src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" width={400} isCover={true} />
-                              </div>
-                            ) : (
+                            {item.image_url ? (() => {
+                              const isItemPng = item.image_url.toLowerCase().includes('.png') || item.image_url.toLowerCase().includes('image/png') || item.image_url.toLowerCase().includes('format=png');
+                              return (
+                                <div className="w-full aspect-square overflow-hidden relative flex items-center justify-center p-1.5 rounded-[1.5rem] border" style={{ backgroundColor: isItemPng ? '#ffffff' : theme === 'dark' ? `${brandColor}08` : '#ffffff', borderColor: theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.05)' }}>
+                                  <OptimizedMedia src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" width={400} isCover={true} />
+                                </div>
+                              );
+                            })() : (
                               <div className={`w-full aspect-square ${t.iconBg} flex items-center justify-center`}>
                                 <ShoppingCart className="w-10 h-10 opacity-20 text-slate-400" />
                               </div>
@@ -2618,10 +2858,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               <div className={`grid gap-6 ${asPreview && previewMode === 'smartphone' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                 {bio.portfolio_items.map((item: any) => {
                    const isNewFormat = !!item.layers;
+                   const hasDesktopLayers = !!item.layers && item.layers.length > 0;
                    const hasMobileLayers = !!item.mobile_layers && item.mobile_layers.length > 0;
-                   const coverImg = (isMobileView && hasMobileLayers)
-                     ? item.mobile_layers[0].image_url
-                     : (isNewFormat && item.layers.length > 0 ? item.layers[0].image_url : item.image_url);
+                   const coverImg = isMobileView
+                     ? (hasMobileLayers ? item.mobile_layers[0].image_url : (hasDesktopLayers ? item.layers[0].image_url : item.image_url))
+                     : (hasDesktopLayers ? item.layers[0].image_url : (hasMobileLayers ? item.mobile_layers[0].image_url : item.image_url));
                    
                    return (
                      <div 
@@ -2653,19 +2894,28 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                        )}
                        
                        {/* Overlay with Portfolio Title */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity flex flex-col justify-end p-4">
-                          <span className="text-white font-bold text-sm sm:text-base drop-shadow-md">
-                            {(isMobileView && item.title_mobile) ? item.title_mobile : (item.title || "Portfólio")}
-                          </span>
-                          {(isMobileView && hasMobileLayers) ? (
-                            <span className="text-white/70 text-xs font-semibold">
-                              {item.mobile_layers.length} {item.mobile_layers.length === 1 ? 'mídia' : 'mídias'}
-                            </span>
-                          ) : (isNewFormat && item.layers && (
-                            <span className="text-white/70 text-xs font-semibold">
-                              {item.layers.length} {item.layers.length === 1 ? 'mídia' : 'mídias'}
-                            </span>
-                          ))}
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent opacity-95 transition-all duration-300 flex flex-col justify-end p-5 sm:p-6 group-hover:from-black/100 group-hover:via-black/45">
+                         <div className="flex items-center justify-between w-full">
+                           <div className="flex flex-col space-y-1.5 pr-4">
+                             <span className="text-white font-black text-lg sm:text-xl md:text-2xl tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] leading-tight transition-all duration-300 group-hover:translate-x-0.5">
+                               {(isMobileView && item.title_mobile) ? item.title_mobile : (item.title || "Portfólio")}
+                             </span>
+                             {(isMobileView && hasMobileLayers) ? (
+                               <span className="text-white/80 text-xs sm:text-sm font-bold opacity-90">
+                                 {item.mobile_layers.length} {item.mobile_layers.length === 1 ? 'mídia' : 'mídias'}
+                               </span>
+                             ) : (isNewFormat && item.layers && (
+                               <span className="text-white/80 text-xs sm:text-sm font-bold opacity-90">
+                                 {item.layers.length} {item.layers.length === 1 ? 'mídia' : 'mídias'}
+                               </span>
+                             ))}
+                           </div>
+                           
+                           {/* Beautifully animated arrow > */}
+                           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white/10 text-white border border-white/20 backdrop-blur-md shadow-lg transition-all duration-300 group-hover:bg-white/20 group-hover:scale-110 group-hover:border-white/45 group-hover:translate-x-1 shrink-0">
+                             <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:scale-110" />
+                           </div>
+                         </div>
                        </div>
                        
 
@@ -2951,10 +3201,18 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         const activeImageUrl = productImages[activeImageIndex] || selectedProduct.image_url;
         const productLink = formatExternalUrl(selectedProduct.url);
 
+        const isPngImage = (url?: string) => {
+          if (!url) return false;
+          const lower = url.toLowerCase();
+          return lower.includes('.png') || lower.includes('image/png') || lower.includes('format=png');
+        };
+
+        const isMainPng = isPngImage(activeImageUrl);
+
         return (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setSelectedProduct(null)}>
+          <div className="fixed inset-0 z-[150] flex items-start md:items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto py-6 sm:py-10 animate-fade-in" onClick={() => setSelectedProduct(null)}>
             <div 
-              className={`w-full max-w-lg md:max-w-5xl lg:max-w-6xl rounded-[2rem] border overflow-hidden shadow-2xl flex flex-col max-h-[92vh] ${
+              className={`w-full max-w-lg md:max-w-[1200px] lg:max-w-[1400px] xl:max-w-[1500px] rounded-[2rem] border overflow-hidden md:overflow-visible shadow-2xl flex flex-col h-auto md:max-h-none ${
                 theme === 'glass'
                   ? 'bg-[#0a0b10]/65 backdrop-blur-3xl border-white/12 text-white shadow-[0_24px_50px_-12px_rgba(0,0,0,0.6)]'
                   : theme === 'dark' 
@@ -2975,90 +3233,125 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               </div>
 
               {/* Scrollable Container (Grid with Left/Right split on Desktop) */}
-              <div className="overflow-y-auto flex-1 no-scrollbar p-5 md:p-8">
+              <div className="overflow-y-auto md:overflow-visible flex-1 no-scrollbar p-5 md:p-8">
                 <div className={`grid items-stretch ${asPreview && previewMode === 'smartphone' ? 'grid-cols-1 gap-6' : 'grid-cols-1 md:grid-cols-12 gap-6 md:gap-10'}`}>
                   
-                  {/* LEFT COLUMN: Image Gallery (Span 7) */}
+                  {/* LEFT COLUMN: Image Gallery (Span 5) */}
                   <div 
-                    className={`${asPreview && previewMode === 'smartphone' ? '' : 'md:col-span-7 md:pr-8 md:border-r'} flex flex-col justify-start space-y-4`}
+                    className={`${asPreview && previewMode === 'smartphone' ? '' : 'md:col-span-5 md:pr-8 md:border-r'} flex flex-col justify-start space-y-4 items-center`}
                     style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.1)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                   >
-                    <div 
-                       className="relative aspect-square w-full rounded-2xl overflow-hidden border flex items-center justify-center p-2 group shadow-inner" 
-                      style={{ 
-                        backgroundColor: theme === 'glass' ? 'rgba(255,255,255,0.02)' : theme === 'dark' ? `${brandColor}08` : '#ffffff', 
-                        borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.08)' 
-                      }}
-                    >
-                      {activeImageUrl ? (
-                        <OptimizedMedia 
-                          src={activeImageUrl} 
-                          alt={selectedProduct.name} 
-                          className="max-w-full max-h-full object-contain cursor-zoom-in transition-transform duration-300 hover:scale-102" 
-                          onClick={() => setZoomedImage(activeImageUrl)}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center opacity-30">
-                          <ShoppingCart className="w-12 h-12 text-slate-400" />
+                    <div className="w-full max-w-[280px] sm:max-w-[360px] md:max-w-[380px] lg:max-w-[420px] xl:max-w-[450px] mx-auto flex flex-col space-y-5">
+                      <div 
+                        className="relative w-full aspect-square rounded-[24px] overflow-hidden border flex items-center justify-center p-3 group shadow-[0_12px_32px_-8px_rgba(0,0,0,0.5)] transition-all duration-300" 
+                        style={{ 
+                          backgroundColor: '#ffffff', 
+                          borderColor: theme === 'glass' ? 'rgba(255,255,255,0.1)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' 
+                        }}
+                      >
+                        {activeImageUrl ? (
+                          <OptimizedMedia 
+                            src={activeImageUrl} 
+                            alt={selectedProduct.name} 
+                            className="max-w-full max-h-full object-contain cursor-zoom-in transition-transform duration-300 hover:scale-102" 
+                            onClick={() => setZoomedImage(activeImageUrl)}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center opacity-30">
+                            <ShoppingCart className="w-12 h-12 text-slate-400" />
+                          </div>
+                        )}
+
+                        {/* Lupa / Zoom Icon Button */}
+                        {activeImageUrl && (
+                          <button
+                            onClick={() => setZoomedImage(activeImageUrl)}
+                            className="absolute bottom-4 right-4 p-2.5 rounded-full bg-black/75 hover:bg-black/90 text-white border border-white/10 transition-all hover:scale-110 active:scale-95 shadow-xl flex items-center justify-center cursor-pointer z-20 group"
+                            title="Ver imagem ampliada"
+                          >
+                            <ZoomIn className="w-5 h-5" style={{ color: brandColor || '#ff6900' }} />
+                          </button>
+                        )}
+
+                        {/* Left / Right Gallery Arrows */}
+                        {productImages.length > 1 && (
+                          <>
+                            <button 
+                              onClick={() => setActiveImageIndex(prev => (prev - 1 + productImages.length) % productImages.length)}
+                              className="absolute left-3.5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/70 text-white hover:bg-black/95 transition-colors shadow-lg z-10 cursor-pointer"
+                            >
+                              <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button 
+                              onClick={() => setActiveImageIndex(prev => (prev + 1) % productImages.length)}
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/70 text-white hover:bg-black/95 transition-colors shadow-lg z-10 cursor-pointer"
+                            >
+                              <ChevronRight className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Thumbnails Gallery Row - Centered with flex row */}
+                      {productImages.length > 1 && (
+                        <div className="w-full">
+                          <div className="flex flex-wrap items-center justify-center gap-3">
+                            {productImages.map((img: string, idx: number) => {
+                              const isActive = activeImageIndex === idx;
+
+                              const buttonStyle: React.CSSProperties = isActive ? {
+                                background: `linear-gradient(90deg, ${brandColor || '#FE540B'}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor || '#FE540B'})`,
+                                backgroundSize: '300% 300%',
+                                animation: 'color-loop 5s ease infinite',
+                                padding: '3px',
+                                boxShadow: `0 8px 24px -4px rgba(0,0,0,0.45), 0 0 16px ${brandColor || '#FE540B'}55`,
+                              } : {
+                                backgroundColor: '#ffffff',
+                              };
+
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() => setActiveImageIndex(idx)}
+                                  className={`relative aspect-square w-[80px] h-[80px] sm:w-[95px] sm:h-[95px] rounded-2xl overflow-hidden transition-all flex items-center justify-center cursor-pointer ${
+                                    isActive 
+                                      ? 'scale-102 opacity-100' 
+                                      : 'opacity-50 hover:opacity-100 border border-black/5 dark:border-white/10'
+                                  }`}
+                                  style={buttonStyle}
+                                >
+                                  {isActive ? (
+                                    <div className="w-full h-full rounded-[13px] flex items-center justify-center overflow-hidden bg-white p-0.5">
+                                      <OptimizedMedia 
+                                        src={img} 
+                                        alt={`Thumbnail ${idx + 1}`} 
+                                        className="w-full h-full object-cover rounded-[11px]" 
+                                        width={150} 
+                                        isCover={true} 
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-full h-full rounded-[14px] flex items-center justify-center overflow-hidden bg-white p-0.5">
+                                      <OptimizedMedia 
+                                        src={img} 
+                                        alt={`Thumbnail ${idx + 1}`} 
+                                        className="w-full h-full object-cover rounded-[12px]" 
+                                        width={150} 
+                                        isCover={true} 
+                                      />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
-
-                      {/* Lupa / Zoom Icon Button */}
-                      {activeImageUrl && (
-                        <button
-                          onClick={() => setZoomedImage(activeImageUrl)}
-                          className="absolute bottom-3.5 right-3.5 p-3 rounded-full bg-black/75 hover:bg-black/90 text-white border border-white/10 transition-all hover:scale-110 active:scale-95 shadow-xl flex items-center justify-center cursor-pointer z-20 group"
-                          title="Ver imagem ampliada"
-                        >
-                          <ZoomIn className="w-5.5 h-5.5" style={{ color: brandColor || '#ff6900' }} />
-                        </button>
-                      )}
-
-                      {/* Left / Right Gallery Arrows */}
-                      {productImages.length > 1 && (
-                        <>
-                          <button 
-                            onClick={() => setActiveImageIndex(prev => (prev - 1 + productImages.length) % productImages.length)}
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/70 text-white hover:bg-black/95 transition-colors shadow-lg z-10 cursor-pointer"
-                          >
-                            <ChevronLeft className="w-5 h-5" />
-                          </button>
-                          <button 
-                            onClick={() => setActiveImageIndex(prev => (prev + 1) % productImages.length)}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/70 text-white hover:bg-black/95 transition-colors shadow-lg z-10 cursor-pointer"
-                          >
-                            <ChevronRight className="w-5 h-5" />
-                          </button>
-                        </>
-                      )}
                     </div>
-
-                    {/* Thumbnails Gallery Row - Miniatura grande */}
-                    {productImages.length > 1 && (
-                      <div className={`grid gap-4 pt-2 ${asPreview && previewMode === 'smartphone' ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3'}`}>
-                        {productImages.map((img: string, idx: number) => (
-                          <button
-                            key={idx}
-                            onClick={() => setActiveImageIndex(idx)}
-                            className={`relative aspect-[4/3] w-full rounded-2xl overflow-hidden border-[3px] transition-all p-1 flex items-center justify-center cursor-pointer ${
-                              activeImageIndex === idx 
-                                ? 'scale-102 shadow-lg opacity-100' 
-                                : 'opacity-50 hover:opacity-100 border-white/5'
-                            }`}
-                            style={{
-                              backgroundColor: theme === 'glass' ? 'rgba(255,255,255,0.03)' : theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#f8fafc',
-                              borderColor: activeImageIndex === idx ? brandColor : 'transparent'
-                            }}
-                          >
-                            <OptimizedMedia src={img} alt={`Thumbnail ${idx + 1}`} className="max-w-full max-h-full object-contain rounded-lg" width={150} isCover={true} />
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
 
-                  {/* RIGHT COLUMN: Info & Actions (Span 5) */}
-                  <div className={`${asPreview && previewMode === 'smartphone' ? '' : 'md:col-span-5 md:pl-2'} flex flex-col justify-between h-full space-y-6`}>
+                  {/* RIGHT COLUMN: Info & Actions (Span 7) */}
+                  <div className={`${asPreview && previewMode === 'smartphone' ? '' : 'md:col-span-7 md:pl-6'} flex flex-col justify-between h-full space-y-6`}>
                     
                     {/* Product Meta details */}
                     <div className="space-y-4 text-left">
@@ -3152,62 +3445,76 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                       {/* Combined Action Buttons */}
                       <div className="flex flex-col gap-2.5 pt-1">
-                        <div className="flex gap-3">
-                          <button 
-                            onClick={() => {
-                              addToCart(selectedProduct, productQuantity, selectedProductOption);
-                              setSelectedProduct(null);
-                            }}
-                            className={`flex-1 flex items-center justify-center py-3.5 px-3 rounded-2xl font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md border cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
-                              theme === 'glass'
-                                ? 'bg-white/10 hover:bg-white/15 text-white border-white/10'
-                                : theme === 'dark' 
-                                  ? 'bg-zinc-900 hover:bg-zinc-800 text-zinc-100 border-zinc-800' 
-                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
-                            }`}
-                          >
-                            <Plus className="w-4 h-4 mr-1.5 shrink-0" />
-                            Adicionar
-                          </button>
-                          
-                          <button 
-                            onClick={() => {
-                              addToCart(selectedProduct, productQuantity, selectedProductOption);
-                              setSelectedProduct(null);
-                              setIsCartOpen(true);
-                            }}
-                            className="flex-1 flex items-center justify-center py-3.5 px-3 rounded-2xl text-white font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] cursor-pointer"
-                            style={{ backgroundColor: brandColor || '#ff6900' }}
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-1.5 shrink-0" />
-                            Comprar Já
-                          </button>
+                        <div className="grid grid-cols-2 gap-4">
+                          {/* Left column: Adicionar & Ver no Site Original */}
+                          <div className="flex flex-col gap-2.5">
+                            <button 
+                              onClick={() => {
+                                addToCart(selectedProduct, productQuantity, selectedProductOption);
+                                setSelectedProduct(null);
+                              }}
+                              className={`w-full flex items-center justify-center py-4 px-3 rounded-2xl font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md border cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
+                                theme === 'glass'
+                                  ? 'bg-white/10 hover:bg-white/15 text-white border-white/10'
+                                  : theme === 'dark' 
+                                    ? 'bg-zinc-900 hover:bg-zinc-800 text-zinc-100 border-zinc-800' 
+                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+                              }`}
+                            >
+                              <Plus className="w-4 h-4 mr-1.5 shrink-0" />
+                              Adicionar
+                            </button>
+
+                            {productLink && (
+                              <a 
+                                href={productLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full flex items-center justify-center py-2.5 text-xs font-bold opacity-65 hover:opacity-100 transition-opacity"
+                              >
+                                <Globe className="w-4 h-4 mr-1.5 shrink-0" />
+                                Ver no Site Original
+                              </a>
+                            )}
+                          </div>
+
+                          {/* Right column: Comprar Já & Voltar ao Catálogo */}
+                          <div className="flex flex-col gap-2.5">
+                            <button 
+                              onClick={() => {
+                                addToCart(selectedProduct, productQuantity, selectedProductOption);
+                                setSelectedProduct(null);
+                                setIsCartOpen(true);
+                              }}
+                              className="w-full flex items-center justify-center py-4 px-3 rounded-2xl text-white font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                              style={{ backgroundColor: brandColor || '#ff6900' }}
+                            >
+                              <ShoppingCart className="w-4 h-4 mr-1.5 shrink-0" />
+                              Comprar Já
+                            </button>
+
+                            <button 
+                              onClick={() => {
+                                setSelectedProduct(null);
+                                setTimeout(() => {
+                                  const el = document.getElementById("catalog-section");
+                                  if (el) {
+                                    el.scrollIntoView({ behavior: "smooth" });
+                                  }
+                                }, 100);
+                              }}
+                              className={`w-full py-3.5 text-xs font-bold rounded-2xl border transition-colors cursor-pointer ${
+                                theme === 'glass'
+                                  ? 'bg-transparent text-zinc-300 hover:text-white border-white/10 hover:bg-white/5'
+                                  : theme === 'dark' 
+                                    ? 'bg-transparent text-zinc-400 hover:text-white border-zinc-800 hover:bg-zinc-900' 
+                                    : 'bg-transparent text-slate-500 hover:text-slate-800 border-slate-200 hover:bg-slate-50'
+                              }`}
+                            >
+                              Voltar ao Catálogo
+                            </button>
+                          </div>
                         </div>
-                        
-                        {productLink && (
-                          <a 
-                            href={productLink}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="w-full flex items-center justify-center py-2.5 text-xs font-bold opacity-60 hover:opacity-100 transition-opacity"
-                          >
-                            <Globe className="w-4 h-4 mr-2" />
-                            Ver no Site Original
-                          </a>
-                        )}
-                        
-                        <button 
-                          onClick={() => setSelectedProduct(null)}
-                          className={`w-full py-3.5 text-xs font-bold rounded-xl border transition-colors cursor-pointer ${
-                            theme === 'glass'
-                              ? 'bg-transparent text-zinc-300 hover:text-white border-white/10 hover:bg-white/5'
-                              : theme === 'dark' 
-                                ? 'bg-transparent text-zinc-400 hover:text-white border-zinc-800 hover:bg-zinc-900' 
-                                : 'bg-transparent text-slate-500 hover:text-slate-800 border-slate-200 hover:bg-slate-50'
-                          }`}
-                        >
-                          Voltar ao Catálogo
-                        </button>
                       </div>
 
                     </div>
