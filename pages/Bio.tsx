@@ -1340,6 +1340,14 @@ export default function Bio() {
 
   const hasActiveSection = Object.values(openSections).some(Boolean);
 
+  const getSectionBtnClass = (isOpen: boolean) => {
+    const base = "relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium";
+    if (isOpen) {
+      return `${base} dark:bg-[var(--primary-color)]/10 bg-[var(--primary-color)]/5 border-[var(--primary-color)]/30 dark:text-white text-slate-850 w-full`;
+    }
+    return `${base} dark:bg-zinc-950/20 bg-slate-50 dark:border-zinc-900 border-slate-200 dark:text-zinc-400 text-slate-600 dark:hover:text-white hover:text-slate-900 dark:hover:bg-zinc-850 hover:bg-slate-100`;
+  };
+
   return (
     <Page title="BIO CardDigital GM">
       <div 
@@ -1392,7 +1400,7 @@ export default function Bio() {
                box-shadow: none !important;
              }
            `}</style>
-           <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2.5 flex-wrap">
+           <h3 className="text-xl font-bold dark:text-white text-slate-800 flex items-center justify-center gap-2.5 flex-wrap">
               <span 
                 className="text-3xl font-black bg-clip-text text-transparent select-none"
                 style={{
@@ -1403,19 +1411,19 @@ export default function Bio() {
               >
                 BiO
               </span>
-              <span className="text-zinc-600 text-2xl font-light mx-0.5">|</span>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
+              <span className="text-zinc-400 dark:text-zinc-600 text-2xl font-light mx-0.5">|</span>
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-gradient-to-br dark:from-white/10 dark:to-transparent border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden shadow-md">
                 <img 
                   src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                   alt="Logo" 
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className="text-lg font-bold text-white tracking-wide">
+              <span className="text-lg font-bold dark:text-white text-slate-800 tracking-wide">
                 CardDigital <span className="text-[#ff7a00]">GM</span>
               </span>
            </h3>
-           <p className="text-zinc-400 text-sm">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
+           <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
            
            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button onClick={handleCopyLink} className="gm-btn gm-btn-primary flex items-center justify-center min-w-[180px]">
@@ -1482,27 +1490,27 @@ export default function Bio() {
             </svg>
 
             <div className="text-center py-6">
-              <h2 className="text-2xl font-bold text-white mb-2">Configurar Página BiO</h2>
-              <p className="text-zinc-400">Escolha qual versão você deseja gerenciar e personalizar.</p>
+              <h2 className="text-2xl font-bold dark:text-white text-slate-800 mb-2">Configurar Página BiO</h2>
+              <p className="text-slate-500 dark:text-zinc-400 font-medium">Escolha qual versão você deseja gerenciar e personalizar.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Botão 1: Bio Smartphone */}
               <button
-                className="group relative p-8 rounded-3xl border border-white/10 bg-zinc-950/40 hover:bg-zinc-900/20 hover:border-zinc-700/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-black/40 cursor-pointer"
+                className="group relative p-8 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-950/40 hover:bg-slate-50 dark:hover:bg-zinc-900/20 hover:border-slate-300 dark:hover:border-zinc-700/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-slate-100/50 dark:shadow-black/40 cursor-pointer"
                 onClick={() => {
                   setSelectedView("smartphone");
                   setPreviewMode("smartphone");
                 }}
               >
-                <div className="w-16 h-16 rounded-2xl bg-zinc-900/60 flex items-center justify-center border border-zinc-800/80 group-hover:scale-110 group-hover:border-zinc-700 group-hover:bg-zinc-800/40 transition-all duration-300">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-zinc-900/60 flex items-center justify-center border border-slate-200 dark:border-zinc-800/80 group-hover:scale-110 group-hover:border-slate-300 dark:group-hover:border-zinc-700 group-hover:bg-slate-200 dark:group-hover:bg-zinc-800/40 transition-all duration-300">
                   <Smartphone size={32} style={{ stroke: "url(#bio-icon-gradient)" }} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-extrabold text-white group-hover:text-[var(--primary-color)] transition-colors">
+                  <h3 className="text-xl font-extrabold text-slate-800 dark:text-white group-hover:text-[var(--primary-color)] transition-colors">
                     Bio Smartphone
                   </h3>
-                  <p className="text-base text-zinc-300 mt-2 leading-relaxed">
+                  <p className="text-base text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed">
                     Personalize títulos, biografia, imagens de fundo e banners exclusivos para a versão móvel e celulares.
                   </p>
                 </div>
@@ -1513,20 +1521,20 @@ export default function Bio() {
 
               {/* Botão 2: Bio Computador */}
               <button
-                className="group relative p-8 rounded-3xl border border-white/10 bg-zinc-950/40 hover:bg-zinc-900/20 hover:border-zinc-700/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-black/40 cursor-pointer"
+                className="group relative p-8 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-950/40 hover:bg-slate-50 dark:hover:bg-zinc-900/20 hover:border-slate-300 dark:hover:border-zinc-700/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-slate-100/50 dark:shadow-black/40 cursor-pointer"
                 onClick={() => {
                   setSelectedView("computador");
                   setPreviewMode("pc");
                 }}
               >
-                <div className="w-16 h-16 rounded-2xl bg-zinc-900/60 flex items-center justify-center border border-zinc-800/80 group-hover:scale-110 group-hover:border-zinc-700 group-hover:bg-zinc-800/40 transition-all duration-300">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-zinc-900/60 flex items-center justify-center border border-slate-200 dark:border-zinc-800/80 group-hover:scale-110 group-hover:border-slate-300 dark:group-hover:border-zinc-700 group-hover:bg-slate-200 dark:group-hover:bg-zinc-800/40 transition-all duration-300">
                   <Monitor size={32} style={{ stroke: "url(#bio-icon-gradient)" }} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-extrabold text-white group-hover:text-[var(--primary-color)] transition-colors">
+                  <h3 className="text-xl font-extrabold text-slate-800 dark:text-white group-hover:text-[var(--primary-color)] transition-colors">
                     Bio Computador
                   </h3>
-                  <p className="text-base text-zinc-300 mt-2 leading-relaxed">
+                  <p className="text-base text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed">
                     Personalize títulos, biografia, efeitos de animação e mídias de alta definição para a versão desktop.
                   </p>
                 </div>
@@ -1539,28 +1547,28 @@ export default function Bio() {
         ) : (
           <div className="flex flex-col gap-6 items-stretch w-full max-w-[1440px] mx-auto animate-in fade-in duration-300">
             {/* VOLTAR BUTTON & STATUS HEADER */}
-            <div className="flex items-center justify-between bg-zinc-950/40 p-4 rounded-2xl border border-white/5 shadow-md">
+            <div className="flex items-center justify-between bg-white dark:bg-zinc-950/40 p-4 rounded-2xl border border-slate-200 dark:border-white/5 shadow-md">
               <button
                 onClick={() => setSelectedView("none")}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-zinc-300 hover:text-white hover:bg-white/5 transition-all duration-200 cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all duration-200 cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5 text-[var(--primary-color)] animate-pulse" />
                 Voltar para Seleção
               </button>
               <div className="flex items-center gap-2.5">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-semibold text-zinc-400">
-                  Editando: <strong className="text-white">{selectedView === "smartphone" ? "Bio Smartphone" : "Bio Computador"}</strong>
+                <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
+                  Editando: <strong className="text-slate-800 dark:text-white">{selectedView === "smartphone" ? "Bio Smartphone" : "Bio Computador"}</strong>
                 </span>
               </div>
             </div>
 
 
             {/* SUBDIVISÃO SUPERIOR: Menu em Cascata Compacta de Seleção (Desktop e Mobile) */}
-            <div className="flex flex-col gap-2.5 bg-zinc-950/40 p-4 sm:p-5 rounded-3xl border border-white/5 shadow-inner">
+            <div className="flex flex-col gap-2.5 bg-white dark:bg-zinc-950/40 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-white/5 shadow-md dark:shadow-inner">
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Painel do Editor de Mídia</span>
-                <span className="text-xs text-zinc-500">
+                <span className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Painel do Editor de Mídia</span>
+                <span className="text-xs text-slate-400 dark:text-zinc-500 font-medium">
                   {hasActiveSection 
                     ? "Clique no painel ativo abaixo para recolher e exibir as outras opções" 
                     : "Selecione uma seção abaixo para editar"}
@@ -1573,11 +1581,7 @@ export default function Bio() {
                   <button
                     type="button"
                     onClick={() => toggleSection('basic')}
-                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
-                      openSections.basic 
-                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
-                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
-                    }`}
+                    className={getSectionBtnClass(openSections.basic)}
                   >
                     {openSections.basic && (
                       <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
@@ -1600,11 +1604,7 @@ export default function Bio() {
                   <button
                     type="button"
                     onClick={() => toggleSection('appearance')}
-                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
-                      openSections.appearance 
-                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
-                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
-                    }`}
+                    className={getSectionBtnClass(openSections.appearance)}
                   >
                     {openSections.appearance && (
                       <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
@@ -1627,11 +1627,7 @@ export default function Bio() {
                   <button
                     type="button"
                     onClick={() => toggleSection('contacts')}
-                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
-                      openSections.contacts 
-                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
-                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
-                    }`}
+                    className={getSectionBtnClass(openSections.contacts)}
                   >
                     {openSections.contacts && (
                       <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
@@ -1654,11 +1650,7 @@ export default function Bio() {
                   <button
                     type="button"
                     onClick={() => toggleSection('otherLinks')}
-                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
-                      openSections.otherLinks 
-                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
-                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
-                    }`}
+                    className={getSectionBtnClass(openSections.otherLinks)}
                   >
                     {openSections.otherLinks && (
                       <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
@@ -1681,11 +1673,7 @@ export default function Bio() {
                   <button
                     type="button"
                     onClick={() => toggleSection('catalog')}
-                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
-                      openSections.catalog 
-                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
-                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
-                    }`}
+                    className={getSectionBtnClass(openSections.catalog)}
                   >
                     {openSections.catalog && (
                       <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
@@ -1708,11 +1696,7 @@ export default function Bio() {
                   <button
                     type="button"
                     onClick={() => toggleSection('portfolio')}
-                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
-                      openSections.portfolio 
-                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
-                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
-                    }`}
+                    className={getSectionBtnClass(openSections.portfolio)}
                   >
                     {openSections.portfolio && (
                       <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
@@ -1735,11 +1719,7 @@ export default function Bio() {
                   <button
                     type="button"
                     onClick={() => toggleSection('payment')}
-                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
-                      openSections.payment 
-                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
-                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
-                    }`}
+                    className={getSectionBtnClass(openSections.payment)}
                   >
                     {openSections.payment && (
                       <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
@@ -1762,11 +1742,7 @@ export default function Bio() {
                   <button
                     type="button"
                     onClick={() => toggleSection('address')}
-                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
-                      openSections.address 
-                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
-                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
-                    }`}
+                    className={getSectionBtnClass(openSections.address)}
                   >
                     {openSections.address && (
                       <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
@@ -1789,11 +1765,7 @@ export default function Bio() {
                   <button
                     type="button"
                     onClick={() => toggleSection('contactSection')}
-                    className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-[8px] border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium ${
-                      openSections.contactSection 
-                        ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white w-full' 
-                        : 'bg-zinc-950/20 border-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-850'
-                    }`}
+                    className={getSectionBtnClass(openSections.contactSection)}
                   >
                     {openSections.contactSection && (
                       <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
@@ -1817,12 +1789,12 @@ export default function Bio() {
 
             {/* Placeholder quando nenhuma seção está expandida */}
             {!Object.values(openSections).some(Boolean) && (
-              <div className="flex flex-col items-center justify-center py-16 px-4 bg-zinc-950/20 border border-white/5 rounded-[2.5rem] text-center shadow-inner animate-in fade-in duration-300">
+              <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-zinc-950/20 border border-slate-200 dark:border-white/5 rounded-[2.5rem] text-center shadow-md dark:shadow-inner animate-in fade-in duration-300">
                 <div className="w-16 h-16 rounded-full bg-[var(--primary-color)]/10 text-[var(--primary-color)] flex items-center justify-center mb-4 border border-[var(--primary-color)]/20 shadow-lg">
                   <Sparkles className="w-8 h-8 animate-pulse" />
                 </div>
-                <h3 className="text-xl font-extrabold text-white mb-2">Painel de Edição BiO</h3>
-                <p className="text-sm text-zinc-400 max-w-md leading-relaxed">
+                <h3 className="text-xl font-extrabold text-slate-800 dark:text-white mb-2">Painel de Edição BiO</h3>
+                <p className="text-sm text-slate-500 dark:text-zinc-400 max-w-md leading-relaxed font-medium">
                   Clique em qualquer uma das seções acima para abrir seu respectivo painel de configuração e editar de ponta a ponta.
                 </p>
               </div>
@@ -1833,7 +1805,7 @@ export default function Bio() {
             {openSections.basic && (
               <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
                 <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
-                  <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                  <span className="flex items-center gap-2.5 text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                     <Info className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
                     INFORMAÇÕES BÁSICAS
                   </span>
@@ -1982,7 +1954,7 @@ export default function Bio() {
             {openSections.appearance && (
               <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
                 <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
-                  <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+                  <span className="flex items-center gap-2.5 text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                     <Eye className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
                     APARÊNCIA DO SITE
                   </span>
@@ -2265,7 +2237,7 @@ export default function Bio() {
         {openSections.contacts && (
           <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
-              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                 <Phone className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
                 CONTATOS E REDES
               </span>
@@ -2311,7 +2283,7 @@ export default function Bio() {
         {openSections.otherLinks && (
           <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
-              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                 <LinkIcon className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
                 OUTROS LINKS
               </span>
@@ -2450,7 +2422,7 @@ export default function Bio() {
         {openSections.catalog && (
           <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
-              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                 <ShoppingBag className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
                 CATÁLOGO DE PRODUTOS
               </span>
@@ -3081,7 +3053,7 @@ export default function Bio() {
         {openSections.portfolio && (
           <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
-              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                 <Layout className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
                 PORTFÓLIO
               </span>
@@ -3810,7 +3782,7 @@ export default function Bio() {
         {openSections.payment && (
           <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
-              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                 <CreditCard className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
                 DADOS DE PAGAMENTO (PIX)
               </span>
@@ -3855,7 +3827,7 @@ export default function Bio() {
         {openSections.address && (
           <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
-              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                 <MapPin className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
                 ENDEREÇO E LOCALIZAÇÃO
               </span>
@@ -3884,7 +3856,7 @@ export default function Bio() {
         {openSections.contactSection && (
           <div className="gm-card p-6 md:p-10 space-y-6 md:space-y-8 md:border-[var(--primary-color)]/20 md:bg-zinc-950/60 md:shadow-2xl md:rounded-[2.5rem] w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-white/5 pb-5 mb-4">
-              <span className="flex items-center gap-2.5 text-xl font-extrabold text-white uppercase tracking-wider">
+              <span className="flex items-center gap-2.5 text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                 <Sparkles className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
                 CHAT CARDDIGITAL GM
               </span>
@@ -3894,19 +3866,19 @@ export default function Bio() {
             </div>
             
             {true && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-top-2 pt-2 text-zinc-300">
+              <div className="space-y-6 animate-in fade-in slide-in-from-top-2 pt-2 text-slate-600 dark:text-zinc-300">
                 {/* Banner de Contato */}
-                <div className="space-y-4 bg-zinc-905/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
-                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <div className="space-y-4 bg-slate-50 dark:bg-zinc-905/40 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-zinc-800/60">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     <Layout className="w-4 h-4 text-[var(--primary-color)]" /> Banner da Página de Contato
                   </h4>
-                  <p className="text-xs text-zinc-400">Envie um banner exclusivo para a página de contato do seu site (caso vazio, usará o banner principal).</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">Envie um banner exclusivo para a página de contato do seu site (caso vazio, usará o banner principal).</p>
                   
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
+                    <div className="space-y-2 bg-slate-100 dark:bg-zinc-950/40 p-3.5 rounded-2xl border border-slate-200 dark:border-zinc-800/80 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-xs font-bold text-zinc-300">Imagem do Banner</span>
+                          <span className="text-xs font-bold text-slate-600 dark:text-zinc-300">Imagem do Banner</span>
                           {bioConfig.contact_banner_img_url && (
                             <button 
                               type="button" 
@@ -3919,11 +3891,11 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.contact_banner_img_url ? (
-                          <div className="w-full aspect-[16/6] rounded-lg overflow-hidden border border-zinc-800 bg-black/40">
+                          <div className="w-full aspect-[16/6] rounded-lg overflow-hidden border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-black/40">
                             <OptimizedImage src={bioConfig.contact_banner_img_url} alt="Banner Contato" className="w-full h-full object-cover" width={800} />
                           </div>
                         ) : (
-                          <div className="w-full aspect-[16/6] rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
+                          <div className="w-full aspect-[16/6] rounded-lg border border-dashed border-slate-300 dark:border-zinc-800 flex flex-col items-center justify-center text-slate-400 dark:text-zinc-500 text-[10px] font-medium bg-slate-200/40 dark:bg-black/10">
                             <Layout className="w-5 h-5 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem banner de contato personalizado
                           </div>
@@ -3932,7 +3904,7 @@ export default function Bio() {
                       <div className="pt-2">
                         <label className="w-full gm-btn gm-btn-outline !py-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all">
                           <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
-                          <span className="font-bold text-white">Upload Banner de Contato</span>
+                          <span className="font-bold text-slate-700 dark:text-white">Upload Banner de Contato</span>
                           <input type="file" accept="image/*" className="hidden" onChange={handleUploadContactBanner} />
                         </label>
                       </div>
@@ -3941,8 +3913,8 @@ export default function Bio() {
                 </div>
 
                 {/* Textos da Página de Contato */}
-                <div className="space-y-4 bg-zinc-905/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
-                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <div className="space-y-4 bg-slate-50 dark:bg-zinc-905/40 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-zinc-800/60">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     <Edit3 className="w-4 h-4 text-[var(--primary-color)]" /> Textos da Página de Contato
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3970,32 +3942,32 @@ export default function Bio() {
                 </div>
 
                 {/* Configurações do Balão do Chat */}
-                <div className="space-y-4 bg-zinc-905/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
-                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <div className="space-y-4 bg-slate-50 dark:bg-zinc-905/40 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-zinc-800/60">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--primary-color)]" /> Balão do Chat Flutuante (WhatsApp)
                   </h4>
-                  <p className="text-xs text-zinc-400">Personalize o widget do Join.chat exibido na página de contato do seu site.</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">Personalize o widget do Join.chat exibido na página de contato do seu site.</p>
                   
-                  <div className="flex flex-col sm:flex-row gap-4 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800">
+                  <div className="flex flex-col sm:flex-row gap-4 bg-slate-100 dark:bg-zinc-950/40 p-3.5 rounded-2xl border border-slate-200 dark:border-zinc-800">
                     <div className="flex items-center gap-3">
                       <input 
                         type="checkbox" 
                         id="chat_balloon_enabled" 
                         checked={bioConfig.chat_balloon_enabled !== false} 
                         onChange={e => handleChange("chat_balloon_enabled", e.target.checked)}
-                        className="w-4 h-4 rounded text-[var(--primary-color)] bg-zinc-850 border-zinc-700 focus:ring-0 cursor-pointer" 
+                        className="w-4 h-4 rounded text-[var(--primary-color)] bg-white dark:bg-zinc-850 border-slate-300 dark:border-zinc-700 focus:ring-0 cursor-pointer" 
                       />
-                      <label htmlFor="chat_balloon_enabled" className="text-xs font-bold text-white cursor-pointer select-none">Habilitar Chat Balão</label>
+                      <label htmlFor="chat_balloon_enabled" className="text-xs font-bold text-slate-700 dark:text-white cursor-pointer select-none">Habilitar Chat Balão</label>
                     </div>
-                    <div className="sm:border-l sm:border-zinc-800 sm:pl-4 flex items-center gap-3">
+                    <div className="sm:border-l border-slate-200 dark:border-zinc-800 sm:pl-4 flex items-center gap-3">
                       <input 
                         type="checkbox" 
                         id="chat_balloon_show_qrcode" 
                         checked={bioConfig.chat_balloon_show_qrcode !== false} 
                         onChange={e => handleChange("chat_balloon_show_qrcode", e.target.checked)}
-                        className="w-4 h-4 rounded text-[var(--primary-color)] bg-zinc-850 border-zinc-700 focus:ring-0 cursor-pointer" 
+                        className="w-4 h-4 rounded text-[var(--primary-color)] bg-white dark:bg-zinc-850 border-slate-300 dark:border-zinc-700 focus:ring-0 cursor-pointer" 
                       />
-                      <label htmlFor="chat_balloon_show_qrcode" className="text-xs font-bold text-white cursor-pointer select-none">Mostrar QR Code ao passar o mouse (PC)</label>
+                      <label htmlFor="chat_balloon_show_qrcode" className="text-xs font-bold text-slate-700 dark:text-white cursor-pointer select-none">Mostrar QR Code ao passar o mouse (PC)</label>
                     </div>
                   </div>
 

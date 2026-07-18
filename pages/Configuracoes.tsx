@@ -1158,8 +1158,8 @@ export default function Configuracoes() {
 
                       <div className="grid grid-cols-2 gap-2.5">
                         {/* Cor Principal */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={brandPrimary}
@@ -1178,8 +1178,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Cor de Fundo */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={brandBg}
@@ -1198,8 +1198,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Cor dos Títulos */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={brandTitle}
@@ -1218,8 +1218,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Cor dos Subtítulos */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={brandSubtitle}
@@ -1238,8 +1238,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Cor dos Ícones */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={brandIcon}
@@ -1258,8 +1258,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Cor dos Botões */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={brandAccent}
@@ -1301,10 +1301,10 @@ export default function Configuracoes() {
                               key={s.id}
                               type="button"
                               onClick={() => setButtonStyle(s.id)}
-                              className={`flex flex-col items-center justify-between p-4 rounded-xl border-2 transition-all h-28 ${
+                              className={`flex flex-col items-center justify-between p-4 rounded-xl border-2 transition-all h-28 shadow-sm hover:shadow-md ${
                                 isActive
                                   ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]"
-                                  : "border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md"
+                                  : "border-slate-200 dark:border-slate-700/60 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800"
                               }`}
                             >
                               <div
@@ -1354,15 +1354,15 @@ export default function Configuracoes() {
                               onMouseLeave={() => setPreviewFont(null)}
                               onTouchStart={() => setPreviewFont(font)}
                               onTouchEnd={() => setPreviewFont(null)}
-                              className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all h-12 ${
+                              className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all h-12 shadow-sm hover:shadow ${
                                 isActive
                                   ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]"
-                                  : "border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md"
+                                  : "border-slate-200 dark:border-slate-700/60 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800"
                               }`}
                               style={{ fontFamily: font }}
                             >
                               <span
-                                className={`text-sm font-medium ${isActive ? "text-[var(--gm-primary)]" : "text-slate-700 dark:text-slate-300"}`}
+                                className={`text-sm font-medium ${isActive ? "text-[var(--gm-primary)] font-bold" : "text-slate-700 dark:text-slate-300"}`}
                               >
                                 {font}
                               </span>
@@ -1381,8 +1381,8 @@ export default function Configuracoes() {
 
                       <div className="grid grid-cols-2 gap-2.5">
                         {/* Cor Principal */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={menuPrimary}
@@ -1401,8 +1401,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Cor de Fundo */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={menuBg}
@@ -1421,8 +1421,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Cor dos Títulos */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={menuTitle}
@@ -1441,8 +1441,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Duas Legendas */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={menuSubtitle}
@@ -1461,8 +1461,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Cor dos Ícones */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={menuIcon}
@@ -1481,8 +1481,8 @@ export default function Configuracoes() {
                         </div>
 
                         {/* Cor dos Botões */}
-                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                             <input
                               type="color"
                               value={menuButton}
@@ -2745,8 +2745,8 @@ export default function Configuracoes() {
 
                                       <div className="grid grid-cols-2 gap-2.5">
                                         {/* Cor Principal */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={brandPrimary}
@@ -2767,8 +2767,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Cor de Fundo */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={brandBg}
@@ -2789,8 +2789,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Cor dos Títulos */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={brandTitle}
@@ -2811,8 +2811,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Cor dos Subtítulos */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={brandSubtitle}
@@ -2833,8 +2833,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Cor dos Ícones */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={brandIcon}
@@ -2855,8 +2855,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Cor dos Botões */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={brandAccent}
@@ -2926,8 +2926,8 @@ export default function Configuracoes() {
                                       
                                       <div className="grid grid-cols-2 gap-2.5">
                                         {/* Cor Principal */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={menuPrimary}
@@ -2948,8 +2948,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Cor de Fundo */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={menuBg}
@@ -2970,8 +2970,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Cor dos Títulos */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={menuTitle}
@@ -2992,8 +2992,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Duas Legendas */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={menuSubtitle}
@@ -3014,8 +3014,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Cor dos Ícones */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={menuIcon}
@@ -3036,8 +3036,8 @@ export default function Configuracoes() {
                                         </div>
 
                                         {/* Cor dos Botões */}
-                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
+                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
                                             <input
                                               type="color"
                                               value={menuButton}

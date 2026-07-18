@@ -15,6 +15,7 @@
   --color-dark-text: var(--gm-text);
   --font-sans: var(--gm-font), ui-sans-serif, system-ui, sans-serif;
   --font-funnel: "Funnel Display", sans-serif;
+  --variant-dark: :where(.gm-dark, [data-theme="dark"], .gm-dark *, [data-theme="dark"] *);
 }
 
 /* =========================================================
@@ -1911,16 +1912,17 @@ body{ overflow: hidden; }
 /* WhatsApp */
 [data-theme="light"] button.bg-emerald-500\/20,
 [data-theme="light"] .btn-whatsapp {
-  background-color: #EAF8EF !important;
-  background: #EAF8EF !important;
-  color: #25D366 !important;
+  background-color: #25D366 !important;
+  background: #25D366 !important;
+  color: #FFFFFF !important;
   border: none !important;
 }
 
 [data-theme="light"] button.bg-emerald-500\/20:hover,
 [data-theme="light"] .btn-whatsapp:hover {
-  background-color: #D4F3E0 !important;
-  background: #D4F3E0 !important;
+  background-color: #20BA5A !important;
+  background: #20BA5A !important;
+  color: #FFFFFF !important;
 }
 
 /* Botão Neutro de Ação (Copiar Telefone, Copiar E-mail) */
@@ -1940,7 +1942,7 @@ body{ overflow: hidden; }
 /* Garante o correto padrão de cores dos ícones de clientes no tema claro (sem herdar cor de botão primário ou ficar sem fill no WhatsApp) */
 [data-theme="light"] .btn-whatsapp svg,
 [data-theme="light"] .btn-whatsapp:hover svg {
-  color: #25D366 !important;
+  color: #FFFFFF !important;
   fill: currentColor !important;
 }
 
