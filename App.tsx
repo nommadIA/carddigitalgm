@@ -25,7 +25,9 @@ const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
 const PixCopy = lazy(() => import('./pages/PixCopy'));
 
 const PageLoader = () => (
-  <div className="fixed inset-0 bg-[#050507]" />
+  <div className="fixed inset-0 flex items-center justify-center bg-transparent z-[99999]">
+    <Loader2 className="w-8 h-8 animate-spin text-[var(--gm-primary)]" />
+  </div>
 );
 
 const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
@@ -132,11 +134,12 @@ const AppRoutes = () => {
 
   // Wait for auth to be fully initialized before making routing decisions or redirecting
   if (!checked) {
+    const isLight = localStorage.getItem("theme") === "light";
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-[#050507]">
+      <div className={`h-screen w-full flex items-center justify-center ${isLight ? "bg-[#F8FAFC] text-slate-800" : "bg-[#050507] text-white"}`}>
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#FE540B]" />
-          <span className="text-xs text-zinc-500 font-medium">Carregando...</span>
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--gm-primary)]" />
+          <span className={`text-xs font-medium ${isLight ? "text-slate-500" : "text-zinc-500"}`}>Carregando...</span>
         </div>
       </div>
     );

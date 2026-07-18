@@ -315,11 +315,11 @@ export default function Clients() {
                     const hasWpp = wppDigits.length >= 10;
 
                     const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-                      const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0";
-                      if (tone === "orange") return `${base} gm-btn-soft`;
-                      if (tone === "green") return `${base} gm-btn-soft`;
-                      if (tone === "red") return `${base} bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] shadow-[0_0_8px_rgba(255,123,0,0.1)]`;
-                      return `${base} gm-btn-soft`;
+                      const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200";
+                      if (tone === "orange") return `${base} btn-action-edit bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 text-amber-500 hover:text-white`;
+                      if (tone === "green") return `${base} btn-whatsapp bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 text-emerald-500 hover:text-white`;
+                      if (tone === "red") return `${base} btn-action-delete bg-red-500/10 border border-red-500/20 hover:bg-red-500 text-red-500 hover:text-white`;
+                      return `${base} btn-action-neutral bg-slate-500/10 border border-slate-500/20 hover:bg-slate-500 text-slate-400 hover:text-white`;
                     };
 
                     return (
@@ -363,7 +363,7 @@ export default function Clients() {
                                     <RotateCcw size={16} />
                                   </button>
                                   <button
-                                    className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                                    className={listBtnClass("red")}
                                     title="Excluir definitivo"
                                     type="button"
                                     onClick={() => confirmHardDelete(c.id)}

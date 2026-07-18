@@ -486,9 +486,9 @@ export default function Budgets() {
   // botões compactos
   const iconBtn = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
     const base = "gm-btn flex-1 h-10 flex items-center justify-center gap-2";
-    if (tone === "orange") return `${base} gm-btn-soft`;
-    if (tone === "green") return `${base} gm-btn-soft`;
-    if (tone === "red") return `${base} bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] shadow-[0_0_10px_rgba(255,123,0,0.1)]`;
+    if (tone === "orange") return `${base} bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 text-amber-500 hover:text-white`;
+    if (tone === "green") return `${base} bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 text-emerald-500 hover:text-white`;
+    if (tone === "red") return `${base} bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white border-none shadow-md`;
     return `${base} gm-btn-soft`;
   };
 
@@ -581,9 +581,9 @@ export default function Budgets() {
                   
                   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
                     const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0";
-                    if (tone === "orange") return `${base} gm-btn-soft`;
-                    if (tone === "green") return `${base} gm-btn-soft`;
-                    if (tone === "red") return `${base} bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] shadow-[0_0_8px_rgba(255,123,0,0.1)]`;
+                    if (tone === "orange") return `${base} bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 text-amber-500 hover:text-white`;
+                    if (tone === "green") return `${base} bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 text-emerald-500 hover:text-white`;
+                    if (tone === "red") return `${base} bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white border-none shadow-md`;
                     return `${base} gm-btn-soft`;
                   };
 

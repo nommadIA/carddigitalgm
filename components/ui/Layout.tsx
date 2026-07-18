@@ -17,6 +17,7 @@ import {
   Wallet,
   Settings,
   Moon,
+  Sun,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -192,17 +193,99 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
 
+  const [themeMode, setThemeMode] = useState<"dark" | "light">(() => {
+    const saved = localStorage.getItem("theme");
+    return saved === "light" ? "light" : "dark";
+  });
+
+  const settingsCacheRef = useRef<any>(null);
+
+  const toggleTheme = () => {
+    const nextTheme = themeMode === "dark" ? "light" : "dark";
+    setThemeMode(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    document.documentElement.classList.toggle("gm-light", nextTheme === "light");
+    document.documentElement.classList.toggle("gm-dark", nextTheme === "dark");
+    localStorage.setItem("theme", nextTheme);
+    
+    // Re-aplica imediatamente as cores personalizadas do novo tema
+    if (settingsCacheRef.current) {
+      applySettingsToDOM(settingsCacheRef.current);
+    } else {
+      fetchSettingsSupabase(tenantId)
+        .then((s) => {
+          if (s) {
+            settingsCacheRef.current = s;
+            applySettingsToDOM(s);
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleThemeMouseEnter = () => {
+    // Determina o tema oposto para prévia em tempo real
+    const previewTheme = themeMode === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", previewTheme);
+    document.documentElement.classList.toggle("gm-light", previewTheme === "light");
+    document.documentElement.classList.toggle("gm-dark", previewTheme === "dark");
+    
+    // Aplica as cores de marca/personalização específicas da prévia
+    if (settingsCacheRef.current) {
+      applySettingsToDOM(settingsCacheRef.current);
+    } else {
+      fetchSettingsSupabase(tenantId)
+        .then((s) => {
+          if (s) {
+            settingsCacheRef.current = s;
+            applySettingsToDOM(s);
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleThemeMouseLeave = () => {
+    // Restaura o tema ativo confirmado
+    document.documentElement.setAttribute("data-theme", themeMode);
+    document.documentElement.classList.toggle("gm-light", themeMode === "light");
+    document.documentElement.classList.toggle("gm-dark", themeMode === "dark");
+    
+    // Restaura as cores de marca/personalização originais
+    if (settingsCacheRef.current) {
+      applySettingsToDOM(settingsCacheRef.current);
+    } else {
+      fetchSettingsSupabase(tenantId)
+        .then((s) => {
+          if (s) {
+            settingsCacheRef.current = s;
+            applySettingsToDOM(s);
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
   useEffect(() => localStorage.setItem("gm.sidebar", collapsed ? "1" : "0"), [collapsed]);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", "dark");
+    const saved = localStorage.getItem("theme") || "dark";
+    document.documentElement.setAttribute("data-theme", saved);
+    document.documentElement.classList.toggle("gm-light", saved === "light");
+    document.documentElement.classList.toggle("gm-dark", saved === "dark");
+    if (saved !== themeMode) {
+      setThemeMode(saved as "dark" | "light");
+    }
   }, []);
 
   // ✅ Carrega settings por TENANT
   useEffect(() => {
     fetchSettingsSupabase(tenantId)
       .then((s) => {
-        if (s) applySettingsToDOM(s);
+        if (s) {
+          settingsCacheRef.current = s;
+          applySettingsToDOM(s);
+        }
       })
       .catch(() => {});
   }, [tenantId]);
@@ -612,6 +695,23 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         <div className="gm-sidebar-footer w-full flex flex-col pb-4 gap-2 mt-auto">
           {collapsed ? (
             <div className="gm-nav w-full">
+              {/* Tema Claro/Escuro (Collapsed) */}
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleTheme();
+                }}
+                onMouseEnter={handleThemeMouseEnter}
+                onMouseLeave={handleThemeMouseLeave}
+                className=""
+                title={themeMode === "dark" ? "Alternar para Tema Claro" : "Alternar para Tema Escuro"}
+              >
+                <div className="relative shrink-0 flex items-center justify-center">
+                  {themeMode === "dark" ? <Sun size={18} className="text-amber-500 hover:scale-110 transition-transform" /> : <Moon size={18} className="text-blue-400 hover:scale-110 transition-transform" />}
+                </div>
+              </a>
+
               <a
                 href="#"
                 onClick={(e) => {
@@ -644,6 +744,27 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             </div>
           ) : (
             <div className="gm-nav w-full">
+              {/* Tema Claro/Escuro (Expanded) */}
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleTheme();
+                }}
+                onMouseEnter={handleThemeMouseEnter}
+                onMouseLeave={handleThemeMouseLeave}
+                className="text-left"
+                title={themeMode === "dark" ? "Alternar para Tema Claro" : "Alternar para Tema Escuro"}
+              >
+                <div className="relative shrink-0 flex items-center">
+                  {themeMode === "dark" ? <Sun size={18} className="text-amber-500" /> : <Moon size={18} className="text-blue-400" />}
+                </div>
+                <span className="text-sm flex-1 text-left">Tema {themeMode === "dark" ? "Claro" : "Escuro"}</span>
+                <span className="shrink-0 px-2 py-0.5 text-[8.5px] font-extrabold uppercase bg-neutral-800 text-zinc-400 rounded-md z-10">
+                  {themeMode === "dark" ? "Escuro" : "Claro"}
+                </span>
+              </a>
+
               <a
                 href="#"
                 onClick={(e) => {
@@ -697,14 +818,6 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       >
         <div className="gm-container min-h-full flex flex-col">{children}</div>
       </main>
-
-      {/* FADE OVERLAY PARA ROLAGEM VERTICAL */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 h-24 pointer-events-none z-[10000]" 
-        style={{ 
-          background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 100%)',
-        }} 
-      />
       
       {/* SCROLL INDICATORS CONTAINER */}
       {createPortal(

@@ -111,7 +111,7 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   logo_url: "",
 };
 
-function hexToRgb(hex: string) {
+export function hexToRgb(hex: string) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
@@ -132,40 +132,165 @@ export function getContrastColor(hex: string) {
 
 export function applySettingsToDOM(s: AppSettings, persist = true) {
   const root = document.documentElement;
+  const currentAttr = root.getAttribute("data-theme");
+  const isLight = currentAttr ? currentAttr === "light" : localStorage.getItem("theme") === "light";
 
-  if (s.brand_primary) {
-    root.style.setProperty("--gm-primary", s.brand_primary);
-    root.style.setProperty("--brand-primary", s.brand_primary);
+  let primary = s.brand_primary;
+  let accent = s.brand_accent;
+  let bg = s.brand_bg;
+  let title = "";
+  let subtitle = "";
+  let icon = "";
+  let button = "";
+
+  let menu_primary = "";
+  let menu_bg = "";
+  let menu_title = "";
+  let menu_subtitle = "";
+  let menu_icon = "";
+  let menu_button = "";
+
+  if (isLight) {
+    const savedLight = s.bio_config?.theme_colors_light || JSON.parse(localStorage.getItem("gm_colors_light") || "null");
+    if (savedLight) {
+      primary = savedLight.primary || "#FF6900";
+      accent = savedLight.accent || "#FF6900";
+      bg = savedLight.bg || "#FFFFFF";
+      title = savedLight.title || "#1B1D22";
+      subtitle = savedLight.subtitle || "#6B7280";
+      icon = savedLight.icon || "#FF6900";
+      button = savedLight.button || "#FF6900";
+
+      menu_primary = savedLight.menu_primary || "#FF6900";
+      menu_bg = savedLight.menu_bg || "#FFFFFF";
+      menu_title = savedLight.menu_title || "#1B1D22";
+      menu_subtitle = savedLight.menu_subtitle || "#6B7280";
+      menu_icon = savedLight.menu_icon || "#FF6900";
+      menu_button = savedLight.menu_button || "#FF6900";
+    } else {
+      primary = "#FF6900";
+      accent = "#FF6900";
+      bg = "#FFFFFF";
+      title = "#1B1D22";
+      subtitle = "#6B7280";
+      icon = "#FF6900";
+      button = "#FF6900";
+
+      menu_primary = "#FF6900";
+      menu_bg = "#FFFFFF";
+      menu_title = "#1B1D22";
+      menu_subtitle = "#6B7280";
+      menu_icon = "#FF6900";
+      menu_button = "#FF6900";
+    }
+  } else {
+    const savedDark = s.bio_config?.theme_colors_dark || JSON.parse(localStorage.getItem("gm_colors_dark") || "null");
+    if (savedDark) {
+      primary = savedDark.primary || s.brand_primary || "#32BCAD";
+      accent = savedDark.accent || s.brand_accent || "#32BCAD";
+      bg = savedDark.bg || s.brand_bg || "#0f1117";
+      title = savedDark.title || "#FFFFFF";
+      subtitle = savedDark.subtitle || "#94A3B8";
+      icon = savedDark.icon || s.brand_accent || "#32BCAD";
+      button = savedDark.button || s.brand_accent || "#32BCAD";
+
+      menu_primary = savedDark.menu_primary || s.brand_primary || "#32BCAD";
+      menu_bg = savedDark.menu_bg || s.brand_bg || "#0f1117";
+      menu_title = savedDark.menu_title || "#FFFFFF";
+      menu_subtitle = savedDark.menu_subtitle || "#94A3B8";
+      menu_icon = savedDark.menu_icon || s.brand_accent || "#32BCAD";
+      menu_button = savedDark.menu_button || s.brand_accent || "#32BCAD";
+    } else {
+      primary = s.brand_primary || "#32BCAD";
+      accent = s.brand_accent || "#32BCAD";
+      bg = s.brand_bg || "#0f1117";
+      title = "#FFFFFF";
+      subtitle = "#94A3B8";
+      icon = s.brand_accent || "#32BCAD";
+      button = s.brand_accent || "#32BCAD";
+
+      menu_primary = s.brand_primary || "#32BCAD";
+      menu_bg = s.brand_bg || "#0f1117";
+      menu_title = "#FFFFFF";
+      menu_subtitle = "#94A3B8";
+      menu_icon = s.brand_accent || "#32BCAD";
+      menu_button = s.brand_accent || "#32BCAD";
+    }
+  }
+
+  if (primary) {
+    root.style.setProperty("--gm-primary", primary);
+    root.style.setProperty("--brand-primary", primary);
     
     // Atualiza a cor da barra de status do celular
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", s.brand_primary);
+      metaThemeColor.setAttribute("content", primary);
     }
     
-    const rgb = hexToRgb(s.brand_primary);
+    const rgb = hexToRgb(primary);
     if (rgb) {
       root.style.setProperty("--gm-primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
     }
 
     // Calcula e aplica a cor de contraste para o texto sobre o primário
-    const contrast = getContrastColor(s.brand_primary);
+    const contrast = getContrastColor(primary);
     root.style.setProperty("--gm-primary-foreground", contrast);
   }
 
-  if (s.brand_accent) {
-    root.style.setProperty("--gm-accent", s.brand_accent);
-    root.style.setProperty("--brand-accent", s.brand_accent);
+  if (accent) {
+    root.style.setProperty("--gm-accent", accent);
+    root.style.setProperty("--brand-accent", accent);
 
-    const rgb = hexToRgb(s.brand_accent);
+    const rgb = hexToRgb(accent);
     if (rgb) {
       root.style.setProperty("--gm-accent-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
     }
   }
 
-  if (s.brand_bg) {
-    root.style.setProperty("--gm-bg", s.brand_bg);
-    root.style.setProperty("--brand-bg", s.brand_bg);
+  if (bg) {
+    root.style.setProperty("--gm-bg", bg);
+    root.style.setProperty("--brand-bg", bg);
+  }
+
+  if (title) {
+    root.style.setProperty("--gm-title", title);
+  }
+
+  if (subtitle) {
+    root.style.setProperty("--gm-subtitle", subtitle);
+  }
+
+  if (icon) {
+    root.style.setProperty("--gm-icon", icon);
+  }
+
+  if (button) {
+    root.style.setProperty("--gm-button", button);
+  }
+
+  if (menu_primary) {
+    root.style.setProperty("--gm-menu-primary", menu_primary);
+  }
+
+  if (menu_bg) {
+    root.style.setProperty("--gm-menu-bg", menu_bg);
+  }
+
+  if (menu_title) {
+    root.style.setProperty("--gm-menu-title", menu_title);
+  }
+
+  if (menu_subtitle) {
+    root.style.setProperty("--gm-menu-subtitle", menu_subtitle);
+  }
+
+  if (menu_icon) {
+    root.style.setProperty("--gm-menu-icon", menu_icon);
+  }
+
+  if (menu_button) {
+    root.style.setProperty("--gm-menu-button", menu_button);
   }
 
   if (s.font_family) {

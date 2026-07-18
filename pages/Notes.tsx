@@ -1383,7 +1383,7 @@ export default function Notes() {
                 >
                   <div
                     id={`note-card-${note.id}`}
-                    className={`rounded-3xl p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full ${
+                    className={`rounded-3xl p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full gm-note-card ${
                       isExpanded
                         ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]"
                         : "overflow-hidden min-h-[280px]"
@@ -1777,7 +1777,7 @@ export default function Notes() {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: "100%", opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+              className="relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden gm-note-modal"
               style={{
                 maxHeight: window.innerWidth < 768 ? "100dvh" : "90vh",
                 backgroundColor: "rgba(17, 19, 24, 0.95)",

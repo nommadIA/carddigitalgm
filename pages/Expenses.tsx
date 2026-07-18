@@ -440,7 +440,7 @@ export default function Expenses() {
 
                     {tab === "active" ? (
                       <button
-                        className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_8px_rgba(255,123,0,0.1)]"
+                        className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] text-white hover:bg-[var(--gm-primary)]/90 transition-all flex items-center justify-center shrink-0 shadow-md"
                         onClick={() => softDeleteExpense(e.id)}
                         title="Mover para lixeira"
                       >
@@ -449,10 +449,10 @@ export default function Expenses() {
                     ) : (
                       <>
                         <button className="gm-btn gm-btn-icon gm-btn-soft" onClick={() => restoreExpense(e.id)} title="Restaurar">
-                          <RotateCcw size={16} />
+                           <RotateCcw size={16} />
                         </button>
                         <button
-                          className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                          className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] text-white hover:bg-[var(--gm-primary)]/90 transition-all flex items-center justify-center shrink-0 shadow-md"
                           onClick={() => confirmHardDelete(e.id)}
                           title="Excluir definitivo"
                         >

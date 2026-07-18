@@ -15,6 +15,8 @@ import {
   fetchSettingsSupabase,
   upsertSettingsSupabase,
   ThemePreset,
+  hexToRgb,
+  getContrastColor,
 } from "../lib/settings";
 import * as QRCode from "qrcode";
 import { buildPixPayload } from "../lib/pix";
@@ -170,9 +172,148 @@ export default function Configuracoes() {
   const [brandPrimary, setBrandPrimary] = useState("#32BCAD");
   const [brandAccent, setBrandAccent] = useState("#32BCAD");
   const [brandBg, setBrandBg] = useState("#0f1117");
+  const [brandTitle, setBrandTitle] = useState("#FFFFFF");
+  const [brandSubtitle, setBrandSubtitle] = useState("#94A3B8");
+  const [brandIcon, setBrandIcon] = useState("#32BCAD");
+
+  // Cores independentes do Menu / Barra Lateral
+  const [menuPrimary, setMenuPrimary] = useState("#32BCAD");
+  const [menuBg, setMenuBg] = useState("#0f1117");
+  const [menuTitle, setMenuTitle] = useState("#FFFFFF");
+  const [menuSubtitle, setMenuSubtitle] = useState("#94A3B8");
+  const [menuIcon, setMenuIcon] = useState("#32BCAD");
+  const [menuButton, setMenuButton] = useState("#32BCAD");
+
   const [fontFamily, setFontFamily] = useState("Inter");
   const [previewFont, setPreviewFont] = useState<string | null>(null);
   const [buttonStyle, setButtonStyle] = useState("solid");
+
+  const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem("theme") === "light");
+
+  useEffect(() => {
+    const handleThemeChange = () => {
+      const light = localStorage.getItem("theme") === "light";
+      if (light !== isLightMode) {
+        setIsLightMode(light);
+      }
+    };
+    const interval = setInterval(handleThemeChange, 500);
+    return () => clearInterval(interval);
+  }, [isLightMode]);
+
+  useEffect(() => {
+    const syncCurrentColors = async () => {
+      try {
+        const s = await fetchSettingsSupabase(tenantId);
+        if (s) {
+          if (isLightMode) {
+            const savedLight = s.bio_config?.theme_colors_light || JSON.parse(localStorage.getItem("gm_colors_light") || "null");
+            setBrandPrimary(savedLight?.primary || "#FF6900");
+            setBrandAccent(savedLight?.accent || "#FF6900");
+            setBrandBg(savedLight?.bg || "#FFFFFF");
+            setBrandTitle(savedLight?.title || "#1B1D22");
+            setBrandSubtitle(savedLight?.subtitle || "#6B7280");
+            setBrandIcon(savedLight?.icon || "#FF6900");
+
+            setMenuPrimary(savedLight?.menu_primary || "#FF6900");
+            setMenuBg(savedLight?.menu_bg || "#FFFFFF");
+            setMenuTitle(savedLight?.menu_title || "#1B1D22");
+            setMenuSubtitle(savedLight?.menu_subtitle || "#6B7280");
+            setMenuIcon(savedLight?.menu_icon || "#FF6900");
+            setMenuButton(savedLight?.menu_button || "#FF6900");
+          } else {
+            const savedDark = s.bio_config?.theme_colors_dark || JSON.parse(localStorage.getItem("gm_colors_dark") || "null");
+            setBrandPrimary(savedDark?.primary || s.brand_primary || "#32BCAD");
+            setBrandAccent(savedDark?.accent || s.brand_accent || "#32BCAD");
+            setBrandBg(savedDark?.bg || s.brand_bg || "#0f1117");
+            setBrandTitle(savedDark?.title || "#FFFFFF");
+            setBrandSubtitle(savedDark?.subtitle || "#94A3B8");
+            setBrandIcon(savedDark?.icon || s.brand_accent || "#32BCAD");
+
+            setMenuPrimary(savedDark?.menu_primary || s.brand_primary || "#32BCAD");
+            setMenuBg(savedDark?.menu_bg || s.brand_bg || "#0f1117");
+            setMenuTitle(savedDark?.menu_title || "#FFFFFF");
+            setMenuSubtitle(savedDark?.menu_subtitle || "#94A3B8");
+            setMenuIcon(savedDark?.menu_icon || s.brand_accent || "#32BCAD");
+            setMenuButton(savedDark?.menu_button || s.brand_accent || "#32BCAD");
+          }
+        }
+      } catch (err) {}
+    };
+    if (tenantId) {
+      syncCurrentColors();
+    }
+  }, [isLightMode, tenantId]);
+
+  // Aplica as cores em tempo real no DOM ao alterar nas configurações
+  useEffect(() => {
+    const root = document.documentElement;
+    if (brandPrimary) {
+      root.style.setProperty("--gm-primary", brandPrimary);
+      root.style.setProperty("--brand-primary", brandPrimary);
+      const rgb = hexToRgb(brandPrimary);
+      if (rgb) {
+        root.style.setProperty("--gm-primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+      }
+      const contrast = getContrastColor(brandPrimary);
+      root.style.setProperty("--gm-primary-foreground", contrast);
+    }
+    if (brandAccent) {
+      root.style.setProperty("--gm-accent", brandAccent);
+      root.style.setProperty("--brand-accent", brandAccent);
+      root.style.setProperty("--gm-button", brandAccent);
+      const rgb = hexToRgb(brandAccent);
+      if (rgb) {
+        root.style.setProperty("--gm-accent-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+      }
+    }
+    if (brandBg) {
+      root.style.setProperty("--gm-bg", brandBg);
+      root.style.setProperty("--brand-bg", brandBg);
+    }
+    if (brandTitle) {
+      root.style.setProperty("--gm-title", brandTitle);
+    }
+    if (brandSubtitle) {
+      root.style.setProperty("--gm-subtitle", brandSubtitle);
+    }
+    if (brandIcon) {
+      root.style.setProperty("--gm-icon", brandIcon);
+    }
+
+    // Cores do menu lateral em tempo real
+    if (menuPrimary) {
+      root.style.setProperty("--gm-menu-primary", menuPrimary);
+    }
+    if (menuBg) {
+      root.style.setProperty("--gm-menu-bg", menuBg);
+    }
+    if (menuTitle) {
+      root.style.setProperty("--gm-menu-title", menuTitle);
+    }
+    if (menuSubtitle) {
+      root.style.setProperty("--gm-menu-subtitle", menuSubtitle);
+    }
+    if (menuIcon) {
+      root.style.setProperty("--gm-menu-icon", menuIcon);
+    }
+    if (menuButton) {
+      root.style.setProperty("--gm-menu-button", menuButton);
+    }
+  }, [
+    brandPrimary,
+    brandAccent,
+    brandBg,
+    brandTitle,
+    brandSubtitle,
+    brandIcon,
+    menuPrimary,
+    menuBg,
+    menuTitle,
+    menuSubtitle,
+    menuIcon,
+    menuButton
+  ]);
 
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -319,9 +460,39 @@ export default function Configuracoes() {
         setPixType(s.pix_type || "CPF");
         setPixKey(s.pix_key || "");
 
-        setBrandPrimary(s.brand_primary || "#32BCAD");
-        setBrandAccent(s.brand_accent || "#32BCAD");
-        setBrandBg(s.brand_bg || "#0f1117");
+        const activeIsLight = localStorage.getItem("theme") === "light";
+        if (activeIsLight) {
+          const savedLight = s.bio_config?.theme_colors_light || JSON.parse(localStorage.getItem("gm_colors_light") || "null");
+          setBrandPrimary(savedLight?.primary || "#FF6900");
+          setBrandAccent(savedLight?.accent || "#FF6900");
+          setBrandBg(savedLight?.bg || "#FFFFFF");
+          setBrandTitle(savedLight?.title || "#1B1D22");
+          setBrandSubtitle(savedLight?.subtitle || "#6B7280");
+          setBrandIcon(savedLight?.icon || "#FF6900");
+
+          setMenuPrimary(savedLight?.menu_primary || "#FF6900");
+          setMenuBg(savedLight?.menu_bg || "#FFFFFF");
+          setMenuTitle(savedLight?.menu_title || "#1B1D22");
+          setMenuSubtitle(savedLight?.menu_subtitle || "#6B7280");
+          setMenuIcon(savedLight?.menu_icon || "#FF6900");
+          setMenuButton(savedLight?.menu_button || "#FF6900");
+        } else {
+          const savedDark = s.bio_config?.theme_colors_dark || JSON.parse(localStorage.getItem("gm_colors_dark") || "null");
+          setBrandPrimary(savedDark?.primary || s.brand_primary || "#32BCAD");
+          setBrandAccent(savedDark?.accent || s.brand_accent || "#32BCAD");
+          setBrandBg(savedDark?.bg || s.brand_bg || "#0f1117");
+          setBrandTitle(savedDark?.title || "#FFFFFF");
+          setBrandSubtitle(savedDark?.subtitle || "#94A3B8");
+          setBrandIcon(savedDark?.icon || s.brand_accent || "#32BCAD");
+
+          setMenuPrimary(savedDark?.menu_primary || s.brand_primary || "#32BCAD");
+          setMenuBg(savedDark?.menu_bg || s.brand_bg || "#0f1117");
+          setMenuTitle(savedDark?.menu_title || "#FFFFFF");
+          setMenuSubtitle(savedDark?.menu_subtitle || "#94A3B8");
+          setMenuIcon(savedDark?.menu_icon || s.brand_accent || "#32BCAD");
+          setMenuButton(savedDark?.menu_button || s.brand_accent || "#32BCAD");
+        }
+        
         setFontFamily(s.font_family || "Inter");
         setButtonStyle(
           s.button_style ||
@@ -447,6 +618,50 @@ export default function Configuracoes() {
     if (!tenantId) return;
     setSaving(true);
     try {
+      // Busca as configurações atuais para obter o bio_config atualizado
+      const s = await fetchSettingsSupabase(tenantId);
+      const currentBioConfig = s?.bio_config || {};
+      const activeIsLight = localStorage.getItem("theme") === "light";
+
+      // Salva no localStorage e no bio_config correspondente
+      if (activeIsLight) {
+        const payloadLight = { 
+          primary: brandPrimary, 
+          accent: brandAccent, 
+          bg: brandBg,
+          title: brandTitle,
+          subtitle: brandSubtitle,
+          icon: brandIcon,
+          button: brandAccent,
+          menu_primary: menuPrimary,
+          menu_bg: menuBg,
+          menu_title: menuTitle,
+          menu_subtitle: menuSubtitle,
+          menu_icon: menuIcon,
+          menu_button: menuButton,
+        };
+        localStorage.setItem("gm_colors_light", JSON.stringify(payloadLight));
+        currentBioConfig.theme_colors_light = payloadLight;
+      } else {
+        const payloadDark = { 
+          primary: brandPrimary, 
+          accent: brandAccent, 
+          bg: brandBg,
+          title: brandTitle,
+          subtitle: brandSubtitle,
+          icon: brandIcon,
+          button: brandAccent,
+          menu_primary: menuPrimary,
+          menu_bg: menuBg,
+          menu_title: menuTitle,
+          menu_subtitle: menuSubtitle,
+          menu_icon: menuIcon,
+          menu_button: menuButton,
+        };
+        localStorage.setItem("gm_colors_dark", JSON.stringify(payloadDark));
+        currentBioConfig.theme_colors_dark = payloadDark;
+      }
+
       const next = await upsertSettingsSupabase(tenantId, {
         company_name: companyName,
         pix_type: pixType,
@@ -490,6 +705,7 @@ export default function Configuracoes() {
 
         button_style: buttonStyle,
         theme_presets: presets,
+        bio_config: currentBioConfig, // Salva o bio_config atualizado
       });
 
       applySettingsToDOM(next);
@@ -787,11 +1003,21 @@ export default function Configuracoes() {
           </AnimatePresence>
           <button
             type="button"
-            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-xl !bg-transparent !text-[#00ff00] !border !border-[#00ff00]/40 hover:!bg-[#00ff00]/10 hover:!border-[#00ff00]/60 transition-all font-bold active:scale-95 shadow-[0_0_12px_rgba(0,255,0,0.15)]"
+            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-xl !bg-gradient-to-r !from-green-500 !to-emerald-600 !text-white hover:!from-green-600 hover:!to-emerald-700 disabled:!opacity-50 transition-all font-extrabold active:scale-95 shadow-[0_4px_14px_rgba(34,197,94,0.4)] hover:shadow-[0_6px_20px_rgba(34,197,94,0.6)] flex items-center gap-2 border-none"
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Salvando..." : "Salvar"}
+            {saving ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Salvando...</span>
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                <span>Salvar</span>
+              </>
+            )}
           </button>
         </div>
       }
@@ -904,58 +1130,149 @@ export default function Configuracoes() {
                       <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
                         Misturador de Cores
                       </label>
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-black/10 dark:border-white/10 shrink-0">
+
+                      {/* INDICADOR DE MODO DO MISTURADOR DE CORES */}
+                      <div className={`mb-3.5 p-3 rounded-xl border flex items-start gap-2.5 ${
+                        isLightMode 
+                          ? "bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-300" 
+                          : "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-300"
+                      }`}>
+                        <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 animate-pulse ${
+                          isLightMode ? "bg-amber-500" : "bg-blue-400"
+                        }`} />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-black uppercase tracking-wider">
+                            {isLightMode 
+                              ? "Modo Claro Ativo" 
+                              : "Modo Escuro Ativo"
+                            }
+                          </span>
+                          <span className="text-[10px] leading-relaxed opacity-90">
+                            {isLightMode
+                              ? "Você está configurando as cores exclusivas para o Modo Claro. Ao salvar, as preferências deste modo serão aplicadas separadamente do modo escuro."
+                              : "Você está configurando as cores exclusivas para o Modo Escuro. Ao salvar, as preferências deste modo serão aplicadas separadamente do modo claro."
+                            }
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {/* Cor Principal */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
                             <input
                               type="color"
                               value={brandPrimary}
                               onChange={(e) => setBrandPrimary(e.target.value)}
-                              className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer"
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
                             />
                           </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-bold">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
                               Cor Principal
                             </div>
-                            <div className="text-xs text-slate-500 uppercase">
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
                               {brandPrimary}
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-black/10 dark:border-white/10 shrink-0">
-                            <input
-                              type="color"
-                              value={brandAccent}
-                              onChange={(e) => setBrandAccent(e.target.value)}
-                              className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-bold">
-                              Cor Secundária
-                            </div>
-                            <div className="text-xs text-slate-500 uppercase">
-                              {brandAccent}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 bg-black/10 dark:bg-black/40 backdrop-blur-md p-3 rounded-xl border border-black/10 dark:border-white/10">
-                          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-black/10 dark:border-white/10 shrink-0">
+
+                        {/* Cor de Fundo */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
                             <input
                               type="color"
                               value={brandBg}
                               onChange={(e) => setBrandBg(e.target.value)}
-                              className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer"
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
                             />
                           </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-bold">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
                               Cor de Fundo
                             </div>
-                            <div className="text-xs text-slate-500 uppercase">
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
                               {brandBg}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Cor dos Títulos */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={brandTitle}
+                              onChange={(e) => setBrandTitle(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Cor dos Títulos
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {brandTitle}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Cor dos Subtítulos */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={brandSubtitle}
+                              onChange={(e) => setBrandSubtitle(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Cor dos Subtítulos
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {brandSubtitle}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Cor dos Ícones */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={brandIcon}
+                              onChange={(e) => setBrandIcon(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Cor dos Ícones
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {brandIcon}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Cor dos Botões */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={brandAccent}
+                              onChange={(e) => setBrandAccent(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Cor dos Botões
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {brandAccent}
                             </div>
                           </div>
                         </div>
@@ -1052,6 +1369,136 @@ export default function Configuracoes() {
                             </button>
                           );
                         })}
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
+
+                    <div className="flex-1 flex flex-col justify-center">
+                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
+                        Misturador de Cores do Menu (Barra Lateral)
+                      </label>
+
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {/* Cor Principal */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={menuPrimary}
+                              onChange={(e) => setMenuPrimary(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Cor Principal
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {menuPrimary}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Cor de Fundo */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={menuBg}
+                              onChange={(e) => setMenuBg(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Cor de Fundo
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {menuBg}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Cor dos Títulos */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={menuTitle}
+                              onChange={(e) => setMenuTitle(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Cor dos Títulos
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {menuTitle}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Duas Legendas */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={menuSubtitle}
+                              onChange={(e) => setMenuSubtitle(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Duas Legendas
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {menuSubtitle}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Cor dos Ícones */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={menuIcon}
+                              onChange={(e) => setMenuIcon(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Cor dos Ícones
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {menuIcon}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Cor dos Botões */}
+                        <div className="flex items-center gap-2 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                            <input
+                              type="color"
+                              value={menuButton}
+                              onChange={(e) => setMenuButton(e.target.value)}
+                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              Cor dos Botões
+                            </div>
+                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                              {menuButton}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1909,7 +2356,7 @@ export default function Configuracoes() {
                             transition={{ duration: 0.3 }}
                           >
                             <div 
-                              className="w-full flex-shrink-0 flex flex-col gap-5 py-6 px-5 rounded-[2rem] relative mb-8 shadow-2xl transition-all"
+                              className="w-full flex-shrink-0 flex flex-col gap-5 py-6 px-5 rounded-[2rem] relative mb-8 shadow-2xl transition-all gm-settings-card"
                               style={{ 
                                 backgroundColor: 'rgba(17, 19, 24, 0.7)',
                                 backdropFilter: 'blur(12px)',
@@ -2270,8 +2717,35 @@ export default function Configuracoes() {
                                       <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
                                         Misturador de Cores
                                       </label>
-                                      <div className="flex flex-col gap-2.5">
-                                        <div className="flex items-center gap-3 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                      
+                                      {/* INDICADOR DE MODO DO MISTURADOR DE CORES */}
+                                      <div className={`mb-3.5 p-3 rounded-xl border flex items-start gap-2.5 ${
+                                        isLightMode 
+                                          ? "bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-300" 
+                                          : "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-300"
+                                      }`}>
+                                        <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 animate-pulse ${
+                                          isLightMode ? "bg-amber-500" : "bg-blue-400"
+                                        }`} />
+                                        <div className="flex flex-col">
+                                          <span className="text-xs font-black uppercase tracking-wider">
+                                            {isLightMode 
+                                              ? "Modo Claro Ativo" 
+                                              : "Modo Escuro Ativo"
+                                            }
+                                          </span>
+                                          <span className="text-[10px] leading-relaxed opacity-90">
+                                            {isLightMode
+                                              ? "Você está configurando as cores exclusivas para o Modo Claro. Ao salvar, as preferências deste modo serão aplicadas separadamente do modo escuro."
+                                              : "Você está configurando as cores exclusivas para o Modo Escuro. Ao salvar, as preferências deste modo serão aplicadas separadamente do modo claro."
+                                            }
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-2.5">
+                                        {/* Cor Principal */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
                                           <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
                                             <input
                                               type="color"
@@ -2283,37 +2757,17 @@ export default function Configuracoes() {
                                             />
                                           </div>
                                           <div className="flex-1 min-w-0">
-                                            <div className="text-xs font-bold">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
                                               Cor Principal
                                             </div>
-                                            <div className="text-[10px] text-slate-500 uppercase">
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
                                               {brandPrimary}
                                             </div>
                                           </div>
                                         </div>
 
-                                        <div className="flex items-center gap-3 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
-                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
-                                            <input
-                                              type="color"
-                                              value={brandAccent}
-                                              onChange={(e) =>
-                                                setBrandAccent(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-xs font-bold">
-                                              Cor Secundária
-                                            </div>
-                                            <div className="text-[10px] text-slate-500 uppercase">
-                                              {brandAccent}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                        {/* Cor de Fundo */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
                                           <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
                                             <input
                                               type="color"
@@ -2325,11 +2779,99 @@ export default function Configuracoes() {
                                             />
                                           </div>
                                           <div className="flex-1 min-w-0">
-                                            <div className="text-xs font-bold">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
                                               Cor de Fundo
                                             </div>
-                                            <div className="text-[10px] text-slate-500 uppercase">
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
                                               {brandBg}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Cor dos Títulos */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={brandTitle}
+                                              onChange={(e) =>
+                                                setBrandTitle(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Cor dos Títulos
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {brandTitle}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Cor dos Subtítulos */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={brandSubtitle}
+                                              onChange={(e) =>
+                                                setBrandSubtitle(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Cor dos Subtítulos
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {brandSubtitle}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Cor dos Ícones */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={brandIcon}
+                                              onChange={(e) =>
+                                                setBrandIcon(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Cor dos Ícones
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {brandIcon}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Cor dos Botões */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={brandAccent}
+                                              onChange={(e) =>
+                                                setBrandAccent(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Cor dos Botões
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {brandAccent}
                                             </div>
                                           </div>
                                         </div>
@@ -2373,6 +2915,147 @@ export default function Configuracoes() {
                                             </button>
                                           );
                                         })}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col w-full py-2">
+                                      <div className="h-px bg-slate-200 dark:bg-slate-700 w-full my-1 shrink-0"></div>
+                                      <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] my-3 block">
+                                        Misturador de Cores do Menu
+                                      </label>
+                                      
+                                      <div className="grid grid-cols-2 gap-2.5">
+                                        {/* Cor Principal */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={menuPrimary}
+                                              onChange={(e) =>
+                                                setMenuPrimary(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Cor Principal
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {menuPrimary}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Cor de Fundo */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={menuBg}
+                                              onChange={(e) =>
+                                                setMenuBg(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Cor de Fundo
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {menuBg}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Cor dos Títulos */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={menuTitle}
+                                              onChange={(e) =>
+                                                setMenuTitle(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Cor dos Títulos
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {menuTitle}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Duas Legendas */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={menuSubtitle}
+                                              onChange={(e) =>
+                                                setMenuSubtitle(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Duas Legendas
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {menuSubtitle}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Cor dos Ícones */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={menuIcon}
+                                              onChange={(e) =>
+                                                setMenuIcon(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Cor dos Ícones
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {menuIcon}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Cor dos Botões */}
+                                        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/35 p-2 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-black/10 shrink-0">
+                                            <input
+                                              type="color"
+                                              value={menuButton}
+                                              onChange={(e) =>
+                                                setMenuButton(e.target.value)
+                                              }
+                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                                            />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-bold leading-tight truncate">
+                                              Cor dos Botões
+                                            </div>
+                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
+                                              {menuButton}
+                                            </div>
+                                          </div>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
