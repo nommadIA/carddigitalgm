@@ -3102,4 +3102,40 @@ button.bg-\[var\(--gm-primary\)\]\/20 {
   stroke: #fca5a5 !important;
 }
 
+/* Correção definitiva global de contraste para ícones (Lucide) em botões e ações */
+button svg,
+button svg.lucide,
+.gm-btn svg,
+.gm-btn svg.lucide,
+a.gm-btn svg,
+a.gm-btn svg.lucide,
+[data-theme="light"] button svg,
+[data-theme="light"] button svg.lucide,
+[data-theme="light"] .gm-btn svg,
+[data-theme="light"] .gm-btn svg.lucide,
+[data-theme="light"] a.gm-btn svg,
+[data-theme="light"] a.gm-btn svg.lucide {
+  color: currentColor !important;
+  stroke: currentColor !important;
+  fill: none !important;
+}
+
+/* Garante que os ícones de ação de orçamentos e outros fiquem brancos nos botões principais */
+.gm-budget-action-btn svg,
+button.gm-budget-action-btn svg,
+.gm-budget-action-btn svg.lucide,
+button.gm-budget-action-btn svg.lucide {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  fill: none !important;
+}
+
+/* Spinners brancos para as ações */
+.gm-budget-action-btn .animate-spin,
+button.gm-budget-action-btn .animate-spin {
+  border-color: #FFFFFF !important;
+  border-top-color: transparent !important;
+}
+
+
 

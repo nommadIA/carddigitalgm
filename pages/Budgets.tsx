@@ -485,7 +485,7 @@ export default function Budgets() {
 
   // botões compactos
   const iconBtn = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-    const base = "gm-btn flex-1 h-10 flex items-center justify-center gap-2";
+    const base = "gm-btn gm-budget-action-btn flex-1 h-10 flex items-center justify-center gap-2";
     if (tone === "orange") return `${base} bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 text-amber-500 hover:text-white`;
     if (tone === "green") return `${base} bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 text-emerald-500 hover:text-white`;
     if (tone === "red") return `${base} bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white border-none shadow-md`;
@@ -580,7 +580,7 @@ export default function Budgets() {
                   const created = r.created_at ? new Date(r.created_at) : null;
                   
                   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-                    const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0";
+                    const base = "gm-btn gm-budget-action-btn w-10 h-10 flex items-center justify-center shrink-0";
                     if (tone === "orange") return `${base} bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 text-amber-500 hover:text-white`;
                     if (tone === "green") return `${base} bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 text-emerald-500 hover:text-white`;
                     if (tone === "red") return `${base} bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white border-none shadow-md`;
@@ -627,7 +627,7 @@ export default function Budgets() {
                               <>
                                 {tab === "CANCELADOS" && (
                                   <button
-                                    className="gm-btn bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1 px-3 flex items-center gap-1.5 h-10"
+                                    className="gm-btn gm-budget-action-btn bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1 px-3 flex items-center gap-1.5 h-10"
                                     title="Restaurar Orçamento (Voltar para Aguardando)"
                                     onClick={() => updateStatusInstant(r.id, "AGUARDANDO")}
                                     type="button"
@@ -662,7 +662,7 @@ export default function Budgets() {
                                   <RotateCcw size={16} />
                                 </button>
                                 <button
-                                  className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                                  className="gm-btn gm-budget-action-btn h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
                                   title="Excluir Definitivamente"
                                   onClick={() => confirmHardDelete(r.id)}
                                   type="button"
@@ -803,7 +803,7 @@ export default function Budgets() {
                         </button>
 
                         <button
-                          className="h-10 w-12 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                          className="gm-btn gm-budget-action-btn h-10 w-12 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shadow-[0_0_10px_rgba(255,123,0,0.1)]"
                           title="Excluir Definitivo"
                           onClick={() => confirmHardDelete(r.id)}
                           type="button"
