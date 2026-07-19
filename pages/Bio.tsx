@@ -1497,7 +1497,7 @@ export default function Bio() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Botão 1: Bio Smartphone */}
               <button
-                className="group relative p-8 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-950/40 hover:bg-slate-50 dark:hover:bg-zinc-900/20 hover:border-slate-300 dark:hover:border-zinc-700/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-slate-100/50 dark:shadow-black/40 cursor-pointer"
+                className="gm-card group relative p-8 rounded-3xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/80 hover:bg-slate-50/80 dark:hover:bg-zinc-900/50 hover:border-[var(--primary-color)] transition-all text-left flex flex-col gap-5 shadow-md hover:shadow-xl cursor-pointer"
                 onClick={() => {
                   setSelectedView("smartphone");
                   setPreviewMode("smartphone");
@@ -1510,7 +1510,7 @@ export default function Bio() {
                   <h3 className="text-xl font-extrabold text-slate-800 dark:text-white group-hover:text-[var(--primary-color)] transition-colors">
                     Bio Smartphone
                   </h3>
-                  <p className="text-base text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed">
+                  <p className="text-base text-slate-700 dark:text-zinc-300 mt-2 leading-relaxed font-semibold">
                     Personalize títulos, biografia, imagens de fundo e banners exclusivos para a versão móvel e celulares.
                   </p>
                 </div>
@@ -1521,7 +1521,7 @@ export default function Bio() {
 
               {/* Botão 2: Bio Computador */}
               <button
-                className="group relative p-8 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-950/40 hover:bg-slate-50 dark:hover:bg-zinc-900/20 hover:border-slate-300 dark:hover:border-zinc-700/50 transition-all text-left flex flex-col gap-5 shadow-lg shadow-slate-100/50 dark:shadow-black/40 cursor-pointer"
+                className="gm-card group relative p-8 rounded-3xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/80 hover:bg-slate-50/80 dark:hover:bg-zinc-900/50 hover:border-[var(--primary-color)] transition-all text-left flex flex-col gap-5 shadow-md hover:shadow-xl cursor-pointer"
                 onClick={() => {
                   setSelectedView("computador");
                   setPreviewMode("pc");
@@ -1534,7 +1534,7 @@ export default function Bio() {
                   <h3 className="text-xl font-extrabold text-slate-800 dark:text-white group-hover:text-[var(--primary-color)] transition-colors">
                     Bio Computador
                   </h3>
-                  <p className="text-base text-slate-600 dark:text-zinc-300 mt-2 leading-relaxed">
+                  <p className="text-base text-slate-700 dark:text-zinc-300 mt-2 leading-relaxed font-semibold">
                     Personalize títulos, biografia, efeitos de animação e mídias de alta definição para a versão desktop.
                   </p>
                 </div>
