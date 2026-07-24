@@ -4,6 +4,7 @@ import Select from "../components/ui/Select";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
 import { ScaleSlider } from "../components/ScaleSlider";
+import { ColorSettingsManager } from "../components/ColorSettingsManager";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
 import {
@@ -47,6 +48,7 @@ import {
   Volume2,
   VolumeX,
   Music,
+  ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,6 +61,7 @@ const TIMBRADO_MODEL_URL =
   "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/Modelo%20Timbrado/TIMBRADO%20GABARITO.png";
 
 import imageCompression from "browser-image-compression";
+import { compressImage } from "../lib/imageCompressor";
 
 export default function Configuracoes() {
   const { tenantId, user } = useAuth();
@@ -73,6 +76,15 @@ export default function Configuracoes() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Estados de Progresso, Prévia de Carregamento e Auto Compressão de Imagens
+  const [logoProgress, setLogoProgress] = useState<number>(0);
+  const [logoStatusText, setLogoStatusText] = useState<string>("");
+  const [logoStats, setLogoStats] = useState<{ originalSize: string; compressedSize: string; reduction: string } | null>(null);
+
+  const [avatarProgress, setAvatarProgress] = useState<number>(0);
+  const [avatarStatusText, setAvatarStatusText] = useState<string>("");
+  const [avatarStats, setAvatarStats] = useState<{ originalSize: string; compressedSize: string; reduction: string } | null>(null);
   const [uploadingTimbrado, setUploadingTimbrado] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -87,6 +99,42 @@ export default function Configuracoes() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const [openSections, setOpenSections] = useState({
+    personalizacao: false,
+    background: false,
+    colors: false,
+    pix: false,
+    timbrado: false,
+    push: false,
+    sounds: false,
+    tutorial: false,
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections((prev) => {
+      const isOpen = !prev[section];
+      const next = {
+        personalizacao: false,
+        background: false,
+        colors: false,
+        pix: false,
+        timbrado: false,
+        push: false,
+        sounds: false,
+        tutorial: false,
+      };
+      next[section] = isOpen;
+      return next;
+    });
+  };
+
+  const getSectionBtnClass = (isOpen: boolean) =>
+    `relative w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 font-bold text-sm tracking-wider uppercase group cursor-pointer ${
+      isOpen
+        ? "bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border-[var(--gm-primary)] shadow-[0_0_15px_rgba(var(--gm-primary-rgb),0.15)] ring-2 ring-[var(--gm-primary)]/20"
+        : "bg-white dark:bg-slate-800/80 border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-[var(--gm-primary)]/50 hover:bg-slate-50 dark:hover:bg-slate-800"
+    }`;
   const [currentScreen, setCurrentScreen] = useState(0);
   const [direction, setDirection] = useState(0);
 
@@ -244,6 +292,25 @@ export default function Configuracoes() {
       syncCurrentColors();
     }
   }, [isLightMode, tenantId]);
+
+  // Helper ultra fluido para aplicar alterações de cores instantaneamente no DOM
+  const updateDomColor = (cssVar: string, value: string) => {
+    const root = document.documentElement;
+    root.style.setProperty(cssVar, value);
+    if (cssVar === "--gm-primary") {
+      root.style.setProperty("--brand-primary", value);
+      const rgb = hexToRgb(value);
+      if (rgb) root.style.setProperty("--gm-primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+      root.style.setProperty("--gm-primary-foreground", getContrastColor(value));
+    } else if (cssVar === "--gm-accent") {
+      root.style.setProperty("--brand-accent", value);
+      root.style.setProperty("--gm-button", value);
+      const rgb = hexToRgb(value);
+      if (rgb) root.style.setProperty("--gm-accent-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+    } else if (cssVar === "--gm-bg") {
+      root.style.setProperty("--brand-bg", value);
+    }
+  };
 
   // Aplica as cores em tempo real no DOM ao alterar nas configurações
   useEffect(() => {
@@ -719,26 +786,132 @@ export default function Configuracoes() {
     }
   }
 
-  async function onUploadLogo(file: File) {
+  function formatBytes(bytes: number): string {
+    if (bytes === 0) return "0 B";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  async function processAndUploadImageAsset(
+    file: File,
+    kind: "logo" | "avatar",
+    setUploading: (u: boolean) => void,
+    setProgress: (p: number) => void,
+    setStatusText: (t: string) => void,
+    setStats: (s: any) => void,
+    setUrl: (url: string) => void
+  ) {
     if (!tenantId) return;
-    setUploadingLogo(true);
+    setUploading(true);
+    setProgress(15);
+    setStatusText("Prévia instantânea...");
+
+    // 1. AUTO VISUALIZAÇÃO INSTANTÂNEA: exibe a imagem local na hora
+    const localBlobUrl = URL.createObjectURL(file);
+    setUrl(localBlobUrl);
+
     try {
-      const url = await uploadTenantAsset(tenantId, file, "logo");
-      setCompanyLogoUrl(url);
+      setProgress(35);
+      setStatusText("Auto-comprimindo imagem...");
+
+      let fileToUpload = file;
+      const isSvg = file.type.includes("svg");
+      const isGif = file.type.includes("gif");
+
+      // 2. AUTO COMPRESSÃO DE IMAGEM
+      if (file.type.startsWith("image/") && !isSvg && !isGif) {
+        try {
+          const options = {
+            maxSizeMB: 0.8,
+            maxWidthOrHeight: 1200,
+            useWebWorker: true,
+            initialQuality: 0.85,
+          };
+          const compressed = await imageCompression(file, options);
+          if (compressed && compressed.size < file.size) {
+            fileToUpload = compressed;
+          }
+        } catch (e1) {
+          try {
+            fileToUpload = await compressImage(file, { quality: 0.85, maxDimension: 1200 });
+          } catch (e2) {
+            fileToUpload = file;
+          }
+        }
+      }
+
+      const origStr = formatBytes(file.size);
+      const compStr = formatBytes(fileToUpload.size);
+      const reductionPercent = file.size > 0 
+        ? Math.max(0, Math.round(((file.size - fileToUpload.size) / file.size) * 100))
+        : 0;
+
+      if (fileToUpload.size < file.size) {
+        setStats({
+          originalSize: origStr,
+          compressedSize: compStr,
+          reduction: `${reductionPercent}% menor`,
+        });
+      } else {
+        setStats({
+          originalSize: origStr,
+          compressedSize: compStr,
+          reduction: "100% Otimizada",
+        });
+      }
+
+      setProgress(65);
+      setStatusText("Enviando para nuvem...");
+
+      // 3. UPLOAD STORAGE
+      const remoteUrl = await uploadTenantAsset(tenantId, fileToUpload, kind);
+      const finalUrl = `${remoteUrl}?t=${Date.now()}`;
+
+      setProgress(90);
+      setStatusText("Sincronizando...");
+
+      URL.revokeObjectURL(localBlobUrl);
+      setUrl(finalUrl);
+
+      setProgress(100);
+      setStatusText("Carregado com sucesso!");
+
+      setTimeout(() => {
+        setProgress(0);
+        setStatusText("");
+      }, 3500);
+    } catch (e: any) {
+      console.error(`Erro no upload de ${kind}:`, e);
+      setStatusText("Erro ao enviar");
+      alert(e?.message || "Ocorreu um erro durante o upload da imagem.");
     } finally {
-      setUploadingLogo(false);
+      setUploading(false);
     }
   }
 
+  async function onUploadLogo(file: File) {
+    await processAndUploadImageAsset(
+      file,
+      "logo",
+      setUploadingLogo,
+      setLogoProgress,
+      setLogoStatusText,
+      setLogoStats,
+      setCompanyLogoUrl
+    );
+  }
+
   async function onUploadAvatar(file: File) {
-    if (!tenantId) return;
-    setUploadingAvatar(true);
-    try {
-      const url = await uploadTenantAsset(tenantId, file, "avatar");
-      setAvatarUrl(url);
-    } finally {
-      setUploadingAvatar(false);
-    }
+    await processAndUploadImageAsset(
+      file,
+      "avatar",
+      setUploadingAvatar,
+      setAvatarProgress,
+      setAvatarStatusText,
+      setAvatarStats,
+      setAvatarUrl
+    );
   }
 
   const [uploadingBackground, setUploadingBackground] = useState(false);
@@ -1041,46 +1214,175 @@ export default function Configuracoes() {
                 </h2>
                 <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
                   <div className="flex flex-col gap-8 h-full flex-1">
-                    <div className="flex flex-col items-center gap-2 shrink-0">
-                      <div className="w-32 h-32 rounded-2xl bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
-                        {uploadingLogo ? (
-                          <Loader2
-                            size={32}
-                            className="animate-spin text-slate-400"
+                    {/* IMAGENS DE IDENTIDADE E PERFIL */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 shrink-0 w-full">
+                      {/* LOGO DA EMPRESA */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
+                          <FileImage size={14} /> Logo da Empresa
+                        </span>
+                        <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-slate-100 dark:bg-slate-700/60 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/logo">
+                          {companyLogoUrl ? (
+                            <img
+                              src={companyLogoUrl}
+                              alt="Logo"
+                              className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover/logo:scale-105"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center gap-1 text-slate-400">
+                              <ImageIcon size={28} className="opacity-50" />
+                              <span className="text-[10px] font-semibold">Sem Logo</span>
+                            </div>
+                          )}
+
+                          {/* OVERLAY DE AUTO COMPRESSÃO E CARREGAMENTO */}
+                          <AnimatePresence>
+                            {uploadingLogo && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-slate-900/85 backdrop-blur-md flex flex-col items-center justify-center p-2 text-white text-center z-10"
+                              >
+                                <Loader2 size={24} className="animate-spin text-[var(--gm-primary)] mb-1.5" />
+                                <span className="text-[10px] font-bold leading-tight drop-shadow">
+                                  {logoStatusText || "Processando..."}
+                                </span>
+                                {logoProgress > 0 && (
+                                  <div className="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden px-1">
+                                    <div
+                                      className="bg-gradient-to-r from-[var(--gm-primary)] to-emerald-400 h-full transition-all duration-300 rounded-full"
+                                      style={{ width: `${logoProgress}%` }}
+                                    />
+                                  </div>
+                                )}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* METRICAS DE COMPRESSAO */}
+                        <AnimatePresence>
+                          {logoStats && !uploadingLogo && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20"
+                            >
+                              <Sparkles size={10} className="shrink-0 text-emerald-500 animate-pulse" />
+                              <span>{logoStats.compressedSize} ({logoStats.reduction})</span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        <label
+                          className={`gm-btn w-full py-1.5 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow transition-all ${
+                            uploadingLogo ? "opacity-50 pointer-events-none" : ""
+                          }`}
+                        >
+                          {uploadingLogo ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Upload size={14} />
+                          )}
+                          <span>{uploadingLogo ? "Otimizando..." : "Alterar Logo"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={uploadingLogo}
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) onUploadLogo(f);
+                            }}
                           />
-                        ) : companyLogoUrl ? (
-                          <img
-                            src={companyLogoUrl}
-                            alt="Logo"
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <ImageIcon
-                            size={32}
-                            className="opacity-50 text-slate-400"
-                          />
-                        )}
+                        </label>
                       </div>
-                      <label
-                        className={`gm-btn w-full max-w-xs py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingLogo ? "opacity-50 pointer-events-none" : ""}`}
-                      >
-                        {uploadingLogo ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                          <FileImage size={16} />
-                        )}
-                        {uploadingLogo ? "Enviando..." : "Alterar Logo"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          disabled={uploadingLogo}
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) onUploadLogo(f);
-                          }}
-                        />
-                      </label>
+
+                      {/* FOTO DE PERFIL / AVATAR */}
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
+                          <User size={14} /> Imagem de Perfil
+                        </span>
+                        <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-slate-100 dark:bg-slate-700/60 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/avatar">
+                          {avatarUrl ? (
+                            <img
+                              src={avatarUrl}
+                              alt="Foto de Perfil"
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover/avatar:scale-105"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center gap-1 text-slate-400">
+                              <User size={32} className="opacity-50" />
+                              <span className="text-[10px] font-semibold">Sem Foto</span>
+                            </div>
+                          )}
+
+                          {/* OVERLAY DE AUTO COMPRESSÃO E CARREGAMENTO */}
+                          <AnimatePresence>
+                            {uploadingAvatar && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-slate-900/85 backdrop-blur-md flex flex-col items-center justify-center p-2 text-white text-center z-10"
+                              >
+                                <Loader2 size={24} className="animate-spin text-[var(--gm-primary)] mb-1.5" />
+                                <span className="text-[10px] font-bold leading-tight drop-shadow">
+                                  {avatarStatusText || "Processando..."}
+                                </span>
+                                {avatarProgress > 0 && (
+                                  <div className="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden px-1">
+                                    <div
+                                      className="bg-gradient-to-r from-[var(--gm-primary)] to-emerald-400 h-full transition-all duration-300 rounded-full"
+                                      style={{ width: `${avatarProgress}%` }}
+                                    />
+                                  </div>
+                                )}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* METRICAS DE COMPRESSAO */}
+                        <AnimatePresence>
+                          {avatarStats && !uploadingAvatar && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20"
+                            >
+                              <Sparkles size={10} className="shrink-0 text-emerald-500 animate-pulse" />
+                              <span>{avatarStats.compressedSize} ({avatarStats.reduction})</span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        <label
+                          className={`gm-btn w-full py-1.5 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow transition-all ${
+                            uploadingAvatar ? "opacity-50 pointer-events-none" : ""
+                          }`}
+                        >
+                          {uploadingAvatar ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Upload size={14} />
+                          )}
+                          <span>{uploadingAvatar ? "Otimizando..." : "Alterar Perfil"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={uploadingAvatar}
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) onUploadAvatar(f);
+                            }}
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     <div className="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
@@ -1128,169 +1430,6 @@ export default function Configuracoes() {
 
                     <div className="flex-1 flex flex-col justify-center">
                       <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
-                        Misturador de Cores
-                      </label>
-
-                      {/* INDICADOR DE MODO DO MISTURADOR DE CORES */}
-                      <div className={`mb-3.5 p-3 rounded-xl border flex items-start gap-2.5 ${
-                        isLightMode 
-                          ? "bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-300" 
-                          : "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-300"
-                      }`}>
-                        <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 animate-pulse ${
-                          isLightMode ? "bg-amber-500" : "bg-blue-400"
-                        }`} />
-                        <div className="flex flex-col">
-                          <span className="text-xs font-black uppercase tracking-wider">
-                            {isLightMode 
-                              ? "Modo Claro Ativo" 
-                              : "Modo Escuro Ativo"
-                            }
-                          </span>
-                          <span className="text-[10px] leading-relaxed opacity-90">
-                            {isLightMode
-                              ? "Você está configurando as cores exclusivas para o Modo Claro. Ao salvar, as preferências deste modo serão aplicadas separadamente do modo escuro."
-                              : "Você está configurando as cores exclusivas para o Modo Escuro. Ao salvar, as preferências deste modo serão aplicadas separadamente do modo claro."
-                            }
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {/* Cor Principal */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={brandPrimary}
-                              onChange={(e) => setBrandPrimary(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor Principal
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {brandPrimary}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cor de Fundo */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={brandBg}
-                              onChange={(e) => setBrandBg(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor de Fundo
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {brandBg}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cor dos Títulos */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={brandTitle}
-                              onChange={(e) => setBrandTitle(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor dos Títulos
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {brandTitle}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cor dos Subtítulos */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={brandSubtitle}
-                              onChange={(e) => setBrandSubtitle(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor dos Subtítulos
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {brandSubtitle}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cor dos Ícones */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={brandIcon}
-                              onChange={(e) => setBrandIcon(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor dos Ícones
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {brandIcon}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cor dos Botões */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={brandAccent}
-                              onChange={(e) => setBrandAccent(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor dos Botões
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {brandAccent}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-
-              <div className="flex flex-col h-full">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Paintbrush size={20} className="text-[var(--gm-primary)]" />{" "}
-                  Cores & Fonte
-                </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col gap-8 h-full flex-1">
-                    <div className="flex-1 flex flex-col justify-center">
-                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
                         Estilo dos Botões
                       </label>
                       <div className="flex flex-col gap-3">
@@ -1301,10 +1440,10 @@ export default function Configuracoes() {
                               key={s.id}
                               type="button"
                               onClick={() => setButtonStyle(s.id)}
-                              className={`flex flex-col items-center justify-between p-4 rounded-xl border-2 transition-all h-28 shadow-sm hover:shadow-md ${
+                              className={`flex flex-col items-center justify-between p-4 rounded-xl border-2 transition-all h-28 shadow-xs hover:shadow-sm ${
                                 isActive
-                                  ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]"
-                                  : "border-slate-200 dark:border-slate-700/60 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800"
+                                  ? "border-[var(--gm-primary)] bg-[var(--gm-primary)]/10"
+                                  : "border-slate-200/80 dark:border-slate-700/60 bg-white hover:bg-slate-50 dark:bg-slate-800/60 dark:hover:bg-slate-800"
                               }`}
                             >
                               <div
@@ -1317,7 +1456,7 @@ export default function Configuracoes() {
                                 Preview
                               </div>
                               <span
-                                className={`text-xs font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-500"}`}
+                                className={`text-xs font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-700 dark:text-slate-300"}`}
                               >
                                 {s.name}
                               </span>
@@ -1326,182 +1465,47 @@ export default function Configuracoes() {
                         })}
                       </div>
                     </div>
-
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
-
-                    <div className="flex-1 flex flex-col justify-center">
-                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
-                        Família de Fonte
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          "Inter",
-                          "Roboto",
-                          "Montserrat",
-                          "Open Sans",
-                          "Raleway",
-                          "Funnel Display",
-                          "Plus Jakarta Sans",
-                          "Hubot Sans",
-                        ].map((font) => {
-                          const isActive = fontFamily === font;
-                          return (
-                            <button
-                              key={font}
-                              type="button"
-                              onClick={() => setFontFamily(font)}
-                              onMouseEnter={() => setPreviewFont(font)}
-                              onMouseLeave={() => setPreviewFont(null)}
-                              onTouchStart={() => setPreviewFont(font)}
-                              onTouchEnd={() => setPreviewFont(null)}
-                              className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all h-12 shadow-sm hover:shadow ${
-                                isActive
-                                  ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]"
-                                  : "border-slate-200 dark:border-slate-700/60 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800"
-                              }`}
-                              style={{ fontFamily: font }}
-                            >
-                              <span
-                                className={`text-sm font-medium ${isActive ? "text-[var(--gm-primary)] font-bold" : "text-slate-700 dark:text-slate-300"}`}
-                              >
-                                {font}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
-
-                    <div className="flex-1 flex flex-col justify-center">
-                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
-                        Misturador de Cores do Menu (Barra Lateral)
-                      </label>
-
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {/* Cor Principal */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={menuPrimary}
-                              onChange={(e) => setMenuPrimary(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor Principal
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {menuPrimary}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cor de Fundo */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={menuBg}
-                              onChange={(e) => setMenuBg(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor de Fundo
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {menuBg}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cor dos Títulos */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={menuTitle}
-                              onChange={(e) => setMenuTitle(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor dos Títulos
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {menuTitle}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Duas Legendas */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={menuSubtitle}
-                              onChange={(e) => setMenuSubtitle(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Duas Legendas
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {menuSubtitle}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cor dos Ícones */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={menuIcon}
-                              onChange={(e) => setMenuIcon(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor dos Ícones
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {menuIcon}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cor dos Botões */}
-                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                            <input
-                              type="color"
-                              value={menuButton}
-                              onChange={(e) => setMenuButton(e.target.value)}
-                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[11px] font-bold leading-tight truncate">
-                              Cor dos Botões
-                            </div>
-                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                              {menuButton}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
+                </Card>
+              </div>
+
+              <div className="flex flex-col h-full">
+                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+                  <Paintbrush size={20} className="text-[var(--gm-primary)]" />{" "}
+                  Cores & Fonte
+                </h2>
+                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                  <ColorSettingsManager
+                    isLightMode={isLightMode}
+                    brandPrimary={brandPrimary}
+                    setBrandPrimary={setBrandPrimary}
+                    brandBg={brandBg}
+                    setBrandBg={setBrandBg}
+                    brandTitle={brandTitle}
+                    setBrandTitle={setBrandTitle}
+                    brandSubtitle={brandSubtitle}
+                    setBrandSubtitle={setBrandSubtitle}
+                    brandIcon={brandIcon}
+                    setBrandIcon={setBrandIcon}
+                    brandAccent={brandAccent}
+                    setBrandAccent={setBrandAccent}
+                    menuPrimary={menuPrimary}
+                    setMenuPrimary={setMenuPrimary}
+                    menuBg={menuBg}
+                    setMenuBg={setMenuBg}
+                    menuTitle={menuTitle}
+                    setMenuTitle={setMenuTitle}
+                    menuSubtitle={menuSubtitle}
+                    setMenuSubtitle={setMenuSubtitle}
+                    menuIcon={menuIcon}
+                    setMenuIcon={setMenuIcon}
+                    menuButton={menuButton}
+                    setMenuButton={setMenuButton}
+                    fontFamily={fontFamily}
+                    setFontFamily={setFontFamily}
+                    setPreviewFont={setPreviewFont}
+                    updateDomColor={updateDomColor}
+                  />
                 </Card>
               </div>
 
@@ -1719,7 +1723,7 @@ export default function Configuracoes() {
                         )}
                         {!(viewMode === "smartphone" ? mobileBgUrl : bgUrl) &&
                           uploadingBackground && (
-                            <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] bg-black/10 flex flex-col items-center justify-center backdrop-blur-sm">
+                            <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-xs bg-slate-100 dark:bg-black/40 flex flex-col items-center justify-center backdrop-blur-sm">
                               <Loader2
                                 size={32}
                                 className="animate-spin text-[var(--gm-primary)] mb-2"
@@ -1813,8 +1817,8 @@ export default function Configuracoes() {
                     </div>
 
                     {/* ✅ Preview do QR + Copia e Cola */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start pt-4 border-t border-black/10 dark:border-white/10 flex-1">
-                      <div className="rounded-xl border border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md p-4 h-full flex flex-col">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start pt-4 border-t border-slate-200/80 dark:border-white/10 flex-1">
+                      <div className="rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-800/80 backdrop-blur-md p-4 h-full flex flex-col">
                         <div className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">
                           QR Code Pix (universal)
                         </div>
@@ -1849,7 +1853,7 @@ export default function Configuracoes() {
                         )}
                       </div>
 
-                      <div className="rounded-xl border border-black/10 dark:border-white/10 bg-black/10 dark:bg-black/40 backdrop-blur-md p-4 h-full flex flex-col">
+                      <div className="rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-800/80 backdrop-blur-md p-4 h-full flex flex-col">
                         <div className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">
                           Pix “Copia e Cola”
                         </div>
@@ -2024,7 +2028,7 @@ export default function Configuracoes() {
 
                     <div className="w-full flex flex-col gap-3 pt-1">
                       {/* SWITCH 1: PERMISSION / RECEBER ALERTAS */}
-                      <div className="w-full flex items-center justify-between p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/5 dark:border-white/5">
+                      <div className="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-white/5">
                         <div className="text-left">
                           <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                             Notificações Push
@@ -2080,7 +2084,7 @@ export default function Configuracoes() {
                       </div>
 
                       {/* SWITCH 2: MUTED / SONS DE NOTIFICAÇÃO */}
-                      <div className="w-full flex items-center justify-between p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/5 dark:border-white/5">
+                      <div className="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-white/5">
                         <div className="text-left">
                           <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                             Sons de Alerta
@@ -2210,7 +2214,7 @@ export default function Configuracoes() {
                           className={`flex items-center justify-between p-4 rounded-xl border text-left transition-all ${
                             isSelected
                               ? "bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_15px_rgba(var(--gm-primary-rgb),0.1)]"
-                              : "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 text-slate-700 dark:text-slate-300 hover:border-black/10 dark:hover:border-white/10 hover:bg-black/10 dark:hover:bg-white/10"
+                              : "bg-white dark:bg-white/5 border-slate-200/80 dark:border-white/5 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10"
                           }`}
                         >
                           <div className="flex items-center gap-3">
@@ -2218,7 +2222,7 @@ export default function Configuracoes() {
                               className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                                 isSelected
                                   ? "bg-[var(--gm-primary)] text-white"
-                                  : "bg-black/10 dark:bg-white/10 text-slate-500 dark:text-zinc-400"
+                                  : "bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-zinc-400"
                               }`}
                             >
                               <Music size={18} />
@@ -2312,7 +2316,7 @@ export default function Configuracoes() {
                       className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition-all duration-300 select-none whitespace-nowrap outline-none ${
                         isSelected
                           ? "bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] shadow-[0_0_12px_rgba(var(--gm-primary-rgb),0.25)] scale-105"
-                          : "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 text-slate-600 dark:text-zinc-400 hover:bg-black/10 dark:hover:bg-white/10 active:scale-95"
+                          : "bg-white dark:bg-white/5 border-slate-200/80 dark:border-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-white/10 active:scale-95"
                       }`}
                     >
                       <TabIcon
@@ -2378,52 +2382,163 @@ export default function Configuracoes() {
                                     </h2>
                                   </div>
 
-                                  <div className="flex flex-col gap-3">
-                                    <div className="flex flex-col w-full py-2 flex flex-col items-center">
-                                      <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
-                                        {uploadingLogo ? (
-                                          <Loader2
-                                            size={24}
-                                            className="animate-spin text-slate-400"
+                                  <div className="flex flex-col gap-4">
+                                    <div className="grid grid-cols-2 gap-3 w-full py-1">
+                                      {/* LOGO DA EMPRESA */}
+                                      <div className="flex flex-col items-center gap-1.5 bg-white dark:bg-white/5 p-3 rounded-2xl border border-slate-200/80 dark:border-white/10">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1">
+                                          <FileImage size={12} /> Logo
+                                        </span>
+                                        <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+                                          {companyLogoUrl ? (
+                                            <img
+                                              src={companyLogoUrl}
+                                              alt="Logo"
+                                              className="w-full h-full object-contain p-1"
+                                            />
+                                          ) : (
+                                            <ImageIcon
+                                              size={20}
+                                              className="opacity-50 text-slate-400"
+                                            />
+                                          )}
+
+                                          <AnimatePresence>
+                                            {uploadingLogo && (
+                                              <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center p-1 text-white text-center z-10"
+                                              >
+                                                <Loader2 size={18} className="animate-spin text-[var(--gm-primary)] mb-1" />
+                                                <span className="text-[9px] font-bold leading-tight">
+                                                  {logoStatusText || "Processando..."}
+                                                </span>
+                                                {logoProgress > 0 && (
+                                                  <div className="w-full bg-white/20 h-1 rounded-full mt-1 overflow-hidden">
+                                                    <div
+                                                      className="bg-[var(--gm-primary)] h-full transition-all duration-300 rounded-full"
+                                                      style={{ width: `${logoProgress}%` }}
+                                                    />
+                                                  </div>
+                                                )}
+                                              </motion.div>
+                                            )}
+                                          </AnimatePresence>
+                                        </div>
+
+                                        <AnimatePresence>
+                                          {logoStats && !uploadingLogo && (
+                                            <motion.div
+                                              initial={{ opacity: 0 }}
+                                              animate={{ opacity: 1 }}
+                                              className="text-[9px] font-bold text-emerald-400 text-center"
+                                            >
+                                              {logoStats.compressedSize} ({logoStats.reduction})
+                                            </motion.div>
+                                          )}
+                                        </AnimatePresence>
+
+                                        <label
+                                          className={`gm-btn w-full py-1.5 text-[11px] flex items-center justify-center gap-1 cursor-pointer ${uploadingLogo ? "opacity-50 pointer-events-none" : ""}`}
+                                        >
+                                          {uploadingLogo ? (
+                                            <Loader2 size={12} className="animate-spin" />
+                                          ) : (
+                                            <Upload size={12} />
+                                          )}
+                                          <span>{uploadingLogo ? "..." : "Logo"}</span>
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            disabled={uploadingLogo}
+                                            onChange={(e) => {
+                                              const f = e.target.files?.[0];
+                                              if (f) onUploadLogo(f);
+                                            }}
                                           />
-                                        ) : companyLogoUrl ? (
-                                          <img
-                                            src={companyLogoUrl}
-                                            alt="Logo"
-                                            className="w-full h-full object-contain"
-                                          />
-                                        ) : (
-                                          <ImageIcon
-                                            size={24}
-                                            className="opacity-50 text-slate-400"
-                                          />
-                                        )}
+                                        </label>
                                       </div>
-                                      <label
-                                        className={`gm-btn w-full mt-3 py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingLogo ? "opacity-50 pointer-events-none" : ""}`}
-                                      >
-                                        {uploadingLogo ? (
-                                          <Loader2
-                                            size={16}
-                                            className="animate-spin"
+
+                                      {/* FOTO DE PERFIL / AVATAR */}
+                                      <div className="flex flex-col items-center gap-1.5 bg-white dark:bg-white/5 p-3 rounded-2xl border border-slate-200/80 dark:border-white/10">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1">
+                                          <User size={12} /> Perfil
+                                        </span>
+                                        <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
+                                          {avatarUrl ? (
+                                            <img
+                                              src={avatarUrl}
+                                              alt="Perfil"
+                                              className="w-full h-full object-cover"
+                                            />
+                                          ) : (
+                                            <User
+                                              size={20}
+                                              className="opacity-50 text-slate-400"
+                                            />
+                                          )}
+
+                                          <AnimatePresence>
+                                            {uploadingAvatar && (
+                                              <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center p-1 text-white text-center z-10"
+                                              >
+                                                <Loader2 size={18} className="animate-spin text-[var(--gm-primary)] mb-1" />
+                                                <span className="text-[9px] font-bold leading-tight">
+                                                  {avatarStatusText || "Processando..."}
+                                                </span>
+                                                {avatarProgress > 0 && (
+                                                  <div className="w-full bg-white/20 h-1 rounded-full mt-1 overflow-hidden">
+                                                    <div
+                                                      className="bg-[var(--gm-primary)] h-full transition-all duration-300 rounded-full"
+                                                      style={{ width: `${avatarProgress}%` }}
+                                                    />
+                                                  </div>
+                                                )}
+                                              </motion.div>
+                                            )}
+                                          </AnimatePresence>
+                                        </div>
+
+                                        <AnimatePresence>
+                                          {avatarStats && !uploadingAvatar && (
+                                            <motion.div
+                                              initial={{ opacity: 0 }}
+                                              animate={{ opacity: 1 }}
+                                              className="text-[9px] font-bold text-emerald-400 text-center"
+                                            >
+                                              {avatarStats.compressedSize} ({avatarStats.reduction})
+                                            </motion.div>
+                                          )}
+                                        </AnimatePresence>
+
+                                        <label
+                                          className={`gm-btn w-full py-1.5 text-[11px] flex items-center justify-center gap-1 cursor-pointer ${uploadingAvatar ? "opacity-50 pointer-events-none" : ""}`}
+                                        >
+                                          {uploadingAvatar ? (
+                                            <Loader2 size={12} className="animate-spin" />
+                                          ) : (
+                                            <Upload size={12} />
+                                          )}
+                                          <span>{uploadingAvatar ? "..." : "Foto"}</span>
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            disabled={uploadingAvatar}
+                                            onChange={(e) => {
+                                              const f = e.target.files?.[0];
+                                              if (f) onUploadAvatar(f);
+                                            }}
                                           />
-                                        ) : (
-                                          <FileImage size={16} />
-                                        )}
-                                        {uploadingLogo
-                                          ? "Enviando..."
-                                          : "Alterar Logo"}
-                                        <input
-                                          type="file"
-                                          accept="image/*"
-                                          className="hidden"
-                                          disabled={uploadingLogo}
-                                          onChange={(e) => {
-                                            const f = e.target.files?.[0];
-                                            if (f) onUploadLogo(f);
-                                          }}
-                                        />
-                                      </label>
+                                        </label>
+                                      </div>
                                     </div>
 
                                     <div className="flex flex-col w-full py-2">
@@ -2457,36 +2572,37 @@ export default function Configuracoes() {
 
                                     <div className="flex flex-col w-full py-2">
                                       <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block text-center">
-                                        Família de Fonte
+                                        Estilo dos Botões
                                       </label>
-                                      <div className="grid grid-cols-2 gap-2">
-                                        {[
-                                          "Inter",
-                                          "Roboto",
-                                          "Montserrat",
-                                          "Open Sans",
-                                          "Raleway",
-                                          "Funnel Display",
-                                          "Plus Jakarta Sans",
-                                          "Hubot Sans",
-                                        ].map((font) => {
-                                          const isActive = fontFamily === font;
+                                      <div className="grid grid-cols-2 gap-3">
+                                        {BUTTON_STYLES.map((s) => {
+                                          const isActive = buttonStyle === s.id;
                                           return (
                                             <button
-                                              key={font}
+                                              key={s.id}
                                               type="button"
                                               onClick={() =>
-                                                setFontFamily(font)
+                                                setButtonStyle(s.id)
                                               }
-                                              className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all h-12 ${
+                                              className={`flex flex-col items-center justify-between p-3 rounded-xl border transition-all h-24 ${
                                                 isActive
-                                                  ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)] text-[var(--gm-primary)] font-bold"
-                                                  : "border-black/5 dark:border-white/5 bg-black/5 dark:bg-black/20 text-slate-700 dark:text-slate-300"
+                                                  ? "border-[var(--gm-primary)] bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] font-bold shadow-xs"
+                                                  : "border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                                               }`}
-                                              style={{ fontFamily: font }}
                                             >
-                                              <span className="text-[11px] truncate max-w-full">
-                                                {font}
+                                              <div
+                                                className={`w-full py-2 text-xs font-bold rounded-lg flex items-center justify-center ${
+                                                  s.id === "solid"
+                                                    ? "bg-[var(--gm-primary)] text-white"
+                                                    : "bg-transparent border border-[var(--gm-primary)] text-[var(--gm-primary)]"
+                                                }`}
+                                              >
+                                                Preview
+                                              </div>
+                                              <span
+                                                className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-600 dark:text-slate-400"}`}
+                                              >
+                                                {s.name}
                                               </span>
                                             </button>
                                           );
@@ -2713,351 +2829,37 @@ export default function Configuracoes() {
                                   </div>
 
                                   <div className="flex flex-col gap-3">
-                                    <div className="flex flex-col w-full py-2">
-                                      <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
-                                        Misturador de Cores
-                                      </label>
-                                      
-                                      {/* INDICADOR DE MODO DO MISTURADOR DE CORES */}
-                                      <div className={`mb-3.5 p-3 rounded-xl border flex items-start gap-2.5 ${
-                                        isLightMode 
-                                          ? "bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-300" 
-                                          : "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-300"
-                                      }`}>
-                                        <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 animate-pulse ${
-                                          isLightMode ? "bg-amber-500" : "bg-blue-400"
-                                        }`} />
-                                        <div className="flex flex-col">
-                                          <span className="text-xs font-black uppercase tracking-wider">
-                                            {isLightMode 
-                                              ? "Modo Claro Ativo" 
-                                              : "Modo Escuro Ativo"
-                                            }
-                                          </span>
-                                          <span className="text-[10px] leading-relaxed opacity-90">
-                                            {isLightMode
-                                              ? "Você está configurando as cores exclusivas para o Modo Claro. Ao salvar, as preferências deste modo serão aplicadas separadamente do modo escuro."
-                                              : "Você está configurando as cores exclusivas para o Modo Escuro. Ao salvar, as preferências deste modo serão aplicadas separadamente do modo claro."
-                                            }
-                                          </span>
-                                        </div>
-                                      </div>
-
-                                      <div className="grid grid-cols-2 gap-2.5">
-                                        {/* Cor Principal */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={brandPrimary}
-                                              onChange={(e) =>
-                                                setBrandPrimary(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor Principal
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {brandPrimary}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Cor de Fundo */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={brandBg}
-                                              onChange={(e) =>
-                                                setBrandBg(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor de Fundo
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {brandBg}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Cor dos Títulos */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={brandTitle}
-                                              onChange={(e) =>
-                                                setBrandTitle(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor dos Títulos
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {brandTitle}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Cor dos Subtítulos */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={brandSubtitle}
-                                              onChange={(e) =>
-                                                setBrandSubtitle(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor dos Subtítulos
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {brandSubtitle}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Cor dos Ícones */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={brandIcon}
-                                              onChange={(e) =>
-                                                setBrandIcon(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor dos Ícones
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {brandIcon}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Cor dos Botões */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={brandAccent}
-                                              onChange={(e) =>
-                                                setBrandAccent(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor dos Botões
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {brandAccent}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex flex-col w-full py-2">
-                                      <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
-                                        Estilo dos Botões
-                                      </label>
-                                      <div className="grid grid-cols-2 gap-3">
-                                        {BUTTON_STYLES.map((s) => {
-                                          const isActive = buttonStyle === s.id;
-                                          return (
-                                            <button
-                                              key={s.id}
-                                              type="button"
-                                              onClick={() =>
-                                                setButtonStyle(s.id)
-                                              }
-                                              className={`flex flex-col items-center justify-between p-3 rounded-xl border transition-all h-24 ${
-                                                isActive
-                                                  ? "border-[var(--gm-primary)] bg-[var(--gm-primary-10)]"
-                                                  : "border-black/5 dark:border-white/5 bg-black/5 dark:bg-black/35"
-                                              }`}
-                                            >
-                                              <div
-                                                className={`w-full py-2 text-xs font-bold rounded-lg flex items-center justify-center ${
-                                                  s.id === "solid"
-                                                    ? "bg-[var(--gm-primary)] text-white"
-                                                    : "bg-transparent border border-[var(--gm-primary)] text-[var(--gm-primary)]"
-                                                }`}
-                                              >
-                                                Preview
-                                              </div>
-                                              <span
-                                                className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-500"}`}
-                                              >
-                                                {s.name}
-                                              </span>
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-
-                                    <div className="flex flex-col w-full py-2">
-                                      <div className="h-px bg-slate-200 dark:bg-slate-700 w-full my-1 shrink-0"></div>
-                                      <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] my-3 block">
-                                        Misturador de Cores do Menu
-                                      </label>
-                                      
-                                      <div className="grid grid-cols-2 gap-2.5">
-                                        {/* Cor Principal */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={menuPrimary}
-                                              onChange={(e) =>
-                                                setMenuPrimary(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor Principal
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {menuPrimary}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Cor de Fundo */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={menuBg}
-                                              onChange={(e) =>
-                                                setMenuBg(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor de Fundo
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {menuBg}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Cor dos Títulos */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={menuTitle}
-                                              onChange={(e) =>
-                                                setMenuTitle(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor dos Títulos
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {menuTitle}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Duas Legendas */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={menuSubtitle}
-                                              onChange={(e) =>
-                                                setMenuSubtitle(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Duas Legendas
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {menuSubtitle}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Cor dos Ícones */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={menuIcon}
-                                              onChange={(e) =>
-                                                setMenuIcon(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor dos Ícones
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {menuIcon}
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        {/* Cor dos Botões */}
-                                        <div className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow transition-all duration-200 group/item">
-                                          <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-white dark:border-slate-700 shadow-md shrink-0 transition-transform duration-200 group-hover/item:scale-105">
-                                            <input
-                                              type="color"
-                                              value={menuButton}
-                                              onChange={(e) =>
-                                                setMenuButton(e.target.value)
-                                              }
-                                              className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
-                                            />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-bold leading-tight truncate">
-                                              Cor dos Botões
-                                            </div>
-                                            <div className="text-[9px] text-slate-500 uppercase font-mono">
-                                              {menuButton}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
+                                    <ColorSettingsManager
+                                      isLightMode={isLightMode}
+                                      brandPrimary={brandPrimary}
+                                      setBrandPrimary={setBrandPrimary}
+                                      brandBg={brandBg}
+                                      setBrandBg={setBrandBg}
+                                      brandTitle={brandTitle}
+                                      setBrandTitle={setBrandTitle}
+                                      brandSubtitle={brandSubtitle}
+                                      setBrandSubtitle={setBrandSubtitle}
+                                      brandIcon={brandIcon}
+                                      setBrandIcon={setBrandIcon}
+                                      brandAccent={brandAccent}
+                                      setBrandAccent={setBrandAccent}
+                                      menuPrimary={menuPrimary}
+                                      setMenuPrimary={setMenuPrimary}
+                                      menuBg={menuBg}
+                                      setMenuBg={setMenuBg}
+                                      menuTitle={menuTitle}
+                                      setMenuTitle={setMenuTitle}
+                                      menuSubtitle={menuSubtitle}
+                                      setMenuSubtitle={setMenuSubtitle}
+                                      menuIcon={menuIcon}
+                                      setMenuIcon={setMenuIcon}
+                                      menuButton={menuButton}
+                                      setMenuButton={setMenuButton}
+                                      fontFamily={fontFamily}
+                                      setFontFamily={setFontFamily}
+                                      setPreviewFont={setPreviewFont}
+                                      updateDomColor={updateDomColor}
+                                    />
                                   </div>
                                 </>
                               )}
@@ -3119,7 +2921,7 @@ export default function Configuracoes() {
                                         </div>
 
                                         {pixQrPreview && (
-                                          <div className="mt-2 flex flex-col items-center justify-center p-3 bg-black/5 dark:bg-black/35 rounded-xl border border-black/5 dark:border-white/5 w-full font-sans">
+                                          <div className="mt-2 flex flex-col items-center justify-center p-3 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/60 w-full font-sans">
                                             <img
                                               src={pixQrPreview}
                                               alt="QR Pix"
@@ -3282,7 +3084,7 @@ export default function Configuracoes() {
 
                                         <div className="w-full flex flex-col gap-3 pt-1">
                                           {/* SWITCH 1: PERMISSION / RECEBER ALERTAS */}
-                                          <div className="w-full flex items-center justify-between p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="w-full flex items-center justify-between p-3 bg-white dark:bg-black/30 rounded-xl border border-slate-200/80 dark:border-white/5">
                                             <div className="text-left">
                                               <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                                                 Notificações Push
@@ -3353,7 +3155,7 @@ export default function Configuracoes() {
                                           </div>
 
                                           {/* SWITCH 2: MUTED / SONS DE NOTIFICAÇÃO */}
-                                          <div className="w-full flex items-center justify-between p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/5 dark:border-white/5">
+                                          <div className="w-full flex items-center justify-between p-3 bg-white dark:bg-black/30 rounded-xl border border-slate-200/80 dark:border-white/5">
                                             <div className="text-left">
                                               <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                                                 Sons de Alerta

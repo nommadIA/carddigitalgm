@@ -28,7 +28,7 @@ export const GlassTimePicker: React.FC<GlassTimePickerProps> = ({
         }}
         disabled={disabled}
         placeholder={placeholder}
-        className={`w-full bg-transparent font-mono text-sm leading-none focus:outline-none focus:ring-0 border-none [color-scheme:dark] select-none cursor-pointer ${className}`}
+        className={`w-full bg-transparent font-mono text-sm leading-none focus:outline-none focus:ring-0 border-none select-none cursor-pointer ${className}`}
         style={{
           outline: 'none',
           boxShadow: 'none',

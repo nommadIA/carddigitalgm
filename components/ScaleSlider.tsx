@@ -24,13 +24,13 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
   };
 
   return (
-    <div className="flex items-center gap-3 bg-black/10 dark:bg-black/40 backdrop-blur-md p-2 rounded-xl border border-black/10 dark:border-white/10">
+    <div className="flex items-center gap-3 bg-white dark:bg-slate-800/80 backdrop-blur-md p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
       <input 
         type="range" 
         min={0.7} 
         max={3} 
         step={0.05} 
-        className="flex-1 h-1.5 accent-[var(--gm-primary)]" 
+        className="flex-1 h-2 accent-[var(--gm-primary)] cursor-pointer" 
         value={localValue} 
         onChange={handleInput}
         onMouseUp={handleCommit}
@@ -42,7 +42,7 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
           min={0.7}
           max={3}
           step={0.01}
-          className="w-16 bg-black/30 dark:bg-black/50 text-center font-bold text-sm text-[var(--gm-primary)] rounded-lg border border-[var(--gm-primary)]/20 focus:border-[var(--gm-primary)]/50 focus:outline-none h-8 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="w-16 bg-slate-50 dark:bg-slate-900 text-center font-bold text-sm text-[var(--gm-primary)] rounded-lg border border-slate-200 dark:border-slate-700/60 focus:border-[var(--gm-primary)] focus:outline-none h-8 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           value={localValue}
           onChange={handleInput}
           onBlur={handleCommit}
@@ -51,7 +51,7 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
             if (e.key === "Enter") handleCommit();
           }}
         />
-        <span className="text-sm font-bold text-[var(--gm-primary)] opacity-70">x</span>
+        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">x</span>
       </div>
     </div>
   );

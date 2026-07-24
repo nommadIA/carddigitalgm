@@ -354,9 +354,9 @@ button{ font-family:inherit; }
   opacity: 1;
 }
 .gm-nav a.active{
-  background: var(--gm-primary-10);
-  color: #ffffff;
-  border-color: var(--gm-primary-20);
+  background: color-mix(in srgb, var(--gm-menu-primary) 12%, transparent);
+  color: var(--gm-menu-title);
+  border-color: color-mix(in srgb, var(--gm-menu-primary) 25%, transparent);
   opacity: 1;
   position: relative;
   overflow: hidden;
@@ -368,7 +368,7 @@ button{ font-family:inherit; }
   left: -15%;
   width: 130%;
   height: 130%;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--gm-primary), transparent 80%) 0%, transparent 50%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gm-menu-primary), transparent 80%) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
   animation: gm-reflection-animate 12s ease-in-out infinite;
@@ -380,8 +380,8 @@ button{ font-family:inherit; }
   z-index: 1;
 }
 .gm-nav a.active svg {
-  color: var(--gm-primary);
-  filter: drop-shadow(0 0 8px var(--gm-primary-30));
+  color: var(--gm-menu-primary);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--gm-menu-primary) 30%, transparent));
 }
 .gm-sidebar.collapsed .gm-nav a span{ display:none; }
 .gm-sidebar.collapsed .gm-nav a{ justify-content:center; padding:11px; }
@@ -393,9 +393,9 @@ button{ font-family:inherit; }
   transform: translateY(-50%);
   width: 3.5px;
   height: 16px;
-  background: var(--gm-primary);
+  background: var(--gm-menu-primary);
   border-radius: 99px;
-  box-shadow: 0 0 8px var(--gm-primary), 0 0 14px rgba(50, 188, 173, 0.45);
+  box-shadow: 0 0 8px var(--gm-menu-primary), 0 0 14px color-mix(in srgb, var(--gm-menu-primary) 45%, transparent);
   z-index: 10;
 }
 .gm-sidebar.collapsed .gm-nav a.active::after {
@@ -1760,22 +1760,32 @@ body{ overflow: hidden; }
   border-bottom: 1px solid rgba(27, 29, 34, 0.04) !important;
 }
 
-/* Ícones Gerais no Tema Claro */
-[data-theme="light"] svg:not(.text-white):not(.text-gm-primary),
-.gm-light svg:not(.text-white):not(.text-gm-primary) {
-  color: #5B6472;
+/* Ícones Gerais no Tema Claro (Somente nas Páginas Internas / fora do menu) */
+[data-theme="light"] main svg:not(.text-white):not(.text-gm-primary):not([class*="text-"]):not(.text-slate-400):not(.text-zinc-400),
+[data-theme="light"] .gm-main svg:not(.text-white):not(.text-gm-primary):not([class*="text-"]):not(.text-slate-400):not(.text-zinc-400),
+.gm-light main svg:not(.text-white):not(.text-gm-primary):not([class*="text-"]):not(.text-slate-400):not(.text-zinc-400),
+.gm-light .gm-main svg:not(.text-white):not(.text-gm-primary):not([class*="text-"]):not(.text-slate-400):not(.text-zinc-400) {
+  color: var(--gm-icon) !important;
+  stroke: var(--gm-icon) !important;
 }
 
-[data-theme="light"] a:hover svg, 
-[data-theme="light"] button:hover svg {
-  color: #FF6900 !important;
+[data-theme="light"] main a:hover svg:not([class*="text-"]), 
+[data-theme="light"] main button:hover svg:not([class*="text-"]),
+[data-theme="light"] .gm-main a:hover svg:not([class*="text-"]), 
+[data-theme="light"] .gm-main button:hover svg:not([class*="text-"]) {
+  color: var(--gm-icon) !important;
+  stroke: var(--gm-icon) !important;
 }
 
 [data-theme="light"] .bg-gm-primary svg,
 [data-theme="light"] .bg-\[var\(--gm-primary\)\] svg,
 [data-theme="light"] .bg-\[\#FF6900\] svg,
+[data-theme="light"] .bg-orange-500 svg,
+[data-theme="light"] .bg-orange-600 svg,
+[data-theme="light"] .bg-\[\#FE540B\] svg,
 [data-theme="light"] .active svg {
   color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
 }
 
 /* Botões Primários Estilo Sólido */
@@ -2226,23 +2236,296 @@ button:has(svg.lucide-trash-2):hover,
 
 [data-theme="light"] .gm-note-modal,
 .gm-light .gm-note-modal {
-  background-color: #FFFFFF !important;
-  background: #FFFFFF !important;
+  background-color: var(--gm-surface) !important;
+  background: var(--gm-surface) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-color: #D8DCE3 !important;
-  color: #1B1D22 !important;
+  border-color: var(--gm-border) !important;
+  color: var(--gm-text) !important;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08) !important;
 }
 
+/* Specific component overrides for light theme in Note Modal */
 [data-theme="light"] .gm-note-modal h3,
+.gm-light .gm-note-modal h3,
 [data-theme="light"] .gm-note-modal p,
-[data-theme="light"] .gm-note-modal span,
+.gm-light .gm-note-modal p,
+[data-theme="light"] .gm-note-modal textarea,
+.gm-light .gm-note-modal textarea {
+  color: var(--gm-text) !important;
+}
+
+/* Muted labels */
 [data-theme="light"] .gm-note-modal label,
-[data-theme="light"] .gm-note-modal div,
-[data-theme="light"] .gm-note-modal input,
-[data-theme="light"] .gm-note-modal textarea {
-  color: #1B1D22 !important;
+.gm-light .gm-note-modal label,
+[data-theme="light"] .gm-note-modal .text-white\/45,
+.gm-light .gm-note-modal .text-white\/45 {
+  color: var(--gm-muted) !important;
+}
+
+/* Title Input */
+[data-theme="light"] .gm-note-modal input[placeholder="Título da nota"],
+.gm-light .gm-note-modal input[placeholder="Título da nota"] {
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal input[placeholder="Título da nota"]::placeholder,
+.gm-light .gm-note-modal input[placeholder="Título da nota"]::placeholder {
+  color: var(--gm-muted) !important;
+  opacity: 0.6 !important;
+}
+
+/* Header Close & Pin Buttons */
+[data-theme="light"] .gm-note-modal button svg,
+.gm-light .gm-note-modal button svg {
+  color: var(--gm-text) !important;
+  stroke: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal button:hover,
+.gm-light .gm-note-modal button:hover {
+  background-color: var(--gm-surface-2) !important;
+}
+
+/* Form Fields and Toolbar Groups */
+[data-theme="light"] .gm-note-modal .bg-black\/20,
+.gm-light .gm-note-modal .bg-black\/20,
+[data-theme="light"] .gm-note-modal .bg-black\/10,
+.gm-light .gm-note-modal .bg-black\/10,
+[data-theme="light"] .gm-note-modal .bg-black\/45,
+.gm-light .gm-note-modal .bg-black\/45 {
+  background-color: var(--gm-surface-2) !important;
+  border-color: var(--gm-border) !important;
+}
+
+/* Inner inputs, selects, time & date pickers */
+[data-theme="light"] .gm-note-modal select,
+.gm-light .gm-note-modal select,
+[data-theme="light"] .gm-note-modal input[type="text"],
+.gm-light .gm-note-modal input[type="text"],
+[data-theme="light"] .gm-note-modal .glass-date-picker,
+.gm-light .gm-note-modal .glass-date-picker,
+[data-theme="light"] .gm-note-modal .glass-time-picker {
+  background-color: var(--gm-surface) !important;
+  border-color: var(--gm-border) !important;
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal select option,
+.gm-light .gm-note-modal select option {
+  background-color: var(--gm-surface) !important;
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal select::placeholder,
+.gm-light .gm-note-modal select::placeholder,
+[data-theme="light"] .gm-note-modal input[type="text"]::placeholder,
+.gm-light .gm-note-modal input[type="text"]::placeholder {
+  color: var(--gm-muted) !important;
+  opacity: 0.5 !important;
+}
+
+/* Icons inside inputs & pickers */
+[data-theme="light"] .gm-note-modal svg.text-white\/40,
+.gm-light .gm-note-modal svg.text-white\/40,
+[data-theme="light"] .gm-note-modal .text-white\/40,
+.gm-light .gm-note-modal .text-white\/40 {
+  color: var(--gm-muted) !important;
+  stroke: var(--gm-muted) !important;
+  opacity: 1 !important;
+}
+
+/* Text formatting toolbar buttons */
+[data-theme="light"] .gm-note-modal .bg-white\/5,
+.gm-light .gm-note-modal .bg-white\/5 {
+  background-color: var(--gm-surface) !important;
+  color: var(--gm-text) !important;
+  border: 1px solid var(--gm-border) !important;
+}
+[data-theme="light"] .gm-note-modal .hover\:bg-white\/15:hover,
+.gm-light .gm-note-modal .hover\:bg-white\/15:hover {
+  background-color: var(--gm-surface-2) !important;
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal button.text-white,
+.gm-light .gm-note-modal button.text-white {
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal .text-white\/60,
+.gm-light .gm-note-modal .text-white\/60 {
+  color: var(--gm-icon) !important;
+  opacity: 1 !important;
+}
+
+/* Dropdown overlay menus inside toolbar (font list & text color grid) */
+[data-theme="light"] .gm-note-modal .bg-\[\#141821\]\/95,
+.gm-light .gm-note-modal .bg-\[\#141821\]\/95 {
+  background-color: var(--gm-surface) !important;
+  border-color: var(--gm-border) !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+[data-theme="light"] .gm-note-modal .bg-\[\#141821\]\/95 button,
+.gm-light .gm-note-modal .bg-\[\#141821\]\/95 button {
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal .bg-\[\#141821\]\/95 button:hover,
+.gm-light .gm-note-modal .bg-\[\#141821\]\/95 button:hover {
+  background-color: var(--gm-surface-2) !important;
+}
+[data-theme="light"] .gm-note-modal .bg-\[\#141821\]\/95 .text-white\/40,
+.gm-light .gm-note-modal .bg-\[\#141821\]\/95 .text-white\/40,
+[data-theme="light"] .gm-note-modal .bg-\[\#141821\]\/95 .text-white\/30,
+.gm-light .gm-note-modal .bg-\[\#141821\]\/95 .text-white\/30 {
+  color: var(--gm-muted) !important;
+  border-bottom-color: var(--gm-border) !important;
+}
+
+/* Layout preview backgrounds */
+[data-theme="light"] .gm-note-modal .bg-black\/25,
+.gm-light .gm-note-modal .bg-black\/25,
+[data-theme="light"] .gm-note-modal .bg-black\/15,
+.gm-light .gm-note-modal .bg-black\/15 {
+  background-color: var(--gm-surface) !important;
+  border-color: var(--gm-border) !important;
+}
+
+/* Typing area input text styling */
+[data-theme="light"] .gm-note-modal [contenteditable="true"],
+.gm-light .gm-note-modal [contenteditable="true"] {
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal [contenteditable="true"]::before,
+.gm-light .gm-note-modal [contenteditable="true"]::before {
+  color: var(--gm-muted) !important;
+  opacity: 0.6 !important;
+}
+
+/* Empty states */
+[data-theme="light"] .gm-note-modal .text-white\/20,
+.gm-light .gm-note-modal .text-white\/20 {
+  color: var(--gm-muted) !important;
+  opacity: 0.5 !important;
+}
+[data-theme="light"] .gm-note-modal .text-white\/10,
+.gm-light .gm-note-modal .text-white\/10 {
+  color: var(--gm-muted) !important;
+  opacity: 0.3 !important;
+}
+
+/* Bottom Action Bar */
+[data-theme="light"] .gm-note-modal .p-4.pb-28,
+.gm-light .gm-note-modal .p-4.pb-28 {
+  background-color: var(--gm-surface-2) !important;
+  border-top-color: var(--gm-border) !important;
+}
+[data-theme="light"] .gm-note-modal .p-4.pb-28 button:not(.bg-green-500),
+.gm-light .gm-note-modal .p-4.pb-28 button:not(.bg-green-500) {
+  background-color: var(--gm-surface) !important;
+  color: var(--gm-text) !important;
+  border: 1px solid var(--gm-border) !important;
+}
+
+/* Expandable Alarm/Clock Config Menu */
+[data-theme="light"] .gm-note-modal .bg-\[\#141517\],
+.gm-light .gm-note-modal .bg-\[\#141517\] {
+  background-color: var(--gm-surface) !important;
+  border-color: var(--gm-border) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+[data-theme="light"] .gm-note-modal .bg-\[\#141517\] span,
+.gm-light .gm-note-modal .bg-\[\#141517\] span,
+[data-theme="light"] .gm-note-modal .bg-\[\#141517\] .text-white,
+.gm-light .gm-note-modal .bg-\[\#141517\] .text-white {
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal .bg-\[\#141517\] .border-zinc-800,
+.gm-light .gm-note-modal .bg-\[\#141517\] .border-zinc-800,
+[data-theme="light"] .gm-note-modal .bg-\[\#141517\] .border-b,
+.gm-light .gm-note-modal .bg-\[\#141517\] .border-b {
+  border-color: var(--gm-border) !important;
+}
+[data-theme="light"] .gm-note-modal .bg-\[\#141517\] .bg-zinc-900\/80,
+.gm-light .gm-note-modal .bg-\[\#141517\] .bg-zinc-900\/80 {
+  background-color: var(--gm-surface-2) !important;
+  border-color: var(--gm-border) !important;
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal .bg-\[\#141517\] .text-zinc-300,
+.gm-light .gm-note-modal .bg-\[\#141517\] .text-zinc-300 {
+  color: var(--gm-muted) !important;
+}
+[data-theme="light"] .gm-note-modal .bg-\[\#141517\] .text-zinc-200,
+.gm-light .gm-note-modal .bg-\[\#141517\] .text-zinc-200 {
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .gm-note-modal .bg-\[\#141517\] .bg-zinc-800\/80,
+.gm-light .gm-note-modal .bg-\[\#141517\] .bg-zinc-800\/80 {
+  background-color: var(--gm-surface-2) !important;
+  border-color: var(--gm-border) !important;
+}
+
+/* Calendar DatePicker Portal Dropdown */
+[data-theme="light"] .glass-datepicker-dropdown,
+.gm-light .glass-datepicker-dropdown {
+  background: var(--gm-surface) !important;
+  border-color: var(--gm-border) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+[data-theme="light"] .glass-datepicker-dropdown .bg-black\/35,
+.gm-light .glass-datepicker-dropdown .bg-black\/35,
+[data-theme="light"] .glass-datepicker-dropdown .bg-black\/10,
+.gm-light .glass-datepicker-dropdown .bg-black\/10 {
+  background-color: var(--gm-surface-2) !important;
+  border-color: var(--gm-border) !important;
+}
+[data-theme="light"] .glass-datepicker-dropdown .text-white\/60,
+.gm-light .glass-datepicker-dropdown .text-white\/60 {
+  color: var(--gm-muted) !important;
+}
+[data-theme="light"] .glass-datepicker-dropdown .text-white\/50,
+.gm-light .glass-datepicker-dropdown .text-white\/50,
+[data-theme="light"] .glass-datepicker-dropdown .text-white,
+.gm-light .glass-datepicker-dropdown .text-white {
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .glass-datepicker-dropdown .text-white\/30,
+.gm-light .glass-datepicker-dropdown .text-white\/30 {
+  color: var(--gm-muted) !important;
+  opacity: 0.6 !important;
+}
+[data-theme="light"] .glass-datepicker-dropdown .border-white\/5,
+.gm-light .glass-datepicker-dropdown .border-white\/5 {
+  border-color: var(--gm-border) !important;
+}
+[data-theme="light"] .glass-datepicker-dropdown .hover\:bg-white\/5:hover,
+.gm-light .glass-datepicker-dropdown .hover\:bg-white\/5:hover {
+  background-color: var(--gm-surface-2) !important;
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .glass-datepicker-dropdown .hover\:bg-white\/10:hover,
+.gm-light .glass-datepicker-dropdown .hover\:bg-white\/10:hover {
+  background-color: var(--gm-surface-2) !important;
+  color: var(--gm-text) !important;
+}
+
+/* Delete confirmation modal */
+[data-theme="light"] .fixed.z-\[1000\] .bg-\[\#1a1b1e\],
+.gm-light .fixed.z-\[1000\] .bg-\[\#1a1b1e\] {
+  background-color: var(--gm-surface) !important;
+  border-color: var(--gm-border) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1) !important;
+}
+[data-theme="light"] .fixed.z-\[1000\] .bg-\[\#1a1b1e\] h3,
+.gm-light .fixed.z-\[1000\] .bg-\[\#1a1b1e\] h3 {
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .fixed.z-\[1000\] .bg-\[\#1a1b1e\] p,
+.gm-light .fixed.z-\[1000\] .bg-\[\#1a1b1e\] p {
+  color: var(--gm-muted) !important;
+}
+[data-theme="light"] .fixed.z-\[1000\] .bg-\[\#1a1b1e\] button:not(.bg-red-500):not(.text-red-500),
+.gm-light .fixed.z-\[1000\] .bg-\[\#1a1b1e\] button:not(.bg-red-500):not(.text-red-500) {
+  color: var(--gm-text) !important;
+}
+[data-theme="light"] .fixed.z-\[1000\] .bg-\[\#1a1b1e\] .hover\:bg-white\/5:hover,
+.gm-light .fixed.z-\[1000\] .bg-\[\#1a1b1e\] .hover\:bg-white\/5:hover {
+  background-color: var(--gm-surface-2) !important;
 }
 
 /* aplica base */
@@ -2922,8 +3205,10 @@ p:not(.text-white):not(.text-slate-100):not(.text-slate-200):not(.text-zinc-100)
   color: var(--gm-subtitle) !important;
 }
 
-/* 3. Ícones (Lucide) */
-svg.lucide:not(.text-white):not(.text-slate-100):not(.text-zinc-100) {
+/* 3. Ícones (Lucide) nas Páginas Internas */
+main svg.lucide:not([class*="text-"]):not(.text-white):not(.text-slate-100):not(.text-zinc-100),
+.gm-main svg.lucide:not([class*="text-"]):not(.text-white):not(.text-slate-100):not(.text-zinc-100),
+.gm-container svg.lucide:not([class*="text-"]):not(.text-white):not(.text-slate-100):not(.text-zinc-100) {
   color: var(--gm-icon) !important;
   stroke: var(--gm-icon) !important;
 }
@@ -2997,7 +3282,7 @@ button.bg-\[var\(--gm-primary\)\]\/20 {
 .gm-sidebar .card-title,
 .gm-sidebar .text-title,
 .gm-sidebar .gm-title,
-.gm-sidebar .font-bold:not(.text-\[\#ff7a00\]):not(.gm-logo-highlight),
+.gm-sidebar .font-bold:not(.gm-logo-highlight),
 .gm-sidebar [class*="text-zinc-900"]:not(.gm-logo-highlight),
 .gm-sidebar [class*="text-slate-900"]:not(.gm-logo-highlight),
 .gm-sidebar [class*="text-gray-900"]:not(.gm-logo-highlight) {
@@ -3025,11 +3310,30 @@ button.bg-\[var\(--gm-primary\)\]\/20 {
   color: var(--gm-menu-subtitle) !important;
 }
 
-/* Garante que os ícones do menu não usem em hipótese alguma as cores gerais do app */
+/* Garante que TODOS os ícones do menu/barra lateral usem rigorosamente a Cor dos Ícones do Menu (var(--gm-menu-icon)) */
 .gm-sidebar svg,
 .gm-sidebar svg.lucide,
-.gm-nav a svg,
-.gm-nav a svg.lucide {
+.gm-sidebar .gm-nav svg,
+.gm-sidebar .gm-nav a svg,
+.gm-sidebar .gm-nav a.active svg,
+.gm-sidebar .gm-nav a:hover svg,
+.gm-sidebar-footer svg,
+.gm-sidebar-footer button svg,
+.gm-sidebar-footer a svg,
+[data-theme="light"] .gm-sidebar svg,
+[data-theme="light"] .gm-sidebar svg.lucide,
+[data-theme="light"] .gm-sidebar .gm-nav svg,
+[data-theme="light"] .gm-sidebar .gm-nav a svg,
+[data-theme="light"] .gm-sidebar .gm-nav a.active svg,
+[data-theme="light"] .gm-sidebar .gm-nav a:hover svg,
+[data-theme="light"] .gm-sidebar-footer svg,
+[data-theme="light"] .gm-sidebar-footer button svg,
+[data-theme="light"] .gm-sidebar-footer a svg,
+.gm-light .gm-sidebar svg,
+.gm-light .gm-sidebar .gm-nav svg,
+.gm-light .gm-sidebar .gm-nav a svg,
+.gm-light .gm-sidebar .gm-nav a.active svg,
+.gm-light .gm-sidebar-footer svg {
   color: var(--gm-menu-icon) !important;
   stroke: var(--gm-menu-icon) !important;
 }
@@ -3102,32 +3406,139 @@ button.bg-\[var\(--gm-primary\)\]\/20 {
   stroke: #fca5a5 !important;
 }
 
-/* Correção definitiva global de contraste para ícones (Lucide) em botões e ações */
-button svg,
-button svg.lucide,
-.gm-btn svg,
-.gm-btn svg.lucide,
-a.gm-btn svg,
-a.gm-btn svg.lucide,
-[data-theme="light"] button svg,
-[data-theme="light"] button svg.lucide,
-[data-theme="light"] .gm-btn svg,
-[data-theme="light"] .gm-btn svg.lucide,
-[data-theme="light"] a.gm-btn svg,
-[data-theme="light"] a.gm-btn svg.lucide {
+/* Correção definitiva de contraste para ícones (Lucide) em botões e ações */
+/* Se o botão ou link é preenchido com a cor principal/marca, ou está ativo, ou tem classe text-white (ou similar), os ícones herdam o currentColor (branco/contraste) */
+button.bg-primary svg,
+button.bg-brand-primary svg,
+button.bg-\[var\(--gm-primary\)\] svg,
+button.bg-\[var\(--gm-button\)\] svg,
+button.bg-\[var\(--primary-color\)\] svg,
+button.bg-orange-500 svg,
+button.bg-orange-600 svg,
+button.bg-\[\#FE540B\] svg,
+button.bg-\[\#ff6900\] svg,
+button.bg-\[\#ff7a00\] svg,
+button.bg-\[\#32BCAD\] svg,
+button.text-white svg,
+button.text-slate-100 svg,
+button.text-zinc-100 svg,
+.gm-btn.bg-primary svg,
+.gm-btn.bg-brand-primary svg,
+.gm-btn.bg-\[var\(--gm-primary\)\] svg,
+.gm-btn.bg-\[var\(--gm-button\)\] svg,
+[data-button-style="solid"] .gm-btn svg,
+.gm-preview-container[data-button-style="solid"] .gm-btn svg,
+.active svg,
+.gm-nav a.active svg,
+.bg-primary svg,
+.bg-brand-primary svg,
+.bg-\[var\(--gm-primary\)\] svg,
+.bg-\[var\(--gm-button\)\] svg,
+.gm-budget-action-btn svg,
+button.gm-budget-action-btn svg,
+.gm-budget-action-btn svg.lucide,
+button.gm-budget-action-btn svg.lucide {
   color: currentColor !important;
   stroke: currentColor !important;
   fill: none !important;
 }
 
-/* Garante que os ícones de ação de orçamentos e outros fiquem brancos nos botões principais */
-.gm-budget-action-btn svg,
-button.gm-budget-action-btn svg,
-.gm-budget-action-btn svg.lucide,
-button.gm-budget-action-btn svg.lucide {
+/* Força ícones em botões, links ou blocos de fundo sólido preenchidos com laranja/marca ou verde/azul/etc a ficarem em BRANCO, evitando o override indesejado no tema claro */
+[data-theme="light"] .bg-primary svg,
+[data-theme="light"] .bg-brand-primary svg,
+[data-theme="light"] .bg-orange-500 svg,
+[data-theme="light"] .bg-orange-600 svg,
+[data-theme="light"] .bg-amber-500 svg,
+[data-theme="light"] .bg-amber-600 svg,
+[data-theme="light"] .bg-\[var\(--gm-primary\)\] svg,
+[data-theme="light"] .bg-\[var\(--gm-button\)\] svg,
+[data-theme="light"] .bg-\[var\(--primary-color\)\] svg,
+[data-theme="light"] .bg-\[\#FE540B\] svg,
+[data-theme="light"] .bg-\[\#ff6900\] svg,
+[data-theme="light"] .bg-\[\#ff7a00\] svg,
+[data-theme="light"] .bg-green-500 svg,
+[data-theme="light"] .bg-emerald-500 svg,
+[data-theme="light"] .bg-red-500 svg,
+[data-theme="light"] .bg-blue-500 svg,
+[data-theme="light"] .active svg,
+[data-theme="light"] .text-white svg,
+[data-theme="light"] [class*="bg-orange-"]:not([class*="/"]) svg,
+[data-theme="light"] [class*="bg-amber-"]:not([class*="/"]) svg,
+[data-theme="light"] [class*="bg-\[var\(--gm-primary\)\]"]:not([class*="/"]) svg,
+[data-theme="light"] [class*="bg-\[var\(--primary-color\)\]"]:not([class*="/"]) svg,
+.gm-light .bg-primary svg,
+.gm-light .bg-brand-primary svg,
+.gm-light .bg-orange-500 svg,
+.gm-light .bg-orange-600 svg,
+.gm-light .bg-\[var\(--gm-primary\)\] svg,
+.gm-light .bg-green-500 svg,
+.gm-light .active svg {
   color: #FFFFFF !important;
   stroke: #FFFFFF !important;
   fill: none !important;
+}
+
+/* Garante texto e ícones brancos em botões, links ou blocos de fundo sólido laranjas/marca no tema claro */
+[data-theme="light"] .bg-primary,
+[data-theme="light"] .bg-brand-primary,
+[data-theme="light"] .bg-orange-500,
+[data-theme="light"] .bg-orange-600,
+[data-theme="light"] .bg-amber-500,
+[data-theme="light"] .bg-amber-600,
+[data-theme="light"] .bg-\[var\(--gm-primary\)\],
+[data-theme="light"] .bg-\[var\(--gm-button\)\],
+[data-theme="light"] .bg-\[var\(--primary-color\)\],
+[data-theme="light"] .bg-\[\#FE540B\],
+[data-theme="light"] .bg-\[\#ff6900\],
+[data-theme="light"] .bg-\[\#ff7a00\],
+[data-theme="light"] .bg-green-500,
+[data-theme="light"] .bg-emerald-500,
+[data-theme="light"] .bg-red-500,
+[data-theme="light"] [class*="bg-orange-"]:not([class*="/"]),
+[data-theme="light"] [class*="bg-amber-"]:not([class*="/"]),
+[data-theme="light"] [class*="bg-\[var\(--gm-primary\)\]"]:not([class*="/"]),
+[data-theme="light"] [class*="bg-\[var\(--primary-color\)\]"]:not([class*="/"]),
+.gm-light .bg-primary,
+.gm-light .bg-brand-primary,
+.gm-light .bg-orange-500,
+.gm-light .bg-orange-600,
+.gm-light .bg-\[var\(--gm-primary\)\],
+.gm-light .bg-green-500 {
+  color: #FFFFFF !important;
+}
+
+/* Garante que sub-elementos de texto em botões, links ou blocos também fiquem brancos */
+[data-theme="light"] .bg-primary *,
+[data-theme="light"] .bg-brand-primary *,
+[data-theme="light"] .bg-orange-500 *,
+[data-theme="light"] .bg-orange-600 *,
+[data-theme="light"] .bg-amber-500 *,
+[data-theme="light"] .bg-amber-600 *,
+[data-theme="light"] .bg-\[var\(--gm-primary\)\] *,
+[data-theme="light"] .bg-\[var\(--gm-button\)\] *,
+[data-theme="light"] .bg-\[var\(--primary-color\)\] *,
+[data-theme="light"] .bg-\[\#FE540B\] *,
+[data-theme="light"] .bg-\[\#ff6900\] *,
+[data-theme="light"] .bg-\[\#ff7a00\] *,
+[data-theme="light"] .bg-green-500 *,
+[data-theme="light"] .bg-emerald-500 *,
+[data-theme="light"] .bg-red-500 *,
+[data-theme="light"] [class*="bg-orange-"]:not([class*="/"]) *,
+[data-theme="light"] [class*="bg-amber-"]:not([class*="/"]) *,
+[data-theme="light"] [class*="bg-\[var\(--gm-primary\)\]"]:not([class*="/"]) *,
+[data-theme="light"] [class*="bg-\[var\(--primary-color\)\]"]:not([class*="/"]) *,
+.gm-light .bg-primary *,
+.gm-light .bg-orange-500 * {
+  color: #FFFFFF !important;
+}
+
+/* Para outros botões ou links gerais nas PÁGINAS INTERNAS que NÃO têm as classes de contraste acima, os ícones usam var(--gm-icon) */
+main button:not(.bg-primary):not(.bg-brand-primary):not(.bg-\[var\(--gm-primary\)\]):not(.bg-\[var\(--gm-button\)\]):not(.bg-\[var\(--primary-color\)\]):not(.bg-orange-500):not(.bg-orange-600):not(.bg-\[\#FE540B\]):not(.bg-\[\#ff6900\]):not(.bg-\[\#ff7a00\]):not(.bg-\[\#32BCAD\]):not(.bg-green-500):not(.bg-emerald-500):not(.text-white):not(.text-slate-100):not(.text-zinc-100) svg.lucide:not([class*="text-"]):not(.text-white),
+main .gm-btn:not(.bg-primary):not(.bg-brand-primary):not(.bg-\[var\(--gm-primary\)\]):not(.bg-\[var\(--gm-button\)\]):not(.text-white) svg.lucide:not([class*="text-"]):not(.text-white),
+.gm-main button:not(.bg-primary):not(.bg-brand-primary):not(.bg-\[var\(--gm-primary\)\]):not(.bg-\[var\(--gm-button\)\]):not(.bg-\[var\(--primary-color\)\]):not(.bg-orange-500):not(.bg-orange-600):not(.bg-\[\#FE540B\]):not(.bg-\[\#ff6900\]):not(.bg-\[\#ff7a00\]):not(.bg-\[\#32BCAD\]):not(.bg-green-500):not(.bg-emerald-500):not(.text-white):not(.text-slate-100):not(.text-zinc-100) svg.lucide:not([class*="text-"]):not(.text-white),
+.gm-main .gm-btn:not(.bg-primary):not(.bg-brand-primary):not(.bg-\[var\(--gm-primary\)\]):not(.bg-\[var\(--gm-button\)\]):not(.text-white) svg.lucide:not([class*="text-"]):not(.text-white) {
+  color: var(--gm-icon) !important;
+  stroke: var(--gm-icon) !important;
 }
 
 /* Spinners brancos para as ações */
@@ -3135,6 +3546,69 @@ button.gm-budget-action-btn svg.lucide {
 button.gm-budget-action-btn .animate-spin {
   border-color: #FFFFFF !important;
   border-top-color: transparent !important;
+}
+
+/* =========================================================
+   ISOLAMENTO ABSOLUTO DOS ÍCONES DO MENU (BARRA LATERAL)
+   Os ícones do Menu usam estritamente var(--gm-menu-icon) (Cor dos Ícones do Menu),
+   NUNCA a "Cor dos Ícones" das Cores do App (var(--gm-icon)).
+========================================================= */
+aside.gm-sidebar svg,
+aside.gm-sidebar svg.lucide,
+.gm-sidebar svg,
+.gm-sidebar svg.lucide,
+.gm-sidebar .gm-nav svg,
+.gm-sidebar .gm-nav a svg,
+.gm-sidebar .gm-nav a svg.lucide,
+.gm-sidebar-footer svg,
+.gm-sidebar-footer button svg,
+.gm-sidebar-footer a svg,
+[data-theme="light"] aside.gm-sidebar svg,
+[data-theme="light"] .gm-sidebar svg,
+[data-theme="light"] .gm-sidebar .gm-nav svg,
+[data-theme="light"] .gm-sidebar .gm-nav a svg,
+[data-theme="light"] .gm-sidebar-footer svg,
+.gm-light aside.gm-sidebar svg,
+.gm-light .gm-sidebar svg,
+.gm-light .gm-sidebar .gm-nav svg,
+.gm-light .gm-sidebar .gm-nav a svg,
+.gm-light .gm-sidebar-footer svg {
+  color: var(--gm-menu-icon) !important;
+  stroke: var(--gm-menu-icon) !important;
+}
+
+/* Ícones dos itens ativos do Menu -> usam a Cor Principal do Menu */
+aside.gm-sidebar .gm-nav a.active svg,
+aside.gm-sidebar .gm-nav a.active svg.lucide,
+.gm-sidebar .gm-nav a.active svg,
+.gm-sidebar .gm-nav a.active svg.lucide,
+[data-theme="light"] .gm-sidebar .gm-nav a.active svg,
+.gm-light .gm-sidebar .gm-nav a.active svg {
+  color: var(--gm-menu-primary) !important;
+  stroke: var(--gm-menu-primary) !important;
+}
+
+/* Ícones dos itens em hover do Menu -> usam a Cor dos Títulos do Menu */
+aside.gm-sidebar .gm-nav a:hover:not(.active) svg,
+aside.gm-sidebar .gm-nav a:hover:not(.active) svg.lucide,
+.gm-sidebar .gm-nav a:hover:not(.active) svg,
+.gm-sidebar .gm-nav a:hover:not(.active) svg.lucide,
+[data-theme="light"] .gm-sidebar .gm-nav a:hover:not(.active) svg,
+.gm-light .gm-sidebar .gm-nav a:hover:not(.active) svg {
+  color: var(--gm-menu-title) !important;
+  stroke: var(--gm-menu-title) !important;
+}
+
+/* Exceção específica: botão de Sair/Logout permanece vermelho */
+aside.gm-sidebar button.text-red-400 svg,
+.gm-sidebar button.text-red-400 svg {
+  color: #ef4444 !important;
+  stroke: #ef4444 !important;
+}
+aside.gm-sidebar button.text-red-400:hover svg,
+.gm-sidebar button.text-red-400:hover svg {
+  color: #fca5a5 !important;
+  stroke: #fca5a5 !important;
 }
 
 

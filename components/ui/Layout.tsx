@@ -607,7 +607,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </div>
             </div>
             <div className="flex flex-col leading-tight">
-                <span className="text-lg font-bold text-white">CardDigital <span className="text-[#ff7a00]">GM</span></span>
+                <span className="text-lg font-bold text-slate-900 dark:text-white">CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span></span>
             </div>
         </div>
         <div className="flex items-center gap-2">
@@ -638,7 +638,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         {/* Overlapping vertical border collapse/expand Toggle Button - Perfectly sized, Positioned precisely, with a thicker style-guide Orange border */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-1/2 -translate-y-1/2 -right-[10.5px] w-[21px] h-[21px] rounded-full bg-[#0b0e14] border-[2.5px] border-[var(--gm-primary)]/60 hover:border-[var(--gm-primary)] flex items-center justify-center text-[var(--gm-primary)] transition-all z-[100] shadow-[0_2px_12px_rgba(50,188,173,0.25)] hover:shadow-[0_2px_16px_rgba(50,188,173,0.45)] cursor-pointer"
+          className="absolute top-1/2 -translate-y-1/2 -right-[10.5px] w-[21px] h-[21px] rounded-full bg-[var(--gm-menu-bg)] border-[2.5px] border-[var(--gm-menu-primary)]/60 hover:border-[var(--gm-menu-primary)] flex items-center justify-center text-[var(--gm-menu-primary)] transition-all z-[100] shadow-[0_2px_12px_rgba(0,0,0,0.25)] cursor-pointer"
           type="button"
           aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
         >
@@ -661,7 +661,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 </div>
               </div>
               <div className="flex items-center gap-1 leading-none">
-                  <span className="text-lg font-bold text-white">CardDigital <span className="text-[#ff7a00]">GM</span></span>
+                  <span className="text-lg font-bold text-[var(--gm-menu-title)]">CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span></span>
               </div>
           </div>
         ) : (
@@ -805,7 +805,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 <span className="text-sm text-left">Sair</span>
               </a>
               <div className="mt-4 text-[11px] text-slate-500 text-center opacity-60 pointer-events-none">
-                <i>Desenvolvido por</i> <span className="font-bold">CardDigital</span> <span className="font-bold text-[var(--gm-primary)]">GM</span>
+                <i>Desenvolvido por</i> <span className="font-bold text-[var(--gm-menu-title)]">CardDigital</span> <span className="font-bold text-[var(--gm-menu-primary)] gm-logo-highlight">GM</span>
               </div>
             </div>
           )}

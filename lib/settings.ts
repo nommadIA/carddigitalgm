@@ -159,7 +159,7 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
       title = savedLight.title || "#1B1D22";
       subtitle = savedLight.subtitle || "#6B7280";
       icon = savedLight.icon || "#FF6900";
-      button = savedLight.button || "#FF6900";
+      button = savedLight.button || savedLight.accent || "#FF6900";
 
       menu_primary = savedLight.menu_primary || "#FF6900";
       menu_bg = savedLight.menu_bg || "#FFFFFF";
@@ -192,14 +192,14 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
       title = savedDark.title || "#FFFFFF";
       subtitle = savedDark.subtitle || "#94A3B8";
       icon = savedDark.icon || s.brand_accent || "#32BCAD";
-      button = savedDark.button || s.brand_accent || "#32BCAD";
+      button = savedDark.button || savedDark.accent || "#32BCAD";
 
       menu_primary = savedDark.menu_primary || s.brand_primary || "#32BCAD";
       menu_bg = savedDark.menu_bg || s.brand_bg || "#0f1117";
       menu_title = savedDark.menu_title || "#FFFFFF";
       menu_subtitle = savedDark.menu_subtitle || "#94A3B8";
       menu_icon = savedDark.menu_icon || s.brand_accent || "#32BCAD";
-      menu_button = savedDark.menu_button || s.brand_accent || "#32BCAD";
+      menu_button = savedDark.menu_button || savedDark.accent || "#32BCAD";
     } else {
       primary = s.brand_primary || "#32BCAD";
       accent = s.brand_accent || "#32BCAD";
@@ -216,6 +216,13 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
       menu_icon = s.brand_accent || "#32BCAD";
       menu_button = s.brand_accent || "#32BCAD";
     }
+  }
+
+  // No modo preview (!persist), respeita as cores passadas no objeto s sem sobreescrever com localStorage
+  if (!persist) {
+    if (s.brand_primary) primary = s.brand_primary;
+    if (s.brand_accent) accent = s.brand_accent;
+    if (s.brand_bg) bg = s.brand_bg;
   }
 
   if (primary) {

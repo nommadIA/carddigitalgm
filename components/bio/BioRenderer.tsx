@@ -754,6 +754,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     ? bio.description_mobile 
     : (bio.description || "");
   const brandColor = bio.color || data?.brand_primary || "#32BCAD";
+  const brandBg = bio.bg_color || data?.brand_bg;
+  const brandTitle = bio.title_color || data?.brand_title;
+  const brandSubtitle = bio.subtitle_color || data?.brand_subtitle;
+  const brandIcon = bio.icon_color || data?.brand_icon || brandColor;
+  const brandAccent = bio.accent_color || bio.button_color || data?.brand_accent || data?.brand_button || brandColor;
   const theme = bio.theme || "dark";
   const buttonStyle = data?.button_style || "solid";
 

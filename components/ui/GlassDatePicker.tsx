@@ -223,7 +223,7 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: dropdownPos.placement === 'top' ? 10 : -10, scale: 0.97 }}
                                 transition={{ type: 'spring', damping: 22, stiffness: 380 }}
-                                className="fixed z-[99999] w-[220px] rounded-xl overflow-hidden shadow-2xl text-left"
+                                className="fixed z-[99999] w-[220px] rounded-xl overflow-hidden shadow-2xl text-left glass-datepicker-dropdown"
                                 style={{
                                   top: `${dropdownPos.top}px`,
                                   left: `${dropdownPos.left}px`,

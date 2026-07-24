@@ -61,7 +61,7 @@ export default function Sidebar() {
       <div className="mb-8">
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
-            <div className="text-xl font-bold tracking-tight">CardDigital <span className="gm-logo-highlight text-[#ff7a00]">GM</span></div>
+            <div className="text-xl font-bold tracking-tight text-[var(--gm-menu-title)]">CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span></div>
             <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Enterprise</div>
           </div>
         </div>
