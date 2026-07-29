@@ -15,7 +15,7 @@ export const Card = ({ title, right, children, className = "", style, onClick, i
   return (
     <div
       id={id}
-      className={`gm-card ${className}`}
+      className={`gm-card ${onClick ? "cursor-pointer active:scale-[0.985] transition-transform duration-150" : ""} ${className}`}
       onClick={onClick}
       style={{
         width: "100%",

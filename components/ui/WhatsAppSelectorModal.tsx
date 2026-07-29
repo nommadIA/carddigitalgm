@@ -123,8 +123,8 @@ export const WhatsAppSelectorModal: React.FC = () => {
             <div className="p-6">
               {/* Icon & Title */}
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                  <WhatsAppIcon size={22} className="text-emerald-400" />
+                <div className="w-10 h-10 rounded-xl bg-[var(--gm-primary)]/10 flex items-center justify-center border border-[var(--gm-primary)]/20">
+                  <WhatsAppIcon size={22} className="text-[var(--gm-primary)]" />
                 </div>
                 <div>
                   <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#ff7b00]">
@@ -146,7 +146,7 @@ export const WhatsAppSelectorModal: React.FC = () => {
                 {/* 1. Standard WhatsApp option */}
                 <button
                   onClick={() => handleSelectApp('personal')}
-                  className="w-full flex items-center gap-3.5 p-3.5 rounded-xl border border-white/5 bg-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 hover:-translate-y-0.5 active:translate-y-0 transition-all text-left group"
+                  className="w-full flex items-center gap-3.5 p-3.5 rounded-xl border border-white/5 bg-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left group"
                 >
                   <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-all">
                     <Smartphone size={18} className="text-emerald-400" />
@@ -162,7 +162,7 @@ export const WhatsAppSelectorModal: React.FC = () => {
                 {/* 2. Business WhatsApp option */}
                 <button
                   onClick={() => handleSelectApp('business')}
-                  className="w-full flex items-center gap-3.5 p-3.5 rounded-xl border border-white/5 bg-white/5 hover:border-sky-500/30 hover:bg-sky-500/5 hover:-translate-y-0.5 active:translate-y-0 transition-all text-left group"
+                  className="w-full flex items-center gap-3.5 p-3.5 rounded-xl border border-white/5 bg-white/5 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all text-left group"
                 >
                   <div className="w-9 h-9 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:bg-sky-500/20 transition-all">
                     <Building2 size={18} className="text-sky-400" />

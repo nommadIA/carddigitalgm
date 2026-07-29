@@ -600,10 +600,10 @@ const Market = () => {
                             {walletBalance > 0 && (
                                 <button 
                                     onClick={() => setShowResetConfirm(true)} 
-                                    className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                                    className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
                                     title="Zerar Saldo"
                                 >
-                                    <Trash2 size={20} />
+                                    <Trash2 size={20} className="text-white" />
                                 </button>
                             )}
                         </div>
@@ -697,10 +697,10 @@ const Market = () => {
                                                                e.stopPropagation();
                                                                setShowDeleteListConfirm(list.id);
                                                            }}
-                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white transition-colors shadow-[0_0_8px_rgba(255,123,0,0.1)]"
+                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--gm-primary)] text-white hover:brightness-110 transition-colors shadow-sm cursor-pointer"
                                                            title="Excluir esta compra"
                                                        >
-                                                           <Trash2 size={14} />
+                                                           <Trash2 size={14} className="text-white" />
                                                        </button>
                                                    </div>
                                                </div>
@@ -713,10 +713,10 @@ const Market = () => {
                                                 e.stopPropagation();
                                                 setShowDeleteHistoryConfirm(h.month);
                                             }}
-                                            className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white transition-colors z-20 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                                            className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--gm-primary)] text-white hover:brightness-110 transition-colors z-20 shadow-md cursor-pointer"
                                             title="Excluir este mês"
                                         >
-                                            <Trash2 size={18} />
+                                            <Trash2 size={18} className="text-white" />
                                         </button>
                                    </div>
                                );
@@ -825,9 +825,10 @@ const Market = () => {
                                         <span className="font-bold text-xl text-[var(--gm-primary)]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
                                         <button 
                                             onClick={() => handleRemoveItem(item.id)} 
-                                            className="h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_8px_rgba(255,123,0,0.1)]"
+                                            className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] text-white hover:brightness-110 transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
+                                            title="Remover item"
                                         >
-                                            <Trash2 size={18}/>
+                                            <Trash2 size={18} className="text-white" />
                                         </button>
                                     </div>
                                 </div>
@@ -917,8 +918,8 @@ const Market = () => {
                                 onClick={e => e.stopPropagation()}
                             >
                                 <div className="p-8 text-center">
-                                    <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
-                                        <Trash2 size={32} className="text-[var(--gm-primary)]" />
+                                    <div className="w-16 h-16 bg-[var(--gm-primary)] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[var(--gm-primary)]/25">
+                                        <Trash2 size={32} className="text-white" />
                                     </div>
                                     <h3 className="text-xl font-bold text-white mb-2">Excluir Compra?</h3>
                                     <p className="text-slate-400 text-sm mb-8 leading-relaxed">
@@ -965,8 +966,8 @@ const Market = () => {
                                 onClick={e => e.stopPropagation()}
                             >
                                 <div className="p-8 text-center">
-                                    <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
-                                        <Trash2 size={32} className="text-[var(--gm-primary)]" />
+                                    <div className="w-16 h-16 bg-[var(--gm-primary)] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[var(--gm-primary)]/25">
+                                        <Trash2 size={32} className="text-white" />
                                     </div>
                                     <h2 className="text-xl font-bold text-white mb-2">Excluir Histórico?</h2>
                                     <p className="text-slate-400 text-sm mb-8 leading-relaxed">
@@ -1067,8 +1068,8 @@ const Market = () => {
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="p-8 text-center">
-                            <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
-                                <Trash2 size={32} className="text-[var(--gm-primary)]" />
+                            <div className="w-16 h-16 bg-[var(--gm-primary)] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[var(--gm-primary)]/25">
+                                <Trash2 size={32} className="text-white" />
                             </div>
                             <h3 className="text-xl font-bold text-white mb-2">Zerar Saldo?</h3>
                             <p className="text-slate-400 text-sm mb-8 leading-relaxed">

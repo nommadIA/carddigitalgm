@@ -43,7 +43,7 @@ const AlarmToast = () => {
       Notification.requestPermission();
     }
 
-    // Polling a cada 2 segundos para verificar alarmes
+    // Polling a cada 10 segundos para verificar alarmes
     const interval = setInterval(() => {
       const alarm = checkAlarms();
       if (alarm) {
@@ -108,7 +108,7 @@ const AlarmToast = () => {
         // Marca como disparado (no storage e IndexedDB)
         markAlarmAsTriggered(alarm.id);
       }
-    }, 2000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
@@ -166,7 +166,7 @@ const AlarmToast = () => {
                 <div className="flex gap-2 mt-4">
                   {/* Flat premium orange buttons (no neon glowing/blooming shadows) */}
                   <button
-                    className="flex-1 h-9 rounded-lg bg-[var(--gm-primary)] hover:brightness-105 active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center border border-white/10"
+                    className="flex-1 h-9 rounded-lg bg-[var(--gm-primary)] hover:brightness-105 text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center border border-white/10"
                     onClick={(e) => { e.stopPropagation(); dismiss(alarm.id); }}
                     type="button"
                   >
@@ -174,7 +174,7 @@ const AlarmToast = () => {
                   </button>
 
                   <button
-                    className="flex-1 h-9 rounded-lg bg-[var(--gm-primary)] hover:brightness-105 active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center border border-white/10"
+                    className="flex-1 h-9 rounded-lg bg-[var(--gm-primary)] hover:brightness-105 text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center border border-white/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       let hashUrl = '';

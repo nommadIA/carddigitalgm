@@ -84,9 +84,28 @@ export default function Sidebar() {
       </nav>
 
       <div className="gm-sidebar-footer">
-        <button className="gm-btn gm-btn-soft w-full justify-start" onClick={toggleMode} type="button">
-          <IconMode size={18} />
-          <span>{mode === "dark" ? "Modo claro" : "Modo escuro"}</span>
+        <button className="gm-btn gm-btn-soft w-full justify-between items-center" onClick={toggleMode} type="button">
+          <div className="flex items-center gap-2">
+            <IconMode size={18} className={mode === "light" ? "text-orange-500" : "text-emerald-400"} />
+            <span className={mode === "light" ? "text-orange-600 dark:text-orange-500 font-bold" : ""}>
+              {mode === "dark" ? "Tema Escuro" : "Tema Claro"}
+            </span>
+          </div>
+          <div
+            className={`relative shrink-0 w-9 h-5 rounded-full p-0.5 transition-all duration-200 border flex items-center ${
+              mode === "dark"
+                ? "bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                : "bg-emerald-600 border-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.35)]"
+            }`}
+          >
+            <div
+              className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-out flex items-center justify-center ${
+                mode === "dark" ? "translate-x-4" : "translate-x-0"
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+            </div>
+          </div>
         </button>
         
         <button 

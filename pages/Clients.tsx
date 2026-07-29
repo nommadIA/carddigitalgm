@@ -315,9 +315,9 @@ export default function Clients() {
                     const hasWpp = wppDigits.length >= 10;
 
                     const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-                      const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200";
-                      if (tone === "orange") return `${base} btn-action-edit bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 text-amber-500 hover:text-white`;
-                      if (tone === "green") return `${base} btn-whatsapp bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 text-emerald-500 hover:text-white`;
+                      const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 group";
+                      if (tone === "orange") return `${base} btn-action-edit bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] text-[var(--gm-primary)] hover:text-white`;
+                      if (tone === "green") return `${base} btn-whatsapp bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] text-[var(--gm-primary)] hover:text-white`;
                       if (tone === "red") return `${base} btn-action-delete bg-red-500/10 border border-red-500/20 hover:bg-red-500 text-red-500 hover:text-white`;
                       return `${base} btn-action-neutral bg-slate-500/10 border border-slate-500/20 hover:bg-slate-500 text-slate-400 hover:text-white`;
                     };
@@ -345,14 +345,14 @@ export default function Clients() {
                           <div className="font-medium truncate hidden sm:block">
                             <div className="font-extrabold text-white text-base truncate">{c.name}</div>
                             <div className="mt-1 text-xs text-slate-400 flex items-center gap-3">
-                              {prettyWpp ? <span className="flex items-center gap-1"><WhatsAppIcon size={12} /> {prettyWpp}</span> : null}
-                              {c.email ? <span className="flex items-center gap-1"><Mail size={12} /> {c.email}</span> : null}
+                              {prettyWpp ? <span className="flex items-center gap-1.5"><WhatsAppIcon size={14} className="text-[var(--gm-primary)] shrink-0" /> {prettyWpp}</span> : null}
+                              {c.email ? <span className="flex items-center gap-1.5"><Mail size={13} className="text-slate-400 shrink-0" /> {c.email}</span> : null}
                             </div>
                           </div>
 
                           <div className="sm:hidden mt-2 text-xs text-slate-400 flex flex-col gap-1">
-                            {prettyWpp ? <span className="flex items-center gap-1"><WhatsAppIcon size={12} /> {prettyWpp}</span> : null}
-                            {c.email ? <span className="flex items-center gap-1"><Mail size={12} /> {c.email}</span> : null}
+                            {prettyWpp ? <span className="flex items-center gap-1.5"><WhatsAppIcon size={14} className="text-[var(--gm-primary)] shrink-0" /> {prettyWpp}</span> : null}
+                            {c.email ? <span className="flex items-center gap-1.5"><Mail size={13} className="text-slate-400 shrink-0" /> {c.email}</span> : null}
                           </div>
 
                           <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
@@ -386,7 +386,7 @@ export default function Clients() {
                                       openWhatsApp(wppDigits);
                                     }}
                                   >
-                                    <WhatsAppIcon size={16} />
+                                    <WhatsAppIcon size={16} className="text-[var(--gm-primary)] group-hover:text-white transition-colors" />
                                   </button>
 
                                   <button

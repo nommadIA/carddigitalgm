@@ -1,5 +1,5 @@
 // pages/Configuracoes.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import Select from "../components/ui/Select";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
@@ -45,10 +45,13 @@ import {
   Smartphone,
   HelpCircle,
   Sparkles,
+  Sun,
+  Moon,
   Volume2,
   VolumeX,
   Music,
   ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -100,41 +103,6 @@ export default function Configuracoes() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [openSections, setOpenSections] = useState({
-    personalizacao: false,
-    background: false,
-    colors: false,
-    pix: false,
-    timbrado: false,
-    push: false,
-    sounds: false,
-    tutorial: false,
-  });
-
-  const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections((prev) => {
-      const isOpen = !prev[section];
-      const next = {
-        personalizacao: false,
-        background: false,
-        colors: false,
-        pix: false,
-        timbrado: false,
-        push: false,
-        sounds: false,
-        tutorial: false,
-      };
-      next[section] = isOpen;
-      return next;
-    });
-  };
-
-  const getSectionBtnClass = (isOpen: boolean) =>
-    `relative w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 font-bold text-sm tracking-wider uppercase group cursor-pointer ${
-      isOpen
-        ? "bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border-[var(--gm-primary)] shadow-[0_0_15px_rgba(var(--gm-primary-rgb),0.15)] ring-2 ring-[var(--gm-primary)]/20"
-        : "bg-white dark:bg-slate-800/80 border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:border-[var(--gm-primary)]/50 hover:bg-slate-50 dark:hover:bg-slate-800"
-    }`;
   const [currentScreen, setCurrentScreen] = useState(0);
   const [direction, setDirection] = useState(0);
 
@@ -217,6 +185,51 @@ export default function Configuracoes() {
   const [pixType, setPixType] = useState("CPF");
   const [pixKey, setPixKey] = useState("");
 
+  // Accordion state (Painel do Editor format - igual ao Bio)
+  const [openSections, setOpenSections] = useState({
+    personalization: false,
+    colors: false,
+    background: false,
+    pix: false,
+    timbrado: false,
+    push: false,
+    sounds: false,
+    tutorial: false,
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections((prev) => {
+      const isOpen = !prev[section];
+      const next = {
+        personalization: false,
+        colors: false,
+        background: false,
+        pix: false,
+        timbrado: false,
+        push: false,
+        sounds: false,
+        tutorial: false,
+      };
+      next[section] = isOpen;
+      return next;
+    });
+
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event('scroll'));
+    }, 150);
+  };
+
+  const hasActiveSection = Object.values(openSections).some(Boolean);
+
+  const getSectionBtnClass = (isOpen: boolean) => {
+    return `group relative flex items-center justify-between p-3.5 sm:p-4 min-h-[48px] sm:min-h-[52px] rounded-2xl border font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 text-left outline-none cursor-pointer ${
+      isOpen
+        ? "bg-white dark:bg-zinc-900 text-slate-900 dark:text-white border-[var(--gm-primary)] shadow-md ring-2 ring-[var(--gm-primary)]/20 scale-[1.01]"
+        : "bg-slate-50 dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-zinc-800/80 shadow-xs hover:shadow-md"
+    }`;
+  };
+
   const [brandPrimary, setBrandPrimary] = useState("#32BCAD");
   const [brandAccent, setBrandAccent] = useState("#32BCAD");
   const [brandBg, setBrandBg] = useState("#0f1117");
@@ -234,20 +247,46 @@ export default function Configuracoes() {
 
   const [fontFamily, setFontFamily] = useState("Inter");
   const [previewFont, setPreviewFont] = useState<string | null>(null);
-  const [buttonStyle, setButtonStyle] = useState("solid");
+
+  // Configuração independente do botão no Modo Claro (☀️)
+  const [buttonStyleLight, setButtonStyleLight] = useState("vazado");
+  const [buttonBgLight, setButtonBgLight] = useState("transparent");
+  const [buttonBorderLight, setButtonBorderLight] = useState("#FF6900");
+  const [buttonTextLight, setButtonTextLight] = useState("#18181B");
+  const [buttonIconLight, setButtonIconLight] = useState("#FF6900");
+
+  // Configuração independente do botão no Modo Escuro (🌙)
+  const [buttonStyleDark, setButtonStyleDark] = useState("vazado");
+  const [buttonBgDark, setButtonBgDark] = useState("transparent");
+  const [buttonBorderDark, setButtonBorderDark] = useState("#FF7B17");
+  const [buttonTextDark, setButtonTextDark] = useState("#FFFFFF");
+  const [buttonIconDark, setButtonIconDark] = useState("#FF7B17");
+
+  // Aba ativa para edição de botões: "light" | "dark"
+  const [btnConfigTab, setBtnConfigTab] = useState<"light" | "dark">(() =>
+    localStorage.getItem("theme") === "light" ? "light" : "dark"
+  );
+
+  // Painel Flutuante estilo Bio Editor
+  const setIsDockedState = useState(false);
+  const isDocked = setIsDockedState[0];
+  const setIsDocked = setIsDockedState[1];
+  const isDraggingRef = useRef(false);
 
   const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem("theme") === "light");
 
   useEffect(() => {
     const handleThemeChange = () => {
       const light = localStorage.getItem("theme") === "light";
-      if (light !== isLightMode) {
-        setIsLightMode(light);
-      }
+      setIsLightMode(prev => prev !== light ? light : prev);
     };
-    const interval = setInterval(handleThemeChange, 500);
-    return () => clearInterval(interval);
-  }, [isLightMode]);
+    window.addEventListener("storage", handleThemeChange);
+    window.addEventListener("themeChange", handleThemeChange);
+    return () => {
+      window.removeEventListener("storage", handleThemeChange);
+      window.removeEventListener("themeChange", handleThemeChange);
+    };
+  }, []);
 
   useEffect(() => {
     const syncCurrentColors = async () => {
@@ -423,7 +462,25 @@ export default function Configuracoes() {
           brand_accent: brandAccent,
           brand_bg: brandBg,
           font_family: previewFont || fontFamily,
-          button_style: buttonStyle,
+          button_config_light: {
+            style: buttonStyleLight,
+            bg: buttonBgLight,
+            border: buttonBorderLight,
+            text: buttonTextLight,
+            icon: buttonIconLight,
+          },
+          button_config_dark: {
+            style: buttonStyleDark,
+            bg: buttonBgDark,
+            border: buttonBorderDark,
+            text: buttonTextDark,
+            icon: buttonIconDark,
+          },
+          button_style: isLightMode ? buttonStyleLight : buttonStyleDark,
+          button_bg: isLightMode ? buttonBgLight : buttonBgDark,
+          button_border: isLightMode ? buttonBorderLight : buttonBorderDark,
+          button_text: isLightMode ? buttonTextLight : buttonTextDark,
+          button_icon: isLightMode ? buttonIconLight : buttonIconDark,
           app_scale: appScale,
           mobile_scale: mobileScale,
           app_background_url: bgUrl,
@@ -452,7 +509,17 @@ export default function Configuracoes() {
     brandBg,
     fontFamily,
     previewFont,
-    buttonStyle,
+    buttonStyleLight,
+    buttonBgLight,
+    buttonBorderLight,
+    buttonTextLight,
+    buttonIconLight,
+    buttonStyleDark,
+    buttonBgDark,
+    buttonBorderDark,
+    buttonTextDark,
+    buttonIconDark,
+    isLightMode,
     appScale,
     mobileScale,
     bgUrl,
@@ -473,22 +540,20 @@ export default function Configuracoes() {
     mobileBgBlur,
   ]);
 
-  // ✅ Desabilita rolagem vertical na página de configurações (Smartphone)
+  // ✅ Configura rolagem vertical suave com toque/deslizar na página de configurações e subpainéis
   useEffect(() => {
     const mainEl = document.querySelector(".gm-main") as HTMLElement;
-    if (viewMode === "smartphone") {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-      if (mainEl) mainEl.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-      if (mainEl) mainEl.style.overflow = "";
+    if (mainEl) {
+      mainEl.style.overflowY = "auto";
+      (mainEl.style as any).webkitOverflowScrolling = "touch";
+      mainEl.style.scrollBehavior = "smooth";
+      mainEl.style.touchAction = "pan-y";
     }
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
     return () => {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
-      if (mainEl) mainEl.style.overflow = "";
     };
   }, [viewMode]);
 
@@ -561,11 +626,37 @@ export default function Configuracoes() {
         }
         
         setFontFamily(s.font_family || "Inter");
-        setButtonStyle(
-          s.button_style ||
-            localStorage.getItem("gm_button_style_fallback") ||
-            "solid",
-        );
+        // Carrega configurações do botão no Modo Claro (☀️)
+        const savedBtnLight = JSON.parse(localStorage.getItem("gm_button_light") || "null") || s.button_config_light || s.bio_config?.button_config_light;
+        if (savedBtnLight) {
+          setButtonStyleLight(savedBtnLight.style || "vazado");
+          setButtonBgLight(savedBtnLight.bg ?? "transparent");
+          setButtonBorderLight(savedBtnLight.border || "#FF6900");
+          setButtonTextLight(savedBtnLight.text || "#18181B");
+          setButtonIconLight(savedBtnLight.icon || "#FF6900");
+        } else {
+          setButtonStyleLight("vazado");
+          setButtonBgLight("transparent");
+          setButtonBorderLight("#FF6900");
+          setButtonTextLight("#18181B");
+          setButtonIconLight("#FF6900");
+        }
+
+        // Carrega configurações do botão no Modo Escuro (🌙)
+        const savedBtnDark = JSON.parse(localStorage.getItem("gm_button_dark") || "null") || s.button_config_dark || s.bio_config?.button_config_dark;
+        if (savedBtnDark) {
+          setButtonStyleDark(savedBtnDark.style || "vazado");
+          setButtonBgDark(savedBtnDark.bg ?? "transparent");
+          setButtonBorderDark(savedBtnDark.border || "#FF7B17");
+          setButtonTextDark(savedBtnDark.text || "#FFFFFF");
+          setButtonIconDark(savedBtnDark.icon || "#FF7B17");
+        } else {
+          setButtonStyleDark("vazado");
+          setButtonBgDark("transparent");
+          setButtonBorderDark("#FF7B17");
+          setButtonTextDark("#FFFFFF");
+          setButtonIconDark("#FF7B17");
+        }
 
         setCompanyLogoUrl(s.company_logo_url || null);
         setAvatarUrl(s.avatar_url || null);
@@ -729,6 +820,27 @@ export default function Configuracoes() {
         currentBioConfig.theme_colors_dark = payloadDark;
       }
 
+      // Salva configurações de botão para ambos os temas
+      const btnConfigLight = {
+        style: buttonStyleLight,
+        bg: buttonBgLight,
+        border: buttonBorderLight,
+        text: buttonTextLight,
+        icon: buttonIconLight,
+      };
+      const btnConfigDark = {
+        style: buttonStyleDark,
+        bg: buttonBgDark,
+        border: buttonBorderDark,
+        text: buttonTextDark,
+        icon: buttonIconDark,
+      };
+
+      localStorage.setItem("gm_button_light", JSON.stringify(btnConfigLight));
+      localStorage.setItem("gm_button_dark", JSON.stringify(btnConfigDark));
+      currentBioConfig.button_config_light = btnConfigLight;
+      currentBioConfig.button_config_dark = btnConfigDark;
+
       const next = await upsertSettingsSupabase(tenantId, {
         company_name: companyName,
         pix_type: pixType,
@@ -770,7 +882,13 @@ export default function Configuracoes() {
         app_scale: Math.min(2, Math.max(0.5, appScale)),
         mobile_scale: Math.min(3, Math.max(0.5, mobileScale)),
 
-        button_style: buttonStyle,
+        button_config_light: btnConfigLight,
+        button_config_dark: btnConfigDark,
+        button_style: activeIsLight ? buttonStyleLight : buttonStyleDark,
+        button_bg: activeIsLight ? buttonBgLight : buttonBgDark,
+        button_border: activeIsLight ? buttonBorderLight : buttonBorderDark,
+        button_text: activeIsLight ? buttonTextLight : buttonTextDark,
+        button_icon: activeIsLight ? buttonIconLight : buttonIconDark,
         theme_presets: presets,
         bio_config: currentBioConfig, // Salva o bio_config atualizado
       });
@@ -1098,8 +1216,8 @@ export default function Configuracoes() {
       name: "Arctic Glass",
       primary: "#F8FAFC",
       accent: "#CBD5E1",
-      bg: "#0F172A",
-      foreground: "#0f172a",
+      bg: "#121215",
+      foreground: "#121215",
     },
     {
       name: "Neon Pink",
@@ -1111,9 +1229,139 @@ export default function Configuracoes() {
   ];
 
   const BUTTON_STYLES = [
-    { id: "solid", name: "Sólido" },
-    { id: "neon", name: "Neon Jateado" },
+    {
+      id: "solid",
+      name: "Botão Sólido Preenchido",
+      desc: "Design limpo e moderno com preenchimento de cor sólida, alto contraste e presença marcante.",
+      badge: "Sólido",
+    },
+    {
+      id: "outline",
+      name: "Botão Vazado com Contorno",
+      desc: "Design elegante com fundo transparente, contorno refinado e visual leve e minimalista.",
+      badge: "Vazado",
+    },
+    {
+      id: "glass",
+      name: "Botão Vidro (Glass)",
+      desc: "Efeito moderno de vidro fosco translúcido (Glassmorphic) com desfoque de fundo e brilho cristalino sutil.",
+      badge: "Vidro",
+    },
   ];
+
+  const updateButtonLight = (patch: {
+    style?: string;
+    bg?: string;
+    border?: string;
+    text?: string;
+    icon?: string;
+  }) => {
+    const style = patch.style !== undefined ? patch.style : buttonStyleLight;
+    const bg = patch.bg !== undefined ? patch.bg : buttonBgLight;
+    const border = patch.border !== undefined ? patch.border : buttonBorderLight;
+    const text = patch.text !== undefined ? patch.text : buttonTextLight;
+    const icon = patch.icon !== undefined ? patch.icon : buttonIconLight;
+
+    setButtonStyleLight(style);
+    setButtonBgLight(bg);
+    setButtonBorderLight(border);
+    setButtonTextLight(text);
+    setButtonIconLight(icon);
+
+    const cfg = { style, bg, border, text, icon };
+    localStorage.setItem("gm_button_light", JSON.stringify(cfg));
+
+    if (isLightMode) {
+      document.documentElement.setAttribute("data-button-style", style);
+      document.documentElement.style.setProperty("--gm-btn-bg", bg);
+      document.documentElement.style.setProperty("--gm-btn-border", border);
+      document.documentElement.style.setProperty("--gm-btn-text", text);
+      document.documentElement.style.setProperty("--gm-btn-icon", icon);
+    }
+  };
+
+  const updateButtonDark = (patch: {
+    style?: string;
+    bg?: string;
+    border?: string;
+    text?: string;
+    icon?: string;
+  }) => {
+    const style = patch.style !== undefined ? patch.style : buttonStyleDark;
+    const bg = patch.bg !== undefined ? patch.bg : buttonBgDark;
+    const border = patch.border !== undefined ? patch.border : buttonBorderDark;
+    const text = patch.text !== undefined ? patch.text : buttonTextDark;
+    const icon = patch.icon !== undefined ? patch.icon : buttonIconDark;
+
+    setButtonStyleDark(style);
+    setButtonBgDark(bg);
+    setButtonBorderDark(border);
+    setButtonTextDark(text);
+    setButtonIconDark(icon);
+
+    const cfg = { style, bg, border, text, icon };
+    localStorage.setItem("gm_button_dark", JSON.stringify(cfg));
+
+    if (!isLightMode) {
+      document.documentElement.setAttribute("data-button-style", style);
+      document.documentElement.style.setProperty("--gm-btn-bg", bg);
+      document.documentElement.style.setProperty("--gm-btn-border", border);
+      document.documentElement.style.setProperty("--gm-btn-text", text);
+      document.documentElement.style.setProperty("--gm-btn-icon", icon);
+    }
+  };
+
+  const handleButtonStyleChange = (newStyle: string) => {
+    if (btnConfigTab === "light") {
+      const defPrimary = brandPrimary || "#FF6900";
+      let bg = "transparent";
+      let border = defPrimary;
+      let text = "#18181B";
+      let icon = defPrimary;
+
+      if (newStyle === "solid") {
+        bg = defPrimary;
+        border = defPrimary;
+        text = "#FFFFFF";
+        icon = "#FFFFFF";
+      } else if (newStyle === "outline" || newStyle === "vazado") {
+        bg = "transparent";
+        border = defPrimary;
+        text = "#18181B";
+        icon = defPrimary;
+      } else if (newStyle === "glass") {
+        bg = "rgba(255, 255, 255, 0.4)";
+        border = "rgba(255, 255, 255, 0.6)";
+        text = "#18181B";
+        icon = defPrimary;
+      }
+      updateButtonLight({ style: newStyle, bg, border, text, icon });
+    } else {
+      const defPrimary = brandPrimary || "#FF7B17";
+      let bg = "transparent";
+      let border = defPrimary;
+      let text = "#FFFFFF";
+      let icon = defPrimary;
+
+      if (newStyle === "solid") {
+        bg = defPrimary;
+        border = defPrimary;
+        text = "#FFFFFF";
+        icon = "#FFFFFF";
+      } else if (newStyle === "outline" || newStyle === "vazado") {
+        bg = "transparent";
+        border = defPrimary;
+        text = "#FFFFFF";
+        icon = defPrimary;
+      } else if (newStyle === "glass") {
+        bg = "rgba(255, 255, 255, 0.15)";
+        border = "rgba(255, 255, 255, 0.3)";
+        text = "#FFFFFF";
+        icon = defPrimary;
+      }
+      updateButtonDark({ style: newStyle, bg, border, text, icon });
+    }
+  };
 
   const applyTheme = (theme: (typeof PRESET_THEMES)[0]) => {
     setBrandPrimary(theme.primary);
@@ -1176,18 +1424,18 @@ export default function Configuracoes() {
           </AnimatePresence>
           <button
             type="button"
-            className="gm-btn w-auto justify-center !h-10 !px-6 !text-sm !rounded-xl !bg-gradient-to-r !from-green-500 !to-emerald-600 !text-white hover:!from-green-600 hover:!to-emerald-700 disabled:!opacity-50 transition-all font-extrabold active:scale-95 shadow-[0_4px_14px_rgba(34,197,94,0.4)] hover:shadow-[0_6px_20px_rgba(34,197,94,0.6)] flex items-center gap-2 border-none"
+            className="gm-btn w-auto justify-center h-10 px-6 text-sm rounded-xl disabled:opacity-50 transition-all font-extrabold active:scale-95 shadow-[0_4px_14px_rgba(255,105,0,0.25)] flex items-center gap-2"
             onClick={handleSave}
             disabled={saving}
           >
             {saving ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={16} className="animate-spin text-white" />
                 <span>Salvando...</span>
               </>
             ) : (
               <>
-                <Save size={16} />
+                <Save size={16} className="text-white" />
                 <span>Salvar</span>
               </>
             )}
@@ -1195,286 +1443,736 @@ export default function Configuracoes() {
         </div>
       }
     >
-      <div
-        className={`flex flex-col ${viewMode === "smartphone" ? "h-[calc(100dvh-180px)] md:h-[calc(100dvh-170px)]" : ""}`}
-      >
+      <div className="flex flex-col flex-1 w-full">
         {/* CONTENT */}
-        <div
-          className={`flex-1 ${viewMode === "desktop" ? "pb-24" : "overflow-hidden"} p-0 md:p-6 lg:p-8 glass-scrollbar`}
-        >
+        <div className="w-full max-w-[1440px] mx-auto flex flex-col gap-6 pb-60">
           {loading ? (
             <Card className="text-center p-10">Carregando...</Card>
-          ) : (viewMode as any) === "desktop" ? (
-            <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 pb-6 items-stretch">
-              {/* ROW 1 */}
-              <div className="flex flex-col h-full">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Palette size={20} className="text-[var(--gm-primary)]" />{" "}
-                  Personalização
-                </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col gap-8 h-full flex-1">
-                    {/* IMAGENS DE IDENTIDADE E PERFIL */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 shrink-0 w-full">
-                      {/* LOGO DA EMPRESA */}
-                      <div className="flex flex-col items-center gap-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
-                          <FileImage size={14} /> Logo da Empresa
-                        </span>
-                        <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-slate-100 dark:bg-slate-700/60 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/logo">
-                          {companyLogoUrl ? (
-                            <img
-                              src={companyLogoUrl}
-                              alt="Logo"
-                              className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover/logo:scale-105"
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center gap-1 text-slate-400">
-                              <ImageIcon size={28} className="opacity-50" />
-                              <span className="text-[10px] font-semibold">Sem Logo</span>
-                            </div>
-                          )}
+          ) : (
+            <div className="w-full flex flex-col gap-6">
+              {/* SUBDIVISÃO SUPERIOR: Menu de Cápsulas de Expansão do Painel de Configurações */}
+              <div className="flex flex-col gap-3 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs backdrop-blur-md">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 px-1">
+                  <span className="text-xs font-extrabold text-[var(--gm-primary)] uppercase tracking-wider flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[var(--gm-primary)] animate-pulse" />
+                    PAINEL DE CONFIGURAÇÕES
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    {hasActiveSection 
+                      ? "Clique na cápsula ativa para recolher e exibir as outras opções" 
+                      : "Selecione uma opção para expandir e editar"}
+                  </span>
+                </div>
 
-                          {/* OVERLAY DE AUTO COMPRESSÃO E CARREGAMENTO */}
-                          <AnimatePresence>
-                            {uploadingLogo && (
-                              <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-slate-900/85 backdrop-blur-md flex flex-col items-center justify-center p-2 text-white text-center z-10"
-                              >
-                                <Loader2 size={24} className="animate-spin text-[var(--gm-primary)] mb-1.5" />
-                                <span className="text-[10px] font-bold leading-tight drop-shadow">
-                                  {logoStatusText || "Processando..."}
-                                </span>
-                                {logoProgress > 0 && (
-                                  <div className="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden px-1">
-                                    <div
-                                      className="bg-gradient-to-r from-[var(--gm-primary)] to-emerald-400 h-full transition-all duration-300 rounded-full"
-                                      style={{ width: `${logoProgress}%` }}
-                                    />
-                                  </div>
-                                )}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
+                <div className={hasActiveSection ? "flex flex-col sm:flex-row gap-2.5 justify-center flex-wrap" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5"}>
+                  {/* 1. Personalização */}
+                  {(!hasActiveSection || openSections.personalization) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('personalization')}
+                      className={getSectionBtnClass(openSections.personalization)}
+                    >
+                      {openSections.personalization && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <Palette className={"w-4 h-4 transition-transform duration-200 " + (openSections.personalization ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        PERSONALIZAÇÃO
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.personalization && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.personalization ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
 
-                        {/* METRICAS DE COMPRESSAO */}
-                        <AnimatePresence>
-                          {logoStats && !uploadingLogo && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0 }}
-                              className="flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20"
-                            >
-                              <Sparkles size={10} className="shrink-0 text-emerald-500 animate-pulse" />
-                              <span>{logoStats.compressedSize} ({logoStats.reduction})</span>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                  {/* 2. Cores & Fonte */}
+                  {(!hasActiveSection || openSections.colors) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('colors')}
+                      className={getSectionBtnClass(openSections.colors)}
+                    >
+                      {openSections.colors && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <Paintbrush className={"w-4 h-4 transition-transform duration-200 " + (openSections.colors ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        CORES & FONTE
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.colors && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.colors ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
 
-                        <label
-                          className={`gm-btn w-full py-1.5 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow transition-all ${
-                            uploadingLogo ? "opacity-50 pointer-events-none" : ""
-                          }`}
-                        >
-                          {uploadingLogo ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : (
-                            <Upload size={14} />
-                          )}
-                          <span>{uploadingLogo ? "Otimizando..." : "Alterar Logo"}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={uploadingLogo}
-                            onChange={(e) => {
-                              const f = e.target.files?.[0];
-                              if (f) onUploadLogo(f);
-                            }}
+                  {/* 3. Imagem de Fundo */}
+                  {(!hasActiveSection || openSections.background) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('background')}
+                      className={getSectionBtnClass(openSections.background)}
+                    >
+                      {openSections.background && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <ImageIcon className={"w-4 h-4 transition-transform duration-200 " + (openSections.background ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        IMAGEM DE FUNDO
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.background && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.background ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* 4. Dados PIX */}
+                  {(!hasActiveSection || openSections.pix) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('pix')}
+                      className={getSectionBtnClass(openSections.pix)}
+                    >
+                      {openSections.pix && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <CreditCard className={"w-4 h-4 transition-transform duration-200 " + (openSections.pix ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        DADOS PIX
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.pix && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.pix ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* 5. Papel Timbrado */}
+                  {(!hasActiveSection || openSections.timbrado) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('timbrado')}
+                      className={getSectionBtnClass(openSections.timbrado)}
+                    >
+                      {openSections.timbrado && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <FileText className={"w-4 h-4 transition-transform duration-200 " + (openSections.timbrado ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        PAPEL TIMBRADO
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.timbrado && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.timbrado ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* 6. Notificações Push */}
+                  {(!hasActiveSection || openSections.push) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('push')}
+                      className={getSectionBtnClass(openSections.push)}
+                    >
+                      {openSections.push && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <Bell className={"w-4 h-4 transition-transform duration-200 " + (openSections.push ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        NOTIFICAÇÕES PUSH
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.push && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.push ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* 7. Sons do Sistema */}
+                  {(!hasActiveSection || openSections.sounds) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('sounds')}
+                      className={getSectionBtnClass(openSections.sounds)}
+                    >
+                      {openSections.sounds && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <Volume2 className={"w-4 h-4 transition-transform duration-200 " + (openSections.sounds ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        SONS DO SISTEMA
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.sounds && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.sounds ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* 8. Tutorial & Suporte */}
+                  {(!hasActiveSection || openSections.tutorial) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('tutorial')}
+                      className={getSectionBtnClass(openSections.tutorial)}
+                    >
+                      {openSections.tutorial && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <HelpCircle className={"w-4 h-4 transition-transform duration-200 " + (openSections.tutorial ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        TUTORIAL & SUPORTE
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.tutorial && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.tutorial ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Card quando nenhuma cápsula estiver aberta */}
+              {!hasActiveSection && (
+                <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 rounded-[2.5rem] text-center shadow-xs backdrop-blur-md animate-in fade-in duration-300">
+                  <div className="w-16 h-16 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] flex items-center justify-center mb-4 border border-[var(--gm-primary)]/20 shadow-xs">
+                    <Sparkles className="w-8 h-8 animate-pulse text-[var(--gm-primary)]" />
+                  </div>
+                  <h3 className="text-xl font-extrabold text-slate-800 dark:text-white mb-2">Painel de Configurações</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md leading-relaxed font-medium">
+                    Clique em qualquer uma das cápsulas acima para abrir o painel correspondente e personalizar as opções do seu aplicativo.
+                  </p>
+                </div>
+              )}
+
+              {/* SEÇÃO 1: PERSONALIZAÇÃO */}
+              {openSections.personalization && (
+                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                      <Palette className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
+                      <span>PERSONALIZAÇÃO</span>
+                    </span>
+                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                      Edição Ativa
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* LOGO DA EMPRESA */}
+                    <div className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
+                        <FileImage size={14} /> Logo da Empresa
+                      </span>
+                      <div className="w-32 h-32 rounded-2xl bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/logo">
+                        {companyLogoUrl ? (
+                          <img
+                            src={companyLogoUrl}
+                            alt="Logo"
+                            className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover/logo:scale-105"
                           />
-                        </label>
-                      </div>
-
-                      {/* FOTO DE PERFIL / AVATAR */}
-                      <div className="flex flex-col items-center gap-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
-                          <User size={14} /> Imagem de Perfil
-                        </span>
-                        <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-slate-100 dark:bg-slate-700/60 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/avatar">
-                          {avatarUrl ? (
-                            <img
-                              src={avatarUrl}
-                              alt="Foto de Perfil"
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover/avatar:scale-105"
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center gap-1 text-slate-400">
-                              <User size={32} className="opacity-50" />
-                              <span className="text-[10px] font-semibold">Sem Foto</span>
-                            </div>
-                          )}
-
-                          {/* OVERLAY DE AUTO COMPRESSÃO E CARREGAMENTO */}
-                          <AnimatePresence>
-                            {uploadingAvatar && (
-                              <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-slate-900/85 backdrop-blur-md flex flex-col items-center justify-center p-2 text-white text-center z-10"
-                              >
-                                <Loader2 size={24} className="animate-spin text-[var(--gm-primary)] mb-1.5" />
-                                <span className="text-[10px] font-bold leading-tight drop-shadow">
-                                  {avatarStatusText || "Processando..."}
-                                </span>
-                                {avatarProgress > 0 && (
-                                  <div className="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden px-1">
-                                    <div
-                                      className="bg-gradient-to-r from-[var(--gm-primary)] to-emerald-400 h-full transition-all duration-300 rounded-full"
-                                      style={{ width: `${avatarProgress}%` }}
-                                    />
-                                  </div>
-                                )}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-
-                        {/* METRICAS DE COMPRESSAO */}
-                        <AnimatePresence>
-                          {avatarStats && !uploadingAvatar && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0 }}
-                              className="flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20"
-                            >
-                              <Sparkles size={10} className="shrink-0 text-emerald-500 animate-pulse" />
-                              <span>{avatarStats.compressedSize} ({avatarStats.reduction})</span>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        <label
-                          className={`gm-btn w-full py-1.5 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow transition-all ${
-                            uploadingAvatar ? "opacity-50 pointer-events-none" : ""
-                          }`}
-                        >
-                          {uploadingAvatar ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : (
-                            <Upload size={14} />
-                          )}
-                          <span>{uploadingAvatar ? "Otimizando..." : "Alterar Perfil"}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={uploadingAvatar}
-                            onChange={(e) => {
-                              const f = e.target.files?.[0];
-                              if (f) onUploadAvatar(f);
-                            }}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
-
-                    <div className="space-y-4 flex-1 flex flex-col justify-center">
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                          Nome da empresa
-                        </label>
-                        <input
-                          className="gm-input py-2 text-sm h-10 w-full"
-                          value={companyName}
-                          onChange={(e) => setCompanyName(e.target.value)}
-                        />
-                      </div>
-
-                      <div className="space-y-4">
-                        {viewMode === "desktop" && (
-                          <div className="space-y-1.5">
-                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
-                              <Monitor size={14} /> Escala Desktop
-                            </label>
-                            <ScaleSlider
-                              value={appScale}
-                              onChange={setAppScale}
-                            />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 text-slate-400">
+                            <ImageIcon size={28} className="opacity-50" />
+                            <span className="text-[10px] font-semibold">Sem Logo</span>
                           </div>
                         )}
-                        {viewMode === "smartphone" && (
-                          <div className="space-y-1.5">
-                            <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
-                              <Smartphone size={14} /> Escala Smartphone
-                            </label>
-                            <ScaleSlider
-                              value={mobileScale}
-                              onChange={setMobileScale}
-                              isMobile
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
 
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
-
-                    <div className="flex-1 flex flex-col justify-center">
-                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block">
-                        Estilo dos Botões
-                      </label>
-                      <div className="flex flex-col gap-3">
-                        {BUTTON_STYLES.map((s) => {
-                          const isActive = buttonStyle === s.id;
-                          return (
-                            <button
-                              key={s.id}
-                              type="button"
-                              onClick={() => setButtonStyle(s.id)}
-                              className={`flex flex-col items-center justify-between p-4 rounded-xl border-2 transition-all h-28 shadow-xs hover:shadow-sm ${
-                                isActive
-                                  ? "border-[var(--gm-primary)] bg-[var(--gm-primary)]/10"
-                                  : "border-slate-200/80 dark:border-slate-700/60 bg-white hover:bg-slate-50 dark:bg-slate-800/60 dark:hover:bg-slate-800"
-                              }`}
+                        <AnimatePresence>
+                          {uploadingLogo && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute inset-0 bg-zinc-900/85 backdrop-blur-md flex flex-col items-center justify-center p-2 text-white text-center z-10"
                             >
-                              <div
-                                className={`w-full py-3 text-sm font-bold rounded-xl flex items-center justify-center ${
-                                  s.id === "solid"
-                                    ? "bg-[var(--gm-primary)] text-white"
-                                    : "bg-transparent border border-[var(--gm-primary)] text-[var(--gm-primary)]"
-                                }`}
-                              >
-                                Preview
-                              </div>
-                              <span
-                                className={`text-xs font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-700 dark:text-slate-300"}`}
-                              >
-                                {s.name}
+                              <Loader2 size={24} className="animate-spin text-[var(--gm-primary)] mb-1.5" />
+                              <span className="text-[10px] font-bold leading-tight drop-shadow">
+                                {logoStatusText || "Processando..."}
                               </span>
-                            </button>
-                          );
-                        })}
+                              {logoProgress > 0 && (
+                                <div className="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden px-1">
+                                  <div
+                                    className="bg-gradient-to-r from-[var(--gm-primary)] to-emerald-400 h-full transition-all duration-300 rounded-full"
+                                    style={{ width: logoProgress + "%" }}
+                                  />
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      <AnimatePresence>
+                        {logoStats && !uploadingLogo && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20"
+                          >
+                            <Sparkles size={10} className="shrink-0 text-emerald-500 animate-pulse" />
+                            <span>{logoStats.compressedSize} ({logoStats.reduction})</span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <label
+                        className={"gm-btn w-full py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow transition-all " + (uploadingLogo ? "opacity-50 pointer-events-none" : "")}
+                      >
+                        {uploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                        <span>{uploadingLogo ? "Otimizando..." : "Alterar Logo"}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploadingLogo}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) onUploadLogo(f);
+                          }}
+                        />
+                      </label>
+                    </div>
+
+                    {/* FOTO DE PERFIL / AVATAR */}
+                    <div className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
+                        <User size={14} /> Imagem de Perfil
+                      </span>
+                      <div className="w-32 h-32 rounded-full bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/avatar">
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt="Foto de Perfil"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover/avatar:scale-105"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 text-slate-400">
+                            <User size={32} className="opacity-50" />
+                            <span className="text-[10px] font-semibold">Sem Foto</span>
+                          </div>
+                        )}
+
+                        <AnimatePresence>
+                          {uploadingAvatar && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute inset-0 bg-zinc-900/85 backdrop-blur-md flex flex-col items-center justify-center p-2 text-white text-center z-10"
+                            >
+                              <Loader2 size={24} className="animate-spin text-[var(--gm-primary)] mb-1.5" />
+                              <span className="text-[10px] font-bold leading-tight drop-shadow">
+                                {avatarStatusText || "Processando..."}
+                              </span>
+                              {avatarProgress > 0 && (
+                                <div className="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden px-1">
+                                  <div
+                                    className="bg-gradient-to-r from-[var(--gm-primary)] to-emerald-400 h-full transition-all duration-300 rounded-full"
+                                    style={{ width: avatarProgress + "%" }}
+                                  />
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      <AnimatePresence>
+                        {avatarStats && !uploadingAvatar && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20"
+                          >
+                            <Sparkles size={10} className="shrink-0 text-emerald-500 animate-pulse" />
+                            <span>{avatarStats.compressedSize} ({avatarStats.reduction})</span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <label
+                        className={"gm-btn w-full py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow transition-all " + (uploadingAvatar ? "opacity-50 pointer-events-none" : "")}
+                      >
+                        {uploadingAvatar ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                        <span>{uploadingAvatar ? "Otimizando..." : "Alterar Perfil"}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploadingAvatar}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) onUploadAvatar(f);
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-slate-200 dark:bg-zinc-800/80 w-full"></div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
+                        Nome da Empresa / Profissional
+                      </label>
+                      <input
+                        className="gm-input py-2 text-sm h-10 w-full"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
+                          <Monitor size={14} /> Escala Desktop
+                        </label>
+                        <ScaleSlider value={appScale} onChange={setAppScale} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
+                          <Smartphone size={14} /> Escala Smartphone
+                        </label>
+                        <ScaleSlider value={mobileScale} onChange={setMobileScale} isMobile />
                       </div>
                     </div>
                   </div>
-                </Card>
-              </div>
 
-              <div className="flex flex-col h-full">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Paintbrush size={20} className="text-[var(--gm-primary)]" />{" "}
-                  Cores & Fonte
-                </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
+                  <div className="h-px bg-slate-200 dark:bg-zinc-800/80 w-full"></div>
+
+                  <div>
+                    {/* CABEÇALHO DO PAINEL DE BOTÕES COM SELETOR DE MODO (CLARO / ESCURO) */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                      <div>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
+                          <Sparkles size={16} />
+                          Personalização dos Botões por Tema
+                        </label>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Configure de forma independente o estilo e as cores dos botões para o Modo Claro e para o Modo Escuro.
+                        </p>
+                      </div>
+
+                      {/* SELETOR DE TEMA PARA EDICAO DOS BOTOES */}
+                      <div className="flex items-center gap-1.5 p-1 bg-slate-200/80 dark:bg-zinc-800/90 rounded-2xl shrink-0 self-start sm:self-auto border border-slate-300/50 dark:border-zinc-700/50">
+                        <button
+                          type="button"
+                          onClick={() => setBtnConfigTab("light")}
+                          className={
+                            "px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer " +
+                            (btnConfigTab === "light"
+                              ? "bg-white text-amber-600 shadow-md scale-[1.02]"
+                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")
+                          }
+                        >
+                          <Sun size={14} className="text-amber-500" />
+                          Modo Claro ☀️
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBtnConfigTab("dark")}
+                          className={
+                            "px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer " +
+                            (btnConfigTab === "dark"
+                              ? "bg-zinc-900 text-orange-400 shadow-md scale-[1.02] border border-zinc-700/80"
+                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")
+                          }
+                        >
+                          <Moon size={14} className="text-orange-400" />
+                          Modo Escuro 🌙
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* BANNER INFORMATIVO DA ABA ATIVA */}
+                    <div className={
+                      "p-3 px-4 rounded-2xl mb-5 text-xs font-bold flex items-center justify-between border transition-all " +
+                      (btnConfigTab === "light"
+                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                        : "bg-orange-500/10 text-orange-400 border-orange-500/20")
+                    }>
+                      <span className="flex items-center gap-2">
+                        {btnConfigTab === "light" ? <Sun size={15} className="text-amber-500" /> : <Moon size={15} className="text-orange-400" />}
+                        Personalizando botões para o <strong>{btnConfigTab === "light" ? "Modo Claro (Fundo Claro)" : "Modo Escuro (Fundo Escuro)"}</strong>
+                      </span>
+                      <span className="text-[10px] uppercase font-black tracking-wider opacity-80">
+                        {isLightMode && btnConfigTab === "light"
+                          ? "Aplicado na tela agora"
+                          : !isLightMode && btnConfigTab === "dark"
+                          ? "Aplicado na tela agora"
+                          : "Prévia do tema"}
+                      </span>
+                    </div>
+
+                    {/* CAIXAS EXPANDIDAS DOS ESTILOS DE BOTÕES */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+                      {BUTTON_STYLES.map((s) => {
+                        const currentActiveStyle = btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark;
+                        const isActive = currentActiveStyle === s.id;
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => handleButtonStyleChange(s.id)}
+                            className={
+                              "group relative flex flex-col justify-between p-5 sm:p-6 rounded-3xl border-2 transition-all duration-150 cursor-pointer text-left shadow-xs hover:shadow-xl outline-none min-h-[240px] " +
+                              (isActive
+                                ? "border-[var(--gm-primary)] bg-[var(--gm-primary)]/10 ring-4 ring-[var(--gm-primary)]/20 shadow-lg scale-[1.01]"
+                                : "border-slate-200/80 dark:border-zinc-800/80 bg-white hover:bg-slate-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-800/80")
+                            }
+                          >
+                            <div className="w-full">
+                              <div className="flex items-center justify-between w-full mb-2">
+                                <span className={"text-sm font-black uppercase tracking-wider flex items-center gap-2 " + (isActive ? "text-[var(--gm-primary)]" : "text-slate-800 dark:text-slate-100")}>
+                                  {isActive && <CheckCircle2 size={16} className="text-[var(--gm-primary)] shrink-0" />}
+                                  {s.name}
+                                </span>
+                                {s.badge && (
+                                  <span className={"text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider " + (isActive ? "bg-[var(--gm-primary)] text-white shadow-xs" : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300")}>
+                                    {s.badge}
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-4">
+                                {s.desc}
+                              </p>
+                            </div>
+
+                            {/* PREVIA DETALHADA EM EVIDENCIA DENTRO DA PROPRIA CAIXA SELETORA */}
+                            <div className="gm-preview-container w-full p-4 rounded-2xl bg-slate-900/90 dark:bg-zinc-950/95 border border-slate-800/80 dark:border-zinc-800/80 shadow-inner space-y-3" data-button-style={s.id}>
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider px-1">
+                                <span className="flex items-center gap-1.5">
+                                  <Sparkles size={12} className="text-[var(--gm-primary)]" />
+                                  Prévia ({btnConfigTab === "light" ? "Claro" : "Escuro"})
+                                </span>
+                                {isActive ? (
+                                  <span className="text-emerald-400 font-black flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    Ativo
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-500 font-semibold">Clique para ativar</span>
+                                )}
+                              </div>
+
+                              {s.id === "solid" ? (
+                                <div className="space-y-2.5">
+                                  <div className="w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-white bg-[var(--gm-primary)] shadow-md flex items-center justify-center gap-2 transition-transform hover:scale-[1.01]">
+                                    <Check size={14} className="text-white" />
+                                    Principal Sólido
+                                  </div>
+                                </div>
+                              ) : s.id === "glass" ? (
+                                <div className="space-y-2.5">
+                                  <div className="w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-white bg-white/20 backdrop-blur-md border border-white/40 shadow-lg flex items-center justify-center gap-2 transition-all hover:bg-white/30">
+                                    <Sparkles size={14} className="text-[var(--gm-primary)]" />
+                                    Principal Vidro
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-2.5">
+                                  <div className="w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-[var(--gm-primary)] bg-transparent border-2 border-[var(--gm-primary)] shadow-xs flex items-center justify-center gap-2 transition-all hover:bg-[var(--gm-primary)] hover:text-white">
+                                    <Check size={14} className="text-[var(--gm-primary)]" />
+                                    Principal Vazado
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* PAINEL DE PERSONALIZAÇÃO DE CORES DO BOTÃO DO TEMA SELECIONADO */}
+                    <div className="mt-6 p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 space-y-4 shadow-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-zinc-800/80 pb-3">
+                        <div>
+                          <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
+                            <Paintbrush size={16} /> Personalizar Cores do Botão - {btnConfigTab === "light" ? "Modo Claro ☀️" : "Modo Escuro 🌙"}
+                          </span>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            Ajuste livremente o preenchimento, contorno, texto e ícone dos botões para o {btnConfigTab === "light" ? "Modo Claro" : "Modo Escuro"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (btnConfigTab === "light") {
+                              const defPrimary = brandPrimary || "#FF6900";
+                              updateButtonLight({
+                                style: "vazado",
+                                bg: "transparent",
+                                border: defPrimary,
+                                text: "#18181B",
+                                icon: defPrimary,
+                              });
+                            } else {
+                              const defPrimary = brandPrimary || "#FF7B17";
+                              updateButtonDark({
+                                style: "vazado",
+                                bg: "transparent",
+                                border: defPrimary,
+                                text: "#FFFFFF",
+                                icon: defPrimary,
+                              });
+                            }
+                          }}
+                          className="text-[11px] font-bold text-[var(--gm-primary)] hover:underline flex items-center gap-1 self-start sm:self-auto cursor-pointer"
+                        >
+                          <RotateCcw size={12} /> Restaurar Padrões ({btnConfigTab === "light" ? "Claro" : "Escuro"})
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* 1. Cor do Preenchimento (Fundo) */}
+                        <ColorPickerInput
+                          label={
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                              <Palette size={14} className="text-[var(--gm-primary)]" />
+                              Cor do Preenchimento (Fundo)
+                            </span>
+                          }
+                          value={btnConfigTab === "light" ? buttonBgLight : buttonBgDark}
+                          onChange={(val) => {
+                            if (btnConfigTab === "light") updateButtonLight({ bg: val });
+                            else updateButtonDark({ bg: val });
+                          }}
+                        />
+
+                        {/* 2. Cor do Contorno (Borda) */}
+                        <ColorPickerInput
+                          label={
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                              <Sparkles size={14} className="text-[var(--gm-primary)]" />
+                              Cor do Contorno (Borda)
+                            </span>
+                          }
+                          value={btnConfigTab === "light" ? buttonBorderLight : buttonBorderDark}
+                          onChange={(val) => {
+                            if (btnConfigTab === "light") updateButtonLight({ border: val });
+                            else updateButtonDark({ border: val });
+                          }}
+                        />
+
+                        {/* 3. Cor do Texto */}
+                        <ColorPickerInput
+                          label={
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                              <Type size={14} className="text-[var(--gm-primary)]" />
+                              Cor do Texto
+                            </span>
+                          }
+                          value={btnConfigTab === "light" ? buttonTextLight : buttonTextDark}
+                          onChange={(val) => {
+                            if (btnConfigTab === "light") updateButtonLight({ text: val });
+                            else updateButtonDark({ text: val });
+                          }}
+                        />
+
+                        {/* 4. Cor do Ícone */}
+                        <ColorPickerInput
+                          label={
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                              <CheckCircle2 size={14} className="text-[var(--gm-primary)]" />
+                              Cor do Ícone
+                            </span>
+                          }
+                          value={btnConfigTab === "light" ? buttonIconLight : buttonIconDark}
+                          onChange={(val) => {
+                            if (btnConfigTab === "light") updateButtonLight({ icon: val });
+                            else updateButtonDark({ icon: val });
+                          }}
+                        />
+                      </div>
+
+                      {/* DEMONSTRAÇÃO AO VIVO NO CANVAS DO TEMA CORRESPONDENTE */}
+                      <div className="pt-2">
+                        <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
+                          <span>Prévia Real do Botão no Canvas do {btnConfigTab === "light" ? "Modo Claro ☀️" : "Modo Escuro 🌙"}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            Ambiente Real Fiel
+                          </span>
+                        </label>
+                        <div className={
+                          "p-8 rounded-2xl border flex flex-col items-center justify-center gap-3 shadow-inner relative overflow-hidden transition-all " +
+                          (btnConfigTab === "light"
+                            ? "bg-[#F7F8FA] border-[#E8EAF0] text-[#18181B]"
+                            : "bg-[#0F1115] border-[#303747] text-[#FFFFFF]")
+                        }>
+                          <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border opacity-70 mb-1" style={{
+                            borderColor: btnConfigTab === "light" ? "#E8EAF0" : "#303747",
+                            color: btnConfigTab === "light" ? "#686D76" : "#B6BDC8"
+                          }}>
+                            {btnConfigTab === "light" ? "Ambiente Modo Claro (#F7F8FA)" : "Ambiente Modo Escuro (#0F1115)"}
+                          </span>
+
+                          <button
+                            type="button"
+                            style={{
+                              backgroundColor: btnConfigTab === "light" ? buttonBgLight : buttonBgDark,
+                              background: btnConfigTab === "light" ? buttonBgLight : buttonBgDark,
+                              borderColor: btnConfigTab === "light" ? buttonBorderLight : buttonBorderDark,
+                              color: btnConfigTab === "light" ? buttonTextLight : buttonTextDark,
+                              borderWidth: "2px",
+                              borderStyle: "solid",
+                              backdropFilter: (btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark) === "glass" ? "blur(12px) saturate(180%)" : "none",
+                              WebkitBackdropFilter: (btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark) === "glass" ? "blur(12px) saturate(180%)" : "none",
+                              boxShadow: (btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark) === "glass" ? "0 8px 32px 0 rgba(0,0,0,0.2)" : (btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark) === "solid" ? "0 4px 12px rgba(0,0,0,0.15)" : "none",
+                            }}
+                            className="px-6 py-3 rounded-xl font-extrabold text-sm flex items-center gap-2.5 transition-all hover:scale-105 cursor-pointer shadow-md"
+                          >
+                            <Sparkles size={16} style={{
+                              color: btnConfigTab === "light" ? buttonIconLight : buttonIconDark,
+                              stroke: btnConfigTab === "light" ? buttonIconLight : buttonIconDark
+                            }} />
+                            <span style={{ color: btnConfigTab === "light" ? buttonTextLight : buttonTextDark }}>
+                              Botão {btnConfigTab === "light" ? "Modo Claro" : "Modo Escuro"}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SEÇÃO 2: CORES & FONTE */}
+              {openSections.colors && (
+                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                      <Paintbrush className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
+                      <span>CORES & FONTE</span>
+                    </span>
+                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                      Edição Ativa
+                    </span>
+                  </div>
+
                   <ColorSettingsManager
                     isLightMode={isLightMode}
                     brandPrimary={brandPrimary}
@@ -1506,244 +2204,176 @@ export default function Configuracoes() {
                     setPreviewFont={setPreviewFont}
                     updateDomColor={updateDomColor}
                   />
-                </Card>
-              </div>
+                </div>
+              )}
 
-              {/* ROW 2 */}
-              <div className="flex flex-col h-full">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <ImageIcon size={20} className="text-[var(--gm-primary)]" />{" "}
-                  Plano de Fundo (
-                  {viewMode === "smartphone" ? "Smartphone" : "Desktop"})
-                </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col h-full flex-1">
-                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 shrink-0">
+              {/* SEÇÃO 3: IMAGEM DE FUNDO */}
+              {openSections.background && (
+                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                      <ImageIcon className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
+                      <span>IMAGEM DE FUNDO</span>
+                    </span>
+                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                      Edição Ativa
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4">
                       <div>
-                        <div className="font-semibold text-sm">
-                          Plano de fundo
+                        <div className="font-bold text-sm text-slate-800 dark:text-white">
+                          Exibir Plano de Fundo
                         </div>
-                        <div className="gm-muted text-[10px]">
-                          Ative para aparecer no app
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          Ative para renderizar no fundo do aplicativo
                         </div>
                       </div>
                       <button
                         type="button"
-                        className={`gm-btn py-1.5 px-3 text-xs`}
+                        className="gm-btn py-1.5 px-4 text-xs font-bold"
                         onClick={() => {
                           if (viewMode === "smartphone") {
                             setMobileBgEnabled((v) => {
                               const next = !v;
-                              if (next && mobileBgOpacity <= 0)
-                                setMobileBgOpacity(mobileBgOpacityPrev);
-                              else if (!next && mobileBgOpacity > 0)
-                                setMobileBgOpacityPrev(mobileBgOpacity);
+                              if (next && mobileBgOpacity <= 0) setMobileBgOpacity(mobileBgOpacityPrev);
+                              else if (!next && mobileBgOpacity > 0) setMobileBgOpacityPrev(mobileBgOpacity);
                               return next;
                             });
                           } else {
                             setBgEnabled((v) => {
                               const next = !v;
-                              if (next && bgOpacity <= 0)
-                                setBgOpacity(bgOpacityPrev);
-                              else if (!next && bgOpacity > 0)
-                                setBgOpacityPrev(bgOpacity);
+                              if (next && bgOpacity <= 0) setBgOpacity(bgOpacityPrev);
+                              else if (!next && bgOpacity > 0) setBgOpacityPrev(bgOpacity);
                               return next;
                             });
                           }
                         }}
                       >
-                        {(
-                          viewMode === "smartphone"
-                            ? mobileBgEnabled
-                            : bgEnabled
-                        )
-                          ? "Ativo"
-                          : "Desativado"}
+                        {(viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) ? "Ativo" : "Desativado"}
                       </button>
                     </div>
 
-                    <div className="mt-4 space-y-4 flex-1 flex flex-col justify-center">
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                          Ajuste
-                        </label>
-                        <Select
-                          className="gm-input py-2 text-sm h-10 w-full"
-                          value={
-                            viewMode === "smartphone" ? mobileBgFit : bgFit
-                          }
-                          onChange={(val) => {
-                            if (viewMode === "smartphone")
-                              setMobileBgFit(String(val) as Fit);
-                            else setBgFit(String(val) as Fit);
-                          }}
-                          options={[
-                            { value: "cover", label: "Cortar (cover)" },
-                            { value: "contain", label: "Conter (contain)" },
-                          ]}
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                          Opacidade (
-                          {Math.round(
-                            (viewMode === "smartphone"
-                              ? mobileBgOpacity
-                              : bgOpacity) * 100,
-                          )}
-                          %)
-                        </label>
-                        <input
-                          type="range"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          className="w-full h-1.5 accent-[var(--gm-primary)]"
-                          value={
-                            viewMode === "smartphone"
-                              ? mobileBgOpacity
-                              : bgOpacity
-                          }
-                          onChange={(e) => {
-                            if (viewMode === "smartphone")
-                              setMobileBgOpacity(Number(e.target.value));
-                            else setBgOpacity(Number(e.target.value));
-                          }}
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                          Zoom (
-                          {viewMode === "smartphone" ? mobileBgScale : bgScale}
-                          x)
-                        </label>
-                        <input
-                          type="range"
-                          min={0.5}
-                          max={5}
-                          step={0.1}
-                          className="w-full h-1.5 accent-[var(--gm-primary)]"
-                          value={
-                            viewMode === "smartphone" ? mobileBgScale : bgScale
-                          }
-                          onChange={(e) => {
-                            if (viewMode === "smartphone")
-                              setMobileBgScale(Number(e.target.value));
-                            else setBgScale(Number(e.target.value));
-                          }}
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                          Desfoque (
-                          {viewMode === "smartphone" ? mobileBgBlur : bgBlur}px)
-                        </label>
-                        <input
-                          type="range"
-                          min={0}
-                          max={24}
-                          step={1}
-                          className="w-full h-1.5 accent-[var(--gm-primary)]"
-                          value={
-                            viewMode === "smartphone" ? mobileBgBlur : bgBlur
-                          }
-                          onChange={(e) => {
-                            if (viewMode === "smartphone")
-                              setMobileBgBlur(Number(e.target.value));
-                            else setBgBlur(Number(e.target.value));
-                          }}
-                        />
-                      </div>
-
-                      <div className="pt-2">
-                        <div className="text-[10px] leading-tight text-slate-500 dark:text-slate-400 mb-3 text-center">
-                          Formatos aceitos: JPG, PNG, WEBP, GIF, MP4 (Máx.
-                          15MB).
-                          <br />
-                          As imagens contam com otimização automática.
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
+                            Modo de Ajuste
+                          </label>
+                          <Select
+                            className="gm-input py-2 text-sm h-10 w-full"
+                            value={viewMode === "smartphone" ? mobileBgFit : bgFit}
+                            onChange={(val) => {
+                              if (viewMode === "smartphone") setMobileBgFit(String(val) as Fit);
+                              else setBgFit(String(val) as Fit);
+                            }}
+                            options={[
+                              { value: "cover", label: "Cortar e Preencher (cover)" },
+                              { value: "contain", label: "Ajustar Inteira (contain)" },
+                            ]}
+                          />
                         </div>
-                        {(viewMode === "smartphone" ? mobileBgUrl : bgUrl) && (
-                          <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-[0_0_15px_rgba(255,123,0,0.1)] group">
-                            {uploadingBackground ? (
-                              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
-                                <Loader2
-                                  size={32}
-                                  className="animate-spin text-[var(--gm-primary)] mb-2"
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
+                            Opacidade ({Math.round((viewMode === "smartphone" ? mobileBgOpacity : bgOpacity) * 100)}%)
+                          </label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            className="w-full h-2 accent-[var(--gm-primary)] cursor-pointer"
+                            value={viewMode === "smartphone" ? mobileBgOpacity : bgOpacity}
+                            onChange={(e) => {
+                              if (viewMode === "smartphone") setMobileBgOpacity(Number(e.target.value));
+                              else setBgOpacity(Number(e.target.value));
+                            }}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
+                            Zoom ({viewMode === "smartphone" ? mobileBgScale : bgScale}x)
+                          </label>
+                          <input
+                            type="range"
+                            min={0.5}
+                            max={5}
+                            step={0.1}
+                            className="w-full h-2 accent-[var(--gm-primary)] cursor-pointer"
+                            value={viewMode === "smartphone" ? mobileBgScale : bgScale}
+                            onChange={(e) => {
+                              if (viewMode === "smartphone") setMobileBgScale(Number(e.target.value));
+                              else setBgScale(Number(e.target.value));
+                            }}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
+                            Desfoque / Blur ({viewMode === "smartphone" ? mobileBgBlur : bgBlur}px)
+                          </label>
+                          <input
+                            type="range"
+                            min={0}
+                            max={24}
+                            step={1}
+                            className="w-full h-2 accent-[var(--gm-primary)] cursor-pointer"
+                            value={viewMode === "smartphone" ? mobileBgBlur : bgBlur}
+                            onChange={(e) => {
+                              if (viewMode === "smartphone") setMobileBgBlur(Number(e.target.value));
+                              else setBgBlur(Number(e.target.value));
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col justify-between p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                        <div>
+                          <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-2 block">
+                            Preview da Imagem / Vídeo
+                          </span>
+                          {(viewMode === "smartphone" ? mobileBgUrl : bgUrl) ? (
+                            <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-xs group">
+                              {uploadingBackground && (
+                                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
+                                  <Loader2 size={32} className="animate-spin text-[var(--gm-primary)] mb-2" />
+                                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">Processando...</span>
+                                </div>
+                              )}
+                              {((viewMode === "smartphone" ? mobileBgUrl : bgUrl) || "").toLowerCase().endsWith(".mp4") ||
+                              ((viewMode === "smartphone" ? mobileBgUrl : bgUrl) || "").toLowerCase().endsWith(".webm") ? (
+                                <video
+                                  src={(viewMode === "smartphone" ? mobileBgUrl : bgUrl) || ""}
+                                  autoPlay
+                                  loop
+                                  muted
+                                  playsInline
+                                  className="w-full h-full object-cover"
                                 />
-                                <span className="text-[10px] font-bold text-white uppercase tracking-wider">
-                                  Processando...
-                                </span>
-                              </div>
-                            ) : null}
-                            {(
-                              (viewMode === "smartphone"
-                                ? mobileBgUrl
-                                : bgUrl) || ""
-                            )
-                              .toLowerCase()
-                              .endsWith(".mp4") ||
-                            (
-                              (viewMode === "smartphone"
-                                ? mobileBgUrl
-                                : bgUrl) || ""
-                            )
-                              .toLowerCase()
-                              .endsWith(".webm") ? (
-                              <video
-                                src={
-                                  (viewMode === "smartphone"
-                                    ? mobileBgUrl
-                                    : bgUrl) || ""
-                                }
-                                autoPlay
-                                loop
-                                muted
-                                playsInline
-                                className="w-full h-full object-cover"
-                                style={{ transform: "translate3d(0, 0, 0)", backfaceVisibility: "hidden" }}
-                                controlsList="nodownload"
-                                disablePictureInPicture
-                                onContextMenu={(e) => e.preventDefault()}
-                              />
-                            ) : (
-                              <img
-                                src={
-                                  (viewMode === "smartphone"
-                                    ? mobileBgUrl
-                                    : bgUrl) || ""
-                                }
-                                alt="Background"
-                                className="w-full h-full object-cover"
-                              />
-                            )}
-                          </div>
-                        )}
-                        {!(viewMode === "smartphone" ? mobileBgUrl : bgUrl) &&
-                          uploadingBackground && (
-                            <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-xs bg-slate-100 dark:bg-black/40 flex flex-col items-center justify-center backdrop-blur-sm">
-                              <Loader2
-                                size={32}
-                                className="animate-spin text-[var(--gm-primary)] mb-2"
-                              />
-                              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
-                                Processando...
-                              </span>
+                              ) : (
+                                <img
+                                  src={(viewMode === "smartphone" ? mobileBgUrl : bgUrl) || ""}
+                                  alt="Background"
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
+                          ) : (
+                            <div className="mb-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800/40 aspect-video flex flex-col items-center justify-center p-4 text-center">
+                              <ImageIcon size={32} className="text-slate-400 mb-2 opacity-50" />
+                              <span className="text-xs font-medium text-slate-500">Nenhuma imagem carregada</span>
                             </div>
                           )}
+                        </div>
+
                         <label
-                          className={`gm-btn w-full py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingBackground ? "opacity-50 pointer-events-none" : ""}`}
+                          className={"gm-btn w-full py-2.5 flex items-center justify-center gap-2 cursor-pointer " + (uploadingBackground ? "opacity-50 pointer-events-none" : "")}
                         >
-                          {uploadingBackground ? (
-                            <Loader2 size={16} className="animate-spin" />
-                          ) : (
-                            <FileImage size={16} />
-                          )}
-                          {uploadingBackground
-                            ? "Enviando..."
-                            : "Upload Background"}
+                          {uploadingBackground ? <Loader2 size={16} className="animate-spin" /> : <FileImage size={16} />}
+                          <span className="font-bold text-xs">{uploadingBackground ? "Enviando..." : "Upload Background"}</span>
                           <input
                             type="file"
                             accept="image/*,video/mp4,video/webm"
@@ -1758,31 +2388,31 @@ export default function Configuracoes() {
                       </div>
                     </div>
                   </div>
-                </Card>
-              </div>
+                </div>
+              )}
 
-              <div className="flex flex-col h-full">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <CreditCard size={20} className="text-[var(--gm-primary)]" />{" "}
-                  Dados de Pagamento
-                </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group">
-                  <div className="flex flex-col gap-6 h-full flex-1">
-                    <div className="shrink-0">
-                      <div className="font-bold text-sm uppercase tracking-wider text-[var(--gm-primary)] mb-1">
-                        Dados de Pagamento (Pix)
-                      </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
-                        ✅ QR e “Copia e Cola” gerados aqui funcionam em{" "}
-                        <b>qualquer banco</b> (Itaú, Nubank, Caixa, BB,
-                        Bradesco, Santander, Inter, etc.)
-                      </div>
+              {/* SEÇÃO 4: DADOS PIX */}
+              {openSections.pix && (
+                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                      <CreditCard className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
+                      <span>DADOS DE PAGAMENTO (PIX)</span>
+                    </span>
+                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                      Edição Ativa
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-6">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-zinc-900/50 p-3.5 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                      ✅ O QR Code e a chave “Copia e Cola” gerados aqui funcionam em <b>qualquer aplicativo bancário</b>.
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 shrink-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-1 block">
-                          Tipo de chave
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-1.5 block">
+                          Tipo de Chave Pix
                         </label>
                         <Select
                           className="gm-input py-2 text-sm h-10 w-full"
@@ -1793,53 +2423,43 @@ export default function Configuracoes() {
                             { value: "CNPJ", label: "CNPJ" },
                             { value: "EMAIL", label: "E-mail" },
                             { value: "PHONE", label: "Telefone" },
-                            { value: "RANDOM", label: "Aleatória" },
+                            { value: "RANDOM", label: "Chave Aleatória" },
                           ]}
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-1 block">
-                          Chave Pix
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-1.5 block">
+                          Sua Chave Pix
                         </label>
                         <input
                           type="text"
                           className="gm-input py-2 text-sm h-10 w-full"
-                          placeholder="Sua chave Pix"
+                          placeholder="Informe sua chave Pix"
                           value={pixKey}
                           onChange={(e) => setPixKey(e.target.value)}
                         />
                       </div>
                     </div>
 
-                    <div className="text-xs text-slate-500 dark:text-slate-400 shrink-0">
-                      Dica: e-mail deve ser minúsculo e sem espaços (o sistema
-                      pode ajustar).
-                    </div>
-
-                    {/* ✅ Preview do QR + Copia e Cola */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start pt-4 border-t border-slate-200/80 dark:border-white/10 flex-1">
-                      <div className="rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-800/80 backdrop-blur-md p-4 h-full flex flex-col">
-                        <div className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">
-                          QR Code Pix (universal)
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-slate-50 dark:bg-zinc-900/50 p-5 flex flex-col items-center justify-between">
+                        <div className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 self-start">
+                          QR Code Pix Universal
                         </div>
                         {pixQrPreview ? (
-                          <div className="bg-white rounded-xl p-3 w-fit mx-auto flex-1 flex items-center justify-center">
-                            <img
-                              src={pixQrPreview}
-                              alt="QR Pix (Preview)"
-                              className="w-[180px] h-auto"
-                            />
+                          <div className="bg-white rounded-2xl p-4 shadow-sm my-2">
+                            <img src={pixQrPreview} alt="QR Pix (Preview)" className="w-[180px] h-auto" />
                           </div>
                         ) : (
-                          <div className="text-xs text-slate-500 text-center py-8 flex-1 flex items-center justify-center">
-                            Informe uma chave Pix para gerar o QR.
+                          <div className="text-xs text-slate-500 text-center py-12">
+                            Informe uma chave Pix válida acima para gerar o QR Code.
                           </div>
                         )}
 
                         {pixQrPreview && (
                           <button
                             type="button"
-                            className="gm-btn-soft w-full mt-4 justify-center py-2"
+                            className="gm-btn-soft w-full mt-3 justify-center py-2 text-xs font-bold"
                             onClick={() => {
                               const a = document.createElement("a");
                               a.href = pixQrPreview;
@@ -1847,206 +2467,163 @@ export default function Configuracoes() {
                               a.click();
                             }}
                           >
-                            <Download size={16} />
-                            Baixar QR
+                            <Download size={16} /> Baixar Imagem QR
                           </button>
                         )}
                       </div>
 
-                      <div className="rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-800/80 backdrop-blur-md p-4 h-full flex flex-col">
-                        <div className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">
-                          Pix “Copia e Cola”
-                        </div>
-
-                        {!pixPayloadPreview ? (
-                          <div className="text-xs text-slate-500 text-center py-8 flex-1 flex items-center justify-center">
-                            Informe uma chave Pix para gerar o código.
+                      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-slate-50 dark:bg-zinc-900/50 p-5 flex flex-col justify-between">
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">
+                            Pix Copia e Cola
                           </div>
-                        ) : (
-                          <div className="flex flex-col h-full justify-between flex-1">
-                            <div className="text-[10px] leading-relaxed font-mono break-all bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-lg p-3 text-slate-600 dark:text-slate-300 mb-4 max-h-[140px] overflow-y-auto">
+                          {!pixPayloadPreview ? (
+                            <div className="text-xs text-slate-500 text-center py-12">
+                              Informe uma chave Pix para gerar o código de cópia instantânea.
+                            </div>
+                          ) : (
+                            <div className="text-[11px] leading-relaxed font-mono break-all bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl p-3 text-slate-700 dark:text-slate-300 max-h-[140px] overflow-y-auto shadow-inner">
                               {pixPayloadPreview}
                             </div>
+                          )}
+                        </div>
 
-                            <button
-                              type="button"
-                              className="gm-btn w-full justify-center py-2 mt-auto"
-                              onClick={async () => {
-                                const ok = await copyText(pixPayloadPreview);
-                                if (ok) {
-                                  setPixCopied(true);
-                                  setTimeout(() => setPixCopied(false), 1500);
-                                } else {
-                                  alert(
-                                    "Não foi possível copiar automaticamente. Copie manualmente acima.",
-                                  );
-                                }
-                              }}
-                            >
-                              {pixCopied ? (
-                                <Check size={16} />
-                              ) : (
-                                <Copy size={16} />
-                              )}
-                              {pixCopied ? "Copiado!" : "Copiar código"}
-                            </button>
-                          </div>
+                        {pixPayloadPreview && (
+                          <button
+                            type="button"
+                            className="gm-btn w-full justify-center py-2.5 text-xs font-bold mt-4"
+                            onClick={async () => {
+                              const ok = await copyText(pixPayloadPreview);
+                              if (ok) {
+                                setPixCopied(true);
+                                setTimeout(() => setPixCopied(false), 1500);
+                              } else {
+                                alert("Não foi possível copiar automaticamente. Copie manualmente o código.");
+                              }
+                            }}
+                          >
+                            {pixCopied ? <Check size={16} /> : <Copy size={16} />}
+                            {pixCopied ? "Copiado com Sucesso!" : "Copiar Código Pix"}
+                          </button>
                         )}
                       </div>
                     </div>
-
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 text-center mt-2 shrink-0">
-                      Observação: este QR é <b>estático</b>. O banco do cliente
-                      pode digitar o valor ao pagar, ou você pode gerar com
-                      valor na tela de orçamento (como já existe no seu
-                      PixModal).
-                    </div>
                   </div>
-                </Card>
-              </div>
+                </div>
+              )}
 
-              {/* ROW 3 */}
-              <div className="flex flex-col h-full">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <FileText size={20} className="text-[var(--gm-primary)]" />{" "}
-                  Timbrado
-                </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-4 px-4 relative overflow-hidden group">
-                  <div className="flex flex-col gap-4 h-full flex-1 justify-center">
-                    <div className="w-full">
-                      <label className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-4 block text-center">
-                        Timbrado A4 (PDF/JPG/PNG)
-                      </label>
-                      <div className="flex items-start gap-8 justify-center">
-                        <div className="flex flex-col items-center gap-3 flex-1 max-w-[200px]">
-                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                            Seu Timbrado
-                          </span>
-                          <div className="w-full aspect-[1/1.414] rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
-                            {uploadingTimbrado ? (
-                              <Loader2
-                                size={48}
-                                className="animate-spin text-slate-400"
-                              />
-                            ) : timbradoUrl ? (
-                              <img
-                                src={timbradoUrl}
-                                alt="Timbrado"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <FileText
-                                size={48}
-                                className="opacity-50 text-slate-400"
-                              />
-                            )}
-                          </div>
-                          <label
-                            className={`gm-btn w-full py-2 flex items-center justify-center gap-2 cursor-pointer ${uploadingTimbrado ? "opacity-50 pointer-events-none" : ""}`}
-                          >
-                            {uploadingTimbrado ? (
-                              <Loader2 size={14} className="animate-spin" />
-                            ) : (
-                              <FileImage size={14} />
-                            )}
-                            {uploadingTimbrado
-                              ? "Enviando..."
-                              : "Importar timbrado"}
-                            <input
-                              type="file"
-                              accept="image/*,application/pdf"
-                              className="hidden"
-                              disabled={uploadingTimbrado}
-                              onChange={(e) => {
-                                const f = e.target.files?.[0];
-                                if (f) onUploadTimbrado(f);
-                              }}
-                            />
-                          </label>
+              {/* SEÇÃO 5: PAPEL TIMBRADO */}
+              {openSections.timbrado && (
+                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                      <FileText className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
+                      <span>PAPEL TIMBRADO</span>
+                    </span>
+                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                      Edição Ativa
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-6 text-center">
+                      Timbrado A4 para Impressão e PDF
+                    </label>
+                    <div className="flex flex-col sm:flex-row items-center gap-8 justify-center w-full max-w-xl">
+                      <div className="flex flex-col items-center gap-3 flex-1 w-full">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
+                          Seu Timbrado Atual
+                        </span>
+                        <div className="w-full aspect-[1/1.414] rounded-2xl bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shadow-inner">
+                          {uploadingTimbrado ? (
+                            <Loader2 size={40} className="animate-spin text-[var(--gm-primary)]" />
+                          ) : timbradoUrl ? (
+                            <img src={timbradoUrl} alt="Timbrado" className="w-full h-full object-cover" />
+                          ) : (
+                            <FileText size={40} className="opacity-40 text-slate-400" />
+                          )}
                         </div>
-                        <div className="flex flex-col items-center gap-3 flex-1 max-w-[200px]">
-                          <span className="text-sm font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                            Gabarito
-                          </span>
-                          <div className="w-full aspect-[1/1.414] rounded bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
-                            <img
-                              src={TIMBRADO_MODEL_URL}
-                              alt="Gabarito"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <a
-                            href={TIMBRADO_MODEL_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="gm-btn w-full py-2 flex items-center justify-center gap-2"
-                          >
-                            <Download size={14} />
-                            Baixar gabarito
-                          </a>
+                        <label
+                          className={"gm-btn w-full py-2.5 flex items-center justify-center gap-2 cursor-pointer " + (uploadingTimbrado ? "opacity-50 pointer-events-none" : "")}
+                        >
+                          {uploadingTimbrado ? <Loader2 size={14} className="animate-spin" /> : <FileImage size={14} />}
+                          <span className="text-xs font-bold">{uploadingTimbrado ? "Enviando..." : "Importar Timbrado"}</span>
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            className="hidden"
+                            disabled={uploadingTimbrado}
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) onUploadTimbrado(f);
+                            }}
+                          />
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col items-center gap-3 flex-1 w-full">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
+                          Gabarito Padrão
+                        </span>
+                        <div className="w-full aspect-[1/1.414] rounded-2xl bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shadow-inner">
+                          <img src={TIMBRADO_MODEL_URL} alt="Gabarito" className="w-full h-full object-cover" />
                         </div>
+                        <a
+                          href={TIMBRADO_MODEL_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="gm-btn-soft w-full py-2.5 flex items-center justify-center gap-2 text-xs font-bold"
+                        >
+                          <Download size={14} /> Baixar Gabarito
+                        </a>
                       </div>
                     </div>
                   </div>
-                </Card>
-              </div>
+                </div>
+              )}
 
-              <div className="flex flex-col h-full">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Bell size={20} className="text-[var(--gm-primary)]" />{" "}
-                  Notificações Push
-                </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group items-center justify-center text-center">
-                  <div className="flex flex-col items-center justify-center w-full max-w-[280px] mx-auto flex-1 space-y-4">
-                    {/* Background Glow */}
-                    <div
-                      className={`absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full opacity-20 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`}
-                    />
+              {/* SEÇÃO 6: NOTIFICAÇÕES PUSH */}
+              {openSections.push && (
+                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                      <Bell className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
+                      <span>NOTIFICAÇÕES PUSH</span>
+                    </span>
+                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                      Edição Ativa
+                    </span>
+                  </div>
 
+                  <div className="flex flex-col items-center text-center max-w-md mx-auto space-y-5">
                     <div
-                      className={`w-16 h-16 rounded-full flex items-center justify-center border transition-all duration-300 mx-auto ${
-                        pushActive && pushPermission === "granted"
-                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-inner animate-pulse"
-                          : "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                      }`}
+                      className={"w-16 h-16 rounded-full flex items-center justify-center border transition-all duration-300 " + (pushActive && pushPermission === "granted" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-inner animate-pulse" : "bg-amber-500/10 border-amber-500/30 text-amber-500")}
                     >
-                      <Bell
-                        size={24}
-                        className={testing ? "animate-bounce" : ""}
-                      />
+                      <Bell size={28} className={testing ? "animate-bounce" : ""} />
                     </div>
 
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">
-                        Configurar Notificações
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                        Alertas e Notificações do Dispositivo
                       </h4>
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-normal">
-                        Defina suas preferências de alerta do dispositivo em
-                        tempo real.
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                        Ative os alertas push para receber avisos em tempo real diretamente no seu smartphone ou computador.
                       </p>
                     </div>
 
-                    <div className="w-full flex flex-col gap-3 pt-1">
-                      {/* SWITCH 1: PERMISSION / RECEBER ALERTAS */}
-                      <div className="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-white/5">
+                    <div className="w-full flex flex-col gap-3 pt-2">
+                      <div className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
                         <div className="text-left">
-                          <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                            Notificações Push
-                          </p>
-                          <p
-                            className={`text-[9px] font-semibold uppercase ${pushActive && pushPermission === "granted" ? "text-emerald-500" : "text-amber-500"}`}
-                          >
-                            {pushActive && pushPermission === "granted"
-                              ? "Ativo (ligado)"
-                              : "Desativado (desligado)"}
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Notificações Push</p>
+                          <p className={"text-[10px] font-semibold uppercase " + (pushActive && pushPermission === "granted" ? "text-emerald-500" : "text-amber-500")}>
+                            {pushActive && pushPermission === "granted" ? "Ativo (Ligado)" : "Desativado (Desligado)"}
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={async () => {
                             if (pushPermission !== "granted") {
-                              const permission =
-                                await Notification.requestPermission();
+                              const permission = await Notification.requestPermission();
                               setPushPermission(permission);
                               if (permission === "granted") {
                                 setPushActive(true);
@@ -2058,82 +2635,38 @@ export default function Configuracoes() {
                             } else {
                               const nextActive = !pushActive;
                               setPushActive(nextActive);
-                              localStorage.setItem(
-                                "gm.pushActive",
-                                nextActive ? "true" : "false",
-                              );
+                              localStorage.setItem("gm.pushActive", nextActive ? "true" : "false");
                             }
                           }}
-                          className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none ${
-                            pushActive && pushPermission === "granted"
-                              ? "bg-emerald-500 justify-end"
-                              : "bg-slate-300 dark:bg-slate-700 justify-start"
-                          }`}
-                          aria-label="Toggle Push Notifications Desktop"
+                          className={"w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none " + (pushActive && pushPermission === "granted" ? "bg-emerald-500 justify-end" : "bg-slate-300 dark:bg-zinc-800 justify-start")}
                         >
-                          <motion.div
-                            layout
-                            className="w-5 h-5 bg-white rounded-full shadow-md"
-                            transition={{
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 30,
-                            }}
-                          />
+                          <motion.div layout className="w-5 h-5 bg-white rounded-full shadow-md" />
                         </button>
                       </div>
 
-                      {/* SWITCH 2: MUTED / SONS DE NOTIFICAÇÃO */}
-                      <div className="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-white/5">
+                      <div className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
                         <div className="text-left">
-                          <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                            Sons de Alerta
-                          </p>
-                          <p
-                            className={`text-[9px] font-semibold uppercase ${!notificationsMuted ? "text-emerald-500" : "text-amber-500"}`}
-                          >
-                            {!notificationsMuted
-                              ? "Ativo (ligado)"
-                              : "Desativado (desligado)"}
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Sons de Alerta</p>
+                          <p className={"text-[10px] font-semibold uppercase " + (!notificationsMuted ? "text-emerald-500" : "text-amber-500")}>
+                            {!notificationsMuted ? "Ativo (Ligado)" : "Desativado (Desligado)"}
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => {
                             const next = !notificationsMuted;
-                            localStorage.setItem(
-                              "gm.notificationsMuted",
-                              next ? "true" : "false",
-                            );
+                            localStorage.setItem("gm.notificationsMuted", next ? "true" : "false");
                             setNotificationsMuted(next);
                           }}
-                          className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none ${
-                            !notificationsMuted
-                              ? "bg-emerald-500 justify-end"
-                              : "bg-slate-300 dark:bg-slate-700 justify-start"
-                          }`}
-                          aria-label="Toggle Warning Sounds Desktop"
+                          className={"w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none " + (!notificationsMuted ? "bg-emerald-500 justify-end" : "bg-slate-300 dark:bg-zinc-800 justify-start")}
                         >
-                          <motion.div
-                            layout
-                            className="w-5 h-5 bg-white rounded-full shadow-md"
-                            transition={{
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 30,
-                            }}
-                          />
+                          <motion.div layout className="w-5 h-5 bg-white rounded-full shadow-md" />
                         </button>
                       </div>
 
-                      {/* SINGLE ACTION BUTTON: TEST NOTIFICATION (SHAKING) */}
                       <motion.button
                         type="button"
-                        animate={
-                          shakeTest
-                            ? { x: [-6, 6, -6, 6, -4, 4, -2, 2, 0] }
-                            : {}
-                        }
+                        animate={shakeTest ? { x: [-6, 6, -6, 6, -4, 4, -2, 2, 0] } : {}}
                         transition={{ duration: 0.4 }}
                         disabled={testing}
                         onClick={async () => {
@@ -2141,8 +2674,7 @@ export default function Configuracoes() {
                           setTimeout(() => setShakeTest(false), 450);
 
                           if (pushPermission !== "granted") {
-                            const permission =
-                              await Notification.requestPermission();
+                            const permission = await Notification.requestPermission();
                             setPushPermission(permission);
                             if (permission !== "granted") return;
                           }
@@ -2162,1274 +2694,222 @@ export default function Configuracoes() {
                           }
                           setTimeout(() => setTesting(false), 1000);
                         }}
-                        style={{
-                          backgroundColor: "var(--gm-primary)",
-                        }}
-                        className="py-3 flex items-center justify-center gap-1.5 text-xs font-bold w-full transition-all text-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:brightness-110 active:scale-[0.98] outline-none mt-2"
+                        className="gm-btn py-3 flex items-center justify-center gap-2 text-xs font-bold w-full transition-all text-white rounded-xl shadow-md hover:brightness-110 active:scale-[0.98] mt-2"
                       >
-                        {testing ? (
-                          <Loader2 size={13} className="animate-spin" />
-                        ) : (
-                          <Bell size={13} />
-                        )}
-                        {testing
-                          ? "Testando..."
-                          : "Enviar Notificação de Teste"}
+                        {testing ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}
+                        {testing ? "Testando Notificação..." : "Enviar Notificação de Teste"}
                       </motion.button>
                     </div>
                   </div>
-                </Card>
-              </div>
+                </div>
+              )}
 
-              {/* ROW 4 - SONS DE NOTIFICAÇÃO */}
-              <div className="flex flex-col h-full lg:col-span-2">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <Volume2 size={20} className="text-[var(--gm-primary)]" />{" "}
-                  Sons de Notificação (Notas e Orçamentos)
-                </h2>
-                <Card className="border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden">
-                  <p className="text-xs text-slate-500 dark:text-zinc-400 mb-4 max-w-2xl leading-relaxed">
-                    Escolha o toque de sua preferência para alarmes, rascunhos e
-                    finalização de orçamentos. Clique em qualquer som para
-                    escutar uma demonstração instantânea e definir como padrão
-                    do seu aplicativo CardDigital.
+              {/* SEÇÃO 7: SONS DO SISTEMA */}
+              {openSections.sounds && (
+                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                      <Volume2 className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
+                      <span>SONS DO SISTEMA</span>
+                    </span>
+                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                      Edição Ativa
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Escolha o toque de sua preferência para alarmes, notificações e confirmações no aplicativo. Clique para escutar uma demonstração instantânea.
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {NOTIFICATION_SOUNDS.map((sound) => {
                       const isSelected = activeSound === sound.id;
                       return (
                         <button
                           key={sound.id}
+                          type="button"
                           onClick={() => {
-                            localStorage.setItem(
-                              "gm.notificationSound",
-                              sound.id,
-                            );
+                            localStorage.setItem("gm.notificationSound", sound.id);
                             setActiveSound(sound.id);
                             try {
                               playNotificationSound(sound.id);
                             } catch (e) {}
                           }}
-                          className={`flex items-center justify-between p-4 rounded-xl border text-left transition-all ${
-                            isSelected
-                              ? "bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_15px_rgba(var(--gm-primary-rgb),0.1)]"
-                              : "bg-white dark:bg-white/5 border-slate-200/80 dark:border-white/5 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10"
-                          }`}
+                          className={"flex items-center justify-between p-4 rounded-2xl border text-left transition-all " + (isSelected ? "bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-sm" : "bg-slate-50 dark:bg-zinc-900/50 border-slate-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600")}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                                isSelected
-                                  ? "bg-[var(--gm-primary)] text-white"
-                                  : "bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-zinc-400"
-                              }`}
+                              className={"w-10 h-10 rounded-full flex items-center justify-center shrink-0 " + (isSelected ? "bg-[var(--gm-primary)] text-white" : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-slate-400")}
                             >
                               <Music size={18} />
                             </div>
                             <div>
-                              <h4 className="text-sm font-bold leading-tight">
-                                {sound.name}
-                              </h4>
-                              <p className="text-[10px] opacity-75 leading-normal mt-0.5 max-w-[280px]">
-                                {sound.description}
-                              </p>
+                              <h4 className="text-sm font-bold leading-tight">{sound.name}</h4>
+                              <p className="text-[10px] opacity-75 leading-normal mt-0.5 max-w-[240px]">{sound.description}</p>
                             </div>
                           </div>
 
                           <div
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                              isSelected
-                                ? "border-[var(--gm-primary)]"
-                                : "border-slate-300 dark:border-zinc-600"
-                            }`}
+                            className={"w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 " + (isSelected ? "border-[var(--gm-primary)]" : "border-slate-300 dark:border-zinc-700")}
                           >
-                            {isSelected && (
-                              <div className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)]" />
-                            )}
+                            {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)]" />}
                           </div>
                         </button>
                       );
                     })}
                   </div>
-                </Card>
-              </div>
+                </div>
+              )}
 
-              {/* ROW 5 - TUTORIAL */}
-              <div className="flex flex-col h-full lg:col-span-2">
-                <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-                  <HelpCircle size={20} className="text-[var(--gm-primary)]" /> Tutorial do Aplicativo
-                </h2>
-                <Card className="flex flex-col flex-1 border border-black/10 dark:border-white/10 shadow-sm rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-md transition-all duration-300 py-6 px-6 relative overflow-hidden group items-center justify-center text-center">
-                  <div className="flex flex-col items-center justify-center w-full max-w-sm mx-auto flex-1">
-                    <div className="w-16 h-16 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] flex items-center justify-center mb-4">
+              {/* SEÇÃO 8: TUTORIAL & SUPORTE */}
+              {openSections.tutorial && (
+                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                      <HelpCircle className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
+                      <span>TUTORIAL & SUPORTE</span>
+                    </span>
+                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                      Edição Ativa
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center text-center max-w-sm mx-auto py-4">
+                    <div className="w-16 h-16 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] flex items-center justify-center mb-4 border border-[var(--gm-primary)]/20">
                       <Sparkles size={32} />
                     </div>
-                    <div className="space-y-2 mb-6 shrink-0">
-                      <h4 className="text-lg font-bold text-slate-800 dark:text-white">
-                        Passo a Passo Interativo
-                      </h4>
-                      <p className="text-xs text-slate-500 max-w-[240px] mx-auto leading-relaxed">
-                        Quer rever as principais funções e usabilidade do painel principal? Inicie o assistente de onboarding.
-                      </p>
-                    </div>
+                    <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-2">
+                      Passo a Passo Interativo
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                      Deseja reiniciar o assistente virtual de onboarding para rever todas as funcionalidades e ferramentas do aplicativo?
+                    </p>
                     <button
+                      type="button"
                       onClick={() => {
                         localStorage.removeItem("gm.tutorialCompleted");
                         localStorage.setItem("gm.tutorialForceStart", "true");
                         navigate("/");
                       }}
-                      className="gm-btn py-3 px-6 flex items-center justify-center gap-2 text-sm w-full transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      className="gm-btn py-3 px-6 flex items-center justify-center gap-2 text-xs font-bold w-full transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <Sparkles size={16} />
                       Iniciar Tutorial do App
                     </button>
                   </div>
-                </Card>
-              </div>
-
-            </div>
-          ) : (
-            <div className="lg:hidden w-full max-w-md mx-auto relative flex flex-col h-full min-h-0 bg-transparent">
-              {/* TABS DE CONFIGURAÇÃO DE CADA TELA EM TEMPO REAL */}
-              <div className="flex gap-1.5 overflow-x-auto px-2 py-3 no-scrollbar shrink-0 border-b border-black/10 dark:border-white/10 mb-2">
-                {[
-                  { id: 0, label: "Identidade", icon: Palette },
-                  { id: 1, label: "Fundo", icon: ImageIcon },
-                  { id: 2, label: "Cores & Botão", icon: Paintbrush },
-                  { id: 3, label: "Pix", icon: CreditCard },
-                  { id: 4, label: "Timbrado", icon: FileText },
-                  { id: 5, label: "Notificar", icon: Bell },
-                  { id: 6, label: "Toques", icon: Volume2 },
-                  { id: 7, label: "Manual", icon: HelpCircle },
-                ].map((tab) => {
-                  const TabIcon = tab.icon;
-                  const isSelected = tab.id === currentScreen;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => {
-                        setDirection(tab.id > currentScreen ? 1 : -1);
-                        setCurrentScreen(tab.id);
-                      }}
-                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition-all duration-300 select-none whitespace-nowrap outline-none ${
-                        isSelected
-                          ? "bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] shadow-[0_0_12px_rgba(var(--gm-primary-rgb),0.25)] scale-105"
-                          : "bg-white dark:bg-white/5 border-slate-200/80 dark:border-white/5 text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-white/10 active:scale-95"
-                      }`}
-                    >
-                      <TabIcon
-                        size={12}
-                        className={
-                          isSelected ? "text-white" : "text-[var(--gm-primary)]"
-                        }
-                      />
-                      <span>{tab.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="relative overflow-hidden w-full pt-1 flex-1 flex flex-col min-h-0">
-                <motion.div
-                  className="relative flex items-start flex-1 min-h-0"
-                  initial={false}
-                >
-                  <motion.div
-                    className="flex w-full items-start h-full min-h-0"
-                    animate={{ x: `-${currentScreen * 100}%` }}
-                    transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                  >
-                    <div
-                      ref={swipeRef}
-                      className="flex w-full items-start h-full min-h-0"
-                      style={{ touchAction: "pan-y" }}
-                    >
-                      {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => {
-                        const isActive = index === currentScreen;
-                        return (
-                          <motion.div
-                            key={index}
-                            className="w-full shrink-0 px-2 flex flex-col justify-start h-full overflow-y-auto no-scrollbar min-h-0 pb-24"
-                            animate={{
-                              filter: isActive ? "blur(0px)" : "blur(4px)",
-                              opacity: isActive ? 1 : 0.5,
-                              scale: isActive ? 1 : 0.95,
-                            }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <div 
-                              className="w-full flex-shrink-0 flex flex-col gap-5 py-6 px-5 rounded-[2rem] relative mb-8 shadow-2xl transition-all gm-settings-card"
-                              style={{ 
-                                backgroundColor: 'rgba(17, 19, 24, 0.7)',
-                                backdropFilter: 'blur(12px)',
-                                borderColor: brandPrimary || '#32BCAD',
-                                borderWidth: '1px',
-                                borderStyle: 'solid',
-                                boxShadow: `0 0 20px ${brandPrimary || '#32BCAD'}40, inset 0 0 20px ${brandPrimary || '#32BCAD'}20`
-                              }}
-                            >
-                              {index === 0 && (
-                                <>
-                                  <div className="flex items-center justify-between mb-1 shrink-0">
-                                    <h2 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-white uppercase tracking-wider">
-                                      <Palette
-                                        size={16}
-                                        className="text-[var(--gm-primary)]"
-                                      />{" "}
-                                      Identidade Visual
-                                    </h2>
-                                  </div>
-
-                                  <div className="flex flex-col gap-4">
-                                    <div className="grid grid-cols-2 gap-3 w-full py-1">
-                                      {/* LOGO DA EMPRESA */}
-                                      <div className="flex flex-col items-center gap-1.5 bg-white dark:bg-white/5 p-3 rounded-2xl border border-slate-200/80 dark:border-white/10">
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1">
-                                          <FileImage size={12} /> Logo
-                                        </span>
-                                        <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
-                                          {companyLogoUrl ? (
-                                            <img
-                                              src={companyLogoUrl}
-                                              alt="Logo"
-                                              className="w-full h-full object-contain p-1"
-                                            />
-                                          ) : (
-                                            <ImageIcon
-                                              size={20}
-                                              className="opacity-50 text-slate-400"
-                                            />
-                                          )}
-
-                                          <AnimatePresence>
-                                            {uploadingLogo && (
-                                              <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center p-1 text-white text-center z-10"
-                                              >
-                                                <Loader2 size={18} className="animate-spin text-[var(--gm-primary)] mb-1" />
-                                                <span className="text-[9px] font-bold leading-tight">
-                                                  {logoStatusText || "Processando..."}
-                                                </span>
-                                                {logoProgress > 0 && (
-                                                  <div className="w-full bg-white/20 h-1 rounded-full mt-1 overflow-hidden">
-                                                    <div
-                                                      className="bg-[var(--gm-primary)] h-full transition-all duration-300 rounded-full"
-                                                      style={{ width: `${logoProgress}%` }}
-                                                    />
-                                                  </div>
-                                                )}
-                                              </motion.div>
-                                            )}
-                                          </AnimatePresence>
-                                        </div>
-
-                                        <AnimatePresence>
-                                          {logoStats && !uploadingLogo && (
-                                            <motion.div
-                                              initial={{ opacity: 0 }}
-                                              animate={{ opacity: 1 }}
-                                              className="text-[9px] font-bold text-emerald-400 text-center"
-                                            >
-                                              {logoStats.compressedSize} ({logoStats.reduction})
-                                            </motion.div>
-                                          )}
-                                        </AnimatePresence>
-
-                                        <label
-                                          className={`gm-btn w-full py-1.5 text-[11px] flex items-center justify-center gap-1 cursor-pointer ${uploadingLogo ? "opacity-50 pointer-events-none" : ""}`}
-                                        >
-                                          {uploadingLogo ? (
-                                            <Loader2 size={12} className="animate-spin" />
-                                          ) : (
-                                            <Upload size={12} />
-                                          )}
-                                          <span>{uploadingLogo ? "..." : "Logo"}</span>
-                                          <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            disabled={uploadingLogo}
-                                            onChange={(e) => {
-                                              const f = e.target.files?.[0];
-                                              if (f) onUploadLogo(f);
-                                            }}
-                                          />
-                                        </label>
-                                      </div>
-
-                                      {/* FOTO DE PERFIL / AVATAR */}
-                                      <div className="flex flex-col items-center gap-1.5 bg-white dark:bg-white/5 p-3 rounded-2xl border border-slate-200/80 dark:border-white/10">
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1">
-                                          <User size={12} /> Perfil
-                                        </span>
-                                        <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shrink-0">
-                                          {avatarUrl ? (
-                                            <img
-                                              src={avatarUrl}
-                                              alt="Perfil"
-                                              className="w-full h-full object-cover"
-                                            />
-                                          ) : (
-                                            <User
-                                              size={20}
-                                              className="opacity-50 text-slate-400"
-                                            />
-                                          )}
-
-                                          <AnimatePresence>
-                                            {uploadingAvatar && (
-                                              <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center p-1 text-white text-center z-10"
-                                              >
-                                                <Loader2 size={18} className="animate-spin text-[var(--gm-primary)] mb-1" />
-                                                <span className="text-[9px] font-bold leading-tight">
-                                                  {avatarStatusText || "Processando..."}
-                                                </span>
-                                                {avatarProgress > 0 && (
-                                                  <div className="w-full bg-white/20 h-1 rounded-full mt-1 overflow-hidden">
-                                                    <div
-                                                      className="bg-[var(--gm-primary)] h-full transition-all duration-300 rounded-full"
-                                                      style={{ width: `${avatarProgress}%` }}
-                                                    />
-                                                  </div>
-                                                )}
-                                              </motion.div>
-                                            )}
-                                          </AnimatePresence>
-                                        </div>
-
-                                        <AnimatePresence>
-                                          {avatarStats && !uploadingAvatar && (
-                                            <motion.div
-                                              initial={{ opacity: 0 }}
-                                              animate={{ opacity: 1 }}
-                                              className="text-[9px] font-bold text-emerald-400 text-center"
-                                            >
-                                              {avatarStats.compressedSize} ({avatarStats.reduction})
-                                            </motion.div>
-                                          )}
-                                        </AnimatePresence>
-
-                                        <label
-                                          className={`gm-btn w-full py-1.5 text-[11px] flex items-center justify-center gap-1 cursor-pointer ${uploadingAvatar ? "opacity-50 pointer-events-none" : ""}`}
-                                        >
-                                          {uploadingAvatar ? (
-                                            <Loader2 size={12} className="animate-spin" />
-                                          ) : (
-                                            <Upload size={12} />
-                                          )}
-                                          <span>{uploadingAvatar ? "..." : "Foto"}</span>
-                                          <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            disabled={uploadingAvatar}
-                                            onChange={(e) => {
-                                              const f = e.target.files?.[0];
-                                              if (f) onUploadAvatar(f);
-                                            }}
-                                          />
-                                        </label>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex flex-col w-full py-2">
-                                      <div className="space-y-4">
-                                        <div className="space-y-1.5">
-                                          <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                                            Nome da empresa
-                                          </label>
-                                          <input
-                                            className="gm-input py-2 text-sm h-10 w-full"
-                                            value={companyName}
-                                            onChange={(e) =>
-                                              setCompanyName(e.target.value)
-                                            }
-                                          />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                          <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
-                                            <Smartphone size={14} /> Escala
-                                            Smartphone
-                                          </label>
-                                          <ScaleSlider
-                                            value={mobileScale}
-                                            onChange={setMobileScale}
-                                            isMobile
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex flex-col w-full py-2">
-                                      <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 block text-center">
-                                        Estilo dos Botões
-                                      </label>
-                                      <div className="grid grid-cols-2 gap-3">
-                                        {BUTTON_STYLES.map((s) => {
-                                          const isActive = buttonStyle === s.id;
-                                          return (
-                                            <button
-                                              key={s.id}
-                                              type="button"
-                                              onClick={() =>
-                                                setButtonStyle(s.id)
-                                              }
-                                              className={`flex flex-col items-center justify-between p-3 rounded-xl border transition-all h-24 ${
-                                                isActive
-                                                  ? "border-[var(--gm-primary)] bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] font-bold shadow-xs"
-                                                  : "border-slate-200/80 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                                              }`}
-                                            >
-                                              <div
-                                                className={`w-full py-2 text-xs font-bold rounded-lg flex items-center justify-center ${
-                                                  s.id === "solid"
-                                                    ? "bg-[var(--gm-primary)] text-white"
-                                                    : "bg-transparent border border-[var(--gm-primary)] text-[var(--gm-primary)]"
-                                                }`}
-                                              >
-                                                Preview
-                                              </div>
-                                              <span
-                                                className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-[var(--gm-primary)]" : "text-slate-600 dark:text-slate-400"}`}
-                                              >
-                                                {s.name}
-                                              </span>
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                              {index === 1 && (
-                                <>
-                                  <div className="flex items-center justify-between mb-1 shrink-0">
-                                    <h2 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-white uppercase tracking-wider">
-                                      <ImageIcon
-                                        size={16}
-                                        className="text-[var(--gm-primary)]"
-                                      />{" "}
-                                      Plano de Fundo
-                                    </h2>
-                                  </div>
-
-                                  <div className="flex flex-col gap-3">
-                                    <div className="flex flex-col w-full py-2">
-                                      <div className="space-y-4">
-                                        <div className="flex items-center justify-between bg-black/5 dark:bg-black/35 p-3 rounded-lg border border-black/5 dark:border-white/5">
-                                          <div>
-                                            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-800 dark:text-white">
-                                              Plano de fundo
-                                            </div>
-                                            <div className="text-[9px] text-slate-500">
-                                              Exibir no smartphone
-                                            </div>
-                                          </div>
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              setMobileBgEnabled(
-                                                !mobileBgEnabled,
-                                              )
-                                            }
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                                              mobileBgEnabled
-                                                ? "bg-[var(--gm-primary)] text-white shadow-md shadow-[var(--gm-primary-30)]"
-                                                : "bg-slate-200 dark:bg-slate-700 text-slate-500"
-                                            }`}
-                                          >
-                                            {mobileBgEnabled
-                                              ? "Ativo"
-                                              : "Inativo"}
-                                          </button>
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                          <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] flex justify-between">
-                                            <span>Opacidade</span>
-                                            <span className="text-[var(--gm-primary)]">
-                                              {Math.round(
-                                                mobileBgOpacity * 100,
-                                              )}
-                                              %
-                                            </span>
-                                          </label>
-                                          <input
-                                            type="range"
-                                            min={0}
-                                            max={1}
-                                            step={0.01}
-                                            className="w-full h-2 accent-[var(--gm-primary)]"
-                                            value={mobileBgOpacity}
-                                            onChange={(e) =>
-                                              setMobileBgOpacity(
-                                                Number(e.target.value),
-                                              )
-                                            }
-                                          />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                          <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] flex justify-between">
-                                            <span>Zoom</span>
-                                            <span className="text-[var(--gm-primary)]">
-                                              {mobileBgScale}x
-                                            </span>
-                                          </label>
-                                          <input
-                                            type="range"
-                                            min={0.5}
-                                            max={5}
-                                            step={0.1}
-                                            className="w-full h-2 accent-[var(--gm-primary)]"
-                                            value={mobileBgScale}
-                                            onChange={(e) =>
-                                              setMobileBgScale(
-                                                Number(e.target.value),
-                                              )
-                                            }
-                                          />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                          <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)] flex justify-between">
-                                            <span>Desfoque</span>
-                                            <span className="text-[var(--gm-primary)]">
-                                              {mobileBgBlur}px
-                                            </span>
-                                          </label>
-                                          <input
-                                            type="range"
-                                            min={0}
-                                            max={24}
-                                            step={1}
-                                            className="w-full h-2 accent-[var(--gm-primary)]"
-                                            value={mobileBgBlur}
-                                            onChange={(e) =>
-                                              setMobileBgBlur(
-                                                Number(e.target.value),
-                                              )
-                                            }
-                                          />
-                                        </div>
-
-                                        <div className="pt-2 flex flex-col gap-3">
-                                          {mobileBgUrl && (
-                                            <div className="w-full flex justify-center py-2">
-                                              <div className="rounded-3xl border-4 border-zinc-850 dark:border-zinc-750 relative aspect-[9/16] w-[210px] bg-black/20 shadow-2xl overflow-y-auto no-scrollbar flex flex-col scroll-smooth">
-                                                {uploadingBackground && (
-                                                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20 backdrop-blur-sm">
-                                                    <Loader2
-                                                      size={24}
-                                                      className="animate-spin text-[var(--gm-primary)] mb-1"
-                                                    />
-                                                    <span className="text-[9px] font-bold text-white uppercase tracking-wider text-center">
-                                                      Processando...
-                                                    </span>
-                                                  </div>
-                                                )}
-                                                <div className="w-full h-auto flex flex-col shrink-0 min-h-full">
-                                                  {mobileBgUrl
-                                                    .toLowerCase()
-                                                    .endsWith(".mp4") ||
-                                                  mobileBgUrl
-                                                    .toLowerCase()
-                                                    .endsWith(".webm") ? (
-                                                    <video
-                                                      src={mobileBgUrl}
-                                                      autoPlay
-                                                      loop
-                                                      muted
-                                                      playsInline
-                                                      className="w-full h-auto block"
-                                                      style={{ transform: "translate3d(0, 0, 0)", backfaceVisibility: "hidden" }}
-                                                      controlsList="nodownload"
-                                                      disablePictureInPicture
-                                                      onContextMenu={(e) => e.preventDefault()}
-                                                    />
-                                                  ) : (
-                                                    <img
-                                                      src={mobileBgUrl}
-                                                      alt="Background"
-                                                      className="w-full h-auto block"
-                                                    />
-                                                  )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                          )}
-
-                                          {!mobileBgUrl &&
-                                            uploadingBackground && (
-                                              <div className="w-full flex justify-center py-2">
-                                                <div className="rounded-3xl border-4 border-zinc-850 dark:border-zinc-750 relative aspect-[9/16] w-[210px] bg-black/20 flex flex-col items-center justify-center backdrop-blur-sm shadow-2xl font-sans">
-                                                  <Loader2
-                                                    size={24}
-                                                    className="animate-spin text-[var(--gm-primary)] mb-1"
-                                                  />
-                                                  <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider text-center">
-                                                    Processando...
-                                                  </span>
-                                                </div>
-                                              </div>
-                                            )}
-
-                                          <label
-                                            className={`gm-btn w-full py-2.5 flex items-center justify-center gap-2 cursor-pointer text-sm font-bold shadow-md ${uploadingBackground ? "opacity-50 pointer-events-none" : ""}`}
-                                          >
-                                            {uploadingBackground ? (
-                                              <Loader2
-                                                size={16}
-                                                className="animate-spin"
-                                              />
-                                            ) : (
-                                              <FileImage size={16} />
-                                            )}
-                                            {uploadingBackground
-                                              ? "Enviando..."
-                                              : "Upload Novo Background"}
-                                            <input
-                                              type="file"
-                                              accept="image/*,video/mp4,video/webm"
-                                              className="hidden"
-                                              disabled={uploadingBackground}
-                                              onChange={(e) => {
-                                                const f = e.target.files?.[0];
-                                                if (f) onUploadBackground(f);
-                                              }}
-                                            />
-                                          </label>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                              {index === 2 && (
-                                <>
-                                  <div className="flex items-center justify-between mb-1 shrink-0">
-                                    <h2 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-white uppercase tracking-wider">
-                                      <Paintbrush
-                                        size={16}
-                                        className="text-[var(--gm-primary)]"
-                                      />{" "}
-                                      Cores & Botões
-                                    </h2>
-                                  </div>
-
-                                  <div className="flex flex-col gap-3">
-                                    <ColorSettingsManager
-                                      isLightMode={isLightMode}
-                                      brandPrimary={brandPrimary}
-                                      setBrandPrimary={setBrandPrimary}
-                                      brandBg={brandBg}
-                                      setBrandBg={setBrandBg}
-                                      brandTitle={brandTitle}
-                                      setBrandTitle={setBrandTitle}
-                                      brandSubtitle={brandSubtitle}
-                                      setBrandSubtitle={setBrandSubtitle}
-                                      brandIcon={brandIcon}
-                                      setBrandIcon={setBrandIcon}
-                                      brandAccent={brandAccent}
-                                      setBrandAccent={setBrandAccent}
-                                      menuPrimary={menuPrimary}
-                                      setMenuPrimary={setMenuPrimary}
-                                      menuBg={menuBg}
-                                      setMenuBg={setMenuBg}
-                                      menuTitle={menuTitle}
-                                      setMenuTitle={setMenuTitle}
-                                      menuSubtitle={menuSubtitle}
-                                      setMenuSubtitle={setMenuSubtitle}
-                                      menuIcon={menuIcon}
-                                      setMenuIcon={setMenuIcon}
-                                      menuButton={menuButton}
-                                      setMenuButton={setMenuButton}
-                                      fontFamily={fontFamily}
-                                      setFontFamily={setFontFamily}
-                                      setPreviewFont={setPreviewFont}
-                                      updateDomColor={updateDomColor}
-                                    />
-                                  </div>
-                                </>
-                              )}
-                              {index === 3 && (
-                                <>
-                                  <div className="flex items-center justify-between mb-1 shrink-0">
-                                    <h2 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-white uppercase tracking-wider">
-                                      <CreditCard
-                                        size={16}
-                                        className="text-[var(--gm-primary)]"
-                                      />{" "}
-                                      Configurações Pix
-                                    </h2>
-                                  </div>
-
-                                  <div className="flex flex-col gap-3">
-                                    <div className="flex flex-col w-full py-2">
-                                      <div className="space-y-3">
-                                        <div className="space-y-1">
-                                          <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                                            Tipo de Chave
-                                          </label>
-                                          <Select
-                                            className="gm-input py-1 text-xs h-9 w-full"
-                                            value={pixType}
-                                            onChange={(val) =>
-                                              setPixType(String(val))
-                                            }
-                                            options={[
-                                              { value: "CPF", label: "CPF" },
-                                              { value: "CNPJ", label: "CNPJ" },
-                                              {
-                                                value: "EMAIL",
-                                                label: "E-mail",
-                                              },
-                                              {
-                                                value: "PHONE",
-                                                label: "Telefone",
-                                              },
-                                              {
-                                                value: "RANDOM",
-                                                label: "Aleatória",
-                                              },
-                                            ]}
-                                          />
-                                        </div>
-                                        <div className="space-y-1">
-                                          <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--gm-primary)]">
-                                            Chave Pix
-                                          </label>
-                                          <input
-                                            className="gm-input py-1 text-xs h-9 w-full"
-                                            value={pixKey}
-                                            onChange={(e) =>
-                                              setPixKey(e.target.value)
-                                            }
-                                            placeholder="Sua chave Pix"
-                                          />
-                                        </div>
-
-                                        {pixQrPreview && (
-                                          <div className="mt-2 flex flex-col items-center justify-center p-3 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/60 w-full font-sans">
-                                            <img
-                                              src={pixQrPreview}
-                                              alt="QR Pix"
-                                              className="w-[180px] h-[180px] rounded-xl shadow-lg mb-3 object-contain bg-white p-2"
-                                            />
-                                            <button
-                                              type="button"
-                                              className="gm-btn w-full justify-center py-2 text-xs font-bold"
-                                              onClick={() => {
-                                                const a =
-                                                  document.createElement("a");
-                                                a.href = pixQrPreview;
-                                                a.download =
-                                                  "pix_qr_configuracoes.png";
-                                                a.click();
-                                              }}
-                                            >
-                                              <Download size={12} />
-                                              Baixar QR Code
-                                            </button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                              {index === 4 && (
-                                <>
-                                  <div className="flex items-center justify-between mb-1 shrink-0">
-                                    <h2 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-white uppercase tracking-wider">
-                                      <FileText
-                                        size={16}
-                                        className="text-[var(--gm-primary)]"
-                                      />{" "}
-                                      Documento Timbrado
-                                    </h2>
-                                  </div>
-
-                                  <div className="flex flex-col gap-3">
-                                    <div className="flex flex-col w-full py-2">
-                                      <div className="grid grid-cols-2 gap-4 w-full">
-                                        {/* Importar Timbrado */}
-                                        <div className="flex flex-col items-center gap-2 w-full">
-                                          <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--gm-primary)] text-center h-4 flex items-center">
-                                            Importar Timbrado
-                                          </span>
-                                          <div className="w-full aspect-[1/1.414] rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-350 dark:border-zinc-705 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner">
-                                            {uploadingTimbrado ? (
-                                              <Loader2
-                                                size={18}
-                                                className="animate-spin text-[var(--gm-primary)]"
-                                              />
-                                            ) : timbradoUrl ? (
-                                              <img
-                                                src={timbradoUrl}
-                                                alt="Timbrado"
-                                                className="w-full h-full object-contain"
-                                              />
-                                            ) : (
-                                              <FileText
-                                                size={20}
-                                                className="opacity-45 text-slate-400"
-                                              />
-                                            )}
-                                          </div>
-                                          <label
-                                            className={`gm-btn w-full py-2 flex items-center justify-center gap-1.5 cursor-pointer text-[10px] uppercase font-bold tracking-wider ${uploadingTimbrado ? "opacity-50 pointer-events-none" : ""}`}
-                                          >
-                                            {uploadingTimbrado ? (
-                                              <Loader2
-                                                size={12}
-                                                className="animate-spin"
-                                              />
-                                            ) : (
-                                              <FileImage size={11} />
-                                            )}
-                                            {uploadingTimbrado
-                                              ? "Enviando..."
-                                              : "Importar"}
-                                            <input
-                                              type="file"
-                                              accept="image/*,application/pdf"
-                                              className="hidden"
-                                              disabled={uploadingTimbrado}
-                                              onChange={(e) => {
-                                                const f = e.target.files?.[0];
-                                                if (f) onUploadTimbrado(f);
-                                              }}
-                                            />
-                                          </label>
-                                        </div>
-
-                                        {/* Gabarito A4 */}
-                                        <div className="flex flex-col items-center gap-2 w-full">
-                                          <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--gm-primary)] text-center h-4 flex items-center font-sans">
-                                            Gabarito A4
-                                          </span>
-                                          <div className="w-full aspect-[1/1.414] rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-350 dark:border-zinc-705 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner">
-                                            <img
-                                              src={TIMBRADO_MODEL_URL}
-                                              alt="Gabarito"
-                                              className="w-full h-full object-contain"
-                                            />
-                                          </div>
-                                          <a
-                                            href={TIMBRADO_MODEL_URL}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="gm-btn w-full py-2 flex items-center justify-center gap-1.5 text-[10px] uppercase font-bold tracking-wider"
-                                          >
-                                            <Download size={11} />
-                                            Baixar Modelo
-                                          </a>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                              {index === 5 && (
-                                <>
-                                  <div className="flex items-center justify-between mb-1 shrink-0">
-                                    <h2 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-white uppercase tracking-wider">
-                                      <Bell
-                                        size={16}
-                                        className="text-[var(--gm-primary)]"
-                                      />{" "}
-                                      Notificações Push
-                                    </h2>
-                                  </div>
-
-                                  <div className="flex flex-col gap-3">
-                                    <div className="flex flex-col w-full py-2 relative overflow-hidden flex flex-col items-center justify-center text-center h-auto min-h-[280px]">
-                                      {/* Background glow */}
-                                      <div
-                                        className={`absolute -top-10 -right-10 w-24 h-24 blur-2xl rounded-full opacity-10 ${pushPermission === "granted" ? "bg-emerald-500" : "bg-amber-500"}`}
-                                      />
-
-                                      <div className="flex flex-col items-center justify-center text-center w-full max-w-[260px] mx-auto space-y-4">
-                                        <div
-                                          className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all duration-300 mx-auto ${
-                                            pushPermission === "granted"
-                                              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-inner animate-pulse"
-                                              : "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                                          }`}
-                                        >
-                                          <Bell size={24} />
-                                        </div>
-
-                                        <div className="space-y-1">
-                                          <h4 className="text-sm font-bold text-slate-800 dark:text-white text-center uppercase tracking-wider">
-                                            Configurar Notificações
-                                          </h4>
-                                          <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-normal text-center">
-                                            Defina suas preferências de alerta
-                                            do dispositivo em tempo real.
-                                          </p>
-                                        </div>
-
-                                        <div className="w-full flex flex-col gap-3 pt-1">
-                                          {/* SWITCH 1: PERMISSION / RECEBER ALERTAS */}
-                                          <div className="w-full flex items-center justify-between p-3 bg-white dark:bg-black/30 rounded-xl border border-slate-200/80 dark:border-white/5">
-                                            <div className="text-left">
-                                              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                                Notificações Push
-                                              </p>
-                                              <p
-                                                className={`text-[9px] font-semibold uppercase ${pushActive && pushPermission === "granted" ? "text-emerald-500" : "text-amber-500"}`}
-                                              >
-                                                {pushActive &&
-                                                pushPermission === "granted"
-                                                  ? "Ativo (ligado)"
-                                                  : "Desativado (desligado)"}
-                                              </p>
-                                            </div>
-                                            <button
-                                              type="button"
-                                              onClick={async () => {
-                                                if (
-                                                  pushPermission !== "granted"
-                                                ) {
-                                                  const permission =
-                                                    await Notification.requestPermission();
-                                                  setPushPermission(permission);
-                                                  if (
-                                                    permission === "granted"
-                                                  ) {
-                                                    setPushActive(true);
-                                                    localStorage.setItem(
-                                                      "gm.pushActive",
-                                                      "true",
-                                                    );
-                                                  } else {
-                                                    setPushActive(false);
-                                                    localStorage.setItem(
-                                                      "gm.pushActive",
-                                                      "false",
-                                                    );
-                                                  }
-                                                } else {
-                                                  const nextActive =
-                                                    !pushActive;
-                                                  setPushActive(nextActive);
-                                                  localStorage.setItem(
-                                                    "gm.pushActive",
-                                                    nextActive
-                                                      ? "true"
-                                                      : "false",
-                                                  );
-                                                }
-                                              }}
-                                              className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none ${
-                                                pushActive &&
-                                                pushPermission === "granted"
-                                                  ? "bg-emerald-500 justify-end"
-                                                  : "bg-slate-300 dark:bg-slate-700 justify-start"
-                                              }`}
-                                              aria-label="Toggle Push Notifications"
-                                            >
-                                              <motion.div
-                                                layout
-                                                className="w-5 h-5 bg-white rounded-full shadow-md"
-                                                transition={{
-                                                  type: "spring",
-                                                  stiffness: 500,
-                                                  damping: 30,
-                                                }}
-                                              />
-                                            </button>
-                                          </div>
-
-                                          {/* SWITCH 2: MUTED / SONS DE NOTIFICAÇÃO */}
-                                          <div className="w-full flex items-center justify-between p-3 bg-white dark:bg-black/30 rounded-xl border border-slate-200/80 dark:border-white/5">
-                                            <div className="text-left">
-                                              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                                Sons de Alerta
-                                              </p>
-                                              <p
-                                                className={`text-[9px] font-semibold uppercase ${!notificationsMuted ? "text-emerald-500" : "text-amber-500"}`}
-                                              >
-                                                {!notificationsMuted
-                                                  ? "Ativo (ligado)"
-                                                  : "Desativado (desligado)"}
-                                              </p>
-                                            </div>
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                const next =
-                                                  !notificationsMuted;
-                                                localStorage.setItem(
-                                                  "gm.notificationsMuted",
-                                                  next ? "true" : "false",
-                                                );
-                                                setNotificationsMuted(next);
-                                              }}
-                                              className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none ${
-                                                !notificationsMuted
-                                                  ? "bg-emerald-500 justify-end"
-                                                  : "bg-slate-300 dark:bg-slate-700 justify-start"
-                                              }`}
-                                              aria-label="Toggle Warning Sounds"
-                                            >
-                                              <motion.div
-                                                layout
-                                                className="w-5 h-5 bg-white rounded-full shadow-md"
-                                                transition={{
-                                                  type: "spring",
-                                                  stiffness: 500,
-                                                  damping: 30,
-                                                }}
-                                              />
-                                            </button>
-                                          </div>
-
-                                          {/* SINGLE ACTION BUTTON: TEST NOTIFICATION (SHAKING) */}
-                                          <motion.button
-                                            type="button"
-                                            animate={
-                                              shakeTest
-                                                ? {
-                                                    x: [
-                                                      -6, 6, -6, 6, -4, 4, -2,
-                                                      2, 0,
-                                                    ],
-                                                  }
-                                                : {}
-                                            }
-                                            transition={{ duration: 0.4 }}
-                                            disabled={testing}
-                                            onClick={async () => {
-                                              setShakeTest(true);
-                                              setTimeout(
-                                                () => setShakeTest(false),
-                                                450,
-                                              );
-
-                                              // Still try to send if permission granted
-                                              if (
-                                                pushPermission !== "granted"
-                                              ) {
-                                                // Prompt permission automatically if they click without it
-                                                const permission =
-                                                  await Notification.requestPermission();
-                                                setPushPermission(permission);
-                                                if (permission !== "granted")
-                                                  return;
-                                              }
-
-                                              // If permission is granted but pushActive was off, turn it on!
-                                              if (!pushActive) {
-                                                setPushActive(true);
-                                                localStorage.setItem(
-                                                  "gm.pushActive",
-                                                  "true",
-                                                );
-                                              }
-
-                                              setTesting(true);
-                                              try {
-                                                playNotificationSound(
-                                                  activeSound,
-                                                );
-                                              } catch (e) {}
-                                              if (
-                                                "serviceWorker" in navigator
-                                              ) {
-                                                const reg =
-                                                  await navigator.serviceWorker
-                                                    .ready;
-                                                reg.active?.postMessage(
-                                                  "TEST_NOTIFICATION",
-                                                );
-                                              }
-                                              setTimeout(
-                                                () => setTesting(false),
-                                                1000,
-                                              );
-                                            }}
-                                            style={{
-                                              backgroundColor:
-                                                "var(--gm-primary)",
-                                            }}
-                                            className="py-3 flex items-center justify-center gap-1.5 text-xs font-bold w-full transition-all text-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:brightness-110 active:scale-[0.98] outline-none mt-2"
-                                          >
-                                            {testing ? (
-                                              <Loader2
-                                                size={13}
-                                                className="animate-spin"
-                                              />
-                                            ) : (
-                                              <Bell size={13} />
-                                            )}
-                                            {testing
-                                              ? "Testando..."
-                                              : "Enviar Notificação de Teste"}
-                                          </motion.button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                              {index === 6 && (
-                                <>
-                                  <div className="flex items-center justify-between mb-1 shrink-0">
-                                    <h2 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-white uppercase tracking-wider">
-                                      <Volume2
-                                        size={16}
-                                        className="text-[var(--gm-primary)]"
-                                      />{" "}
-                                      Toques de Notificação
-                                    </h2>
-                                  </div>
-
-                                  <div className="flex flex-col gap-2">
-                                    <div className="!border-none !shadow-none bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-2xl p-4">
-                                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 mb-3 leading-relaxed">
-                                        Selecione seu som padrão. Toque para
-                                        salvar e ouvir em tempo real:
-                                      </p>
-
-                                      <div className="space-y-1.5">
-                                        {NOTIFICATION_SOUNDS.map((sound) => {
-                                          const isSelected =
-                                            activeSound === sound.id;
-                                          return (
-                                            <button
-                                              key={sound.id}
-                                              type="button"
-                                              onClick={() => {
-                                                localStorage.setItem(
-                                                  "gm.notificationSound",
-                                                  sound.id,
-                                                );
-                                                setActiveSound(sound.id);
-                                                try {
-                                                  playNotificationSound(
-                                                    sound.id,
-                                                  );
-                                                } catch (e) {}
-                                              }}
-                                              className={`flex items-center justify-between p-2.5 rounded-xl border text-left w-full transition-all duration-300 ${
-                                                isSelected
-                                                  ? "bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-sm font-semibold"
-                                                  : "bg-white/50 dark:bg-zinc-900/50 border-black/5 dark:border-white/5 text-slate-700 dark:text-slate-300 active:bg-black/10 dark:active:bg-white/10"
-                                              }`}
-                                            >
-                                              <div className="flex items-center gap-2.5 min-w-0">
-                                                <div
-                                                  className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                                                    isSelected
-                                                      ? "bg-[var(--gm-primary)] text-white"
-                                                      : "bg-black/10 dark:bg-white/10 text-slate-500 dark:text-zinc-400"
-                                                  }`}
-                                                >
-                                                  <Music size={12} />
-                                                </div>
-                                                <div className="min-w-0">
-                                                  <h4 className="text-[11px] font-bold leading-tight truncate">
-                                                    {sound.name}
-                                                  </h4>
-                                                  <p className="text-[9px] opacity-75 leading-normal truncate max-w-[200px]">
-                                                    {sound.description}
-                                                  </p>
-                                                </div>
-                                              </div>
-
-                                              <div
-                                                className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                                                  isSelected
-                                                    ? "border-[var(--gm-primary)]"
-                                                    : "border-slate-300 dark:border-zinc-600"
-                                                }`}
-                                              >
-                                                {isSelected && (
-                                                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--gm-primary)]" />
-                                                )}
-                                              </div>
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                              {index === 7 && (
-                                <>
-                                  <div className="flex items-center justify-between mb-1 shrink-0">
-                                    <h2 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-white uppercase tracking-wider">
-                                      <HelpCircle
-                                        size={16}
-                                        className="text-[var(--gm-primary)]"
-                                      />{" "}
-                                      Tutorial Interativo
-                                    </h2>
-                                  </div>
-
-                                  <div className="flex flex-col gap-3">
-                                    <div className="flex flex-col w-full py-2 relative overflow-hidden flex flex-col items-center justify-center text-center h-auto">
-                                      <div className="w-12 h-12 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] flex items-center justify-center mb-3">
-                                        <Sparkles size={24} />
-                                      </div>
-                                      <div className="space-y-1.5 mb-5 shrink-0">
-                                        <h4 className="text-base font-bold text-slate-800 dark:text-white">
-                                          Aprenda em Segundos
-                                        </h4>
-                                        <p className="text-[11px] text-slate-500 dark:text-zinc-400 max-w-[240px] mx-auto leading-relaxed">
-                                          Quer rever as principais funções e
-                                          usabilidade do painel principal?
-                                          Inicie o assistente virtual passo a
-                                          passo agora.
-                                        </p>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          localStorage.removeItem(
-                                            "gm.tutorialCompleted",
-                                          );
-                                          localStorage.setItem(
-                                            "gm.tutorialForceStart",
-                                            "true",
-                                          );
-                                          navigate("/");
-                                        }}
-                                        className="gm-btn py-2.5 px-6 flex items-center justify-center gap-2 text-xs w-full transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                      >
-                                        <Sparkles size={14} />
-                                        Iniciar Tutorial
-                                      </button>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                </motion.div>
-              </div>
+                </div>
+              )}
             </div>
           )}
+
         </div>
+      </div>
+
+      {/* PAINEL / BOTÃO FLUTUANTE "SALVAR" NO LADO DIREITO DO APP (IGUAL O DA BIO EDITOR) */}
+      <div className="fixed top-1/2 -translate-y-1/2 right-0 z-[9999] select-none pointer-events-none flex flex-col items-end">
+        <AnimatePresence mode="wait">
+          {isDocked ? (
+            /* Estado Recolhido (Docked): Barra vertical de cor fixada na borda direita com sensibilidade a toque e arrasto */
+            <motion.div
+              key="docked"
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              drag="x"
+              dragConstraints={{ left: -150, right: 0 }}
+              dragElastic={0.15}
+              onDragStart={() => {
+                isDraggingRef.current = true;
+              }}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -20) {
+                  setIsDocked(false);
+                }
+                setTimeout(() => {
+                  isDraggingRef.current = false;
+                }, 100);
+              }}
+              onClick={() => {
+                if (isDraggingRef.current) return;
+                setIsDocked(false);
+              }}
+              whileDrag={{ scale: 1.02 }}
+              className="pointer-events-auto cursor-grab active:cursor-grabbing flex flex-col items-end group"
+              title="Clique ou arraste para a esquerda para abrir o botão Salvar"
+            >
+              <div className="flex flex-col gap-2 py-8 pl-10 pr-1 bg-transparent select-none">
+                <div className="w-3.5 h-20 rounded-full bg-[var(--gm-primary)] shadow-xl transition-all group-hover:w-5 flex items-center justify-center text-white border border-amber-300/40">
+                  <Save size={15} className="opacity-90 animate-pulse text-white" />
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            /* Estado Expandido: Botão circular flutuante arrastável no lado direito */
+            <motion.div
+              key="expanded"
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              drag="x"
+              dragConstraints={{ left: -100, right: 100 }}
+              dragElastic={0.15}
+              onDragStart={() => {
+                isDraggingRef.current = true;
+              }}
+              onDragEnd={(e, info) => {
+                if (info.offset.x > 30 || info.offset.x < -30) {
+                  setIsDocked(true);
+                }
+                setTimeout(() => {
+                  isDraggingRef.current = false;
+                }, 100);
+              }}
+              whileDrag={{ scale: 0.95, opacity: 0.9 }}
+              className="pointer-events-auto flex flex-col gap-3 pr-3 sm:pr-5 items-end justify-center cursor-grab active:cursor-grabbing"
+            >
+              <AnimatePresence>
+                {saveSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, x: 20 }}
+                    className="flex items-center gap-2 text-[var(--gm-primary)] bg-white/95 dark:bg-zinc-900/95 border border-[var(--gm-primary)]/40 px-3.5 py-2 rounded-2xl text-xs font-black shadow-2xl backdrop-blur-md"
+                  >
+                    <CheckCircle2 size={16} className="text-[var(--gm-primary)] animate-bounce" />
+                    <span>Configurações Salvas!</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="relative group flex items-center">
+                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-2xl whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
+                  {saving ? "Salvando..." : "Salvar Configurações"}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isDraggingRef.current) return;
+                    handleSave();
+                  }}
+                  disabled={saving}
+                  className="gm-floating-save-btn w-14 h-14 bg-[var(--gm-primary)] hover:brightness-110 active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(255,105,0,0.45)] hover:shadow-[0_12px_32px_rgba(255,105,0,0.65)] transition-all duration-300 hover:scale-110 disabled:opacity-50 border border-orange-300/40 cursor-pointer outline-none"
+                  title="Salvar todas as alterações de configurações"
+                >
+                  {saving ? (
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  ) : saveSuccess ? (
+                    <CheckCircle2 className="w-6 h-6 text-white animate-bounce" />
+                  ) : (
+                    <Save className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-200" />
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </Page>
   );

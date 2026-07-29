@@ -160,20 +160,21 @@ const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 9999,
-  background: "rgba(0,0,0,0.6)",
+  background: "rgba(0, 0, 0, 0.8)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   padding: 16,
-  backdropFilter: "blur(8px)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
 };
 
 const fullScreenContainer: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 9999,
-  background: "rgba(0,0,0,0.6)",
-  backdropFilter: "blur(8px)",
+  background: "#09090b",
+  color: "#f4f4f5",
   display: "flex",
   flexDirection: "column",
   overflow: "hidden",
@@ -183,13 +184,15 @@ const topBar: React.CSSProperties = {
   position: "sticky",
   top: 0,
   zIndex: 50,
-  background: "rgba(0, 0, 0, 0.4)",
-  backdropFilter: "blur(12px)",
-  borderBottom: "1px solid rgba(255,255,255,0.08)",
+  background: "rgba(24, 24, 27, 0.95)",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   padding: "16px 24px",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
 };
 
 const pageContent: React.CSSProperties = {
@@ -198,50 +201,55 @@ const pageContent: React.CSSProperties = {
   maxWidth: "1100px",
   margin: "0 auto",
   // ✅ mais espaço no final + safe-area (iPhone/Android gesture bar)
-  padding: "40px 24px calc(160px + env(safe-area-inset-bottom, 0px)) 24px",
+  padding: "32px 24px calc(160px + env(safe-area-inset-bottom, 0px)) 24px",
 };
 
 const sectionTitle: React.CSSProperties = {
-  fontSize: 14,
+  fontSize: 13,
   fontWeight: 800,
   textTransform: "uppercase",
   letterSpacing: "0.05em",
-  color: "rgba(255,255,255,0.4)",
+  color: "#94a3b8",
   marginBottom: 16,
   marginTop: 32,
 };
 
 const card: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  background: "rgba(24, 24, 27, 0.75)",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
   borderRadius: 16,
   padding: 24,
+  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
 };
 
 const labelTop: React.CSSProperties = {
   display: "block",
   fontSize: 11,
   fontWeight: 700,
-  color: "rgba(255,255,255,0.5)",
+  color: "#94a3b8",
   marginBottom: 6,
   textTransform: "uppercase",
+  letterSpacing: "0.025em",
 };
 
 const inputBig: React.CSSProperties = {
   width: "100%",
-  background: "rgba(0,0,0,0.3)",
-  border: "1px solid rgba(255,255,255,0.1)",
+  background: "rgba(0, 0, 0, 0.4)",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
   borderRadius: 10,
   padding: "12px 14px",
-  color: "white",
+  color: "#FFFFFF",
   fontSize: 15,
+  fontWeight: 500,
   outline: "none",
   transition: "all 0.2s",
 };
 
 const itemRow: React.CSSProperties = {
-  background: "rgba(0,0,0,0.25)",
-  border: "1px solid rgba(255,255,255,0.06)",
+  background: "rgba(24, 24, 27, 0.6)",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
   borderRadius: 14,
   padding: 20,
   marginBottom: 16,
@@ -628,49 +636,49 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     return createPortal(
       <div style={overlay} onClick={onClose}>
         <div
-          style={{ ...card, width: 800, maxWidth: "95vw", background: "rgba(20,20,20,0.8)", backdropFilter: "blur(16px)", padding: 40 }}
+          className="w-full max-w-[800px] p-8 md:p-10 rounded-3xl bg-zinc-900/95 border border-white/10 text-white shadow-2xl backdrop-blur-2xl animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">Novo Orçamento</h2>
-              <p className="text-slate-400">Selecione o modelo de proposta ideal para este projeto.</p>
+              <h2 className="text-2xl font-extrabold text-white mb-1.5">Novo Orçamento</h2>
+              <p className="text-sm font-medium text-slate-400">Selecione o modelo de proposta ideal para este projeto.</p>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg text-slate-400">
-              <X size={24} />
+            <button onClick={onClose} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer">
+              <X size={22} />
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <button
-              className="group relative p-6 rounded-2xl border border-white/10 bg-white/5 hover:bg-[var(--gm-primary)]/10 hover:border-[var(--gm-primary)]/50 transition-all text-left flex flex-col gap-4"
+              className="group relative p-6 rounded-2xl border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
               onClick={() => applyTemplate("agency")}
             >
-              <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/20 group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
                 <Palette size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)]">
+                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
                   Agência & Design
                 </h3>
-                <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-400 mt-1.5 leading-relaxed font-medium">
                   Orçamentos baseados em serviços, artes digitais e criação.
                 </p>
               </div>
             </button>
 
             <button
-              className="group relative p-6 rounded-2xl border border-white/10 bg-white/5 hover:bg-[var(--gm-primary)]/10 hover:border-[var(--gm-primary)]/50 transition-all text-left flex flex-col gap-4"
+              className="group relative p-6 rounded-2xl border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
               onClick={() => applyTemplate("print")}
             >
-              <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/20 group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
                 <Printer size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)]">
+                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
                   Impressão & Gráfica
                 </h3>
-                <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+                <p className="text-xs text-slate-400 mt-1.5 leading-relaxed font-medium">
                   Cálculo de Lonas (m²) e Materiais Gráficos (Panfletos, Cartões).
                 </p>
               </div>
@@ -689,8 +697,8 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             {!budgetToEditId && (
-              <button onClick={() => setStep("pick")} className="text-slate-400 hover:text-white transition-colors">
-                <ArrowLeft size={24} />
+              <button onClick={() => setStep("pick")} className="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-white/10">
+                <ArrowLeft size={22} />
               </button>
             )}
             <div className="flex items-center gap-2">
@@ -710,12 +718,12 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   </span>
                 </div>
               </div>
-              {loadingData && <span className="text-[10px] text-slate-400 animate-pulse ml-2">Carregando...</span>}
+              {loadingData && <span className="text-[10px] text-slate-400 animate-pulse ml-2 font-medium">Carregando...</span>}
             </div>
           </div>
         </div>
 
-        <button onClick={() => { onClose(); if (!budgetToEditId) resetForm(); }} className="p-2 hover:bg-white/10 rounded-lg text-slate-400">
+        <button onClick={() => { onClose(); if (!budgetToEditId) resetForm(); }} className="p-2 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer">
           <X size={22} />
         </button>
       </div>
@@ -979,10 +987,10 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                       : "CREDIT";
 
                   const pill = (active: boolean) =>
-                    `p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
+                    `p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                       active
-                        ? "bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border-[var(--gm-primary)]/50"
-                        : "bg-black/20 text-slate-500 border-white/5 hover:bg-white/5"
+                        ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/50 shadow-md"
+                        : "bg-black/30 text-slate-400 border-white/10 hover:bg-white/5 hover:text-white"
                     }`;
 
                   return (
@@ -1067,7 +1075,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                         placeholder="0"
                         className="pr-12"
                       />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 bg-white/10 px-1.5 py-0.5 rounded border border-white/10">
                         {discountPercentage.toFixed(1)}%
                       </div>
                     </div>
@@ -1099,24 +1107,24 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
               <div className="flex-1 md:border-l md:border-white/10 md:pl-8 flex flex-col justify-center gap-3">
                 <div className="flex justify-between text-sm text-slate-400">
-                  <span>Subtotal</span>
-                  <span className="text-white font-medium">{money(subtotal)}</span>
+                  <span className="font-medium">Subtotal</span>
+                  <span className="text-white font-bold">{money(subtotal)}</span>
                 </div>
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-sm text-green-400">
+                  <div className="flex justify-between text-sm text-emerald-400 font-semibold">
                     <span>Desconto ({discountPercentage.toFixed(1)}%)</span>
-                    <span className="font-medium">-{money(discountAmount)}</span>
+                    <span>-{money(discountAmount)}</span>
                   </div>
                 )}
                 {paymentMethod === "CREDIT" && interestRate > 0 && (
-                  <div className="flex justify-between text-sm text-[var(--gm-accent)]">
+                  <div className="flex justify-between text-sm text-[var(--gm-primary)] font-semibold">
                     <span>Juros ({interestRate}%)</span>
-                    <span className="font-medium">+{money(totalFinal - (subtotal - discountAmount))}</span>
+                    <span>+{money(totalFinal - (subtotal - discountAmount))}</span>
                   </div>
                 )}
                 <div className="border-t border-white/10 pt-4 mt-2">
                   <div className="text-right">
-                    <span className="text-xs text-slate-500 uppercase font-bold tracking-widest block mb-1">Total Final</span>
+                    <span className="text-xs text-slate-400 uppercase font-bold tracking-widest block mb-1">Total Final</span>
                     <span className="text-3xl font-extrabold text-[var(--gm-primary)]">{money(totalFinal)}</span>
                   </div>
                 </div>
@@ -1128,7 +1136,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
       {/* 04. AÇÕES */}
       <div
-        className={`p-4 md:p-5 rounded-2xl bg-black/85 border border-white/10 backdrop-blur-xl flex flex-row items-center justify-between gap-4 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`p-4 md:p-5 rounded-2xl bg-zinc-900/95 border border-white/15 text-white backdrop-blur-2xl flex flex-row items-center justify-between gap-4 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         style={{
@@ -1143,11 +1151,11 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         }}
       >
             {/* Drag Handle Visual */}
-            <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/10 rounded-full" />
+            <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/20 rounded-full" />
 
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center">
-                <CheckCircle2 size={28} className="animate-neon-verified" />
+                <CheckCircle2 size={28} className="text-emerald-400" />
               </div>
               <div className="hidden sm:block">
                 <div className="text-white font-bold text-base leading-none mb-1">
@@ -1165,7 +1173,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             <button
               onClick={(e) => { e.stopPropagation(); handleSave(); }}
               disabled={saving}
-              className="px-6 py-3 rounded-xl font-bold text-sm bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20 hover:brightness-110 transition-all flex items-center gap-3 shrink-0"
+              className="px-6 py-3 rounded-xl font-bold text-sm bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/25 hover:brightness-110 active:scale-95 transition-all flex items-center gap-3 shrink-0 cursor-pointer"
             >
               {saving ? (
                 "Salvando..."

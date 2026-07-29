@@ -51,8 +51,9 @@ export default function BottomNav() {
           >
             <button
               onClick={() => setIsVisible(true)}
-              className="bg-[var(--gm-primary)] text-white text-sm font-black uppercase tracking-wider px-12 py-2.5 rounded-t-2xl rounded-b-none shadow-lg shadow-black/50"
+              className="bg-[var(--gm-primary)] text-white text-xs font-black uppercase tracking-widest px-10 py-3 rounded-t-2xl rounded-b-none shadow-[0_-4px_20px_rgba(255,105,0,0.35)] backdrop-blur-md active:scale-95 transition-transform duration-150 flex items-center gap-2 border-t border-x border-white/20"
             >
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               MENU
             </button>
           </motion.div>
@@ -65,8 +66,8 @@ export default function BottomNav() {
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="md:hidden fixed bottom-0 left-0 right-0 z-[10002] bg-[rgba(15,15,15,0.85)] backdrop-blur-[16px] saturate-[1.5] border-t border-white/10 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.6)] touch-none"
+            transition={{ type: "spring", stiffness: 350, damping: 32 }}
+            className="md:hidden fixed bottom-0 left-0 right-0 z-[10002] bg-[#0c0e12]/90 dark:bg-[#0c0e12]/92 backdrop-blur-2xl saturate-[1.8] border-t border-white/12 pb-[calc(env(safe-area-inset-bottom,12px)+10px)] shadow-[0_-12px_48px_rgba(0,0,0,0.7)] touch-none rounded-t-3xl"
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={0.2}
@@ -76,13 +77,11 @@ export default function BottomNav() {
               }
             }}
           >
-            <div className="w-full flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing">
-              <div className="w-40 h-1.5 bg-white/20 rounded-full" />
+            <div className="w-full flex justify-center pt-2.5 pb-2 cursor-grab active:cursor-grabbing">
+              <div className="w-12 h-1 bg-white/25 rounded-full transition-all hover:bg-white/40" />
             </div>
 
-
-            
-            <div className="flex items-center gap-1 overflow-x-auto px-3 pb-2 no-scrollbar" style={{ scrollSnapType: 'x mandatory' }}>
+            <div className="flex items-center gap-1.5 overflow-x-auto px-4 pb-2 no-scrollbar" style={{ scrollSnapType: 'x mandatory' }}>
               {items.map((it) => {
                 const Icon = it.icon;
                 return (
@@ -91,19 +90,19 @@ export default function BottomNav() {
                     to={it.to}
                     onClick={() => setIsVisible(false)}
                     className={({ isActive }) =>
-                      `flex flex-col items-center justify-center min-w-[72px] h-[64px] rounded-2xl transition-all duration-300 scroll-snap-align-start ${
+                      `flex flex-col items-center justify-center min-w-[74px] h-[66px] rounded-2xl transition-all duration-200 scroll-snap-align-start active:scale-95 ${
                         isActive 
-                          ? "text-white" 
-                          : "text-slate-500 hover:text-slate-300 active:scale-90"
+                          ? "bg-white/10 text-white border border-white/15 shadow-sm" 
+                          : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
                       }`
                     }
                   >
                     {({ isActive }) => (
                       <>
-                        <div className={`p-1.5 transition-all ${isActive ? 'text-[var(--gm-primary)] drop-shadow-[0_0_8px_var(--gm-primary-30)]' : ''}`}>
+                        <div className={`p-1 transition-all ${isActive ? 'text-[var(--gm-primary)] scale-110 drop-shadow-[0_0_10px_rgba(255,105,0,0.5)]' : 'opacity-70'}`}>
                           <Icon size={22} />
                         </div>
-                        <span className={`text-[11px] font-bold mt-0.5 tracking-tight ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+                        <span className={`text-[11px] font-bold mt-0.5 tracking-tight ${isActive ? 'text-white font-extrabold' : 'opacity-65'}`}>
                           {it.label}
                         </span>
                       </>

@@ -486,9 +486,9 @@ export default function Budgets() {
   // botões compactos
   const iconBtn = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
     const base = "gm-btn gm-budget-action-btn flex-1 h-10 flex items-center justify-center gap-2";
-    if (tone === "orange") return `${base} bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 text-amber-500 hover:text-white`;
-    if (tone === "green") return `${base} bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 text-emerald-500 hover:text-white`;
-    if (tone === "red") return `${base} bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white border-none shadow-md`;
+    if (tone === "orange") return `${base} gm-btn-soft text-amber-500`;
+    if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
+    if (tone === "red") return `${base} gm-btn-soft text-red-500`;
     return `${base} gm-btn-soft`;
   };
 
@@ -581,9 +581,9 @@ export default function Budgets() {
                   
                   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
                     const base = "gm-btn gm-budget-action-btn w-10 h-10 flex items-center justify-center shrink-0";
-                    if (tone === "orange") return `${base} bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500 text-amber-500 hover:text-white`;
-                    if (tone === "green") return `${base} bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 text-emerald-500 hover:text-white`;
-                    if (tone === "red") return `${base} bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white border-none shadow-md`;
+                    if (tone === "orange") return `${base} gm-btn-soft text-amber-500`;
+                    if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
+                    if (tone === "red") return `${base} gm-btn-soft text-red-500`;
                     return `${base} gm-btn-soft`;
                   };
 
@@ -641,15 +641,15 @@ export default function Budgets() {
                                 </button>
                                 <button 
                                   className={listBtnClass("green")} 
-                                  title="Compartilhar" 
+                                  title="Enviar via WhatsApp / Compartilhar" 
                                   onClick={() => handleShare(r)} 
                                   type="button"
                                   disabled={sharing === r.id}
                                 >
                                   {sharing === r.id ? (
-                                    <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                                   ) : (
-                                    <Share2 size={16} />
+                                    <WhatsAppIcon size={16} />
                                   )}
                                 </button>
                                 <button className={listBtnClass("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
@@ -772,15 +772,15 @@ export default function Budgets() {
 
                         <button 
                           className={iconBtn("green")} 
-                          title="Compartilhar" 
+                          title="Enviar via WhatsApp / Compartilhar" 
                           onClick={() => handleShare(r)} 
                           type="button"
                           disabled={sharing === r.id}
                         >
                           {sharing === r.id ? (
-                            <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                           ) : (
-                            <Share2 size={16} />
+                            <WhatsAppIcon size={16} />
                           )}
                         </button>
 

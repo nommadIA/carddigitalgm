@@ -63,123 +63,139 @@ function formatPhoneBR(v: string) {
   if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   return d;
 }
-
 const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 9999,
-  background: "rgba(0,0,0,0.55)",
+  background: "rgba(0, 0, 0, 0.8)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   padding: 16,
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
 };
 
 const modal: React.CSSProperties = {
   width: 860,
   maxWidth: "100%",
   borderRadius: 22,
-  background: "rgba(24,24,24,0.48)",
-  border: "1px solid rgba(255,255,255,0.12)",
-  boxShadow: "0 26px 90px rgba(0,0,0,0.55)",
-  backdropFilter: "blur(18px)",
-  WebkitBackdropFilter: "blur(18px)",
+  background: "rgba(24, 24, 27, 0.95)",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
+  boxShadow: "0 25px 60px rgba(0, 0, 0, 0.6)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
   overflow: "hidden",
+  color: "#FFFFFF",
 };
 
 const leftAccent: React.CSSProperties = {
   width: 6,
-  background: "linear-gradient(180deg, rgba(255,140,0,0.95), rgba(255,90,0,0.55))",
+  background: "var(--gm-primary, #FF6900)",
 };
 
 const header: React.CSSProperties = {
-  padding: "18px 18px 12px 18px",
+  padding: "20px 24px 14px 24px",
   display: "flex",
   alignItems: "flex-start",
   justifyContent: "space-between",
   gap: 12,
+  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
 };
 
 const title: React.CSSProperties = {
-  fontWeight: 950,
-  fontSize: 18,
-  color: "rgba(255,255,255,0.92)",
+  fontWeight: 800,
+  fontSize: 20,
+  color: "#FFFFFF",
 };
 
 const subtitle: React.CSSProperties = {
   marginTop: 4,
-  fontSize: 12,
-  color: "rgba(255,255,255,0.58)",
+  fontSize: 13,
+  color: "#94a3b8",
 };
 
 const closeBtn: React.CSSProperties = {
-  borderRadius: 14,
-  padding: "10px 12px",
-  background: "var(--gm-primary)",
-  border: "none",
-  color: "#fff",
-  fontWeight: 900,
+  borderRadius: 12,
+  padding: "8px 16px",
+  background: "rgba(255, 255, 255, 0.08)",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
+  color: "#cbd5e1",
+  fontWeight: 700,
+  fontSize: 13,
+  cursor: "pointer",
+  transition: "all 0.2s ease",
 };
 
 const body: React.CSSProperties = {
-  padding: "0 18px 18px 18px",
+  padding: "20px 24px",
 };
 
 const card: React.CSSProperties = {
   borderRadius: 18,
-  background: "rgba(0,0,0,0.18)",
-  border: "1px solid rgba(255,255,255,0.10)",
-  backdropFilter: "blur(14px)",
-  WebkitBackdropFilter: "blur(14px)",
-  padding: 14,
+  background: "rgba(18, 18, 20, 0.65)",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  padding: 20,
 };
 
 const label: React.CSSProperties = {
-  color: "rgba(255,255,255,0.65)",
+  color: "#94a3b8",
   fontSize: 12,
-  fontWeight: 900,
+  fontWeight: 700,
   marginBottom: 6,
+  textTransform: "uppercase",
+  letterSpacing: "0.025em",
 };
 
 const input: React.CSSProperties = {
   width: "100%",
-  borderRadius: 14,
-  padding: "12px 12px",
-  background: "rgba(0,0,0,0.28)",
-  border: "1px solid rgba(255,255,255,0.10)",
-  color: "rgba(255,255,255,0.85)",
+  borderRadius: 12,
+  padding: "10px 14px",
+  background: "rgba(0, 0, 0, 0.4)",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
+  color: "#FFFFFF",
   outline: "none",
+  fontSize: 14,
+  fontWeight: 500,
 };
 
 const hint: React.CSSProperties = {
   marginTop: 6,
   fontSize: 11,
-  color: "rgba(255,255,255,0.45)",
+  color: "#64748b",
+  fontWeight: 500,
 };
 
 const footer: React.CSSProperties = {
-  marginTop: 14,
+  marginTop: 20,
   display: "flex",
   justifyContent: "flex-end",
-  gap: 10,
+  gap: 12,
+  paddingTop: 12,
+  borderTop: "1px solid rgba(255, 255, 255, 0.08)",
 };
 
 const btnGhost: React.CSSProperties = {
-  borderRadius: 14,
-  padding: "12px 14px",
-  fontWeight: 950,
-  background: "var(--gm-primary)",
-  border: "none",
-  color: "#fff",
+  borderRadius: 12,
+  padding: "10px 18px",
+  fontWeight: 700,
+  background: "rgba(255, 255, 255, 0.08)",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
+  color: "#cbd5e1",
+  fontSize: 13,
+  cursor: "pointer",
 };
 
 const btnPrimary: React.CSSProperties = {
-  borderRadius: 14,
-  padding: "12px 16px",
-  fontWeight: 950,
-  background: "var(--gm-primary)",
+  borderRadius: 12,
+  padding: "10px 22px",
+  fontWeight: 800,
+  background: "var(--gm-primary, #FF6900)",
   border: "none",
-  color: "#fff",
+  color: "#FFFFFF",
+  fontSize: 13,
+  cursor: "pointer",
+  boxShadow: "0 4px 16px rgba(255, 105, 0, 0.35)",
 };
 
 export default function NewClientModal({ open, onClose, onSuccess, clientToEdit }: Props) {

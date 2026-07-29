@@ -1369,7 +1369,7 @@ export default function Notes() {
               const isLong =
                 (note.content?.length || 0) > 200 ||
                 (note.content?.split("\n").length || 0) > 4;
-              const noteColor = note.color || "#334155";
+              const noteColor = "var(--gm-primary, #FF6900)";
 
               return (
                 <motion.div
@@ -1389,12 +1389,12 @@ export default function Notes() {
                         : "overflow-hidden min-h-[280px]"
                     } ${note.id === highlightedId ? "gm-highlighted-budget-glass" : ""}`}
                     style={{
-                      backgroundColor: "rgba(17, 19, 24, 0.7)",
+                      backgroundColor: "var(--gm-card, rgba(17, 19, 24, 0.8))",
                       backdropFilter: "blur(12px)",
-                      borderColor: noteColor,
+                      borderColor: "var(--gm-primary, #FF6900)",
                       borderWidth: "1px",
                       borderStyle: "solid",
-                      boxShadow: `0 0 8px ${noteColor}20, inset 0 0 8px ${noteColor}10`,
+                      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
                     }}
                   >
                     {/* Pin Toggle */}
@@ -1780,20 +1780,20 @@ export default function Notes() {
               className="relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden gm-note-modal"
               style={{
                 maxHeight: window.innerWidth < 768 ? "100dvh" : "90vh",
-                backgroundColor: "rgba(17, 19, 24, 0.95)",
+                backgroundColor: "var(--gm-card, rgba(17, 19, 24, 0.95))",
                 backdropFilter: "blur(16px)",
-                borderColor: color || "#334155",
+                borderColor: "var(--gm-primary, #FF6900)",
                 borderWidth: window.innerWidth < 768 ? "0px" : "1px",
                 borderTopWidth: window.innerWidth < 768 ? "2px" : "1px",
                 borderStyle: "solid",
-                boxShadow: `0 0 15px ${color}20, inset 0 0 10px ${color}10`,
+                boxShadow: "0 20px 50px rgba(0, 0, 0, 0.3)",
               }}
             >
               <div
                 className="p-4 md:px-6 flex items-center justify-between shrink-0"
                 style={{
-                  borderBottom: `1px solid ${color}40`,
-                  backgroundColor: `${color}10`,
+                  borderBottom: "1px solid var(--gm-primary, #FF6900)",
+                  backgroundColor: "rgba(255, 105, 0, 0.08)",
                 }}
               >
                 <div className="flex items-center gap-3 w-full">
@@ -2156,39 +2156,7 @@ export default function Notes() {
 
                 </div>
 
-                {/* Compact Cores da Nota Block */}
-                <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/5 mt-1.5 px-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full select-none" style={{ backgroundColor: color }} />
-                    <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-sans">
-                      Cores da Nota
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
-                    {COLORS.map((c) => {
-                      const isActive = color === c;
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setColor(c)}
-                          className={`rounded-full border border-solid transition-all duration-200 shrink-0 flex-none ${
-                            isActive
-                              ? "w-6 h-6 border-2 border-white z-10 opacity-100 scale-110"
-                              : "w-5 h-5 border border-white/20 hover:border-white/50 hover:scale-105 opacity-60 hover:opacity-100"
-                          }`}
-                          style={{
-                            backgroundColor: c,
-                            boxShadow: isActive
-                              ? `0 0 8px ${c}b5`
-                              : "none",
-                          }}
-                          title={`Mudar cor de fundo para ${c}`}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
+                {/* Formatar Texto Opções Extra */}
               </div>
 
               {/* Scrollable Area */}
@@ -2699,7 +2667,7 @@ export default function Notes() {
                 <div className="w-full md:w-auto">
                   <button
                     onClick={handleSave}
-                    className="w-full md:w-auto px-8 py-3 rounded-xl text-base font-extrabold flex items-center justify-center transition-all shadow-xl text-white bg-green-500 hover:bg-green-600 shadow-green-500/25 hover:shadow-green-500/45 transform hover:-translate-y-0.5 md:ml-1 active:scale-95"
+                    className="w-full md:w-auto px-8 py-3 rounded-xl text-base font-extrabold flex items-center justify-center transition-all shadow-xl text-white bg-green-500 hover:bg-green-600 shadow-green-500/25 hover:shadow-green-500/45 md:ml-1"
                   >
                     Salvar
                   </button>
@@ -2788,7 +2756,7 @@ export default function Notes() {
                     openWhatsapp("", cleanMessage);
                     setNoteShareData(null);
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 active:scale-98 transition-all"
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
                 >
                   <div className="shrink-0">
                     <WhatsAppIcon
@@ -2820,7 +2788,7 @@ export default function Notes() {
                     );
                     setNoteShareData(null);
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 active:scale-98 transition-all"
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
                 >
                   <div className="shrink-0">
                     <Mail size={24} className="text-[var(--gm-primary)]" />
@@ -2848,7 +2816,7 @@ export default function Notes() {
                       alert("Erro ao copiar texto.");
                     }
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 active:scale-98 transition-all"
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
                 >
                   <div className="shrink-0">
                     <Copy size={24} className="text-[var(--gm-primary)]" />
@@ -2881,7 +2849,7 @@ export default function Notes() {
                         }
                       }
                     }}
-                    className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 active:scale-98 transition-all"
+                    className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
                   >
                     <div className="shrink-0">
                       <Share2 size={24} className="text-[var(--gm-primary)]" />

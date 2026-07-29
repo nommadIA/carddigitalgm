@@ -195,7 +195,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   const [themeMode, setThemeMode] = useState<"dark" | "light">(() => {
     const saved = localStorage.getItem("theme");
-    return saved === "light" ? "light" : "dark";
+    return saved === "dark" ? "dark" : "light";
   });
 
   const settingsCacheRef = useRef<any>(null);
@@ -206,6 +206,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     document.documentElement.setAttribute("data-theme", nextTheme);
     document.documentElement.classList.toggle("gm-light", nextTheme === "light");
     document.documentElement.classList.toggle("gm-dark", nextTheme === "dark");
+    document.documentElement.classList.toggle("dark", nextTheme === "dark");
     localStorage.setItem("theme", nextTheme);
     
     // Re-aplica imediatamente as cores personalizadas do novo tema
@@ -223,60 +224,48 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     }
   };
 
-  const handleThemeMouseEnter = () => {
-    // Determina o tema oposto para prévia em tempo real
-    const previewTheme = themeMode === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", previewTheme);
-    document.documentElement.classList.toggle("gm-light", previewTheme === "light");
-    document.documentElement.classList.toggle("gm-dark", previewTheme === "dark");
-    
-    // Aplica as cores de marca/personalização específicas da prévia
-    if (settingsCacheRef.current) {
-      applySettingsToDOM(settingsCacheRef.current);
-    } else {
-      fetchSettingsSupabase(tenantId)
-        .then((s) => {
-          if (s) {
-            settingsCacheRef.current = s;
-            applySettingsToDOM(s);
-          }
-        })
-        .catch(() => {});
-    }
-  };
-
-  const handleThemeMouseLeave = () => {
-    // Restaura o tema ativo confirmado
-    document.documentElement.setAttribute("data-theme", themeMode);
-    document.documentElement.classList.toggle("gm-light", themeMode === "light");
-    document.documentElement.classList.toggle("gm-dark", themeMode === "dark");
-    
-    // Restaura as cores de marca/personalização originais
-    if (settingsCacheRef.current) {
-      applySettingsToDOM(settingsCacheRef.current);
-    } else {
-      fetchSettingsSupabase(tenantId)
-        .then((s) => {
-          if (s) {
-            settingsCacheRef.current = s;
-            applySettingsToDOM(s);
-          }
-        })
-        .catch(() => {});
-    }
-  };
-
   useEffect(() => localStorage.setItem("gm.sidebar", collapsed ? "1" : "0"), [collapsed]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme") || "dark";
+    const saved = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", saved);
     document.documentElement.classList.toggle("gm-light", saved === "light");
     document.documentElement.classList.toggle("gm-dark", saved === "dark");
+    document.documentElement.classList.toggle("dark", saved === "dark");
     if (saved !== themeMode) {
       setThemeMode(saved as "dark" | "light");
     }
+
+    const savedBtnStyle = localStorage.getItem("gm_button_style_fallback") || "vazado";
+    document.documentElement.setAttribute("data-button-style", savedBtnStyle);
   }, []);
+
+  useEffect(() => {
+    const handleThemeUpdate = () => {
+      const saved = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.documentElement.classList.toggle("gm-light", saved === "light");
+      document.documentElement.classList.toggle("gm-dark", saved === "dark");
+      document.documentElement.classList.toggle("dark", saved === "dark");
+      setThemeMode(saved as "dark" | "light");
+
+      if (settingsCacheRef.current) {
+        applySettingsToDOM(settingsCacheRef.current);
+      } else {
+        fetchSettingsSupabase(tenantId)
+          .then((s) => {
+            if (s) {
+              settingsCacheRef.current = s;
+              applySettingsToDOM(s);
+            }
+          })
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener("gm_theme_updated", handleThemeUpdate);
+    return () => window.removeEventListener("gm_theme_updated", handleThemeUpdate);
+  }, [tenantId]);
 
   // ✅ Carrega settings por TENANT
   useEffect(() => {
@@ -432,21 +421,25 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     const checkScroll = () => {
       let target = activeScrollElement;
       if (!target || !document.contains(target)) {
-        // Try to find the scrollable element under the center of the screen
-        const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-        if (centerEl) {
-          let curr: HTMLElement | null = centerEl as HTMLElement;
-          while (curr && curr !== document.body) {
-            if (curr.scrollHeight > curr.clientHeight + 10 && 
-                (window.getComputedStyle(curr).overflowY === 'auto' || window.getComputedStyle(curr).overflowY === 'scroll' || curr.classList.contains('gm-main'))) {
-              target = curr;
-              break;
+        // Try to find the scrollable element marked with data-active-scroll
+        target = document.querySelector('[data-active-scroll="true"]') as HTMLElement;
+        
+        if (!target) {
+          const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+          if (centerEl) {
+            let curr: HTMLElement | null = centerEl as HTMLElement;
+            while (curr && curr !== document.body) {
+              if (curr.scrollHeight > curr.clientHeight + 10 && 
+                  (window.getComputedStyle(curr).overflowY === 'auto' || window.getComputedStyle(curr).overflowY === 'scroll' || curr.classList.contains('gm-main'))) {
+                target = curr;
+                break;
+              }
+              curr = curr.parentElement;
             }
-            curr = curr.parentElement;
           }
         }
 
-        // Fallback to the old method
+        // Fallback
         if (!target) {
           const elements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
           for (let i = elements.length - 1; i >= 0; i--) {
@@ -462,17 +455,18 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       if (target) {
         const currentScrollY = target.scrollTop;
         const maxScroll = target.scrollHeight - target.clientHeight;
-        setCanScrollUp(currentScrollY > 100);
-        setCanScrollDown(maxScroll > 0 && currentScrollY < maxScroll - 50);
+        const nextUp = currentScrollY > 20;
+        const nextDown = maxScroll > 10 && currentScrollY < maxScroll - 20;
+        setCanScrollUp(prev => prev !== nextUp ? nextUp : prev);
+        setCanScrollDown(prev => prev !== nextDown ? nextDown : prev);
       } else {
         setCanScrollUp(false);
         setCanScrollDown(false);
       }
     };
 
-    const interval = setInterval(checkScroll, 500);
-
     updateTargets();
+    checkScroll();
     tick();
 
     // Use capture: true to catch all scroll events on the page
@@ -481,7 +475,6 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     return () => {
       window.removeEventListener("scroll", onScroll, { capture: true } as any);
       window.removeEventListener("resize", checkScroll);
-      clearInterval(interval);
       if (raf) cancelAnimationFrame(raf);
       document.documentElement.style.setProperty("--gm-app-bg-parallax-y", "0px");
       document.documentElement.style.setProperty("--gm-app-bg-depth-scale", `${BASE_DEPTH}`);
@@ -613,6 +606,21 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         <div className="flex items-center gap-2">
             <button
                 type="button"
+                className="gm-btn gm-btn-icon relative bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20 transition-all"
+                onClick={toggleTheme}
+                title={themeMode === "dark" ? "Alternar para Tema Claro" : "Alternar para Tema Escuro"}
+                aria-label="Alternar Tema Claro/Escuro"
+                style={{ width: '38px', height: '38px', borderRadius: '10px' }}
+            >
+                {themeMode === "dark" ? (
+                  <Sun size={18} className="text-amber-400" />
+                ) : (
+                  <Moon size={18} className="text-[var(--gm-primary)]" />
+                )}
+            </button>
+
+            <button
+                type="button"
                 className="gm-btn gm-btn-icon relative bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)]"
                 onClick={handleBellClick}
                 title="Atualizações e Informações"
@@ -635,17 +643,22 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       {/* DESKTOP SIDEBAR */}
       <aside className={`gm-sidebar ${collapsed ? "collapsed" : ""} hidden md:flex !relative`}>
-        {/* Overlapping vertical border collapse/expand Toggle Button - Perfectly sized, Positioned precisely, with a thicker style-guide Orange border */}
+        {/* Overlapping vertical border collapse/expand Toggle Button - White circle in Light theme, Black circle in Dark theme, with Orange border & Orange chevron arrow */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-1/2 -translate-y-1/2 -right-[10.5px] w-[21px] h-[21px] rounded-full bg-[var(--gm-menu-bg)] border-[2.5px] border-[var(--gm-menu-primary)]/60 hover:border-[var(--gm-menu-primary)] flex items-center justify-center text-[var(--gm-menu-primary)] transition-all z-[100] shadow-[0_2px_12px_rgba(0,0,0,0.25)] cursor-pointer"
+          className="absolute top-1/2 -translate-y-1/2 -right-[11px] w-[22px] h-[22px] rounded-full border-[2.5px] border-[var(--gm-primary)] flex items-center justify-center text-[var(--gm-primary)] transition-all z-[100] shadow-[0_2px_10px_rgba(0,0,0,0.3)] cursor-pointer shrink-0"
+          style={{
+            backgroundColor: themeMode === "dark" ? "#000000" : "#ffffff",
+            borderColor: "var(--gm-primary)",
+            color: "var(--gm-primary)"
+          }}
           type="button"
           aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
         >
           {collapsed ? (
-            <ChevronRight size={10} className="animate-arrow-right" />
+            <ChevronRight size={12} className="animate-arrow-right text-[var(--gm-primary)]" />
           ) : (
-            <ChevronLeft size={10} className="animate-arrow-left" />
+            <ChevronLeft size={12} className="animate-arrow-left text-[var(--gm-primary)]" />
           )}
         </button>
 
@@ -702,13 +715,25 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   e.preventDefault();
                   toggleTheme();
                 }}
-                onMouseEnter={handleThemeMouseEnter}
-                onMouseLeave={handleThemeMouseLeave}
-                className=""
-                title={themeMode === "dark" ? "Alternar para Tema Claro" : "Alternar para Tema Escuro"}
+                className="relative flex items-center justify-center p-1.5"
+                title={themeMode === "dark" ? "Tema Escuro Ativo (Clique para alternar)" : "Tema Claro Ativo (Clique para alternar)"}
               >
-                <div className="relative shrink-0 flex items-center justify-center">
-                  {themeMode === "dark" ? <Sun size={18} className="text-amber-500 hover:scale-110 transition-transform" /> : <Moon size={18} className="text-blue-400 hover:scale-110 transition-transform" />}
+                <div
+                  role="switch"
+                  aria-checked={themeMode === "dark"}
+                  className={`relative shrink-0 w-9 h-5 rounded-full p-0.5 cursor-pointer transition-all duration-200 border flex items-center ${
+                    themeMode === "dark"
+                      ? "bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                      : "bg-emerald-600 border-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.35)]"
+                  }`}
+                >
+                  <div
+                    className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-out flex items-center justify-center ${
+                      themeMode === "dark" ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                  </div>
                 </div>
               </a>
 
@@ -739,7 +764,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 title="Sair"
                 aria-label="Sair"
               >
-                <LogOut size={18} className="transition-transform hover:scale-110" />
+                <LogOut size={18} className="transition-transform" />
               </a>
             </div>
           ) : (
@@ -751,18 +776,61 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   e.preventDefault();
                   toggleTheme();
                 }}
-                onMouseEnter={handleThemeMouseEnter}
-                onMouseLeave={handleThemeMouseLeave}
-                className="text-left"
+                className="text-left flex items-center justify-between w-full gap-2 p-1.5 rounded-xl transition-all"
                 title={themeMode === "dark" ? "Alternar para Tema Claro" : "Alternar para Tema Escuro"}
               >
-                <div className="relative shrink-0 flex items-center">
-                  {themeMode === "dark" ? <Sun size={18} className="text-amber-500" /> : <Moon size={18} className="text-blue-400" />}
+                <div className="relative shrink-0 flex items-center gap-2.5 min-w-0">
+                  {themeMode === "dark" ? (
+                    <Moon size={18} className="text-emerald-400 shrink-0" />
+                  ) : (
+                    <Sun size={18} className="text-orange-500 shrink-0" />
+                  )}
+                  <div className="flex flex-col min-w-0 gap-0.5">
+                    <span className={`text-xs font-black leading-tight ${
+                      themeMode === "dark" ? "text-slate-200 dark:text-zinc-200" : "text-orange-600 dark:text-orange-500"
+                    }`}>
+                      Tema {themeMode === "dark" ? "Escuro" : "Claro"}
+                    </span>
+                    <div>
+                      {themeMode === "dark" ? (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[7.5px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                          ATIVO
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[7.5px] font-black uppercase tracking-wider bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30">
+                          <span className="w-1 h-1 rounded-full bg-orange-500 animate-pulse" />
+                          ATIVO
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <span className="text-sm flex-1 text-left">Tema {themeMode === "dark" ? "Claro" : "Escuro"}</span>
-                <span className="shrink-0 px-2 py-0.5 text-[8.5px] font-extrabold uppercase bg-neutral-800 text-zinc-400 rounded-md z-10">
-                  {themeMode === "dark" ? "Escuro" : "Claro"}
-                </span>
+
+                {/* Chave Verde Clicável (Toggle Switch) */}
+                <div
+                  role="switch"
+                  aria-checked={themeMode === "dark"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    toggleTheme();
+                  }}
+                  className={`relative shrink-0 w-9 h-5 rounded-full p-0.5 cursor-pointer transition-all duration-200 border flex items-center ${
+                    themeMode === "dark"
+                      ? "bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                      : "bg-emerald-600 border-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.35)]"
+                  }`}
+                  title={themeMode === "dark" ? "Tema Escuro Ativo - Clique para alterar" : "Tema Claro Ativo - Clique para alterar"}
+                >
+                  <div
+                    className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-out flex items-center justify-center ${
+                      themeMode === "dark" ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                  </div>
+                </div>
               </a>
 
               <a
@@ -826,32 +894,36 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           {location.pathname === "/" && (
             <button
               onClick={() => openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.")}
-              className="transition-all duration-300 flex items-center justify-center w-12 h-12 rounded-full bg-green-500/80 backdrop-blur-md border border-white/20 shadow-[0_4px_20px_rgba(34,197,94,0.4)] hover:scale-110 pointer-events-auto group cursor-pointer"
+              className="transition-all duration-200 flex items-center justify-center w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#20ba5a] border border-white/20 shadow-[0_4px_16px_rgba(37,211,102,0.4)] pointer-events-auto cursor-pointer"
               aria-label="Ajuda via WhatsApp"
               title="Ajuda via WhatsApp"
             >
-              <WhatsAppIcon size={24} className="text-white animate-pulse group-hover:animate-none" />
+              <WhatsAppIcon size={24} className="text-white" />
             </button>
           )}
 
           {/* BACK TO TOP BUTTON (GLASS) */}
           <button
             onClick={() => {
-              const scrollableElements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
-              scrollableElements.forEach(el => el.scrollTo({ top: 0, behavior: "smooth" }));
               const activeEl = document.querySelector('[data-active-scroll="true"]');
-              if (activeEl) activeEl.scrollTo({ top: 0, behavior: "smooth" });
+              if (activeEl) {
+                activeEl.scrollTo({ top: 0, behavior: "smooth" });
+              } else {
+                const scrollableElements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
+                scrollableElements.forEach(el => el.scrollTo({ top: 0, behavior: "smooth" }));
+              }
             }}
-            className={`transition-all duration-300 flex items-center justify-center w-8 h-8 pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
-              canScrollUp ? "opacity-50 hover:opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+            className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900/90 dark:bg-zinc-900/90 border border-[var(--gm-primary)]/50 shadow-xl pointer-events-auto cursor-pointer ${
+              canScrollUp ? "opacity-90 hover:opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
             }`}
             aria-label="Voltar ao topo"
+            title="Rolar para o topo"
           >
-            <ChevronUp size={22} className="text-[var(--gm-primary)] filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] animate-bounce" />
+            <ChevronUp size={20} className="text-[var(--gm-primary)] animate-pulse" />
           </button>
 
           {/* SCROLL DOWN INDICATOR (GLASS) */}
-          {!(location.pathname === '/' || location.pathname === '/configuracoes') && (
+          {location.pathname !== '/' && (
             <button 
               onClick={() => {
                 let target = document.querySelector('[data-active-scroll="true"]') as HTMLElement;
@@ -866,15 +938,16 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   }
                 }
                 if (target) {
-                  target.scrollBy({ top: target.clientHeight * 0.8, behavior: "smooth" });
+                  target.scrollBy({ top: Math.min(target.clientHeight * 0.7, 320), behavior: "smooth" });
                 }
               }}
-              className={`transition-all duration-300 flex flex-col items-center justify-center w-8 h-8 pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
-                canScrollDown ? "opacity-50 hover:opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+              className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900/90 dark:bg-zinc-900/90 border border-[var(--gm-primary)]/50 shadow-xl pointer-events-auto cursor-pointer ${
+                canScrollDown ? "opacity-90 hover:opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
               }`}
               aria-label="Rolar para baixo"
+              title="Rolar para baixo"
             >
-              <ChevronDown size={22} className="text-white filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] animate-bounce" />
+              <ChevronDown size={20} className="text-[var(--gm-primary)] animate-bounce" />
             </button>
           )}
         </div>,
@@ -910,7 +983,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </div>
               <button
                 type="button"
-                className="w-8 h-8 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 hover:scale-105 active:scale-95 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-zinc-700/60"
+                className="w-8 h-8 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-zinc-700/60"
                 onClick={() => setShowUpdateModal(false)}
                 title="Fechar Notificações"
               >
@@ -1059,7 +1132,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </span>
               <button
                 type="button"
-                className="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800/80 active:scale-95 text-zinc-300 hover:text-white rounded-xl text-[9px] font-black transition-all uppercase tracking-widest shrink-0"
+                className="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800/80 text-zinc-300 hover:text-white rounded-xl text-[9px] font-black transition-all uppercase tracking-widest shrink-0"
                 onClick={() => setShowUpdateModal(false)}
               >
                 Fechar

@@ -505,7 +505,7 @@ const Dashboard = () => {
         {/* Novo Orçamento */}
         <motion.div variants={itemVariants}>
           <Link to="/budgets?new=true" className="group block">
-            <Card className="aspect-square gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+            <Card className="aspect-square gap-2 transition-all duration-300 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
               <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-[var(--gm-primary)] transition-all duration-500 group-hover:scale-110 group-hover:rotate-[360deg] group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
                 <Plus size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
               </div>
@@ -521,7 +521,7 @@ const Dashboard = () => {
         {/* Clientes */}
         <motion.div variants={itemVariants}>
           <Link to="/clients" className="group block">
-            <Card className="aspect-square gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+            <Card className="aspect-square gap-2 transition-all duration-300 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
               <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
                 <Users size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
               </div>
@@ -537,7 +537,7 @@ const Dashboard = () => {
         {/* Financeiro */}
         <motion.div variants={itemVariants}>
           <Link to="/financial" className="group block">
-            <Card className="aspect-square gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+            <Card className="aspect-square gap-2 transition-all duration-300 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
               <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
                 <Wallet size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
               </div>
@@ -553,7 +553,7 @@ const Dashboard = () => {
         {/* Mercado */}
         <motion.div variants={itemVariants}>
           <Link to="/market" className="group block h-full">
-            <Card className="h-full aspect-square md:aspect-auto gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+            <Card className="h-full aspect-square md:aspect-auto gap-2 transition-all duration-300 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
               <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
                 <ShoppingCart size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
               </div>
@@ -569,7 +569,7 @@ const Dashboard = () => {
         {/* Notas */}
         <motion.div variants={itemVariants}>
           <Link to="/notes" className="group block h-full">
-            <Card className="h-full aspect-square md:aspect-auto gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+            <Card className="h-full aspect-square md:aspect-auto gap-2 transition-all duration-300 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
               <div className="w-[50px] h-[50px] md:w-[60px] md:h-[60px] flex items-center justify-center text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
                 <FileText size={viewMode === "smartphone" ? 28 : 32} strokeWidth={1.5} />
               </div>
@@ -586,7 +586,7 @@ const Dashboard = () => {
         {viewMode === "smartphone" && (
           <motion.div variants={itemVariants}>
             <Link to="/minha-bio" className="group block h-full">
-              <Card className="h-full aspect-square gap-2 transition-all duration-300 group-hover:-translate-y-2 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
+              <Card className="h-full aspect-square gap-2 transition-all duration-300 p-2 flex flex-col items-center justify-center rounded-[2rem] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(255,123,0,0.15)]">
                 <div className="w-[50px] h-[50px] flex items-center justify-center text-[var(--gm-primary)] transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,123,0,0.5)]">
                   <Smartphone size={28} strokeWidth={1.5} />
                 </div>

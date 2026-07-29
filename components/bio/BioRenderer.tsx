@@ -16,9 +16,17 @@ export const formatExternalUrl = (url: string | undefined): string | undefined =
 };
 
 export const BrandWhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-    <path d="M15.05 13.52c-.17-.11-.47-.23-.62-.29-.15-.06-.26-.1-.36.03-.13.17-.4.48-.52.61-.1.12-.2.13-.37.07a4.93 4.93 0 0 1-1.42-.9c-.55-.49-.92-1.09-1.02-1.29-.11-.18 0-.28.07-.36.08-.08.18-.21.27-.32.09-.1.12-.17.18-.3a.4.4 0 0 0-.01-.39c-.04-.1-.36-.88-.49-1.22-.13-.32-.27-.28-.36-.28h-.27c-.15 0-.39.06-.59.28-.2.22-.76.75-.76 1.83s.77 2.12.88 2.27c.1.15 1.52 2.37 3.69 3.32.52.22.92.36 1.24.46.52.17.99.14 1.36.09.41-.06 1.27-.52 1.45-1 .18-.49.18-.91.13-1-.05-.09-.2-.14-.42-.25z" />
+  <svg viewBox="0 0 84.54 85.23" fill="currentColor" {...props}>
+    <path 
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M33.62 26l-1.01 -2.74c-0.56,-1.5 -1.02,-1.49 -1.5,-1.48 -0.1,0 -0.19,0.01 -0.28,0 -0.33,-0.01 -0.68,-0.05 -1.04,-0.08 -0.34,-0.03 -0.68,-0.07 -1.03,-0.08 -0.03,0 -0.05,-0 -0.08,-0 -0.45,0 -1.44,0.12 -2.36,1.05l-0.22 0.22c-1.15,1.14 -3.53,3.49 -3.71,8.22 -0.18,4.72 2.92,9.56 3.87,10.93 0.05,0.07 0.13,0.19 0.24,0.38 4.84,7.81 11,13.64 17.33,16.41 8.78,3.85 10.26,3.55 11.56,3.28 0.32,-0.06 0.63,-0.13 1.01,-0.15 1.73,-0.09 6.02,-2.21 6.92,-4.46 0.92,-2.3 0.98,-4.23 0.85,-4.58 -0.1,-0.19 -0.6,-0.45 -1.18,-0.75l-0.58 -0.31c-1.21,-0.66 -6.26,-3.39 -7.18,-3.76 -0.95,-0.39 -1.22,-0.42 -1.69,0.23 -0.92,1.27 -3.6,4.14 -3.63,4.17 -1.11,1.18 -2.26,0.79 -3.14,0.31 -0.16,-0.09 -0.39,-0.2 -0.67,-0.33 -1.48,-0.71 -4.54,-2.17 -7.95,-5.46 -3.07,-2.95 -5.11,-6.48 -5.85,-7.87 -0.84,-1.56 0.15,-2.47 0.69,-2.96 0.31,-0.29 0.68,-0.71 1.05,-1.12 0.21,-0.23 0.41,-0.46 0.61,-0.68 0.42,-0.45 0.6,-0.79 0.88,-1.31l0.17 -0.32c0.22,-0.4 0.21,-0.77 -0.04,-1.32 -0.17,-0.37 -0.95,-2.49 -2.03,-5.44l0 0z"
+    />
+    <path 
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M84.54 41.68c0,-22.98 -18.7,-41.68 -41.68,-41.68 -22.98,0 -41.67,18.7 -41.67,41.68 0,7.6 2.07,15.04 5.98,21.52l0.15 0.25 -7.33 21.78 22.48 -7.2 0.24 0.13c6.14,3.39 13.1,5.18 20.14,5.18 22.98,0 41.68,-18.7 41.68,-41.68l0 0zm-75.61 34.74l0 0 4.7 -13.98c-4.34,-6.09 -6.64,-13.27 -6.64,-20.76 0,-19.78 16.09,-35.88 35.87,-35.88 19.78,0 35.88,16.09 35.88,35.88 0,19.78 -16.09,35.88 -35.88,35.88 -6.93,0 -13.66,-1.99 -19.48,-5.77l-14.46 4.63 0 0z"
+    />
   </svg>
 );
 
@@ -326,7 +334,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       setCatalogIndex((prev) => (prev >= maxCatalogIndex ? 0 : prev + 1));
     }, 4000);
     return () => clearInterval(interval);
-  }, [catalogIndex, maxCatalogIndex]);
+  }, [maxCatalogIndex]);
 
   useEffect(() => {
     setCatalogIndex(0);
@@ -340,7 +348,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const [submittedEmail, setSubmittedEmail] = useState("");
 
   const customSvgs: Record<string, string> = {
-    whatsapp: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/whatsapp.svg",
+    whatsapp: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg",
     telegram: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/telegram.svg",
     instagram: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/instagram.svg",
     facebook: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/facebook.svg",
@@ -1037,10 +1045,15 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     
     const Wrapper = href ? "a" : "div";
     const formattedHref = formatExternalUrl(href);
+    const isOutline = buttonStyle === "outline" || buttonStyle === "vazado";
     const isNeon = buttonStyle === "neon";
 
     // Dynamic styles based on buttonStyle
-    const containerStyle = isNeon ? {
+    const containerStyle = isOutline ? {
+      backgroundColor: 'transparent',
+      borderColor: brandColor,
+      borderWidth: '2px',
+    } : isNeon ? {
       borderColor: brandColor,
       backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.35)' : 'rgba(255, 255, 255, 0.75)',
     } : {
@@ -1048,13 +1061,18 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       borderColor: brandColor,
     };
 
-    const textStyle = isNeon ? {
+    const textStyle = isOutline ? {
+      color: theme === 'dark' ? '#ffffff' : '#0f172a',
+    } : isNeon ? {
       color: brandColor,
     } : {
       color: '#ffffff',
     };
 
-    const iconStyle = isNeon ? {
+    const iconStyle = isOutline ? {
+      color: brandColor,
+      backgroundColor: theme === 'dark' ? `${brandColor}20` : `${brandColor}15`,
+    } : isNeon ? {
       color: brandColor,
       backgroundColor: theme === 'dark' ? `${brandColor}20` : `${brandColor}10`,
     } : {
@@ -1540,10 +1558,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       )}
                     </div>
                     <div className="px-2 space-y-2 sm:space-y-3">
-                      <h1 className={`text-2xl sm:text-3xl md:text-5xl font-black tracking-tight ${isOverBanner ? "text-white drop-shadow-md" : t.textTitle}`}>{companyName}</h1>
+                      <h1 className={`text-2xl sm:text-3xl md:text-5xl font-black tracking-tight ${isOverBanner ? "!text-white drop-shadow-md" : t.textTitle}`}>{companyName}</h1>
                       {desc && (
                         <div 
-                          className={`mt-1.5 ${getResponsiveFontSizeClass(bio.description_size, bio.description_size_mobile)} max-w-4xl leading-relaxed whitespace-pre-wrap tracking-wide ${descMarginClass} ${descAlignClass} ${descBoldClass} ${descItalicClass} ${descFontClass} ${isOverBanner ? "text-zinc-100/95 drop-shadow-sm" : `${t.textDesc}`}`}
+                          className={`mt-1.5 ${getResponsiveFontSizeClass(bio.description_size, bio.description_size_mobile)} max-w-4xl leading-relaxed whitespace-pre-wrap tracking-wide ${descMarginClass} ${descAlignClass} ${descBoldClass} ${descItalicClass} ${descFontClass} ${isOverBanner ? "!text-white [&_*]:!text-white drop-shadow-sm" : `${t.textDesc}`}`}
                           dangerouslySetInnerHTML={{ __html: desc }}
                         />
                       )}
@@ -1557,25 +1575,26 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             const el = document.getElementById("portfolio-section");
                             if (el) el.scrollIntoView({ behavior: 'smooth' });
                           }}
-                          className={`flex items-center justify-center px-6 py-2.5 rounded-full text-xs sm:text-sm font-extrabold shadow-[0_6px_20px_0_rgba(0,0,0,0.15)] cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 text-white bg-gradient-to-r w-full sm:w-auto`}
+                          className={`flex items-center justify-center px-6 py-2.5 rounded-full text-xs sm:text-sm font-extrabold shadow-[0_6px_20px_0_rgba(0,0,0,0.15)] cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 !text-white [&_*]:!text-white bg-gradient-to-r w-full sm:w-auto`}
                           style={{ 
                             backgroundImage: `linear-gradient(to right, ${brandColor}, ${brandColor}dd)`,
+                            color: '#ffffff',
                           }}
                         >
-                          Veja nosso Portfólio
+                          <span className="!text-white">Veja nosso Portfólio</span>
                         </button>
                       )}
 
                       <button 
                         onClick={handleShareBio}
-                        className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs sm:text-sm font-extrabold border shadow-sm cursor-pointer transition-all duration-200 transform active:scale-95 bio-button w-full sm:w-auto ${isOverBanner ? "bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm" : `${t.cardBg} ${t.cardBgHover} ${t.cardBorder}`}`}
+                        className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs sm:text-sm font-extrabold border shadow-sm cursor-pointer transition-all duration-200 transform active:scale-95 bio-button w-full sm:w-auto ${isOverBanner ? "bg-white/10 hover:bg-white/20 !text-white border-white/20 backdrop-blur-sm [&_*]:!text-white" : `${t.cardBg} ${t.cardBgHover} ${t.cardBorder}`}`}
                         style={{ 
                           color: isOverBanner ? '#ffffff' : brandColor, 
                           borderColor: isOverBanner ? 'rgba(255,255,255,0.25)' : `${brandColor}40`
                         }}
                       >
-                        <Share2 className="w-4 h-4" />
-                        {copiedShare ? "Link Copiado!" : "Compartilhar Bio"}
+                        <Share2 className="w-4 h-4 !text-white" />
+                        <span className={isOverBanner ? "!text-white" : ""}>{copiedShare ? "Link Copiado!" : "Compartilhar Bio"}</span>
                       </button>
                     </div>
 
@@ -1805,7 +1824,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               {companyName.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <span className={`font-extrabold text-2xl sm:text-3xl tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
+                          <span className={`font-extrabold text-2xl sm:text-3xl tracking-tight ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
                         </div>
                         <div className="flex items-center">
                           {/* Navigation Links Group */}
@@ -1818,8 +1837,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               }} 
                               className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
                                 (activeView as string) === "bio" 
-                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
-                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
+                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
                               } hover:text-[#FE540B]`}
                             >
                               Início
@@ -1831,8 +1850,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               onClick={() => setActiveView("contact")} 
                               className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
                                 (activeView as string) === "contact" 
-                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
-                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
+                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
                               } hover:text-[#FE540B]`}
                             >
                               Contato
@@ -1855,8 +1874,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               }} 
                               className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
                                 (activeView as string) === "portfolio" 
-                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
-                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
+                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
+                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
                               } hover:text-[#FE540B]`}
                             >
                               Vitrine
@@ -1945,12 +1964,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 {activeView !== "contact" && activeView !== "portfolio" && (
                                   <div className="absolute inset-0 z-20 flex flex-col justify-center py-6">
                                     <div className={`w-full max-w-[1150px] mx-auto px-4 md:px-8 lg:px-12 flex flex-col ${heroAlign === 'center' ? 'items-center text-center' : heroAlign === 'right' ? 'items-end text-right' : 'items-start text-left'}`}>
-                                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-2xl leading-tight">
+                                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight !text-white drop-shadow-md max-w-2xl leading-tight">
                                          {companyName}
                                        </h1>
                                        {desc && (
                                          <div 
-                                           className={`mt-4 text-base md:text-lg lg:text-xl text-zinc-100 max-w-2xl leading-relaxed whitespace-pre-wrap ${heroBold ? 'font-bold' : 'font-medium'} ${heroItalic ? 'italic' : ''}`}
+                                           className={`mt-4 text-base md:text-lg lg:text-xl !text-white [&_*]:!text-white drop-shadow-sm max-w-2xl leading-relaxed whitespace-pre-wrap ${heroBold ? 'font-bold' : 'font-medium'} ${heroItalic ? 'italic' : ''}`}
                                            dangerouslySetInnerHTML={{ __html: desc }}
                                          />
                                        )}
@@ -1962,12 +1981,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                                const el = document.getElementById("portfolio-section");
                                                if (el) el.scrollIntoView({ behavior: 'smooth' });
                                              }}
-                                             className="flex items-center px-8 py-3.5 rounded-full text-lg font-extrabold shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 text-white bg-gradient-to-r"
+                                             className="flex items-center px-8 py-3.5 rounded-full text-lg font-extrabold shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 !text-white [&_*]:!text-white bg-gradient-to-r"
                                              style={{ 
                                                backgroundImage: `linear-gradient(to right, ${brandColor}, ${brandColor}dd)`,
+                                               color: '#ffffff',
                                              }}
                                            >
-                                             Veja nosso Portfólio
+                                             <span className="!text-white">Veja nosso Portfólio</span>
                                            </button>
                                          </div>
                                        )}
@@ -2118,17 +2138,17 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                           return (
                             <div className={`relative z-20 w-full flex flex-col justify-center ${mobAlignClass} space-y-6 px-4`}>
-                              <h1 className="text-[34px] sm:text-[38px] font-black tracking-tight text-white leading-[1.1] select-none max-w-[95%] drop-shadow-md">
+                              <h1 className="text-[34px] sm:text-[38px] font-black tracking-tight !text-white leading-[1.1] select-none max-w-[95%] drop-shadow-md">
                                 {bio.title_mobile || bio.title || companyName || "Criando marcas que conectam"}
                               </h1>
                               
                               {desc && (
                                 <div className={`w-full flex flex-col ${mobAlignClass} space-y-3.5 pt-6 max-w-sm border-t border-white/10 mt-6`}>
-                                  <h2 className="hidden sm:block text-xl sm:text-2xl font-black tracking-tight text-white font-sans uppercase">
+                                  <h2 className="hidden sm:block text-xl sm:text-2xl font-black tracking-tight !text-white font-sans uppercase">
                                     Sobre a
                                   </h2>
                                   <div 
-                                    className={`leading-relaxed text-zinc-100 whitespace-pre-wrap font-sans drop-shadow-sm px-2 ${mobSize} ${mobBold} ${mobItalic} ${mobFont}`}
+                                    className={`leading-relaxed !text-white [&_*]:!text-white whitespace-pre-wrap font-sans drop-shadow-sm px-2 ${mobSize} ${mobBold} ${mobItalic} ${mobFont}`}
                                     dangerouslySetInnerHTML={{ __html: desc }}
                                   />
                                 </div>
@@ -2143,9 +2163,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     setActiveView("bio");
                                   }
                                 }}
-                                className="px-8 py-3.5 bg-[#FE540B] hover:bg-[#ff3d00] text-white rounded-full text-base font-extrabold shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer mt-4"
+                                className="px-8 py-3.5 bg-[#FE540B] hover:bg-[#ff3d00] !text-white [&_*]:!text-white rounded-full text-base font-extrabold shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer mt-4"
+                                style={{ color: '#ffffff' }}
                               >
-                                Veja nosso Portfólio
+                                <span className="!text-white">Veja nosso Portfólio</span>
                               </button>
                             </div>
                           );
@@ -2792,7 +2813,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               setSelectedProduct(item);
                               setActiveImageIndex(0);
                             }}
-                            className={`overflow-hidden rounded-[2rem] border transition-[transform,box-shadow,border-color] duration-300 flex flex-col h-full cursor-pointer hover:shadow-2xl hover:-translate-y-1 group ${t.cardBg} ${t.cardBorder} catalog-card-item flex-1`}
+                            className={`overflow-hidden rounded-[2rem] border transition-[transform,box-shadow,border-color] duration-300 flex flex-col h-full cursor-pointer hover:shadow-2xl group ${t.cardBg} ${t.cardBorder} catalog-card-item flex-1`}
                           >
                             {item.image_url ? (() => {
                               const isItemPng = item.image_url.toLowerCase().includes('.png') || item.image_url.toLowerCase().includes('image/png') || item.image_url.toLowerCase().includes('format=png');
@@ -4074,7 +4095,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     <button 
                                       type="button"
                                       onClick={handleCopyPix}
-                                      className="w-full flex items-center justify-center py-3.5 px-4 rounded-xl text-sm font-black transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md hover:brightness-110 active:scale-[0.98] cursor-pointer text-white border-0 shadow-sm"
+                                      className="w-full flex items-center justify-center py-3.5 px-4 rounded-xl text-sm font-black transition-all duration-300 hover:shadow-md hover:brightness-110 cursor-pointer text-white border-0 shadow-sm"
                                       style={{ 
                                         background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
                                         backgroundSize: '300% 300%',
@@ -4099,16 +4120,16 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   type="button"
                                   onClick={() => setIsCardExpanded(!isCardExpanded)}
                                   className="w-full flex items-center justify-between p-4 font-black text-sm tracking-wide transition-all duration-200 text-left cursor-pointer hover:bg-slate-500/10 active:scale-[0.99]"
-                                  style={{ borderLeft: `4px solid ${brandColor || '#32BCAD'}` }}
+                                  style={{ borderLeft: `4px solid ${brandColor || '#FE540B'}` }}
                                 >
                                   <div className="flex items-center gap-2.5">
-                                    <div className="bg-blue-500/10 dark:bg-blue-500/20 p-1.5 rounded-lg">
-                                      <CreditCard className="w-5 h-5 text-blue-500" />
+                                    <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${brandColor || '#FE540B'}20` }}>
+                                      <CreditCard className="w-5 h-5" style={{ color: brandColor || '#FE540B' }} />
                                     </div>
                                     <span className="text-slate-800 dark:text-slate-100 text-base font-extrabold uppercase">PAGAR COM CARTÃO</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 dark:bg-blue-500/20">Cartão de Crédito</span>
+                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${brandColor || '#FE540B'}20`, color: brandColor || '#FE540B' }}>Cartão de Crédito</span>
                                     {isCardExpanded ? (
                                       <ChevronUp className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                                     ) : (
@@ -4128,7 +4149,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                       href={cardUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="w-full flex items-center justify-center py-4 px-4 rounded-xl text-sm font-black text-white transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98] border-0 shadow-md"
+                                      className="w-full flex items-center justify-center py-4 px-4 rounded-xl text-sm font-black text-white transition-all duration-300 hover:shadow-lg border-0 shadow-md"
                                       style={{ 
                                         backgroundColor: brandColor,
                                         boxShadow: `0 4px 12px ${brandColor}40`

@@ -385,7 +385,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
             {/* Next / Complete button */}
             <button
               onClick={handleNext}
-              className="gm-btn py-2.5 px-5 rounded-2xl flex items-center gap-1.5 text-xs font-bold text-white transition-all hover:scale-[1.02] shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
+              className="gm-btn py-2.5 px-5 rounded-2xl flex items-center gap-1.5 text-xs font-bold text-white transition-all shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
             >
               {step === stepsCount - 1 ? "Concluir" : "Próximo"}
               <ChevronRight size={16} />

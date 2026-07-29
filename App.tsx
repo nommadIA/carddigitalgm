@@ -6,23 +6,45 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { fetchSettingsSupabase, applySettingsToDOM, AppSettings } from "./lib/settings";
 import ThemeSync from './components/ui/ThemeSync';
+import RouteBoundary from './RouteBoundary';
 
-// Lazy load pages for better performance
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Budgets = lazy(() => import('./pages/Budgets'));
-const Clients = lazy(() => import('./pages/Clients'));
-const Market = lazy(() => import('./pages/Market'));
-const Financial = lazy(() => import('./pages/Financial'));
-const Expenses = lazy(() => import('./pages/Expenses'));
-const Configuracoes = lazy(() => import('./pages/Configuracoes'));
-const Notes = lazy(() => import('./pages/Notes'));
-const Bio = lazy(() => import('./pages/Bio'));
-const PublicBio = lazy(() => import('./pages/PublicBio'));
-const AuthCallback = lazy(() => import('./pages/AuthCallback'));
-const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
-const PixCopy = lazy(() => import('./pages/PixCopy'));
+// Resilient Lazy Loader to recover from stale Vite chunk / dynamic import fetch errors
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>
+) {
+  return lazy(async () => {
+    const pageHasAlreadyBeenReloaded = sessionStorage.getItem('gm_lazy_retry');
+    try {
+      const component = await componentImport();
+      sessionStorage.removeItem('gm_lazy_retry');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenReloaded) {
+        sessionStorage.setItem('gm_lazy_retry', 'true');
+        window.location.reload();
+        return new Promise<{ default: T }>(() => {});
+      }
+      throw error;
+    }
+  });
+}
+
+// Lazy load pages for better performance with auto-retry
+const Login = lazyWithRetry(() => import('./pages/Login'));
+const Register = lazyWithRetry(() => import('./pages/Register'));
+const Dashboard = lazyWithRetry(() => import('./pages/Dashboard'));
+const Budgets = lazyWithRetry(() => import('./pages/Budgets'));
+const Clients = lazyWithRetry(() => import('./pages/Clients'));
+const Market = lazyWithRetry(() => import('./pages/Market'));
+const Financial = lazyWithRetry(() => import('./pages/Financial'));
+const Expenses = lazyWithRetry(() => import('./pages/Expenses'));
+const Configuracoes = lazyWithRetry(() => import('./pages/Configuracoes'));
+const Notes = lazyWithRetry(() => import('./pages/Notes'));
+const Bio = lazyWithRetry(() => import('./pages/Bio'));
+const PublicBio = lazyWithRetry(() => import('./pages/PublicBio'));
+const AuthCallback = lazyWithRetry(() => import('./pages/AuthCallback'));
+const UpdatePassword = lazyWithRetry(() => import('./pages/UpdatePassword'));
+const PixCopy = lazyWithRetry(() => import('./pages/PixCopy'));
 
 const PageLoader = () => (
   <div className="fixed inset-0 flex items-center justify-center bg-transparent z-[99999]">
@@ -61,15 +83,15 @@ const PrivateRoutes = () => {
           >
             <Suspense fallback={<PageLoader />}>
               <Routes location={location}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/budgets" element={<Budgets />} />
-                <Route path="/clients" element={<Clients />} />
-                <Route path="/expenses" element={<Expenses />} />
-                <Route path="/market" element={<Market />} />
-                <Route path="/notes" element={<Notes />} />
-                <Route path="/financial" element={<Financial />} />
-                <Route path="/minha-bio" element={<Bio />} />
-                <Route path="/configuracoes" element={<Configuracoes />} />
+                <Route path="/" element={<RouteBoundary title="Dashboard"><Dashboard /></RouteBoundary>} />
+                <Route path="/budgets" element={<RouteBoundary title="Orçamentos"><Budgets /></RouteBoundary>} />
+                <Route path="/clients" element={<RouteBoundary title="Clientes"><Clients /></RouteBoundary>} />
+                <Route path="/expenses" element={<RouteBoundary title="Despesas"><Expenses /></RouteBoundary>} />
+                <Route path="/market" element={<RouteBoundary title="Mercado"><Market /></RouteBoundary>} />
+                <Route path="/notes" element={<RouteBoundary title="Anotações"><Notes /></RouteBoundary>} />
+                <Route path="/financial" element={<RouteBoundary title="Financeiro"><Financial /></RouteBoundary>} />
+                <Route path="/minha-bio" element={<RouteBoundary title="Minha Bio"><Bio /></RouteBoundary>} />
+                <Route path="/configuracoes" element={<RouteBoundary title="Configurações"><Configuracoes /></RouteBoundary>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
@@ -134,7 +156,7 @@ const AppRoutes = () => {
 
   // Wait for auth to be fully initialized before making routing decisions or redirecting
   if (!checked) {
-    const isLight = localStorage.getItem("theme") === "light";
+    const isLight = localStorage.getItem("theme") !== "dark";
     return (
       <div className={`h-screen w-full flex items-center justify-center ${isLight ? "bg-[#F8FAFC] text-slate-800" : "bg-[#050507] text-white"}`}>
         <div className="flex flex-col items-center gap-3">
