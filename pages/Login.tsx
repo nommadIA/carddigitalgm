@@ -90,8 +90,8 @@ export default function Login() {
         className="w-full max-w-[560px] relative z-10"
       >
         <Card
-          className="p-8 md:p-12 bg-black/40 backdrop-blur-2xl border-white/10 shadow-2xl relative overflow-hidden"
-          style={{ borderRadius: 32 }}
+          className="p-8 md:p-12 relative overflow-hidden"
+          style={{ borderRadius: 8 }}
         >
           {/* CABEÇALHO COMO ANTES */}
           <div className="flex flex-col items-center mb-10">
@@ -114,19 +114,19 @@ export default function Login() {
 
             <div className="flex items-center justify-center text-center leading-none gap-2">
               <span className="text-3xl font-light text-slate-200 tracking-tight">CardDigital</span>
-              <span className="text-4xl font-semibold text-[#ff7a00] drop-shadow-[0_0_15px_rgba(255,122,0,0.3)]">GM</span>
+              <span className="text-4xl font-semibold text-[var(--gm-primary)]">GM</span>
             </div>
             <div className="text-sm opacity-50 mt-4 uppercase tracking-[0.2em] font-bold">Acesso Restrito</div>
           </div>
 
           {errorMessage && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-red-200 text-sm mb-4">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-200 text-sm mb-4">
               {errorMessage}
             </div>
           )}
 
           {successMessage && (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 text-green-200 text-sm mb-4">
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 text-green-200 text-sm mb-4">
               {successMessage}
             </div>
           )}
@@ -139,7 +139,7 @@ export default function Login() {
                   <Mail size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-2xl w-full text-white"
+                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -170,7 +170,7 @@ export default function Login() {
                     <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                   </div>
                   <input
-                    className="gm-input !pl-12 !pr-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-2xl w-full text-white"
+                    className="gm-input !pl-12 !pr-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -222,7 +222,7 @@ export default function Login() {
                 <div className="text-xs opacity-60 mb-3">Ainda não tem uma conta?</div>
                 <Link
                   to="/register"
-                  className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition font-semibold"
+                  className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition font-semibold"
                 >
                   Criar nova conta
                 </Link>

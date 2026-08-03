@@ -58,26 +58,49 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       setUser(profile);
 
       // tenantId via RPC
-      const { data: tenants, error } = await supabase.rpc("get_my_tenants");
+      let tenants: any = null;
+      let error: any = null;
+      try {
+        const res = await supabase.rpc("get_my_tenants");
+        tenants = res.data;
+        error = res.error;
+      } catch (err) {
+        error = err;
+      }
+
       if (error) {
-        console.warn("Erro ao buscar tenants:", error);
-        // não trava o app
-        setTenantId(null);
-        localStorage.removeItem("tenant_id");
+        const errorMsg = error?.message || String(error);
+        if (!errorMsg.includes("Failed to fetch")) {
+          console.warn("Erro ao buscar tenants:", errorMsg);
+        }
+        // não trava o app — usa tenant salvo se existir
+        const cachedTenant = localStorage.getItem("tenant_id");
+        setTenantId(cachedTenant || null);
         return;
       }
 
       let activeTenantId = tenants?.[0]?.tenant_id as string | undefined;
 
       if (!activeTenantId) {
-        const { data: newTenantId, error: createError } = await supabase.rpc("create_tenant", {
-          p_name: "Minha Conta"
-        });
+        let newTenantId: any = null;
+        let createError: any = null;
+        try {
+          const res = await supabase.rpc("create_tenant", {
+            p_name: "Minha Conta"
+          });
+          newTenantId = res.data;
+          createError = res.error;
+        } catch (err) {
+          createError = err;
+        }
 
         if (createError) {
-          console.warn("Erro ao criar tenant inicial:", createError);
-          setTenantId(null);
-          localStorage.removeItem("tenant_id");
+          const createMsg = createError?.message || String(createError);
+          if (!createMsg.includes("Failed to fetch")) {
+            console.warn("Erro ao criar tenant inicial:", createMsg);
+          }
+          const cachedTenant = localStorage.getItem("tenant_id");
+          setTenantId(cachedTenant || null);
           return;
         }
         activeTenantId = newTenantId as any;

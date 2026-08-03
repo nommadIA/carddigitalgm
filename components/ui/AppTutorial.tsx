@@ -71,7 +71,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="relative w-full max-w-lg bg-[#000000]/95 border border-white/10 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex flex-col min-h-[500px] backdrop-blur-xl animate-fade-in"
+        className="relative w-full max-w-lg bg-[#000000]/95 border border-white/10 rounded-lg overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex flex-col min-h-[500px] backdrop-blur-xl animate-fade-in"
       >
         {/* Progress Bar Header */}
         <div className="w-full h-1.5 bg-white/5 flex">
@@ -107,7 +107,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
             >
               {step === 0 && (
                 <div className="text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto rounded-2xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] animate-pulse">
+                  <div className="w-16 h-16 mx-auto rounded-lg bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] animate-pulse">
                     <Sparkles size={36} className="text-[var(--gm-primary)]" />
                   </div>
                   <h3 className="text-2xl font-black text-white tracking-tight">
@@ -116,7 +116,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
                   <p className="text-sm text-zinc-300 leading-relaxed max-w-sm mx-auto">
                     Parabéns pelo cadastro! Vamos fazer um tour interativo rápido para aprender a usar as principais funções. É prático e rápido!
                   </p>
-                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-left space-y-3 max-w-sm mx-auto">
+                  <div className="bg-white/5 border border-white/5 rounded-lg p-4 text-left space-y-3 max-w-sm mx-auto">
                     <div className="flex items-center gap-3 text-xs text-zinc-300">
                       <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                       <span><b>Orçamentos 📄:</b> Calcule em segundos.</span>
@@ -165,7 +165,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
                             setSelectedIconHelp(item.key);
                             try { playNotificationSound(); } catch (e) {}
                           }}
-                          className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-2 aspect-square transition-all ${
+                          className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 aspect-square transition-all ${
                             isSel 
                               ? "bg-[var(--gm-primary)]/15 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-md"
                               : "bg-white/5 border-white/5 text-zinc-400 hover:border-white/10 hover:text-white"
@@ -178,7 +178,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
                     })}
                   </div>
 
-                  <div className="min-h-[64px] bg-white/5 border border-white/5 rounded-2xl p-3 flex items-center justify-center text-center">
+                  <div className="min-h-[64px] bg-white/5 border border-white/5 rounded-lg p-3 flex items-center justify-center text-center">
                     {selectedIconHelp === "orc" && (
                       <p className="text-xs text-[var(--gm-primary)] font-bold">➕ Novo Orçamento: Preencha materiais, mão de obra, margens e gere Orçamentos e PDFs prontos!</p>
                     )}
@@ -216,7 +216,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
                     Você digita os materiais e mão de obra, adiciona impostos ou margens e o app compacta tudo em um link ou PDF direto para o WhatsApp do cliente.
                   </p>
 
-                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-4 justify-center">
+                  <div className="bg-white/5 border border-white/5 rounded-lg p-4 flex flex-col items-center gap-4 justify-center">
                     <span className="text-xs text-zinc-400 uppercase tracking-wider">Simulador de Emissão</span>
                     <button
                       onClick={() => {
@@ -271,7 +271,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
                         setCustomNote(e.target.value);
                         setNoteSaved(false);
                       }}
-                      className="gm-input w-full p-3 text-xs bg-black/60 border-white/5 rounded-2xl h-24 focus:border-[var(--gm-primary)] text-white"
+                      className="gm-input w-full p-3 text-xs bg-black/60 border-white/5 rounded-lg h-24 focus:border-[var(--gm-primary)] text-white"
                     />
                     <button
                       disabled={!customNote}
@@ -315,15 +315,15 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
 
                   <div className="grid grid-cols-3 gap-3 pt-2">
                     {[
-                      { hex: "#ff7a00", name: "Laranja GM (Oficial)" },
+                      { hex: "var(--gm-primary)", name: "Laranja GM (Oficial)" },
                       { hex: "#10b981", name: "Verde Esmeralda" },
                       { hex: "#e11d48", name: "Rosa Carmim" },
                     ].map((col) => (
                       <button
                         key={col.hex}
                         onClick={() => changeBrandColorSim(col.hex)}
-                        className={`p-3 rounded-2xl border flex flex-col items-center gap-2 transition-all ${
-                          tempColor === col.hex || (col.hex === "#ff7a00" && !tempColor)
+                        className={`p-3 rounded-lg border flex flex-col items-center gap-2 transition-all ${
+                          tempColor === col.hex || (col.hex === "var(--gm-primary)" && !tempColor)
                             ? "border-[var(--gm-primary)] bg-[var(--gm-primary)]/10"
                             : "border-white/5 bg-white/5 hover:border-white/15"
                         }`}
@@ -353,7 +353,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
                   <p className="text-sm text-zinc-300 leading-relaxed max-w-sm mx-auto">
                     Excelente! Você concluiu o seu mini tutorial interativo e aprendeu a usar o aplicativo CardDigital GM.
                   </p>
-                  <div className="bg-black/40 rounded-2xl p-4 border border-white/5 max-w-sm mx-auto flex items-center gap-3 text-left">
+                  <div className="bg-black/40 rounded-lg p-4 border border-white/5 max-w-sm mx-auto flex items-center gap-3 text-left">
                     <HelpCircle size={24} className="text-[var(--gm-primary)] shrink-0 animate-bounce" />
                     <div>
                       <h5 className="text-xs font-bold text-white">Dica Extra ⚙️</h5>
@@ -385,7 +385,7 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
             {/* Next / Complete button */}
             <button
               onClick={handleNext}
-              className="gm-btn py-2.5 px-5 rounded-2xl flex items-center gap-1.5 text-xs font-bold text-white transition-all shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
+              className="gm-btn py-2.5 px-5 rounded-lg flex items-center gap-1.5 text-xs font-bold text-white transition-all shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
             >
               {step === stepsCount - 1 ? "Concluir" : "Próximo"}
               <ChevronRight size={16} />

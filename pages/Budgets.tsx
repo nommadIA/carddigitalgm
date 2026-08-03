@@ -1,5 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
 import { Grid } from "../components/ui/Grid";
@@ -31,8 +32,12 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  Zap,
 } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
+import { SectionDivider } from "../components/ui/SectionDivider";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from "recharts";
+import SafeResponsive from "../components/ui/SafeResponsive";
 
 // ✅ Componente para Scroll por Arrastre (Mouse/Touch) sem barra visível
 const DraggableScroll = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
@@ -128,10 +133,433 @@ function pillClass(status: string) {
   }
 }
 
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < breakpoint);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < breakpoint);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [breakpoint]);
+  return isMobile;
+}
+
+function VirtualizedBudgetList({
+  items,
+  highlightedId,
+  expandedRows,
+  toggleRow,
+  tab,
+  updateStatusInstant,
+  setEditId,
+  handleShare,
+  sharing,
+  softDelete,
+  restore,
+  confirmHardDelete,
+}: {
+  items: BudgetRow[];
+  highlightedId: string | null;
+  expandedRows: Set<string>;
+  toggleRow: (id: string) => void;
+  tab: TabKey;
+  updateStatusInstant: (id: string, status: string) => void;
+  setEditId: (id: string) => void;
+  handleShare: (r: BudgetRow) => void;
+  sharing: string | null;
+  softDelete: (id: string) => void;
+  restore: (id: string) => void;
+  confirmHardDelete: (id: string) => void;
+}) {
+  const parentRef = React.useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 68,
+    overscan: 10,
+  });
+
+  const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
+    const base = "gm-btn gm-budget-action-btn w-10 h-10 flex items-center justify-center shrink-0";
+    if (tone === "orange") return `${base} gm-btn-soft text-amber-500`;
+    if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
+    if (tone === "red") return `${base} gm-btn-soft text-red-500`;
+    return `${base} gm-btn-soft`;
+  };
+
+  return (
+    <Card className="!p-0 overflow-hidden">
+      <div className="overflow-x-auto">
+        <div className="text-sm min-w-full">
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/10 font-bold opacity-60 uppercase tracking-wider text-xs bg-black/20">
+            <div>Data</div>
+            <div>Descrição</div>
+            <div className="text-right">Ações</div>
+          </div>
+
+          <div
+            ref={parentRef}
+            className="overflow-y-auto max-h-[650px] no-scrollbar relative"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const r = items[virtualRow.index];
+                if (!r) return null;
+                const created = r.created_at ? new Date(r.created_at) : null;
+                const isHighlighted = r.id === highlightedId;
+
+                return (
+                  <div
+                    key={r.id}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    id={`budget-row-${r.id}`}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
+                      isHighlighted ? "gm-highlighted-row-glass" : ""
+                    }`}
+                  >
+                    <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center">
+                      <div className="flex justify-between sm:contents">
+                        <div className="flex items-center gap-2 text-slate-400 font-mono text-xs sm:text-sm">
+                          <button
+                            onClick={() => toggleRow(r.id)}
+                            className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
+                          >
+                            <ChevronDown
+                              size={18}
+                              className={`transition-transform duration-300 ${expandedRows.has(r.id) ? "rotate-180" : ""}`}
+                            />
+                          </button>
+                          {created ? created.toLocaleDateString("pt-BR") : "-"}
+                        </div>
+                        <div className="sm:hidden text-right font-bold text-[var(--gm-primary)]">
+                          {CURRENCY.format(Number(r.total_amount || 0))}
+                        </div>
+                      </div>
+                      <div className="font-medium truncate">
+                        <span className="font-extrabold text-white mr-2">{(r.client_name || "CLIENTE").toUpperCase()}</span>
+                        <span className="text-slate-300">{r.title || "Orçamento"}</span>
+                      </div>
+                      <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
+                        <div className="hidden sm:block text-right font-bold text-[var(--gm-primary)] mr-4">
+                          {CURRENCY.format(Number(r.total_amount || 0))}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {tab !== "LIXEIRA" ? (
+                            <>
+                              {tab === "CANCELADOS" && (
+                                <button
+                                  className="gm-btn gm-budget-action-btn bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1 px-3 flex items-center gap-1.5 h-10"
+                                  title="Restaurar Orçamento (Voltar para Aguardando)"
+                                  onClick={() => updateStatusInstant(r.id, "AGUARDANDO")}
+                                  type="button"
+                                >
+                                  <RotateCcw size={15} />
+                                  <span className="font-bold">Restaurar</span>
+                                </button>
+                              )}
+                              <button className={listBtnClass("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                className={listBtnClass("green")}
+                                title="Enviar via WhatsApp / Compartilhar"
+                                onClick={() => handleShare(r)}
+                                type="button"
+                                disabled={sharing === r.id}
+                              >
+                                {sharing === r.id ? (
+                                  <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <WhatsAppIcon size={16} />
+                                )}
+                              </button>
+                              <button className={listBtnClass("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button className={listBtnClass("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
+                                <RotateCcw size={16} />
+                              </button>
+                              <button
+                                className="gm-btn gm-budget-action-btn h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                                title="Excluir Definitivamente"
+                                onClick={() => confirmHardDelete(r.id)}
+                                type="button"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {expandedRows.has(r.id) && <ExpandedBudgetRow budgetId={r.id} />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function VirtualizedBudgetGrid({
+  items,
+  highlightedId,
+  tab,
+  updateStatusInstant,
+  setEditId,
+  handleShare,
+  sharing,
+  handlePdf,
+  setReminderConfigOpen,
+  softDelete,
+  restore,
+  confirmHardDelete,
+  isMobile,
+}: {
+  items: BudgetRow[];
+  highlightedId: string | null;
+  tab: TabKey;
+  updateStatusInstant: (id: string, status: string) => void;
+  setEditId: (id: string) => void;
+  handleShare: (r: BudgetRow) => void;
+  sharing: string | null;
+  handlePdf: (id: string, tenant_id: string) => void;
+  setReminderConfigOpen: (open: boolean) => void;
+  softDelete: (id: string) => void;
+  restore: (id: string) => void;
+  confirmHardDelete: (id: string) => void;
+  isMobile: boolean;
+}) {
+  const columns = isMobile ? 1 : 2;
+  const rowCount = Math.ceil(items.length / columns);
+  const parentRef = React.useRef<HTMLDivElement>(null);
+
+  const gridVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 220,
+    overscan: 6,
+  });
+
+  const iconBtn = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
+    const base = "gm-btn gm-budget-action-btn flex-1 h-10 flex items-center justify-center gap-2";
+    if (tone === "orange") return `${base} gm-btn-soft text-amber-500`;
+    if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
+    if (tone === "red") return `${base} gm-btn-soft text-red-500`;
+    return `${base} gm-btn-soft`;
+  };
+
+  return (
+    <div
+      ref={parentRef}
+      className="overflow-y-auto max-h-[720px] pr-1 no-scrollbar relative"
+      style={{ WebkitOverflowScrolling: "touch" }}
+    >
+      <div
+        style={{
+          height: `${gridVirtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {gridVirtualizer.getVirtualItems().map((virtualRow) => {
+          const rowIndex = virtualRow.index;
+          const rowItems = items.slice(rowIndex * columns, rowIndex * columns + columns);
+
+          return (
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={gridVirtualizer.measureElement}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+              className="pb-3"
+            >
+              <div className={`grid ${columns === 2 ? "grid-cols-2" : "grid-cols-1"} gap-3`}>
+                {rowItems.map((r) => {
+                  const created = r.created_at ? new Date(r.created_at) : null;
+                  const currentStatus = normalizeStatus(r.status);
+
+                  const sortedOptions = [
+                    ...STATUS_OPTIONS.filter((o) => o.value === currentStatus),
+                    ...STATUS_OPTIONS.filter((o) => o.value !== currentStatus),
+                  ];
+
+                  const isHighlighted = r.id === highlightedId;
+
+                  return (
+                    <Card
+                      key={r.id}
+                      id={`budget-card-${r.id}`}
+                      className={`gm-budget-card flex flex-col justify-between !p-4 transition-all duration-300 ${
+                        isHighlighted ? "gm-highlighted-budget-glass" : ""
+                      }`}
+                    >
+                      {/* HEADER compacto */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-extrabold truncate text-white text-[15px]">
+                            {(r.client_name || "CLIENTE").toUpperCase()}
+                          </div>
+                          <div className="gm-muted text-sm truncate mt-1 font-medium text-slate-300">
+                            {r.title || "Orçamento"}
+                          </div>
+
+                          <div className="flex items-center gap-4 mt-2 gm-muted text-xs">
+                            <div className="flex items-center gap-1">
+                              <Calendar size={14} />
+                              <span>{created ? created.toLocaleDateString("pt-BR") : "-"}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock size={14} />
+                              <span>{r.delivery_days ?? 5} dias úteis</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <div className="font-extrabold text-[18px] text-[var(--gm-primary)]">
+                            {CURRENCY.format(Number(r.total_amount || 0))}
+                          </div>
+                          <div className="gm-muted text-xs">Total</div>
+                        </div>
+                      </div>
+
+                      {/* FOOTER em 2 linhas (caps + ações) */}
+                      <div className="mt-5 pt-4 border-t border-white/5 flex flex-col gap-3">
+                        {/* cápsulas de status */}
+                        <div>
+                          <DraggableScroll>
+                            {sortedOptions.map((opt) => {
+                              const isActive = currentStatus === opt.value;
+                              const activeCls = pillClass(opt.value);
+                              const inactiveCls =
+                                "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
+
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateStatusInstant(r.id, opt.value);
+                                  }}
+                                  className={`snap-start shrink-0 px-3 py-1.5 rounded-full text-[11px] font-extrabold tracking-wide transition-all whitespace-nowrap border ${
+                                    isActive ? activeCls + " shadow-md" : inactiveCls
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              );
+                            })}
+                          </DraggableScroll>
+                        </div>
+
+                        {/* ações compactas */}
+                        <div className="flex items-center gap-2">
+                          {(tab as any) !== "LIXEIRA" ? (
+                            <>
+                              <button className={iconBtn("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
+                                <Pencil size={16} />
+                              </button>
+
+                              <button
+                                className={iconBtn("green")}
+                                title="Enviar via WhatsApp / Compartilhar"
+                                onClick={() => handleShare(r)}
+                                type="button"
+                                disabled={sharing === r.id}
+                              >
+                                {sharing === r.id ? (
+                                  <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <WhatsAppIcon size={16} />
+                                )}
+                              </button>
+
+                              <button
+                                className={iconBtn("neutral")}
+                                title="PDF"
+                                onClick={() => handlePdf(r.id, r.tenant_id)}
+                                type="button"
+                              >
+                                <FileDown size={16} />
+                              </button>
+
+                              <button
+                                className={iconBtn("neutral")}
+                                title="Lembretes"
+                                onClick={() => setReminderConfigOpen(true)}
+                                type="button"
+                              >
+                                <Bell size={16} />
+                              </button>
+
+                              <button className={iconBtn("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button className={iconBtn("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
+                                <RotateCcw size={16} /> Restaurar
+                              </button>
+
+                              <button
+                                className="gm-btn gm-budget-action-btn h-10 w-12 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                                title="Excluir Definitivo"
+                                onClick={() => confirmHardDelete(r.id)}
+                                type="button"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Budgets() {
   const { tenantId } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const [rows, setRows] = useState<BudgetRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -327,6 +755,51 @@ export default function Budgets() {
     });
   }, [rows, tab, q]);
 
+  // Resumo por status (todos os orçamentos não excluídos) — usado no gráfico do topo
+  const statusSummary = useMemo(() => {
+    const active = rows.filter((r) => !r.deleted_at);
+    const groups: Record<string, { count: number; total: number }> = {
+      AGUARDANDO: { count: 0, total: 0 },
+      APROVADO: { count: 0, total: 0 },
+      CONCLUIDO: { count: 0, total: 0 },
+      CANCELADO: { count: 0, total: 0 },
+    };
+    active.forEach((r) => {
+      const status = normalizeStatus(r.status);
+      if (!groups[status]) groups[status] = { count: 0, total: 0 };
+      groups[status].count += 1;
+      groups[status].total += Number(r.total_amount || 0);
+    });
+
+    const colorFor = (status: string) => {
+      if (status === "APROVADO") return "#34d399";
+      if (status === "CONCLUIDO") return "var(--gm-primary)";
+      if (status === "CANCELADO") return "#f87171";
+      return "#fbbf24"; // AGUARDANDO
+    };
+
+    const labelFor = (status: string) => {
+      if (status === "AGUARDANDO") return "Aguard.";
+      if (status === "APROVADO") return "Aprov.";
+      if (status === "CONCLUIDO") return "Concl.";
+      if (status === "CANCELADO") return "Cancel.";
+      return status;
+    };
+
+    return {
+      chartData: Object.entries(groups).map(([status, v]) => ({
+        name: labelFor(status),
+        value: v.total,
+        count: v.count,
+        color: colorFor(status),
+      })),
+      totalAtivo: groups.AGUARDANDO.total + groups.APROVADO.total,
+      countAtivo: groups.AGUARDANDO.count + groups.APROVADO.count,
+      totalConcluido: groups.CONCLUIDO.total,
+      countConcluido: groups.CONCLUIDO.count,
+    };
+  }, [rows]);
+
   const updateStatusInstant = async (id: string, next: string) => {
     const nextNorm = normalizeStatus(next);
 
@@ -496,14 +969,67 @@ export default function Budgets() {
     <Page
       title="Orçamentos"
       actions={
-        <button className="gm-btn" type="button" onClick={() => setNewOpen(true)}>
+        <button className="gm-btn h-12 text-xs uppercase tracking-wider" type="button" onClick={() => setNewOpen(true)}>
           <Plus size={16} />
           Novo Orçamento
         </button>
       }
     >
+      {/* ✅ Resumo geral (dado real, calculado a partir de todos os orçamentos ativos) */}
+      <div className="mb-6 space-y-4">
+        <SectionDivider label="Resumo" />
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+            <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
+              Em aberto (aguardando + aprovado)
+            </div>
+            <div className="text-2xl font-extrabold text-[color:var(--gm-text)] mt-1.5">
+              {CURRENCY.format(statusSummary.totalAtivo)}
+            </div>
+            <div className="text-xs text-[color:var(--gm-text-tertiary)] mt-1">{statusSummary.countAtivo} orçamento(s)</div>
+          </div>
+
+          <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+            <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
+              Concluídos
+            </div>
+            <div className="text-2xl font-extrabold text-emerald-400 mt-1.5">
+              {CURRENCY.format(statusSummary.totalConcluido)}
+            </div>
+            <div className="text-xs text-[color:var(--gm-text-tertiary)] mt-1">{statusSummary.countConcluido} orçamento(s)</div>
+          </div>
+
+          <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm sm:col-span-1 col-span-1 overflow-hidden">
+            <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider mb-2">
+              Valor por status
+            </div>
+            <div className="h-28 relative overflow-hidden w-full">
+              <SafeResponsive height={112}>
+                <BarChart data={statusSummary.chartData} barSize={22} margin={{ top: 10, right: 8, left: 8, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="name" stroke="#888" fontSize={9} tickLine={false} axisLine={false} interval={0} />
+                  <YAxis hide domain={[0, (dataMax: number) => (dataMax > 0 ? dataMax * 1.2 : 100)]} />
+                  <Tooltip
+                    formatter={(val: number) => CURRENCY.format(val)}
+                    cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                    contentStyle={{ backgroundColor: "#0f1117", border: "1px solid #30363d", borderRadius: "8px", color: "#fff", fontSize: 12 }}
+                  />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {statusSummary.chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </SafeResponsive>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ✅ Tabs + Busca */}
-      <div className="mb-6">
+      <div className="mb-6 space-y-4">
+        <SectionDivider label="Filtros" />
         <DraggableScroll className="mb-4 pb-2">
           {[
             "AGUARDANDO",
@@ -546,7 +1072,7 @@ export default function Budgets() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
           <input
             type="text"
-            className="gm-input !pl-14 py-3.5 bg-white/5 border-white/10 focus:border-[var(--gm-primary)] transition-all rounded-2xl"
+            className="gm-input !pl-14 py-3.5 bg-white/5 border-white/10 focus:border-[var(--gm-primary)] transition-all rounded-lg"
             placeholder="Buscar por cliente ou valor..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -554,7 +1080,13 @@ export default function Budgets() {
         </div>
       </div>
 
-      <div style={{ height: 14 }} />
+      <div className="mb-2 flex items-center justify-between text-xs text-slate-400 px-1">
+        <SectionDivider label="Lista de orçamentos" />
+        <span className="shrink-0 ml-4 px-2.5 py-1 rounded-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5">
+          <Zap size={13} /> Virtual Scroll ({filtered.length})
+        </span>
+      </div>
+      <div style={{ height: 8 }} />
 
       {loading ? (
         <Grid cols={2}>
@@ -566,258 +1098,37 @@ export default function Budgets() {
         </Grid>
       ) : filtered.length === 0 ? (
         <Card className="text-center p-10 border-dashed opacity-70">Nenhum orçamento encontrado.</Card>
-      ) : (tab === "CONCLUIDOS" || tab === "CANCELADOS" || tab === "LIXEIRA") ? (
-        <Card className="!p-0 overflow-hidden">
-          <div className="overflow-x-auto">
-            <div className="text-sm min-w-full">
-              <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/10 font-bold opacity-60 uppercase tracking-wider text-xs">
-                <div>Data</div>
-                <div>Descrição</div>
-                <div className="text-right">Ações</div>
-              </div>
-              <div className="pb-2">
-                {filtered.map((r) => {
-                  const created = r.created_at ? new Date(r.created_at) : null;
-                  
-                  const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-                    const base = "gm-btn gm-budget-action-btn w-10 h-10 flex items-center justify-center shrink-0";
-                    if (tone === "orange") return `${base} gm-btn-soft text-amber-500`;
-                    if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
-                    if (tone === "red") return `${base} gm-btn-soft text-red-500`;
-                    return `${base} gm-btn-soft`;
-                  };
-
-                  const isHighlighted = r.id === highlightedId;
-
-                  return (
-                    <div 
-                      key={r.id} 
-                      id={`budget-row-${r.id}`} 
-                      className={`border-b border-white/5 hover:bg-white/5 transition-all duration-500 ${
-                        isHighlighted ? "gm-highlighted-row-glass" : ""
-                      }`}
-                    >
-                      <div
-                        className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center"
-                      >
-                        <div className="flex justify-between sm:contents">
-                          <div className="flex items-center gap-2 text-slate-400 font-mono text-xs sm:text-sm">
-                            <button
-                              onClick={() => toggleRow(r.id)}
-                              className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
-                            >
-                              <ChevronDown size={18} className={`transition-transform duration-300 ${expandedRows.has(r.id) ? "rotate-180" : ""}`} />
-                            </button>
-                            {created ? created.toLocaleDateString("pt-BR") : "-"}
-                          </div>
-                          <div className="sm:hidden text-right font-bold text-[var(--gm-primary)]">
-                            {CURRENCY.format(Number(r.total_amount || 0))}
-                          </div>
-                        </div>
-                        <div className="font-medium truncate">
-                          <span className="font-extrabold text-white mr-2">{(r.client_name || "CLIENTE").toUpperCase()}</span>
-                          <span className="text-slate-300">{r.title || "Orçamento"}</span>
-                        </div>
-                        <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
-                          <div className="hidden sm:block text-right font-bold text-[var(--gm-primary)] mr-4">
-                            {CURRENCY.format(Number(r.total_amount || 0))}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {tab !== "LIXEIRA" ? (
-                              <>
-                                {tab === "CANCELADOS" && (
-                                  <button
-                                    className="gm-btn gm-budget-action-btn bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1 px-3 flex items-center gap-1.5 h-10"
-                                    title="Restaurar Orçamento (Voltar para Aguardando)"
-                                    onClick={() => updateStatusInstant(r.id, "AGUARDANDO")}
-                                    type="button"
-                                  >
-                                    <RotateCcw size={15} />
-                                    <span className="font-bold">Restaurar</span>
-                                  </button>
-                                )}
-                                <button className={listBtnClass("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
-                                  <Pencil size={16} />
-                                </button>
-                                <button 
-                                  className={listBtnClass("green")} 
-                                  title="Enviar via WhatsApp / Compartilhar" 
-                                  onClick={() => handleShare(r)} 
-                                  type="button"
-                                  disabled={sharing === r.id}
-                                >
-                                  {sharing === r.id ? (
-                                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                                  ) : (
-                                    <WhatsAppIcon size={16} />
-                                  )}
-                                </button>
-                                <button className={listBtnClass("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
-                                  <Trash2 size={16} />
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button className={listBtnClass("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
-                                  <RotateCcw size={16} />
-                                </button>
-                                <button
-                                  className="gm-btn gm-budget-action-btn h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
-                                  title="Excluir Definitivamente"
-                                  onClick={() => confirmHardDelete(r.id)}
-                                  type="button"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {expandedRows.has(r.id) && <ExpandedBudgetRow budgetId={r.id} />}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </Card>
+      ) : tab === "CONCLUIDOS" || tab === "CANCELADOS" || tab === "LIXEIRA" ? (
+        <VirtualizedBudgetList
+          items={filtered}
+          highlightedId={highlightedId}
+          expandedRows={expandedRows}
+          toggleRow={toggleRow}
+          tab={tab}
+          updateStatusInstant={updateStatusInstant}
+          setEditId={setEditId}
+          handleShare={handleShare}
+          sharing={sharing}
+          softDelete={softDelete}
+          restore={restore}
+          confirmHardDelete={confirmHardDelete}
+        />
       ) : (
-        <Grid cols={2}>
-          {filtered.map((r) => {
-            const created = r.created_at ? new Date(r.created_at) : null;
-            const currentStatus = normalizeStatus(r.status);
-
-            const sortedOptions = [
-              ...STATUS_OPTIONS.filter((o) => o.value === currentStatus),
-              ...STATUS_OPTIONS.filter((o) => o.value !== currentStatus),
-            ];
-
-            const isHighlighted = r.id === highlightedId;
-
-            return (
-              <Card 
-                key={r.id} 
-                id={`budget-card-${r.id}`} 
-                className={`gm-budget-card flex flex-col justify-between !p-4 transition-all duration-500 ${
-                  isHighlighted ? "gm-highlighted-budget-glass" : ""
-                }`}
-              >
-                {/* HEADER compacto */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="font-extrabold truncate text-white text-[15px]">
-                      {(r.client_name || "CLIENTE").toUpperCase()}
-                    </div>
-                    <div className="gm-muted text-sm truncate mt-1 font-medium text-slate-300">
-                      {r.title || "Orçamento"}
-                    </div>
-
-                    <div className="flex items-center gap-4 mt-2 gm-muted text-xs">
-                      <div className="flex items-center gap-1">
-                        <Calendar size={14} />
-                        <span>{created ? created.toLocaleDateString("pt-BR") : "-"}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock size={14} />
-                        <span>{r.delivery_days ?? 5} dias úteis</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <div className="font-extrabold text-[18px] text-[var(--gm-primary)]">
-                      {CURRENCY.format(Number(r.total_amount || 0))}
-                    </div>
-                    <div className="gm-muted text-xs">Total</div>
-                  </div>
-                </div>
-
-                {/* FOOTER em 2 linhas (caps + ações) */}
-                <div className="mt-5 pt-4 border-t border-white/5 flex flex-col gap-3">
-                  {/* cápsulas de status */}
-                  <div>
-                    <DraggableScroll>
-                      {sortedOptions.map((opt) => {
-                        const isActive = currentStatus === opt.value;
-                        const activeCls = pillClass(opt.value);
-                        const inactiveCls = "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
-
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateStatusInstant(r.id, opt.value);
-                            }}
-                            className={`snap-start shrink-0 px-3 py-1.5 rounded-full text-[11px] font-extrabold tracking-wide transition-all whitespace-nowrap border ${
-                              isActive ? activeCls + " shadow-md" : inactiveCls
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                    </DraggableScroll>
-                  </div>
-
-                  {/* ações compactas (sem azul) */}
-                  <div className="flex items-center gap-2">
-                    {(tab as any) !== "LIXEIRA" ? (
-                      <>
-                        <button className={iconBtn("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
-                          <Pencil size={16} />
-                        </button>
-
-                        <button 
-                          className={iconBtn("green")} 
-                          title="Enviar via WhatsApp / Compartilhar" 
-                          onClick={() => handleShare(r)} 
-                          type="button"
-                          disabled={sharing === r.id}
-                        >
-                          {sharing === r.id ? (
-                            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <WhatsAppIcon size={16} />
-                          )}
-                        </button>
-
-                        <button className={iconBtn("neutral")} title="PDF" onClick={() => handlePdf(r.id, r.tenant_id)} type="button">
-                          <FileDown size={16} />
-                        </button>
-
-                        <button className={iconBtn("neutral")} title="Lembretes" onClick={() => setReminderConfigOpen(true)} type="button">
-                          <Bell size={16} />
-                        </button>
-
-                        <button className={iconBtn("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
-                          <Trash2 size={16} />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button className={iconBtn("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
-                          <RotateCcw size={16} /> Restaurar
-                        </button>
-
-                        <button
-                          className="gm-btn gm-budget-action-btn h-10 w-12 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shadow-[0_0_10px_rgba(255,123,0,0.1)]"
-                          title="Excluir Definitivo"
-                          onClick={() => confirmHardDelete(r.id)}
-                          type="button"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </Grid>
+        <VirtualizedBudgetGrid
+          items={filtered}
+          highlightedId={highlightedId}
+          tab={tab}
+          updateStatusInstant={updateStatusInstant}
+          setEditId={setEditId}
+          handleShare={handleShare}
+          sharing={sharing}
+          handlePdf={handlePdf}
+          setReminderConfigOpen={setReminderConfigOpen}
+          softDelete={softDelete}
+          restore={restore}
+          confirmHardDelete={confirmHardDelete}
+          isMobile={isMobile}
+        />
       )}
 
       {/* Instance for creating new budget (persistent state) */}
@@ -846,7 +1157,7 @@ export default function Budgets() {
       {/* Share Options Modal */}
       {shareData && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
-          <div className="gm-card w-full max-w-md rounded-3xl overflow-hidden animate-slide-up !border-white/10" onClick={e => e.stopPropagation()}>
+          <div className="gm-card w-full max-w-md rounded-lg overflow-hidden animate-slide-up !border-white/10" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
               <h3 className="text-lg font-bold">Compartilhar Orçamento</h3>
               <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">

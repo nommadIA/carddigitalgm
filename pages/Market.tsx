@@ -635,7 +635,7 @@ const Market = () => {
                                const [year, month] = h.month.split("-");
                                const monthName = new Date(Number(year), Number(month) - 1).toLocaleString('pt-BR', { month: 'long' });
                                return (
-                                   <div key={h.month} className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[var(--gm-primary)] transition-all flex flex-col relative">
+                                   <div key={h.month} className="p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[var(--gm-primary)] transition-all flex flex-col relative">
                                        <div className="flex justify-between items-start mb-2 pr-14">
                                            <div className="flex items-center gap-2 text-slate-400">
                                                <button
@@ -650,7 +650,7 @@ const Market = () => {
                                                <Calendar size={16} />
                                                <span className="text-sm font-bold uppercase tracking-widest">{monthName} {year}</span>
                                            </div>
-                                           <div className="text-xs bg-white/10 px-2 py-1 rounded-full font-bold">{h.count} compras</div>
+                                           <div className="text-xs bg-white/10 px-2 py-1 rounded font-bold">{h.count} compras</div>
                                        </div>
                                        <div className="text-3xl font-black text-white mb-4">
                                            {CURRENCY_FORMATTER.format(h.total)}
@@ -853,13 +853,13 @@ const Market = () => {
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    className="relative w-full max-w-sm bg-[#1a1a1a]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden" 
+                    className="relative w-full max-w-sm bg-[var(--gm-surface)] border border-white/10 rounded-lg p-8 shadow-lg overflow-hidden" 
                     onClick={e => e.stopPropagation()}
                 >
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--gm-primary)] to-[var(--gm-accent)]"></div>
                     
                     <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-[var(--gm-primary)]/20 flex items-center justify-center text-[var(--gm-primary)] mb-6">
+                        <div className="w-16 h-16 rounded-lg bg-[var(--gm-primary)]/20 flex items-center justify-center text-[var(--gm-primary)] mb-6">
                             <Wallet size={32} />
                         </div>
                         
@@ -870,7 +870,7 @@ const Market = () => {
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-slate-500">R$</span>
                             <input 
                                 type="number" 
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-3xl font-black text-white focus:outline-none focus:border-[var(--gm-primary)] transition-all text-center" 
+                                className="w-full bg-white/5 border border-white/10 rounded-lg py-5 pl-14 pr-6 text-3xl font-black text-white focus:outline-none focus:border-[var(--gm-primary)] transition-all text-center" 
                                 value={topUpAmount} 
                                 onChange={e => setTopUpAmount(e.target.value)} 
                                 onFocus={(e) => e.target.select()}
@@ -1012,13 +1012,13 @@ const Market = () => {
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-sm bg-[#1a1a1a]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
+                        className="relative w-full max-w-sm bg-[var(--gm-surface)] border border-white/10 rounded-lg p-8 shadow-lg overflow-hidden"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--gm-primary)] to-[var(--gm-accent)]"></div>
                         
                         <div className="flex flex-col items-center text-center">
-                            <div className="w-16 h-16 bg-[var(--gm-primary)]/20 rounded-2xl flex items-center justify-center mb-6 text-[var(--gm-primary)]">
+                            <div className="w-16 h-16 bg-[var(--gm-primary)]/20 rounded-lg flex items-center justify-center mb-6 text-[var(--gm-primary)]">
                                 <ShoppingCart size={32} />
                             </div>
                             <h3 className="text-2xl font-black text-white mb-2">Finalizar Compra?</h3>
@@ -1101,7 +1101,7 @@ const Market = () => {
         {/* Share Options Modal */}
         {shareData && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
-            <div className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="bg-dark-card border border-white/10 rounded-lg w-full max-w-md shadow-lg overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
                 <h3 className="text-lg font-bold">Compartilhar {shareData.title}</h3>
                 <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">

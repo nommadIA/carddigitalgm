@@ -214,7 +214,7 @@ export default function ReminderConfigModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="bg-[#151619] border border-white/5 rounded-2xl w-full max-w-md shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-slide-up">
+      <div className="bg-[#151619] border border-white/5 rounded-lg w-full max-w-md shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-slide-up">
         {/* Header - Hardware Style */}
         <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
           <div className="flex items-center gap-3">

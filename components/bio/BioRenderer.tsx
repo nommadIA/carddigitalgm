@@ -1546,7 +1546,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 return (
                   <div className={`text-center space-y-3.5 sm:space-y-4 ${isOverBanner ? "relative z-20 text-white w-full px-4" : "pt-2"}`}>
                     <div 
-                      className={`w-20 h-20 sm:w-28 sm:h-28 mx-auto rounded-full overflow-hidden border-[3px] flex items-center justify-center p-1 shadow-2xl relative ${isOverBanner ? "bg-black/35 backdrop-blur-md border-white/40" : t.iconBg}`} 
+                      className={`w-20 h-20 sm:w-28 sm:h-28 mx-auto rounded-full overflow-hidden border-[3px] flex items-center justify-center p-1 shadow-lg relative ${isOverBanner ? "bg-black/35 backdrop-blur-md border-white/40" : t.iconBg}`} 
                       style={{ borderColor: isOverBanner ? undefined : `${brandColor}50` }}
                     >
                       {logo ? (
@@ -1642,7 +1642,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         {logo ? (
                           <img src={logo} alt={companyName} className="h-16 sm:h-[72px] w-auto object-contain rounded-md shadow-sm" />
                         ) : (
-                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-2xl sm:text-3xl text-white" style={{ backgroundColor: brandColor }}>
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-lg flex items-center justify-center font-bold text-2xl sm:text-3xl text-white" style={{ backgroundColor: brandColor }}>
                             {companyName.charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -2259,7 +2259,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                      mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                                    }
                                  }} 
-                                 className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
+                                 className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-lg overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
                                  style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                                >
                                  {prevCoverImg ? (
@@ -2303,7 +2303,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                      mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                                    }
                                  }} 
-                                 className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
+                                 className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-lg overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
                                  style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                                >
                                  {nextCoverImg ? (
@@ -2412,7 +2412,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                        mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                                      }
                                    }} 
-                                   className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
+                                   className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-lg overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
                                    style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                                  >
                                    {prevCoverImg ? (
@@ -2456,7 +2456,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                        mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                                      }
                                    }} 
-                                   className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
+                                   className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-lg overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
                                    style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                                  >
                                    {nextCoverImg ? (
@@ -2529,7 +2529,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             <h4 className={`text-xl sm:text-2xl font-black text-center ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
                               Atenção: Ative seu e-mail!
                             </h4>
-                            <div className={`p-5 rounded-2xl border text-sm text-left leading-relaxed ${
+                            <div className={`p-5 rounded-lg border text-sm text-left leading-relaxed ${
                               theme === 'glass' || theme === 'dark'
                                 ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
                                 : 'bg-amber-50 border-amber-200 text-amber-900'
@@ -2585,9 +2585,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               onChange={(e) => setContactName(e.target.value)}
                               className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all focus:ring-0 ${
                                 theme === 'glass'
-                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-2xl'
+                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-lg'
                                   : theme === 'dark' 
-                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-2xl' 
+                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-lg' 
                                     : 'bg-transparent border-zinc-300 text-slate-900 placeholder-zinc-400 focus:border-[#FE540B] rounded-none'
                               }`}
                               style={{ borderColor: (theme === 'glass' || theme === 'dark') ? undefined : undefined }}
@@ -2605,9 +2605,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               onChange={(e) => setContactEmail(e.target.value)}
                               className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all focus:ring-0 ${
                                 theme === 'glass'
-                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-2xl'
+                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-lg'
                                   : theme === 'dark' 
-                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-2xl' 
+                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-lg' 
                                     : 'bg-transparent border-zinc-300 text-slate-900 placeholder-zinc-400 focus:border-[#FE540B] rounded-none'
                               }`}
                             />
@@ -2624,9 +2624,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               onChange={(e) => setContactMessage(e.target.value)}
                               className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all focus:ring-0 resize-none ${
                                 theme === 'glass'
-                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-2xl'
+                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-lg'
                                   : theme === 'dark' 
-                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-2xl' 
+                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-lg' 
                                     : 'bg-transparent border-zinc-300 text-slate-900 placeholder-zinc-400 focus:border-[#FE540B] rounded-none'
                               }`}
                             />
@@ -2813,7 +2813,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               setSelectedProduct(item);
                               setActiveImageIndex(0);
                             }}
-                            className={`overflow-hidden rounded-[2rem] border transition-[transform,box-shadow,border-color] duration-300 flex flex-col h-full cursor-pointer hover:shadow-2xl group ${t.cardBg} ${t.cardBorder} catalog-card-item flex-1`}
+                            className={`overflow-hidden rounded-[2rem] border transition-[transform,box-shadow,border-color] duration-300 flex flex-col h-full cursor-pointer hover:shadow-lg group ${t.cardBg} ${t.cardBorder} catalog-card-item flex-1`}
                           >
                             {item.image_url ? (() => {
                               const isItemPng = item.image_url.toLowerCase().includes('.png') || item.image_url.toLowerCase().includes('image/png') || item.image_url.toLowerCase().includes('format=png');
@@ -2903,7 +2903,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                            mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                          }
                        }}
-                       className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden border shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-center"
+                       className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden border shadow-lg hover:shadow-lg transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-center"
                        style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                      >
                        {coverImg ? (
@@ -3025,7 +3025,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       {isLoginOpen && (
         <div className="fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setIsLoginOpen(false)}>
           <div 
-            className={`w-full max-w-md rounded-[2rem] border overflow-hidden shadow-2xl flex flex-col ${
+            className={`w-full max-w-md rounded-[2rem] border overflow-hidden shadow-lg flex flex-col ${
               theme === 'glass'
                 ? 'bg-[#0a0b10]/65 backdrop-blur-3xl border-white/12 text-white shadow-[0_24px_50px_-12px_rgba(0,0,0,0.6)]'
                 : theme === 'dark'
@@ -3138,7 +3138,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       {showAppRedirectScreen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
           <div 
-            className={`w-full max-w-md rounded-[2.5rem] border p-8 flex flex-col items-center text-center shadow-2xl relative ${
+            className={`w-full max-w-md rounded-[2.5rem] border p-8 flex flex-col items-center text-center shadow-lg relative ${
               theme === 'glass'
                 ? 'bg-[#0a0b10]/80 backdrop-blur-3xl border-white/12 text-white shadow-[0_24px_50px_-12px_rgba(0,0,0,0.8)]'
                 : theme === 'dark'
@@ -3151,8 +3151,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
             {/* Glowing Logo Icon */}
             <div className="relative mb-6">
-              <div className="absolute inset-0 bg-[#FE540B]/20 rounded-3xl blur-md scale-105" />
-              <div className="relative w-20 h-20 rounded-3xl border border-white/10 bg-[#0c0d12] flex items-center justify-center p-2.5 overflow-hidden">
+              <div className="absolute inset-0 bg-[#FE540B]/20 rounded-lg blur-md scale-105" />
+              <div className="relative w-20 h-20 rounded-lg border border-white/10 bg-[#0c0d12] flex items-center justify-center p-2.5 overflow-hidden">
                 <img 
                   src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                   alt="CardDigital GM" 
@@ -3193,7 +3193,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   // Direct standard web link opening, triggering installed PWA deep-linking on supported browsers
                   window.location.href = window.location.origin + "/";
                 }}
-                className="w-full py-4 px-6 rounded-2xl text-white font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-4 px-6 rounded-lg text-white font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                 style={{ backgroundColor: "#FE540B" }}
               >
                 <ExternalLink className="w-5 h-5" />
@@ -3205,7 +3205,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   setShowAppRedirectScreen(false);
                   navigate("/");
                 }}
-                className={`w-full py-3.5 px-6 rounded-2xl text-xs font-bold transition-all border hover:bg-white/5 active:scale-[0.98] cursor-pointer ${
+                className={`w-full py-3.5 px-6 rounded-lg text-xs font-bold transition-all border hover:bg-white/5 active:scale-[0.98] cursor-pointer ${
                   theme === 'glass' || theme === 'dark'
                     ? 'border-white/10 text-white/70 hover:text-white'
                     : 'border-slate-200 text-slate-600 hover:text-slate-900 bg-slate-50'
@@ -3238,7 +3238,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         return (
           <div className="fixed inset-0 z-[150] flex items-start md:items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto py-6 sm:py-10 animate-fade-in" onClick={() => setSelectedProduct(null)}>
             <div 
-              className={`w-full max-w-lg md:max-w-[1200px] lg:max-w-[1400px] xl:max-w-[1500px] rounded-[2rem] border overflow-hidden md:overflow-visible shadow-2xl flex flex-col h-auto md:max-h-none ${
+              className={`w-full max-w-lg md:max-w-[1200px] lg:max-w-[1400px] xl:max-w-[1500px] rounded-[2rem] border overflow-hidden md:overflow-visible shadow-lg flex flex-col h-auto md:max-h-none ${
                 theme === 'glass'
                   ? 'bg-[#0a0b10]/65 backdrop-blur-3xl border-white/12 text-white shadow-[0_24px_50px_-12px_rgba(0,0,0,0.6)]'
                   : theme === 'dark' 
@@ -3339,7 +3339,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 <button
                                   key={idx}
                                   onClick={() => setActiveImageIndex(idx)}
-                                  className={`relative aspect-square w-[80px] h-[80px] sm:w-[95px] sm:h-[95px] rounded-2xl overflow-hidden transition-all flex items-center justify-center cursor-pointer ${
+                                  className={`relative aspect-square w-[80px] h-[80px] sm:w-[95px] sm:h-[95px] rounded-lg overflow-hidden transition-all flex items-center justify-center cursor-pointer ${
                                     isActive 
                                       ? 'scale-102 opacity-100' 
                                       : 'opacity-50 hover:opacity-100 border border-black/5 dark:border-white/10'
@@ -3409,7 +3409,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   key={opt.id}
                                   type="button"
                                   onClick={() => setSelectedProductOption(opt)}
-                                  className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer group ${
+                                  className={`p-3.5 rounded-lg border text-left transition-all relative flex flex-col justify-between cursor-pointer group ${
                                     isSelected 
                                       ? 'text-white' 
                                       : 'border-white/5 bg-zinc-900/40 hover:bg-zinc-900/80 hover:border-white/10 text-zinc-300'
@@ -3479,7 +3479,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 addToCart(selectedProduct, productQuantity, selectedProductOption);
                                 setSelectedProduct(null);
                               }}
-                              className={`w-full flex items-center justify-center py-4 px-3 rounded-2xl font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md border cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
+                              className={`w-full flex items-center justify-center py-4 px-3 rounded-lg font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md border cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
                                 theme === 'glass'
                                   ? 'bg-white/10 hover:bg-white/15 text-white border-white/10'
                                   : theme === 'dark' 
@@ -3512,7 +3512,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 setSelectedProduct(null);
                                 setIsCartOpen(true);
                               }}
-                              className="w-full flex items-center justify-center py-4 px-3 rounded-2xl text-white font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                              className="w-full flex items-center justify-center py-4 px-3 rounded-lg text-white font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] cursor-pointer"
                               style={{ backgroundColor: brandColor || '#ff6900' }}
                             >
                               <ShoppingCart className="w-4 h-4 mr-1.5 shrink-0" />
@@ -3529,7 +3529,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   }
                                 }, 100);
                               }}
-                              className={`w-full py-3.5 text-xs font-bold rounded-2xl border transition-colors cursor-pointer ${
+                              className={`w-full py-3.5 text-xs font-bold rounded-lg border transition-colors cursor-pointer ${
                                 theme === 'glass'
                                   ? 'bg-transparent text-zinc-300 hover:text-white border-white/10 hover:bg-white/5'
                                   : theme === 'dark' 
@@ -3572,7 +3572,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             <OptimizedMedia 
               src={zoomedImage} 
               alt="Imagem detalhada" 
-              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl animate-scale-up" 
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-lg animate-scale-up" 
             />
           </div>
         </div>
@@ -3642,7 +3642,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     return { ...prev, currentIndex: prevIdx };
                   });
                 }}
-                className="absolute left-4 sm:left-6 md:left-10 p-3 sm:p-4 rounded-full bg-black/40 hover:bg-black/60 hover:scale-110 active:scale-90 border border-white/10 text-white transition-all cursor-pointer z-30 shadow-2xl flex items-center justify-center"
+                className="absolute left-4 sm:left-6 md:left-10 p-3 sm:p-4 rounded-full bg-black/40 hover:bg-black/60 hover:scale-110 active:scale-90 border border-white/10 text-white transition-all cursor-pointer z-30 shadow-lg flex items-center justify-center"
                 title="Imagem Anterior (Seta Esquerda)"
               >
                 <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -3656,8 +3656,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 alt={`Imagem de portfólio ${portfolioLightbox.currentIndex + 1}`} 
                 className={`select-none pointer-events-none animate-scale-up transition-all duration-300 ${
                   lightboxFit === 'cover' 
-                    ? 'w-full h-full object-cover shadow-2xl' 
-                    : 'max-w-full max-h-[80vh] object-contain rounded-lg sm:rounded-xl shadow-2xl'
+                    ? 'w-full h-full object-cover shadow-lg' 
+                    : 'max-w-full max-h-[80vh] object-contain rounded-lg sm:rounded-xl shadow-lg'
                 }`} 
               />
             </div>
@@ -3673,7 +3673,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     return { ...prev, currentIndex: nextIdx };
                   });
                 }}
-                className="absolute right-4 sm:right-6 md:right-10 p-3 sm:p-4 rounded-full bg-black/40 hover:bg-black/60 hover:scale-110 active:scale-90 border border-white/10 text-white transition-all cursor-pointer z-30 shadow-2xl flex items-center justify-center"
+                className="absolute right-4 sm:right-6 md:right-10 p-3 sm:p-4 rounded-full bg-black/40 hover:bg-black/60 hover:scale-110 active:scale-90 border border-white/10 text-white transition-all cursor-pointer z-30 shadow-lg flex items-center justify-center"
                 title="Próxima Imagem (Seta Direita)"
               >
                 <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -3718,7 +3718,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             setCheckoutStep("cart");
             setIsCartOpen(true);
           }}
-          className={`fixed bottom-6 right-20 z-[140] flex items-center gap-2 px-5 py-4 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-transform font-bold text-white cursor-pointer group`}
+          className={`fixed bottom-6 right-20 z-[140] flex items-center gap-2 px-5 py-4 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform font-bold text-white cursor-pointer group`}
           style={{ backgroundColor: brandColor }}
         >
           <div className="relative">
@@ -3735,7 +3735,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       {isCartOpen && (
         <div className="fixed inset-0 z-[160] flex justify-end pointer-events-none animate-fade-in" onClick={() => setIsCartOpen(false)}>
           <div 
-            className={`w-[88%] sm:w-full max-w-md h-full flex flex-col shadow-2xl pointer-events-auto relative pl-[6px] animate-in slide-in-from-right duration-300 ${
+            className={`w-[88%] sm:w-full max-w-md h-full flex flex-col shadow-lg pointer-events-auto relative pl-[6px] animate-in slide-in-from-right duration-300 ${
               theme === 'glass'
                 ? 'bg-[#0a0b10]/65 backdrop-blur-3xl border-l border-white/12 text-white shadow-[-10px_0_40px_rgba(0,0,0,0.5)]'
                 : theme === 'dark' 
@@ -3829,7 +3829,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         return (
                           <div 
                             key={idx}
-                            className={`flex gap-4 p-4 rounded-3xl border transition-all ${
+                            className={`flex gap-4 p-4 rounded-lg border transition-all ${
                               theme === 'glass'
                                 ? 'bg-white/5 border-white/10 text-white'
                                 : theme === 'dark' 
@@ -3839,7 +3839,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           >
                             {/* Product Thumbnail */}
                             <div 
-                              className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border flex items-center justify-center p-1" 
+                              className="w-20 h-20 rounded-lg overflow-hidden shrink-0 border flex items-center justify-center p-1" 
                               style={{ 
                                 backgroundColor: theme === 'glass' ? 'rgba(255,255,255,0.02)' : theme === 'dark' ? `${brandColor}08` : '#ffffff', 
                                 borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.05)' 
@@ -3910,7 +3910,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   ) : (
                     <div className="space-y-6 animate-fade-in text-slate-900 dark:text-slate-100">
                       {/* Customer info form */}
-                      <div className="space-y-5 bg-black/5 dark:bg-white/5 p-4 rounded-3xl border border-slate-200/50 dark:border-white/10 shadow-sm">
+                      <div className="space-y-5 bg-black/5 dark:bg-white/5 p-4 rounded-lg border border-slate-200/50 dark:border-white/10 shadow-sm">
                         <h4 className="text-sm font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 pb-1.5 border-b border-slate-200 dark:border-white/10">
                           Identificação e Entrega
                         </h4>
@@ -3925,7 +3925,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             placeholder="Como podemos te chamar?"
                             value={orderName}
                             onChange={(e) => setOrderName(e.target.value)}
-                            className={`w-full px-4 py-3.5 rounded-2xl text-base font-medium border focus:outline-none transition-all shadow-sm focus:ring-2 focus:ring-brand focus-border-brand ${
+                            className={`w-full px-4 py-3.5 rounded-lg text-base font-medium border focus:outline-none transition-all shadow-sm focus:ring-2 focus:ring-brand focus-border-brand ${
                               theme === 'glass'
                                 ? 'bg-white/10 border-white/20 text-white placeholder-white/50 focus:bg-white/15'
                                 : theme === 'dark' 
@@ -3945,7 +3945,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             placeholder="Ex: (99) 99999-9999"
                             value={orderPhone}
                             onChange={(e) => setOrderPhone(e.target.value)}
-                            className={`w-full px-4 py-3.5 rounded-2xl text-base font-medium border focus:outline-none transition-all shadow-sm focus:ring-2 focus:ring-brand focus-border-brand ${
+                            className={`w-full px-4 py-3.5 rounded-lg text-base font-medium border focus:outline-none transition-all shadow-sm focus:ring-2 focus:ring-brand focus-border-brand ${
                               theme === 'glass'
                                 ? 'bg-white/10 border-white/20 text-white placeholder-white/50 focus:bg-white/15'
                                 : theme === 'dark' 
@@ -3965,7 +3965,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             placeholder="Ex: 000.000.000-00 ou 00.000.000/0000-00"
                             value={orderCpfCnpj}
                             onChange={(e) => setOrderCpfCnpj(e.target.value)}
-                            className={`w-full px-4 py-3.5 rounded-2xl text-base font-medium border focus:outline-none transition-all shadow-sm focus:ring-2 focus:ring-brand focus-border-brand ${
+                            className={`w-full px-4 py-3.5 rounded-lg text-base font-medium border focus:outline-none transition-all shadow-sm focus:ring-2 focus:ring-brand focus-border-brand ${
                               theme === 'glass'
                                 ? 'bg-white/10 border-white/20 text-white placeholder-white/50 focus:bg-white/15'
                                 : theme === 'dark' 
@@ -3981,7 +3981,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             <Truck className="w-4 h-4 text-emerald-500" />
                             Opção de Entrega <span className="text-red-500 font-bold">*</span>
                           </label>
-                          <div className="grid grid-cols-2 gap-2 bg-slate-200/50 dark:bg-black/25 p-1.5 rounded-2xl border border-slate-300/60 dark:border-white/10">
+                          <div className="grid grid-cols-2 gap-2 bg-slate-200/50 dark:bg-black/25 p-1.5 rounded-lg border border-slate-300/60 dark:border-white/10">
                             <button
                               type="button"
                               onClick={() => setDeliveryOption("pickup")}
@@ -4019,7 +4019,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               value={deliveryAddress}
                               onChange={(e) => setDeliveryAddress(e.target.value)}
                               rows={3}
-                              className={`w-full px-4 py-3 rounded-2xl text-base font-medium border focus:outline-none transition-all resize-none shadow-sm focus:ring-2 focus:ring-brand focus-border-brand ${
+                              className={`w-full px-4 py-3 rounded-lg text-base font-medium border focus:outline-none transition-all resize-none shadow-sm focus:ring-2 focus:ring-brand focus-border-brand ${
                                 theme === 'glass'
                                   ? 'bg-white/10 border-white/20 text-white placeholder-white/50 focus:bg-white/15'
                                   : theme === 'dark' 
@@ -4042,7 +4042,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           <div className="space-y-3">
                             {/* Pix Accordion */}
                             {pixKey && (
-                              <div className="rounded-2xl border overflow-hidden shadow-sm transition-all duration-300 border-slate-200 dark:border-white/10 bg-white/5 dark:bg-black/10">
+                              <div className="rounded-lg border overflow-hidden shadow-sm transition-all duration-300 border-slate-200 dark:border-white/10 bg-white/5 dark:bg-black/10">
                                 {/* Accordion Header */}
                                 <button
                                   type="button"
@@ -4076,7 +4076,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                       Escaneie o código QR ou clique para copiar a chave Pix abaixo. Efetue a transferência e anexe o comprovante na finalização do pedido!
                                     </p>
                                     
-                                    <div className="bg-white p-3.5 rounded-2xl inline-block shadow-md border border-slate-200">
+                                    <div className="bg-white p-3.5 rounded-lg inline-block shadow-md border border-slate-200">
                                       <img 
                                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(pixBrCode || pixKey)}`} 
                                         alt="QR Code Pix"
@@ -4114,7 +4114,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                             {/* Credit Card Accordion */}
                             {cardUrl && (
-                              <div className="rounded-2xl border overflow-hidden shadow-sm transition-all duration-300 border-slate-200 dark:border-white/10 bg-white/5 dark:bg-black/10">
+                              <div className="rounded-lg border overflow-hidden shadow-sm transition-all duration-300 border-slate-200 dark:border-white/10 bg-white/5 dark:bg-black/10">
                                 {/* Accordion Header */}
                                 <button
                                   type="button"
@@ -4192,7 +4192,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   {checkoutStep === "cart" ? (
                     <button 
                       onClick={() => setCheckoutStep("checkout")}
-                      className="w-full flex items-center justify-center p-4 rounded-2xl text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                      className="w-full flex items-center justify-center p-4 rounded-lg text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
                       style={{ backgroundColor: brandColor }}
                     >
                       Avançar para Entrega
@@ -4202,7 +4202,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     <div className="space-y-2">
                       <button 
                         onClick={handleCheckoutWhatsApp}
-                        className="w-full flex items-center justify-center p-4 rounded-2xl text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer bg-green-600 hover:bg-green-700"
+                        className="w-full flex items-center justify-center p-4 rounded-lg text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer bg-green-600 hover:bg-green-700"
                       >
                         <MessageCircle className="w-5 h-5 mr-2" />
                         Finalizar e Enviar via WhatsApp
@@ -4428,7 +4428,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         onClick={() => {
                           setIsChatWidgetOpen(true);
                         }}
-                        className="w-[58px] h-[58px] sm:w-[66px] sm:h-[66px] rounded-full flex items-center justify-center text-white cursor-pointer shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 border border-white/15"
+                        className="w-[58px] h-[58px] sm:w-[66px] sm:h-[66px] rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 border border-white/15"
                         style={{ 
                           backgroundColor: "#25D366",
                         }}
@@ -4453,7 +4453,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       {customAlert && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setCustomAlert(null)}>
           <div 
-            className={`w-full max-w-sm rounded-[2rem] border overflow-hidden shadow-2xl p-6 flex flex-col items-center text-center gap-4 animate-scale-up ${
+            className={`w-full max-w-sm rounded-[2rem] border overflow-hidden shadow-lg p-6 flex flex-col items-center text-center gap-4 animate-scale-up ${
               theme === 'dark' 
                 ? 'bg-zinc-950 border-zinc-800 text-white' 
                 : 'bg-white border-slate-200 text-slate-900'

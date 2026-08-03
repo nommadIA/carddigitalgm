@@ -1310,7 +1310,7 @@ export default function Notes() {
     <Page title="Notes" className="animate-fade-in relative min-h-screen">
       <div className="flex flex-col gap-6 mb-8">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="relative w-full md:max-w-md gm-btn !p-0 !cursor-text hover:!scale-100 active:!scale-100 !transform-none !justify-start h-14 rounded-2xl overflow-hidden shadow-lg border-2 border-transparent focus-within:border-[var(--gm-primary)] transition-colors">
+          <div className="relative w-full md:max-w-md gm-btn !p-0 !cursor-text hover:!scale-100 active:!scale-100 !transform-none !justify-start h-14 rounded-lg overflow-hidden shadow-lg border-2 border-transparent focus-within:border-[var(--gm-primary)] transition-colors">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10 pointer-events-none"
               size={20}
@@ -1326,7 +1326,7 @@ export default function Notes() {
 
           <button
             onClick={openNewNote}
-            className="flex items-center gap-2 gm-btn px-6 py-4 rounded-2xl shrink-0 w-full md:w-auto shadow-lg"
+            className="flex items-center gap-2 gm-btn px-6 py-4 rounded-lg shrink-0 w-full md:w-auto shadow-lg"
           >
             <Plus size={20} />
             <span>Criar Nota</span>
@@ -1383,7 +1383,7 @@ export default function Notes() {
                 >
                   <div
                     id={`note-card-${note.id}`}
-                    className={`rounded-3xl p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full gm-note-card ${
+                    className={`rounded-lg p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full gm-note-card ${
                       isExpanded
                         ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]"
                         : "overflow-hidden min-h-[280px]"
@@ -1725,7 +1725,7 @@ export default function Notes() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                   onClick={() => openNewNoteModal("note")}
-                  className="flex flex-col items-start gap-4 p-6 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group"
+                  className="flex flex-col items-start gap-4 p-6 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group"
                 >
                   <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
                     <Edit2 size={24} />
@@ -1740,7 +1740,7 @@ export default function Notes() {
 
                 <button
                   onClick={() => openNewNoteModal("production")}
-                  className="flex flex-col items-start gap-4 p-6 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group"
+                  className="flex flex-col items-start gap-4 p-6 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group"
                 >
                   <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
                     <Palette size={24} />
@@ -1777,7 +1777,7 @@ export default function Notes() {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: "100%", opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-3xl shadow-2xl flex flex-col overflow-hidden gm-note-modal"
+              className="relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-lg shadow-lg flex flex-col overflow-hidden gm-note-modal"
               style={{
                 maxHeight: window.innerWidth < 768 ? "100dvh" : "90vh",
                 backgroundColor: "var(--gm-card, rgba(17, 19, 24, 0.95))",
@@ -1914,7 +1914,7 @@ export default function Notes() {
                             setColorPickerOpen(false);
                           }}
                         />
-                        <div className="absolute top-10 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-1.5 shadow-2xl z-[9991] backdrop-blur-md min-w-[124px]">
+                        <div className="absolute top-10 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-1.5 shadow-lg z-[9991] backdrop-blur-md min-w-[124px]">
                           <div className="px-1 py-0.5 text-[8px] font-extrabold uppercase tracking-widest text-white/30 border-b border-white/5">
                             Cor do Texto
                           </div>
@@ -1987,7 +1987,7 @@ export default function Notes() {
                             setFontSelectorOpen(false);
                           }}
                         />
-                        <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-0.5 shadow-2xl z-[9995] backdrop-blur-md min-w-[200px] max-h-[280px] overflow-y-auto scrollbar-hide">
+                        <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-0.5 shadow-lg z-[9995] backdrop-blur-md min-w-[200px] max-h-[280px] overflow-y-auto scrollbar-hide">
                           <div className="px-2.5 py-1.5 text-[9px] font-extrabold uppercase tracking-widest text-white/40 border-b border-white/5 mb-1.5">
                             Selecione a Fonte
                           </div>
@@ -2547,7 +2547,7 @@ export default function Notes() {
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 15, scale: 0.95 }}
                                 transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                                className="absolute bottom-full right-0 mb-3 w-64 bg-[#141517] border border-zinc-800 rounded-2xl p-4 space-y-4 z-[100] shadow-[0_25px_50px_rgba(0,0,0,0.95)] text-left"
+                                className="absolute bottom-full right-0 mb-3 w-64 bg-[#141517] border border-zinc-800 rounded-lg p-4 space-y-4 z-[100] shadow-[0_25px_50px_rgba(0,0,0,0.95)] text-left"
                                 style={{ borderTopWidth: '3px', borderTopColor: hasActiveClocks ? '#22c55e' : color }}
                               >
                                 <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
@@ -2691,7 +2691,7 @@ export default function Notes() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#1a1b1e] border border-red-500/20 rounded-2xl p-6 relative w-full max-w-md shadow-2xl"
+              className="bg-[#1a1b1e] border border-red-500/20 rounded-lg p-6 relative w-full max-w-md shadow-lg"
             >
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
@@ -2732,7 +2732,7 @@ export default function Notes() {
             onClick={() => setNoteShareData(null)}
           >
             <div
-              className="gm-card w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative z-10 !border-white/10"
+              className="gm-card w-full max-w-md rounded-lg overflow-hidden shadow-lg relative z-10 !border-white/10"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">

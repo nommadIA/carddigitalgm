@@ -35,7 +35,7 @@ export default function PixCopy() {
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 text-white">
-      <div className="bg-zinc-900 p-8 rounded-3xl border border-white/10 max-w-md w-full text-center space-y-6 shadow-2xl">
+      <div className="bg-zinc-900 p-8 rounded-lg border border-white/10 max-w-md w-full text-center space-y-6 shadow-lg">
         <div className="w-16 h-16 bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] rounded-full flex items-center justify-center mx-auto">
           {copied ? <Check size={32} /> : <Copy size={32} />}
         </div>

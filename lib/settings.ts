@@ -105,8 +105,8 @@ const DEFAULT_SETTINGS: AppSettings & any = {
   mobile_app_background_scale: 1.2,
   mobile_app_background_blur: 10,
 
-  app_scale: 2.0,
-  mobile_scale: 1.5,
+  app_scale: 1.0,
+  mobile_scale: 1.0,
   button_style: "solid",
   budget_approved_reminder_enabled: false,
   budget_approved_reminder_times: DEFAULT_REMINDER_TIMES,
@@ -435,10 +435,18 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
   const meffectiveBlur = Math.round(mblur * mfactor);
   root.style.setProperty("--gm-mobile-bg-blur-effective", `${meffectiveBlur}px`);
 
-  // ✅ Escala Global do App (Zoom)
-  const scale = s.app_scale ?? Number(localStorage.getItem("gm_app_scale_fallback") || 2.0);
-  const mobileScale = s.mobile_scale ?? Number(localStorage.getItem("gm_mobile_scale_fallback") || 1.5);
+  // ✅ Escala Global do App (Zoom - Padronizado e proporcional)
+  let scale = Number(s.app_scale ?? localStorage.getItem("gm_app_scale_fallback") ?? 1.0);
+  if (!Number.isFinite(scale) || scale > 1.35 || scale < 0.75) scale = 1.0;
+
+  let mobileScale = Number(s.mobile_scale ?? localStorage.getItem("gm_mobile_scale_fallback") ?? 1.0);
+  if (!Number.isFinite(mobileScale) || mobileScale > 1.35 || mobileScale < 0.75) mobileScale = 1.0;
   
+  s.app_scale = scale;
+  s.mobile_scale = mobileScale;
+  localStorage.setItem("gm_app_scale_fallback", String(scale));
+  localStorage.setItem("gm_mobile_scale_fallback", String(mobileScale));
+
   root.style.setProperty("--gm-app-scale", String(scale));
   root.style.setProperty("--gm-mobile-scale", String(mobileScale));
   

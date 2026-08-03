@@ -67,135 +67,131 @@ const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 9999,
-  background: "rgba(0, 0, 0, 0.8)",
+  background: "rgba(8, 8, 12, 0.85)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: 16,
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
+  padding: "12px",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
 };
 
 const modal: React.CSSProperties = {
-  width: 860,
+  width: 840,
   maxWidth: "100%",
-  borderRadius: 22,
-  background: "rgba(24, 24, 27, 0.95)",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
-  boxShadow: "0 25px 60px rgba(0, 0, 0, 0.6)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
+  maxHeight: "92vh",
+  display: "flex",
+  flexDirection: "column",
+  borderRadius: 20,
+  background: "#12151A",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  boxShadow: "0 24px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 107, 26, 0.05)",
   overflow: "hidden",
   color: "#FFFFFF",
 };
 
 const leftAccent: React.CSSProperties = {
-  width: 6,
-  background: "var(--gm-primary, #FF6900)",
+  width: 4,
+  background: "linear-gradient(180deg, #FF7A2A, #FF5B00)",
+  flexShrink: 0,
 };
 
 const header: React.CSSProperties = {
-  padding: "20px 24px 14px 24px",
+  padding: "20px 24px 16px 24px",
   display: "flex",
   alignItems: "flex-start",
   justifyContent: "space-between",
   gap: 12,
-  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+  background: "#181C22",
 };
 
 const title: React.CSSProperties = {
   fontWeight: 800,
   fontSize: 20,
   color: "#FFFFFF",
+  letterSpacing: "-0.02em",
 };
 
 const subtitle: React.CSSProperties = {
   marginTop: 4,
   fontSize: 13,
-  color: "#94a3b8",
+  color: "#B6BCC7",
+  fontWeight: 400,
 };
 
 const closeBtn: React.CSSProperties = {
-  borderRadius: 12,
-  padding: "8px 16px",
-  background: "rgba(255, 255, 255, 0.08)",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
-  color: "#cbd5e1",
-  fontWeight: 700,
+  borderRadius: 10,
+  padding: "8px 14px",
+  background: "rgba(255, 255, 255, 0.05)",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  color: "#B6BCC7",
+  fontWeight: 600,
   fontSize: 13,
   cursor: "pointer",
-  transition: "all 0.2s ease",
-};
-
-const body: React.CSSProperties = {
-  padding: "20px 24px",
-};
-
-const card: React.CSSProperties = {
-  borderRadius: 18,
-  background: "rgba(18, 18, 20, 0.65)",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
-  padding: 20,
+  transition: "all 0.15s ease",
 };
 
 const label: React.CSSProperties = {
-  color: "#94a3b8",
-  fontSize: 12,
+  color: "#B6BCC7",
+  fontSize: 11,
   fontWeight: 700,
   marginBottom: 6,
   textTransform: "uppercase",
-  letterSpacing: "0.025em",
+  letterSpacing: "0.05em",
 };
 
 const input: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
-  padding: "10px 14px",
-  background: "rgba(0, 0, 0, 0.4)",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
+  padding: "12px 16px",
+  background: "#181C22",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
   color: "#FFFFFF",
   outline: "none",
   fontSize: 14,
-  fontWeight: 500,
+  fontWeight: 400,
+  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
 };
 
 const hint: React.CSSProperties = {
   marginTop: 6,
   fontSize: 11,
-  color: "#64748b",
-  fontWeight: 500,
+  color: "#7B8592",
+  fontWeight: 400,
 };
 
 const footer: React.CSSProperties = {
-  marginTop: 20,
+  marginTop: 24,
   display: "flex",
   justifyContent: "flex-end",
+  alignItems: "center",
   gap: 12,
-  paddingTop: 12,
-  borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+  paddingTop: 16,
+  borderTop: "1px solid rgba(255, 255, 255, 0.06)",
 };
 
 const btnGhost: React.CSSProperties = {
   borderRadius: 12,
-  padding: "10px 18px",
+  padding: "12px 20px",
   fontWeight: 700,
-  background: "rgba(255, 255, 255, 0.08)",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
-  color: "#cbd5e1",
+  background: "rgba(255, 255, 255, 0.05)",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  color: "#FFFFFF",
   fontSize: 13,
   cursor: "pointer",
 };
 
 const btnPrimary: React.CSSProperties = {
   borderRadius: 12,
-  padding: "10px 22px",
-  fontWeight: 800,
-  background: "var(--gm-primary, #FF6900)",
+  padding: "12px 24px",
+  fontWeight: 700,
+  background: "linear-gradient(180deg, #FF7A2A, #FF5B00)",
   border: "none",
   color: "#FFFFFF",
   fontSize: 13,
   cursor: "pointer",
-  boxShadow: "0 4px 16px rgba(255, 105, 0, 0.35)",
+  boxShadow: "0 4px 20px rgba(255, 107, 26, 0.35)",
 };
 
 export default function NewClientModal({ open, onClose, onSuccess, clientToEdit }: Props) {
@@ -303,107 +299,103 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
             </button>
           </div>
 
-          <div className="p-0 md:p-[0_18px_18px_18px]">
-            <div style={card}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <div style={label}>Nome</div>
-                  <input
-                    style={input}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex: João Silva / Empresa X"
-                  />
-                </div>
-
-                <div>
-                  <div style={label}>WhatsApp (obrigatório)</div>
-                  <input
-                    style={input}
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(formatWhatsappBR(e.target.value))}
-                    placeholder="(98) 9xxxx-xxxx"
-                    inputMode="tel"
-                  />
-                  <div style={hint}>Dica: só números com DDD. (98) 9xxxx-xxxx</div>
-                </div>
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1 max-h-[calc(92vh-90px)]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div style={label}>Nome</div>
+                <input
+                  style={input}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: João Silva / Empresa X"
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                <div>
-                  <div style={label}>Telefone (opcional)</div>
-                  <input
-                    style={input}
-                    value={phone}
-                    onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
-                    placeholder="(98) xxxx-xxxx"
-                    inputMode="tel"
-                  />
-                </div>
-
-                <div>
-                  <div style={label}>E-mail (opcional)</div>
-                  <input
-                    style={input}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="ex: atendimento@empresa.com"
-                    inputMode="email"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                <div>
-                  <div style={label}>CPF/CNPJ (opcional)</div>
-                  <input
-                    style={input}
-                    value={cpfCnpj}
-                    onChange={(e) => setCpfCnpj(e.target.value)}
-                    placeholder="Somente se quiser"
-                  />
-                </div>
-
-                <div>
-                  <div style={label}>Endereço (opcional)</div>
-                  <input
-                    style={input}
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Rua, nº, bairro, cidade - UF"
-                  />
-                </div>
-              </div>
-
-              <div style={footer}>
-                <button
-                  type="button"
-                  style={btnGhost}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onClose();
-                  }}
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="button"
-                  style={{ ...btnPrimary, opacity: canSave ? 1 : 0.65, cursor: canSave ? "pointer" : "not-allowed" }}
-                  disabled={!canSave}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleSave();
-                  }}
-                >
-                  {saving ? "Salvando..." : "Salvar"}
-                </button>
+              <div>
+                <div style={label}>WhatsApp (obrigatório)</div>
+                <input
+                  style={input}
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(formatWhatsappBR(e.target.value))}
+                  placeholder="(98) 9xxxx-xxxx"
+                  inputMode="tel"
+                />
+                <div style={hint}>Dica: só números com DDD. (98) 9xxxx-xxxx</div>
               </div>
             </div>
 
-            <div style={{ height: 6 }} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <div style={label}>Telefone (opcional)</div>
+                <input
+                  style={input}
+                  value={phone}
+                  onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+                  placeholder="(98) xxxx-xxxx"
+                  inputMode="tel"
+                />
+              </div>
+
+              <div>
+                <div style={label}>E-mail (opcional)</div>
+                <input
+                  style={input}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="ex: atendimento@empresa.com"
+                  inputMode="email"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <div style={label}>CPF/CNPJ (opcional)</div>
+                <input
+                  style={input}
+                  value={cpfCnpj}
+                  onChange={(e) => setCpfCnpj(e.target.value)}
+                  placeholder="Somente se quiser"
+                />
+              </div>
+
+              <div>
+                <div style={label}>Endereço (opcional)</div>
+                <input
+                  style={input}
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Rua, nº, bairro, cidade - UF"
+                />
+              </div>
+            </div>
+
+            <div style={footer}>
+              <button
+                type="button"
+                style={btnGhost}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClose();
+                }}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                style={{ ...btnPrimary, opacity: canSave ? 1 : 0.65, cursor: canSave ? "pointer" : "not-allowed" }}
+                disabled={!canSave}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSave();
+                }}
+              >
+                {saving ? "Salvando..." : "Salvar"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -104,7 +104,7 @@ export const WhatsAppSelectorModal: React.FC = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 text-left text-white shadow-2xl"
+            className="relative w-full max-w-sm overflow-hidden rounded-lg border border-white/10 text-left text-white shadow-lg"
             style={{
               background: 'linear-gradient(135deg, rgba(22, 28, 38, 0.96) 0%, rgba(13, 17, 23, 0.98) 100%)',
               backdropFilter: 'blur(24px)',

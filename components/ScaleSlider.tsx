@@ -17,8 +17,8 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
 
   const handleCommit = () => {
     let finalVal = localValue;
-    if (finalVal < 0.7) finalVal = 0.7;
-    if (finalVal > 3) finalVal = 3;
+    if (finalVal < 0.8) finalVal = 0.8;
+    if (finalVal > 1.2) finalVal = 1.2;
     setLocalValue(finalVal);
     onChange(finalVal);
   };
@@ -27,8 +27,8 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
     <div className="flex items-center gap-3 bg-white dark:bg-zinc-900/80 backdrop-blur-md p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
       <input 
         type="range" 
-        min={0.7} 
-        max={3} 
+        min={0.8} 
+        max={1.2} 
         step={0.05} 
         className="flex-1 h-2 accent-[var(--gm-primary)] cursor-pointer" 
         value={localValue} 
@@ -39,8 +39,8 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
       <div className="flex items-center gap-1 shrink-0">
         <input
           type="number"
-          min={0.7}
-          max={3}
+          min={0.8}
+          max={1.2}
           step={0.01}
           className="w-16 bg-zinc-50 dark:bg-zinc-950 text-center font-bold text-sm text-[var(--gm-primary)] rounded-lg border border-zinc-200 dark:border-zinc-800 focus:border-[var(--gm-primary)] focus:outline-none h-8 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           value={localValue}

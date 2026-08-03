@@ -67,7 +67,7 @@ export default function UpdatePassword() {
         className="w-full max-w-[460px] relative z-10"
       >
         <Card
-          className="p-8 md:p-10 bg-black/40 backdrop-blur-2xl border-white/10 shadow-2xl relative overflow-hidden"
+          className="p-8 md:p-10 relative overflow-hidden"
           style={{ borderRadius: 32 }}
         >
           <div className="text-center mb-8">
@@ -76,13 +76,13 @@ export default function UpdatePassword() {
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-red-200 text-sm mb-6 text-center">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-200 text-sm mb-6 text-center">
               {error}
             </div>
           )}
 
           {message && (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 text-green-200 text-sm mb-6 text-center">
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 text-green-200 text-sm mb-6 text-center">
               {message}
             </div>
           )}
@@ -95,7 +95,7 @@ export default function UpdatePassword() {
                   <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 !pr-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-2xl w-full text-white"
+                  className="gm-input !pl-12 !pr-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -120,7 +120,7 @@ export default function UpdatePassword() {
                   <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 !pr-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-2xl w-full text-white"
+                  className="gm-input !pl-12 !pr-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

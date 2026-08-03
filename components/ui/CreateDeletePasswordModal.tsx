@@ -55,7 +55,7 @@ export default function CreateDeletePasswordModal({ open, onClose }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-[#0a0a0c] border border-white/10 rounded-2xl p-6 shadow-2xl relative"
+        className="w-full max-w-md bg-[#0a0a0c] border border-white/10 rounded-lg p-6 shadow-lg relative"
       >
         <button 
             onClick={onClose} 

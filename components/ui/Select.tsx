@@ -84,7 +84,7 @@ export default function Select({
 
       {isOpen && (
         <div 
-          className="absolute z-[10000] top-[calc(100%+8px)] left-0 w-full max-h-80 overflow-hidden flex flex-col rounded-xl bg-black/80 backdrop-blur-2xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.8)]"
+          className="absolute z-[10000] top-[calc(100%+8px)] left-0 w-full max-h-80 overflow-hidden flex flex-col rounded bg-[var(--gm-surface)] border border-[var(--gm-border)] shadow-lg"
           style={{
             WebkitBackdropFilter: "blur(24px)",
             backdropFilter: "blur(24px)",

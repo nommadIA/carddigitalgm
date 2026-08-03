@@ -184,7 +184,7 @@ export default function PublicBio() {
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="max-w-md w-full bg-[#121215] border border-white/5 rounded-[2rem] p-6 text-center space-y-6 shadow-2xl relative z-10">
+        <div className="max-w-md w-full bg-[#121215] border border-white/5 rounded-[2rem] p-6 text-center space-y-6 shadow-lg relative z-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#32BCAD]/10 text-[#32BCAD]">
             <Sparkles className="w-8 h-8" />
           </div>
@@ -197,7 +197,7 @@ export default function PublicBio() {
           </div>
 
           {/* Help instructions for the administrator (Expandable) */}
-          <details className="bg-[#32BCAD]/5 border border-[#32BCAD]/20 rounded-2xl p-4 text-left cursor-pointer group transition-all duration-300 overflow-hidden">
+          <details className="bg-[#32BCAD]/5 border border-[#32BCAD]/20 rounded-lg p-4 text-left cursor-pointer group transition-all duration-300 overflow-hidden">
             <summary className="text-xs font-bold uppercase tracking-wider text-[#32BCAD] select-none outline-none list-none flex items-center justify-between">
               <span>Suporte e Diagnóstico Técnico</span>
               <span className="text-[10px] text-[#32BCAD] group-open:rotate-180 transition-transform duration-200">▼</span>

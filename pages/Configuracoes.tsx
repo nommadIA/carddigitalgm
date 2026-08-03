@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import Select from "../components/ui/Select";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
+import { SectionDivider } from "../components/ui/SectionDivider";
 import { ScaleSlider } from "../components/ScaleSlider";
 import { ColorSettingsManager } from "../components/ColorSettingsManager";
 import { supabase } from "../lib/supabase";
@@ -223,7 +224,7 @@ export default function Configuracoes() {
   const hasActiveSection = Object.values(openSections).some(Boolean);
 
   const getSectionBtnClass = (isOpen: boolean) => {
-    return `group relative flex items-center justify-between p-3.5 sm:p-4 min-h-[48px] sm:min-h-[52px] rounded-2xl border font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 text-left outline-none cursor-pointer ${
+    return `group relative flex items-center justify-between p-3.5 sm:p-4 min-h-[48px] sm:min-h-[52px] rounded-lg border font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 text-left outline-none cursor-pointer ${
       isOpen
         ? "bg-white dark:bg-zinc-900 text-slate-900 dark:text-white border-[var(--gm-primary)] shadow-md ring-2 ring-[var(--gm-primary)]/20 scale-[1.01]"
         : "bg-slate-50 dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-zinc-800/80 shadow-xs hover:shadow-md"
@@ -1424,7 +1425,7 @@ export default function Configuracoes() {
           </AnimatePresence>
           <button
             type="button"
-            className="gm-btn w-auto justify-center h-10 px-6 text-sm rounded-xl disabled:opacity-50 transition-all font-extrabold active:scale-95 shadow-[0_4px_14px_rgba(255,105,0,0.25)] flex items-center gap-2"
+            className="gm-btn w-auto justify-center h-12 px-6 text-sm rounded-xl disabled:opacity-50 transition-all font-extrabold active:scale-95 shadow-[0_4px_14px_rgba(255,105,0,0.25)] flex items-center gap-2"
             onClick={handleSave}
             disabled={saving}
           >
@@ -1451,7 +1452,8 @@ export default function Configuracoes() {
           ) : (
             <div className="w-full flex flex-col gap-6">
               {/* SUBDIVISÃO SUPERIOR: Menu de Cápsulas de Expansão do Painel de Configurações */}
-              <div className="flex flex-col gap-3 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 shadow-xs backdrop-blur-md">
+              <SectionDivider label="Personalização do app" />
+              <div className="gm-settings-card flex flex-col gap-3 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-xs backdrop-blur-md">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 px-1">
                   <span className="text-xs font-extrabold text-[var(--gm-primary)] uppercase tracking-wider flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--gm-primary)] animate-pulse" />
@@ -1653,7 +1655,7 @@ export default function Configuracoes() {
 
               {/* Card quando nenhuma cápsula estiver aberta */}
               {!hasActiveSection && (
-                <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 rounded-[2.5rem] text-center shadow-xs backdrop-blur-md animate-in fade-in duration-300">
+                <div className="gm-settings-card flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 rounded-[2.5rem] text-center shadow-xs backdrop-blur-md animate-in fade-in duration-300">
                   <div className="w-16 h-16 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] flex items-center justify-center mb-4 border border-[var(--gm-primary)]/20 shadow-xs">
                     <Sparkles className="w-8 h-8 animate-pulse text-[var(--gm-primary)]" />
                   </div>
@@ -1666,7 +1668,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 1: PERSONALIZAÇÃO */}
               {openSections.personalization && (
-                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Palette className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -1679,11 +1681,11 @@ export default function Configuracoes() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* LOGO DA EMPRESA */}
-                    <div className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                    <div className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
                       <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
                         <FileImage size={14} /> Logo da Empresa
                       </span>
-                      <div className="w-32 h-32 rounded-2xl bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/logo">
+                      <div className="w-32 h-32 rounded-lg bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/logo">
                         {companyLogoUrl ? (
                           <img
                             src={companyLogoUrl}
@@ -1755,7 +1757,7 @@ export default function Configuracoes() {
                     </div>
 
                     {/* FOTO DE PERFIL / AVATAR */}
-                    <div className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                    <div className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
                       <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
                         <User size={14} /> Imagem de Perfil
                       </span>
@@ -1877,7 +1879,7 @@ export default function Configuracoes() {
                       </div>
 
                       {/* SELETOR DE TEMA PARA EDICAO DOS BOTOES */}
-                      <div className="flex items-center gap-1.5 p-1 bg-slate-200/80 dark:bg-zinc-800/90 rounded-2xl shrink-0 self-start sm:self-auto border border-slate-300/50 dark:border-zinc-700/50">
+                      <div className="flex items-center gap-1.5 p-1 bg-slate-200/80 dark:bg-zinc-800/90 rounded-lg shrink-0 self-start sm:self-auto border border-slate-300/50 dark:border-zinc-700/50">
                         <button
                           type="button"
                           onClick={() => setBtnConfigTab("light")}
@@ -1909,7 +1911,7 @@ export default function Configuracoes() {
 
                     {/* BANNER INFORMATIVO DA ABA ATIVA */}
                     <div className={
-                      "p-3 px-4 rounded-2xl mb-5 text-xs font-bold flex items-center justify-between border transition-all " +
+                      "p-3 px-4 rounded-lg mb-5 text-xs font-bold flex items-center justify-between border transition-all " +
                       (btnConfigTab === "light"
                         ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
                         : "bg-orange-500/10 text-orange-400 border-orange-500/20")
@@ -1938,7 +1940,7 @@ export default function Configuracoes() {
                             type="button"
                             onClick={() => handleButtonStyleChange(s.id)}
                             className={
-                              "group relative flex flex-col justify-between p-5 sm:p-6 rounded-3xl border-2 transition-all duration-150 cursor-pointer text-left shadow-xs hover:shadow-xl outline-none min-h-[240px] " +
+                              "group relative flex flex-col justify-between p-5 sm:p-6 rounded-lg border-2 transition-all duration-150 cursor-pointer text-left shadow-xs hover:shadow-xl outline-none min-h-[240px] " +
                               (isActive
                                 ? "border-[var(--gm-primary)] bg-[var(--gm-primary)]/10 ring-4 ring-[var(--gm-primary)]/20 shadow-lg scale-[1.01]"
                                 : "border-slate-200/80 dark:border-zinc-800/80 bg-white hover:bg-slate-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-800/80")
@@ -1963,7 +1965,7 @@ export default function Configuracoes() {
                             </div>
 
                             {/* PREVIA DETALHADA EM EVIDENCIA DENTRO DA PROPRIA CAIXA SELETORA */}
-                            <div className="gm-preview-container w-full p-4 rounded-2xl bg-slate-900/90 dark:bg-zinc-950/95 border border-slate-800/80 dark:border-zinc-800/80 shadow-inner space-y-3" data-button-style={s.id}>
+                            <div className="gm-preview-container w-full p-4 rounded-lg bg-slate-900/90 dark:bg-zinc-950/95 border border-slate-800/80 dark:border-zinc-800/80 shadow-inner space-y-3" data-button-style={s.id}>
                               <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider px-1">
                                 <span className="flex items-center gap-1.5">
                                   <Sparkles size={12} className="text-[var(--gm-primary)]" />
@@ -2008,7 +2010,7 @@ export default function Configuracoes() {
                     </div>
 
                     {/* PAINEL DE PERSONALIZAÇÃO DE CORES DO BOTÃO DO TEMA SELECIONADO */}
-                    <div className="mt-6 p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 space-y-4 shadow-xs">
+                    <div className="mt-6 p-5 sm:p-6 rounded-lg bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 space-y-4 shadow-xs">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-zinc-800/80 pb-3">
                         <div>
                           <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
@@ -2118,7 +2120,7 @@ export default function Configuracoes() {
                           </span>
                         </label>
                         <div className={
-                          "p-8 rounded-2xl border flex flex-col items-center justify-center gap-3 shadow-inner relative overflow-hidden transition-all " +
+                          "p-8 rounded-lg border flex flex-col items-center justify-center gap-3 shadow-inner relative overflow-hidden transition-all " +
                           (btnConfigTab === "light"
                             ? "bg-[#F7F8FA] border-[#E8EAF0] text-[#18181B]"
                             : "bg-[#0F1115] border-[#303747] text-[#FFFFFF]")
@@ -2162,7 +2164,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 2: CORES & FONTE */}
               {openSections.colors && (
-                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Paintbrush className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2209,7 +2211,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 3: IMAGEM DE FUNDO */}
               {openSections.background && (
-                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <ImageIcon className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2221,7 +2223,7 @@ export default function Configuracoes() {
                   </div>
 
                   <div className="flex flex-col gap-6">
-                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4">
+                    <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4">
                       <div>
                         <div className="font-bold text-sm text-slate-800 dark:text-white">
                           Exibir Plano de Fundo
@@ -2330,7 +2332,7 @@ export default function Configuracoes() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col justify-between p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                      <div className="flex flex-col justify-between p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
                         <div>
                           <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-2 block">
                             Preview da Imagem / Vídeo
@@ -2393,7 +2395,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 4: DADOS PIX */}
               {openSections.pix && (
-                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <CreditCard className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2405,7 +2407,7 @@ export default function Configuracoes() {
                   </div>
 
                   <div className="flex flex-col gap-6">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-zinc-900/50 p-3.5 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-zinc-900/50 p-3.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
                       ✅ O QR Code e a chave “Copia e Cola” gerados aqui funcionam em <b>qualquer aplicativo bancário</b>.
                     </div>
 
@@ -2442,12 +2444,12 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-slate-50 dark:bg-zinc-900/50 p-5 flex flex-col items-center justify-between">
+                      <div className="rounded-lg border border-slate-200/80 dark:border-zinc-800/80 bg-slate-50 dark:bg-zinc-900/50 p-5 flex flex-col items-center justify-between">
                         <div className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 self-start">
                           QR Code Pix Universal
                         </div>
                         {pixQrPreview ? (
-                          <div className="bg-white rounded-2xl p-4 shadow-sm my-2">
+                          <div className="bg-white rounded-lg p-4 shadow-sm my-2">
                             <img src={pixQrPreview} alt="QR Pix (Preview)" className="w-[180px] h-auto" />
                           </div>
                         ) : (
@@ -2472,7 +2474,7 @@ export default function Configuracoes() {
                         )}
                       </div>
 
-                      <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-slate-50 dark:bg-zinc-900/50 p-5 flex flex-col justify-between">
+                      <div className="rounded-lg border border-slate-200/80 dark:border-zinc-800/80 bg-slate-50 dark:bg-zinc-900/50 p-5 flex flex-col justify-between">
                         <div>
                           <div className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">
                             Pix Copia e Cola
@@ -2514,7 +2516,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 5: PAPEL TIMBRADO */}
               {openSections.timbrado && (
-                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <FileText className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2534,7 +2536,7 @@ export default function Configuracoes() {
                         <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
                           Seu Timbrado Atual
                         </span>
-                        <div className="w-full aspect-[1/1.414] rounded-2xl bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shadow-inner">
+                        <div className="w-full aspect-[1/1.414] rounded-lg bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shadow-inner">
                           {uploadingTimbrado ? (
                             <Loader2 size={40} className="animate-spin text-[var(--gm-primary)]" />
                           ) : timbradoUrl ? (
@@ -2565,7 +2567,7 @@ export default function Configuracoes() {
                         <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
                           Gabarito Padrão
                         </span>
-                        <div className="w-full aspect-[1/1.414] rounded-2xl bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shadow-inner">
+                        <div className="w-full aspect-[1/1.414] rounded-lg bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shadow-inner">
                           <img src={TIMBRADO_MODEL_URL} alt="Gabarito" className="w-full h-full object-cover" />
                         </div>
                         <a
@@ -2584,7 +2586,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 6: NOTIFICAÇÕES PUSH */}
               {openSections.push && (
-                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Bell className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2612,7 +2614,7 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="w-full flex flex-col gap-3 pt-2">
-                      <div className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                      <div className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
                         <div className="text-left">
                           <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Notificações Push</p>
                           <p className={"text-[10px] font-semibold uppercase " + (pushActive && pushPermission === "granted" ? "text-emerald-500" : "text-amber-500")}>
@@ -2644,7 +2646,7 @@ export default function Configuracoes() {
                         </button>
                       </div>
 
-                      <div className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80">
+                      <div className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
                         <div className="text-left">
                           <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Sons de Alerta</p>
                           <p className={"text-[10px] font-semibold uppercase " + (!notificationsMuted ? "text-emerald-500" : "text-amber-500")}>
@@ -2706,7 +2708,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 7: SONS DO SISTEMA */}
               {openSections.sounds && (
-                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Volume2 className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2735,7 +2737,7 @@ export default function Configuracoes() {
                               playNotificationSound(sound.id);
                             } catch (e) {}
                           }}
-                          className={"flex items-center justify-between p-4 rounded-2xl border text-left transition-all " + (isSelected ? "bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-sm" : "bg-slate-50 dark:bg-zinc-900/50 border-slate-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600")}
+                          className={"flex items-center justify-between p-4 rounded-lg border text-left transition-all " + (isSelected ? "bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-sm" : "bg-slate-50 dark:bg-zinc-900/50 border-slate-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600")}
                         >
                           <div className="flex items-center gap-3">
                             <div
@@ -2763,7 +2765,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 8: TUTORIAL & SUPORTE */}
               {openSections.tutorial && (
-                <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <HelpCircle className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2875,7 +2877,7 @@ export default function Configuracoes() {
                     initial={{ opacity: 0, scale: 0.8, x: 20 }}
                     animate={{ opacity: 1, scale: 1, x: 0 }}
                     exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                    className="flex items-center gap-2 text-[var(--gm-primary)] bg-white/95 dark:bg-zinc-900/95 border border-[var(--gm-primary)]/40 px-3.5 py-2 rounded-2xl text-xs font-black shadow-2xl backdrop-blur-md"
+                    className="flex items-center gap-2 text-[var(--gm-primary)] bg-white/95 dark:bg-zinc-900/95 border border-[var(--gm-primary)]/40 px-3.5 py-2 rounded-lg text-xs font-black shadow-lg backdrop-blur-md"
                   >
                     <CheckCircle2 size={16} className="text-[var(--gm-primary)] animate-bounce" />
                     <span>Configurações Salvas!</span>
@@ -2884,7 +2886,7 @@ export default function Configuracoes() {
               </AnimatePresence>
 
               <div className="relative group flex items-center">
-                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-2xl whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
+                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
                   {saving ? "Salvando..." : "Salvar Configurações"}
                 </span>
                 <button

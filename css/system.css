@@ -1,0 +1,602 @@
+/* =========================================================
+   CardDigital GM — Design System Stylesheet (css/system.css)
+   Design System com Tokens (Dark & Light Mode via data-theme)
+   Padrão Forge Industrial Dark System (Clean & Flat - 14 Segredos)
+   Visual Source of Truth aligned with DESIGN.md
+========================================================= */
+
+:root {
+  /* Tipografia */
+  --font-display: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Raios (Forge Padrão: 4px ~ 8px) */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
+
+  /* Espaçamento Forge (Nunca menos) */
+  --gap-section: 72px;
+  --gap-cards: 32px;
+  --padding-card: 28px;
+  --container-max: 1600px;
+
+  /* Sombras Quase Imperceptíveis (14) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .05);
+  --shadow: 0 10px 30px rgba(0, 0, 0, .08);
+
+  --transition: .22s cubic-bezier(.22, 1, .36, 1);
+
+  /* DARK MODE DEFAULT (Igual à imagem / [data-theme="dark"]) */
+  --bg: #090909;
+  --bg-secondary: #101010;
+
+  --surface: #151515;
+  --surface-hover: #1C1C1C;
+
+  /* 7) Bordas Forge: no dark rgba(255,255,255,.08) */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.14);
+
+  --text: #F5F5F5;
+  --text-secondary: #AFAFAF;
+  --text-muted: #777777;
+
+  --primary: #FF5A1A;
+  --primary-hover: #FF7439;
+
+  --success: #19C37D;
+  --warning: #FFB020;
+  --danger: #E5484D;
+
+  /* Compatibilidade de aliases com classes .gm- */
+  --gm-primary: var(--primary);
+  --gm-accent: var(--primary);
+  --gm-bg: var(--bg);
+  --gm-bg-secondary: var(--bg-secondary);
+  --gm-text: var(--text);
+  --gm-text-secondary: var(--text-secondary);
+  --gm-text-tertiary: var(--text-muted);
+  --gm-surface: var(--surface);
+  --gm-surface-2: var(--surface-hover);
+  --gm-border: var(--border);
+  --gm-border-light: var(--border-hover);
+  --gm-font: var(--font-body);
+  --font-funnel: var(--font-display);
+  --gm-radius: 8px;
+  --gm-radius-sm: 4px;
+}
+
+/* =========================================================
+   DARK MODE EXPLICITO (14. Sombras: 0 15px 40px rgba(0,0,0,.35))
+========================================================= */
+[data-theme="dark"],
+.gm-dark {
+  --bg: #090909;
+  --bg-secondary: #101010;
+
+  --surface: #151515;
+  --surface-hover: #1C1C1C;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.14);
+
+  --text: #F5F5F5;
+  --text-secondary: #AFAFAF;
+  --text-muted: #777777;
+
+  --primary: #FF5A1A;
+  --primary-hover: #FF7439;
+
+  --success: #19C37D;
+  --warning: #FFB020;
+  --danger: #E5484D;
+
+  --shadow: 0 15px 40px rgba(0, 0, 0, .35);
+
+  --gm-bg: var(--bg);
+  --gm-bg-secondary: var(--bg-secondary);
+  --gm-text: var(--text);
+  --gm-text-secondary: var(--text-secondary);
+  --gm-text-tertiary: var(--text-muted);
+  --gm-surface: var(--surface);
+  --gm-surface-2: var(--surface-hover);
+  --gm-border: var(--border);
+  --gm-border-light: var(--border-hover);
+}
+
+/* =========================================================
+   LIGHT MODE (7. Bordas: 1px solid #E5E5E5)
+========================================================= */
+[data-theme="light"],
+.gm-light {
+  --bg: #F5F5F5;
+  --bg-secondary: #FFFFFF;
+
+  --surface: #FFFFFF;
+  --surface-hover: #FAFAFA;
+
+  --border: #E5E5E5;
+  --border-hover: #D4D4D4;
+
+  --text: #161616;
+  --text-secondary: #5E5E5E;
+  --text-muted: #888888;
+
+  --primary: #FF5A1A;
+  --primary-hover: #FF6A2A;
+
+  --success: #18A45D;
+  --warning: #C98400;
+  --danger: #D93A41;
+
+  --shadow: 0 10px 30px rgba(0, 0, 0, .08);
+
+  --gm-bg: var(--bg);
+  --gm-bg-secondary: var(--bg-secondary);
+  --gm-text: var(--text);
+  --gm-text-secondary: var(--text-secondary);
+  --gm-text-tertiary: var(--text-muted);
+  --gm-surface: var(--surface);
+  --gm-surface-2: var(--surface-hover);
+  --gm-border: var(--border);
+  --gm-border-light: var(--border-hover);
+}
+
+/* =========================================================
+   Body
+========================================================= */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  transition: .3s;
+}
+
+/* =========================================================
+   1) CSS Separadores & Cards Quase Invisíveis (Modo Forge)
+========================================================= */
+.section {
+  padding: 40px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 40px;
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+/* Cards quase invisíveis (Modo Forge Separador) */
+.card-forge,
+.card-separator,
+.gm-card-forge {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  padding: 28px 0 !important;
+  box-shadow: none !important;
+}
+
+/* 6) Cards Padrão (Radius 8px) & 13) Animações (.card transition) */
+.card,
+.panel,
+.container,
+.gm-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  padding: 28px;
+  box-shadow: var(--shadow) !important;
+  backdrop-filter: none !important;
+  transition: all .22s;
+}
+
+.card:hover,
+.gm-card:hover {
+  background: var(--surface-hover) !important;
+  border-color: var(--border-hover) !important;
+  transform: translateY(-2px);
+}
+
+.gm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.gm-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.gm-card-title h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.gm-compact {
+  padding: 16px 20px !important;
+  border-radius: 8px !important;
+}
+
+/* =========================================================
+   4) Botões Forge (Modelo 1 - Laranja / Modelo 2 - Outline)
+========================================================= */
+button.gm-btn,
+.gm-btn {
+  height: 48px;
+  padding: 0 26px;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .25s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Modelo 1 (Laranja) */
+button.primary,
+.btn-primary,
+.gm-btn-primary {
+  height: 48px;
+  padding: 0 26px;
+  background: #FF5A1A !important;
+  border: none !important;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-radius: 4px !important;
+  color: white !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+button.primary:hover,
+.btn-primary:hover,
+.gm-btn-primary:hover {
+  transform: translateY(-1px);
+  background: #FF6C28 !important;
+  box-shadow: 0 8px 20px rgba(255, 90, 26, .28) !important;
+}
+
+/* Modelo 2 (Botão Outline igual ao Forge) */
+button.secondary,
+.btn-secondary,
+.gm-btn-secondary {
+  height: 48px;
+  padding: 0 26px;
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: white;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: .06em;
+  border-radius: 4px !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+button.secondary:hover,
+.btn-secondary:hover,
+.gm-btn-secondary:hover {
+  background: rgba(255, 255, 255, .03);
+}
+
+[data-theme="light"] button.secondary,
+[data-theme="light"] .btn-secondary,
+[data-theme="light"] .gm-btn-secondary {
+  color: var(--text);
+}
+
+.gm-btn-danger {
+  height: 48px;
+  padding: 0 26px;
+  border-radius: 4px;
+  background: rgba(229, 72, 77, .12);
+  color: var(--danger);
+  border: 1px solid rgba(229, 72, 77, .3);
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.gm-btn-danger:hover {
+  background: rgba(229, 72, 77, .22);
+}
+
+/* =========================================================
+   11) Inputs Forge (44px, radius 4px)
+========================================================= */
+input.gm-input,
+textarea.gm-input,
+select.gm-select,
+.gm-input,
+.gm-select {
+  height: 44px;
+  padding: 0 14px;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 4px !important;
+  backdrop-filter: none !important;
+  transition: .2s;
+  width: 100%;
+}
+
+textarea.gm-input {
+  height: auto;
+  padding: 12px 14px;
+}
+
+input.gm-input:focus,
+textarea.gm-input:focus,
+select.gm-select:focus,
+.gm-input:focus,
+.gm-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(255, 90, 26, .15);
+  outline: none;
+}
+
+/* =========================================================
+   2) Tipografia Forge Reduzida
+========================================================= */
+/* H1: 54px → 48px */
+h1.gm-h1, .gm-h1 {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+}
+
+/* H2: 42px → 34px */
+h2.gm-h2, .gm-h2 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+}
+
+/* Títulos dos Cards: 34px → 28px */
+h3.gm-h3, .gm-h3,
+.metric-title,
+.card-title-lg {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* Texto: 15px */
+p.gm-body, .gm-body {
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: .75;
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--text);
+  text-decoration: none;
+  transition: .25s;
+}
+
+a:hover {
+  color: var(--primary);
+}
+
+/* =========================================================
+   10) Tabelas Forge (Nada de caixas, só linhas)
+========================================================= */
+table {
+  background: transparent;
+  border: none;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: var(--surface-hover);
+}
+
+tr {
+  border-bottom: 1px solid var(--border);
+}
+
+td, th {
+  padding: 18px 0;
+  text-align: left;
+}
+
+tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+/* =========================================================
+   Gráficos
+========================================================= */
+.chart-grid,
+.recharts-cartesian-grid line,
+.grid line {
+  stroke: var(--border);
+}
+
+.chart-axis,
+.axis text {
+  fill: var(--text-secondary);
+}
+
+.chart-line,
+.line {
+  stroke: var(--primary);
+  stroke-width: 3;
+}
+
+.chart-bar,
+.bar {
+  fill: var(--primary);
+}
+
+.chart-area,
+.area {
+  fill: rgba(255, 90, 26, .15);
+}
+
+/* =========================================================
+   Badges
+========================================================= */
+.badge,
+.gm-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.success {
+  background: rgba(25, 195, 125, .12);
+  color: var(--success);
+}
+
+.warning {
+  background: rgba(255, 176, 32, .15);
+  color: var(--warning);
+}
+
+.danger {
+  background: rgba(229, 72, 77, .12);
+  color: var(--danger);
+}
+
+/* =========================================================
+   8) Ícones Forge (20px, stroke-width: 1.7)
+========================================================= */
+svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.7;
+  color: var(--text-secondary);
+  transition: .2s;
+}
+
+button:hover svg,
+.gm-btn:hover svg {
+  color: var(--primary);
+  transform: scale(1.05);
+}
+
+/* =========================================================
+   Navbar
+========================================================= */
+nav {
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+
+/* =========================================================
+   5) Sidebar Forge (250px, itens 52px, ícones 18px, texto 15px)
+========================================================= */
+.sidebar,
+.gm-sidebar {
+  width: 250px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.sidebar a,
+.gm-nav a {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  border-radius: 0;
+  transition: .2s;
+}
+
+.sidebar a svg,
+.gm-nav a svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.7;
+}
+
+.sidebar a:hover,
+.gm-nav a:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+/* Item ativo (Só a lateral esquerda, sem cápsula/caixa) */
+.sidebar .active,
+.sidebar a.active,
+.gm-nav a.active {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-left: 3.5px solid var(--primary, #FF6900) !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  color: var(--text) !important;
+}
+
+/* =========================================================
+   Scrollbar
+========================================================= */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 999px;
+}
+
+/* =========================================================
+   Animações & Transições (13)
+========================================================= */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.card,
+.gm-card {
+  animation: fadeUp .4s;
+}
+
+* {
+  transition:
+    background .22s cubic-bezier(.22, 1, .36, 1),
+    color .22s cubic-bezier(.22, 1, .36, 1),
+    border-color .22s cubic-bezier(.22, 1, .36, 1),
+    transform .22s cubic-bezier(.22, 1, .36, 1),
+    box-shadow .22s cubic-bezier(.22, 1, .36, 1);
+}

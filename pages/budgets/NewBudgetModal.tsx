@@ -636,7 +636,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     return createPortal(
       <div style={overlay} onClick={onClose}>
         <div
-          className="w-full max-w-[800px] p-8 md:p-10 rounded-3xl bg-zinc-900/95 border border-white/10 text-white shadow-2xl backdrop-blur-2xl animate-fade-in"
+          className="w-full max-w-[800px] p-8 md:p-10 rounded-lg bg-[var(--gm-surface)] border border-white/10 text-white shadow-lg animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-start mb-8">
@@ -651,7 +651,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <button
-              className="group relative p-6 rounded-2xl border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
+              className="group relative p-6 rounded-lg border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
               onClick={() => applyTemplate("agency")}
             >
               <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
@@ -668,7 +668,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             </button>
 
             <button
-              className="group relative p-6 rounded-2xl border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
+              className="group relative p-6 rounded-lg border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
               onClick={() => applyTemplate("print")}
             >
               <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
@@ -763,7 +763,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             </div>
 
             {items.length === 0 && (
-              <div className="p-8 border border-dashed border-white/10 rounded-2xl text-center text-slate-500">
+              <div className="p-8 border border-dashed border-white/10 rounded-lg text-center text-slate-500">
                 <div className="font-bold text-white mb-1">Comece com um template</div>
                 <div className="text-sm mb-4">
                   Já deixei uma proposta-base pronta (editável) para {kind === "agency" ? "AGÊNCIA" : "IMPRESSÃO GRÁFICA"}.
@@ -1136,7 +1136,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
       {/* 04. AÇÕES */}
       <div
-        className={`p-4 md:p-5 rounded-2xl bg-zinc-900/95 border border-white/15 text-white backdrop-blur-2xl flex flex-row items-center justify-between gap-4 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`p-4 md:p-5 rounded-lg bg-[var(--gm-surface)] border border-white/15 text-white flex flex-row items-center justify-between gap-4 shadow-lg z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         style={{

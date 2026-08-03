@@ -9,6 +9,7 @@ import SafeResponsive from "../components/ui/SafeResponsive";
 import { pushToast } from "../store/toast";
 import { FileText, Save, History, X, Download, Trash2, ChevronLeft, ChevronRight, Calendar, Share2, Copy, Mail } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
+import { SectionDivider } from "../components/ui/SectionDivider";
 import { useAuth } from "../store/AuthContext";
 import { generateFinanceReportPdf } from "../services/pdfService";
 import { fetchSettingsSupabase } from "../lib/settings";
@@ -418,6 +419,9 @@ export default function Financial() {
         <div className="p-10 text-center opacity-60">Carregando dados financeiros...</div>
       ) : (
         <>
+          <div className="mb-4">
+            <SectionDivider label="Resumo do mês" />
+          </div>
           <Grid cols={3} className="mb-8">
             <Card className="border-l-4 border-l-[var(--gm-accent)]">
               <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Entradas</p>
@@ -435,6 +439,9 @@ export default function Financial() {
             </Card>
           </Grid>
 
+          <div className="mb-4">
+            <SectionDivider label="Gráficos" />
+          </div>
           <Grid cols={2} className="gap-8">
             <Card title="Fluxo Diário (Entradas x Saídas)">
               <div className="mt-4">
@@ -477,6 +484,8 @@ export default function Financial() {
 
           {/* Detailed Report */}
           <div className="mt-8">
+            <SectionDivider label="Extrato detalhado" />
+            <div className="mt-4">
             <Card>
               <div className="gm-card-header mb-4">
                 <div className="gm-card-title">
@@ -570,6 +579,7 @@ export default function Financial() {
                 </div>
               </div>
             </Card>
+            </div>
           </div>
         </>
       )}
@@ -577,7 +587,7 @@ export default function Financial() {
       {/* Modal Histórico */}
       {showHistory && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-dark-card border border-white/10 rounded-lg w-full max-w-2xl shadow-lg flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <h2 className="text-xl font-bold">Histórico de Relatórios</h2>
               <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -654,7 +664,7 @@ export default function Financial() {
       {/* Modal de Compartilhamento */}
       {shareData && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-dark-card border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+          <div className="bg-dark-card border border-white/10 rounded-lg w-full max-w-md shadow-lg overflow-hidden">
             <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
               <h3 className="text-lg font-bold">Compartilhar Relatório</h3>
               <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">

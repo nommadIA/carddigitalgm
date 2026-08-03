@@ -52,46 +52,49 @@ export interface ColorSettingsManagerProps {
   updateDomColor: (cssVar: string, value: string) => void;
 }
 
-// 5 CORES BASE SOLICITADAS
+// 8 CORES OFICIAIS DO SISTEMA (CONFORME IMAGEM DE PALETA)
 export const BASE_ORANGE_PALETTE = [
-  { name: "Laranja", hex: "#FF6900", desc: "Cor Primária / Destaque / Botões", bgClass: "bg-[#FF6900]" },
-  { name: "Branco", hex: "#FFFFFF", desc: "Cor de Contraste / Títulos Dark Mode", bgClass: "bg-white border border-slate-300" },
-  { name: "Cinza Claro", hex: "#F8FAFC", desc: "Fundo Light Mode / Superfícies", bgClass: "bg-[#F8FAFC] border border-slate-300" },
-  { name: "Cinza Escuro", hex: "#27272A", desc: "Subtítulos / Superfícies Dark", bgClass: "bg-[#27272A]" },
-  { name: "Preto", hex: "#121215", desc: "Títulos Light Mode / Canvas Dark", bgClass: "bg-[#121215]" },
+  { name: "Ink", hex: "#0B0B0C", desc: "Fundo Profundo / Canvas Dark", category: "Neutral Dark" },
+  { name: "Graphite", hex: "#131315", desc: "Superfície de Cards / Painel", category: "Neutral Dark" },
+  { name: "Slate", hex: "#1B1B1E", desc: "Superfície Secundária / Hover", category: "Neutral Dark" },
+  { name: "Filament", hex: "#26262A", desc: "Bordas & Elementos Neutros", category: "Neutral Dark" },
+  { name: "Ember", hex: "#F65A1A", desc: "Cor Primária / Destaque Principal", category: "Accent" },
+  { name: "Spark", hex: "#FF7A38", desc: "Destaque Secundário / Hover Ativo", category: "Accent" },
+  { name: "Bone", hex: "#F2F2F3", desc: "Texto Principal / Fundo Claro", category: "Light / Text" },
+  { name: "Ash", hex: "#8B8B92", desc: "Texto Secundário / Subtítulos", category: "Muted Text" },
 ];
 
 // VALORES PADRÃO INTELIGENTES PARA MODO CLARO E MODO ESCURO
 export const DEFAULT_ORANGE_LIGHT = {
-  primary: "#FF6900",
-  accent: "#FF6900",
-  bg: "#F7F8FA",
-  title: "#18181B",
-  subtitle: "#686D76",
-  icon: "#FF6900",
-  button: "#FF6900",
-  menu_primary: "#FF6900",
-  menu_bg: "#FF6900",
+  primary: "#F65A1A",
+  accent: "#FF7A38",
+  bg: "#F2F2F3",
+  title: "#0B0B0C",
+  subtitle: "#8B8B92",
+  icon: "#F65A1A",
+  button: "#F65A1A",
+  menu_primary: "#F65A1A",
+  menu_bg: "#F65A1A",
   menu_title: "#FFFFFF",
   menu_subtitle: "rgba(255, 255, 255, 0.85)",
   menu_icon: "#FFFFFF",
-  menu_button: "#FF6900",
+  menu_button: "#F65A1A",
 };
 
 export const DEFAULT_ORANGE_DARK = {
-  primary: "#FF7B17",
-  accent: "#FF7B17",
-  bg: "#0F1115",
-  title: "#FFFFFF",
-  subtitle: "#B6BDC8",
-  icon: "#FF7B17",
-  button: "#FF7B17",
-  menu_primary: "#FF7B17",
-  menu_bg: "#181B22",
-  menu_title: "#FFFFFF",
-  menu_subtitle: "#B6BDC8",
-  menu_icon: "#BFC7D5",
-  menu_button: "#FF7B17",
+  primary: "#F65A1A",
+  accent: "#FF7A38",
+  bg: "#0B0B0C",
+  title: "#F2F2F3",
+  subtitle: "#8B8B92",
+  icon: "#F65A1A",
+  button: "#F65A1A",
+  menu_primary: "#F65A1A",
+  menu_bg: "#131315",
+  menu_title: "#F2F2F3",
+  menu_subtitle: "#8B8B92",
+  menu_icon: "#8B8B92",
+  menu_button: "#F65A1A",
 };
 
 export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
@@ -297,11 +300,11 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
       {/* BANNER PRINCIPAL DE HEADER COM MODO CLARO/ESCURO INTELIGENTE E RESET */}
       <div className={
         isLightMode 
-          ? "bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white p-6 sm:p-7 rounded-3xl border border-orange-400/40 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
-          : "bg-zinc-900/95 text-white p-6 sm:p-7 rounded-3xl border border-zinc-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
+          ? "bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white p-6 sm:p-7 rounded-lg border border-orange-400/40 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
+          : "bg-zinc-900/95 text-white p-6 sm:p-7 rounded-lg border border-zinc-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
       }>
         <div className="flex items-center gap-4">
-          <div className="w-13 h-13 rounded-2xl bg-white text-[#FF6900] flex items-center justify-center shrink-0 shadow-lg font-black text-xl">
+          <div className="w-13 h-13 rounded-lg bg-white text-[#FF6900] flex items-center justify-center shrink-0 shadow-lg font-black text-xl">
             <Building2 className="w-7 h-7" />
           </div>
           <div>
@@ -324,7 +327,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
           <button
             type="button"
             onClick={resetToDefaultOrange}
-            className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-white/20 hover:bg-white/30 border border-white/30 text-white text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+            className="w-full sm:w-auto px-4 py-3 rounded-lg bg-white/20 hover:bg-white/30 border border-white/30 text-white text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
             title="Restaurar padrão Laranja Oficial"
           >
             <RotateCcw size={16} /> Resetar Cores
@@ -336,8 +339,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             onClick={toggleSmartThemeMode}
             className={
               isLightMode
-                ? "w-full sm:w-auto px-5 py-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-black flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-lg"
-                : "w-full sm:w-auto px-5 py-3 rounded-2xl bg-[#FF6900] hover:bg-[#ff7a1a] text-white text-xs font-black flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md"
+                ? "w-full sm:w-auto px-5 py-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-black flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-lg"
+                : "w-full sm:w-auto px-5 py-3 rounded-lg bg-[#FF6900] hover:bg-[#ff7a1a] text-white text-xs font-black flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md"
             }
           >
             {isLightMode ? (
@@ -353,45 +356,61 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
         </div>
       </div>
 
-      {/* PALETA BASE DE 5 CORES PARA ACESSO RÁPIDO */}
+      {/* PALETA BASE DE 8 CORES OFICIAIS (VISUAL CONFORME IMAGEM DE PALETA) */}
       <div className={
         isLightMode
-          ? "bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4"
-          : "bg-zinc-900/90 p-6 rounded-3xl border border-zinc-800 space-y-4 shadow-xs"
+          ? "bg-white p-6 rounded-lg border border-slate-200/90 shadow-sm space-y-4"
+          : "bg-[#0B0B0C] p-6 rounded-lg border border-[#26262A] space-y-4 shadow-sm"
       }>
         <div className={
           isLightMode
             ? "flex items-center justify-between border-b border-slate-200 pb-3"
-            : "flex items-center justify-between border-b border-zinc-800 pb-3"
+            : "flex items-center justify-between border-b border-[#26262A] pb-3"
         }>
-          <label className="text-xs font-extrabold uppercase tracking-wider text-[#FF6900] flex items-center gap-2">
-            <Palette className="w-4 h-4" /> Paleta de Cores Padrão
-          </label>
-          <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400">
-            5 Cores Fundamentais
+          <div>
+            <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+              <Palette className="w-5 h-5 text-[#F65A1A]" />
+              Palette
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-[#8B8B92]">
+              Paleta oficial do sistema. Clique em qualquer amostra para aplicar ou copiar.
+            </p>
+          </div>
+          <span className="text-xs font-bold font-mono text-[#F65A1A] bg-[#F65A1A]/10 px-3 py-1 rounded-full border border-[#F65A1A]/30">
+            8 CORES SISTÊMICAS
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        {/* GRID DE CARDS DA PALETA IGUAL À IMAGEM DE REFERÊNCIA */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {BASE_ORANGE_PALETTE.map((color) => (
             <div
               key={color.name}
-              className={
-                isLightMode
-                  ? "p-3.5 rounded-2xl border border-slate-200 bg-slate-50 flex items-center gap-3 shadow-2xs"
-                  : "p-3.5 rounded-2xl border border-zinc-800 bg-zinc-800/40 flex items-center gap-3"
-              }
+              onClick={() => {
+                try {
+                  navigator.clipboard.writeText(color.hex);
+                } catch (e) {}
+              }}
+              className="rounded-lg border border-[#26262A] overflow-hidden bg-[#131315] hover:border-[#F65A1A]/70 transition-all cursor-pointer group shadow-sm flex flex-col"
+              title={`Clique para copiar ${color.hex}`}
             >
-              <div className={`w-9 h-9 rounded-xl ${color.bgClass} shrink-0 shadow-xs flex items-center justify-center`}>
-                <span className="text-[10px] font-mono font-bold opacity-75">
-                  {color.hex.substring(1, 3)}
-                </span>
+              {/* Bloco Superior com a Cor */}
+              <div
+                className="h-20 sm:h-24 w-full transition-transform duration-300 group-hover:scale-[1.02] relative"
+                style={{ backgroundColor: color.hex }}
+              >
+                {/* Borda interna sutil para cores claras como Bone */}
+                {color.hex === "#F2F2F3" && (
+                  <div className="absolute inset-0 border border-slate-300/40 pointer-events-none" />
+                )}
               </div>
-              <div>
-                <h4 className="text-xs font-black text-slate-900 dark:text-white">
+
+              {/* Painel Inferior do Card com Nome e Hex */}
+              <div className="p-3.5 bg-[#131315] border-t border-[#26262A]/60 flex flex-col justify-center">
+                <h4 className="text-sm font-bold text-white group-hover:text-[#F65A1A] transition-colors">
                   {color.name}
                 </h4>
-                <p className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 uppercase font-bold">
+                <p className="text-xs font-mono text-[#8B8B92] uppercase mt-0.5 tracking-wider font-semibold">
                   {color.hex}
                 </p>
               </div>
@@ -403,8 +422,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
       {/* EDITOR INDIVIDUAL DE CADA COR DO APLICATIVO */}
       <div className={
         isLightMode
-          ? "bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-6"
-          : "bg-zinc-900/90 p-6 sm:p-8 rounded-3xl border border-zinc-800 space-y-6 shadow-sm"
+          ? "bg-white p-6 sm:p-8 rounded-lg border border-slate-200/90 shadow-sm space-y-6"
+          : "bg-zinc-900/90 p-6 sm:p-8 rounded-lg border border-zinc-800 space-y-6 shadow-sm"
       }>
         <div className={
           isLightMode
@@ -435,13 +454,13 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
 
         {/* MENSAGENS DE CONFIRMAÇÃO */}
         {savedSuccess && (
-          <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
+          <div className="p-3.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
             <CheckCircle2 size={16} /> Cor atualizada com sucesso no aplicativo!
           </div>
         )}
 
         {resetSuccess && (
-          <div className="p-3.5 rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-600 dark:text-sky-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
+          <div className="p-3.5 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-600 dark:text-sky-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
             <RotateCcw size={16} /> Cores resetadas para o padrão oficial Laranja!
           </div>
         )}
@@ -457,8 +476,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 1. COR PRIMÁRIA / DESTAQUE */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -498,8 +517,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 2. FUNDO DO APLICATIVO */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -539,8 +558,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 3. TÍTULOS E CABEÇALHOS */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -580,8 +599,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 4. SUBTÍTULOS E TEXTOS */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -621,8 +640,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 5. ÍCONES DO SISTEMA */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -662,8 +681,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 6. COR DE ACENTO */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -718,8 +737,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 1. FUNDO DO MENU */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -759,8 +778,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 2. TÍTULO DO MENU */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -800,8 +819,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 3. SUBTÍTULO DO MENU */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -841,8 +860,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             {/* 4. ÍCONES DO MENU */}
             <div className={
               isLightMode
-                ? "p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 space-y-3"
+                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
+                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
             }>
               <div className="flex items-center justify-between">
                 <div>
@@ -887,8 +906,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
       {/* SEÇÃO DA TIPOGRAFIA (FAMÍLIA DE FONTE) */}
       <div className={
         isLightMode
-          ? "bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4"
-          : "bg-zinc-900/90 p-6 rounded-3xl border border-zinc-800 space-y-4 shadow-xs"
+          ? "bg-white p-6 rounded-lg border border-slate-200/90 shadow-sm space-y-4"
+          : "bg-zinc-900/90 p-6 rounded-lg border border-zinc-800 space-y-4 shadow-xs"
       }>
         <label className="text-xs font-extrabold uppercase tracking-wider text-[#FF6900] flex items-center gap-2">
           <Type className="w-4 h-4" /> Tipografia Principal do Aplicativo
@@ -897,6 +916,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             "Inter",
+            "Space Grotesk",
             "Roboto",
             "Montserrat",
             "Open Sans",
@@ -915,7 +935,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                 onMouseLeave={() => setPreviewFont(null)}
                 onTouchStart={() => setPreviewFont(font)}
                 onTouchEnd={() => setPreviewFont(null)}
-                className={`flex items-center justify-center p-3 rounded-2xl border-2 transition-all h-12 shadow-2xs hover:shadow-xs cursor-pointer ${
+                className={`flex items-center justify-center p-3 rounded-lg border-2 transition-all h-12 shadow-2xs hover:shadow-xs cursor-pointer ${
                   isActive
                     ? "border-[#FF6900] bg-[#FF6900]/10 text-[#FF6900] font-bold"
                     : isLightMode

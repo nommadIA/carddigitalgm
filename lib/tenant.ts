@@ -15,17 +15,26 @@ export async function fetchTenantsSafe(userId: string) {
       .select("tenant_id")
       .eq("user_id", userId);
 
-    const { data, error } = await withTimeout<any>(req as any, 8000);
+    const { data, error } = await withTimeout<any>(req as any, 8000).catch((err) => ({
+      data: null,
+      error: err,
+    }));
 
     if (error) {
-      console.error("Erro ao buscar tenants:", error);
+      const msg = error?.message || String(error);
+      if (!msg.includes("Failed to fetch")) {
+        console.warn("Erro ao buscar tenants:", msg);
+      }
       return [];
     }
 
     const ids = (data || []).map((x: any) => x.tenant_id).filter(Boolean);
     return ids;
   } catch (e: any) {
-    console.error("Erro ao buscar tenants:", e?.message || e);
+    const msg = e?.message || String(e);
+    if (!msg.includes("Failed to fetch")) {
+      console.warn("Erro ao buscar tenants:", msg);
+    }
     return []; // ✅ nunca trava
   }
 }

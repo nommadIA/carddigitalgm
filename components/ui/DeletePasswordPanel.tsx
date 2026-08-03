@@ -76,7 +76,7 @@ export default function DeletePasswordPanel() {
   return (
     <div className="grid md:grid-cols-2 gap-6">
         {/* Card 1: Password Settings (Modal Trigger) */}
-        <div className="gm-card p-6 rounded-2xl flex flex-col justify-between">
+        <div className="gm-card p-6 rounded-lg flex flex-col justify-between">
             <div>
                 <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-[var(--gm-primary)]/10 rounded-lg text-[var(--gm-primary)] border border-[var(--gm-primary)]/20 shadow-[0_0_10px_var(--gm-primary-10)]">
@@ -101,7 +101,7 @@ export default function DeletePasswordPanel() {
         </div>
 
         {/* Card 2: Empty Trash */}
-        <div className="gm-card p-6 rounded-2xl relative overflow-hidden">
+        <div className="gm-card p-6 rounded-lg relative overflow-hidden">
              <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                 <AlertTriangle size={100} className="text-[var(--gm-primary)]" />
             </div>
@@ -147,7 +147,7 @@ export default function DeletePasswordPanel() {
                     </div>
 
                     <div className="p-8 space-y-4">
-                         <div className="p-4 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-2xl text-sm text-[var(--gm-primary)] flex items-start gap-3">
+                         <div className="p-4 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-lg text-sm text-[var(--gm-primary)] flex items-start gap-3">
                             <AlertTriangle size={18} className="shrink-0 mt-0.5" />
                             <p>Essa senha será solicitada sempre que você tentar excluir algo <strong>definitivamente</strong>.</p>
                         </div>

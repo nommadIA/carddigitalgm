@@ -1502,13 +1502,13 @@ export default function Bio() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Botão 1: Bio Smartphone */}
               <button
-                className="gm-card group relative p-8 rounded-3xl border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/80 hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50 hover:border-[var(--primary-color)] transition-all text-left flex flex-col gap-5 shadow-md hover:shadow-xl cursor-pointer"
+                className="gm-card group relative p-8 rounded-lg border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/80 hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50 hover:border-[var(--primary-color)] transition-all text-left flex flex-col gap-5 shadow-md hover:shadow-xl cursor-pointer"
                 onClick={() => {
                   setSelectedView("smartphone");
                   setPreviewMode("smartphone");
                 }}
               >
-                <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-900/60 flex items-center justify-center border border-zinc-200 dark:border-zinc-800/80 group-hover:scale-110 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-800/40 transition-all duration-300">
+                <div className="w-16 h-16 rounded-lg bg-zinc-100 dark:bg-zinc-900/60 flex items-center justify-center border border-zinc-200 dark:border-zinc-800/80 group-hover:scale-110 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-800/40 transition-all duration-300">
                   <Smartphone size={32} style={{ stroke: "url(#bio-icon-gradient)" }} />
                 </div>
                 <div>
@@ -1526,13 +1526,13 @@ export default function Bio() {
 
               {/* Botão 2: Bio Computador */}
               <button
-                className="gm-card group relative p-8 rounded-3xl border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/80 hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50 hover:border-[var(--primary-color)] transition-all text-left flex flex-col gap-5 shadow-md hover:shadow-xl cursor-pointer"
+                className="gm-card group relative p-8 rounded-lg border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/80 hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50 hover:border-[var(--primary-color)] transition-all text-left flex flex-col gap-5 shadow-md hover:shadow-xl cursor-pointer"
                 onClick={() => {
                   setSelectedView("computador");
                   setPreviewMode("pc");
                 }}
               >
-                <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-900/60 flex items-center justify-center border border-zinc-200 dark:border-zinc-800/80 group-hover:scale-110 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-800/40 transition-all duration-300">
+                <div className="w-16 h-16 rounded-lg bg-zinc-100 dark:bg-zinc-900/60 flex items-center justify-center border border-zinc-200 dark:border-zinc-800/80 group-hover:scale-110 group-hover:border-zinc-300 dark:group-hover:border-zinc-700 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-800/40 transition-all duration-300">
                   <Monitor size={32} style={{ stroke: "url(#bio-icon-gradient)" }} />
                 </div>
                 <div>
@@ -1552,7 +1552,7 @@ export default function Bio() {
         ) : (
           <div className="flex flex-col gap-6 items-stretch w-full max-w-[1440px] mx-auto animate-in fade-in duration-300">
             {/* VOLTAR BUTTON & STATUS HEADER */}
-            <div className="flex items-center justify-between bg-white dark:bg-zinc-900/80 p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-xs backdrop-blur-md">
+            <div className="flex items-center justify-between bg-white dark:bg-zinc-900/80 p-4 rounded-lg border border-zinc-200/80 dark:border-zinc-800 shadow-xs backdrop-blur-md">
               <button
                 onClick={() => setSelectedView("none")}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-zinc-700 dark:text-zinc-200 hover:text-[var(--primary-color)] dark:hover:text-[var(--primary-color)] hover:bg-[var(--primary-color)]/10 transition-all duration-200 cursor-pointer"
@@ -1570,7 +1570,7 @@ export default function Bio() {
 
 
             {/* SUBDIVISÃO SUPERIOR: Menu em Cascata Compacta de Seleção (Desktop e Mobile) */}
-            <div className="flex flex-col gap-3 bg-white dark:bg-zinc-900/80 p-4 sm:p-5 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-xs backdrop-blur-md">
+            <div className="flex flex-col gap-3 bg-white dark:bg-zinc-900/80 p-4 sm:p-5 rounded-lg border border-zinc-200/80 dark:border-zinc-800 shadow-xs backdrop-blur-md">
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs font-extrabold text-[var(--primary-color)] uppercase tracking-wider">Painel do Editor de Mídia</span>
                 <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
@@ -1808,7 +1808,7 @@ export default function Bio() {
 
             {/* 1. INFORMAÇÕES BÁSICAS */}
             {openSections.basic && (
-              <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
+              <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
                 <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-5 mb-4">
                   <span className="flex items-center gap-2.5 text-xl font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
                     <Info className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
@@ -1854,7 +1854,7 @@ export default function Bio() {
                   )}
                   
                   {/* Barra de Formatação */}
-                  <div className="flex flex-wrap items-center gap-3 bg-[#0d0e12]/60 p-3 rounded-2xl border border-white/5 mt-2">
+                  <div className="flex flex-wrap items-center gap-3 bg-[#0d0e12]/60 p-3 rounded-lg border border-white/5 mt-2">
                     {/* Alinhamento */}
                     <div className="flex items-center gap-1 bg-[#161920] p-1 rounded-xl border border-white/5 shadow-inner">
                       <button
@@ -1957,7 +1957,7 @@ export default function Bio() {
 
             {/* 2. APARÊNCIA DO SITE */}
             {openSections.appearance && (
-              <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
+              <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
                 <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-5 mb-4">
                   <span className="flex items-center gap-2.5 text-xl font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
                     <Eye className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
@@ -2036,7 +2036,7 @@ export default function Bio() {
               {/* Seção Desktop (Plano de Fundo & Banner Principal) */}
               {selectedView === "computador" && (
                 <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 space-y-4">
-                  <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
+                  <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-lg border border-zinc-800/60">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/50 pb-2.5">
                       <span className="text-sm font-bold text-white flex items-center gap-1.5">
                         <Layout className="w-4 h-4 text-[var(--primary-color)]" /> Mídias Versão Desktop (Computador)
@@ -2048,7 +2048,7 @@ export default function Bio() {
 
                     <div className="grid grid-cols-1 gap-4">
                     {/* Plano de Fundo Desktop */}
-                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
+                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-lg border border-zinc-800/80 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-xs font-bold text-zinc-300">Plano de Fundo Desktop</span>
@@ -2084,7 +2084,7 @@ export default function Bio() {
                     </div>
 
                     {/* Banner Desktop Principal */}
-                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
+                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-lg border border-zinc-800/80 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-xs font-bold text-zinc-300">Banner Desktop Principal</span>
@@ -2127,7 +2127,7 @@ export default function Bio() {
               {/* Seção Smartphone (Plano de Fundo & Banner Principal) */}
               {selectedView === "smartphone" && (
                 <div className="sm:col-span-2 border-t border-zinc-800/80 pt-4 mt-2 space-y-4">
-                  <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-3xl border border-zinc-800/60">
+                  <div className="space-y-4 bg-zinc-900/40 p-4 sm:p-5 rounded-lg border border-zinc-800/60">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/50 pb-2.5">
                     <span className="text-sm font-bold text-white flex items-center gap-1.5">
                       <Smartphone className="w-4 h-4 text-[var(--primary-color)]" /> Mídias Versão Smartphone (Celular)
@@ -2139,7 +2139,7 @@ export default function Bio() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Plano de Fundo Smartphone */}
-                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
+                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-lg border border-zinc-800/80 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-xs font-bold text-zinc-300">Plano de Fundo Smartphone</span>
@@ -2176,7 +2176,7 @@ export default function Bio() {
                     </div>
 
                     {/* Banner Smartphone Principal */}
-                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-800/80 flex flex-col justify-between">
+                    <div className="space-y-2 bg-zinc-950/40 p-3.5 rounded-lg border border-zinc-800/80 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-xs font-bold text-zinc-300">Banner Smartphone Principal (1080x900 px)</span>
@@ -2240,7 +2240,7 @@ export default function Bio() {
 
         {/* 3. CONTATOS E REDES */}
         {openSections.contacts && (
-          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-5 mb-4">
               <span className="flex items-center gap-2.5 text-xl font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
                 <Phone className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
@@ -2286,7 +2286,7 @@ export default function Bio() {
 
         {/* 4. OUTROS LINKS */}
         {openSections.otherLinks && (
-          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-5 mb-4">
               <span className="flex items-center gap-2.5 text-xl font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
                 <LinkIcon className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
@@ -2341,7 +2341,7 @@ export default function Bio() {
                              </button>
                              
                              {iconPickerOpen === link.id && (
-                               <div className="absolute z-20 mt-1 w-full bg-[var(--gm-bg)] border border-zinc-700/50 rounded-xl p-3 shadow-2xl">
+                               <div className="absolute z-20 mt-1 w-full bg-[var(--gm-bg)] border border-zinc-700/50 rounded-xl p-3 shadow-lg">
                                  <div className="grid grid-cols-4 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
                                    {platforms.map(p => {
                                      const PIcon = getPlatformIcon(p.value);
@@ -2425,7 +2425,7 @@ export default function Bio() {
 
         {/* 5. CATÁLOGO DE PRODUTOS */}
         {openSections.catalog && (
-          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-5 mb-4">
               <span className="flex items-center gap-2.5 text-xl font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
                 <ShoppingBag className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
@@ -2487,7 +2487,7 @@ export default function Bio() {
               {catalogTab === 'list' && (
                 <div className="space-y-4">
                   {(!bioConfig.catalog_items || bioConfig.catalog_items.length === 0) ? (
-                    <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-2xl space-y-3">
+                    <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-lg space-y-3">
                       <ShoppingBag className="w-12 h-12 opacity-30 mx-auto text-[var(--primary-color)]" />
                       <p className="font-medium text-zinc-400">Nenhum produto cadastrado no momento.</p>
                       <button 
@@ -2506,7 +2506,7 @@ export default function Bio() {
                         return (
                           <div 
                             key={item.id} 
-                            className="bg-zinc-950/40 rounded-2xl border border-zinc-850/80 overflow-hidden transition-all duration-200 hover:border-zinc-800"
+                            className="bg-zinc-950/40 rounded-lg border border-zinc-850/80 overflow-hidden transition-all duration-200 hover:border-zinc-800"
                           >
                             {/* ITEM HEADER (CLICK TO EXPAND) */}
                             <div 
@@ -2697,11 +2697,11 @@ export default function Bio() {
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                       {(item.images || (item.image_url ? [item.image_url] : [""])).map((imgUrl, idx) => (
-                                        <div key={idx} className="bg-black/50 p-4 rounded-2xl border border-zinc-800 space-y-4 flex flex-col justify-between">
+                                        <div key={idx} className="bg-black/50 p-4 rounded-lg border border-zinc-800 space-y-4 flex flex-col justify-between">
                                           {/* 1. FOTO MINIATURA */}
                                           <div className="flex items-center gap-3.5">
                                             {imgUrl ? (
-                                              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border border-zinc-300 bg-white shrink-0 group/img shadow-md flex items-center justify-center p-1">
+                                              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-lg overflow-hidden border border-zinc-300 bg-white shrink-0 group/img shadow-md flex items-center justify-center p-1">
                                                 <OptimizedImage 
                                                   src={imgUrl} 
                                                   alt={"Foto " + (idx + 1)} 
@@ -2718,7 +2718,7 @@ export default function Bio() {
                                                 </button>
                                               </div>
                                             ) : (
-                                              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-zinc-600 shrink-0">
+                                              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-zinc-600 shrink-0">
                                                 <ShoppingBag className="w-8 h-8 opacity-45 text-[var(--primary-color)]" />
                                               </div>
                                             )}
@@ -2781,7 +2781,7 @@ export default function Bio() {
 
               {/* CONTEÚDO DA TAB: CADASTRAR NOVO PRODUTO */}
               {catalogTab === 'add' && (
-                <div className="bg-zinc-950/40 p-4 sm:p-5 rounded-2xl border border-zinc-850/80 space-y-5 animate-in fade-in duration-200">
+                <div className="bg-zinc-950/40 p-4 sm:p-5 rounded-lg border border-zinc-850/80 space-y-5 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-900">
                     <h3 className="text-sm font-extrabold text-zinc-200 flex items-center gap-2">
                       <PlusCircle className="w-4 h-4 text-[var(--primary-color)]" />
@@ -2901,11 +2901,11 @@ export default function Bio() {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {newProduct.images.map((imgUrl, idx) => (
-                            <div key={idx} className="bg-black/50 p-4 rounded-2xl border border-zinc-800 space-y-4 flex flex-col justify-between">
+                            <div key={idx} className="bg-black/50 p-4 rounded-lg border border-zinc-800 space-y-4 flex flex-col justify-between">
                               {/* 1. FOTO MINIATURA */}
                               <div className="flex items-center gap-3.5">
                                 {imgUrl ? (
-                                  <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border border-zinc-300 bg-white shrink-0 group/img shadow-md flex items-center justify-center p-1">
+                                  <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-lg overflow-hidden border border-zinc-300 bg-white shrink-0 group/img shadow-md flex items-center justify-center p-1">
                                     <OptimizedImage 
                                       src={imgUrl} 
                                       alt={"Foto " + (idx + 1)} 
@@ -2922,7 +2922,7 @@ export default function Bio() {
                                     </button>
                                   </div>
                                 ) : (
-                                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-zinc-600 shrink-0">
+                                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-lg border border-dashed border-zinc-800 flex flex-col items-center justify-center bg-black/40 text-zinc-600 shrink-0">
                                     <ShoppingBag className="w-8 h-8 opacity-45 text-[var(--primary-color)]" />
                                   </div>
                                 )}
@@ -2994,7 +2994,7 @@ export default function Bio() {
 
               {/* CONTEÚDO DA TAB: LIXEIRA */}
               {catalogTab === 'trash' && (
-                <div className="bg-zinc-950/40 p-4 sm:p-5 rounded-2xl border border-zinc-850/80 space-y-4 animate-in fade-in duration-200">
+                <div className="bg-zinc-950/40 p-4 sm:p-5 rounded-lg border border-zinc-850/80 space-y-4 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between pb-3 border-b border-zinc-900">
                     <h3 className="text-xs font-extrabold text-zinc-200 flex items-center gap-2">
                       <Trash2 className="w-4 h-4 text-red-400" />
@@ -3012,7 +3012,7 @@ export default function Bio() {
                   </div>
 
                   {deletedCatalogItems.length === 0 ? (
-                    <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-2xl space-y-2">
+                    <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-lg space-y-2">
                       <Trash2 className="w-10 h-10 opacity-20 mx-auto text-zinc-400" />
                       <p>A lixeira está vazia.</p>
                     </div>
@@ -3056,7 +3056,7 @@ export default function Bio() {
 
         {/* 6. PORTFÓLIO */}
         {openSections.portfolio && (
-          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-5 mb-4">
               <span className="flex items-center gap-2.5 text-xl font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
                 <Layout className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
@@ -3736,7 +3736,7 @@ export default function Bio() {
                       )}
                     </div>
                     {deletedPortfolioItems.length === 0 ? (
-                      <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-2xl space-y-2">
+                      <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-zinc-800 rounded-lg space-y-2">
                         <Trash2 className="w-10 h-10 opacity-20 mx-auto text-zinc-400" />
                         <p>A lixeira está vazia.</p>
                       </div>
@@ -3785,7 +3785,7 @@ export default function Bio() {
 
         {/* 7. DADOS DE PAGAMENTO (PIX) */}
         {openSections.payment && (
-          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-5 mb-4">
               <span className="flex items-center gap-2.5 text-xl font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
                 <CreditCard className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
@@ -3830,7 +3830,7 @@ export default function Bio() {
 
         {/* 8. ENDEREÇO E LOCALIZAÇÃO */}
         {openSections.address && (
-          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-5 mb-4">
               <span className="flex items-center gap-2.5 text-xl font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
                 <MapPin className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
@@ -3859,7 +3859,7 @@ export default function Bio() {
 
         {/* 9. CHAT CARDDIGITAL GM */}
         {openSections.contactSection && (
-          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-3xl space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full animate-in fade-in duration-300">
             <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-5 mb-4">
               <span className="flex items-center gap-2.5 text-xl font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
                 <Sparkles className="w-6 h-6 text-[var(--primary-color)] animate-pulse" />
@@ -3873,14 +3873,14 @@ export default function Bio() {
             {true && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2 pt-2 text-zinc-600 dark:text-zinc-300">
                 {/* Banner de Contato */}
-                <div className="space-y-4 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
+                <div className="space-y-4 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-lg border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
                   <h4 className="text-sm font-bold text-zinc-800 dark:text-white flex items-center gap-2">
                     <Layout className="w-4 h-4 text-[var(--primary-color)]" /> Banner da Página de Contato
                   </h4>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">Envie um banner exclusivo para a página de contato do seu site (caso vazio, usará o banner principal).</p>
                   
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2 bg-zinc-50 dark:bg-zinc-900/40 p-3.5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 flex flex-col justify-between">
+                    <div className="space-y-2 bg-zinc-50 dark:bg-zinc-900/40 p-3.5 rounded-lg border border-zinc-200/80 dark:border-zinc-800 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">Imagem do Banner</span>
@@ -3918,7 +3918,7 @@ export default function Bio() {
                 </div>
 
                 {/* Textos da Página de Contato */}
-                <div className="space-y-4 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
+                <div className="space-y-4 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-lg border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
                   <h4 className="text-sm font-bold text-zinc-800 dark:text-white flex items-center gap-2">
                     <Edit3 className="w-4 h-4 text-[var(--primary-color)]" /> Textos da Página de Contato
                   </h4>
@@ -3947,13 +3947,13 @@ export default function Bio() {
                 </div>
 
                 {/* Configurações do Balão do Chat */}
-                <div className="space-y-4 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
+                <div className="space-y-4 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-lg border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
                   <h4 className="text-sm font-bold text-zinc-800 dark:text-white flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--primary-color)]" /> Balão do Chat Flutuante (WhatsApp)
                   </h4>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">Personalize o widget do Join.chat exibido na página de contato do seu site.</p>
                   
-                  <div className="flex flex-col sm:flex-row gap-4 bg-zinc-100 dark:bg-zinc-950/40 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+                  <div className="flex flex-col sm:flex-row gap-4 bg-zinc-100 dark:bg-zinc-950/40 p-3.5 rounded-lg border border-zinc-200 dark:border-zinc-800">
                     <div className="flex items-center gap-3">
                       <input 
                         type="checkbox" 
@@ -4135,7 +4135,7 @@ export default function Bio() {
                     initial={{ opacity: 0, scale: 0.8, x: 20 }}
                     animate={{ opacity: 1, scale: 1, x: 0 }}
                     exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                    className="flex items-center gap-2 text-[var(--gm-primary)] bg-white/95 dark:bg-zinc-900/95 border border-[var(--gm-primary)]/40 px-3.5 py-2 rounded-2xl text-xs font-black shadow-2xl backdrop-blur-md"
+                    className="flex items-center gap-2 text-[var(--gm-primary)] bg-white/95 dark:bg-zinc-900/95 border border-[var(--gm-primary)]/40 px-3.5 py-2 rounded-lg text-xs font-black shadow-lg backdrop-blur-md"
                   >
                     <CheckCircle2 size={16} className="text-[var(--gm-primary)] animate-bounce" />
                     <span>Bio Salva!</span>
@@ -4145,7 +4145,7 @@ export default function Bio() {
 
               {/* SAVE BUTTON */}
               <div className="relative group flex items-center">
-                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-2xl whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
+                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
                   {saving ? "Salvando..." : "Salvar Alterações"}
                 </span>
                 <button 
@@ -4156,7 +4156,7 @@ export default function Bio() {
                     handleSave();
                   }}
                   disabled={saving}
-                  className="gm-floating-save-btn w-14 h-14 hover:brightness-110 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 disabled:opacity-50 border border-white/20 cursor-pointer outline-none"
+                  className="gm-floating-save-btn w-14 h-14 hover:brightness-110 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 border border-white/20 cursor-pointer outline-none"
                   style={{ backgroundColor: (bioConfig as any).brand_color || bioConfig.color || 'var(--gm-primary)' }}
                   title="Salvar todas as alterações da Bio"
                 >
@@ -4172,7 +4172,7 @@ export default function Bio() {
 
               {/* PREVIEW BUTTON */}
               <div className="relative group flex items-center">
-                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-2xl whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
+                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
                   Visualizar Prévia
                 </span>
                 <button 
@@ -4202,7 +4202,7 @@ export default function Bio() {
           {/* Top Center Device Switcher */}
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="fixed top-4 left-1/2 -tranzinc-x-1/2 z-[120] bg-zinc-950/90 backdrop-blur-xl border border-zinc-800/80 p-1.5 rounded-full flex items-center gap-1.5 shadow-2xl pointer-events-auto"
+            className="fixed top-4 left-1/2 -tranzinc-x-1/2 z-[120] bg-zinc-950/90 backdrop-blur-xl border border-zinc-800/80 p-1.5 rounded-full flex items-center gap-1.5 shadow-lg pointer-events-auto"
           >
             <button
               onClick={() => setPreviewMode("smartphone")}
@@ -4234,7 +4234,7 @@ export default function Bio() {
               e.stopPropagation();
               setPreviewOpen(false);
             }}
-            className="fixed top-4 right-4 z-[120] bg-zinc-800/90 hover:bg-red-600 text-white font-bold px-4 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-2xl transition-all duration-300 pointer-events-auto border border-white/10"
+            className="fixed top-4 right-4 z-[120] bg-zinc-800/90 hover:bg-red-600 text-white font-bold px-4 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-lg transition-all duration-300 pointer-events-auto border border-white/10"
           >
             <X className="w-5 h-5" />
             <span className="text-sm">Fechar</span>
@@ -4255,7 +4255,7 @@ export default function Bio() {
               </button>
 
               {/* Smartphone frame */}
-              <div className="w-full h-full p-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[3rem] shadow-2xl relative">
+              <div className="w-full h-full p-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[3rem] shadow-lg relative">
                 {/* Quick internal close button directly inside the smartphone bezel */}
                 <button 
                   onClick={() => setPreviewOpen(false)}
@@ -4293,7 +4293,7 @@ export default function Bio() {
           ) : (
             <div 
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-5xl h-[85vh] max-h-[850px] animate-in zoom-in-95 duration-300 cursor-default bg-[#0a0a0c] border border-white/15 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+              className="relative w-full max-w-5xl h-[85vh] max-h-[850px] animate-in zoom-in-95 duration-300 cursor-default bg-[#0a0a0c] border border-white/15 rounded-lg shadow-lg flex flex-col overflow-hidden"
             >
               {/* Browser Top Window Controls */}
               <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800 shrink-0">

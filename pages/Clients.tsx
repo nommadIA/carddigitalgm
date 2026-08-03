@@ -1,16 +1,20 @@
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { supabase } from "../lib/supabase";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
 import NewClientPage from "./clients/NewClientPage";
 import EditClientPage from "./clients/EditClientPage";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
-import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User, Zap } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
 import { openWhatsapp } from "../services/whatsApp";
 import ExpandedClientRow from "../components/clients/ExpandedClientRow";
+import { SectionDivider } from "../components/ui/SectionDivider";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import SafeResponsive from "../components/ui/SafeResponsive";
 
 type ClientRow = {
   id: string;
@@ -80,6 +84,228 @@ function useIsMobile(breakpoint = 860) {
     return () => window.removeEventListener("resize", onResize);
   }, [breakpoint]);
   return isMobile;
+}
+
+function VirtualizedClientList({
+  items,
+  expandedRows,
+  toggleRow,
+  tab,
+  isMobile,
+  avatarStyle,
+  restore,
+  confirmHardDelete,
+  setEditPageId,
+  openWhatsApp,
+  copyToClipboard,
+  setToast,
+  softDelete,
+}: {
+  items: ClientRow[];
+  expandedRows: Set<string>;
+  toggleRow: (id: string) => void;
+  tab: "ATIVOS" | "LIXEIRA";
+  isMobile: boolean;
+  avatarStyle: React.CSSProperties;
+  restore: (id: string) => void;
+  confirmHardDelete: (id: string) => void;
+  setEditPageId: (id: string) => void;
+  openWhatsApp: (phone: string) => void;
+  copyToClipboard: (text: string) => Promise<boolean>;
+  setToast: (msg: string) => void;
+  softDelete: (id: string) => void;
+}) {
+  const parentRef = React.useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 72,
+    overscan: 10,
+  });
+
+  const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
+    const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 group";
+    if (tone === "orange") return `${base} btn-action-edit bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] text-[var(--gm-primary)] hover:text-white`;
+    if (tone === "green") return `${base} btn-whatsapp bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] text-[var(--gm-primary)] hover:text-white`;
+    if (tone === "red") return `${base} btn-action-delete bg-red-500/10 border border-red-500/20 hover:bg-red-500 text-red-500 hover:text-white`;
+    return `${base} btn-action-neutral bg-slate-500/10 border border-slate-500/20 hover:bg-slate-500 text-slate-400 hover:text-white`;
+  };
+
+  return (
+    <Card className="!p-0 overflow-hidden">
+      <div className="overflow-x-auto">
+        <div className="text-sm min-w-full">
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/10 font-bold opacity-60 uppercase tracking-wider text-xs bg-black/20">
+            <div>Avatar</div>
+            <div>Cliente</div>
+            <div className="text-right">Ações</div>
+          </div>
+
+          <div
+            ref={parentRef}
+            className="overflow-y-auto max-h-[680px] no-scrollbar relative"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const c = items[virtualRow.index];
+                if (!c) return null;
+
+                const wppDigits = onlyDigits(c.whatsapp || c.phone || "");
+                const prettyWpp = fmtPhoneBR(c.whatsapp || c.phone || "");
+                const hasWpp = wppDigits.length >= 10;
+
+                return (
+                  <div
+                    key={c.id}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                  >
+                    <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center">
+                      <div className="flex justify-between sm:contents">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => toggleRow(c.id)}
+                            className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
+                          >
+                            <ChevronDown
+                              size={18}
+                              className={`transition-transform duration-300 ${expandedRows.has(c.id) ? "rotate-180" : ""}`}
+                            />
+                          </button>
+                          <div style={avatarStyle}>
+                            <User size={isMobile ? 18 : 20} className="text-[var(--gm-primary)]" />
+                          </div>
+                          <div className="sm:hidden font-extrabold text-white truncate text-sm">
+                            {c.name}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="font-medium truncate hidden sm:block">
+                        <div className="font-extrabold text-white text-base truncate">{c.name}</div>
+                        <div className="mt-1 text-xs text-slate-400 flex items-center gap-3">
+                          {prettyWpp ? (
+                            <span className="flex items-center gap-1.5">
+                              <WhatsAppIcon size={14} className="text-[var(--gm-primary)] shrink-0" /> {prettyWpp}
+                            </span>
+                          ) : null}
+                          {c.email ? (
+                            <span className="flex items-center gap-1.5">
+                              <Mail size={13} className="text-slate-400 shrink-0" /> {c.email}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="sm:hidden mt-2 text-xs text-slate-400 flex flex-col gap-1">
+                        {prettyWpp ? (
+                          <span className="flex items-center gap-1.5">
+                            <WhatsAppIcon size={14} className="text-[var(--gm-primary)] shrink-0" /> {prettyWpp}
+                          </span>
+                        ) : null}
+                        {c.email ? (
+                          <span className="flex items-center gap-1.5">
+                            <Mail size={13} className="text-slate-400 shrink-0" /> {c.email}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
+                        <div className="flex items-center gap-2">
+                          {tab === "LIXEIRA" ? (
+                            <>
+                              <button className={listBtnClass("green")} title="Restaurar" type="button" onClick={() => restore(c.id)}>
+                                <RotateCcw size={16} />
+                              </button>
+                              <button
+                                className={listBtnClass("red")}
+                                title="Excluir definitivo"
+                                type="button"
+                                onClick={() => confirmHardDelete(c.id)}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button className={listBtnClass("orange")} title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
+                                <Pencil size={16} />
+                              </button>
+
+                              <button
+                                className={`${listBtnClass("green")} ${!hasWpp ? "opacity-50" : ""}`}
+                                title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
+                                type="button"
+                                onClick={() => {
+                                  if (!hasWpp) return setToast("Sem WhatsApp cadastrado");
+                                  openWhatsApp(wppDigits);
+                                }}
+                              >
+                                <WhatsAppIcon size={16} />
+                              </button>
+
+                              <button
+                                className={listBtnClass("neutral")}
+                                title="Copiar telefone"
+                                type="button"
+                                onClick={async () => {
+                                  const txt = prettyWpp || "";
+                                  if (!txt) return setToast("Sem telefone");
+                                  const ok = await copyToClipboard(txt);
+                                  setToast(ok ? "Telefone copiado" : "Falha ao copiar");
+                                }}
+                              >
+                                <Copy size={16} />
+                              </button>
+
+                              <button
+                                className={listBtnClass("neutral")}
+                                title="Copiar e-mail"
+                                type="button"
+                                onClick={async () => {
+                                  const txt = (c.email || "").trim();
+                                  if (!txt) return setToast("Sem e-mail");
+                                  const ok = await copyToClipboard(txt);
+                                  setToast(ok ? "E-mail copiado" : "Falha ao copiar");
+                                }}
+                              >
+                                <Mail size={16} />
+                              </button>
+
+                              <button className={listBtnClass("red")} title="Mover para lixeira" type="button" onClick={() => softDelete(c.id)}>
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {expandedRows.has(c.id) && <ExpandedClientRow clientId={c.id} />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
 }
 
 export default function Clients() {
@@ -164,6 +390,36 @@ export default function Clients() {
     // Sort alphabetically by name
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }, [rows, tab, q]);
+
+  // Resumo: clientes ativos, novos nos últimos 30 dias e cadastros por mês (dado real)
+  const clientSummary = useMemo(() => {
+    const active = rows.filter((r) => !r.deleted_at);
+    const now = new Date();
+    const in30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const novos30d = active.filter((r) => r.created_at && new Date(r.created_at) >= in30d).length;
+
+    const monthLabels: { key: string; label: string }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      monthLabels.push({
+        key: `${d.getFullYear()}-${d.getMonth()}`,
+        label: d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
+      });
+    }
+    const counts: Record<string, number> = {};
+    active.forEach((r) => {
+      if (!r.created_at) return;
+      const d = new Date(r.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+
+    return {
+      totalAtivos: active.length,
+      novos30d,
+      chartData: monthLabels.map((m) => ({ name: m.label, value: counts[m.key] || 0 })),
+    };
+  }, [rows]);
 
   async function softDelete(id: string) {
     try {
@@ -253,12 +509,58 @@ export default function Clients() {
       <Page
         title="Clientes"
         actions={
-          <button className="gm-btn" type="button" onClick={() => setOpenNewPage(true)}>
+          <button className="gm-btn h-12 text-xs uppercase tracking-wider" type="button" onClick={() => setOpenNewPage(true)}>
             <Plus size={16} />
             Novo Cliente
           </button>
         }
       >
+        <div className="mb-4 space-y-4">
+          <SectionDivider label="Resumo" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+              <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
+                Clientes ativos
+              </div>
+              <div className="text-2xl font-extrabold text-[color:var(--gm-text)] mt-1.5">
+                {clientSummary.totalAtivos}
+              </div>
+            </div>
+
+            <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+              <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
+                Novos nos últimos 30 dias
+              </div>
+              <div className="text-2xl font-extrabold text-emerald-400 mt-1.5">
+                {clientSummary.novos30d}
+              </div>
+            </div>
+
+            <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+              <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider mb-2">
+                Cadastros por mês
+              </div>
+              <div className="h-20 relative overflow-hidden w-full">
+                <SafeResponsive height={80}>
+                  <BarChart data={clientSummary.chartData} barSize={16}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="name" stroke="#666" fontSize={9} tickLine={false} axisLine={false} />
+                    <YAxis hide allowDecimals={false} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                      contentStyle={{ backgroundColor: "#0f1117", border: "1px solid #30363d", borderRadius: "8px", color: "#fff", fontSize: 12 }}
+                    />
+                    <Bar dataKey="value" name="Clientes" radius={[4, 4, 0, 0]} fill="var(--gm-primary)" />
+                  </BarChart>
+                </SafeResponsive>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <SectionDivider label="Filtros" />
+        </div>
         <Card className="p-4">
           <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
             <div className="flex-1">
@@ -289,7 +591,13 @@ export default function Clients() {
           </div>
         </Card>
 
-        <div style={{ height: 12 }} />
+        <div className="mb-2 flex items-center justify-between text-xs text-slate-400 px-1">
+          <SectionDivider label="Lista de clientes" />
+          <span className="shrink-0 ml-4 px-2.5 py-1 rounded-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5">
+            <Zap size={13} /> Virtual Scroll ({filtered.length})
+          </span>
+        </div>
+        <div style={{ height: 8 }} />
 
         {loading ? (
           <div style={gridWrap}>
@@ -300,139 +608,21 @@ export default function Clients() {
         ) : filtered.length === 0 ? (
           <Card className="p-10 text-center opacity-70 border-dashed">Nenhum cliente encontrado.</Card>
         ) : (
-          <Card className="!p-0 overflow-hidden">
-            <div className="overflow-x-auto">
-              <div className="text-sm min-w-full">
-                <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/10 font-bold opacity-60 uppercase tracking-wider text-xs">
-                  <div>Avatar</div>
-                  <div>Cliente</div>
-                  <div className="text-right">Ações</div>
-                </div>
-                <div className="pb-2">
-                  {filtered.map((c) => {
-                    const wppDigits = onlyDigits(c.whatsapp || c.phone || "");
-                    const prettyWpp = fmtPhoneBR(c.whatsapp || c.phone || "");
-                    const hasWpp = wppDigits.length >= 10;
-
-                    const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-                      const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 group";
-                      if (tone === "orange") return `${base} btn-action-edit bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] text-[var(--gm-primary)] hover:text-white`;
-                      if (tone === "green") return `${base} btn-whatsapp bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] text-[var(--gm-primary)] hover:text-white`;
-                      if (tone === "red") return `${base} btn-action-delete bg-red-500/10 border border-red-500/20 hover:bg-red-500 text-red-500 hover:text-white`;
-                      return `${base} btn-action-neutral bg-slate-500/10 border border-slate-500/20 hover:bg-slate-500 text-slate-400 hover:text-white`;
-                    };
-
-                    return (
-                      <div key={c.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center">
-                          <div className="flex justify-between sm:contents">
-                            <div className="flex items-center gap-3">
-                              <button
-                                onClick={() => toggleRow(c.id)}
-                                className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
-                              >
-                                <ChevronDown size={18} className={`transition-transform duration-300 ${expandedRows.has(c.id) ? "rotate-180" : ""}`} />
-                              </button>
-                              <div style={avatarStyle}>
-                                <User size={isMobile ? 18 : 20} className="text-[var(--gm-primary)]" />
-                              </div>
-                              <div className="sm:hidden font-extrabold text-white truncate text-sm">
-                                {c.name}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="font-medium truncate hidden sm:block">
-                            <div className="font-extrabold text-white text-base truncate">{c.name}</div>
-                            <div className="mt-1 text-xs text-slate-400 flex items-center gap-3">
-                              {prettyWpp ? <span className="flex items-center gap-1.5"><WhatsAppIcon size={14} className="text-[var(--gm-primary)] shrink-0" /> {prettyWpp}</span> : null}
-                              {c.email ? <span className="flex items-center gap-1.5"><Mail size={13} className="text-slate-400 shrink-0" /> {c.email}</span> : null}
-                            </div>
-                          </div>
-
-                          <div className="sm:hidden mt-2 text-xs text-slate-400 flex flex-col gap-1">
-                            {prettyWpp ? <span className="flex items-center gap-1.5"><WhatsAppIcon size={14} className="text-[var(--gm-primary)] shrink-0" /> {prettyWpp}</span> : null}
-                            {c.email ? <span className="flex items-center gap-1.5"><Mail size={13} className="text-slate-400 shrink-0" /> {c.email}</span> : null}
-                          </div>
-
-                          <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
-                            <div className="flex items-center gap-2">
-                              {tab === "LIXEIRA" ? (
-                                <>
-                                  <button className={listBtnClass("green")} title="Restaurar" type="button" onClick={() => restore(c.id)}>
-                                    <RotateCcw size={16} />
-                                  </button>
-                                  <button
-                                    className={listBtnClass("red")}
-                                    title="Excluir definitivo"
-                                    type="button"
-                                    onClick={() => confirmHardDelete(c.id)}
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button className={listBtnClass("orange")} title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
-                                    <Pencil size={16} />
-                                  </button>
-
-                                  <button
-                                    className={`${listBtnClass("green")} ${!hasWpp ? 'opacity-50' : ''}`}
-                                    title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
-                                    type="button"
-                                    onClick={() => {
-                                      if (!hasWpp) return setToast("Sem WhatsApp cadastrado");
-                                      openWhatsApp(wppDigits);
-                                    }}
-                                  >
-                                    <WhatsAppIcon size={16} className="text-[var(--gm-primary)] group-hover:text-white transition-colors" />
-                                  </button>
-
-                                  <button
-                                    className={listBtnClass("neutral")}
-                                    title="Copiar telefone"
-                                    type="button"
-                                    onClick={async () => {
-                                      const txt = prettyWpp || "";
-                                      if (!txt) return setToast("Sem telefone");
-                                      const ok = await copyToClipboard(txt);
-                                      setToast(ok ? "Telefone copiado" : "Falha ao copiar");
-                                    }}
-                                  >
-                                    <Copy size={16} />
-                                  </button>
-
-                                  <button
-                                    className={listBtnClass("neutral")}
-                                    title="Copiar e-mail"
-                                    type="button"
-                                    onClick={async () => {
-                                      const txt = (c.email || "").trim();
-                                      if (!txt) return setToast("Sem e-mail");
-                                      const ok = await copyToClipboard(txt);
-                                      setToast(ok ? "E-mail copiado" : "Falha ao copiar");
-                                    }}
-                                  >
-                                    <Mail size={16} />
-                                  </button>
-
-                                  <button className={listBtnClass("red")} title="Mover para lixeira" type="button" onClick={() => softDelete(c.id)}>
-                                    <Trash2 size={16} />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        {expandedRows.has(c.id) && <ExpandedClientRow clientId={c.id} />}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </Card>
+          <VirtualizedClientList
+            items={filtered}
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            tab={tab}
+            isMobile={isMobile}
+            avatarStyle={avatarStyle}
+            restore={restore}
+            confirmHardDelete={confirmHardDelete}
+            setEditPageId={setEditPageId}
+            openWhatsApp={openWhatsApp}
+            copyToClipboard={copyToClipboard}
+            setToast={setToast}
+            softDelete={softDelete}
+          />
         )}
       </Page>
 

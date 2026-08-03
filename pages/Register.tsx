@@ -59,8 +59,8 @@ export default function Register() {
         className="w-full max-w-[560px] relative z-10"
       >
         <Card
-          className="p-8 md:p-12 bg-black/40 backdrop-blur-2xl border-white/10 shadow-2xl relative overflow-hidden"
-          style={{ borderRadius: 32 }}
+          className="p-8 md:p-12 relative overflow-hidden"
+          style={{ borderRadius: 8 }}
         >
           {/* CABEÇALHO COMO ANTES */}
           <div className="flex flex-col items-center mb-8">
@@ -74,19 +74,19 @@ export default function Register() {
               <img
                 src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/brand_assets_logo/FIVE%20ICON%20CARDDIGITAL%20GM.svg"
                 alt="Logo CardDigital GM"
-                className="w-24 h-24 rounded-3xl shadow-2xl shadow-black/60 hover:scale-105 transition-transform duration-500 relative z-10"
+                className="w-24 h-24 rounded-lg shadow-lg shadow-black/60 hover:scale-105 transition-transform duration-500 relative z-10"
               />
             </motion.div>
 
             <div className="text-4xl font-light text-white leading-none">
               <span className="opacity-95">CardDigital</span>{" "}
-              <span className="text-[#ff7a00] font-bold">GM</span>
+              <span className="text-[var(--gm-primary)] font-bold">GM</span>
             </div>
             <div className="text-sm opacity-60 mt-3">Crie sua conta para começar</div>
           </div>
 
           {errorMessage && (
-            <div className="text-red-200 text-sm text-center p-4 rounded-2xl border border-red-500/20 bg-red-500/10 mb-4">
+            <div className="text-red-200 text-sm text-center p-4 rounded-lg border border-red-500/20 bg-red-500/10 mb-4">
               {errorMessage}
             </div>
           )}
@@ -99,7 +99,7 @@ export default function Register() {
                   <User size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-2xl w-full text-white"
+                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -114,7 +114,7 @@ export default function Register() {
                   <Mail size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-2xl w-full text-white"
+                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -130,7 +130,7 @@ export default function Register() {
                   <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 !pr-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-2xl w-full text-white"
+                  className="gm-input !pl-12 !pr-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -154,7 +154,7 @@ export default function Register() {
                   <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base bg-black/40 backdrop-blur-md border-[var(--gm-primary)]/40 focus:bg-black/60 focus:border-[var(--gm-primary)] transition-all rounded-2xl w-full text-white"
+                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

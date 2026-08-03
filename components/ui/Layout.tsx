@@ -588,7 +588,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       />
 
       {/* MOBILE TOP HEADER */}
-      <div className="fixed top-0 left-0 right-0 h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-black/40 backdrop-blur-[20px] saturate-[1.8] border-b border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+      <div className="fixed top-0 left-0 right-0 h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-[var(--gm-surface)] border-b border-[var(--gm-border)]">
         <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center shrink-0">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
@@ -646,7 +646,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         {/* Overlapping vertical border collapse/expand Toggle Button - White circle in Light theme, Black circle in Dark theme, with Orange border & Orange chevron arrow */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-1/2 -translate-y-1/2 -right-[11px] w-[22px] h-[22px] rounded-full border-[2.5px] border-[var(--gm-primary)] flex items-center justify-center text-[var(--gm-primary)] transition-all z-[100] shadow-[0_2px_10px_rgba(0,0,0,0.3)] cursor-pointer shrink-0"
+          className="absolute top-7 -right-[11px] w-[24px] h-[24px] rounded-full border-[2.5px] border-[var(--gm-primary)] flex items-center justify-center text-[var(--gm-primary)] transition-all z-[100] shadow-[0_2px_10px_rgba(0,0,0,0.3)] cursor-pointer shrink-0 hover:scale-110"
           style={{
             backgroundColor: themeMode === "dark" ? "#000000" : "#ffffff",
             borderColor: "var(--gm-primary)",
@@ -656,9 +656,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
         >
           {collapsed ? (
-            <ChevronRight size={12} className="animate-arrow-right text-[var(--gm-primary)]" />
+            <ChevronRight size={13} className="animate-arrow-right text-[var(--gm-primary)]" />
           ) : (
-            <ChevronLeft size={12} className="animate-arrow-left text-[var(--gm-primary)]" />
+            <ChevronLeft size={13} className="animate-arrow-left text-[var(--gm-primary)]" />
           )}
         </button>
 
@@ -691,7 +691,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           </div>
         )}
 
-        <nav className="gm-nav">
+        <nav className="gm-nav flex-1 flex flex-col justify-start py-1 overflow-visible gap-0.5">
           {filteredNav.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -705,45 +705,16 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="gm-sidebar-footer w-full flex flex-col pb-4 gap-2 mt-auto">
+        <div className="gm-sidebar-footer w-full flex flex-col pb-2 gap-1 mt-auto">
           {collapsed ? (
             <div className="gm-nav w-full">
-              {/* Tema Claro/Escuro (Collapsed) */}
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toggleTheme();
-                }}
-                className="relative flex items-center justify-center p-1.5"
-                title={themeMode === "dark" ? "Tema Escuro Ativo (Clique para alternar)" : "Tema Claro Ativo (Clique para alternar)"}
-              >
-                <div
-                  role="switch"
-                  aria-checked={themeMode === "dark"}
-                  className={`relative shrink-0 w-9 h-5 rounded-full p-0.5 cursor-pointer transition-all duration-200 border flex items-center ${
-                    themeMode === "dark"
-                      ? "bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                      : "bg-emerald-600 border-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.35)]"
-                  }`}
-                >
-                  <div
-                    className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-out flex items-center justify-center ${
-                      themeMode === "dark" ? "translate-x-4" : "translate-x-0"
-                    }`}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                  </div>
-                </div>
-              </a>
-
               <a
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
                   handleBellClick();
                 }}
-                className="active"
+                className=""
                 title="Notificações e Atualizações"
               >
                 <div className="relative shrink-0 flex items-center justify-center">
@@ -760,7 +731,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   e.preventDefault();
                   signOut();
                 }}
-                className="active"
+                className=""
                 title="Sair"
                 aria-label="Sair"
               >
@@ -769,77 +740,13 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             </div>
           ) : (
             <div className="gm-nav w-full">
-              {/* Tema Claro/Escuro (Expanded) */}
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toggleTheme();
-                }}
-                className="text-left flex items-center justify-between w-full gap-2 p-1.5 rounded-xl transition-all"
-                title={themeMode === "dark" ? "Alternar para Tema Claro" : "Alternar para Tema Escuro"}
-              >
-                <div className="relative shrink-0 flex items-center gap-2.5 min-w-0">
-                  {themeMode === "dark" ? (
-                    <Moon size={18} className="text-emerald-400 shrink-0" />
-                  ) : (
-                    <Sun size={18} className="text-orange-500 shrink-0" />
-                  )}
-                  <div className="flex flex-col min-w-0 gap-0.5">
-                    <span className={`text-xs font-black leading-tight ${
-                      themeMode === "dark" ? "text-slate-200 dark:text-zinc-200" : "text-orange-600 dark:text-orange-500"
-                    }`}>
-                      Tema {themeMode === "dark" ? "Escuro" : "Claro"}
-                    </span>
-                    <div>
-                      {themeMode === "dark" ? (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[7.5px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                          <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                          ATIVO
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[7.5px] font-black uppercase tracking-wider bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 animate-pulse" />
-                          ATIVO
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Chave Verde Clicável (Toggle Switch) */}
-                <div
-                  role="switch"
-                  aria-checked={themeMode === "dark"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    toggleTheme();
-                  }}
-                  className={`relative shrink-0 w-9 h-5 rounded-full p-0.5 cursor-pointer transition-all duration-200 border flex items-center ${
-                    themeMode === "dark"
-                      ? "bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                      : "bg-emerald-600 border-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.35)]"
-                  }`}
-                  title={themeMode === "dark" ? "Tema Escuro Ativo - Clique para alterar" : "Tema Claro Ativo - Clique para alterar"}
-                >
-                  <div
-                    className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-out flex items-center justify-center ${
-                      themeMode === "dark" ? "translate-x-4" : "translate-x-0"
-                    }`}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                  </div>
-                </div>
-              </a>
-
               <a
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
                   handleBellClick();
                 }}
-                className="active text-left"
+                className="text-left"
                 title="Notificações e Atualizações"
               >
                 <div className="relative shrink-0 flex items-center">
@@ -866,13 +773,13 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   e.preventDefault();
                   signOut();
                 }}
-                className="active text-left"
+                className="text-left"
                 title="Sair"
               >
                 <LogOut size={18} className="transition-transform hover:scale-110" />
                 <span className="text-sm text-left">Sair</span>
               </a>
-              <div className="mt-4 text-[11px] text-slate-500 text-center opacity-60 pointer-events-none">
+              <div className="mt-2 text-[11px] text-slate-500 text-center opacity-60 pointer-events-none">
                 <i>Desenvolvido por</i> <span className="font-bold text-[var(--gm-menu-title)]">CardDigital</span> <span className="font-bold text-[var(--gm-menu-primary)] gm-logo-highlight">GM</span>
               </div>
             </div>
@@ -890,15 +797,15 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* SCROLL INDICATORS CONTAINER */}
       {createPortal(
         <div className="fixed right-4 bottom-24 z-[10001] flex flex-col gap-3 pointer-events-none" style={{ zIndex: 10001 }}>
-          {/* WHATSAPP SUPPORT BUTTON (GLASS) */}
+          {/* WHATSAPP SUPPORT BUTTON (GREEN BOX WITH WHITE ICON) */}
           {location.pathname === "/" && (
             <button
               onClick={() => openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.")}
-              className="transition-all duration-200 flex items-center justify-center w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#20ba5a] border border-white/20 shadow-[0_4px_16px_rgba(37,211,102,0.4)] pointer-events-auto cursor-pointer"
+              className="transition-all duration-200 flex items-center justify-center w-12 h-12 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white border border-white/20 shadow-[0_4px_20px_rgba(37,211,102,0.45)] pointer-events-auto cursor-pointer hover:scale-105 active:scale-95"
               aria-label="Ajuda via WhatsApp"
               title="Ajuda via WhatsApp"
             >
-              <WhatsAppIcon size={24} className="text-white" />
+              <WhatsAppIcon size={26} className="text-white" />
             </button>
           )}
 
@@ -960,7 +867,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* UPDATE DIALOG MODAL (NOTIFICAÇÕES CENTER) */}
       {showUpdateModal && (
         <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" style={{ zIndex: 1000000 }}>
-          <div className="relative w-full max-w-md bg-[#131416]/98 border border-zinc-800 rounded-2xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col gap-4 text-white overflow-hidden font-sans">
+          <div className="relative w-full max-w-md bg-[#131416]/98 border border-zinc-800 rounded-lg p-5 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col gap-4 text-white overflow-hidden font-sans">
             
             {/* Ambient Glow */}
             <div className="absolute -top-12 -left-12 w-28 h-28 bg-[var(--gm-primary)]/20 rounded-full blur-2xl pointer-events-none" />
@@ -1111,7 +1018,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               ) : (
                 /* EMPTY STATE - MATCHING SCREENSHOT EXACTLY */
                 <div className="flex flex-col items-center justify-center py-10 px-4 text-center space-y-3 animate-fade-in my-auto mx-auto w-full h-full min-h-[200px]">
-                  <div className="w-14 h-14 rounded-2xl bg-zinc-800/25 border border-zinc-850 flex items-center justify-center text-zinc-550">
+                  <div className="w-14 h-14 rounded-lg bg-zinc-800/25 border border-zinc-850 flex items-center justify-center text-zinc-550">
                     <Bell size={24} className="opacity-30" />
                   </div>
                   <div className="space-y-1">

@@ -1,11 +1,9 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   FileText,
   Users,
-  Receipt,
   ShoppingCart,
   Smartphone,
   BarChart3,
@@ -20,22 +18,19 @@ import { useAuth } from "../../store/AuthContext";
 type ThemeMode = "dark" | "light";
 
 const items = [
-  { to: "/", label: "Início", icon: LayoutDashboard },
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/budgets", label: "Orçamentos", icon: FileText },
   { to: "/clients", label: "Clientes", icon: Users },
-  { to: "/expenses", label: "Despesas", icon: Receipt },
+  { to: "/financial", label: "Financeiro", icon: BarChart3 },
   { to: "/market", label: "Mercado", icon: ShoppingCart },
   { to: "/notes", label: "Notas", icon: StickyNote },
-  { to: "/minha-bio", label: "Bio", icon: Smartphone },
-  { to: "/financial", label: "Financeiro", icon: BarChart3 },
+  { to: "/minha-bio", label: "Bio / Portfólio", icon: Smartphone },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 function applyTheme(mode: ThemeMode) {
   const root = document.documentElement;
-  // Use data-theme attribute which is standard in this app
   root.setAttribute("data-theme", mode);
-  // Also toggle classes for CSS targeting specific to premium styling
   root.classList.toggle("gm-light", mode === "light");
   root.classList.toggle("gm-dark", mode === "dark");
   localStorage.setItem("theme", mode);
@@ -58,11 +53,18 @@ export default function Sidebar() {
 
   return (
     <div className="gm-sidebar">
-      <div className="mb-8">
+      <div className="mb-8 px-1">
         <div className="flex items-center gap-3">
-          <div className="flex flex-col">
-            <div className="text-xl font-bold tracking-tight text-[var(--gm-menu-title)]">CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span></div>
-            <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">Enterprise</div>
+          <div className="w-10 h-10 rounded-lg bg-[#FF5A1A] flex items-center justify-center font-black text-white text-base shadow-md shadow-[#FF5A1A]/30 shrink-0">
+            GM
+          </div>
+          <div className="flex flex-col min-w-0">
+            <div className="text-base font-extrabold tracking-tight text-white flex items-center gap-1 truncate">
+              CardDigital <span className="text-[#FF5A1A]">GM</span>
+            </div>
+            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+              Forge System
+            </div>
           </div>
         </div>
       </div>
@@ -75,47 +77,54 @@ export default function Sidebar() {
               key={it.to}
               to={it.to}
               title={it.label}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  isActive
+                    ? "bg-transparent text-white font-bold border-l-2 border-[#FF5A1A]"
+                    : "text-zinc-400 hover:text-white bg-transparent"
+                }`
+              }
             >
-              <Icon size={18} />
+              <Icon size={18} className="shrink-0" />
               <span>{it.label}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="gm-sidebar-footer">
-        <button className="gm-btn gm-btn-soft w-full justify-between items-center" onClick={toggleMode} type="button">
-          <div className="flex items-center gap-2">
-            <IconMode size={18} className={mode === "light" ? "text-orange-500" : "text-emerald-400"} />
-            <span className={mode === "light" ? "text-orange-600 dark:text-orange-500 font-bold" : ""}>
-              {mode === "dark" ? "Tema Escuro" : "Tema Claro"}
-            </span>
+      <div className="gm-sidebar-footer mt-auto pt-6 border-t border-[#222222]">
+        <button
+          className="gm-btn gm-btn-soft w-full justify-between items-center text-xs font-semibold py-2 px-3 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] border border-[#222222] transition-colors"
+          onClick={toggleMode}
+          type="button"
+        >
+          <div className="flex items-center gap-2 text-zinc-300">
+            <IconMode size={16} className={mode === "light" ? "text-orange-500" : "text-emerald-400"} />
+            <span>{mode === "dark" ? "Tema Escuro" : "Tema Claro"}</span>
           </div>
           <div
-            className={`relative shrink-0 w-9 h-5 rounded-full p-0.5 transition-all duration-200 border flex items-center ${
+            className={`relative shrink-0 w-8 h-4 rounded-full p-0.5 transition-all duration-200 border flex items-center ${
               mode === "dark"
                 ? "bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                : "bg-emerald-600 border-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.35)]"
+                : "bg-zinc-600 border-zinc-500"
             }`}
           >
             <div
-              className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-out flex items-center justify-center ${
-                mode === "dark" ? "translate-x-4" : "translate-x-0"
+              className={`w-3 h-3 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-out ${
+                mode === "dark" ? "translate-x-3.5" : "translate-x-0"
               }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            </div>
+            />
           </div>
         </button>
-        
-        <button 
-          className="gm-btn gm-btn-soft w-full justify-start mt-2 text-red-400 hover:text-red-300" 
-          onClick={signOut} 
+
+        <button
+          className="w-full flex items-center gap-2 px-3 py-2 mt-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+          onClick={signOut}
           type="button"
           title="Sair"
         >
-          <LogOut size={18} />
-          <span>Sair</span>
+          <LogOut size={16} />
+          <span>Sair da Conta</span>
         </button>
       </div>
     </div>
