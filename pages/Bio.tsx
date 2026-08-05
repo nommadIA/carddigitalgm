@@ -1417,14 +1417,20 @@ export default function Bio() {
               </span>
               <span className="text-zinc-400 dark:text-zinc-600 text-2xl font-light mx-0.5">|</span>
               <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-gradient-to-br dark:from-white/10 dark:to-transparent border border-zinc-200 dark:border-white/10 flex items-center justify-center overflow-hidden shadow-md">
-                <img 
-                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                  alt="Logo" 
-                  className="w-full h-full object-cover"
-                />
+                {settings?.company_logo_url || bioConfig.logo_url ? (
+                  <img 
+                    src={settings?.company_logo_url || bioConfig.logo_url} 
+                    alt="Logo da Empresa" 
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-[var(--gm-primary)] font-black text-xs">
+                    {(settings?.company_name || bioConfig.title || "GM").substring(0, 2).toUpperCase()}
+                  </span>
+                )}
               </div>
               <span className="text-lg font-bold dark:text-white text-zinc-800 tracking-wide">
-                CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span>
+                {settings?.company_name || bioConfig.title || "CardDigital GM"}
               </span>
            </h3>
            <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>

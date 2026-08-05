@@ -9,6 +9,7 @@ import {
   setBudgetRemindersEnabled,
   syncAllBudgetAlarms,
 } from "../../lib/alarmSystem";
+import { readSettingsLocal } from "../../lib/settings";
 
 interface ReminderConfigModalProps {
   open: boolean;
@@ -134,7 +135,7 @@ export default function ReminderConfigModal({
       const title = "Teste de Notificação";
       const options = {
         body: "Seu sistema de lembretes está funcionando corretamente!",
-        icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg",
+        icon: readSettingsLocal()?.company_logo_url || "/icon.png",
         vibrate: [200, 100, 200],
         tag: "test-notification",
         renotify: true,

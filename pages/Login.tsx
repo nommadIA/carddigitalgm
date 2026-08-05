@@ -6,6 +6,7 @@ import { Lock, Mail, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { supabase } from "../lib/supabase";
+import { readSettingsLocal } from "../lib/settings";
 
 export default function Login() {
   const { signInWithPassword, checked, user } = useAuth();
@@ -18,6 +19,8 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+
+  const settings = useMemo(() => readSettingsLocal(), []);
 
   useEffect(() => {
     if (checked && user) navigate("/", { replace: true });
@@ -101,20 +104,27 @@ export default function Login() {
               transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
               className="relative mb-6 flex items-center justify-center"
             >
-              <div className="gm-logo-box" style={{ width: '110px', height: '110px' }}>
+              <div className="gm-logo-box flex items-center justify-center overflow-hidden" style={{ width: '110px', height: '110px' }}>
                 <div className="gm-logo-glow-wrapper"></div>
                 <div className="gm-logo-border-wrapper"></div>
-                <img
-                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
-                  alt="Logo CardDigital GM"
-                  className="gm-logo"
-                />
+                {settings?.company_logo_url ? (
+                  <img
+                    src={settings.company_logo_url}
+                    alt={settings.company_name || "Logo"}
+                    className="gm-logo w-full h-full object-contain p-2"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[var(--gm-primary)] font-black text-3xl uppercase tracking-wider">
+                    {settings?.company_name ? settings.company_name.substring(0, 2) : "GM"}
+                  </div>
+                )}
               </div>
             </motion.div>
 
             <div className="flex items-center justify-center text-center leading-none gap-2">
-              <span className="text-3xl font-light text-slate-200 tracking-tight">CardDigital</span>
-              <span className="text-4xl font-semibold text-[var(--gm-primary)]">GM</span>
+              <span className="text-3xl font-light text-slate-200 tracking-tight">
+                {settings?.company_name ? settings.company_name : <>CardDigital <span className="text-4xl font-semibold text-[var(--gm-primary)]">GM</span></>}
+              </span>
             </div>
             <div className="text-sm opacity-50 mt-4 uppercase tracking-[0.2em] font-bold">Acesso Restrito</div>
           </div>

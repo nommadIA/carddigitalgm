@@ -518,7 +518,7 @@ export default function Clients() {
         <div className="mb-4 space-y-4">
           <SectionDivider label="Resumo" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+            <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
               <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
                 Clientes ativos
               </div>
@@ -527,7 +527,7 @@ export default function Clients() {
               </div>
             </div>
 
-            <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+            <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
               <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
                 Novos nos últimos 30 dias
               </div>
@@ -536,7 +536,7 @@ export default function Clients() {
               </div>
             </div>
 
-            <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+            <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
               <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider mb-2">
                 Cadastros por mês
               </div>

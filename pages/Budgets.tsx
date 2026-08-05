@@ -620,7 +620,7 @@ export default function Budgets() {
           }
         }
         
-        // Highlight the selected budget
+        // Highlight the selected budget card without opening the editor modal
         setHighlightedId(id);
 
         // Wait a brief moment for React to change tabs and render the DOM elements, then scroll smoothly
@@ -631,7 +631,7 @@ export default function Budgets() {
           }
         }, 150);
 
-        // Keep highlighted for 6 seconds, then clear state and cleanup query param from the URL
+        // Keep highlighted for 2.5 seconds, then clear state and cleanup query param from the URL
         const timer = setTimeout(() => {
           setHighlightedId(null);
           
@@ -658,7 +658,7 @@ export default function Budgets() {
               { replace: true }
             );
           }
-        }, 6000);
+        }, 2500);
 
         return () => clearTimeout(timer);
       }
@@ -980,7 +980,7 @@ export default function Budgets() {
         <SectionDivider label="Resumo" />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+          <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
             <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
               Em aberto (aguardando + aprovado)
             </div>
@@ -990,7 +990,7 @@ export default function Budgets() {
             <div className="text-xs text-[color:var(--gm-text-tertiary)] mt-1">{statusSummary.countAtivo} orçamento(s)</div>
           </div>
 
-          <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm">
+          <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
             <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
               Concluídos
             </div>
@@ -1000,7 +1000,7 @@ export default function Budgets() {
             <div className="text-xs text-[color:var(--gm-text-tertiary)] mt-1">{statusSummary.countConcluido} orçamento(s)</div>
           </div>
 
-          <div className="bg-[color:var(--gm-surface)] border border-[color:var(--gm-border)] rounded-lg p-4 shadow-sm sm:col-span-1 col-span-1 overflow-hidden">
+          <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg sm:col-span-1 col-span-1 overflow-hidden">
             <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider mb-2">
               Valor por status
             </div>
@@ -1068,11 +1068,11 @@ export default function Budgets() {
           </button>
         </DraggableScroll>
 
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+        <div className="relative gm-dashboard-card !p-0 rounded-2xl overflow-hidden">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
-            className="gm-input !pl-14 py-3.5 bg-white/5 border-white/10 focus:border-[var(--gm-primary)] transition-all rounded-lg"
+            className="w-full !pl-12 pr-4 py-3.5 bg-transparent border-none text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--gm-primary)] transition-all rounded-2xl"
             placeholder="Buscar por cliente ou valor..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -1097,7 +1097,7 @@ export default function Budgets() {
           ))}
         </Grid>
       ) : filtered.length === 0 ? (
-        <Card className="text-center p-10 border-dashed opacity-70">Nenhum orçamento encontrado.</Card>
+        <Card className="gm-dashboard-card text-center p-12 opacity-90 rounded-2xl">Nenhum orçamento encontrado.</Card>
       ) : tab === "CONCLUIDOS" || tab === "CANCELADOS" || tab === "LIXEIRA" ? (
         <VirtualizedBudgetList
           items={filtered}

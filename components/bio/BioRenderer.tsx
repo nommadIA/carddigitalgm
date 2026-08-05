@@ -3153,11 +3153,17 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-[#FE540B]/20 rounded-lg blur-md scale-105" />
               <div className="relative w-20 h-20 rounded-lg border border-white/10 bg-[#0c0d12] flex items-center justify-center p-2.5 overflow-hidden">
-                <img 
-                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                  alt="CardDigital GM" 
-                  className="w-full h-full object-contain"
-                />
+                {config?.logo_url ? (
+                  <img 
+                    src={config.logo_url} 
+                    alt={config?.title || "Logo"} 
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[var(--gm-primary)] font-black text-2xl uppercase tracking-wider">
+                    {config?.title ? config.title.substring(0, 2) : "GM"}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -3166,7 +3172,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               Acesso Autorizado! 🚀
             </h3>
             <p className="text-sm font-semibold opacity-80 mb-6 font-funnel uppercase tracking-wider" style={{ color: "#FE540B" }}>
-              CardDigital GM
+              {config?.title || "CardDigital GM"}
             </p>
 
             {/* Content text */}

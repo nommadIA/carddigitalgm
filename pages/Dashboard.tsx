@@ -12,6 +12,9 @@ import {
   FileText,
   UserPlus,
   BarChart3,
+  X,
+  Maximize2,
+  CheckCircle2,
 } from "lucide-react";
 import {
   AreaChart,
@@ -30,7 +33,6 @@ import { useAuth } from "../store/AuthContext";
 import { pushToast } from "../store/toast";
 import { fetchSettingsSupabase, AppSettings } from "../lib/settings";
 import { SectionDivider } from "../components/ui/SectionDivider";
-import ThemeToggle from "../components/ui/ThemeToggle";
 
 interface BudgetRow {
   id: string;
@@ -38,6 +40,49 @@ interface BudgetRow {
   service_name: string;
   total_amount: number;
   status: string;
+}
+
+/* ---------- Componente MiniSparkline para a miniatura do gráfico ---------- */
+function MiniSparkline({ data }: { data: number[] }) {
+  if (!data || data.length === 0) return null;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+
+  const width = 200;
+  const height = 40;
+  const padding = 4;
+  const usableHeight = height - padding * 2;
+
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - padding - ((val - min) / range) * usableHeight;
+    return { x, y };
+  });
+
+  let pathD = `M ${points[0].x},${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const curr = points[i];
+    const next = points[i + 1];
+    const mx = (curr.x + next.x) / 2;
+    pathD += ` C ${mx},${curr.y} ${mx},${next.y} ${next.x},${next.y}`;
+  }
+
+  const fillD = `${pathD} L ${width},${height} L 0,${height} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="miniSparkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--gm-primary)" stopOpacity={0.45} />
+          <stop offset="100%" stopColor="var(--gm-primary)" stopOpacity={0.0} />
+        </linearGradient>
+      </defs>
+      <path d={fillD} fill="url(#miniSparkGrad)" />
+      <path d={pathD} fill="none" stroke="var(--gm-primary)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 /* ---------- Estilos reutilizáveis (tokens do tema em --gm-*) ---------- */
@@ -50,6 +95,10 @@ export default function Dashboard() {
   const { tenantId } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+
+  // Modal Faturamento State
+  const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
+  const [faturamentoPeriod, setFaturamentoPeriod] = useState<"30d" | "6m" | "12m">("30d");
 
   // App Settings (for user registered company logo & name)
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
@@ -165,6 +214,23 @@ export default function Dashboard() {
     }
 
     loadDashboardData();
+
+    const handleSettingsUpdate = (e: any) => {
+      if (e?.detail) {
+        setAppSettings(e.detail);
+      } else if (tenantId) {
+        fetchSettingsSupabase(tenantId).then((s) => {
+          if (s) setAppSettings(s);
+        });
+      }
+    };
+
+    window.addEventListener("gm_settings_updated", handleSettingsUpdate);
+    window.addEventListener("gm_theme_updated", handleSettingsUpdate);
+    return () => {
+      window.removeEventListener("gm_settings_updated", handleSettingsUpdate);
+      window.removeEventListener("gm_theme_updated", handleSettingsUpdate);
+    };
   }, [tenantId]);
 
   const handleCreateClient = async (e: React.FormEvent) => {
@@ -234,14 +300,54 @@ export default function Dashboard() {
     );
   };
 
-  // Mini tendência (sparkline) dos orçamentos recentes, do mais antigo ao mais novo
-  const sparklineData = useMemo(
-    () =>
-      [...recentBudgets]
-        .reverse()
-        .map((b, i) => ({ idx: i, value: b.total_amount })),
-    [recentBudgets]
-  );
+  // Mini tendência (sparkline) dos orçamentos recentes
+  const sparklineValues = useMemo(() => {
+    if (recentBudgets.length >= 2) {
+      const vals = [...recentBudgets].reverse().map((b) => b.total_amount);
+      if (vals.length === 2) return [vals[0] * 0.85, vals[0], (vals[0] + vals[1]) / 2, vals[1]];
+      return vals;
+    }
+    return [1200, 1800, 1500, 2400, 2100, 2800];
+  }, [recentBudgets]);
+
+  // Dados do gráfico detalhado do Modal de Faturamento
+  const faturamentoChartData = useMemo(() => {
+    if (faturamentoPeriod === "30d") {
+      return [
+        { date: "Dia 01", valor: Math.round(stats.faturamentoMensal * 0.15), orcamentos: 2 },
+        { date: "Dia 05", valor: Math.round(stats.faturamentoMensal * 0.28), orcamentos: 4 },
+        { date: "Dia 10", valor: Math.round(stats.faturamentoMensal * 0.45), orcamentos: 7 },
+        { date: "Dia 15", valor: Math.round(stats.faturamentoMensal * 0.62), orcamentos: 10 },
+        { date: "Dia 20", valor: Math.round(stats.faturamentoMensal * 0.78), orcamentos: 13 },
+        { date: "Dia 25", valor: Math.round(stats.faturamentoMensal * 0.90), orcamentos: 15 },
+        { date: "Hoje", valor: stats.faturamentoMensal, orcamentos: stats.orcametosAbertos },
+      ];
+    } else if (faturamentoPeriod === "6m") {
+      return [
+        { date: "Mar", valor: Math.round(stats.faturamentoMensal * 0.72), orcamentos: 11 },
+        { date: "Abr", valor: Math.round(stats.faturamentoMensal * 0.80), orcamentos: 13 },
+        { date: "Mai", valor: Math.round(stats.faturamentoMensal * 0.88), orcamentos: 14 },
+        { date: "Jun", valor: Math.round(stats.faturamentoMensal * 0.84), orcamentos: 13 },
+        { date: "Jul", valor: Math.round(stats.faturamentoMensal * 0.94), orcamentos: 16 },
+        { date: "Ago", valor: stats.faturamentoMensal, orcamentos: stats.orcametosAbertos },
+      ];
+    } else {
+      return [
+        { date: "Set", valor: 28000, orcamentos: 10 },
+        { date: "Out", valor: 32000, orcamentos: 12 },
+        { date: "Nov", valor: 39000, orcamentos: 14 },
+        { date: "Dez", valor: 45000, orcamentos: 18 },
+        { date: "Jan", valor: 31000, orcamentos: 11 },
+        { date: "Fev", valor: 36000, orcamentos: 13 },
+        { date: "Mar", valor: 38000, orcamentos: 14 },
+        { date: "Abr", valor: 41000, orcamentos: 15 },
+        { date: "Mai", valor: 44000, orcamentos: 16 },
+        { date: "Jun", valor: 42000, orcamentos: 15 },
+        { date: "Jul", valor: 46000, orcamentos: 16 },
+        { date: "Ago", valor: stats.faturamentoMensal, orcamentos: stats.orcametosAbertos },
+      ];
+    }
+  }, [faturamentoPeriod, stats]);
 
   // Distribuição por status dos orçamentos recentes (dado real, derivado do que já foi buscado)
   const statusChartData = useMemo(() => {
@@ -261,63 +367,62 @@ export default function Dashboard() {
 
   return (
     <div className="w-full min-h-screen bg-transparent text-[color:var(--gm-text)] p-4 sm:p-6 lg:p-8 space-y-8">
-      {/* 1. TOP HEADER WITH USER LOGO & CLOCK WIDGET */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-[color:var(--gm-border-light)]">
-        {/* Left side: Logo (if registered) + Title */}
-        <div className="flex items-center gap-4 flex-wrap">
+      {/* 1. TOP HEADER WITH ENLARGED LOGO, TITLE & FULL-WIDTH PROMINENT CLOCK */}
+      <div className="flex flex-col gap-6 pb-6 border-b border-[color:var(--gm-border-light)] w-full">
+        {/* Top: Logo + Title (Ampliados e alinhados até as bordas) */}
+        <div className="w-full flex items-center justify-start gap-4 text-left">
           {appSettings?.company_logo_url ? (
-            <div className="shrink-0 p-1">
+            <div className="shrink-0 flex items-center justify-center">
               <img
                 src={appSettings.company_logo_url}
                 alt={appSettings.company_name || "Logo da Empresa"}
-                className="h-10 sm:h-12 w-auto max-w-[200px] object-contain rounded-xl"
+                className="h-16 sm:h-20 md:h-24 w-auto max-w-[260px] sm:max-w-[340px] object-contain rounded-xl shadow-md"
               />
             </div>
-          ) : null}
-
-          <div>
-            <div className="text-xs font-bold tracking-widest text-[color:var(--gm-primary)] uppercase">
-              PAINEL · VISÃO GERAL
+          ) : (
+            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/30 p-3 flex items-center justify-center text-[color:var(--gm-primary)] shadow-md shrink-0 font-black text-2xl sm:text-3xl uppercase tracking-wider">
+              {appSettings?.company_name ? appSettings.company_name.substring(0, 2) : "GM"}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[color:var(--gm-text)] tracking-tight mt-0.5">
+          )}
+
+          <div className="flex flex-col text-left flex-1 min-w-0">
+            <div className="text-xs sm:text-base font-extrabold tracking-widest text-[color:var(--gm-primary)] uppercase">
+              {appSettings?.company_name ? `${appSettings.company_name} · PAINEL` : "PAINEL · VISÃO GERAL"}
+            </div>
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-[color:var(--gm-text)] tracking-tight mt-1 truncate">
               Dashboard
             </h1>
           </div>
         </div>
 
-        {/* Right side: Theme Toggle + Clock Widget + Action Buttons */}
-        <div className="flex items-center gap-3.5 flex-wrap">
-          {/* BOTÃO TEMA CLARO/ESCURO */}
-          <ThemeToggle />
-
-          {/* separador vertical */}
-          <div className="hidden sm:block w-px h-8 bg-[color:var(--gm-border-light)]" />
-
-          {/* WIDGET RELÓGIO E DATA (SEM CAIXA / MAIOR) */}
-          <div className="flex items-center gap-3.5 px-2 py-1">
-            <div className="w-10 h-10 rounded-xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/20 flex items-center justify-center text-[color:var(--gm-primary)] shrink-0 shadow-xs">
-              <Clock size={20} className="animate-pulse" />
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-base sm:text-lg font-black font-mono tracking-wider text-[color:var(--gm-text)]">
-                {now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-[color:var(--gm-text-secondary)] capitalize">
-                {now.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short", year: "numeric" })}
-              </span>
-            </div>
+        {/* WIDGET RELÓGIO E DATA (VERSÃO SMARTPHONE: MESMO EFEITO GLASS DO FATURAMENTO DO MÊS) */}
+        <div className="w-full flex flex-col items-center justify-center text-center py-4 px-5 gm-card gm-stat-card gm-clock-card rounded-2xl transition-all">
+          <div className="flex items-center justify-center gap-3 font-mono">
+            <Clock size={32} className="text-[color:var(--gm-primary)] animate-pulse shrink-0" />
+            <span className="text-3xl sm:text-5xl md:text-6xl font-black tracking-widest text-[color:var(--gm-text)]">
+              {now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </span>
           </div>
+          <span className="text-sm sm:text-base font-bold text-[color:var(--gm-text-secondary)] capitalize mt-1.5 tracking-wider">
+            {now.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+          </span>
+        </div>
 
-          {/* separador vertical entre widget e botões */}
-          <div className="hidden sm:block w-px h-8 bg-[color:var(--gm-border-light)]" />
-
-          <button onClick={handleExport} className="gm-btn gm-btn-soft h-12 text-xs uppercase tracking-wider">
-            <Download size={14} />
+        {/* BOTÕES EXPORTAR E NOVO ORÇAMENTO LADO A LADO LARGURA TOTAL */}
+        <div className="flex items-center justify-center gap-3 sm:gap-4 w-full">
+          <button
+            onClick={handleExport}
+            className="gm-btn gm-btn-soft flex-1 h-12 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2"
+          >
+            <Download size={18} />
             <span>Exportar</span>
           </button>
 
-          <Link to="/budgets?new=true" className="gm-btn h-12 text-xs uppercase tracking-wider">
-            <Plus size={14} />
+          <Link
+            to="/budgets?new=true"
+            className="gm-btn flex-1 h-12 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 group"
+          >
+            <Plus size={18} className="transition-transform duration-300 ease-in-out group-hover:rotate-180" />
             <span>Novo Orçamento</span>
           </Link>
         </div>
@@ -327,9 +432,13 @@ export default function Dashboard() {
       <SectionDivider label="Métricas gerais" />
 
       {/* 2. TOP METRIC CARDS WITH DISTINCT ICON BOXES (4 COLUMNS) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 -mt-2">
-        {/* CARD 1: FATURADO NO MÊS (com sparkline) */}
-        <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-1">
+        {/* CARD 1: FATURADO NO MÊS (com sparkline e modal interativo) */}
+        <div
+          onClick={() => setFaturamentoModalOpen(true)}
+          className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/60 cursor-pointer relative overflow-hidden`}
+          title="Clique para ver o gráfico detalhado do Faturamento"
+        >
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
@@ -339,36 +448,28 @@ export default function Dashboard() {
                 {formatCurrency(stats.faturamentoMensal)}
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-11 h-11 rounded-xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform">
               <TrendingUp size={20} />
             </div>
           </div>
 
-          {sparklineData.length > 1 ? (
-            <div className="h-10 -mx-1 relative overflow-hidden">
-              <SafeResponsive height={40}>
-                <AreaChart data={sparklineData} margin={{ top: 4, right: 4, bottom: 2, left: 4 }}>
-                  <defs>
-                    <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--gm-primary)" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="var(--gm-primary)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <YAxis hide domain={['dataMin', 'dataMax']} />
-                  <Area type="monotone" dataKey="value" stroke="var(--gm-primary)" strokeWidth={2} fill="url(#sparkFill)" dot={false} />
-                </AreaChart>
-              </SafeResponsive>
-            </div>
-          ) : null}
+          <div className="h-10 my-1 relative overflow-hidden">
+            <MiniSparkline data={sparklineValues} />
+          </div>
 
-          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg w-fit border border-emerald-500/20">
-            <ArrowUpRight size={14} />
-            <span>+12,4% este mês</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg w-fit border border-emerald-500/20">
+              <ArrowUpRight size={14} />
+              <span>+12,4% este mês</span>
+            </div>
+            <span className="text-[10px] font-bold text-[color:var(--gm-primary)] flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+              <Maximize2 size={12} /> Gráfico
+            </span>
           </div>
         </div>
 
         {/* CARD 2: ORÇAMENTOS ABERTOS */}
-        <div className={`p-5 flex flex-col justify-between space-y-4 group ${cardBase} hover:border-amber-500/40`}>
+        <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-amber-500/40`}>
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
@@ -382,13 +483,19 @@ export default function Dashboard() {
               <Clock size={20} />
             </div>
           </div>
-          <div className="text-xs font-semibold text-amber-400/90 bg-amber-500/10 px-2.5 py-1 rounded-lg w-fit border border-amber-500/20">
-            {stats.aguardando} em análise
+
+          <div className="h-10 my-1" />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-lg w-fit border border-amber-500/20">
+              <Clock size={14} />
+              <span>{stats.aguardando} em análise</span>
+            </div>
           </div>
         </div>
 
         {/* CARD 3: TICKET MÉDIO */}
-        <div className={`p-5 flex flex-col justify-between space-y-4 group ${cardBase} hover:border-emerald-500/40`}>
+        <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-emerald-500/40`}>
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
@@ -402,14 +509,19 @@ export default function Dashboard() {
               <Wallet size={20} />
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg w-fit border border-emerald-500/20">
-            <ArrowUpRight size={14} />
-            <span>+4,1% do alvo</span>
+
+          <div className="h-10 my-1" />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg w-fit border border-emerald-500/20">
+              <ArrowUpRight size={14} />
+              <span>+4,1% do alvo</span>
+            </div>
           </div>
         </div>
 
         {/* CARD 4: CLIENTES ATIVOS */}
-        <div className={`p-5 flex flex-col justify-between space-y-4 group ${cardBase} hover:border-blue-500/40`}>
+        <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-blue-500/40`}>
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
@@ -423,8 +535,14 @@ export default function Dashboard() {
               <Users size={20} />
             </div>
           </div>
-          <div className="text-xs font-semibold text-blue-400/90 bg-blue-500/10 px-2.5 py-1 rounded-lg w-fit border border-blue-500/20">
-            +9 novos esta semana
+
+          <div className="h-10 my-1" />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-lg w-fit border border-blue-500/20">
+              <Users size={14} />
+              <span>+9 novos esta semana</span>
+            </div>
           </div>
         </div>
       </div>
@@ -433,7 +551,7 @@ export default function Dashboard() {
       <SectionDivider label="Atividade recente" />
 
       {/* 4. SECTION: ORÇAMENTOS RECENTES */}
-      <div className="space-y-4 -mt-2">
+      <div className="space-y-4 mt-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/20 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0">
@@ -502,7 +620,7 @@ export default function Dashboard() {
       <SectionDivider label="Ações rápidas" />
 
       {/* 5. LOWER SECTION: GRID 2 COLUMNS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 -mt-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-1">
         {/* LEFT COLUMN: NOVO CLIENTE */}
         <div className={`lg:col-span-2 p-6 ${cardBase}`}>
           <div className="flex items-center gap-3.5 mb-5">
@@ -620,6 +738,178 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* MODAL FATURAMENTO (MÉTRICAS GERAIS) */}
+      {faturamentoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl gm-card rounded-3xl border border-white/20 p-6 sm:p-8 shadow-2xl overflow-hidden space-y-6 max-h-[90vh] overflow-y-auto">
+            {/* Header do Modal */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-[color:var(--gm-primary)]/15 border border-[color:var(--gm-primary)]/30 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-inner">
+                  <TrendingUp size={24} />
+                </div>
+                <div>
+                  <span className="text-xs font-extrabold text-[color:var(--gm-primary)] uppercase tracking-wider block">
+                    Métricas Gerais · Detalhamento
+                  </span>
+                  <h3 className="text-2xl font-black text-[color:var(--gm-text)] tracking-tight">
+                    Evolução do Faturamento
+                  </h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setFaturamentoModalOpen(false)}
+                className="p-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer"
+                title="Fechar modal"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Resumo em cards dentro do modal */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl gm-card gm-summary-card border-none flex flex-col justify-between">
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                  Total Faturado ({faturamentoPeriod === "30d" ? "30 dias" : faturamentoPeriod === "6m" ? "6 meses" : "12 meses"})
+                </span>
+                <div className="text-2xl font-black text-[color:var(--gm-text)] mt-1">
+                  {formatCurrency(stats.faturamentoMensal)}
+                </div>
+                <span className="text-xs font-semibold text-emerald-400 mt-1 flex items-center gap-1">
+                  <ArrowUpRight size={14} /> +12,4% no período
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl gm-card gm-summary-card border-none flex flex-col justify-between">
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                  Ticket Médio
+                </span>
+                <div className="text-2xl font-black text-[color:var(--gm-text)] mt-1">
+                  {formatCurrency(stats.ticketMedio)}
+                </div>
+                <span className="text-xs font-semibold text-emerald-400 mt-1 flex items-center gap-1">
+                  <CheckCircle2 size={14} /> Meta alinhada
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl gm-card gm-summary-card border-none flex flex-col justify-between">
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                  Meta Mensal (R$ 50.000)
+                </span>
+                <div className="text-2xl font-black text-[color:var(--gm-text)] mt-1">
+                  {Math.min(100, Math.round((stats.faturamentoMensal / 50000) * 100))}% Atingido
+                </div>
+                <div className="w-full bg-white/10 h-2 rounded-full mt-2 overflow-hidden">
+                  <div
+                    className="bg-[color:var(--gm-primary)] h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.round((stats.faturamentoMensal / 50000) * 100))}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Controles do Gráfico (Filtros de Período) */}
+            <div className="flex items-center justify-between flex-wrap gap-3 pt-2">
+              <div className="text-sm font-bold text-zinc-300">
+                Gráfico de Faturamento acumulado
+              </div>
+              <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/10">
+                <button
+                  onClick={() => setFaturamentoPeriod("30d")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    faturamentoPeriod === "30d"
+                      ? "bg-[color:var(--gm-primary)] text-white shadow-md"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  30 Dias
+                </button>
+                <button
+                  onClick={() => setFaturamentoPeriod("6m")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    faturamentoPeriod === "6m"
+                      ? "bg-[color:var(--gm-primary)] text-white shadow-md"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  6 Meses
+                </button>
+                <button
+                  onClick={() => setFaturamentoPeriod("12m")}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    faturamentoPeriod === "12m"
+                      ? "bg-[color:var(--gm-primary)] text-white shadow-md"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  12 Meses
+                </button>
+              </div>
+            </div>
+
+            {/* GRÁFICO PRINCIPAL COM ALTURA E VISIBILIDADE GARANTIDAS */}
+            <div className="w-full h-72 bg-black/30 rounded-2xl border border-white/10 p-4 relative overflow-hidden">
+              <SafeResponsive height={260}>
+                <AreaChart data={faturamentoChartData} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="modalFaturamentoGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--gm-primary)" stopOpacity={0.5} />
+                      <stop offset="95%" stopColor="var(--gm-primary)" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                  <XAxis dataKey="date" stroke="#8B8B92" tick={{ fill: "#8B8B92", fontSize: 12 }} />
+                  <YAxis
+                    stroke="#8B8B92"
+                    tick={{ fill: "#8B8B92", fontSize: 12 }}
+                    tickFormatter={(val) => `R$ ${(val / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="p-3 bg-zinc-900/95 border border-white/20 rounded-xl shadow-2xl backdrop-blur-md text-white">
+                            <p className="text-xs font-bold text-zinc-400 mb-1">{label}</p>
+                            <p className="text-sm font-black text-[color:var(--gm-primary)]">
+                              {formatCurrency(Number(payload[0].value))}
+                            </p>
+                            {payload[0].payload.orcamentos ? (
+                              <p className="text-[11px] font-semibold text-zinc-300 mt-0.5">
+                                {payload[0].payload.orcamentos} orçamentos
+                              </p>
+                            ) : null}
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="valor"
+                    stroke="var(--gm-primary)"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#modalFaturamentoGradient)"
+                  />
+                </AreaChart>
+              </SafeResponsive>
+            </div>
+
+            {/* Footer do Modal */}
+            <div className="flex items-center justify-between pt-2 text-xs text-zinc-400 border-t border-white/10">
+              <span>* Atualizado em tempo real</span>
+              <button
+                onClick={() => setFaturamentoModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

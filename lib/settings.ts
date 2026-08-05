@@ -458,6 +458,11 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
       localStorage.setItem(LOCAL_KEY, JSON.stringify(s));
     } catch {}
   }
+
+  try {
+    window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: s }));
+    window.dispatchEvent(new Event("gm_theme_updated"));
+  } catch {}
 }
 
 export function readSettingsLocal(): AppSettings | null {
@@ -542,14 +547,15 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
     if (tenantId) {
       const { data: byTenant, error: errTenant } = await withTimeout<any>(
         supabase.from("app_settings").select("*").eq("tenant_id", tenantId).maybeSingle() as any,
-        15000
+        4000
       ).catch((err) => {
         return { data: null, error: err };
       });
 
       if (errTenant) {
         const errorMsg = errTenant?.message || String(errTenant);
-        if (!errorMsg.includes("Failed to fetch")) {
+        const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("Timeout") || errorMsg.includes("Tempo limite");
+        if (!isQuiet) {
           console.warn("fetchSettings warn (tenant):", errorMsg);
         }
         const local = readSettingsLocal();
@@ -566,14 +572,15 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
       if (owner) {
         const { data: byOwner, error: errOwner } = await withTimeout<any>(
           supabase.from("app_settings").select("*").eq("owner", owner).maybeSingle() as any,
-          15000
+          4000
         ).catch((err) => {
           return { data: null, error: err };
         });
 
         if (errOwner) {
           const errorMsg = errOwner?.message || String(errOwner);
-          if (!errorMsg.includes("Failed to fetch")) {
+          const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("Timeout") || errorMsg.includes("Tempo limite");
+          if (!isQuiet) {
             console.warn("fetchSettings warn (owner):", errorMsg);
           }
           const local = readSettingsLocal();
@@ -634,13 +641,14 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
     if (owner) q = q.eq("owner", owner);
     else q = q.is("tenant_id", null);
 
-    const { data, error } = await withTimeout<any>(q.maybeSingle() as any, 15000).catch((err) => {
+    const { data, error } = await withTimeout<any>(q.maybeSingle() as any, 4000).catch((err) => {
       return { data: null, error: err };
     });
 
     if (error) {
       const errorMsg = error?.message || String(error);
-      if (!errorMsg.includes("Failed to fetch")) {
+      const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("Timeout") || errorMsg.includes("Tempo limite");
+      if (!isQuiet) {
         console.warn("fetchSettings warn:", errorMsg);
       }
       const local = readSettingsLocal();
@@ -655,7 +663,8 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
     return merged;
   } catch (e: any) {
     const errorMsg = e?.message || String(e);
-    if (!errorMsg.includes("Failed to fetch")) {
+    const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("Timeout") || errorMsg.includes("Tempo limite");
+    if (!isQuiet) {
       console.warn("fetchSettings warn:", errorMsg);
     }
     const local = readSettingsLocal();

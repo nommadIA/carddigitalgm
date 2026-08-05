@@ -267,16 +267,35 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     return () => window.removeEventListener("gm_theme_updated", handleThemeUpdate);
   }, [tenantId]);
 
-  // ✅ Carrega settings por TENANT
+  const [appSettings, setAppSettings] = useState<any>(null);
+
   useEffect(() => {
     fetchSettingsSupabase(tenantId)
       .then((s) => {
         if (s) {
           settingsCacheRef.current = s;
+          setAppSettings(s);
           applySettingsToDOM(s);
         }
       })
       .catch(() => {});
+
+    const handleSettingsUpdate = (e: any) => {
+      if (e?.detail) {
+        setAppSettings(e.detail);
+      } else if (tenantId) {
+        fetchSettingsSupabase(tenantId).then((s) => {
+          if (s) setAppSettings(s);
+        });
+      }
+    };
+
+    window.addEventListener("gm_settings_updated", handleSettingsUpdate);
+    window.addEventListener("gm_theme_updated", handleSettingsUpdate);
+    return () => {
+      window.removeEventListener("gm_settings_updated", handleSettingsUpdate);
+      window.removeEventListener("gm_theme_updated", handleSettingsUpdate);
+    };
   }, [tenantId]);
 
 
@@ -594,23 +613,25 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
                 <img 
                   src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                  alt="Logo" 
+                  alt="Logo CardDigital GM" 
                   className="w-full h-full object-cover"
                 />
               </div>
             </div>
             <div className="flex flex-col leading-tight">
-                <span className="text-lg font-bold text-slate-900 dark:text-white">CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span></span>
+                <span className="text-lg font-bold text-slate-900 dark:text-white">
+                  CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span>
+                </span>
             </div>
         </div>
         <div className="flex items-center gap-2">
             <button
                 type="button"
-                className="gm-btn gm-btn-icon relative bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20 transition-all"
+                className="gm-btn gm-btn-icon gm-square-btn relative bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20 transition-all"
                 onClick={toggleTheme}
                 title={themeMode === "dark" ? "Alternar para Tema Claro" : "Alternar para Tema Escuro"}
                 aria-label="Alternar Tema Claro/Escuro"
-                style={{ width: '38px', height: '38px', borderRadius: '10px' }}
+                style={{ width: '38px', height: '38px', borderRadius: '4px' }}
             >
                 {themeMode === "dark" ? (
                   <Sun size={18} className="text-amber-400" />
@@ -621,20 +642,21 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
             <button
                 type="button"
-                className="gm-btn gm-btn-icon relative bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)]"
+                className="gm-btn gm-btn-icon gm-square-btn relative bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)]"
                 onClick={handleBellClick}
                 title="Atualizações e Informações"
                 aria-label="Atualizações e Informações"
-                style={{ width: '38px', height: '38px', borderRadius: '10px' }}
+                style={{ width: '38px', height: '38px', borderRadius: '4px' }}
             >
                 <Bell size={18} className="animate-swing" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-black animate-pulse" />
             </button>
 
             <button 
-                className="gm-btn gm-btn-icon gm-btn-danger"
+                className="gm-btn gm-btn-icon gm-square-btn gm-btn-danger"
                 onClick={signOut}
                 aria-label="Sair"
+                style={{ width: '38px', height: '38px', borderRadius: '4px' }}
             >
                 <LogOut size={18} />
             </button>
@@ -643,12 +665,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       {/* DESKTOP SIDEBAR */}
       <aside className={`gm-sidebar ${collapsed ? "collapsed" : ""} hidden md:flex !relative`}>
-        {/* Overlapping vertical border collapse/expand Toggle Button - White circle in Light theme, Black circle in Dark theme, with Orange border & Orange chevron arrow */}
+        {/* Overlapping vertical border collapse/expand Toggle Button - Grey glass circle with Orange border & Orange chevron arrow, centered vertically */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-7 -right-[11px] w-[24px] h-[24px] rounded-full border-[2.5px] border-[var(--gm-primary)] flex items-center justify-center text-[var(--gm-primary)] transition-all z-[100] shadow-[0_2px_10px_rgba(0,0,0,0.3)] cursor-pointer shrink-0 hover:scale-110"
+          className="absolute top-1/2 -translate-y-1/2 -right-[12px] w-[25px] h-[25px] rounded-full border-2 border-[var(--gm-primary)] bg-[#242428]/85 backdrop-blur-md flex items-center justify-center text-[var(--gm-primary)] transition-all z-[100] shadow-[0_2px_12px_rgba(0,0,0,0.4)] cursor-pointer shrink-0 hover:scale-110 hover:bg-[#2d2d32]/90"
           style={{
-            backgroundColor: themeMode === "dark" ? "#000000" : "#ffffff",
             borderColor: "var(--gm-primary)",
             color: "var(--gm-primary)"
           }}
@@ -656,34 +677,36 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
         >
           {collapsed ? (
-            <ChevronRight size={13} className="animate-arrow-right text-[var(--gm-primary)]" />
+            <ChevronRight size={13} className="animate-arrow-right text-[var(--gm-primary)] stroke-[2.5]" />
           ) : (
-            <ChevronLeft size={13} className="animate-arrow-left text-[var(--gm-primary)]" />
+            <ChevronLeft size={13} className="animate-arrow-left text-[var(--gm-primary)] stroke-[2.5]" />
           )}
         </button>
 
         {!collapsed ? (
           <div className="flex items-center gap-3 px-2 py-1 mb-4">
              <div className="relative flex items-center justify-center shrink-0">
-                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
                   <img 
                     src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                    alt="Logo" 
+                    alt="Logo Official CardDigital GM" 
                     className="w-full h-full object-cover"
                   />
                 </div>
               </div>
               <div className="flex items-center gap-1 leading-none">
-                  <span className="text-lg font-bold text-[var(--gm-menu-title)]">CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span></span>
+                  <span className="text-lg font-bold text-[var(--gm-menu-title)]">
+                    CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span>
+                  </span>
               </div>
           </div>
         ) : (
           <div className="flex justify-center mt-2 mb-6">
             <div className="relative flex items-center justify-center shrink-0">
-                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
                   <img 
                     src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                    alt="Logo" 
+                    alt="Logo Official CardDigital GM" 
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -789,7 +812,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       <main 
         ref={setRefs}
-        className="gm-main"
+        className="gm-main pb-28 md:pb-0"
       >
         <div className="gm-container min-h-full flex flex-col">{children}</div>
       </main>
@@ -995,6 +1018,18 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                       </div>
 
                       <div className="flex-1 space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1 pb-1 border-b border-zinc-800/60">
+                          {appSettings?.company_logo_url ? (
+                            <img src={appSettings.company_logo_url} alt={appSettings?.company_name || "Empresa"} className="w-3.5 h-3.5 object-contain rounded shrink-0" />
+                          ) : (
+                            <div className="w-3.5 h-3.5 rounded bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] flex items-center justify-center text-[8px] font-black uppercase shrink-0">
+                              {appSettings?.company_name ? appSettings.company_name.substring(0, 2) : "GM"}
+                            </div>
+                          )}
+                          <span className="text-[10px] font-extrabold text-[var(--gm-primary)] uppercase tracking-wider truncate">
+                            {appSettings?.company_name || "GM Edificação"}
+                          </span>
+                        </div>
                         <div className="flex items-center justify-between">
                           <h4 className={`text-[11.5px] font-black tracking-wide ${noti.read ? "text-zinc-300" : "text-white"}`}>
                             {noti.title}
@@ -1050,6 +1085,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         </div>
       )}
       <WhatsAppSelectorModal />
+      <BottomNav />
     </div>
   );
 }

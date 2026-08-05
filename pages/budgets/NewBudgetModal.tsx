@@ -636,7 +636,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     return createPortal(
       <div style={overlay} onClick={onClose}>
         <div
-          className="w-full max-w-[800px] p-8 md:p-10 rounded-lg bg-[var(--gm-surface)] border border-white/10 text-white shadow-lg animate-fade-in"
+          className="w-full max-w-[800px] p-8 md:p-10 rounded-2xl gm-modal gm-card bg-[var(--gm-surface)] border-none text-white shadow-2xl animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-start mb-8">

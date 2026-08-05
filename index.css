@@ -292,15 +292,17 @@ button{ font-family:inherit; }
   min-width:var(--gm-sidebar-w);
   height:100vh;
   max-height:100vh;
-  overflow: visible !important;
   position:sticky; top:0;
   padding: 18px 14px;
-  background: transparent !important;
-  background-color: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: none !important;
+  backdrop-filter: blur(8px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
+  background: linear-gradient(135deg, rgba(255, 122, 0, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(20, 16, 14, 0.35) 100%), rgba(20, 16, 14, 0.55) !important;
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40) !important;
   display:flex; flex-direction:column;
   gap: 10px;
   z-index: 50;
@@ -673,11 +675,11 @@ button{ font-family:inherit; }
 }
 
 /* Ícone Laranja no Botão Vazado */
-[data-button-style="outline"] .gm-btn svg,
-[data-button-style="vazado"] .gm-btn svg,
-:root:not([data-button-style="solid"]) .gm-btn svg,
-.gm-preview-container[data-button-style="outline"] .gm-btn svg,
-.gm-preview-container[data-button-style="vazado"] .gm-btn svg {
+[data-button-style="outline"] .gm-btn svg:not(.whatsapp-icon),
+[data-button-style="vazado"] .gm-btn svg:not(.whatsapp-icon),
+:root:not([data-button-style="solid"]) .gm-btn svg:not(.whatsapp-icon),
+.gm-preview-container[data-button-style="outline"] .gm-btn svg:not(.whatsapp-icon),
+.gm-preview-container[data-button-style="vazado"] .gm-btn svg:not(.whatsapp-icon) {
   color: var(--gm-primary) !important;
   stroke: var(--gm-primary) !important;
   fill: none !important;
@@ -1444,84 +1446,128 @@ body{ overflow: hidden; }
 }
 
 /* sidebar glass */
-.gm-sidebar{
-  background: transparent !important;
-  background-color: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: none !important;
+aside.gm-sidebar,
+.gm-sidebar {
+  position: relative;
+  backdrop-filter: blur(8px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
+  background: linear-gradient(135deg, rgba(255, 122, 0, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(20, 16, 14, 0.35) 100%), rgba(20, 16, 14, 0.55) !important;
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40) !important;
 }
 
-/* cards glass premium - Exact user specified glass-card design */
-.gm-card,
-.glass,
+/* cards & containers glass premium - EFEITO GLASSMORPHISM SOLICITADO PELO USUÁRIO */
 .glass-card,
-.glass-container {
-  position: relative;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.28) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border-radius: 20px;
+.glass,
+.glass-container,
+.gm-card,
+.gm-dashboard-card,
+.gm-stat-card,
+.gm-chart-container,
+.card,
+.panel,
+.gm-filter-btn,
+.btn-glass,
+.gm-btn-secondary,
+.btn-secondary {
+  position: relative !important;
+  overflow: hidden !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-radius: 20px !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.5),
     inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 8px 4px rgba(255, 255, 255, 0.4) !important;
+    inset 0 0 12px 6px rgba(255, 255, 255, 0.25) !important;
+  transition: all 0.25s ease !important;
 }
 
-.gm-card::before,
-.glass::before,
+/* Tamanho Fixo Específico para .glass-card quando explicitamente definido */
+.glass-card.fixed-size {
+  width: 240px !important;
+  height: 360px !important;
+}
+
+/* Linha superior luminosa em gradiente (::before) */
 .glass-card::before,
-.glass-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
+.glass::before,
+.glass-container::before,
+.gm-card::before,
+.gm-dashboard-card::before,
+.gm-stat-card::before,
+.gm-chart-container::before,
+.card::before,
+.panel::before,
+.gm-filter-btn::before,
+.btn-glass::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 1px !important;
   background: linear-gradient(
     90deg,
     transparent,
     rgba(255, 255, 255, 0.8),
     transparent
-  );
-  pointer-events: none;
-  z-index: 2;
+  ) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  display: block !important;
 }
 
-.gm-card::after,
-.glass::after,
+/* Linha lateral esquerda luminosa em gradiente (::after) */
 .glass-card::after,
-.glass-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 100%;
+.glass::after,
+.glass-container::after,
+.gm-card::after,
+.gm-dashboard-card::after,
+.gm-stat-card::after,
+.gm-chart-container::after,
+.card::after,
+.panel::after,
+.gm-filter-btn::after,
+.btn-glass::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 1px !important;
+  height: 100% !important;
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.8),
     transparent,
     rgba(255, 255, 255, 0.3)
-  );
-  pointer-events: none;
-  z-index: 2;
+  ) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  display: block !important;
 }
 
 .gm-card:hover,
 .glass:hover,
-.glass-card:hover {
-  background: rgba(255, 255, 255, 0.20) !important;
+.glass-card:hover,
+.gm-dashboard-card:hover,
+.gm-stat-card:hover,
+.card:hover,
+.gm-filter-btn:hover,
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
   border-color: rgba(255, 255, 255, 0.45) !important;
   box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 12px 40px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
     inset 0 -1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 0 25px 8px rgba(255, 255, 255, 0.12) !important;
+    inset 0 0 16px 8px rgba(255, 255, 255, 0.35) !important;
 }
 
 /* inputs */
@@ -3618,87 +3664,90 @@ body {
 }
 
 /* =========================================================
-   Glassmorphism Aurora & Fluid Light for Active Budgets
+   Glassmorphism Aurora & Fluid Light for Active Budgets & Notes
    ========================================================= */
-.gm-highlighted-budget-glass {
+.gm-highlighted-budget-glass,
+.gm-highlighted-row-glass,
+.gm-highlighted-orange-sweep {
   position: relative !important;
   overflow: hidden !important;
-  background: rgba(10, 10, 10, 0.45) !important;
-  backdrop-filter: blur(20px) saturate(1.8) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;
-  border: 1px solid rgba(var(--gm-primary-rgb), 0.2) !important;
-  border-radius: 12px !important;
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.5),
-    0 0 12px rgba(var(--gm-primary-rgb), 0.12) !important;
+  border: 1.5px solid var(--gm-primary, #FF6900) !important;
   z-index: 20 !important;
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation: gm-orange-container-glow 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
 }
 
 /* Force children to stack safely above the background glow sweep */
-.gm-highlighted-budget-glass > * {
+.gm-highlighted-budget-glass > *,
+.gm-highlighted-row-glass > *,
+.gm-highlighted-orange-sweep > * {
   position: relative !important;
   z-index: 2 !important;
 }
 
-/* Saturated orange/primary smoky aura circulating from Point A (Top-Left) to Point B (Bottom-Right) and back, with liquid morphing shapes */
-.gm-highlighted-budget-glass::before {
+/* 1.5s Smooth Orange Gradient Wave passing across the container */
+.gm-highlighted-budget-glass::after,
+.gm-highlighted-row-glass::after,
+.gm-highlighted-orange-sweep::after {
   content: "" !important;
   position: absolute !important;
-  width: 360px !important;
-  height: 360px !important;
-  background: radial-gradient(
-    circle at center,
-    rgba(var(--gm-primary-rgb), 0.72) 0%,
-    rgba(var(--gm-primary-rgb), 0.28) 45%,
-    rgba(var(--gm-primary-rgb), 0.04) 70%,
+  top: 0 !important;
+  left: -150% !important;
+  width: 150% !important;
+  height: 100% !important;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(255, 105, 0, 0) 15%,
+    rgba(255, 105, 0, 0.2) 35%,
+    rgba(255, 120, 0, 0.75) 50%,
+    rgba(255, 105, 0, 0.2) 65%,
+    rgba(255, 105, 0, 0) 85%,
     transparent 100%
   ) !important;
-  filter: blur(45px) !important;
-  mix-blend-mode: plus-lighter !important;
   pointer-events: none !important;
-  z-index: 1 !important;
-  animation: gm-aura-circulate 6s forwards ease-in-out !important;
+  z-index: 10 !important;
+  animation: gm-orange-gradient-pass 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
 }
 
-/* Apply same elegant, fluid behavior to rows */
-.gm-highlighted-row-glass {
-  position: relative !important;
-  overflow: hidden !important;
-  background: rgba(10, 10, 10, 0.35) !important;
-  backdrop-filter: blur(16px) saturate(1.6) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(1.6) !important;
-  border-top: 1px solid rgba(var(--gm-primary-rgb), 0.15) !important;
-  border-bottom: 1px solid rgba(var(--gm-primary-rgb), 0.15) !important;
-  box-shadow: 
-    0 8px 30px rgba(0, 0, 0, 0.4),
-    0 0 10px rgba(var(--gm-primary-rgb), 0.08) !important;
-  z-index: 20 !important;
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+@keyframes gm-orange-container-glow {
+  0% {
+    border-color: rgba(255, 105, 0, 0.2);
+    box-shadow: 0 0 0px rgba(255, 105, 0, 0);
+  }
+  25% {
+    border-color: rgba(255, 105, 0, 1);
+    box-shadow: 
+      0 0 25px rgba(255, 105, 0, 0.7),
+      0 0 50px rgba(255, 105, 0, 0.35),
+      inset 0 0 15px rgba(255, 105, 0, 0.2);
+  }
+  65% {
+    border-color: rgba(255, 105, 0, 0.8);
+    box-shadow: 
+      0 0 18px rgba(255, 105, 0, 0.45),
+      0 0 35px rgba(255, 105, 0, 0.2);
+  }
+  100% {
+    border-color: rgba(255, 105, 0, 0.4);
+    box-shadow: 0 0 8px rgba(255, 105, 0, 0.15);
+  }
 }
 
-.gm-highlighted-row-glass > * {
-  position: relative !important;
-  z-index: 2 !important;
-}
-
-.gm-highlighted-row-glass::before {
-  content: "" !important;
-  position: absolute !important;
-  width: 250px !important;
-  height: 250px !important;
-  background: radial-gradient(
-    circle at center,
-    rgba(var(--gm-primary-rgb), 0.65) 0%,
-    rgba(var(--gm-primary-rgb), 0.25) 45%,
-    rgba(var(--gm-primary-rgb), 0.04) 70%,
-    transparent 100%
-  ) !important;
-  filter: blur(35px) !important;
-  mix-blend-mode: plus-lighter !important;
-  pointer-events: none !important;
-  z-index: 1 !important;
-  animation: gm-aura-circulate-row 6s forwards ease-in-out !important;
+@keyframes gm-orange-gradient-pass {
+  0% {
+    left: -150%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: 150%;
+    opacity: 0;
+  }
 }
 
 @keyframes gm-aura-circulate {
@@ -5228,6 +5277,7 @@ aside.gm-sidebar .gm-nav,
 .gm-sidebar nav,
 .gm-sidebar .gm-nav,
 .gm-nav,
+nav.gm-nav,
 aside.gm-sidebar .gm-sidebar-footer,
 .gm-sidebar .gm-sidebar-footer,
 aside.gm-sidebar .gm-nav a,
@@ -5235,11 +5285,24 @@ aside.gm-sidebar .gm-nav a,
 .gm-nav a {
   background: transparent !important;
   background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   position: relative !important;
   outline: none !important;
+}
+
+aside.gm-sidebar nav::before,
+aside.gm-sidebar nav::after,
+aside.gm-sidebar .gm-nav::before,
+aside.gm-sidebar .gm-nav::after,
+.gm-sidebar .gm-nav::before,
+.gm-sidebar .gm-nav::after,
+.gm-nav::before,
+.gm-nav::after {
+  display: none !important;
 }
 
 aside.gm-sidebar .gm-nav a:hover,
@@ -5304,23 +5367,61 @@ aside.gm-sidebar .gm-nav a.active span,
 }
 
 /* =========================================================
-   TRANSPARÊNCIA DO MENU LATERAL (REMOÇÃO DO RETÂNGULO ESCURO)
+   GLASSMORPHISM DO MENU LATERAL (SIDEBAR - SEM BORDAS)
    ========================================================= */
 aside.gm-sidebar,
 .gm-sidebar,
 [data-theme="dark"] aside.gm-sidebar,
 .gm-dark aside.gm-sidebar,
-html.gm-has-bg .gm-sidebar,
-[data-theme="light"] aside.gm-sidebar,
-.gm-light aside.gm-sidebar,
-html.gm-has-bg[data-theme="light"] .gm-sidebar {
+html.gm-has-bg .gm-sidebar {
+  position: relative !important;
+  backdrop-filter: blur(8px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
+  background: linear-gradient(135deg, rgba(255, 122, 0, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(20, 16, 14, 0.35) 100%), rgba(20, 16, 14, 0.55) !important;
+  border: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40) !important;
+}
+
+/* Remoção do container Glassmorphism por trás dos títulos em todas as janelas */
+.gm-header,
+.gm-page-header,
+.gm-title-wrapper {
+  position: relative !important;
   background: transparent !important;
   background-color: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-right: 1px solid var(--gm-border, rgba(255, 255, 255, 0.08)) !important;
+  border: none !important;
   border-top: none !important;
+  border-bottom: none !important;
   box-shadow: none !important;
+}
+
+[data-theme="light"] aside.gm-sidebar,
+.gm-light aside.gm-sidebar,
+html.gm-has-bg[data-theme="light"] .gm-sidebar {
+  position: relative !important;
+  backdrop-filter: blur(8px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 100%), rgba(255, 255, 255, 0.65) !important;
+  border: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06) !important;
+}
+
+aside.gm-sidebar::before,
+.gm-sidebar::before,
+aside.gm-sidebar::after,
+.gm-sidebar::after {
+  display: none !important;
+  content: none !important;
 }
 
 .gm-layout,
@@ -5341,22 +5442,131 @@ html.gm-has-bg[data-theme="light"] .gm-sidebar {
   outline-offset: 2px !important;
 }
 
-/* Dashboard Cards & Menus Glassmorphism com Alto Contraste */
+/* Dashboard Cards Glassmorphism (MESMO EFEITO DO MENU LATERAL - SEM BORDAS) - DESKTOP & SMARTPHONE */
 .gm-dashboard-card,
 .gm-stat-card,
 .gm-chart-container,
-.gm-header,
 .gm-toolbar,
-.gm-bottom-nav,
-nav.fixed.bottom-0 {
-  position: relative;
-  backdrop-filter: blur(24px) saturate(145%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(0, 0, 0, 0.20) 100%), rgba(16, 20, 28, 0.65) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.28) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.20) !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40), inset 0 1px 1px 0 rgba(255, 255, 255, 0.20) !important;
+.gm-clock-card,
+.gm-card,
+.gm-budget-card,
+.gm-budget-row,
+.gm-modal,
+.gm-modal-content,
+.gm-note-modal,
+.gm-summary-card,
+[role="dialog"] {
+  position: relative !important;
+  backdrop-filter: blur(8px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
+  background: linear-gradient(135deg, rgba(255, 122, 0, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(20, 16, 14, 0.35) 100%), rgba(20, 16, 14, 0.55) !important;
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40) !important;
+}
+
+/* BOTÕES DE AÇÃO SUPERIOR (TEMA, NOTIFICAÇÃO, SAIR) - FORMATO ESTRITAMENTE QUADRADO (4px) */
+.gm-square-btn,
+button.gm-square-btn,
+.gm-btn.gm-square-btn {
+  border-radius: 4px !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  max-width: 38px !important;
+  max-height: 38px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* FIX SUPREMO PARA A BARRA DE NAVEGAÇÃO INFERIOR NO SMARTPHONE */
+nav.fixed.bottom-0,
+.gm-bottom-nav {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 999999 !important;
+  backdrop-filter: blur(24px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+  background: rgba(18, 18, 22, 0.94) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="light"] nav.fixed.bottom-0,
+[data-theme="light"] .gm-bottom-nav,
+.gm-light nav.fixed.bottom-0,
+.gm-light .gm-bottom-nav,
+html:not(.dark) nav.fixed.bottom-0,
+html:not(.dark) .gm-bottom-nav {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05), 0 -1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light"] nav.fixed.bottom-0 a,
+.gm-light nav.fixed.bottom-0 a,
+html:not(.dark) nav.fixed.bottom-0 a {
+  color: #4B5563 !important;
+}
+
+[data-theme="light"] nav.fixed.bottom-0 a.active,
+.gm-light nav.fixed.bottom-0 a.active,
+html:not(.dark) nav.fixed.bottom-0 a.active {
+  color: #F65A1A !important;
+}
+
+/* =========================================================
+   LINHAS DE DIVISÃO E SEPARAÇÃO DO APP (GLASSMORPHISM & ALTO CONTRASTE)
+   ========================================================= */
+hr,
+.h-px,
+.gm-divider {
+  height: 1px !important;
+  border: none !important;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.20) 50%,
+    rgba(255, 255, 255, 0.40) 100%
+  ) !important;
+  box-shadow: 0 1px 3px rgba(255, 255, 255, 0.20) !important;
+}
+
+/* Linhas de divisão em tabelas e listas */
+table thead tr,
+table thead th,
+.border-b,
+[class*="border-b"] {
+  border-bottom-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+table tbody tr,
+.divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.border-t,
+[class*="border-t"] {
+  border-top-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+.border-r,
+[class*="border-r"] {
+  border-right-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+.border-l,
+[class*="border-l"] {
+  border-left-color: rgba(255, 255, 255, 0.28) !important;
 }
 
 /* No Tema Claro */
@@ -5365,11 +5575,23 @@ nav.fixed.bottom-0 {
 [data-theme="light"] .gm-chart-container,
 [data-theme="light"] .gm-header,
 [data-theme="light"] .gm-toolbar,
+[data-theme="light"] .gm-card,
+[data-theme="light"] .gm-budget-card,
+[data-theme="light"] .gm-modal,
+[data-theme="light"] .gm-modal-content,
+[data-theme="light"] .gm-summary-card,
+[data-theme="light"] [role="dialog"],
 .gm-light .gm-dashboard-card,
 .gm-light .gm-stat-card,
 .gm-light .gm-chart-container,
 .gm-light .gm-header,
-.gm-light .gm-toolbar {
+.gm-light .gm-toolbar,
+.gm-light .gm-card,
+.gm-light .gm-budget-card,
+.gm-light .gm-modal,
+.gm-light .gm-modal-content,
+.gm-light .gm-summary-card,
+.gm-light [role="dialog"] {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 100%), rgba(255, 255, 255, 0.78) !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
@@ -5434,4 +5656,72 @@ nav.fixed.bottom-0 {
   }
 }
 
+/* =========================================================
+   GLOBAL BUTTON HOVER & ACTIVE UI STYLE (SOLID ORANGE ON HOVER / CLICK)
+   Quando passa o mouse ou clica em botões do app, eles ficam sólidos em Laranja
+   ========================================================= */
+button,
+a.btn,
+.btn,
+[role="button"],
+.btn-action-edit,
+.btn-action-neutral,
+.btn-action-icon,
+.gm-btn-icon,
+.gm-budget-action-btn {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):hover,
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):active,
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):focus-visible,
+.btn-action-edit:hover,
+.btn-action-edit:active,
+.btn-action-neutral:hover,
+.btn-action-neutral:active,
+.btn-action-icon:hover,
+.btn-action-icon:active,
+.gm-btn-icon:hover,
+.gm-btn-icon:active,
+.gm-budget-action-btn:hover,
+.gm-budget-action-btn:active {
+  background-color: #F65A1A !important;
+  background: linear-gradient(135deg, #FF7A2A 0%, #F65A1A 100%) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 4px 20px rgba(246, 90, 26, 0.5) !important;
+  transform: translateY(-1px);
+}
+
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+.btn-action-edit:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+.btn-action-edit:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+.btn-action-neutral:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+.btn-action-neutral:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+.btn-action-icon:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+.btn-action-icon:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+.gm-btn-icon:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+.gm-btn-icon:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+.gm-budget-action-btn:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]) {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  fill: none;
+}
+
+/* =========================================================
+   GARANTIA ABSOLUTA: ÍCONE DO WHATSAPP PREENCHIDO (SOLID FILL)
+   Garante que o ícone do WhatsApp em qualquer lista ou botão seja
+   sempre preenchido com a cor do elemento (currentColor) sem stroke "vazado"
+   ========================================================= */
+.whatsapp-icon,
+svg.whatsapp-icon,
+svg[data-icon="whatsapp"],
+.whatsapp-icon path,
+svg.whatsapp-icon path,
+svg[data-icon="whatsapp"] path {
+  fill: currentColor !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+}
 

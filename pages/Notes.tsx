@@ -224,15 +224,15 @@ export default function Notes() {
           }
         }, 150);
 
-        // Open the editor after a brief delay to let the user see the gorgeous diagnostic highlight animation sweep
+        // Open the editor after a brief delay to let the user see the note card highlight
         const openTimer = setTimeout(() => {
           openEdit(noteToOpen);
-        }, 1000);
+        }, 250);
 
-        // Keep highlighted for 6 seconds, then clear state
+        // Keep highlighted for 2.5 seconds, then clear state
         const clearHighlightTimer = setTimeout(() => {
           setHighlightedId(null);
-        }, 6000);
+        }, 2500);
 
         return () => {
           clearTimeout(scrollTimer);
@@ -1777,7 +1777,9 @@ export default function Notes() {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: "100%", opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-lg shadow-lg flex flex-col overflow-hidden gm-note-modal"
+              className={`relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-lg shadow-lg flex flex-col overflow-hidden gm-note-modal ${
+                highlightedId ? "gm-highlighted-orange-sweep" : ""
+              }`}
               style={{
                 maxHeight: window.innerWidth < 768 ? "100dvh" : "90vh",
                 backgroundColor: "var(--gm-card, rgba(17, 19, 24, 0.95))",
