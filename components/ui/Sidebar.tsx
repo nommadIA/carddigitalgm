@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -9,8 +9,6 @@ import {
   BarChart3,
   Settings,
   StickyNote,
-  Moon,
-  Sun,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../../store/AuthContext";
@@ -30,26 +28,18 @@ const items = [
 
 function applyTheme(mode: ThemeMode) {
   const root = document.documentElement;
-  root.setAttribute("data-theme", mode);
-  root.classList.toggle("gm-light", mode === "light");
-  root.classList.toggle("gm-dark", mode === "dark");
-  localStorage.setItem("theme", mode);
+  root.setAttribute("data-theme", "dark");
+  root.classList.remove("gm-light", "light");
+  root.classList.add("gm-dark", "dark");
+  localStorage.setItem("theme", "dark");
 }
 
 export default function Sidebar() {
   const { signOut } = useAuth();
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem("theme") as ThemeMode | null;
-    return saved === "light" ? "light" : "dark";
-  });
 
   useEffect(() => {
-    applyTheme(mode);
-  }, [mode]);
-
-  const toggleMode = () => setMode((m) => (m === "dark" ? "light" : "dark"));
-
-  const IconMode = useMemo(() => (mode === "dark" ? Sun : Moon), [mode]);
+    applyTheme("dark");
+  }, []);
 
   return (
     <div className="gm-sidebar">
@@ -94,31 +84,7 @@ export default function Sidebar() {
 
       <div className="gm-sidebar-footer mt-auto pt-6 border-t border-[#222222]">
         <button
-          className="gm-btn gm-btn-soft w-full justify-between items-center text-xs font-semibold py-2 px-3 rounded-lg bg-[#151515] hover:bg-[#1C1C1C] border border-[#222222] transition-colors"
-          onClick={toggleMode}
-          type="button"
-        >
-          <div className="flex items-center gap-2 text-zinc-300">
-            <IconMode size={16} className={mode === "light" ? "text-orange-500" : "text-emerald-400"} />
-            <span>{mode === "dark" ? "Tema Escuro" : "Tema Claro"}</span>
-          </div>
-          <div
-            className={`relative shrink-0 w-8 h-4 rounded-full p-0.5 transition-all duration-200 border flex items-center ${
-              mode === "dark"
-                ? "bg-emerald-500 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                : "bg-zinc-600 border-zinc-500"
-            }`}
-          >
-            <div
-              className={`w-3 h-3 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-out ${
-                mode === "dark" ? "translate-x-3.5" : "translate-x-0"
-              }`}
-            />
-          </div>
-        </button>
-
-        <button
-          className="w-full flex items-center gap-2 px-3 py-2 mt-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
           onClick={signOut}
           type="button"
           title="Sair"

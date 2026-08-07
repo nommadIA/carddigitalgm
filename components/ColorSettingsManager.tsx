@@ -332,27 +332,6 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
           >
             <RotateCcw size={16} /> Resetar Cores
           </button>
-
-          {/* MODO CLARO / ESCURO INTELIGENTE */}
-          <button
-            type="button"
-            onClick={toggleSmartThemeMode}
-            className={
-              isLightMode
-                ? "w-full sm:w-auto px-5 py-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-black flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-lg"
-                : "w-full sm:w-auto px-5 py-3 rounded-lg bg-[#FF6900] hover:bg-[#ff7a1a] text-white text-xs font-black flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md"
-            }
-          >
-            {isLightMode ? (
-              <>
-                <Moon size={17} /> Alternar para Modo Escuro
-              </>
-            ) : (
-              <>
-                <Sun size={17} /> Alternar para Modo Claro
-              </>
-            )}
-          </button>
         </div>
       </div>
 

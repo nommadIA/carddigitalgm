@@ -34,6 +34,15 @@ import { pushToast } from "../store/toast";
 import { fetchSettingsSupabase, AppSettings } from "../lib/settings";
 import { SectionDivider } from "../components/ui/SectionDivider";
 
+function formatPhoneBR(value: string) {
+  const digits = (value || "").replace(/\D/g, "").slice(0, 11);
+  if (!digits) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
 interface BudgetRow {
   id: string;
   client_name: string;
@@ -659,7 +668,8 @@ export default function Dashboard() {
                 type="text"
                 placeholder="(00) 90000-0000"
                 value={newClientPhone}
-                onChange={(e) => setNewClientPhone(e.target.value)}
+                onChange={(e) => setNewClientPhone(formatPhoneBR(e.target.value))}
+                inputMode="tel"
                 className={inputBase}
               />
             </div>

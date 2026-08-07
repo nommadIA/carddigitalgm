@@ -263,31 +263,14 @@ export default function Configuracoes() {
   const [buttonTextDark, setButtonTextDark] = useState("#FFFFFF");
   const [buttonIconDark, setButtonIconDark] = useState("#FF7B17");
 
-  // Aba ativa para edição de botões: "light" | "dark"
-  const [btnConfigTab, setBtnConfigTab] = useState<"light" | "dark">(() =>
-    localStorage.getItem("theme") === "light" ? "light" : "dark"
-  );
+  const [btnConfigTab] = useState<"light" | "dark">("dark");
+  const [isLightMode] = useState<boolean>(false);
 
   // Painel Flutuante estilo Bio Editor
   const setIsDockedState = useState(false);
   const isDocked = setIsDockedState[0];
   const setIsDocked = setIsDockedState[1];
   const isDraggingRef = useRef(false);
-
-  const [isLightMode, setIsLightMode] = useState(() => localStorage.getItem("theme") === "light");
-
-  useEffect(() => {
-    const handleThemeChange = () => {
-      const light = localStorage.getItem("theme") === "light";
-      setIsLightMode(prev => prev !== light ? light : prev);
-    };
-    window.addEventListener("storage", handleThemeChange);
-    window.addEventListener("themeChange", handleThemeChange);
-    return () => {
-      window.removeEventListener("storage", handleThemeChange);
-      window.removeEventListener("themeChange", handleThemeChange);
-    };
-  }, []);
 
   useEffect(() => {
     const syncCurrentColors = async () => {
@@ -1668,7 +1651,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 1: PERSONALIZAÇÃO */}
               {openSections.personalization && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Palette className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -1866,67 +1849,17 @@ export default function Configuracoes() {
                   <div className="h-px bg-slate-200 dark:bg-zinc-800/80 w-full"></div>
 
                   <div>
-                    {/* CABEÇALHO DO PAINEL DE BOTÕES COM SELETOR DE MODO (CLARO / ESCURO) */}
+                    {/* CABEÇALHO DO PAINEL DE BOTÕES */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
                       <div>
                         <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
                           <Sparkles size={16} />
-                          Personalização dos Botões por Tema
+                          Personalização dos Botões
                         </label>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          Configure de forma independente o estilo e as cores dos botões para o Modo Claro e para o Modo Escuro.
+                          Configure o estilo e as cores dos botões do aplicativo.
                         </p>
                       </div>
-
-                      {/* SELETOR DE TEMA PARA EDICAO DOS BOTOES */}
-                      <div className="flex items-center gap-1.5 p-1 bg-slate-200/80 dark:bg-zinc-800/90 rounded-lg shrink-0 self-start sm:self-auto border border-slate-300/50 dark:border-zinc-700/50">
-                        <button
-                          type="button"
-                          onClick={() => setBtnConfigTab("light")}
-                          className={
-                            "px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer " +
-                            (btnConfigTab === "light"
-                              ? "bg-white text-amber-600 shadow-md scale-[1.02]"
-                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")
-                          }
-                        >
-                          <Sun size={14} className="text-amber-500" />
-                          Modo Claro ☀️
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setBtnConfigTab("dark")}
-                          className={
-                            "px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer " +
-                            (btnConfigTab === "dark"
-                              ? "bg-zinc-900 text-orange-400 shadow-md scale-[1.02] border border-zinc-700/80"
-                              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white")
-                          }
-                        >
-                          <Moon size={14} className="text-orange-400" />
-                          Modo Escuro 🌙
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* BANNER INFORMATIVO DA ABA ATIVA */}
-                    <div className={
-                      "p-3 px-4 rounded-lg mb-5 text-xs font-bold flex items-center justify-between border transition-all " +
-                      (btnConfigTab === "light"
-                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
-                        : "bg-orange-500/10 text-orange-400 border-orange-500/20")
-                    }>
-                      <span className="flex items-center gap-2">
-                        {btnConfigTab === "light" ? <Sun size={15} className="text-amber-500" /> : <Moon size={15} className="text-orange-400" />}
-                        Personalizando botões para o <strong>{btnConfigTab === "light" ? "Modo Claro (Fundo Claro)" : "Modo Escuro (Fundo Escuro)"}</strong>
-                      </span>
-                      <span className="text-[10px] uppercase font-black tracking-wider opacity-80">
-                        {isLightMode && btnConfigTab === "light"
-                          ? "Aplicado na tela agora"
-                          : !isLightMode && btnConfigTab === "dark"
-                          ? "Aplicado na tela agora"
-                          : "Prévia do tema"}
-                      </span>
                     </div>
 
                     {/* CAIXAS EXPANDIDAS DOS ESTILOS DE BOTÕES */}
@@ -2164,7 +2097,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 2: CORES & FONTE */}
               {openSections.colors && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Paintbrush className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2211,7 +2144,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 3: IMAGEM DE FUNDO */}
               {openSections.background && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <ImageIcon className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2395,7 +2328,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 4: DADOS PIX */}
               {openSections.pix && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <CreditCard className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2516,7 +2449,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 5: PAPEL TIMBRADO */}
               {openSections.timbrado && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <FileText className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2586,7 +2519,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 6: NOTIFICAÇÕES PUSH */}
               {openSections.push && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Bell className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2708,7 +2641,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 7: SONS DO SISTEMA */}
               {openSections.sounds && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Volume2 className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
@@ -2765,7 +2698,7 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 8: TUTORIAL & SUPORTE */}
               {openSections.tutorial && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 touch-pan-y overscroll-y-contain">
+                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
                   <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <HelpCircle className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />

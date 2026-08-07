@@ -7,6 +7,7 @@ import AppTutorial from "./AppTutorial";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   LayoutGrid,
   FileText,
@@ -193,48 +194,25 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
 
-  const [themeMode, setThemeMode] = useState<"dark" | "light">(() => {
-    const saved = localStorage.getItem("theme");
-    return saved === "dark" ? "dark" : "light";
-  });
+  const [themeMode, setThemeMode] = useState<"dark" | "light">("dark");
 
   const settingsCacheRef = useRef<any>(null);
 
   const toggleTheme = () => {
-    const nextTheme = themeMode === "dark" ? "light" : "dark";
-    setThemeMode(nextTheme);
-    document.documentElement.setAttribute("data-theme", nextTheme);
-    document.documentElement.classList.toggle("gm-light", nextTheme === "light");
-    document.documentElement.classList.toggle("gm-dark", nextTheme === "dark");
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-    localStorage.setItem("theme", nextTheme);
-    
-    // Re-aplica imediatamente as cores personalizadas do novo tema
-    if (settingsCacheRef.current) {
-      applySettingsToDOM(settingsCacheRef.current);
-    } else {
-      fetchSettingsSupabase(tenantId)
-        .then((s) => {
-          if (s) {
-            settingsCacheRef.current = s;
-            applySettingsToDOM(s);
-          }
-        })
-        .catch(() => {});
-    }
+    setThemeMode("dark");
+    document.documentElement.setAttribute("data-theme", "dark");
+    document.documentElement.classList.remove("gm-light", "light");
+    document.documentElement.classList.add("gm-dark", "dark");
+    localStorage.setItem("theme", "dark");
   };
 
   useEffect(() => localStorage.setItem("gm.sidebar", collapsed ? "1" : "0"), [collapsed]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme") || "light";
-    document.documentElement.setAttribute("data-theme", saved);
-    document.documentElement.classList.toggle("gm-light", saved === "light");
-    document.documentElement.classList.toggle("gm-dark", saved === "dark");
-    document.documentElement.classList.toggle("dark", saved === "dark");
-    if (saved !== themeMode) {
-      setThemeMode(saved as "dark" | "light");
-    }
+    localStorage.setItem("theme", "dark");
+    document.documentElement.setAttribute("data-theme", "dark");
+    document.documentElement.classList.remove("gm-light", "light");
+    document.documentElement.classList.add("gm-dark", "dark");
 
     const savedBtnStyle = localStorage.getItem("gm_button_style_fallback") || "vazado";
     document.documentElement.setAttribute("data-button-style", savedBtnStyle);
@@ -242,12 +220,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   useEffect(() => {
     const handleThemeUpdate = () => {
-      const saved = localStorage.getItem("theme") || "light";
-      document.documentElement.setAttribute("data-theme", saved);
-      document.documentElement.classList.toggle("gm-light", saved === "light");
-      document.documentElement.classList.toggle("gm-dark", saved === "dark");
-      document.documentElement.classList.toggle("dark", saved === "dark");
-      setThemeMode(saved as "dark" | "light");
+      localStorage.setItem("theme", "dark");
+      document.documentElement.setAttribute("data-theme", "dark");
+      document.documentElement.classList.remove("gm-light", "light");
+      document.documentElement.classList.add("gm-dark", "dark");
+      setThemeMode("dark");
 
       if (settingsCacheRef.current) {
         applySettingsToDOM(settingsCacheRef.current);
@@ -568,6 +545,67 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     };
   }, []);
 
+  const renderHeaderActionButtons = (extraClass = "") => (
+    <div className={`flex items-center gap-2 shrink-0 ${extraClass}`}>
+      <button
+        type="button"
+        onClick={handleBellClick}
+        title="Atualizações e Informações"
+        aria-label="Atualizações e Informações"
+        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center text-orange-500 hover:!bg-[#FE540B] hover:!text-white active:!bg-[#e04808] active:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
+        style={{
+          width: '36px',
+          height: '36px',
+          minWidth: '36px',
+          minHeight: '36px',
+          maxWidth: '36px',
+          maxHeight: '36px',
+          borderRadius: '50%',
+          aspectRatio: '1 / 1',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0',
+          margin: '0',
+          boxSizing: 'border-box',
+          overflow: 'hidden'
+        }}
+      >
+        <Bell size={20} className="animate-swing text-current shrink-0" />
+        {unreadCount > 0 && (
+          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-transparent group-hover:border-white transition-colors" />
+        )}
+      </button>
+
+      <button 
+        type="button"
+        onClick={signOut}
+        title="Sair"
+        aria-label="Sair"
+        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center text-orange-500 hover:!bg-[#FE540B] hover:!text-white active:!bg-[#e04808] active:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
+        style={{
+          width: '36px',
+          height: '36px',
+          minWidth: '36px',
+          minHeight: '36px',
+          maxWidth: '36px',
+          maxHeight: '36px',
+          borderRadius: '50%',
+          aspectRatio: '1 / 1',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0',
+          margin: '0',
+          boxSizing: 'border-box',
+          overflow: 'hidden'
+        }}
+      >
+        <LogOut size={20} className="text-current shrink-0" />
+      </button>
+    </div>
+  );
+
   return (
     <div className="gm-layout">
       {/* Novo componente de alarmes para orçamentos aprovados */}
@@ -624,43 +662,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 </span>
             </div>
         </div>
-        <div className="flex items-center gap-2">
-            <button
-                type="button"
-                className="gm-btn gm-btn-icon gm-square-btn relative bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20 transition-all"
-                onClick={toggleTheme}
-                title={themeMode === "dark" ? "Alternar para Tema Claro" : "Alternar para Tema Escuro"}
-                aria-label="Alternar Tema Claro/Escuro"
-                style={{ width: '38px', height: '38px', borderRadius: '4px' }}
-            >
-                {themeMode === "dark" ? (
-                  <Sun size={18} className="text-amber-400" />
-                ) : (
-                  <Moon size={18} className="text-[var(--gm-primary)]" />
-                )}
-            </button>
 
-            <button
-                type="button"
-                className="gm-btn gm-btn-icon gm-square-btn relative bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)]"
-                onClick={handleBellClick}
-                title="Atualizações e Informações"
-                aria-label="Atualizações e Informações"
-                style={{ width: '38px', height: '38px', borderRadius: '4px' }}
-            >
-                <Bell size={18} className="animate-swing" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-black animate-pulse" />
-            </button>
-
-            <button 
-                className="gm-btn gm-btn-icon gm-square-btn gm-btn-danger"
-                onClick={signOut}
-                aria-label="Sair"
-                style={{ width: '38px', height: '38px', borderRadius: '4px' }}
-            >
-                <LogOut size={18} />
-            </button>
-        </div>
+        {/* Botões do cabeçalho mobile: caixas quadradas 1:1 com bordas levemente arredondadas e ícones na cor laranja */}
+        {renderHeaderActionButtons()}
       </div>
 
       {/* DESKTOP SIDEBAR */}
@@ -684,21 +688,21 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         </button>
 
         {!collapsed ? (
-          <div className="flex items-center gap-3 px-2 py-1 mb-4">
-             <div className="relative flex items-center justify-center shrink-0">
-                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
+          <div className="flex items-center justify-between gap-3 px-2 py-1 mb-4">
+             <div className="flex items-center gap-3 shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shadow-md shrink-0">
                   <img 
                     src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                     alt="Logo Official CardDigital GM" 
                     className="w-full h-full object-cover"
                   />
                 </div>
-              </div>
-              <div className="flex items-center gap-1 leading-none">
-                  <span className="text-lg font-bold text-[var(--gm-menu-title)]">
-                    CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span>
-                  </span>
-              </div>
+                <div className="flex items-center gap-1 leading-none">
+                    <span className="text-lg font-bold text-[var(--gm-menu-title)]">
+                      CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span>
+                    </span>
+                </div>
+             </div>
           </div>
         ) : (
           <div className="flex justify-center mt-2 mb-6">
@@ -728,81 +732,17 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="gm-sidebar-footer w-full flex flex-col pb-2 gap-1 mt-auto">
+        <div className="gm-sidebar-footer w-full flex flex-col pb-2 gap-2 mt-auto">
           {collapsed ? (
-            <div className="gm-nav w-full">
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleBellClick();
-                }}
-                className=""
-                title="Notificações e Atualizações"
-              >
-                <div className="relative shrink-0 flex items-center justify-center">
-                  <Bell size={18} className={unreadCount > 0 ? "animate-swing" : ""} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black flex items-center justify-center animate-pulse" />
-                  )}
-                </div>
-              </a>
-
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  signOut();
-                }}
-                className=""
-                title="Sair"
-                aria-label="Sair"
-              >
-                <LogOut size={18} className="transition-transform" />
-              </a>
+            <div className="flex flex-col items-center gap-2 w-full py-1">
+              {renderHeaderActionButtons("flex-col items-center")}
             </div>
           ) : (
-            <div className="gm-nav w-full">
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleBellClick();
-                }}
-                className="text-left"
-                title="Notificações e Atualizações"
-              >
-                <div className="relative shrink-0 flex items-center">
-                  <Bell size={18} className={unreadCount > 0 ? "animate-swing" : ""} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black animate-pulse" />
-                  )}
-                </div>
-                <span className="text-sm flex-1 text-left">Atualizações</span>
-                {unreadCount > 0 ? (
-                  <span className="shrink-0 px-2 py-0.5 text-[9px] font-black uppercase bg-red-500 text-white rounded-md z-10">
-                    {unreadCount} Novas
-                  </span>
-                ) : (
-                  <span className="shrink-0 px-2 py-0.5 text-[8.5px] font-extrabold uppercase bg-neutral-800 text-zinc-400 rounded-md z-10">
-                    Em dia
-                  </span>
-                )}
-              </a>
-
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  signOut();
-                }}
-                className="text-left"
-                title="Sair"
-              >
-                <LogOut size={18} className="transition-transform hover:scale-110" />
-                <span className="text-sm text-left">Sair</span>
-              </a>
-              <div className="mt-2 text-[11px] text-slate-500 text-center opacity-60 pointer-events-none">
+            <div className="flex flex-col gap-2 w-full pt-2 border-t border-white/10">
+              <div className="flex items-center justify-center gap-2">
+                {renderHeaderActionButtons()}
+              </div>
+              <div className="mt-1 text-[11px] text-slate-500 text-center opacity-60 pointer-events-none">
                 <i>Desenvolvido por</i> <span className="font-bold text-[var(--gm-menu-title)]">CardDigital</span> <span className="font-bold text-[var(--gm-menu-primary)] gm-logo-highlight">GM</span>
               </div>
             </div>
@@ -814,7 +754,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         ref={setRefs}
         className="gm-main pb-28 md:pb-0"
       >
-        <div className="gm-container min-h-full flex flex-col">{children}</div>
+        <div className="gm-container min-h-full flex flex-col">
+          {children}
+        </div>
       </main>
       
       {/* SCROLL INDICATORS CONTAINER */}

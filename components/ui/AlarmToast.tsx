@@ -143,14 +143,14 @@ const AlarmToast = () => {
   const companyLogo = settings?.company_logo_url;
 
   return (
-    <div className="fixed bottom-20 right-4 z-[9999] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed inset-0 sm:inset-auto sm:bottom-20 sm:right-4 z-[9999] flex flex-col items-center justify-center sm:items-end p-4 sm:p-0 gap-3 pointer-events-none">
       {alarms.map((alarm) => {
         const descriptionText = getNotificationText(alarm);
 
         return (
           <div
             key={alarm.id}
-            className="pointer-events-auto w-[360px] max-w-[92vw] rounded-xl border border-white/10 bg-[#151619]/95 backdrop-blur-md shadow-[0_16px_36px_rgba(0,0,0,0.6)] p-4 animate-slide-up transition-all"
+            className="pointer-events-auto w-[360px] max-w-[92vw] rounded-xl border border-white/10 bg-[#151619]/95 backdrop-blur-md shadow-[0_25px_60px_rgba(0,0,0,0.8)] p-4 animate-scale-up sm:animate-slide-up transition-all"
           >
             {/* Header: Company Logo + Company Name */}
             <div className="flex items-center justify-between pb-2 mb-3 border-b border-white/10">

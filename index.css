@@ -1570,17 +1570,29 @@ aside.gm-sidebar,
     inset 0 0 16px 8px rgba(255, 255, 255, 0.35) !important;
 }
 
-/* inputs */
-.gm-input{
-  background: rgba(255,255,255,0.06) !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-  backdrop-filter: blur(14px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(120%) !important;
+/* inputs - glassmorphism styling across all typing fields */
+.gm-input,
+input[type="text"].gm-input,
+input[type="password"].gm-input,
+input[type="email"].gm-input,
+input[type="number"].gm-input,
+input[type="search"].gm-input,
+textarea.gm-input,
+select.gm-input {
+  background: rgba(16, 20, 26, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(16px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(130%) !important;
+  transition: all 0.2s ease-in-out !important;
 }
-.gm-input:focus{
-  outline:none;
-  border-color: rgba(255,123,0,0.55) !important;
-  box-shadow: 0 0 0 4px rgba(255,123,0,0.12);
+
+.gm-input:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: rgba(255, 105, 0, 0.7) !important;
+  box-shadow: 0 0 14px rgba(255, 105, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
 /* BG layer global */
@@ -5723,5 +5735,17 @@ svg[data-icon="whatsapp"] path {
   fill: currentColor !important;
   stroke: none !important;
   stroke-width: 0 !important;
+}
+
+.gm-budget-action-btn:hover .whatsapp-icon,
+.gm-budget-action-btn:hover svg.whatsapp-icon,
+.gm-budget-action-btn:hover svg[data-icon="whatsapp"],
+.gm-budget-action-btn:active .whatsapp-icon,
+.gm-budget-action-btn:active svg.whatsapp-icon,
+.gm-budget-action-btn:active svg[data-icon="whatsapp"],
+button:hover .whatsapp-icon,
+button:active .whatsapp-icon {
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
 }
 

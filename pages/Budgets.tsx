@@ -453,32 +453,30 @@ function VirtualizedBudgetGrid({
 
                       {/* FOOTER em 2 linhas (caps + ações) */}
                       <div className="mt-5 pt-4 border-t border-white/5 flex flex-col gap-3">
-                        {/* cápsulas de status */}
-                        <div>
-                          <DraggableScroll>
-                            {sortedOptions.map((opt) => {
-                              const isActive = currentStatus === opt.value;
-                              const activeCls = pillClass(opt.value);
-                              const inactiveCls =
-                                "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
+                        {/* cápsulas de status uniformes e expandidas até o final */}
+                        <div className="grid grid-cols-4 gap-2 w-full">
+                          {sortedOptions.map((opt) => {
+                            const isActive = currentStatus === opt.value;
+                            const activeCls = pillClass(opt.value);
+                            const inactiveCls =
+                              "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
 
-                              return (
-                                <button
-                                  key={opt.value}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateStatusInstant(r.id, opt.value);
-                                  }}
-                                  className={`snap-start shrink-0 px-3 py-1.5 rounded-full text-[11px] font-extrabold tracking-wide transition-all whitespace-nowrap border ${
-                                    isActive ? activeCls + " shadow-md" : inactiveCls
-                                  }`}
-                                >
-                                  {opt.label}
-                                </button>
-                              );
-                            })}
-                          </DraggableScroll>
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateStatusInstant(r.id, opt.value);
+                                }}
+                                className={`w-full h-8 px-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-tight transition-all truncate flex items-center justify-center border ${
+                                  isActive ? activeCls + " shadow-md" : inactiveCls
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            );
+                          })}
                         </div>
 
                         {/* ações compactas */}
@@ -490,14 +488,14 @@ function VirtualizedBudgetGrid({
                               </button>
 
                               <button
-                                className={iconBtn("green")}
+                                className={iconBtn("orange")}
                                 title="Enviar via WhatsApp / Compartilhar"
                                 onClick={() => handleShare(r)}
                                 type="button"
                                 disabled={sharing === r.id}
                               >
                                 {sharing === r.id ? (
-                                  <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                  <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                                 ) : (
                                   <WhatsAppIcon size={16} />
                                 )}
@@ -1032,36 +1030,38 @@ export default function Budgets() {
         <SectionDivider label="Filtros" />
         <DraggableScroll className="mb-4 pb-2">
           {[
-            "AGUARDANDO",
-            "APROVADO",
-            "CONCLUIDOS",
-            "CANCELADOS",
-          ].map((status) => {
-            const active = tab === status;
-            const label = status === "CONCLUIDOS" ? "CONCLUÍDOS" : status;
+            { key: "AGUARDANDO", label: "AGUARDANDO", statusVal: "AGUARDANDO" },
+            { key: "APROVADO", label: "APROVADO", statusVal: "APROVADO" },
+            { key: "CONCLUIDOS", label: "CONCLUÍDOS", statusVal: "CONCLUIDO" },
+            { key: "CANCELADOS", label: "CANCELADOS", statusVal: "CANCELADO" },
+          ].map((item) => {
+            const active = tab === item.key;
+            const activeCls = pillClass(item.statusVal);
+            const inactiveCls =
+              "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
 
             return (
               <button
-                key={status}
-                onClick={() => setTab(status as TabKey)}
-                className={`relative px-6 py-3 rounded-full text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border-2 ${
-                  active 
-                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_20px_var(--gm-primary-20)] scale-105" 
-                    : "bg-black/40 border-white/10 text-slate-400 hover:bg-white/10 hover:border-white/20 hover:text-white"
+                key={item.key}
+                type="button"
+                onClick={() => setTab(item.key as TabKey)}
+                className={`snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border ${
+                  active ? activeCls + " shadow-md" : inactiveCls
                 }`}
               >
-                {label}
+                {item.label}
               </button>
             );
           })}
 
           {/* Lixeira separada */}
           <button
+            type="button"
             onClick={() => setTab("LIXEIRA")}
-            className={`px-6 py-3 rounded-full text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border-2 ${
+            className={`snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border ${
               tab === "LIXEIRA"
-                ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_20px_var(--gm-primary-20)] scale-105"
-                : "bg-black/40 border-[var(--gm-primary)]/20 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/10 hover:border-[var(--gm-primary)]/40 hover:text-[var(--gm-primary)] shadow-none"
+                ? pillClass("CANCELADO") + " shadow-md"
+                : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
             }`}
           >
             LIXEIRA

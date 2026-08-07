@@ -1417,9 +1417,9 @@ export default function Bio() {
               </span>
               <span className="text-zinc-400 dark:text-zinc-600 text-2xl font-light mx-0.5">|</span>
               <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-gradient-to-br dark:from-white/10 dark:to-transparent border border-zinc-200 dark:border-white/10 flex items-center justify-center overflow-hidden shadow-md">
-                {settings?.company_logo_url || bioConfig.logo_url ? (
+                {settings?.company_logo_url || (bioConfig as any).logo_url ? (
                   <img 
-                    src={settings?.company_logo_url || bioConfig.logo_url} 
+                    src={settings?.company_logo_url || (bioConfig as any).logo_url} 
                     alt="Logo da Empresa" 
                     className="w-full h-full object-contain"
                   />

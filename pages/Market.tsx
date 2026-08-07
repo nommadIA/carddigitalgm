@@ -28,6 +28,41 @@ type MarketHistory = {
   lists: { id: string; amount: number; created_at: string; note: string; items?: CartItem[] }[];
 };
 
+const SUPERMARKET_FOOD_SUGGESTIONS = [
+  // Grãos, Farinhas e Matinais
+  "Arroz 5kg", "Arroz Integral 1kg", "Arroz Parboilizado 1kg", "Feijão Carioca 1kg", "Feijão Preto 1kg",
+  "Açúcar Refinado 1kg", "Açúcar Cristal 1kg", "Café Torrado e Moído 500g", "Café Solúvel 100g",
+  "Óleo de Soja 900ml", "Azeite de Oliva Extra Virgem 500ml", "Sal Refinado 1kg", "Farinha de Trigo 1kg",
+  "Farinha de Mandioca 1kg", "Fubá Mimoso 1kg", "Tapioca 500g", "Aveia em Flocos 170g",
+  // Massas e Enlatados
+  "Macarrão Espaguete 500g", "Macarrão Parafuso 500g", "Macarrão Penne 500g", "Massa de Lasanha 500g",
+  "Molho de Tomate Sachê 340g", "Extrato de Tomate 130g", "Milho Verde em Lata", "Ervilha em Lata",
+  "Sardinha em Lata", "Atum Ralado em Lata", "Maionese 500g", "Ketchup 400g", "Mostarda 200g",
+  // Laticínios e Padaria
+  "Leite Integral 1L", "Leite Desnatado 1L", "Leite Semidesnatado 1L", "Leite Condensado 395g",
+  "Creme de Leite 200g", "Manteiga com Sal 200g", "Margarina 500g", "Requeijão Cremoso 200g",
+  "Queijo Mussarela Fatiado", "Queijo Prato Fatiado", "Queijo Parmesão Ralado 50g", "Presunto Fatiado",
+  "Peito de Peru Fatiado", "Iogurte Natural 170g", "Iogurte de Morango 1L", "Ovos Brancos Dúzia",
+  "Pão de Forma 500g", "Pão Francês 1kg", "Torrada Tradicional 140g", "Biscoito Recheado",
+  "Biscoito Cream Cracker 400g", "Biscoito Maizena 400g", "Achocolatado em Pó 400g",
+  // Carnes, Aves e Frios
+  "Carne Moída 1kg", "Peito de Frango 1kg", "Coxa e Sobrecoxa de Frango 1kg", "Bife de Alcatra 1kg",
+  "Contra Filé 1kg", "Picanha 1kg", "Costela Suína 1kg", "Linguiça Toscana 1kg", "Linguiça Calabresa",
+  "Salsicha 1kg", "Bacon Fatiado", "Bife de Coxão Mole 1kg",
+  // Hortifruti
+  "Banana Prata 1kg", "Maçã Fuji 1kg", "Mamão Formosa", "Melancia", "Laranja Pera 1kg",
+  "Limão Taiti 1kg", "Tomate 1kg", "Cebola 1kg", "Alho 200g", "Batata Inglesa 1kg",
+  "Cenoura 1kg", "Abobrinha", "Alface Crespa", "Cheiro Verde", "Bandeja de Morango",
+  // Bebidas
+  "Refrigerante Coca-Cola 2L", "Refrigerante Guaraná 2L", "Suco de Caixa 1L", "Água Mineral 5L",
+  "Cerveja Latão 473ml", "Cerveja Long Neck", "Vinho Tinto 750ml",
+  // Higiene e Limpeza
+  "Sabão em Pó 1kg", "Sabão Líquido 3L", "Detergente Neutro 500ml", "Amaciante Concentrado 1.5L",
+  "Desinfetante 1L", "Água Sanitária 2L", "Papel Higiênico 12 rolos", "Papel Toalha 2 rolos",
+  "Saco de Lixo 50L", "Esponja de Louça 4un", "Sabonete 90g", "Shampoo 400ml", "Condicionador 400ml",
+  "Creme Dental 90g", "Desodorante Aerosol"
+];
+
 const Market = () => {
   const { tenantId, user } = useAuth();
   
@@ -50,8 +85,80 @@ const Market = () => {
 
   const [newItemName, setNewItemName] = useState('');
   const [newItemPrice, setNewItemPrice] = useState('');
-  const [newItemQty, setNewItemQty] = useState(1);
+  const [newItemQty, setNewItemQty] = useState<string | number>(1);
   const [addingItem, setAddingItem] = useState(false);
+  const [showProductSuggestions, setShowProductSuggestions] = useState(false);
+
+  const priceInputRef = React.useRef<HTMLInputElement>(null);
+  const productContainerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (productContainerRef.current && !productContainerRef.current.contains(event.target as Node)) {
+        setShowProductSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const parsePriceStr = (val: string): number => {
+    if (!val) return 0;
+    const clean = val.replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
+    return parseFloat(clean) || 0;
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    val = val.replace(/[^0-9.,]/g, '');
+    val = val.replace('.', ',');
+    const parts = val.split(',');
+    if (parts.length > 2) {
+      val = parts[0] + ',' + parts.slice(1).join('');
+    }
+    if (val.length > 1 && val.startsWith('0') && val[1] !== ',') {
+      val = val.replace(/^0+/, '');
+    }
+    setNewItemPrice(val);
+  };
+
+  const handlePriceBlur = () => {
+    const num = parsePriceStr(newItemPrice);
+    if (isNaN(num) || num <= 0) {
+      setNewItemPrice('');
+    } else {
+      setNewItemPrice(num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    }
+  };
+
+  const handlePriceFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
+    if (newItemPrice === '0,00' || newItemPrice === '0' || newItemPrice === '0.00') {
+      setNewItemPrice('');
+    }
+  };
+
+  const productSuggestions = useMemo(() => {
+    const term = newItemName.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (!term) {
+      return [];
+    }
+    return SUPERMARKET_FOOD_SUGGESTIONS.filter(item => {
+      const itemClean = item.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return itemClean.includes(term);
+    }).slice(0, 8);
+  }, [newItemName]);
+
+  const selectSuggestion = (name: string) => {
+    setNewItemName(name);
+    setShowProductSuggestions(false);
+    setTimeout(() => {
+      if (priceInputRef.current) {
+        priceInputRef.current.focus();
+        priceInputRef.current.select();
+      }
+    }, 50);
+  };
   const [topUpModalOpen, setTopUpModalOpen] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('');
   const [toppingUp, setToppingUp] = useState(false);
@@ -227,7 +334,7 @@ const Market = () => {
 
   const handleAddItem = async () => {
     const nome = newItemName.trim();
-    const preco = Number(newItemPrice) || 0;
+    const preco = parsePriceStr(newItemPrice);
     if (!nome) return;
     
     setAddingItem(true);
@@ -237,13 +344,16 @@ const Market = () => {
             user_id: user?.id,
             name: nome,
             unit_price: preco,
-            quantity: newItemQty
+            quantity: Number(newItemQty) || 1
         }).select().single();
 
         if (error) throw error;
 
         setCartItems(prev => [data, ...prev]);
-        setNewItemName(""); setNewItemPrice(""); setNewItemQty(1);
+        setNewItemName(""); 
+        setNewItemPrice(""); 
+        setNewItemQty(1);
+        setShowProductSuggestions(false);
     } catch (e: any) {
         alert("Erro ao adicionar item: " + e.message);
     } finally {
@@ -728,13 +838,13 @@ const Market = () => {
        ) : (
            <Grid cols={1} className="gap-6">
                 {/* Add Item Form */}
-                <Card title="Adicionar Item">
+                <Card title="Adicionar Item" className="!overflow-visible !contain-none relative z-30">
                     <div className="flex flex-col gap-4">
                         <div className="w-full">
                             <label className="gm-label mb-1 block">Captura por Voz</label>
                             <div className="flex gap-2">
                                 <button 
-                                   className={`gm-btn w-full flex items-center justify-center h-12 rounded-xl shadow-lg gap-2 transition-colors ${isListening ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/30' : processingVoice ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/30' : 'bg-slate-800 text-white hover:bg-slate-700 shadow-black/20'}`}
+                                   className={`gm-btn w-full flex items-center justify-center h-12 !rounded-md shadow-lg gap-2 transition-colors ${isListening ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/30' : processingVoice ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/30' : 'bg-slate-800 text-white hover:bg-slate-700 shadow-black/20'}`}
                                    onClick={handleVoiceInput}
                                    disabled={isListening || processingVoice}
                                 >
@@ -761,28 +871,118 @@ const Market = () => {
                             </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row gap-4 items-end">
-                            <div className="flex-1 w-full">
-                                <label className="gm-label mb-1 block">Produto</label>
-                                <input 
-                                    type="text"
-                                    className="gm-input w-full h-12" 
-                                    value={newItemName} 
-                                    onChange={e => setNewItemName(e.target.value)} 
-                                    placeholder="Ex: Arroz 5kg" 
-                                />
+                        <div className="flex flex-col gap-2">
+                            <div className="flex flex-col md:flex-row gap-4 items-end">
+                                <div className="flex-1 w-full relative" ref={productContainerRef}>
+                                    <label className="gm-label mb-1 block">Produto (Alimento / Item)</label>
+                                    <div className="relative">
+                                        <input 
+                                            type="text"
+                                            className="gm-input w-full h-12 pr-10 !rounded-md" 
+                                            value={newItemName} 
+                                            onChange={e => {
+                                                setNewItemName(e.target.value);
+                                                setShowProductSuggestions(true);
+                                            }}
+                                            onFocus={() => {
+                                                if (newItemName.trim()) {
+                                                    setShowProductSuggestions(true);
+                                                }
+                                            }}
+                                            placeholder="Ex: Arroz 5kg, Feijão, Leite..." 
+                                            autoComplete="off"
+                                        />
+                                        {newItemName && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setNewItemName('');
+                                                    setShowProductSuggestions(false);
+                                                }}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Modal de Sugestões flutuante fora do card com Glass Blur e Tom Laranja */}
+                                    {showProductSuggestions && newItemName.trim().length > 0 && productSuggestions.length > 0 && (
+                                        <div className="absolute left-0 right-0 top-full mt-2 bg-zinc-950/95 backdrop-blur-xl border border-orange-500/40 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] z-[9999] p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
+                                            <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-orange-400 uppercase bg-orange-500/10 rounded-md flex items-center justify-between mb-1">
+                                                <span>Sugestões de Alimentos</span>
+                                                <span className="text-[9px] text-zinc-400 font-normal">Toque para selecionar</span>
+                                            </div>
+                                            {productSuggestions.map((suggestion) => (
+                                                <button
+                                                    key={suggestion}
+                                                    type="button"
+                                                    className="w-full text-left px-3.5 py-2.5 text-sm text-zinc-100 hover:bg-orange-500/20 hover:text-white transition-all !rounded-md flex items-center justify-between group cursor-pointer border border-transparent hover:border-orange-500/30"
+                                                    onClick={() => selectSuggestion(suggestion)}
+                                                >
+                                                    <span className="font-medium group-hover:translate-x-1 transition-transform flex items-center gap-2">
+                                                        <span className="text-orange-500">🛒</span> {suggestion}
+                                                    </span>
+                                                    <span className="text-[10px] text-orange-400 font-semibold bg-orange-500/10 px-2 py-0.5 !rounded-md border border-orange-500/20">
+                                                        Selecionar
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="w-full md:w-44">
+                                    <label className="gm-label mb-1 block">Preço (Un)</label>
+                                    <div className="relative flex items-center">
+                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-orange-500 z-10 pointer-events-none select-none">R$</span>
+                                        <input 
+                                            ref={priceInputRef}
+                                            type="text" 
+                                            inputMode="decimal"
+                                            className="gm-input h-12 w-full !pl-11 pr-3 font-bold text-base md:text-lg text-white !rounded-md" 
+                                            value={newItemPrice} 
+                                            onChange={handlePriceChange}
+                                            onBlur={handlePriceBlur}
+                                            onFocus={handlePriceFocus} 
+                                            onClick={(e) => {
+                                                (e.target as HTMLInputElement).select();
+                                                if (newItemPrice === '0,00' || newItemPrice === '0') setNewItemPrice('');
+                                            }}
+                                            placeholder="0,00" 
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="w-full md:w-24">
+                                    <label className="gm-label mb-1 block">Qtd</label>
+                                    <input 
+                                        className="gm-input text-center h-12 w-full font-bold !rounded-md" 
+                                        type="text" 
+                                        inputMode="numeric"
+                                        value={newItemQty} 
+                                        onChange={e => {
+                                            const val = e.target.value.replace(/[^0-9]/g, '');
+                                            const clean = val.replace(/^0+(?=\d)/, '');
+                                            setNewItemQty(clean);
+                                        }} 
+                                        onBlur={() => {
+                                            if (!newItemQty || Number(newItemQty) < 1) {
+                                                setNewItemQty(1);
+                                            }
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.select();
+                                            if (newItemQty === 0 || newItemQty === '0') setNewItemQty('');
+                                        }}
+                                        placeholder="1" 
+                                    />
+                                </div>
+
+                                <button className="gm-btn h-12 w-full md:w-auto px-8 !rounded-md font-bold flex items-center justify-center gap-2" onClick={handleAddItem} disabled={addingItem}>
+                                    {addingItem ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />} Adicionar
+                                </button>
                             </div>
-                            <div className="w-full md:w-32">
-                                <label className="gm-label mb-1 block">Preço (Un)</label>
-                                <input className="gm-input h-12 w-full" type="number" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} onFocus={(e) => e.target.select()} placeholder="0.00" />
-                            </div>
-                            <div className="w-full md:w-24">
-                                <label className="gm-label mb-1 block">Qtd</label>
-                                <input className="gm-input text-center h-12 w-full" type="number" value={newItemQty} onChange={e => setNewItemQty(Number(e.target.value))} onFocus={(e) => e.target.select()} />
-                            </div>
-                            <button className="gm-btn h-12 w-full md:w-auto px-8" onClick={handleAddItem} disabled={addingItem}>
-                                {addingItem ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />} Adicionar
-                            </button>
                         </div>
                     </div>
                 </Card>
@@ -793,7 +993,7 @@ const Market = () => {
                     right={
                         cartItems.length > 0 && (
                             <button 
-                                className="gm-btn gm-btn-accent font-black transition-all px-6 py-2 rounded-xl flex items-center gap-2"
+                                className="gm-btn gm-btn-accent font-black transition-all px-6 py-2 !rounded-md flex items-center gap-2"
                                 onClick={() => setShowFinalizeConfirm(true)}
                                 disabled={finalizing}
                             >
@@ -825,7 +1025,7 @@ const Market = () => {
                                         <span className="font-bold text-xl text-[var(--gm-primary)]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
                                         <button 
                                             onClick={() => handleRemoveItem(item.id)} 
-                                            className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] text-white hover:brightness-110 transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
+                                            className="h-10 w-10 !rounded-md bg-[var(--gm-primary)] text-white hover:brightness-110 transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
                                             title="Remover item"
                                         >
                                             <Trash2 size={18} className="text-white" />
@@ -881,14 +1081,14 @@ const Market = () => {
                         
                         <div className="grid grid-cols-1 gap-3 w-full">
                             <button 
-                                className="gm-btn w-full py-4 font-black text-lg" 
+                                className="gm-btn w-full py-4 font-black text-lg !rounded-md" 
                                 onClick={handleTopUp}
                                 disabled={toppingUp}
                             >
                                 {toppingUp ? <Loader2 size={24} className="animate-spin mx-auto" /> : "CONFIRMAR RECARGA"}
                             </button>
                             <button 
-                                className="gm-btn gm-btn-soft w-full py-3" 
+                                className="gm-btn gm-btn-soft w-full py-3 !rounded-md" 
                                 onClick={() => setTopUpModalOpen(false)}
                             >
                                 CANCELAR

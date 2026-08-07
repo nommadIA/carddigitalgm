@@ -3153,15 +3153,15 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-[#FE540B]/20 rounded-lg blur-md scale-105" />
               <div className="relative w-20 h-20 rounded-lg border border-white/10 bg-[#0c0d12] flex items-center justify-center p-2.5 overflow-hidden">
-                {config?.logo_url ? (
+                {(data as any)?.logo_url ? (
                   <img 
-                    src={config.logo_url} 
-                    alt={config?.title || "Logo"} 
+                    src={(data as any).logo_url} 
+                    alt={(data as any)?.title || "Logo"} 
                     className="w-full h-full object-contain"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[var(--gm-primary)] font-black text-2xl uppercase tracking-wider">
-                    {config?.title ? config.title.substring(0, 2) : "GM"}
+                    {(data as any)?.title ? (data as any).title.substring(0, 2) : "GM"}
                   </div>
                 )}
               </div>
@@ -3172,7 +3172,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               Acesso Autorizado! 🚀
             </h3>
             <p className="text-sm font-semibold opacity-80 mb-6 font-funnel uppercase tracking-wider" style={{ color: "#FE540B" }}>
-              {config?.title || "CardDigital GM"}
+              {(data as any)?.title || "CardDigital GM"}
             </p>
 
             {/* Content text */}
