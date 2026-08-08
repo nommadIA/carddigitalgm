@@ -54,7 +54,7 @@ function monthRange(monthYYYYMM: string) {
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState<ExpenseUI[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();

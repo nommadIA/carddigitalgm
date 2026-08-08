@@ -31,8 +31,9 @@ import SafeResponsive from "../components/ui/SafeResponsive";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
 import { pushToast } from "../store/toast";
-import { fetchSettingsSupabase, AppSettings } from "../lib/settings";
+import { fetchSettingsSupabase, readSettingsLocal, AppSettings } from "../lib/settings";
 import { SectionDivider } from "../components/ui/SectionDivider";
+import { generateFullAppSummaryPdf } from "../services/pdfService";
 
 function formatPhoneBR(value: string) {
   const digits = (value || "").replace(/\D/g, "").slice(0, 11);
@@ -103,14 +104,14 @@ const inputBase =
 export default function Dashboard() {
   const { tenantId } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Modal Faturamento State
   const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
   const [faturamentoPeriod, setFaturamentoPeriod] = useState<"30d" | "6m" | "12m">("30d");
 
   // App Settings (for user registered company logo & name)
-  const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
+  const [appSettings, setAppSettings] = useState<AppSettings | null>(() => readSettingsLocal());
 
   // Live Clock & Date Widget State
   const [now, setNow] = useState<Date>(new Date());
@@ -271,8 +272,46 @@ export default function Dashboard() {
     }
   };
 
-  const handleExport = () => {
-    pushToast({ title: "Relatório exportado com sucesso!", type: "success" });
+  // Exporting state
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!tenantId) {
+      pushToast({ title: "Sessão não identificada", type: "error" });
+      return;
+    }
+
+    try {
+      setExporting(true);
+      pushToast({ title: "Gerando relatório completo em PDF com Timbrado...", type: "info" });
+
+      const [settingsData, budgetsRes, clientsRes, notesRes, expensesRes, marketRes] = await Promise.all([
+        fetchSettingsSupabase(tenantId),
+        supabase.from("budgets").select("*").eq("tenant_id", tenantId).is("deleted_at", null).order("created_at", { ascending: false }),
+        supabase.from("clients").select("*").eq("tenant_id", tenantId).is("deleted_at", null).order("created_at", { ascending: false }),
+        supabase.from("notes").select("*").eq("tenant_id", tenantId).is("deleted_at", null).order("created_at", { ascending: false }),
+        supabase.from("expenses").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false }),
+        supabase.from("shopping_items").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false }),
+      ]);
+
+      const settings = settingsData || (appSettings as AppSettings) || { company_name: "CardDigital GM" };
+
+      await generateFullAppSummaryPdf({
+        settings,
+        budgets: budgetsRes.data || [],
+        clients: clientsRes.data || [],
+        notes: notesRes.data || [],
+        expenses: expensesRes.data || [],
+        marketItems: marketRes.data || [],
+      });
+
+      pushToast({ title: "Relatório Timbrado exportado com sucesso!", type: "success" });
+    } catch (err: any) {
+      console.error("Erro na exportação do relatório:", err);
+      pushToast({ title: err.message || "Falha ao gerar o relatório em PDF", type: "error" });
+    } finally {
+      setExporting(false);
+    }
   };
 
   const formatCurrency = (val: number) => {
@@ -417,23 +456,35 @@ export default function Dashboard() {
           </span>
         </div>
 
-        {/* BOTÕES EXPORTAR E NOVO ORÇAMENTO LADO A LADO LARGURA TOTAL */}
+        {/* BOTÕES NOVO ORÇAMENTO E EXPORTAR LADO A LADO COM O MESMO VISUAL PADRÃO */}
         <div className="flex items-center justify-center gap-3 sm:gap-4 w-full">
-          <button
-            onClick={handleExport}
-            className="gm-btn gm-btn-soft flex-1 h-12 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2"
-          >
-            <Download size={18} />
-            <span>Exportar</span>
-          </button>
-
           <Link
             to="/budgets?new=true"
-            className="gm-btn flex-1 h-12 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 group"
+            className="gm-btn group flex-1 h-12 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] transition-all cursor-pointer"
           >
             <Plus size={18} className="transition-transform duration-300 ease-in-out group-hover:rotate-180" />
             <span>Novo Orçamento</span>
           </Link>
+
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            className="gm-btn group flex-1 h-12 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            title="Exportar relatório consolidado (Orçamentos, Clientes, Notas, Financeiro e Mercado) no papel timbrado"
+          >
+            {exporting ? (
+              <>
+                <Loader2 size={18} className="animate-spin text-white" />
+                <span>Exportando...</span>
+              </>
+            ) : (
+              <>
+                <Download size={18} className="transition-transform duration-300 ease-in-out group-hover:scale-110" />
+                <span>Exportar</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 

@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { playNotificationSound } from "../../lib/audio";
 import { useAuth } from "../../store/AuthContext";
-import { fetchSettingsSupabase, applySettingsToDOM } from "../../lib/settings";
+import { fetchSettingsSupabase, applySettingsToDOM, readSettingsLocal } from "../../lib/settings";
 import AlarmToast from "./AlarmToast";
 import { ToastHost } from "./Toast";
 import BottomNav from "./BottomNav";
@@ -155,25 +155,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   const handleBellClick = () => {
     setShowUpdateModal(true);
-    if ("Notification" in window) {
-      if (Notification.permission === "granted") {
-        new Notification("CardDigital GM • Nova Versão", {
-          body: "A versão v2.1.0 foi ativada com sucesso! Conectado e funcionando em tempo real.",
-          icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
-        });
-        try { playNotificationSound(); } catch (e) {}
-      } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then((perm) => {
-          if (perm === "granted") {
-            new Notification("CardDigital GM • Novo!", {
-              body: "Agora você receberá alertas de nova versão fora do aplicativo.",
-              icon: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
-            });
-            try { playNotificationSound(); } catch (e) {}
-          }
-        });
-      }
-    }
+    try { playNotificationSound(); } catch (e) {}
   };
 
   useEffect(() => {
@@ -244,7 +226,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     return () => window.removeEventListener("gm_theme_updated", handleThemeUpdate);
   }, [tenantId]);
 
-  const [appSettings, setAppSettings] = useState<any>(null);
+  const [appSettings, setAppSettings] = useState<any>(() => readSettingsLocal());
 
   useEffect(() => {
     fetchSettingsSupabase(tenantId)
@@ -1027,7 +1009,6 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         </div>
       )}
       <WhatsAppSelectorModal />
-      <BottomNav />
     </div>
   );
 }

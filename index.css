@@ -722,10 +722,18 @@ button{ font-family:inherit; }
 :root:not([data-button-style="solid"]) .gm-btn:hover,
 .gm-preview-container[data-button-style="outline"] .gm-btn:hover,
 .gm-preview-container[data-button-style="vazado"] .gm-btn:hover {
-  background-color: var(--gm-primary-10, rgba(255, 105, 0, 0.12)) !important;
+  background-color: var(--gm-primary) !important;
+  background: var(--gm-primary) !important;
   border-color: var(--gm-primary) !important;
-  transform: none !important;
-  box-shadow: 0 4px 14px var(--gm-primary-20) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(254, 84, 11, 0.45) !important;
+}
+
+[data-button-style="outline"] .gm-btn:hover span,
+[data-button-style="vazado"] .gm-btn:hover span,
+:root:not([data-button-style="solid"]) .gm-btn:hover span {
+  color: #ffffff !important;
 }
 
 [data-button-style="outline"] .gm-btn.gm-btn-soft,
@@ -1083,7 +1091,14 @@ button.gm-budget-action-btn:hover svg,
 .btn-action-delete:hover svg,
 .btn-action-neutral:hover svg,
 .btn-whatsapp:hover svg {
-  transform: scale(1.15) !important;
+  transform: scale(1.15);
+}
+
+.group:hover .group-hover\:rotate-180,
+.gm-btn:hover svg.group-hover\:rotate-180,
+button:hover svg.group-hover\:rotate-180,
+a:hover svg.group-hover\:rotate-180 {
+  transform: rotate(180deg) scale(1.15) !important;
 }
 
 .gm-btn:active svg,
@@ -1756,14 +1771,13 @@ select:focus {
   color: var(--gm-title, var(--gm-text)) !important;
 }
 
-/* Neutraliza o escurecimento do layout no tema claro e remove efeitos parallax de fundo */
+/* Neutraliza o escurecimento do layout no tema claro e permite visualização da imagem de fundo */
 [data-theme="light"] .gm-layout::after, 
 .gm-light .gm-layout::after {
-  background: var(--gm-bg) !important;
-  background-color: var(--gm-bg) !important;
+  background: transparent !important;
+  background-color: transparent !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  opacity: 1 !important;
 }
 
 /* 1. Cor do Plano de Fundo Geral (Transparente para exibir plano de fundo sem caixa preta) */
@@ -4917,12 +4931,9 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   color: #0F172A !important;
 }
 
-[data-theme="light"] .gm-layout::before,
 [data-theme="light"] .gm-layout::after,
-.gm-light .gm-layout::before,
 .gm-light .gm-layout::after {
-  background-color: #F4F5F8 !important;
-  opacity: 1 !important;
+  background-color: transparent !important;
 }
 
 /* 2. Overriding Hardcoded Dark Background Classes to Clean White/Light Gray */
@@ -5749,3 +5760,12 @@ button:active .whatsapp-icon {
   color: #FFFFFF !important;
 }
 
+
+/* =========================================================
+   ALINHAMENTO GERAL — Consistência de ícones e botões
+========================================================= */
+/* Traço mais fino e uniforme em todos os ícones Lucide (exceto ícones
+   de marca preenchidos, como o do WhatsApp, que não usam stroke) */
+svg:not(.whatsapp-icon):not([data-icon="whatsapp"]) {
+  stroke-width: 1.75;
+}

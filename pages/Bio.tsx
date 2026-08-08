@@ -3,7 +3,7 @@ import { Page } from "../components/ui/Page";
 import { Link } from "react-router-dom";
 import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, ChevronLeft, Save, Smartphone, Monitor, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard, List, PlusCircle, Trash2, RotateCcw, Edit3, AlignLeft, AlignCenter, AlignRight, Bold, Italic, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
-import { fetchSettingsSupabase, upsertSettingsSupabase, AppSettings } from "../lib/settings";
+import { fetchSettingsSupabase, upsertSettingsSupabase, readSettingsLocal, AppSettings } from "../lib/settings";
 import { pushToast } from "../store/toast";
 import BioRenderer, { getPlatformIcon } from "../components/bio/BioRenderer";
 import { supabase } from "../lib/supabase";
@@ -79,11 +79,12 @@ function OptimizedImage({ src, alt, className, width = 360 }: { src: string; alt
 
 export default function Bio() {
   const { tenantId } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const cachedSettings = readSettingsLocal();
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [settings, setSettings] = useState<AppSettings | null>(cachedSettings);
   const [iconPickerOpen, setIconPickerOpen] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<"smartphone" | "pc">("smartphone");
@@ -988,29 +989,28 @@ export default function Bio() {
 
   const loadData = async () => {
     if (!tenantId) return;
-    setLoading(true);
     const s = await fetchSettingsSupabase(tenantId);
-    setSettings(s);
-    if (s?.bio_config) {
-      setBioConfig({
-        ...bioConfig,
-        ...s.bio_config,
-        custom_links: s.bio_config.custom_links || [],
-        catalog_items: s.bio_config.catalog_items || [],
-        catalog_title: s.bio_config.catalog_title || "Catálogo",
-        portfolio_items: s.bio_config.portfolio_items || [],
-        portfolio_title: s.bio_config.portfolio_title || "Portfólio",
-      });
-    } else {
-      // Tentar pegar infos já existentes caso não tenha bio_config configurada
-      setBioConfig({
-        ...bioConfig,
-        title: s?.company_name || "",
-        pix_key: s?.pix_key || "",
-        pix_type: s?.pix_type || "CPF",
-      });
+    if (s) {
+      setSettings(s);
+      if (s.bio_config) {
+        setBioConfig(prev => ({
+          ...prev,
+          ...s.bio_config,
+          custom_links: s.bio_config.custom_links || [],
+          catalog_items: s.bio_config.catalog_items || [],
+          catalog_title: s.bio_config.catalog_title || "Catálogo",
+          portfolio_items: s.bio_config.portfolio_items || [],
+          portfolio_title: s.bio_config.portfolio_title || "Portfólio",
+        }));
+      } else {
+        setBioConfig(prev => ({
+          ...prev,
+          title: s.company_name || "",
+          pix_key: s.pix_key || "",
+          pix_type: s.pix_type || "CPF",
+        }));
+      }
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -1067,7 +1067,7 @@ export default function Bio() {
   };
 
   const handleCopyLink = () => {
-    const url = `https://carddigitalgmapp.netlify.app/${getCustomSlug()}`;
+    const url = `${window.location.origin}/${getCustomSlug()}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -1314,16 +1314,6 @@ export default function Bio() {
 
   const primaryColor = settings?.brand_primary || "#FF6900";
 
-  if (loading) {
-    return (
-      <Page title="BIO CardDigital GM">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: primaryColor }} />
-        </div>
-      </Page>
-    );
-  }
-
   const platforms = [
     { value: 'instagram', label: 'Instagram' },
     { value: 'whatsapp', label: 'WhatsApp' },
@@ -1353,7 +1343,7 @@ export default function Bio() {
   };
 
   return (
-    <Page title="BIO CardDigital GM">
+    <Page title="">
       <div 
         className="w-full max-w-[1440px] mx-auto pb-20 space-y-6 px-4 sm:px-6"
         style={{
@@ -1435,27 +1425,34 @@ export default function Bio() {
            </h3>
            <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
            
-           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <button onClick={handleCopyLink} className="gm-btn gm-btn-primary flex items-center justify-center min-w-[180px]">
-                {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+           <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 pt-2 w-full max-w-2xl mx-auto">
+              <button 
+                onClick={handleCopyLink} 
+                className="w-full sm:w-[200px] h-12 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center border-2 border-[color:var(--gm-primary)] bg-[#121316]/90 hover:bg-[color:var(--gm-primary)]/15 active:scale-95 text-white shadow-lg transition-all cursor-pointer"
+              >
+                {copied ? <Check className="w-4 h-4 mr-2 text-emerald-400" /> : <Copy className="w-4 h-4 mr-2 text-[color:var(--gm-primary)]" />}
                 {copied ? "Link Copiado!" : "Copiar Link"}
               </button>
-              <a href={`https://carddigitalgmapp.netlify.app/${getCustomSlug()}`} target="_blank" rel="noopener noreferrer" className="gm-btn gm-btn-primary flex items-center justify-center min-w-[180px]">
-                <Globe className="w-4 h-4 mr-2" /> Ver Tela Inteira
+              <a 
+                href={`${window.location.origin}/${getCustomSlug()}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-full sm:w-[200px] h-12 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center border-2 border-[color:var(--gm-primary)] bg-[#121316]/90 hover:bg-[color:var(--gm-primary)]/15 active:scale-95 text-white shadow-lg transition-all cursor-pointer"
+              >
+                <Globe className="w-4 h-4 mr-2 text-[color:var(--gm-primary)]" /> Ver Tela Inteira
               </a>
               <button 
                 onClick={() => setPreviewOpen(true)} 
-                className="gm-btn bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center min-w-[180px]"
+                className="w-full sm:w-[200px] h-12 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center border-2 border-[color:var(--gm-primary)] bg-[#121316]/90 hover:bg-[color:var(--gm-primary)]/15 active:scale-95 text-white shadow-lg transition-all cursor-pointer"
               >
-                <Eye className="w-4 h-4 mr-2" /> Visualizar Prévia
+                <Eye className="w-4 h-4 mr-2 text-[color:var(--gm-primary)]" /> Visualizar Prévia
               </button>
               <button 
                 onClick={handleSave} 
                 disabled={saving}
-                className="gm-btn hover:brightness-110 disabled:opacity-50 text-white flex items-center justify-center min-w-[180px]"
-                style={{ backgroundColor: (bioConfig as any).brand_color || bioConfig.color || 'var(--gm-primary)' }}
+                className="w-full sm:w-[200px] h-12 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center border-2 border-[color:var(--gm-primary)] bg-[#121316]/90 hover:bg-[color:var(--gm-primary)]/15 active:scale-95 text-white shadow-lg transition-all disabled:opacity-50 cursor-pointer"
               >
-                <Save className="w-4 h-4 mr-2 text-white" /> {saving ? "Salvando..." : "Salvar Alterações"}
+                <Save className="w-4 h-4 mr-2 text-[color:var(--gm-primary)]" /> {saving ? "Salvando..." : "Salvar Alterações"}
               </button>
             </div>
 
@@ -4271,7 +4268,7 @@ export default function Bio() {
                   <X className="w-4 h-4" />
                 </button>
 
-                <div className="w-full h-full overflow-hidden rounded-[2.6rem] bg-[#0a0a0c] relative">
+                <div className="w-full h-full overflow-hidden rounded-[2.6rem] bg-[#0a0a0c] relative no-scrollbar">
                     {/* Notch Minimalista */}
                     <div className="absolute top-0 w-full h-6 z-20 flex justify-center items-start">
                        <div className="w-24 h-5 bg-black rounded-b-xl flex items-center justify-center">
@@ -4279,7 +4276,7 @@ export default function Bio() {
                        </div>
                     </div>
                     
-                    <div className="w-full h-full">
+                    <div className="w-full h-full overflow-hidden no-scrollbar">
                        <BioRenderer 
                          asPreview={true}
                          previewMode="smartphone"
@@ -4310,7 +4307,7 @@ export default function Bio() {
                   
                   <div className="ml-4 px-3 py-1 bg-zinc-950/80 rounded-md text-[10px] font-mono text-zinc-400 select-all flex items-center gap-1.5 border border-zinc-800">
                     <Globe className="w-3 h-3 text-zinc-500" />
-                    <span>https://carddigitalgmapp.netlify.app/{getCustomSlug()}</span>
+                    <span>{window.location.origin}/{getCustomSlug()}</span>
                   </div>
                 </div>
                 

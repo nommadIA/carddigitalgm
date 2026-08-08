@@ -68,7 +68,7 @@ const Market = () => {
   
   const [walletBalance, setWalletBalance] = useState(0);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [history, setHistory] = useState<MarketHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -1053,7 +1053,7 @@ const Market = () => {
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    className="relative w-full max-w-sm bg-[var(--gm-surface)] border border-white/10 rounded-lg p-8 shadow-lg overflow-hidden" 
+                    className="gm-modal relative w-full max-w-sm rounded-lg p-8 shadow-lg overflow-hidden" 
                     onClick={e => e.stopPropagation()}
                 >
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--gm-primary)] to-[var(--gm-accent)]"></div>
@@ -1212,7 +1212,7 @@ const Market = () => {
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-sm bg-[var(--gm-surface)] border border-white/10 rounded-lg p-8 shadow-lg overflow-hidden"
+                        className="gm-modal relative w-full max-w-sm rounded-lg p-8 shadow-lg overflow-hidden"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--gm-primary)] to-[var(--gm-accent)]"></div>

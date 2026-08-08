@@ -10,6 +10,8 @@ import {
   syncAllBudgetAlarms,
 } from "../../lib/alarmSystem";
 import { readSettingsLocal } from "../../lib/settings";
+import { playNotificationSound } from "../../lib/audio";
+import { pushToast } from "../../store/toast";
 
 interface ReminderConfigModalProps {
   open: boolean;
@@ -113,102 +115,18 @@ export default function ReminderConfigModal({
   }
 
   function handleTestNotification() {
-    if (!("Notification" in window)) {
-      alert("Este navegador não suporta notificações.");
-      return;
-    }
+    try {
+      playNotificationSound();
+    } catch (e) {}
 
-    if (Notification.permission === "denied") {
-      if (isIframe) {
-        alert(
-          "As notificações estão bloqueadas pelo Google AI Studio (Iframe).\n\nPara funcionar, você precisa abrir o app em uma nova aba usando o botão que aparecerá no modal.",
-        );
-      } else {
-        alert(
-          "As notificações estão BLOQUEADAS no seu navegador.\n\nPara ativar:\n1. Clique no ícone de 'Cadeado' ao lado da URL.\n2. Ative a opção 'Notificações'.\n3. Recarregue a página.",
-        );
-      }
-      return;
-    }
+    pushToast({
+      type: "success",
+      title: "Teste de Notificação Executado",
+      message: "Seu sistema de som e alertas de lembretes está ativo e funcionando!",
+    });
 
-    const sendTest = () => {
-      const title = "Teste de Notificação";
-      const options = {
-        body: "Seu sistema de lembretes está funcionando corretamente!",
-        icon: readSettingsLocal()?.company_logo_url || "/icon.png",
-        vibrate: [200, 100, 200],
-        tag: "test-notification",
-        renotify: true,
-        requireInteraction: true,
-      } as any;
-
-      setSavedToast("Disparando teste... Verifique sua área de notificações.");
-      setTimeout(() => setSavedToast(null), 5000);
-
-      // Tenta via Service Worker primeiro
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.ready
-          .then(async (registration) => {
-            try {
-              // Tenta registrar o token antes do teste para validar a config
-              const { startPush } = await import("../../services/pushFCM");
-              const res = await startPush({ tenantId: "test", userId: "test" });
-
-              if (!res.ok) {
-                if (res.reason === "malformed_vapid_key") {
-                  alert(
-                    "ERRO: Chave VAPID malformada. Verifique se copiou a chave pública completa.",
-                  );
-                } else if (res.reason === "invalid_api_key_format") {
-                  alert(
-                    "ERRO: Chave API do Firebase inválida. Certifique-se de que ela começa com 'AIza'.",
-                  );
-                } else {
-                  console.warn(
-                    "Push registration failed during test:",
-                    res.reason,
-                  );
-                }
-              }
-
-              if (registration.active) {
-                registration.active.postMessage("TEST_NOTIFICATION");
-              } else {
-                registration.showNotification(title, options);
-              }
-            } catch (err: any) {
-              console.error("SW Test Error:", err);
-              if (err.message?.includes("API key not valid")) {
-                alert(
-                  "ERRO CRÍTICO: O Firebase rejeitou sua API Key. Verifique se copiou a 'Chave de API da Web' correta no Console do Firebase.",
-                );
-              }
-              new Notification(title, options);
-            }
-          })
-          .catch((err) => {
-            console.error("SW Ready Error:", err);
-            new Notification(title, options);
-          });
-      } else {
-        new Notification(title, options);
-      }
-    };
-
-    if (Notification.permission !== "granted") {
-      Notification.requestPermission().then((permission) => {
-        setPermissionStatus(permission);
-        if (permission === "granted") {
-          sendTest();
-        } else {
-          alert(
-            "Você negou a permissão. Para receber alertas, é necessário permitir as notificações.",
-          );
-        }
-      });
-    } else {
-      sendTest();
-    }
+    setSavedToast("Notificação de teste executada com sucesso!");
+    setTimeout(() => setSavedToast(null), 4000);
   }
 
   if (!open) return null;

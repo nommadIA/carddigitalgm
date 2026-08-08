@@ -58,7 +58,7 @@ function toISODate(d: Date) {
 
 export default function Financial() {
   const { tenantId } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<DayRow[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
@@ -385,28 +385,28 @@ export default function Financial() {
           <div className="flex flex-row gap-2 w-full xl:w-auto justify-between xl:justify-start">
             <button
               onClick={() => handleShare(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }), transactions)}
-              className="gm-btn rounded-xl shadow-sm justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none"
+              className="gm-btn rounded-xl shadow-sm justify-center h-10 w-10 p-0 flex-1 xl:flex-none"
               title="Compartilhar Relatório"
             >
               <Share2 size={18} />
             </button>
             <button 
               onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} 
-              className="gm-btn rounded-xl shadow-sm justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none" 
+              className="gm-btn rounded-xl shadow-sm justify-center h-10 w-10 p-0 flex-1 xl:flex-none" 
               title="Gerar PDF"
             >
               <FileText size={18} />
             </button>
             <button 
               onClick={handleSave} 
-              className="gm-btn rounded-xl shadow-sm justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none" 
+              className="gm-btn rounded-xl shadow-sm justify-center h-10 w-10 p-0 flex-1 xl:flex-none" 
               title="Fechar e Salvar Mês"
             >
               <Save size={18} />
             </button>
             <button 
               onClick={openHistory} 
-              className="gm-btn rounded-xl shadow-sm justify-center h-[42px] w-[42px] p-0 flex-1 xl:flex-none" 
+              className="gm-btn rounded-xl shadow-sm justify-center h-10 w-10 p-0 flex-1 xl:flex-none" 
               title="Histórico"
             >
               <History size={18} />

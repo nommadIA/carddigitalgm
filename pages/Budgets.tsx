@@ -560,7 +560,7 @@ export default function Budgets() {
   const isMobile = useIsMobile();
 
   const [rows, setRows] = useState<BudgetRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const [tab, setTab] = useState<TabKey>("AGUARDANDO");
   const [q, setQ] = useState("");

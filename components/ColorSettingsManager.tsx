@@ -10,6 +10,7 @@ import {
   Sliders,
   Check,
   Building2,
+  Users,
   Info
 } from "lucide-react";
 
@@ -58,10 +59,88 @@ export const BASE_ORANGE_PALETTE = [
   { name: "Graphite", hex: "#131315", desc: "Superfície de Cards / Painel", category: "Neutral Dark" },
   { name: "Slate", hex: "#1B1B1E", desc: "Superfície Secundária / Hover", category: "Neutral Dark" },
   { name: "Filament", hex: "#26262A", desc: "Bordas & Elementos Neutros", category: "Neutral Dark" },
-  { name: "Ember", hex: "#F65A1A", desc: "Cor Primária / Destaque Principal", category: "Accent" },
+  { name: "Ember", hex: "#FE540B", desc: "Cor Primária / Destaque Principal", category: "Accent" },
   { name: "Spark", hex: "#FF7A38", desc: "Destaque Secundário / Hover Ativo", category: "Accent" },
   { name: "Bone", hex: "#F2F2F3", desc: "Texto Principal / Fundo Claro", category: "Light / Text" },
   { name: "Ash", hex: "#8B8B92", desc: "Texto Secundário / Subtítulos", category: "Muted Text" },
+];
+
+export const PRESET_THEMES = [
+  {
+    id: "orange",
+    name: "Laranja CardDigital (Oficial)",
+    badge: "Padrão",
+    primary: "#FE540B",
+    bg: "#0B0B0C",
+    title: "#FFFFFF",
+    subtitle: "#A1A1AA",
+    icon: "#FE540B",
+    accent: "#FE540B",
+    menuBg: "#111111",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#A1A1AA",
+    menuIcon: "#FE540B",
+  },
+  {
+    id: "emerald",
+    name: "Verde Esmeralda Pro",
+    badge: "Finanças",
+    primary: "#10B981",
+    bg: "#0B0B0C",
+    title: "#FFFFFF",
+    subtitle: "#A1A1AA",
+    icon: "#10B981",
+    accent: "#059669",
+    menuBg: "#0F172A",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#94A3B8",
+    menuIcon: "#10B981",
+  },
+  {
+    id: "cyan",
+    name: "Azul Elétrico Neon",
+    badge: "Tech",
+    primary: "#06B6D4",
+    bg: "#080E1A",
+    title: "#FFFFFF",
+    subtitle: "#94A3B8",
+    icon: "#06B6D4",
+    accent: "#0891B2",
+    menuBg: "#0F172A",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#64748B",
+    menuIcon: "#06B6D4",
+  },
+  {
+    id: "purple",
+    name: "Roxo Cyberpunk",
+    badge: "Design",
+    primary: "#8B5CF6",
+    bg: "#090514",
+    title: "#FFFFFF",
+    subtitle: "#A78BFA",
+    icon: "#8B5CF6",
+    accent: "#7C3AED",
+    menuBg: "#13092B",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#C4B5FD",
+    menuIcon: "#8B5CF6",
+  },
+  {
+    id: "gold",
+    name: "Ouro Executivo / Âmbar",
+    badge: "Premium",
+    primary: "#F59E0B",
+    bg: "#0C0A09",
+    title: "#FFFFFF",
+    subtitle: "#A8A29E",
+    icon: "#F59E0B",
+    accent: "#D97706",
+    menuBg: "#1C1917",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#78716C",
+    menuIcon: "#F59E0B",
+  },
 ];
 
 // VALORES PADRÃO INTELIGENTES PARA MODO CLARO E MODO ESCURO
@@ -248,6 +327,61 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
 
     setResetSuccess(true);
     setTimeout(() => setResetSuccess(false), 2500);
+  };
+
+  // Aplica um tema pré-definido com 1 clique
+  const applyPresetTheme = (preset: typeof PRESET_THEMES[0]) => {
+    setBrandPrimary(preset.primary);
+    setBrandBg(preset.bg);
+    setBrandTitle(preset.title);
+    setBrandSubtitle(preset.subtitle);
+    setBrandIcon(preset.icon);
+    setBrandAccent(preset.accent);
+
+    setMenuPrimary(preset.primary);
+    setMenuBg(preset.menuBg);
+    setMenuTitle(preset.menuTitle);
+    setMenuSubtitle(preset.menuSubtitle);
+    setMenuIcon(preset.menuIcon);
+    setMenuButton(preset.primary);
+
+    updateDomColor("--gm-primary", preset.primary);
+    updateDomColor("--gm-accent", preset.accent);
+    updateDomColor("--gm-bg", preset.bg);
+    updateDomColor("--gm-title", preset.title);
+    updateDomColor("--gm-subtitle", preset.subtitle);
+    updateDomColor("--gm-icon", preset.icon);
+    updateDomColor("--gm-button", preset.primary);
+
+    updateDomColor("--gm-menu-primary", preset.primary);
+    updateDomColor("--gm-menu-bg", preset.menuBg);
+    updateDomColor("--gm-menu-title", preset.menuTitle);
+    updateDomColor("--gm-menu-subtitle", preset.menuSubtitle);
+    updateDomColor("--gm-menu-icon", preset.menuIcon);
+    updateDomColor("--gm-menu-button", preset.primary);
+
+    const currentConfig = {
+      primary: preset.primary,
+      accent: preset.accent,
+      bg: preset.bg,
+      title: preset.title,
+      subtitle: preset.subtitle,
+      icon: preset.icon,
+      button: preset.primary,
+      menu_primary: preset.primary,
+      menu_bg: preset.menuBg,
+      menu_title: preset.menuTitle,
+      menu_subtitle: preset.menuSubtitle,
+      menu_icon: preset.menuIcon,
+      menu_button: preset.primary,
+    };
+
+    localStorage.setItem("gm_colors_dark", JSON.stringify(currentConfig));
+    localStorage.setItem("gm_selected_theme_id", preset.id);
+    window.dispatchEvent(new Event("gm_theme_updated"));
+
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 2000);
   };
 
   // Alternância Inteligente Modo Claro / Modo Escuro
@@ -443,6 +577,103 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             <RotateCcw size={16} /> Cores resetadas para o padrão oficial Laranja!
           </div>
         )}
+
+        {/* SEÇÃO DE TEMAS PRÉ-DEFINIDOS RÁPIDOS */}
+        <div className="space-y-3 pb-2 border-b border-slate-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[var(--gm-primary)]" />
+              TEMAS E PALETAS PRONTAS (1-CLIQUE)
+            </h3>
+            <span className="text-[10px] text-slate-400 font-semibold">
+              Clique para aplicar a paleta completa
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {PRESET_THEMES.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => applyPresetTheme(preset)}
+                className="p-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900/60 hover:border-[var(--gm-primary)] transition-all cursor-pointer flex flex-col items-start gap-2 group text-left shadow-2xs hover:shadow-xs"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-2xs" style={{ backgroundColor: preset.primary }} />
+                    <span className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-2xs" style={{ backgroundColor: preset.menuBg }} />
+                  </div>
+                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)]">
+                    {preset.badge}
+                  </span>
+                </div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate w-full group-hover:text-[var(--gm-primary)] transition-colors">
+                  {preset.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* PRÉ-VISUALIZAÇÃO INTERATIVA EM TEMPO REAL */}
+        <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-100/70 dark:bg-zinc-950/80 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <Sliders size={15} className="text-[var(--gm-primary)]" />
+              Pré-visualização ao Vivo do seu Aplicativo
+            </span>
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+              Reflete suas alterações na hora
+            </span>
+          </div>
+
+          <div className="p-4 rounded-xl border shadow-inner transition-colors flex flex-col sm:flex-row items-stretch gap-4" style={{ backgroundColor: brandBg }}>
+            {/* Sidebar Preview */}
+            <div className="w-full sm:w-44 p-3 rounded-lg flex flex-col gap-2 shrink-0 border border-white/5" style={{ backgroundColor: menuBg }}>
+              <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: menuTitle }}>
+                MARCA / MENU
+              </span>
+              <div className="flex items-center gap-2 p-1.5 rounded-md" style={{ color: menuTitle }}>
+                <Building2 size={16} style={{ color: menuIcon }} />
+                <span className="text-xs font-bold truncate">Dashboard</span>
+              </div>
+              <div className="flex items-center gap-2 p-1.5 rounded-md opacity-80" style={{ color: menuSubtitle }}>
+                <Users size={16} style={{ color: menuIcon }} />
+                <span className="text-xs font-medium truncate">Clientes</span>
+              </div>
+            </div>
+
+            {/* Main Content Area Preview */}
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h4 className="text-sm font-black tracking-tight" style={{ color: brandTitle }}>
+                    Título de Exemplo
+                  </h4>
+                  <p className="text-[11px]" style={{ color: brandSubtitle }}>
+                    Subtítulo explicativo com a tipografia e cores escolhidas
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  style={{ backgroundColor: brandPrimary }}
+                >
+                  <Sparkles size={13} /> Botão Primário
+                </button>
+              </div>
+
+              <div className="p-3 rounded-lg border border-white/10 bg-white/5 flex items-center justify-between">
+                <span className="text-xs font-bold" style={{ color: brandTitle }}>
+                  Orçamento #0042
+                </span>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: brandAccent }}>
+                  APROVADO
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* GRID DE CONTROLES DE CORES DO CORPO DO APP */}
         <div className="space-y-4">

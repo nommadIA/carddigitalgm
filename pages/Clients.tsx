@@ -313,7 +313,7 @@ export default function Clients() {
   const isMobile = useIsMobile(860);
 
   const [rows, setRows] = useState<ClientRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const [tab, setTab] = useState<"ATIVOS" | "LIXEIRA">("ATIVOS");
   const [q, setQ] = useState("");

@@ -57,62 +57,8 @@ const AlarmToast = () => {
           return [alarm, ...prev];
         });
 
-        // Notificação do Navegador (se permitido)
-        if ("Notification" in window && Notification.permission === "granted") {
-          const settings = readSettingsLocal();
-          const companyName = settings?.company_name || "GM Edificação";
-          const companyLogo = settings?.company_logo_url || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
-
-          let typeTitle = 'Notificação';
-          let body = '';
-          let hashUrl = '/';
-          
-          if (alarm.type === 'NOTE') {
-             typeTitle = 'Lembrete de Nota';
-             body = `Nota: ${alarm.clientName}\nHorário: ${alarm.time}`;
-             hashUrl = `/#/notes?id=${alarm.budgetId}`;
-          } else if (alarm.type === 'EXPENSE') {
-             typeTitle = 'Lembrete de Despesa';
-             body = `Cliente: ${alarm.clientName}\nHorário: ${alarm.time}`;
-             hashUrl = `/#/expenses?id=${alarm.budgetId}`;
-          } else {
-             typeTitle = 'Orçamento Aprovado';
-             body = `Olá! Orçamento "${alarm.clientName}" em andamento, conclua antes do prazo "${alarm.deliveryDays || 5} dias"`;
-             hashUrl = `/#/budgets?id=${alarm.budgetId}`;
-          }
-
-          const notificationTitle = `${companyName} • ${typeTitle}`;
-
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(registration => {
-              registration.showNotification(notificationTitle, {
-                body: body,
-                icon: companyLogo,
-                vibrate: [200, 100, 200],
-                tag: alarm.id,
-                renotify: true,
-                requireInteraction: true,
-                data: { url: hashUrl }
-              } as any);
-            });
-          } else {
-            const n = new Notification(notificationTitle, {
-              body: body,
-              icon: companyLogo,
-              vibrate: [200, 100, 200],
-              tag: alarm.id,
-              renotify: true,
-              requireInteraction: true
-            } as any);
-            
-            n.onclick = function(e) {
-              e.preventDefault();
-              window.focus();
-              window.location.hash = hashUrl.replace('/#', '');
-              n.close();
-            };
-          }
-        }
+        // Notificação em tela (In-App Floating Toast) ativada exclusivamente
+        // (Notificações nativas do sistema operacional desativadas para não exibir o link/domínio do Netlify no SO)
 
         // Marca como disparado (no storage e IndexedDB)
         markAlarmAsTriggered(alarm.id);

@@ -159,7 +159,7 @@ export default function Notes() {
   const navigate = useNavigate();
 
   const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [mainTab, setMainTab] = useState<"NOTE" | "PRODUCTION">("NOTE");
   const [noteTab, setNoteTab] = useState<
@@ -2693,7 +2693,7 @@ export default function Notes() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#1a1b1e] border border-red-500/20 rounded-lg p-6 relative w-full max-w-md shadow-lg"
+              className="gm-modal border border-red-500/20 rounded-lg p-6 relative w-full max-w-md shadow-lg"
             >
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">

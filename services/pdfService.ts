@@ -764,3 +764,356 @@ export async function generateFinanceReportPdf(params: {
     throw err;
   }
 }
+
+export type FullAppSummaryData = {
+  settings: AppSettings;
+  budgets: any[];
+  clients: any[];
+  notes: any[];
+  expenses: any[];
+  marketItems: any[];
+};
+
+export async function generateFullAppSummaryPdf(data: FullAppSummaryData) {
+  try {
+    const { settings, budgets = [], clients = [], notes = [], expenses = [], marketItems = [] } = data;
+    const timbradoUrl = settings?.timbrado_url || "";
+
+    const doc = await PDFDocument.create();
+    const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+
+    let bgImage: any = null;
+    if (timbradoUrl) {
+      try {
+        bgImage = await embedBackgroundImage(doc, timbradoUrl);
+      } catch (e) {
+        console.warn("Timbrado background could not be loaded, proceeding with clean header layout:", e);
+      }
+    }
+
+    const W = 595.28;
+    const H = 841.89;
+
+    const PX_W = 2480;
+    const PX_H = 3508;
+
+    const CONTENT_X_PX = 160;
+    const CONTENT_TOP_PX = 230;
+    const CONTENT_W_PX = 2160;
+    const CONTENT_H_PX = 2260;
+
+    const CONTENT_X = (CONTENT_X_PX / PX_W) * W;
+    const CONTENT_W = (CONTENT_W_PX / PX_W) * W;
+    const CONTENT_RIGHT_X = CONTENT_X + CONTENT_W;
+
+    const CONTENT_TOP_Y = H - (CONTENT_TOP_PX / PX_H) * H;
+    const CONTENT_BOTTOM_Y = H - ((CONTENT_TOP_PX + CONTENT_H_PX) / PX_H) * H;
+
+    let cursorY = CONTENT_TOP_Y;
+    let page: PDFPage;
+
+    const cText = rgb(0.1, 0.1, 0.1);
+    const cGray = rgb(0.35, 0.35, 0.35);
+    const cLightGray = rgb(0.6, 0.6, 0.6);
+    const cPrimary = rgb(0.95, 0.33, 0.04); // #FE540B
+    const cGreen = rgb(0.1, 0.6, 0.3);
+    const cRed = rgb(0.8, 0.15, 0.15);
+
+    const addPage = () => {
+      const p = doc.addPage([W, H]);
+      if (bgImage) {
+        p.drawImage(bgImage, { x: 0, y: 0, width: W, height: H });
+      } else {
+        // Fallback header background strip
+        p.drawRectangle({
+          x: CONTENT_X,
+          y: H - 45,
+          width: CONTENT_W,
+          height: 2,
+          color: cPrimary,
+        });
+      }
+      page = p;
+      cursorY = CONTENT_TOP_Y;
+    };
+
+    const checkSpace = (heightNeeded: number) => {
+      if (cursorY - heightNeeded < CONTENT_BOTTOM_Y) {
+        addPage();
+      }
+    };
+
+    const hr = (y: number) => {
+      page.drawLine({
+        start: { x: CONTENT_X, y },
+        end: { x: CONTENT_RIGHT_X, y },
+        thickness: 0.5,
+        color: rgb(0.85, 0.85, 0.85),
+      });
+    };
+
+    const drawSectionHeader = (title: string) => {
+      checkSpace(32);
+      page.drawRectangle({
+        x: CONTENT_X,
+        y: cursorY - 18,
+        width: CONTENT_W,
+        height: 18,
+        color: cPrimary,
+        opacity: 0.08,
+      });
+      page.drawText(title.toUpperCase(), {
+        x: CONTENT_X + 6,
+        y: cursorY - 13,
+        size: 8.5,
+        font: fontBold,
+        color: cPrimary,
+      });
+      cursorY -= 26;
+    };
+
+    // Initialize first page
+    addPage();
+
+    // MAIN TITLE
+    const nowStr = new Date().toLocaleDateString("pt-BR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+
+    const companyTitle = stripEmojis(settings?.company_name || "CardDigital GM").toUpperCase();
+    page.drawText("RELATÓRIO DE GESTÃO INTEGRADO", {
+      x: CONTENT_X,
+      y: cursorY,
+      size: 13,
+      font: fontBold,
+      color: cPrimary,
+    });
+    cursorY -= 14;
+
+    page.drawText(`${companyTitle} • ${nowStr.toUpperCase()}`, {
+      x: CONTENT_X,
+      y: cursorY,
+      size: 8.5,
+      font: fontRegular,
+      color: cGray,
+    });
+    cursorY -= 16;
+    hr(cursorY);
+    cursorY -= 16;
+
+    // RESUMO DE MÉTRICAS (KPIs)
+    const totalOrcamentos = budgets.length;
+    const orcamentosAprovados = budgets.filter((b) =>
+      String(b.status || "").toUpperCase().includes("APROV")
+    );
+    const totalValorOrcamentos = budgets.reduce(
+      (sum, b) => sum + (Number(b.total_amount || b.total) || 0),
+      0
+    );
+    const totalClientes = clients.length;
+    const totalNotas = notes.length;
+
+    const totalDespesas = expenses.reduce(
+      (sum, e) => sum + (Number(e.amount || e.valor) || 0),
+      0
+    );
+    const totalMercado = marketItems.reduce(
+      (sum, m) => sum + (Number(m.price || m.valor || m.unit_price) || 0),
+      0
+    );
+
+    drawSectionHeader("1. Resumo Consolidado de Métricas do Sistema");
+
+    // Table of KPIs
+    const kpiRow1 = [
+      `Total de Orçamentos: ${totalOrcamentos} (${orcamentosAprovados.length} aprovados)`,
+      `Valor em Orçamentos: ${CURRENCY_FORMATTER.format(totalValorOrcamentos)}`,
+    ];
+    const kpiRow2 = [
+      `Clientes Cadastrados: ${totalClientes}`,
+      `Notas Registradas: ${totalNotas}`,
+    ];
+    const kpiRow3 = [
+      `Total de Despesas: ${CURRENCY_FORMATTER.format(totalDespesas)}`,
+      `Itens no Mercado: ${marketItems.length} (${CURRENCY_FORMATTER.format(totalMercado)})`,
+    ];
+
+    const drawKpiLine = (leftText: string, rightText: string) => {
+      checkSpace(16);
+      page.drawText(leftText, { x: CONTENT_X + 5, y: cursorY, size: 8.5, font: fontBold, color: cText });
+      const rW = fontBold.widthOfTextAtSize(rightText, 8.5);
+      page.drawText(rightText, { x: CONTENT_RIGHT_X - rW - 5, y: cursorY, size: 8.5, font: fontBold, color: cText });
+      cursorY -= 14;
+    };
+
+    drawKpiLine(kpiRow1[0], kpiRow1[1]);
+    drawKpiLine(kpiRow2[0], kpiRow2[1]);
+    drawKpiLine(kpiRow3[0], kpiRow3[1]);
+    cursorY -= 10;
+
+    // SEÇÃO 2: ORÇAMENTOS
+    drawSectionHeader("2. Orçamentos Recentes e Status");
+    if (budgets.length === 0) {
+      page.drawText("Nenhum orçamento registrado no sistema.", {
+        x: CONTENT_X + 5,
+        y: cursorY,
+        size: 8.5,
+        font: fontRegular,
+        color: cGray,
+      });
+      cursorY -= 16;
+    } else {
+      // Table Header
+      checkSpace(18);
+      page.drawText("Cliente / Serviço", { x: CONTENT_X + 5, y: cursorY, size: 8, font: fontBold, color: cGray });
+      page.drawText("Status", { x: CONTENT_X + 260, y: cursorY, size: 8, font: fontBold, color: cGray });
+      const vHeader = "Valor Total";
+      const vW = fontBold.widthOfTextAtSize(vHeader, 8);
+      page.drawText(vHeader, { x: CONTENT_RIGHT_X - vW - 5, y: cursorY, size: 8, font: fontBold, color: cGray });
+      cursorY -= 10;
+      hr(cursorY);
+      cursorY -= 12;
+
+      for (const b of budgets.slice(0, 15)) {
+        checkSpace(18);
+        const name = stripEmojis(b.client_name || b.title || "Cliente sem nome").slice(0, 32);
+        const service = stripEmojis(b.service_name || b.category || "Serviço").slice(0, 30);
+        const st = String(b.status || "Pendente").toUpperCase();
+        const val = CURRENCY_FORMATTER.format(Number(b.total_amount || b.total) || 0);
+
+        page.drawText(`${name} (${service})`, { x: CONTENT_X + 5, y: cursorY, size: 8, font: fontRegular, color: cText });
+        page.drawText(st, { x: CONTENT_X + 260, y: cursorY, size: 7.5, font: fontBold, color: st.includes("APROV") ? cGreen : cGray });
+
+        const valW = fontBold.widthOfTextAtSize(val, 8);
+        page.drawText(val, { x: CONTENT_RIGHT_X - valW - 5, y: cursorY, size: 8, font: fontBold, color: cText });
+
+        cursorY -= 12;
+        hr(cursorY + 4);
+        cursorY -= 6;
+      }
+    }
+    cursorY -= 10;
+
+    // SEÇÃO 3: CLIENTES
+    drawSectionHeader("3. Clientes da Base");
+    if (clients.length === 0) {
+      page.drawText("Nenhum cliente cadastrado no sistema.", {
+        x: CONTENT_X + 5,
+        y: cursorY,
+        size: 8.5,
+        font: fontRegular,
+        color: cGray,
+      });
+      cursorY -= 16;
+    } else {
+      for (const c of clients.slice(0, 12)) {
+        checkSpace(16);
+        const name = stripEmojis(c.name || c.cliente_nome || "Cliente").slice(0, 35);
+        const phone = c.phone || c.whatsapp || c.telefone || "Sem telefone";
+        const docNum = c.document || c.cpf || c.cnpj || "";
+
+        const label = `${name} ${phone ? `• ${phone}` : ""} ${docNum ? `(${docNum})` : ""}`;
+        page.drawText(`•  ${label}`, { x: CONTENT_X + 5, y: cursorY, size: 8, font: fontRegular, color: cText });
+        cursorY -= 12;
+      }
+    }
+    cursorY -= 10;
+
+    // SEÇÃO 4: NOTAS & ANOTAÇÕES
+    drawSectionHeader("4. Notas & Anotações do Sistema");
+    if (notes.length === 0) {
+      page.drawText("Nenhuma nota cadastrada.", {
+        x: CONTENT_X + 5,
+        y: cursorY,
+        size: 8.5,
+        font: fontRegular,
+        color: cGray,
+      });
+      cursorY -= 16;
+    } else {
+      for (const n of notes.slice(0, 10)) {
+        checkSpace(16);
+        const title = stripEmojis(n.title || "Sem título").slice(0, 45);
+        const category = stripEmojis(n.category || "Geral");
+        const dt = n.created_at ? new Date(n.created_at).toLocaleDateString("pt-BR") : "";
+
+        page.drawText(`•  [${category.toUpperCase()}] ${title} ${dt ? `- ${dt}` : ""}`, {
+          x: CONTENT_X + 5,
+          y: cursorY,
+          size: 8,
+          font: fontRegular,
+          color: cText,
+        });
+        cursorY -= 12;
+      }
+    }
+    cursorY -= 10;
+
+    // SEÇÃO 5: FINANCEIRO & DESPESAS
+    drawSectionHeader("5. Financeiro & Registro de Despesas");
+    if (expenses.length === 0) {
+      page.drawText("Nenhuma despesa registrada no período.", {
+        x: CONTENT_X + 5,
+        y: cursorY,
+        size: 8.5,
+        font: fontRegular,
+        color: cGray,
+      });
+      cursorY -= 16;
+    } else {
+      for (const e of expenses.slice(0, 10)) {
+        checkSpace(16);
+        const title = stripEmojis(e.title || e.description || "Despesa").slice(0, 40);
+        const category = stripEmojis(e.category || "Geral");
+        const val = CURRENCY_FORMATTER.format(Number(e.amount || e.valor) || 0);
+
+        page.drawText(`•  ${title} (${category})`, { x: CONTENT_X + 5, y: cursorY, size: 8, font: fontRegular, color: cText });
+        const valW = fontBold.widthOfTextAtSize(val, 8);
+        page.drawText(`-${val}`, { x: CONTENT_RIGHT_X - valW - 5, y: cursorY, size: 8, font: fontBold, color: cRed });
+        cursorY -= 12;
+      }
+    }
+    cursorY -= 10;
+
+    // SEÇÃO 6: MERCADO / CATÁLOGO
+    drawSectionHeader("6. Mercado & Catálogo de Itens");
+    if (marketItems.length === 0) {
+      page.drawText("Nenhum item cadastrado no Mercado.", {
+        x: CONTENT_X + 5,
+        y: cursorY,
+        size: 8.5,
+        font: fontRegular,
+        color: cGray,
+      });
+      cursorY -= 16;
+    } else {
+      for (const m of marketItems.slice(0, 10)) {
+        checkSpace(16);
+        const name = stripEmojis(m.title || m.name || m.item_name || "Item Mercado").slice(0, 40);
+        const priceVal = Number(m.price || m.unit_price || m.valor) || 0;
+        const val = priceVal > 0 ? CURRENCY_FORMATTER.format(priceVal) : "Sob Consulta";
+
+        page.drawText(`•  ${name}`, { x: CONTENT_X + 5, y: cursorY, size: 8, font: fontRegular, color: cText });
+        const valW = fontBold.widthOfTextAtSize(val, 8);
+        page.drawText(val, { x: CONTENT_RIGHT_X - valW - 5, y: cursorY, size: 8, font: fontBold, color: cText });
+        cursorY -= 12;
+      }
+    }
+
+    // Save and download
+    const pdfBytes = await doc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const safeComp = sanitizeFilename(settings?.company_name || "CARDDIGITAL_GM");
+    link.download = `RELATORIO_GERAL_${safeComp}.pdf`;
+    link.click();
+  } catch (err: any) {
+    console.error("Erro ao gerar Relatório Geral Integrado em PDF", err);
+    throw err;
+  }
+}

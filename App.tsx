@@ -46,21 +46,13 @@ const AuthCallback = lazyWithRetry(() => import('./pages/AuthCallback'));
 const UpdatePassword = lazyWithRetry(() => import('./pages/UpdatePassword'));
 const PixCopy = lazyWithRetry(() => import('./pages/PixCopy'));
 
-const PageLoader = () => (
-  <div className="fixed inset-0 flex items-center justify-center bg-transparent z-[99999]">
-    <Loader2 className="w-8 h-8 animate-spin text-[var(--gm-primary)]" />
-  </div>
-);
+const PageLoader = () => null;
 
 const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
   const { user, checked } = useAuth();
 
   if (!checked) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-[var(--gm-bg)] text-[var(--gm-primary)]">
-        <Loader2 size={40} className="animate-spin" />
-      </div>
-    );
+    return <div className="h-screen w-full bg-[var(--gm-bg)]" />;
   }
 
   if (!user) return <Navigate to="/login" replace />;
@@ -157,14 +149,7 @@ const AppRoutes = () => {
   // Wait for auth to be fully initialized before making routing decisions or redirecting
   if (!checked) {
     const isLight = localStorage.getItem("theme") !== "dark";
-    return (
-      <div className={`h-screen w-full flex items-center justify-center ${isLight ? "bg-[#F8FAFC] text-slate-800" : "bg-[#050507] text-white"}`}>
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[var(--gm-primary)]" />
-          <span className={`text-xs font-medium ${isLight ? "text-slate-500" : "text-zinc-500"}`}>Carregando...</span>
-        </div>
-      </div>
-    );
+    return <div className={`h-screen w-full ${isLight ? "bg-[#F8FAFC]" : "bg-[#050507]"}`} />;
   }
 
   // If a mobile user is not logged in and opens the root, redirect directly to the public bio page

@@ -969,7 +969,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       }
       return suffix ? suffix : (data?.tenant_id || "gmedificacao");
     };
-    const url = `https://carddigitalgmapp.netlify.app/${getCustomSlug()}`;
+    const url = `${window.location.origin}/${getCustomSlug()}`;
     if (navigator.share && !asPreview) {
       navigator.share({
         title: companyName,
@@ -1437,6 +1437,16 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           -webkit-overflow-scrolling: touch;
           scroll-behavior: smooth;
         }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+          background: transparent !important;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none !important;
+          scrollbar-width: none !important;
+        }
       `}</style>
       
       {/* Background Animated Gradient / Aurora */}
@@ -1485,7 +1495,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       <div 
         ref={mainScrollRef}
         onScroll={handleScroll}
-        className={`w-full h-full relative z-10 overflow-y-auto overflow-x-hidden ${!asPreview ? "custom-scroll" : "no-scrollbar"}`}
+        className={`w-full h-full relative z-10 overflow-y-auto overflow-x-hidden ${!asPreview ? "no-scrollbar md:custom-scroll" : "no-scrollbar"}`}
       >
         <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10 w-full">
           <div className="w-full">

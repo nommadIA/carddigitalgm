@@ -16,6 +16,7 @@ import {
   applySettingsToDOM,
   fetchSettingsSupabase,
   upsertSettingsSupabase,
+  readSettingsLocal,
   ThemePreset,
   hexToRgb,
   getContrastColor,
@@ -75,7 +76,7 @@ export default function Configuracoes() {
     return localStorage.getItem("gm.notificationSound") || "classic_chord";
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -231,20 +232,32 @@ export default function Configuracoes() {
     }`;
   };
 
-  const [brandPrimary, setBrandPrimary] = useState("#32BCAD");
-  const [brandAccent, setBrandAccent] = useState("#32BCAD");
-  const [brandBg, setBrandBg] = useState("#0f1117");
-  const [brandTitle, setBrandTitle] = useState("#FFFFFF");
-  const [brandSubtitle, setBrandSubtitle] = useState("#94A3B8");
-  const [brandIcon, setBrandIcon] = useState("#32BCAD");
+  const cachedSettings = readSettingsLocal();
+  const isLightModeInitial = typeof localStorage !== "undefined" && localStorage.getItem("theme") === "light";
+  const defaultOrangeInitial = isLightModeInitial ? "#FF6900" : "#FF7B17";
+
+  const savedColorsInitial = isLightModeInitial
+    ? (cachedSettings?.bio_config?.theme_colors_light || (typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem("gm_colors_light") || "null") : null))
+    : (cachedSettings?.bio_config?.theme_colors_dark || (typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem("gm_colors_dark") || "null") : null));
+
+  const initialPrimary = savedColorsInitial?.primary || (cachedSettings?.brand_primary && cachedSettings?.brand_primary !== "#32BCAD" ? cachedSettings.brand_primary : null) || defaultOrangeInitial;
+  const initialAccent = savedColorsInitial?.accent || (cachedSettings?.brand_accent && cachedSettings?.brand_accent !== "#32BCAD" ? cachedSettings.brand_accent : null) || defaultOrangeInitial;
+  const initialBg = savedColorsInitial?.bg || cachedSettings?.brand_bg || (isLightModeInitial ? "#FFFFFF" : "#0f1117");
+
+  const [brandPrimary, setBrandPrimary] = useState(initialPrimary);
+  const [brandAccent, setBrandAccent] = useState(initialAccent);
+  const [brandBg, setBrandBg] = useState(initialBg);
+  const [brandTitle, setBrandTitle] = useState(savedColorsInitial?.title || (isLightModeInitial ? "#1B1D22" : "#FFFFFF"));
+  const [brandSubtitle, setBrandSubtitle] = useState(savedColorsInitial?.subtitle || (isLightModeInitial ? "#6B7280" : "#94A3B8"));
+  const [brandIcon, setBrandIcon] = useState(savedColorsInitial?.icon || initialAccent);
 
   // Cores independentes do Menu / Barra Lateral
-  const [menuPrimary, setMenuPrimary] = useState("#32BCAD");
-  const [menuBg, setMenuBg] = useState("#0f1117");
-  const [menuTitle, setMenuTitle] = useState("#FFFFFF");
-  const [menuSubtitle, setMenuSubtitle] = useState("#94A3B8");
-  const [menuIcon, setMenuIcon] = useState("#32BCAD");
-  const [menuButton, setMenuButton] = useState("#32BCAD");
+  const [menuPrimary, setMenuPrimary] = useState(savedColorsInitial?.menu_primary || initialPrimary);
+  const [menuBg, setMenuBg] = useState(savedColorsInitial?.menu_bg || initialBg);
+  const [menuTitle, setMenuTitle] = useState(savedColorsInitial?.menu_title || (isLightModeInitial ? "#1B1D22" : "#FFFFFF"));
+  const [menuSubtitle, setMenuSubtitle] = useState(savedColorsInitial?.menu_subtitle || (isLightModeInitial ? "#6B7280" : "#94A3B8"));
+  const [menuIcon, setMenuIcon] = useState(savedColorsInitial?.menu_icon || initialAccent);
+  const [menuButton, setMenuButton] = useState(savedColorsInitial?.menu_button || initialAccent);
 
   const [fontFamily, setFontFamily] = useState("Inter");
   const [previewFont, setPreviewFont] = useState<string | null>(null);
@@ -294,19 +307,23 @@ export default function Configuracoes() {
             setMenuButton(savedLight?.menu_button || "#FF6900");
           } else {
             const savedDark = s.bio_config?.theme_colors_dark || JSON.parse(localStorage.getItem("gm_colors_dark") || "null");
-            setBrandPrimary(savedDark?.primary || s.brand_primary || "#32BCAD");
-            setBrandAccent(savedDark?.accent || s.brand_accent || "#32BCAD");
-            setBrandBg(savedDark?.bg || s.brand_bg || "#0f1117");
+            const darkPrimary = savedDark?.primary || (s.brand_primary && s.brand_primary !== "#32BCAD" ? s.brand_primary : null) || "#FF7B17";
+            const darkAccent = savedDark?.accent || (s.brand_accent && s.brand_accent !== "#32BCAD" ? s.brand_accent : null) || "#FF7B17";
+            const darkBg = savedDark?.bg || (s.brand_bg && s.brand_bg !== "#0b1220" ? s.brand_bg : null) || "#0f1117";
+
+            setBrandPrimary(darkPrimary);
+            setBrandAccent(darkAccent);
+            setBrandBg(darkBg);
             setBrandTitle(savedDark?.title || "#FFFFFF");
             setBrandSubtitle(savedDark?.subtitle || "#94A3B8");
-            setBrandIcon(savedDark?.icon || s.brand_accent || "#32BCAD");
+            setBrandIcon(savedDark?.icon || darkAccent);
 
-            setMenuPrimary(savedDark?.menu_primary || s.brand_primary || "#32BCAD");
-            setMenuBg(savedDark?.menu_bg || s.brand_bg || "#0f1117");
+            setMenuPrimary(savedDark?.menu_primary || darkPrimary);
+            setMenuBg(savedDark?.menu_bg || darkBg);
             setMenuTitle(savedDark?.menu_title || "#FFFFFF");
             setMenuSubtitle(savedDark?.menu_subtitle || "#94A3B8");
-            setMenuIcon(savedDark?.menu_icon || s.brand_accent || "#32BCAD");
-            setMenuButton(savedDark?.menu_button || s.brand_accent || "#32BCAD");
+            setMenuIcon(savedDark?.menu_icon || darkAccent);
+            setMenuButton(savedDark?.menu_button || darkAccent);
           }
         }
       } catch (err) {}
@@ -337,6 +354,7 @@ export default function Configuracoes() {
 
   // Aplica as cores em tempo real no DOM ao alterar nas configurações
   useEffect(() => {
+    if (loading) return;
     const root = document.documentElement;
     if (brandPrimary) {
       root.style.setProperty("--gm-primary", brandPrimary);
@@ -567,7 +585,6 @@ export default function Configuracoes() {
   const canSave = useMemo(() => !!tenantId && !saving, [tenantId, saving]);
 
   async function load() {
-    setLoading(true);
     try {
       // ✅ settings
       const s = await fetchSettingsSupabase(tenantId);
@@ -594,19 +611,23 @@ export default function Configuracoes() {
           setMenuButton(savedLight?.menu_button || "#FF6900");
         } else {
           const savedDark = s.bio_config?.theme_colors_dark || JSON.parse(localStorage.getItem("gm_colors_dark") || "null");
-          setBrandPrimary(savedDark?.primary || s.brand_primary || "#32BCAD");
-          setBrandAccent(savedDark?.accent || s.brand_accent || "#32BCAD");
-          setBrandBg(savedDark?.bg || s.brand_bg || "#0f1117");
+          const darkPrimary = savedDark?.primary || (s.brand_primary && s.brand_primary !== "#32BCAD" ? s.brand_primary : null) || "#FF7B17";
+          const darkAccent = savedDark?.accent || (s.brand_accent && s.brand_accent !== "#32BCAD" ? s.brand_accent : null) || "#FF7B17";
+          const darkBg = savedDark?.bg || (s.brand_bg && s.brand_bg !== "#0b1220" ? s.brand_bg : null) || "#0f1117";
+
+          setBrandPrimary(darkPrimary);
+          setBrandAccent(darkAccent);
+          setBrandBg(darkBg);
           setBrandTitle(savedDark?.title || "#FFFFFF");
           setBrandSubtitle(savedDark?.subtitle || "#94A3B8");
-          setBrandIcon(savedDark?.icon || s.brand_accent || "#32BCAD");
+          setBrandIcon(savedDark?.icon || darkAccent);
 
-          setMenuPrimary(savedDark?.menu_primary || s.brand_primary || "#32BCAD");
-          setMenuBg(savedDark?.menu_bg || s.brand_bg || "#0f1117");
+          setMenuPrimary(savedDark?.menu_primary || darkPrimary);
+          setMenuBg(savedDark?.menu_bg || darkBg);
           setMenuTitle(savedDark?.menu_title || "#FFFFFF");
           setMenuSubtitle(savedDark?.menu_subtitle || "#94A3B8");
-          setMenuIcon(savedDark?.menu_icon || s.brand_accent || "#32BCAD");
-          setMenuButton(savedDark?.menu_button || s.brand_accent || "#32BCAD");
+          setMenuIcon(savedDark?.menu_icon || darkAccent);
+          setMenuButton(savedDark?.menu_button || darkAccent);
         }
         
         setFontFamily(s.font_family || "Inter");
@@ -2167,19 +2188,19 @@ export default function Configuracoes() {
                       </div>
                       <button
                         type="button"
-                        className="gm-btn py-1.5 px-4 text-xs font-bold"
+                        className={"gm-btn py-1.5 px-4 text-xs font-bold transition-all " + ((viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) ? "bg-emerald-600 text-white" : "bg-zinc-700 text-zinc-300")}
                         onClick={() => {
                           if (viewMode === "smartphone") {
                             setMobileBgEnabled((v) => {
                               const next = !v;
-                              if (next && mobileBgOpacity <= 0) setMobileBgOpacity(mobileBgOpacityPrev);
+                              if (next && mobileBgOpacity <= 0) setMobileBgOpacity(mobileBgOpacityPrev || 0.18);
                               else if (!next && mobileBgOpacity > 0) setMobileBgOpacityPrev(mobileBgOpacity);
                               return next;
                             });
                           } else {
                             setBgEnabled((v) => {
                               const next = !v;
-                              if (next && bgOpacity <= 0) setBgOpacity(bgOpacityPrev);
+                              if (next && bgOpacity <= 0) setBgOpacity(bgOpacityPrev || 0.18);
                               else if (!next && bgOpacity > 0) setBgOpacityPrev(bgOpacity);
                               return next;
                             });
@@ -2222,8 +2243,16 @@ export default function Configuracoes() {
                             className="w-full h-2 accent-[var(--gm-primary)] cursor-pointer"
                             value={viewMode === "smartphone" ? mobileBgOpacity : bgOpacity}
                             onChange={(e) => {
-                              if (viewMode === "smartphone") setMobileBgOpacity(Number(e.target.value));
-                              else setBgOpacity(Number(e.target.value));
+                              const val = Number(e.target.value);
+                              if (viewMode === "smartphone") {
+                                setMobileBgOpacity(val);
+                                if (val > 0) setMobileBgEnabled(true);
+                                else setMobileBgEnabled(false);
+                              } else {
+                                setBgOpacity(val);
+                                if (val > 0) setBgEnabled(true);
+                                else setBgEnabled(false);
+                              }
                             }}
                           />
                         </div>
@@ -2271,9 +2300,16 @@ export default function Configuracoes() {
                             Preview da Imagem / Vídeo
                           </span>
                           {(viewMode === "smartphone" ? mobileBgUrl : bgUrl) ? (
-                            <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-xs group">
+                            <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-xs group bg-black/40 flex items-center justify-center">
+                              {!(viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) && (
+                                <div className="absolute inset-0 bg-black/70 z-10 flex items-center justify-center backdrop-blur-xs">
+                                  <span className="text-xs font-bold text-red-400 uppercase tracking-wider bg-red-950/80 px-3 py-1 rounded-md border border-red-500/30">
+                                    Plano de Fundo Desativado
+                                  </span>
+                                </div>
+                              )}
                               {uploadingBackground && (
-                                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 backdrop-blur-sm">
+                                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-20 backdrop-blur-sm">
                                   <Loader2 size={32} className="animate-spin text-[var(--gm-primary)] mb-2" />
                                   <span className="text-[10px] font-bold text-white uppercase tracking-wider">Processando...</span>
                                 </div>
@@ -2286,13 +2322,25 @@ export default function Configuracoes() {
                                   loop
                                   muted
                                   playsInline
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full transition-all duration-200"
+                                  style={{
+                                    objectFit: (viewMode === "smartphone" ? mobileBgFit : bgFit) as any,
+                                    opacity: (viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) ? (viewMode === "smartphone" ? mobileBgOpacity : bgOpacity) : 0.15,
+                                    transform: `scale(${viewMode === "smartphone" ? mobileBgScale : bgScale})`,
+                                    filter: `blur(${viewMode === "smartphone" ? mobileBgBlur : bgBlur}px)`
+                                  }}
                                 />
                               ) : (
                                 <img
                                   src={(viewMode === "smartphone" ? mobileBgUrl : bgUrl) || ""}
                                   alt="Background"
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full transition-all duration-200"
+                                  style={{
+                                    objectFit: (viewMode === "smartphone" ? mobileBgFit : bgFit) as any,
+                                    opacity: (viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) ? (viewMode === "smartphone" ? mobileBgOpacity : bgOpacity) : 0.15,
+                                    transform: `scale(${viewMode === "smartphone" ? mobileBgScale : bgScale})`,
+                                    filter: `blur(${viewMode === "smartphone" ? mobileBgBlur : bgBlur}px)`
+                                  }}
                                 />
                               )}
                             </div>

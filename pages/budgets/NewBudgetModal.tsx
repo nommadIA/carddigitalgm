@@ -159,8 +159,8 @@ async function insertItemsWithAutoStrip(items: any[]) {
 const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
-  zIndex: 9999,
-  background: "rgba(0, 0, 0, 0.8)",
+  zIndex: 1000000,
+  background: "rgba(0, 0, 0, 0.85)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -172,7 +172,7 @@ const overlay: React.CSSProperties = {
 const fullScreenContainer: React.CSSProperties = {
   position: "fixed",
   inset: 0,
-  zIndex: 9999,
+  zIndex: 1000000,
   background: "#09090b",
   color: "#f4f4f5",
   display: "flex",
@@ -279,7 +279,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
   const [deliveryDays, setDeliveryDays] = useState<number>(5);
 
   const [items, setItems] = useState<BudgetItemDraft[]>([]);
-  const [barPosition, setBarPosition] = useState(24); // Posição padrão em px da base
+  const [barPosition, setBarPosition] = useState(16); // Posição padrão em px da base
   const [isDragging, setIsDragging] = useState(false);
   const dragStartY = React.useRef(0);
   const dragStartPos = React.useRef(0);
@@ -732,7 +732,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         <div style={pageContent}>
           <div className="flex flex-col gap-6">
             {/* 01. CLIENTE */}
-          <div style={card}>
+          <div style={{ ...card, position: "relative", zIndex: 40 }}>
             <div style={labelTop} className="flex justify-between">
               <span>01. Cliente</span>
             </div>
@@ -749,7 +749,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
           </div>
 
           {/* 02. ITENS */}
-          <div>
+          <div style={{ position: "relative", zIndex: 20 }}>
             <div className="flex items-center justify-between mb-4">
               <div style={sectionTitle} className="!mb-0 !marginTop-0">
                 02. Itens da Proposta
@@ -971,7 +971,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
           </div>
 
           {/* 03. RESUMO FINANCEIRO */}
-          <div style={card}>
+          <div style={{ ...card, position: "relative", zIndex: 10 }}>
             <div style={labelTop} className="mb-4">
               03. Resumo Financeiro & Pagamento
             </div>
@@ -1136,13 +1136,13 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
       {/* 04. AÇÕES */}
       <div
-        className={`p-4 md:p-5 rounded-lg bg-[var(--gm-surface)] border border-white/15 text-white flex flex-row items-center justify-between gap-4 shadow-lg z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`p-3.5 sm:p-5 rounded-2xl bg-[#18181b]/95 backdrop-blur-xl border border-white/20 text-white flex flex-row items-center justify-between gap-3 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         style={{
           position: "fixed",
-          left: 24,
-          right: 24,
+          left: 12,
+          right: 12,
           bottom: `calc(${barPosition}px + env(safe-area-inset-bottom, 0px))`,
           maxWidth: 1052,
           margin: "0 auto",
@@ -1150,46 +1150,43 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
           touchAction: "none",
         }}
       >
-            {/* Drag Handle Visual */}
-            <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/20 rounded-full" />
+        {/* Drag Handle Visual */}
+        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/20 rounded-full" />
 
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center">
-                <CheckCircle2 size={28} className="text-emerald-400" />
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-white font-bold text-base leading-none mb-1">
-                  {budgetToEditId ? "Pronto para atualizar?" : "Pronto para finalizar?"}
-                </div>
-                <div className="text-slate-400 text-[10px] uppercase tracking-wider font-medium">Confira os valores antes de salvar</div>
-              </div>
-              <div className="sm:hidden">
-                <div className="text-white font-bold text-sm leading-none">
-                  {budgetToEditId ? "Atualizar?" : "Finalizar?"}
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={(e) => { e.stopPropagation(); handleSave(); }}
-              disabled={saving}
-              className="px-6 py-3 rounded-xl font-bold text-sm bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/25 hover:brightness-110 active:scale-95 transition-all flex items-center gap-3 shrink-0 cursor-pointer"
-            >
-              {saving ? (
-                "Salvando..."
-              ) : budgetToEditId ? (
-                <>
-                  <ArrowRight size={18} className="animate-arrow-point" />
-                  Atualizar Proposta
-                </>
-              ) : (
-                <>
-                  <ArrowRight size={18} className="animate-arrow-point" />
-                  Finalizar Proposta
-                </>
-              )}
-            </button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center shrink-0">
+            <CheckCircle2 size={26} className="text-emerald-400" />
           </div>
+          <div>
+            <div className="text-white font-bold text-sm sm:text-base leading-tight">
+              {budgetToEditId ? "Atualizar Proposta?" : "Pronto para finalizar?"}
+            </div>
+            <div className="hidden sm:block text-slate-400 text-[10px] uppercase tracking-wider font-medium mt-0.5">
+              Confira os valores antes de salvar
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={(e) => { e.stopPropagation(); handleSave(); }}
+          disabled={saving}
+          className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/25 hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 sm:gap-3 shrink-0 cursor-pointer"
+        >
+          {saving ? (
+            "Salvando..."
+          ) : budgetToEditId ? (
+            <>
+              <ArrowRight size={18} className="animate-arrow-point" />
+              <span>Atualizar Proposta</span>
+            </>
+          ) : (
+            <>
+              <ArrowRight size={18} className="animate-arrow-point" />
+              <span>Finalizar Proposta</span>
+            </>
+          )}
+        </button>
+      </div>
       </div>
     </div>,
     document.body
