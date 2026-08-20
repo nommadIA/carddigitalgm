@@ -65,8 +65,8 @@ export default function CreateDeletePasswordModal({ open, onClose }: Props) {
         </button>
 
         <div className="mb-6">
-            <h3 className="text-lg font-extrabold text-white">Criar Senha</h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Criar Senha</h3>
+            <p className="text-base text-slate-300 font-medium mt-1.5 leading-relaxed">
             Proteja exclusões definitivas com uma senha segura.
             </p>
         </div>

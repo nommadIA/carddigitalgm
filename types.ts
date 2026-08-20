@@ -82,6 +82,10 @@ export interface Expense {
   amount: number;
   dueDate: string;
   paid: boolean;
+  is_recurring?: boolean;
+  recurring_frequency?: 'MONTHLY' | 'WEEKLY' | 'YEARLY' | string;
+  reminder_alarm?: boolean;
+  reminder_time?: string;
   createdAt: string;
   deletedAt?: string | null;
 }

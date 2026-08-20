@@ -6,6 +6,7 @@ import { Card } from "../components/ui/Card";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { ScaleSlider } from "../components/ScaleSlider";
 import { ColorSettingsManager } from "../components/ColorSettingsManager";
+import { ColorSpectrumModal } from "../components/ui/ColorSpectrumModal";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
 import {
@@ -54,6 +55,8 @@ import {
   Music,
   ChevronDown,
   ChevronUp,
+  Square,
+  Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -225,59 +228,46 @@ export default function Configuracoes() {
   const hasActiveSection = Object.values(openSections).some(Boolean);
 
   const getSectionBtnClass = (isOpen: boolean) => {
-    return `group relative flex items-center justify-between p-3.5 sm:p-4 min-h-[48px] sm:min-h-[52px] rounded-lg border font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 text-left outline-none cursor-pointer ${
+    return `group relative flex items-center justify-between p-3.5 sm:p-4 min-h-[48px] sm:min-h-[52px] rounded-xl border font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 text-left outline-none cursor-pointer ${
       isOpen
-        ? "bg-white dark:bg-zinc-900 text-slate-900 dark:text-white border-[var(--gm-primary)] shadow-md ring-2 ring-[var(--gm-primary)]/20 scale-[1.01]"
-        : "bg-slate-50 dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-zinc-800/80 shadow-xs hover:shadow-md"
+        ? "barra fora text-slate-900 dark:text-white border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/20 scale-[1.01]"
+        : "fora hover:opacity-90 text-slate-700 dark:text-slate-200 border-white/10 shadow-none"
     }`;
   };
 
   const cachedSettings = readSettingsLocal();
-  const isLightModeInitial = typeof localStorage !== "undefined" && localStorage.getItem("theme") === "light";
-  const defaultOrangeInitial = isLightModeInitial ? "#FF6900" : "#FF7B17";
+  const defaultOrangeInitial = "#FF7B17";
 
-  const savedColorsInitial = isLightModeInitial
-    ? (cachedSettings?.bio_config?.theme_colors_light || (typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem("gm_colors_light") || "null") : null))
-    : (cachedSettings?.bio_config?.theme_colors_dark || (typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem("gm_colors_dark") || "null") : null));
+  const savedColorsInitial = cachedSettings?.bio_config?.theme_colors_dark || (typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem("gm_colors_dark") || "null") : null);
 
   const initialPrimary = savedColorsInitial?.primary || (cachedSettings?.brand_primary && cachedSettings?.brand_primary !== "#32BCAD" ? cachedSettings.brand_primary : null) || defaultOrangeInitial;
   const initialAccent = savedColorsInitial?.accent || (cachedSettings?.brand_accent && cachedSettings?.brand_accent !== "#32BCAD" ? cachedSettings.brand_accent : null) || defaultOrangeInitial;
-  const initialBg = savedColorsInitial?.bg || cachedSettings?.brand_bg || (isLightModeInitial ? "#FFFFFF" : "#0f1117");
+  const initialBg = savedColorsInitial?.bg || (cachedSettings?.brand_bg && cachedSettings?.brand_bg !== "#0b1220" ? cachedSettings.brand_bg : null) || "#0f1117";
 
   const [brandPrimary, setBrandPrimary] = useState(initialPrimary);
   const [brandAccent, setBrandAccent] = useState(initialAccent);
   const [brandBg, setBrandBg] = useState(initialBg);
-  const [brandTitle, setBrandTitle] = useState(savedColorsInitial?.title || (isLightModeInitial ? "#1B1D22" : "#FFFFFF"));
-  const [brandSubtitle, setBrandSubtitle] = useState(savedColorsInitial?.subtitle || (isLightModeInitial ? "#6B7280" : "#94A3B8"));
+  const [brandTitle, setBrandTitle] = useState(savedColorsInitial?.title || "#FFFFFF");
+  const [brandSubtitle, setBrandSubtitle] = useState(savedColorsInitial?.subtitle || "#94A3B8");
   const [brandIcon, setBrandIcon] = useState(savedColorsInitial?.icon || initialAccent);
 
   // Cores independentes do Menu / Barra Lateral
   const [menuPrimary, setMenuPrimary] = useState(savedColorsInitial?.menu_primary || initialPrimary);
   const [menuBg, setMenuBg] = useState(savedColorsInitial?.menu_bg || initialBg);
-  const [menuTitle, setMenuTitle] = useState(savedColorsInitial?.menu_title || (isLightModeInitial ? "#1B1D22" : "#FFFFFF"));
-  const [menuSubtitle, setMenuSubtitle] = useState(savedColorsInitial?.menu_subtitle || (isLightModeInitial ? "#6B7280" : "#94A3B8"));
+  const [menuTitle, setMenuTitle] = useState(savedColorsInitial?.menu_title || "#FFFFFF");
+  const [menuSubtitle, setMenuSubtitle] = useState(savedColorsInitial?.menu_subtitle || "#94A3B8");
   const [menuIcon, setMenuIcon] = useState(savedColorsInitial?.menu_icon || initialAccent);
   const [menuButton, setMenuButton] = useState(savedColorsInitial?.menu_button || initialAccent);
 
   const [fontFamily, setFontFamily] = useState("Inter");
   const [previewFont, setPreviewFont] = useState<string | null>(null);
 
-  // Configuração independente do botão no Modo Claro (☀️)
-  const [buttonStyleLight, setButtonStyleLight] = useState("vazado");
-  const [buttonBgLight, setButtonBgLight] = useState("transparent");
-  const [buttonBorderLight, setButtonBorderLight] = useState("#FF6900");
-  const [buttonTextLight, setButtonTextLight] = useState("#18181B");
-  const [buttonIconLight, setButtonIconLight] = useState("#FF6900");
-
-  // Configuração independente do botão no Modo Escuro (🌙)
+  // Configuração de botões
   const [buttonStyleDark, setButtonStyleDark] = useState("vazado");
   const [buttonBgDark, setButtonBgDark] = useState("transparent");
   const [buttonBorderDark, setButtonBorderDark] = useState("#FF7B17");
   const [buttonTextDark, setButtonTextDark] = useState("#FFFFFF");
   const [buttonIconDark, setButtonIconDark] = useState("#FF7B17");
-
-  const [btnConfigTab] = useState<"light" | "dark">("dark");
-  const [isLightMode] = useState<boolean>(false);
 
   // Painel Flutuante estilo Bio Editor
   const setIsDockedState = useState(false);
@@ -290,48 +280,32 @@ export default function Configuracoes() {
       try {
         const s = await fetchSettingsSupabase(tenantId);
         if (s) {
-          if (isLightMode) {
-            const savedLight = s.bio_config?.theme_colors_light || JSON.parse(localStorage.getItem("gm_colors_light") || "null");
-            setBrandPrimary(savedLight?.primary || "#FF6900");
-            setBrandAccent(savedLight?.accent || "#FF6900");
-            setBrandBg(savedLight?.bg || "#FFFFFF");
-            setBrandTitle(savedLight?.title || "#1B1D22");
-            setBrandSubtitle(savedLight?.subtitle || "#6B7280");
-            setBrandIcon(savedLight?.icon || "#FF6900");
+          const localSaved = typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem("gm_colors_dark") || "null") : null;
+          const savedDark = localSaved || s.bio_config?.theme_colors_dark;
+          const darkPrimary = savedDark?.primary || (s.brand_primary && s.brand_primary !== "#32BCAD" ? s.brand_primary : null) || "#FE540B";
+          const darkAccent = savedDark?.accent || (s.brand_accent && s.brand_accent !== "#32BCAD" ? s.brand_accent : null) || "#FF7A38";
+          const darkBg = savedDark?.bg || (s.brand_bg && s.brand_bg !== "#0b1220" ? s.brand_bg : null) || "#0B0B0C";
 
-            setMenuPrimary(savedLight?.menu_primary || "#FF6900");
-            setMenuBg(savedLight?.menu_bg || "#FFFFFF");
-            setMenuTitle(savedLight?.menu_title || "#1B1D22");
-            setMenuSubtitle(savedLight?.menu_subtitle || "#6B7280");
-            setMenuIcon(savedLight?.menu_icon || "#FF6900");
-            setMenuButton(savedLight?.menu_button || "#FF6900");
-          } else {
-            const savedDark = s.bio_config?.theme_colors_dark || JSON.parse(localStorage.getItem("gm_colors_dark") || "null");
-            const darkPrimary = savedDark?.primary || (s.brand_primary && s.brand_primary !== "#32BCAD" ? s.brand_primary : null) || "#FF7B17";
-            const darkAccent = savedDark?.accent || (s.brand_accent && s.brand_accent !== "#32BCAD" ? s.brand_accent : null) || "#FF7B17";
-            const darkBg = savedDark?.bg || (s.brand_bg && s.brand_bg !== "#0b1220" ? s.brand_bg : null) || "#0f1117";
+          setBrandPrimary(darkPrimary);
+          setBrandAccent(darkAccent);
+          setBrandBg(darkBg);
+          setBrandTitle(savedDark?.title || "#FFFFFF");
+          setBrandSubtitle(savedDark?.subtitle || "#94A3B8");
+          setBrandIcon(savedDark?.icon || darkAccent);
 
-            setBrandPrimary(darkPrimary);
-            setBrandAccent(darkAccent);
-            setBrandBg(darkBg);
-            setBrandTitle(savedDark?.title || "#FFFFFF");
-            setBrandSubtitle(savedDark?.subtitle || "#94A3B8");
-            setBrandIcon(savedDark?.icon || darkAccent);
-
-            setMenuPrimary(savedDark?.menu_primary || darkPrimary);
-            setMenuBg(savedDark?.menu_bg || darkBg);
-            setMenuTitle(savedDark?.menu_title || "#FFFFFF");
-            setMenuSubtitle(savedDark?.menu_subtitle || "#94A3B8");
-            setMenuIcon(savedDark?.menu_icon || darkAccent);
-            setMenuButton(savedDark?.menu_button || darkAccent);
-          }
+          setMenuPrimary(savedDark?.menu_primary || darkPrimary);
+          setMenuBg(savedDark?.menu_bg || darkBg);
+          setMenuTitle(savedDark?.menu_title || "#FFFFFF");
+          setMenuSubtitle(savedDark?.menu_subtitle || "#94A3B8");
+          setMenuIcon(savedDark?.menu_icon || darkAccent);
+          setMenuButton(savedDark?.menu_button || darkAccent);
         }
       } catch (err) {}
     };
     if (tenantId) {
       syncCurrentColors();
     }
-  }, [isLightMode, tenantId]);
+  }, [tenantId]);
 
   // Helper ultra fluido para aplicar alterações de cores instantaneamente no DOM
   const updateDomColor = (cssVar: string, value: string) => {
@@ -464,13 +438,6 @@ export default function Configuracoes() {
           brand_accent: brandAccent,
           brand_bg: brandBg,
           font_family: previewFont || fontFamily,
-          button_config_light: {
-            style: buttonStyleLight,
-            bg: buttonBgLight,
-            border: buttonBorderLight,
-            text: buttonTextLight,
-            icon: buttonIconLight,
-          },
           button_config_dark: {
             style: buttonStyleDark,
             bg: buttonBgDark,
@@ -478,11 +445,11 @@ export default function Configuracoes() {
             text: buttonTextDark,
             icon: buttonIconDark,
           },
-          button_style: isLightMode ? buttonStyleLight : buttonStyleDark,
-          button_bg: isLightMode ? buttonBgLight : buttonBgDark,
-          button_border: isLightMode ? buttonBorderLight : buttonBorderDark,
-          button_text: isLightMode ? buttonTextLight : buttonTextDark,
-          button_icon: isLightMode ? buttonIconLight : buttonIconDark,
+          button_style: buttonStyleDark,
+          button_bg: buttonBgDark,
+          button_border: buttonBorderDark,
+          button_text: buttonTextDark,
+          button_icon: buttonIconDark,
           app_scale: appScale,
           mobile_scale: mobileScale,
           app_background_url: bgUrl,
@@ -511,17 +478,11 @@ export default function Configuracoes() {
     brandBg,
     fontFamily,
     previewFont,
-    buttonStyleLight,
-    buttonBgLight,
-    buttonBorderLight,
-    buttonTextLight,
-    buttonIconLight,
     buttonStyleDark,
     buttonBgDark,
     buttonBorderDark,
     buttonTextDark,
     buttonIconDark,
-    isLightMode,
     appScale,
     mobileScale,
     bgUrl,
@@ -562,15 +523,12 @@ export default function Configuracoes() {
   // ✅ Reverte para as configurações salvas se sair sem salvar
   useEffect(() => {
     return () => {
-      const saved = localStorage.getItem("gm.settings.cache.v1");
-      if (saved) {
-        try {
-          const s = JSON.parse(saved);
-          applySettingsToDOM(s);
-        } catch (e) {}
+      const s = readSettingsLocal(tenantId);
+      if (s) {
+        applySettingsToDOM(s, false, tenantId);
       }
     };
-  }, []);
+  }, [tenantId]);
 
   // ✅ IMPORTANTE: Preview Scale (somente UI / não salva no Supabase)
   const [bgPreviewScale, setBgPreviewScale] = useState(1);
@@ -631,21 +589,6 @@ export default function Configuracoes() {
         }
         
         setFontFamily(s.font_family || "Inter");
-        // Carrega configurações do botão no Modo Claro (☀️)
-        const savedBtnLight = JSON.parse(localStorage.getItem("gm_button_light") || "null") || s.button_config_light || s.bio_config?.button_config_light;
-        if (savedBtnLight) {
-          setButtonStyleLight(savedBtnLight.style || "vazado");
-          setButtonBgLight(savedBtnLight.bg ?? "transparent");
-          setButtonBorderLight(savedBtnLight.border || "#FF6900");
-          setButtonTextLight(savedBtnLight.text || "#18181B");
-          setButtonIconLight(savedBtnLight.icon || "#FF6900");
-        } else {
-          setButtonStyleLight("vazado");
-          setButtonBgLight("transparent");
-          setButtonBorderLight("#FF6900");
-          setButtonTextLight("#18181B");
-          setButtonIconLight("#FF6900");
-        }
 
         // Carrega configurações do botão no Modo Escuro (🌙)
         const savedBtnDark = JSON.parse(localStorage.getItem("gm_button_dark") || "null") || s.button_config_dark || s.bio_config?.button_config_dark;
@@ -786,53 +729,30 @@ export default function Configuracoes() {
       const currentBioConfig = s?.bio_config || {};
       const activeIsLight = localStorage.getItem("theme") === "light";
 
-      // Salva no localStorage e no bio_config correspondente
-      if (activeIsLight) {
-        const payloadLight = { 
-          primary: brandPrimary, 
-          accent: brandAccent, 
-          bg: brandBg,
-          title: brandTitle,
-          subtitle: brandSubtitle,
-          icon: brandIcon,
-          button: brandAccent,
-          menu_primary: menuPrimary,
-          menu_bg: menuBg,
-          menu_title: menuTitle,
-          menu_subtitle: menuSubtitle,
-          menu_icon: menuIcon,
-          menu_button: menuButton,
-        };
-        localStorage.setItem("gm_colors_light", JSON.stringify(payloadLight));
-        currentBioConfig.theme_colors_light = payloadLight;
-      } else {
-        const payloadDark = { 
-          primary: brandPrimary, 
-          accent: brandAccent, 
-          bg: brandBg,
-          title: brandTitle,
-          subtitle: brandSubtitle,
-          icon: brandIcon,
-          button: brandAccent,
-          menu_primary: menuPrimary,
-          menu_bg: menuBg,
-          menu_title: menuTitle,
-          menu_subtitle: menuSubtitle,
-          menu_icon: menuIcon,
-          menu_button: menuButton,
-        };
-        localStorage.setItem("gm_colors_dark", JSON.stringify(payloadDark));
-        currentBioConfig.theme_colors_dark = payloadDark;
-      }
-
-      // Salva configurações de botão para ambos os temas
-      const btnConfigLight = {
-        style: buttonStyleLight,
-        bg: buttonBgLight,
-        border: buttonBorderLight,
-        text: buttonTextLight,
-        icon: buttonIconLight,
+      // Salva no localStorage e no bio_config
+      const payloadDark = { 
+        primary: brandPrimary, 
+        accent: brandAccent, 
+        bg: brandBg,
+        title: brandTitle,
+        subtitle: brandSubtitle,
+        icon: brandIcon,
+        button: brandAccent,
+        menu_primary: menuPrimary,
+        menu_bg: menuBg,
+        menu_title: menuTitle,
+        menu_subtitle: menuSubtitle,
+        menu_icon: menuIcon,
+        menu_button: menuButton,
       };
+      localStorage.setItem("gm_colors_dark", JSON.stringify(payloadDark));
+      localStorage.setItem("gm_theme_color", brandPrimary);
+      if (tenantId) {
+        localStorage.setItem(`gm_colors_dark_${tenantId}`, JSON.stringify(payloadDark));
+      }
+      currentBioConfig.theme_colors_dark = payloadDark;
+
+      // Salva configurações de botão
       const btnConfigDark = {
         style: buttonStyleDark,
         bg: buttonBgDark,
@@ -841,9 +761,7 @@ export default function Configuracoes() {
         icon: buttonIconDark,
       };
 
-      localStorage.setItem("gm_button_light", JSON.stringify(btnConfigLight));
       localStorage.setItem("gm_button_dark", JSON.stringify(btnConfigDark));
-      currentBioConfig.button_config_light = btnConfigLight;
       currentBioConfig.button_config_dark = btnConfigDark;
 
       const next = await upsertSettingsSupabase(tenantId, {
@@ -887,18 +805,23 @@ export default function Configuracoes() {
         app_scale: Math.min(2, Math.max(0.5, appScale)),
         mobile_scale: Math.min(3, Math.max(0.5, mobileScale)),
 
-        button_config_light: btnConfigLight,
         button_config_dark: btnConfigDark,
-        button_style: activeIsLight ? buttonStyleLight : buttonStyleDark,
-        button_bg: activeIsLight ? buttonBgLight : buttonBgDark,
-        button_border: activeIsLight ? buttonBorderLight : buttonBorderDark,
-        button_text: activeIsLight ? buttonTextLight : buttonTextDark,
-        button_icon: activeIsLight ? buttonIconLight : buttonIconDark,
+        button_style: buttonStyleDark,
+        button_bg: buttonBgDark,
+        button_border: buttonBorderDark,
+        button_text: buttonTextDark,
+        button_icon: buttonIconDark,
         theme_presets: presets,
         bio_config: currentBioConfig, // Salva o bio_config atualizado
       });
 
       applySettingsToDOM(next);
+
+      // Dispara eventos globais para que todos os componentes em aberto se atualizem
+      window.dispatchEvent(new CustomEvent("gm_theme_updated", { detail: next }));
+      window.dispatchEvent(new CustomEvent("gm_colors_updated", { detail: next }));
+      window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: next }));
+
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (e: any) {
@@ -925,7 +848,6 @@ export default function Configuracoes() {
     setStats: (s: any) => void,
     setUrl: (url: string) => void
   ) {
-    if (!tenantId) return;
     setUploading(true);
     setProgress(15);
     setStatusText("Prévia instantânea...");
@@ -992,13 +914,29 @@ export default function Configuracoes() {
       const finalUrl = `${remoteUrl}?t=${Date.now()}`;
 
       setProgress(90);
-      setStatusText("Sincronizando...");
+      setStatusText("Sincronizando no banco...");
 
       URL.revokeObjectURL(localBlobUrl);
       setUrl(finalUrl);
 
+      if (kind === "logo") {
+        setCompanyLogoUrl(finalUrl);
+        setAvatarUrl(finalUrl);
+        const updated = await upsertSettingsSupabase(tenantId, {
+          company_logo_url: finalUrl,
+          avatar_url: finalUrl,
+        });
+        window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
+      } else {
+        setAvatarUrl(finalUrl);
+        const updated = await upsertSettingsSupabase(tenantId, {
+          avatar_url: finalUrl,
+        });
+        window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
+      }
+
       setProgress(100);
-      setStatusText("Carregado com sucesso!");
+      setStatusText("Salvo no banco com sucesso!");
 
       setTimeout(() => {
         setProgress(0);
@@ -1021,7 +959,10 @@ export default function Configuracoes() {
       setLogoProgress,
       setLogoStatusText,
       setLogoStats,
-      setCompanyLogoUrl
+      (url) => {
+        setCompanyLogoUrl(url);
+        setAvatarUrl(url);
+      }
     );
   }
 
@@ -1040,7 +981,6 @@ export default function Configuracoes() {
   const [uploadingBackground, setUploadingBackground] = useState(false);
 
   async function onUploadBackground(file: File) {
-    if (!tenantId) return;
     setUploadingBackground(true);
     try {
       let fileToUpload = file;
@@ -1073,8 +1013,30 @@ export default function Configuracoes() {
       const url = await uploadTenantAsset(tenantId, fileToUpload, "background");
       if (viewMode === "smartphone") {
         setMobileBgUrl(url);
+        setMobileBgEnabled(true);
+        const op = mobileBgOpacity > 0 ? mobileBgOpacity : (mobileBgOpacityPrev || 0.18);
+        setMobileBgOpacity(op);
+        const updated = await upsertSettingsSupabase(tenantId, {
+          mobile_app_background_url: url,
+          mobile_app_background_opacity: op,
+          mobile_app_background_fit: mobileBgFit,
+          mobile_app_background_scale: mobileBgScale,
+          mobile_app_background_blur: mobileBgBlur,
+        });
+        window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
       } else {
         setBgUrl(url);
+        setBgEnabled(true);
+        const op = bgOpacity > 0 ? bgOpacity : (bgOpacityPrev || 0.18);
+        setBgOpacity(op);
+        const updated = await upsertSettingsSupabase(tenantId, {
+          app_background_url: url,
+          app_background_opacity: op,
+          app_background_fit: bgFit,
+          app_background_scale: bgScale,
+          app_background_blur: bgBlur,
+        });
+        window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
       }
     } catch (e: any) {
       alert(e.message || "Erro no upload");
@@ -1254,37 +1216,6 @@ export default function Configuracoes() {
     },
   ];
 
-  const updateButtonLight = (patch: {
-    style?: string;
-    bg?: string;
-    border?: string;
-    text?: string;
-    icon?: string;
-  }) => {
-    const style = patch.style !== undefined ? patch.style : buttonStyleLight;
-    const bg = patch.bg !== undefined ? patch.bg : buttonBgLight;
-    const border = patch.border !== undefined ? patch.border : buttonBorderLight;
-    const text = patch.text !== undefined ? patch.text : buttonTextLight;
-    const icon = patch.icon !== undefined ? patch.icon : buttonIconLight;
-
-    setButtonStyleLight(style);
-    setButtonBgLight(bg);
-    setButtonBorderLight(border);
-    setButtonTextLight(text);
-    setButtonIconLight(icon);
-
-    const cfg = { style, bg, border, text, icon };
-    localStorage.setItem("gm_button_light", JSON.stringify(cfg));
-
-    if (isLightMode) {
-      document.documentElement.setAttribute("data-button-style", style);
-      document.documentElement.style.setProperty("--gm-btn-bg", bg);
-      document.documentElement.style.setProperty("--gm-btn-border", border);
-      document.documentElement.style.setProperty("--gm-btn-text", text);
-      document.documentElement.style.setProperty("--gm-btn-icon", icon);
-    }
-  };
-
   const updateButtonDark = (patch: {
     style?: string;
     bg?: string;
@@ -1307,71 +1238,108 @@ export default function Configuracoes() {
     const cfg = { style, bg, border, text, icon };
     localStorage.setItem("gm_button_dark", JSON.stringify(cfg));
 
-    if (!isLightMode) {
-      document.documentElement.setAttribute("data-button-style", style);
-      document.documentElement.style.setProperty("--gm-btn-bg", bg);
-      document.documentElement.style.setProperty("--gm-btn-border", border);
-      document.documentElement.style.setProperty("--gm-btn-text", text);
-      document.documentElement.style.setProperty("--gm-btn-icon", icon);
-    }
+    document.documentElement.setAttribute("data-button-style", style);
+    document.documentElement.style.setProperty("--gm-btn-bg", bg);
+    document.documentElement.style.setProperty("--gm-btn-border", border);
+    document.documentElement.style.setProperty("--gm-btn-text", text);
+    document.documentElement.style.setProperty("--gm-btn-icon", icon);
   };
 
   const handleButtonStyleChange = (newStyle: string) => {
-    if (btnConfigTab === "light") {
-      const defPrimary = brandPrimary || "#FF6900";
-      let bg = "transparent";
-      let border = defPrimary;
-      let text = "#18181B";
-      let icon = defPrimary;
+    const defPrimary = brandPrimary || "#FF7B17";
+    let bg = "transparent";
+    let border = defPrimary;
+    let text = "#FFFFFF";
+    let icon = defPrimary;
 
-      if (newStyle === "solid") {
-        bg = defPrimary;
-        border = defPrimary;
-        text = "#FFFFFF";
-        icon = "#FFFFFF";
-      } else if (newStyle === "outline" || newStyle === "vazado") {
-        bg = "transparent";
-        border = defPrimary;
-        text = "#18181B";
-        icon = defPrimary;
-      } else if (newStyle === "glass") {
-        bg = "rgba(255, 255, 255, 0.4)";
-        border = "rgba(255, 255, 255, 0.6)";
-        text = "#18181B";
-        icon = defPrimary;
-      }
-      updateButtonLight({ style: newStyle, bg, border, text, icon });
-    } else {
-      const defPrimary = brandPrimary || "#FF7B17";
-      let bg = "transparent";
-      let border = defPrimary;
-      let text = "#FFFFFF";
-      let icon = defPrimary;
-
-      if (newStyle === "solid") {
-        bg = defPrimary;
-        border = defPrimary;
-        text = "#FFFFFF";
-        icon = "#FFFFFF";
-      } else if (newStyle === "outline" || newStyle === "vazado") {
-        bg = "transparent";
-        border = defPrimary;
-        text = "#FFFFFF";
-        icon = defPrimary;
-      } else if (newStyle === "glass") {
-        bg = "rgba(255, 255, 255, 0.15)";
-        border = "rgba(255, 255, 255, 0.3)";
-        text = "#FFFFFF";
-        icon = defPrimary;
-      }
-      updateButtonDark({ style: newStyle, bg, border, text, icon });
+    if (newStyle === "solid") {
+      bg = defPrimary;
+      border = defPrimary;
+      text = "#FFFFFF";
+      icon = "#FFFFFF";
+    } else if (newStyle === "outline" || newStyle === "vazado") {
+      bg = "transparent";
+      border = defPrimary;
+      text = "#FFFFFF";
+      icon = defPrimary;
+    } else if (newStyle === "glass") {
+      bg = "rgba(255, 255, 255, 0.15)";
+      border = "rgba(255, 255, 255, 0.3)";
+      text = "#FFFFFF";
+      icon = defPrimary;
     }
+    updateButtonDark({ style: newStyle, bg, border, text, icon });
   };
 
   const applyTheme = (theme: (typeof PRESET_THEMES)[0]) => {
     setBrandPrimary(theme.primary);
     setBrandAccent(theme.accent);
     setBrandBg(theme.bg);
+  };
+
+  const parseColorToRgb = (colorStr: string) => {
+    if (!colorStr || colorStr === "transparent" || colorStr === "TRANSPARENT") {
+      return { r: 0, g: 0, b: 0, a: 0 };
+    }
+    const rgbaMatch = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
+    if (rgbaMatch) {
+      return {
+        r: parseInt(rgbaMatch[1], 10),
+        g: parseInt(rgbaMatch[2], 10),
+        b: parseInt(rgbaMatch[3], 10),
+        a: rgbaMatch[4] !== undefined ? parseFloat(rgbaMatch[4]) : 1,
+      };
+    }
+    let hex = colorStr.trim().replace(/^#/, "");
+    if (hex.length === 3) {
+      hex = hex.split("").map((c) => c + c).join("");
+    }
+    if (hex.length === 6 || hex.length === 8) {
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      const a = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
+      return {
+        r: isNaN(r) ? 0 : r,
+        g: isNaN(g) ? 0 : g,
+        b: isNaN(b) ? 0 : b,
+        a: isNaN(a) ? 1 : a,
+      };
+    }
+    return { r: 0, g: 0, b: 0, a: 1 };
+  };
+
+  const rgbToCmyk = (r: number, g: number, b: number) => {
+    if (r === 0 && g === 0 && b === 0) return { c: 0, m: 0, y: 0, k: 100 };
+    const rN = r / 255;
+    const gN = g / 255;
+    const bN = b / 255;
+    const k = 1 - Math.max(rN, gN, bN);
+    if (k >= 0.999) return { c: 0, m: 0, y: 0, k: 100 };
+    const c = Math.round(((1 - rN - k) / (1 - k)) * 100);
+    const m = Math.round(((1 - gN - k) / (1 - k)) * 100);
+    const y = Math.round(((1 - bN - k) / (1 - k)) * 100);
+    const kPct = Math.round(k * 100);
+    return { c, m, y, k: kPct };
+  };
+
+  const getColorFormats = (colorStr: string) => {
+    if (!colorStr || colorStr === "transparent" || colorStr === "TRANSPARENT") {
+      return {
+        hex: "TRANSPARENT",
+        rgb: "rgb(0, 0, 0)",
+        cmyk: "0%, 0%, 0%, 100%",
+      };
+    }
+    const { r, g, b, a } = parseColorToRgb(colorStr);
+    const toHex = (n: number) => n.toString(16).padStart(2, "0").toUpperCase();
+    const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    const rgb = a !== undefined && a < 1 
+      ? `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})` 
+      : `rgb(${r}, ${g}, ${b})`;
+    const { c, m, y, k } = rgbToCmyk(r, g, b);
+    const cmyk = `${c}%, ${m}%, ${y}%, ${k}%`;
+    return { hex, rgb, cmyk };
   };
 
   const ColorPickerInput = ({
@@ -1382,31 +1350,116 @@ export default function Configuracoes() {
     label: React.ReactNode;
     value: string;
     onChange: (v: string) => void;
-  }) => (
-    <div>
-      <label className="gm-label flex items-center gap-2">{label}</label>
-      <div className="flex items-center gap-2">
-        <div
-          className="relative w-10 h-10 rounded-lg overflow-hidden border border-white/10 shrink-0 shadow-sm"
-          style={{ backgroundColor: value }}
-        >
-          <input
-            type="color"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="absolute inset-0 w-[200%] h-[200%] -top-[50%] -left-[50%] p-0 border-0 cursor-pointer opacity-0"
-            title="Escolher cor"
-          />
+  }) => {
+    const [copiedFormat, setCopiedFormat] = useState<string | null>(null);
+    const [isSpectrumOpen, setIsSpectrumOpen] = useState(false);
+    const formats = getColorFormats(value);
+
+    const handleCopy = (e: React.MouseEvent, text: string, formatLabel: string) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(text);
+      setCopiedFormat(formatLabel);
+      setTimeout(() => setCopiedFormat(null), 1800);
+    };
+
+    return (
+      <>
+        <div className="group relative flex flex-col rounded-2xl border border-white/10 fora overflow-hidden hover:border-[var(--gm-primary)]/80 transition-all shadow-none">
+          {/* TOP: AMOSTRA DA COR CONFIGURADA GRANDE (CLIQUE NA COR -> AJUSTE DE CORES COM ESPECTRO) */}
+          <div
+            onClick={() => setIsSpectrumOpen(true)}
+            className="relative w-full h-28 sm:h-32 overflow-hidden cursor-pointer transition-transform duration-200 group-hover:scale-[1.01] flex flex-col items-center justify-center gap-2 p-2"
+            style={{
+              backgroundColor:
+                value === "TRANSPARENT" || value === "transparent"
+                  ? "transparent"
+                  : value,
+            }}
+            title="Clique para ajustar a cor com a barra de espectro"
+          >
+            {(value === "TRANSPARENT" ||
+              value === "transparent" ||
+              value.includes("0.15") ||
+              value.includes("0.3") ||
+              value.includes("rgba") ||
+              value.includes("RGBA")) && (
+              <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1.5px,transparent_1.5px)] [background-size:6px_6px] opacity-30 pointer-events-none" />
+            )}
+
+            {/* Botão de Destaque 'Ajustar Cor' no Centro */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsSpectrumOpen(true);
+              }}
+              className="relative z-10 px-4 py-2 rounded-xl bg-black/75 hover:bg-black/90 text-white font-extrabold text-xs flex items-center gap-2 border border-white/20 shadow-lg backdrop-blur-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              title="Clique para ajustar a cor"
+            >
+              <Palette size={15} className="text-[var(--gm-primary)]" />
+              <span>Ajustar Cor</span>
+            </button>
+          </div>
+
+          {/* BOTTOM: CÓDIGOS DE CORES SEPARADOS (HEX, RGB, CMYK) - SEM CAIXA INTERNA, CLIQUE PARA COPIAR */}
+          <div className="p-3.5 sm:p-4 barra border-t border-white/10 flex flex-col justify-between gap-2.5 flex-1">
+            {/* Header com Label e Badge de Copiado */}
+            <div className="flex items-center justify-between text-xs font-bold text-white leading-tight">
+              <span>{label}</span>
+              {copiedFormat && (
+                <span className="text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 animate-in fade-in">
+                  {copiedFormat} Copiado!
+                </span>
+              )}
+            </div>
+
+            {/* Lista de Códigos das Cores Separadas (HEX, RGB, CMYK) sem caixas internas de input */}
+            <div className="space-y-1 pt-1 border-t border-white/5">
+              {/* HEX */}
+              <div
+                onClick={(e) => handleCopy(e, formats.hex, "HEX")}
+                className="flex items-center justify-between text-[11px] font-mono cursor-pointer hover:bg-white/10 px-2 py-1 rounded-md transition-colors group/hex"
+                title="Clique para copiar código HEX"
+              >
+                <span className="font-extrabold text-[#8B8B92] group-hover/hex:text-[var(--gm-primary)]">HEX:</span>
+                <span className="font-bold text-white tracking-wider">{formats.hex}</span>
+              </div>
+
+              {/* RGB */}
+              <div
+                onClick={(e) => handleCopy(e, formats.rgb, "RGB")}
+                className="flex items-center justify-between text-[11px] font-mono cursor-pointer hover:bg-white/10 px-2 py-1 rounded-md transition-colors group/rgb"
+                title="Clique para copiar código RGB"
+              >
+                <span className="font-extrabold text-[#8B8B92] group-hover/rgb:text-[var(--gm-primary)]">RGB:</span>
+                <span className="font-bold text-white tracking-wider">{formats.rgb}</span>
+              </div>
+
+              {/* CMYK */}
+              <div
+                onClick={(e) => handleCopy(e, formats.cmyk, "CMYK")}
+                className="flex items-center justify-between text-[11px] font-mono cursor-pointer hover:bg-white/10 px-2 py-1 rounded-md transition-colors group/cmyk"
+                title="Clique para copiar código CMYK"
+              >
+                <span className="font-extrabold text-[#8B8B92] group-hover/cmyk:text-[var(--gm-primary)]">CMYK:</span>
+                <span className="font-bold text-white tracking-wider">{formats.cmyk}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <input
-          className="gm-input uppercase font-mono text-sm"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          maxLength={7}
+
+        {/* MODAL DE ESPECTRO INTERATIVO */}
+        <ColorSpectrumModal
+          isOpen={isSpectrumOpen}
+          onClose={() => setIsSpectrumOpen(false)}
+          initialColor={value}
+          title="Ajustar Cor"
+          subtitle="Arraste a barra de espectro para alterar a matiz ou refine a saturação e luminosidade."
+          onApply={(newHex) => onChange(newHex)}
         />
-      </div>
-    </div>
-  );
+      </>
+    );
+  };
 
   return (
     <Page
@@ -1457,13 +1510,13 @@ export default function Configuracoes() {
             <div className="w-full flex flex-col gap-6">
               {/* SUBDIVISÃO SUPERIOR: Menu de Cápsulas de Expansão do Painel de Configurações */}
               <SectionDivider label="Personalização do app" />
-              <div className="gm-settings-card flex flex-col gap-3 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-xs backdrop-blur-md">
+              <div className="gm-settings-card fora flex flex-col gap-3 p-4 sm:p-5 rounded-2xl border border-white/10 shadow-none backdrop-blur-md">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 px-1">
                   <span className="text-xs font-extrabold text-[var(--gm-primary)] uppercase tracking-wider flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--gm-primary)] animate-pulse" />
                     PAINEL DE CONFIGURAÇÕES
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  <span className="text-xs text-slate-400 font-medium">
                     {hasActiveSection 
                       ? "Clique na cápsula ativa para recolher e exibir as outras opções" 
                       : "Selecione uma opção para expandir e editar"}
@@ -1659,7 +1712,7 @@ export default function Configuracoes() {
 
               {/* Card quando nenhuma cápsula estiver aberta */}
               {!hasActiveSection && (
-                <div className="gm-settings-card flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 rounded-[2.5rem] text-center shadow-xs backdrop-blur-md animate-in fade-in duration-300">
+                <div className="gm-settings-card fora flex flex-col items-center justify-center py-16 px-4 border border-white/10 rounded-[2.5rem] text-center shadow-none backdrop-blur-md animate-in fade-in duration-300">
                   <div className="w-16 h-16 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] flex items-center justify-center mb-4 border border-[var(--gm-primary)]/20 shadow-xs">
                     <Sparkles className="w-8 h-8 animate-pulse text-[var(--gm-primary)]" />
                   </div>
@@ -1672,8 +1725,8 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 1: PERSONALIZAÇÃO */}
               {openSections.personalization && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
-                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                <div className="gm-settings-card fora border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 barra py-3 sm:py-4 border-b border-white/10 flex items-center justify-between mb-2 rounded-t-xl px-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Palette className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
                       <span>PERSONALIZAÇÃO</span>
@@ -1683,161 +1736,127 @@ export default function Configuracoes() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* LOGO DA EMPRESA */}
-                    <div className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
-                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
-                        <FileImage size={14} /> Logo da Empresa
-                      </span>
-                      <div className="w-32 h-32 rounded-lg bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/logo">
-                        {companyLogoUrl ? (
-                          <img
-                            src={companyLogoUrl}
-                            alt="Logo"
-                            className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover/logo:scale-105"
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center gap-1 text-slate-400">
-                            <ImageIcon size={28} className="opacity-50" />
-                            <span className="text-[10px] font-semibold">Sem Logo</span>
-                          </div>
-                        )}
+                  <div className="w-full py-2">
+                    {/* LOGO DA EMPRESA / FOTO DE PERFIL (LADO ESQUERDO: LOGO + BOTÃO; LADO DIREITO: TEXTOS) */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 sm:p-7 fora rounded-2xl border border-white/10 shadow-none w-full">
+                      {/* LADO ESQUERDO: PRÉVIA DA IMAGEM LOGO + BOTÃO PARA SUBIR IMAGEM */}
+                      <div className="flex flex-col items-center gap-3 shrink-0 w-full sm:w-auto">
+                        {/* PRÉVIA IMAGEM LOGO */}
+                        <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl barra border-2 border-dashed border-white/20 overflow-hidden flex items-center justify-center relative shrink-0 group/logo">
+                          {companyLogoUrl ? (
+                            <img
+                              src={companyLogoUrl}
+                              alt="Logo"
+                              className="w-full h-full object-contain p-2.5 transition-transform duration-300 group-hover/logo:scale-105"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center gap-2 text-slate-400">
+                              <ImageIcon size={36} className="opacity-50 text-[var(--gm-primary)]" />
+                              <span className="text-xs font-bold text-[#8B8B92]">Sem Imagem</span>
+                            </div>
+                          )}
+
+                          <AnimatePresence>
+                            {uploadingLogo && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-zinc-900/85 backdrop-blur-md flex flex-col items-center justify-center p-2 text-white text-center z-10"
+                              >
+                                <Loader2 size={24} className="animate-spin text-[var(--gm-primary)] mb-1.5" />
+                                <span className="text-[10px] font-bold leading-tight drop-shadow">
+                                  {logoStatusText || "Processando..."}
+                                </span>
+                                {logoProgress > 0 && (
+                                  <div className="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden px-1">
+                                    <div
+                                      className="bg-gradient-to-r from-[var(--gm-primary)] to-emerald-400 h-full transition-all duration-300 rounded-full"
+                                      style={{ width: logoProgress + "%" }}
+                                    />
+                                  </div>
+                                )}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* BOTÃO PARA SUBIR LOGO ABAIXO DA FOTO DA LOGO */}
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label
+                            className={"gm-btn py-2 px-4 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-none hover:shadow-sm transition-all rounded-xl border border-[var(--gm-primary)]/40 bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white w-full " + (uploadingLogo ? "opacity-50 pointer-events-none" : "")}
+                          >
+                            {uploadingLogo ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                            <span>{uploadingLogo ? "Otimizando..." : "Alterar Logo"}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              disabled={uploadingLogo}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) onUploadLogo(f);
+                              }}
+                            />
+                          </label>
+
+                          {companyLogoUrl && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                setCompanyLogoUrl(null);
+                                setAvatarUrl(null);
+                                const updated = await upsertSettingsSupabase(tenantId, {
+                                  company_logo_url: null,
+                                  avatar_url: null,
+                                });
+                                window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
+                              }}
+                              className="text-[11px] font-bold text-red-400 hover:text-red-300 transition-colors py-1 flex items-center justify-center gap-1 cursor-pointer"
+                            >
+                              <Trash2 size={12} /> Remover Logo
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* LADO DIREITO: TODAS AS INFORMAÇÕES DE TEXTO E ORIENTAÇÕES */}
+                      <div className="flex-1 flex flex-col items-start text-left gap-3">
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
+                          <FileImage size={15} /> Logo da Empresa / Imagem de Perfil
+                        </span>
+
+                        <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium leading-relaxed">
+                          Cadastre a imagem oficial da sua marca para exibição no sistema e perfis. Recomendamos imagens em formato quadrado ou PNG com fundo transparente.
+                        </p>
 
                         <AnimatePresence>
-                          {uploadingLogo && (
+                          {logoStats && !uploadingLogo && (
                             <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0 }}
-                              className="absolute inset-0 bg-zinc-900/85 backdrop-blur-md flex flex-col items-center justify-center p-2 text-white text-center z-10"
+                              className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20"
                             >
-                              <Loader2 size={24} className="animate-spin text-[var(--gm-primary)] mb-1.5" />
-                              <span className="text-[10px] font-bold leading-tight drop-shadow">
-                                {logoStatusText || "Processando..."}
-                              </span>
-                              {logoProgress > 0 && (
-                                <div className="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden px-1">
-                                  <div
-                                    className="bg-gradient-to-r from-[var(--gm-primary)] to-emerald-400 h-full transition-all duration-300 rounded-full"
-                                    style={{ width: logoProgress + "%" }}
-                                  />
-                                </div>
-                              )}
+                              <Sparkles size={11} className="shrink-0 text-emerald-500 animate-pulse" />
+                              <span>Imagem otimizada: {logoStats.compressedSize} ({logoStats.reduction})</span>
                             </motion.div>
                           )}
                         </AnimatePresence>
+
+                        <div className="pt-2 border-t border-white/10 w-full mt-1">
+                          <span className="text-[11px] text-[#8B8B92] font-medium leading-relaxed block">
+                            • Resolução sugerida: <strong className="text-slate-700 dark:text-zinc-300">512x512px</strong>
+                          </span>
+                          <span className="text-[11px] text-[#8B8B92] font-medium leading-relaxed block">
+                            • Formatos aceitos: <strong className="text-slate-700 dark:text-zinc-300">PNG, JPG, WEBP e SVG</strong>
+                          </span>
+                        </div>
                       </div>
-
-                      <AnimatePresence>
-                        {logoStats && !uploadingLogo && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20"
-                          >
-                            <Sparkles size={10} className="shrink-0 text-emerald-500 animate-pulse" />
-                            <span>{logoStats.compressedSize} ({logoStats.reduction})</span>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <label
-                        className={"gm-btn w-full py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow transition-all " + (uploadingLogo ? "opacity-50 pointer-events-none" : "")}
-                      >
-                        {uploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                        <span>{uploadingLogo ? "Otimizando..." : "Alterar Logo"}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          disabled={uploadingLogo}
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) onUploadLogo(f);
-                          }}
-                        />
-                      </label>
-                    </div>
-
-                    {/* FOTO DE PERFIL / AVATAR */}
-                    <div className="flex flex-col items-center gap-3 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
-                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
-                        <User size={14} /> Imagem de Perfil
-                      </span>
-                      <div className="w-32 h-32 rounded-full bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shrink-0 shadow-inner group/avatar">
-                        {avatarUrl ? (
-                          <img
-                            src={avatarUrl}
-                            alt="Foto de Perfil"
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover/avatar:scale-105"
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center gap-1 text-slate-400">
-                            <User size={32} className="opacity-50" />
-                            <span className="text-[10px] font-semibold">Sem Foto</span>
-                          </div>
-                        )}
-
-                        <AnimatePresence>
-                          {uploadingAvatar && (
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className="absolute inset-0 bg-zinc-900/85 backdrop-blur-md flex flex-col items-center justify-center p-2 text-white text-center z-10"
-                            >
-                              <Loader2 size={24} className="animate-spin text-[var(--gm-primary)] mb-1.5" />
-                              <span className="text-[10px] font-bold leading-tight drop-shadow">
-                                {avatarStatusText || "Processando..."}
-                              </span>
-                              {avatarProgress > 0 && (
-                                <div className="w-full bg-white/20 h-1.5 rounded-full mt-2 overflow-hidden px-1">
-                                  <div
-                                    className="bg-gradient-to-r from-[var(--gm-primary)] to-emerald-400 h-full transition-all duration-300 rounded-full"
-                                    style={{ width: avatarProgress + "%" }}
-                                  />
-                                </div>
-                              )}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-
-                      <AnimatePresence>
-                        {avatarStats && !uploadingAvatar && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex items-center justify-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20"
-                          >
-                            <Sparkles size={10} className="shrink-0 text-emerald-500 animate-pulse" />
-                            <span>{avatarStats.compressedSize} ({avatarStats.reduction})</span>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <label
-                        className={"gm-btn w-full py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:shadow transition-all " + (uploadingAvatar ? "opacity-50 pointer-events-none" : "")}
-                      >
-                        {uploadingAvatar ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                        <span>{uploadingAvatar ? "Otimizando..." : "Alterar Perfil"}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          disabled={uploadingAvatar}
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) onUploadAvatar(f);
-                          }}
-                        />
-                      </label>
                     </div>
                   </div>
 
-                  <div className="h-px bg-slate-200 dark:bg-zinc-800/80 w-full"></div>
+                  <div className="h-px bg-white/10 w-full"></div>
 
                   <div className="space-y-4">
                     <div className="space-y-1.5">
@@ -1867,7 +1886,7 @@ export default function Configuracoes() {
                     </div>
                   </div>
 
-                  <div className="h-px bg-slate-200 dark:bg-zinc-800/80 w-full"></div>
+                  <div className="h-px bg-white/10 w-full"></div>
 
                   <div>
                     {/* CABEÇALHO DO PAINEL DE BOTÕES */}
@@ -1883,10 +1902,10 @@ export default function Configuracoes() {
                       </div>
                     </div>
 
-                    {/* CAIXAS EXPANDIDAS DOS ESTILOS DE BOTÕES */}
+                    {/* CAIXAS EXPANDIDAS DOS ESTILOS DE BOTÕES (IGUAL À IMAGEM ANEXADA PRINT 1) */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
                       {BUTTON_STYLES.map((s) => {
-                        const currentActiveStyle = btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark;
+                        const currentActiveStyle = buttonStyleDark;
                         const isActive = currentActiveStyle === s.id;
                         return (
                           <button
@@ -1894,36 +1913,40 @@ export default function Configuracoes() {
                             type="button"
                             onClick={() => handleButtonStyleChange(s.id)}
                             className={
-                              "group relative flex flex-col justify-between p-5 sm:p-6 rounded-lg border-2 transition-all duration-150 cursor-pointer text-left shadow-xs hover:shadow-xl outline-none min-h-[240px] " +
+                              "group relative flex flex-col justify-between p-5 sm:p-6 rounded-2xl border transition-all duration-200 cursor-pointer text-left outline-none min-h-[230px] fora " +
                               (isActive
-                                ? "border-[var(--gm-primary)] bg-[var(--gm-primary)]/10 ring-4 ring-[var(--gm-primary)]/20 shadow-lg scale-[1.01]"
-                                : "border-slate-200/80 dark:border-zinc-800/80 bg-white hover:bg-slate-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-800/80")
+                                ? "border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40 scale-[1.01]"
+                                : "border-white/10 hover:border-white/30")
                             }
                           >
                             <div className="w-full">
                               <div className="flex items-center justify-between w-full mb-2">
-                                <span className={"text-sm font-black uppercase tracking-wider flex items-center gap-2 " + (isActive ? "text-[var(--gm-primary)]" : "text-slate-800 dark:text-slate-100")}>
-                                  {isActive && <CheckCircle2 size={16} className="text-[var(--gm-primary)] shrink-0" />}
+                                <span className={"text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 " + (isActive ? "text-white" : "text-slate-200")}>
+                                  {isActive && (
+                                    <span className="w-5 h-5 rounded-full bg-[var(--gm-primary)] flex items-center justify-center text-white shrink-0">
+                                      <Check size={12} strokeWidth={3} />
+                                    </span>
+                                  )}
                                   {s.name}
                                 </span>
                                 {s.badge && (
-                                  <span className={"text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider " + (isActive ? "bg-[var(--gm-primary)] text-white shadow-xs" : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-300")}>
+                                  <span className={"text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider " + (isActive ? "bg-[var(--gm-primary)] text-white shadow-xs" : "barra border border-white/10 text-[#8B8B92]")}>
                                     {s.badge}
                                   </span>
                                 )}
                               </div>
 
-                              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-4">
+                              <p className="text-xs text-[#8B8B92] font-medium leading-relaxed mb-4">
                                 {s.desc}
                               </p>
                             </div>
 
                             {/* PREVIA DETALHADA EM EVIDENCIA DENTRO DA PROPRIA CAIXA SELETORA */}
-                            <div className="gm-preview-container w-full p-4 rounded-lg bg-slate-900/90 dark:bg-zinc-950/95 border border-slate-800/80 dark:border-zinc-800/80 shadow-inner space-y-3" data-button-style={s.id}>
-                              <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider px-1">
-                                <span className="flex items-center gap-1.5">
+                            <div className="gm-preview-container w-full p-3.5 rounded-xl barra border border-white/10 space-y-3" data-button-style={s.id}>
+                              <div className="flex items-center justify-between text-[10px] text-[#8B8B92] font-bold uppercase tracking-wider px-0.5">
+                                <span className="flex items-center gap-1.5 text-white/90">
                                   <Sparkles size={12} className="text-[var(--gm-primary)]" />
-                                  Prévia ({btnConfigTab === "light" ? "Claro" : "Escuro"})
+                                  Prévia
                                 </span>
                                 {isActive ? (
                                   <span className="text-emerald-400 font-black flex items-center gap-1">
@@ -1931,7 +1954,7 @@ export default function Configuracoes() {
                                     Ativo
                                   </span>
                                 ) : (
-                                  <span className="text-slate-500 font-semibold">Clique para ativar</span>
+                                  <span className="text-[#8B8B92] font-bold uppercase tracking-wider">Clique para ativar</span>
                                 )}
                               </div>
 
@@ -1944,7 +1967,7 @@ export default function Configuracoes() {
                                 </div>
                               ) : s.id === "glass" ? (
                                 <div className="space-y-2.5">
-                                  <div className="w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-white bg-white/20 backdrop-blur-md border border-white/40 shadow-lg flex items-center justify-center gap-2 transition-all hover:bg-white/30">
+                                  <div className="w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-white bg-white/10 backdrop-blur-md border border-white/20 shadow-lg flex items-center justify-center gap-2 transition-all hover:bg-white/20">
                                     <Sparkles size={14} className="text-[var(--gm-primary)]" />
                                     Principal Vidro
                                   </div>
@@ -1963,153 +1986,83 @@ export default function Configuracoes() {
                       })}
                     </div>
 
-                    {/* PAINEL DE PERSONALIZAÇÃO DE CORES DO BOTÃO DO TEMA SELECIONADO */}
-                    <div className="mt-6 p-5 sm:p-6 rounded-lg bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 space-y-4 shadow-xs">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-zinc-800/80 pb-3">
+                    {/* PAINEL DE PERSONALIZAÇÃO DE CORES DO BOTÃO */}
+                    <div className="mt-6 p-5 sm:p-6 rounded-2xl fora border border-white/10 space-y-4 shadow-none">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3.5">
                         <div>
                           <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
-                            <Paintbrush size={16} /> Personalizar Cores do Botão - {btnConfigTab === "light" ? "Modo Claro ☀️" : "Modo Escuro 🌙"}
+                            <Paintbrush size={16} /> Personalizar Cores
                           </span>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                            Ajuste livremente o preenchimento, contorno, texto e ícone dos botões para o {btnConfigTab === "light" ? "Modo Claro" : "Modo Escuro"}
+                          <p className="text-xs text-[#8B8B92] font-medium mt-0.5">
+                            Ajuste livremente o preenchimento, contorno, texto e ícone
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => {
-                            if (btnConfigTab === "light") {
-                              const defPrimary = brandPrimary || "#FF6900";
-                              updateButtonLight({
-                                style: "vazado",
-                                bg: "transparent",
-                                border: defPrimary,
-                                text: "#18181B",
-                                icon: defPrimary,
-                              });
-                            } else {
-                              const defPrimary = brandPrimary || "#FF7B17";
-                              updateButtonDark({
-                                style: "vazado",
-                                bg: "transparent",
-                                border: defPrimary,
-                                text: "#FFFFFF",
-                                icon: defPrimary,
-                              });
-                            }
+                            const defPrimary = brandPrimary || "#FF7B17";
+                            updateButtonDark({
+                              style: "vazado",
+                              bg: "transparent",
+                              border: defPrimary,
+                              text: "#FFFFFF",
+                              icon: defPrimary,
+                            });
                           }}
-                          className="text-[11px] font-bold text-[var(--gm-primary)] hover:underline flex items-center gap-1 self-start sm:self-auto cursor-pointer"
+                          className="text-xs font-bold text-[var(--gm-primary)] hover:opacity-90 bg-[var(--gm-primary)]/10 px-3.5 py-1.5 rounded-full border border-[var(--gm-primary)]/30 flex items-center gap-1.5 transition-all cursor-pointer self-start sm:self-auto"
                         >
-                          <RotateCcw size={12} /> Restaurar Padrões ({btnConfigTab === "light" ? "Claro" : "Escuro"})
+                          <RotateCcw size={13} /> Restaurar Padrões
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
                         {/* 1. Cor do Preenchimento (Fundo) */}
                         <ColorPickerInput
                           label={
-                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-[var(--gm-primary)]">
                               <Palette size={14} className="text-[var(--gm-primary)]" />
                               Cor do Preenchimento (Fundo)
                             </span>
                           }
-                          value={btnConfigTab === "light" ? buttonBgLight : buttonBgDark}
-                          onChange={(val) => {
-                            if (btnConfigTab === "light") updateButtonLight({ bg: val });
-                            else updateButtonDark({ bg: val });
-                          }}
+                          value={buttonBgDark}
+                          onChange={(val) => updateButtonDark({ bg: val })}
                         />
 
                         {/* 2. Cor do Contorno (Borda) */}
                         <ColorPickerInput
                           label={
-                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-                              <Sparkles size={14} className="text-[var(--gm-primary)]" />
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-[var(--gm-primary)]">
+                              <Square size={14} className="text-[var(--gm-primary)]" />
                               Cor do Contorno (Borda)
                             </span>
                           }
-                          value={btnConfigTab === "light" ? buttonBorderLight : buttonBorderDark}
-                          onChange={(val) => {
-                            if (btnConfigTab === "light") updateButtonLight({ border: val });
-                            else updateButtonDark({ border: val });
-                          }}
+                          value={buttonBorderDark}
+                          onChange={(val) => updateButtonDark({ border: val })}
                         />
 
                         {/* 3. Cor do Texto */}
                         <ColorPickerInput
                           label={
-                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-[var(--gm-primary)]">
                               <Type size={14} className="text-[var(--gm-primary)]" />
                               Cor do Texto
                             </span>
                           }
-                          value={btnConfigTab === "light" ? buttonTextLight : buttonTextDark}
-                          onChange={(val) => {
-                            if (btnConfigTab === "light") updateButtonLight({ text: val });
-                            else updateButtonDark({ text: val });
-                          }}
+                          value={buttonTextDark}
+                          onChange={(val) => updateButtonDark({ text: val })}
                         />
 
                         {/* 4. Cor do Ícone */}
                         <ColorPickerInput
                           label={
-                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-[var(--gm-primary)]">
                               <CheckCircle2 size={14} className="text-[var(--gm-primary)]" />
                               Cor do Ícone
                             </span>
                           }
-                          value={btnConfigTab === "light" ? buttonIconLight : buttonIconDark}
-                          onChange={(val) => {
-                            if (btnConfigTab === "light") updateButtonLight({ icon: val });
-                            else updateButtonDark({ icon: val });
-                          }}
+                          value={buttonIconDark}
+                          onChange={(val) => updateButtonDark({ icon: val })}
                         />
-                      </div>
-
-                      {/* DEMONSTRAÇÃO AO VIVO NO CANVAS DO TEMA CORRESPONDENTE */}
-                      <div className="pt-2">
-                        <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
-                          <span>Prévia Real do Botão no Canvas do {btnConfigTab === "light" ? "Modo Claro ☀️" : "Modo Escuro 🌙"}</span>
-                          <span className="text-[10px] text-slate-400 font-normal">
-                            Ambiente Real Fiel
-                          </span>
-                        </label>
-                        <div className={
-                          "p-8 rounded-lg border flex flex-col items-center justify-center gap-3 shadow-inner relative overflow-hidden transition-all " +
-                          (btnConfigTab === "light"
-                            ? "bg-[#F7F8FA] border-[#E8EAF0] text-[#18181B]"
-                            : "bg-[#0F1115] border-[#303747] text-[#FFFFFF]")
-                        }>
-                          <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border opacity-70 mb-1" style={{
-                            borderColor: btnConfigTab === "light" ? "#E8EAF0" : "#303747",
-                            color: btnConfigTab === "light" ? "#686D76" : "#B6BDC8"
-                          }}>
-                            {btnConfigTab === "light" ? "Ambiente Modo Claro (#F7F8FA)" : "Ambiente Modo Escuro (#0F1115)"}
-                          </span>
-
-                          <button
-                            type="button"
-                            style={{
-                              backgroundColor: btnConfigTab === "light" ? buttonBgLight : buttonBgDark,
-                              background: btnConfigTab === "light" ? buttonBgLight : buttonBgDark,
-                              borderColor: btnConfigTab === "light" ? buttonBorderLight : buttonBorderDark,
-                              color: btnConfigTab === "light" ? buttonTextLight : buttonTextDark,
-                              borderWidth: "2px",
-                              borderStyle: "solid",
-                              backdropFilter: (btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark) === "glass" ? "blur(12px) saturate(180%)" : "none",
-                              WebkitBackdropFilter: (btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark) === "glass" ? "blur(12px) saturate(180%)" : "none",
-                              boxShadow: (btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark) === "glass" ? "0 8px 32px 0 rgba(0,0,0,0.2)" : (btnConfigTab === "light" ? buttonStyleLight : buttonStyleDark) === "solid" ? "0 4px 12px rgba(0,0,0,0.15)" : "none",
-                            }}
-                            className="px-6 py-3 rounded-xl font-extrabold text-sm flex items-center gap-2.5 transition-all hover:scale-105 cursor-pointer shadow-md"
-                          >
-                            <Sparkles size={16} style={{
-                              color: btnConfigTab === "light" ? buttonIconLight : buttonIconDark,
-                              stroke: btnConfigTab === "light" ? buttonIconLight : buttonIconDark
-                            }} />
-                            <span style={{ color: btnConfigTab === "light" ? buttonTextLight : buttonTextDark }}>
-                              Botão {btnConfigTab === "light" ? "Modo Claro" : "Modo Escuro"}
-                            </span>
-                          </button>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -2118,8 +2071,8 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 2: CORES & FONTE */}
               {openSections.colors && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
-                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                <div className="gm-settings-card fora border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 barra py-3 sm:py-4 border-b border-white/10 flex items-center justify-between mb-2 rounded-t-xl px-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Paintbrush className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
                       <span>CORES & FONTE</span>
@@ -2130,7 +2083,6 @@ export default function Configuracoes() {
                   </div>
 
                   <ColorSettingsManager
-                    isLightMode={isLightMode}
                     brandPrimary={brandPrimary}
                     setBrandPrimary={setBrandPrimary}
                     brandBg={brandBg}
@@ -2165,8 +2117,8 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 3: IMAGEM DE FUNDO */}
               {openSections.background && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
-                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                <div className="gm-settings-card fora border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 barra py-3 sm:py-4 border-b border-white/10 flex items-center justify-between mb-2 rounded-t-xl px-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <ImageIcon className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
                       <span>IMAGEM DE FUNDO</span>
@@ -2177,7 +2129,7 @@ export default function Configuracoes() {
                   </div>
 
                   <div className="flex flex-col gap-6">
-                    <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4">
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 fora p-4">
                       <div>
                         <div className="font-bold text-sm text-slate-800 dark:text-white">
                           Exibir Plano de Fundo
@@ -2294,13 +2246,13 @@ export default function Configuracoes() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col justify-between p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
+                      <div className="flex flex-col justify-between p-4 fora rounded-xl border border-white/10 shadow-none">
                         <div>
                           <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-2 block">
                             Preview da Imagem / Vídeo
                           </span>
                           {(viewMode === "smartphone" ? mobileBgUrl : bgUrl) ? (
-                            <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-xs group bg-black/40 flex items-center justify-center">
+                            <div className="mb-4 rounded-xl overflow-hidden border border-[var(--gm-primary)]/20 relative aspect-video shadow-none group bg-black/40 flex items-center justify-center">
                               {!(viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) && (
                                 <div className="absolute inset-0 bg-black/70 z-10 flex items-center justify-center backdrop-blur-xs">
                                   <span className="text-xs font-bold text-red-400 uppercase tracking-wider bg-red-950/80 px-3 py-1 rounded-md border border-red-500/30">
@@ -2345,29 +2297,61 @@ export default function Configuracoes() {
                               )}
                             </div>
                           ) : (
-                            <div className="mb-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800/40 aspect-video flex flex-col items-center justify-center p-4 text-center">
+                            <div className="mb-4 rounded-xl border-2 border-dashed border-white/20 barra aspect-video flex flex-col items-center justify-center p-4 text-center">
                               <ImageIcon size={32} className="text-slate-400 mb-2 opacity-50" />
-                              <span className="text-xs font-medium text-slate-500">Nenhuma imagem carregada</span>
+                              <span className="text-xs font-medium text-slate-400">Nenhuma imagem carregada</span>
                             </div>
                           )}
                         </div>
 
-                        <label
-                          className={"gm-btn w-full py-2.5 flex items-center justify-center gap-2 cursor-pointer " + (uploadingBackground ? "opacity-50 pointer-events-none" : "")}
-                        >
-                          {uploadingBackground ? <Loader2 size={16} className="animate-spin" /> : <FileImage size={16} />}
-                          <span className="font-bold text-xs">{uploadingBackground ? "Enviando..." : "Upload Background"}</span>
-                          <input
-                            type="file"
-                            accept="image/*,video/mp4,video/webm"
-                            className="hidden"
-                            disabled={uploadingBackground}
-                            onChange={(e) => {
-                              const f = e.target.files?.[0];
-                              if (f) onUploadBackground(f);
-                            }}
-                          />
-                        </label>
+                        <div className="flex flex-col gap-2 w-full">
+                          <label
+                            className={"gm-btn w-full py-2.5 flex items-center justify-center gap-2 cursor-pointer " + (uploadingBackground ? "opacity-50 pointer-events-none" : "")}
+                          >
+                            {uploadingBackground ? <Loader2 size={16} className="animate-spin" /> : <FileImage size={16} />}
+                            <span className="font-bold text-xs">{uploadingBackground ? "Enviando..." : "Upload Background"}</span>
+                            <input
+                              type="file"
+                              accept="image/*,video/mp4,video/webm"
+                              className="hidden"
+                              disabled={uploadingBackground}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) onUploadBackground(f);
+                              }}
+                            />
+                          </label>
+
+                          {(viewMode === "smartphone" ? mobileBgUrl : bgUrl) && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (viewMode === "smartphone") {
+                                  setMobileBgUrl(null);
+                                  setMobileBgEnabled(false);
+                                  setMobileBgOpacity(0);
+                                  const updated = await upsertSettingsSupabase(tenantId, {
+                                    mobile_app_background_url: null,
+                                    mobile_app_background_opacity: 0,
+                                  });
+                                  window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
+                                } else {
+                                  setBgUrl(null);
+                                  setBgEnabled(false);
+                                  setBgOpacity(0);
+                                  const updated = await upsertSettingsSupabase(tenantId, {
+                                    app_background_url: null,
+                                    app_background_opacity: 0,
+                                  });
+                                  window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
+                                }
+                              }}
+                              className="text-[11px] font-bold text-red-400 hover:text-red-300 transition-colors py-1 flex items-center justify-center gap-1 cursor-pointer"
+                            >
+                              <Trash2 size={12} /> Remover Imagem de Fundo
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2376,8 +2360,8 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 4: DADOS PIX */}
               {openSections.pix && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
-                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                <div className="gm-settings-card fora border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 barra py-3 sm:py-4 border-b border-white/10 flex items-center justify-between mb-2 rounded-t-xl px-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <CreditCard className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
                       <span>DADOS DE PAGAMENTO (PIX)</span>
@@ -2388,7 +2372,7 @@ export default function Configuracoes() {
                   </div>
 
                   <div className="flex flex-col gap-6">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-zinc-900/50 p-3.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 fora p-3.5 rounded-xl border border-white/10">
                       ✅ O QR Code e a chave “Copia e Cola” gerados aqui funcionam em <b>qualquer aplicativo bancário</b>.
                     </div>
 
@@ -2425,7 +2409,7 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                      <div className="rounded-lg border border-slate-200/80 dark:border-zinc-800/80 bg-slate-50 dark:bg-zinc-900/50 p-5 flex flex-col items-center justify-between">
+                      <div className="rounded-xl border border-white/10 fora p-5 flex flex-col items-center justify-between shadow-none">
                         <div className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 self-start">
                           QR Code Pix Universal
                         </div>
@@ -2455,7 +2439,7 @@ export default function Configuracoes() {
                         )}
                       </div>
 
-                      <div className="rounded-lg border border-slate-200/80 dark:border-zinc-800/80 bg-slate-50 dark:bg-zinc-900/50 p-5 flex flex-col justify-between">
+                      <div className="rounded-xl border border-white/10 fora p-5 flex flex-col justify-between shadow-none">
                         <div>
                           <div className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3">
                             Pix Copia e Cola
@@ -2465,7 +2449,7 @@ export default function Configuracoes() {
                               Informe uma chave Pix para gerar o código de cópia instantânea.
                             </div>
                           ) : (
-                            <div className="text-[11px] leading-relaxed font-mono break-all bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl p-3 text-slate-700 dark:text-slate-300 max-h-[140px] overflow-y-auto shadow-inner">
+                            <div className="text-[11px] leading-relaxed font-mono break-all barra border border-white/10 rounded-xl p-3 text-slate-700 dark:text-slate-300 max-h-[140px] overflow-y-auto">
                               {pixPayloadPreview}
                             </div>
                           )}
@@ -2497,8 +2481,8 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 5: PAPEL TIMBRADO */}
               {openSections.timbrado && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
-                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                <div className="gm-settings-card fora border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 barra py-3 sm:py-4 border-b border-white/10 flex items-center justify-between mb-2 rounded-t-xl px-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <FileText className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
                       <span>PAPEL TIMBRADO</span>
@@ -2517,7 +2501,7 @@ export default function Configuracoes() {
                         <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
                           Seu Timbrado Atual
                         </span>
-                        <div className="w-full aspect-[1/1.414] rounded-lg bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shadow-inner">
+                        <div className="w-full aspect-[1/1.414] rounded-xl barra border-2 border-dashed border-white/20 overflow-hidden flex items-center justify-center relative shadow-none">
                           {uploadingTimbrado ? (
                             <Loader2 size={40} className="animate-spin text-[var(--gm-primary)]" />
                           ) : timbradoUrl ? (
@@ -2548,7 +2532,7 @@ export default function Configuracoes() {
                         <span className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)]">
                           Gabarito Padrão
                         </span>
-                        <div className="w-full aspect-[1/1.414] rounded-lg bg-slate-100 dark:bg-zinc-800/60 border-2 border-dashed border-slate-300 dark:border-zinc-700 overflow-hidden flex items-center justify-center relative shadow-inner">
+                        <div className="w-full aspect-[1/1.414] rounded-xl barra border-2 border-dashed border-white/20 overflow-hidden flex items-center justify-center relative shadow-none">
                           <img src={TIMBRADO_MODEL_URL} alt="Gabarito" className="w-full h-full object-cover" />
                         </div>
                         <a
@@ -2567,8 +2551,8 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 6: NOTIFICAÇÕES PUSH */}
               {openSections.push && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
-                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                <div className="gm-settings-card fora border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 barra py-3 sm:py-4 border-b border-white/10 flex items-center justify-between mb-2 rounded-t-xl px-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Bell className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
                       <span>NOTIFICAÇÕES PUSH</span>
@@ -2580,7 +2564,7 @@ export default function Configuracoes() {
 
                   <div className="flex flex-col items-center text-center max-w-md mx-auto space-y-5">
                     <div
-                      className={"w-16 h-16 rounded-full flex items-center justify-center border transition-all duration-300 " + (pushActive && pushPermission === "granted" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 shadow-inner animate-pulse" : "bg-amber-500/10 border-amber-500/30 text-amber-500")}
+                      className={"w-16 h-16 rounded-full flex items-center justify-center border transition-all duration-300 " + (pushActive && pushPermission === "granted" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 animate-pulse" : "bg-amber-500/10 border-amber-500/30 text-amber-500")}
                     >
                       <Bell size={28} className={testing ? "animate-bounce" : ""} />
                     </div>
@@ -2595,7 +2579,7 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="w-full flex flex-col gap-3 pt-2">
-                      <div className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
+                      <div className="w-full flex items-center justify-between p-3.5 fora rounded-xl border border-white/10">
                         <div className="text-left">
                           <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Notificações Push</p>
                           <p className={"text-[10px] font-semibold uppercase " + (pushActive && pushPermission === "granted" ? "text-emerald-500" : "text-amber-500")}>
@@ -2627,7 +2611,7 @@ export default function Configuracoes() {
                         </button>
                       </div>
 
-                      <div className="w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-200/80 dark:border-zinc-800/80">
+                      <div className="w-full flex items-center justify-between p-3.5 fora rounded-xl border border-white/10">
                         <div className="text-left">
                           <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Sons de Alerta</p>
                           <p className={"text-[10px] font-semibold uppercase " + (!notificationsMuted ? "text-emerald-500" : "text-amber-500")}>
@@ -2677,7 +2661,7 @@ export default function Configuracoes() {
                           }
                           setTimeout(() => setTesting(false), 1000);
                         }}
-                        className="gm-btn py-3 flex items-center justify-center gap-2 text-xs font-bold w-full transition-all text-white rounded-xl shadow-md hover:brightness-110 active:scale-[0.98] mt-2"
+                        className="gm-btn py-3 flex items-center justify-center gap-2 text-xs font-bold w-full transition-all text-white rounded-xl shadow-none hover:brightness-110 active:scale-[0.98] mt-2"
                       >
                         {testing ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}
                         {testing ? "Testando Notificação..." : "Enviar Notificação de Teste"}
@@ -2689,8 +2673,8 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 7: SONS DO SISTEMA */}
               {openSections.sounds && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
-                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                <div className="gm-settings-card fora border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 barra py-3 sm:py-4 border-b border-white/10 flex items-center justify-between mb-2 rounded-t-xl px-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <Volume2 className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
                       <span>SONS DO SISTEMA</span>
@@ -2718,11 +2702,11 @@ export default function Configuracoes() {
                               playNotificationSound(sound.id);
                             } catch (e) {}
                           }}
-                          className={"flex items-center justify-between p-4 rounded-lg border text-left transition-all " + (isSelected ? "bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-sm" : "bg-slate-50 dark:bg-zinc-900/50 border-slate-200/80 dark:border-zinc-800/80 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600")}
+                          className={"flex items-center justify-between p-4 rounded-xl border text-left transition-all " + (isSelected ? "barra border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-none" : "fora border-white/10 text-slate-700 dark:text-slate-300 hover:border-white/30 shadow-none")}
                         >
                           <div className="flex items-center gap-3">
                             <div
-                              className={"w-10 h-10 rounded-full flex items-center justify-center shrink-0 " + (isSelected ? "bg-[var(--gm-primary)] text-white" : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-slate-400")}
+                              className={"w-10 h-10 rounded-full flex items-center justify-center shrink-0 " + (isSelected ? "bg-[var(--gm-primary)] text-white" : "barra text-slate-400")}
                             >
                               <Music size={18} />
                             </div>
@@ -2733,7 +2717,7 @@ export default function Configuracoes() {
                           </div>
 
                           <div
-                            className={"w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 " + (isSelected ? "border-[var(--gm-primary)]" : "border-slate-300 dark:border-zinc-700")}
+                            className={"w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 " + (isSelected ? "border-[var(--gm-primary)]" : "border-slate-400/40 dark:border-white/20")}
                           >
                             {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)]" />}
                           </div>
@@ -2746,8 +2730,8 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 8: TUTORIAL & SUPORTE */}
               {openSections.tutorial && (
-                <div className="gm-settings-card bg-white dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800/80 p-4 sm:p-6 md:p-8 rounded-lg space-y-6 shadow-xs backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
-                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md py-3 sm:py-4 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between mb-2">
+                <div className="gm-settings-card fora border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
+                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 barra py-3 sm:py-4 border-b border-white/10 flex items-center justify-between mb-2 rounded-t-xl px-2">
                     <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
                       <HelpCircle className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
                       <span>TUTORIAL & SUPORTE</span>

@@ -89,7 +89,15 @@ const Market = () => {
   const [addingItem, setAddingItem] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
 
+  // Voice Workflow States
+  type VoiceStep = 'idle' | 'product' | 'price' | 'quantity' | 'confirm';
+  const [voiceStep, setVoiceStep] = useState<VoiceStep>('idle');
+  const [voiceFeedback, setVoiceFeedback] = useState<string>('');
+
+  const productInputRef = React.useRef<HTMLInputElement>(null);
   const priceInputRef = React.useRef<HTMLInputElement>(null);
+  const qtyInputRef = React.useRef<HTMLInputElement>(null);
+  const addBtnRef = React.useRef<HTMLButtonElement>(null);
   const productContainerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -332,10 +340,160 @@ const Market = () => {
         }
     };
 
-  const handleAddItem = async () => {
-    const nome = newItemName.trim();
-    const preco = parsePriceStr(newItemPrice);
-    if (!nome) return;
+  const PT_NUMBERS_MAP: Record<string, number> = {
+    'zero': 0, 'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'três': 3, 'tres': 3, 'quatro': 4,
+    'cinco': 5, 'seis': 6, 'meia': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10,
+    'onze': 11, 'doze': 12, 'duzia': 12, 'dúzia': 12, 'treze': 13, 'quatorze': 14,
+    'catorze': 14, 'quinze': 15, 'dezesseis': 16, 'dezessete': 17, 'dezoito': 18,
+    'dezenove': 19, 'vinte': 20, 'trinta': 30, 'quarenta': 40, 'cinquenta': 50,
+    'sessenta': 60, 'setenta': 70, 'oitenta': 80, 'noventa': 90, 'cem': 100,
+    'cento': 100, 'duzentos': 200, 'duzentas': 200, 'trezentos': 300, 'quatrocentos': 400,
+    'quinhentos': 500, 'seiscentos': 600, 'setecentos': 700, 'oitocentos': 800, 'novecentos': 900
+  };
+
+  const parsePtBrWordsToNumber = (text: string): number | null => {
+    const clean = text.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .trim();
+    
+    if (!clean) return null;
+    const words = clean.split(/\s+/).filter(w => w !== 'e' && w !== 'de');
+    
+    if (words.length === 1 && !isNaN(Number(words[0]))) {
+      return Number(words[0]);
+    }
+
+    let total = 0;
+    let current = 0;
+    let hasMatch = false;
+
+    for (const w of words) {
+      if (!isNaN(Number(w))) {
+        current += Number(w);
+        hasMatch = true;
+      } else if (PT_NUMBERS_MAP[w] !== undefined) {
+        current += PT_NUMBERS_MAP[w];
+        hasMatch = true;
+      } else if (w === 'mil') {
+        current = current === 0 ? 1000 : current * 1000;
+        total += current;
+        current = 0;
+        hasMatch = true;
+      }
+    }
+
+    return hasMatch ? total + current : null;
+  };
+
+  const parsePortuguesePrice = (transcript: string): number | null => {
+    if (!transcript) return null;
+    const raw = transcript.toLowerCase().trim();
+
+    // Pattern 1: Direct number with comma/dot (e.g. "5,50", "12.90", "R$ 4,50", "3.00")
+    const directMatch = raw.match(/(?:r\$)?\s*(\d+(?:[.,]\d{1,2})?)/i);
+    if (directMatch && (raw.includes(',') || raw.includes('.'))) {
+      const num = parseFloat(directMatch[1].replace(',', '.'));
+      if (!isNaN(num) && num > 0) return num;
+    }
+
+    // Pattern 2: "X reais e Y centavos" or "X e Y" or "X com Y"
+    const reaisAndCentavosMatch = raw.match(/^(?:r\$\s*)?(.+?)\s*(?:reais|real)?\s*(?:e|com|vírgula|virgula|ponto|,|\.)\s*(.+?)(?:\s*centavos?)?$/i);
+    if (reaisAndCentavosMatch) {
+      const intPartStr = reaisAndCentavosMatch[1].trim();
+      const decPartStr = reaisAndCentavosMatch[2].trim();
+      
+      const intPart = parsePtBrWordsToNumber(intPartStr);
+      const decPart = parsePtBrWordsToNumber(decPartStr);
+
+      if (intPart !== null && decPart !== null) {
+        const decFormatted = decPart < 10 && decPartStr.length === 1 ? decPart * 10 : decPart;
+        return intPart + decFormatted / 100;
+      }
+    }
+
+    // Pattern 3: "X centavos"
+    const centavosOnly = raw.match(/^(.+?)\s*centavos?$/i);
+    if (centavosOnly) {
+      const cent = parsePtBrWordsToNumber(centavosOnly[1]);
+      if (cent !== null) return cent / 100;
+    }
+
+    // Pattern 4: "X reais" or single number
+    const reaisOnly = raw.match(/^(.+?)(?:\s*(?:reais|real))?$/i);
+    if (reaisOnly) {
+      const val = parsePtBrWordsToNumber(reaisOnly[1]);
+      if (val !== null) return val;
+    }
+
+    return null;
+  };
+
+  const parsePortugueseQuantity = (transcript: string): number => {
+    if (!transcript) return 1;
+    const raw = transcript.toLowerCase().trim();
+
+    if (raw.includes("meia duzia") || raw.includes("meia dúzia")) return 6;
+    if (raw.includes("duzia") || raw.includes("dúzia")) return 12;
+
+    const numMatch = raw.match(/\d+/);
+    if (numMatch) {
+      const n = parseInt(numMatch[0], 10);
+      if (!isNaN(n) && n > 0) return n;
+    }
+
+    const wordVal = parsePtBrWordsToNumber(raw);
+    if (wordVal !== null && wordVal > 0) return wordVal;
+
+    return 1;
+  };
+
+  const isAddCommand = (transcript: string): boolean => {
+    const clean = transcript.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return /\b(adicionar|adicione|adiciona|adicionou|inserir|insere|salvar|salve|confirmar|confirma|ok|sim|pronto|colocar|bota)\b/i.test(clean);
+  };
+
+  const formatProductWithAI = async (rawTranscript: string): Promise<string> => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
+    if (apiKey) {
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: `Você é um assistente de supermercado brasileiro. Corrija a ortografia e formate o nome do produto para uma lista de compras em português brasileiro.
+Regras:
+1. Retorne APENAS o nome do produto formatado em português brasileiro correto.
+2. Sem markdown, sem aspas, sem pontuação final.
+3. Padronize unidades usuais (Ex: "Arroz cinco quilos" -> "Arroz 5kg", "feijao carioca" -> "Feijão Carioca 1kg", "leite integral" -> "Leite Integral 1L", "detergente neutro" -> "Detergente Neutro 500ml", "papel higienico" -> "Papel Higiênico", "ovos brancos" -> "Ovos Brancos Dúzia").
+Texto falado: "${rawTranscript}"`,
+        });
+        const text = response.text?.trim();
+        if (text) return text;
+      } catch (err) {
+        console.warn("Erro ao formatar com Gemini, usando fallback local:", err);
+      }
+    }
+
+    let clean = rawTranscript.trim();
+    clean = clean
+      .replace(/\bquilos?\b/gi, 'kg')
+      .replace(/\bquilo\b/gi, 'kg')
+      .replace(/\blitros?\b/gi, 'L')
+      .replace(/\bgramas?\b/gi, 'g')
+      .replace(/\bml\b/gi, 'ml')
+      .replace(/\bcaixas?\b/gi, 'cx');
+    return clean.charAt(0).toUpperCase() + clean.slice(1);
+  };
+
+  const handleAddItem = async (
+    overrideName?: string,
+    overridePrice?: number,
+    overrideQty?: number
+  ) => {
+    const nome = (overrideName ?? newItemName).trim();
+    const preco = overridePrice !== undefined ? overridePrice : parsePriceStr(newItemPrice);
+    const qtd = overrideQty !== undefined ? overrideQty : (Number(newItemQty) || 1);
+    if (!nome) return false;
     
     setAddingItem(true);
     try {
@@ -344,7 +502,7 @@ const Market = () => {
             user_id: user?.id,
             name: nome,
             unit_price: preco,
-            quantity: Number(newItemQty) || 1
+            quantity: qtd
         }).select().single();
 
         if (error) throw error;
@@ -354,8 +512,18 @@ const Market = () => {
         setNewItemPrice(""); 
         setNewItemQty(1);
         setShowProductSuggestions(false);
+        setVoiceStep('idle');
+        setVoiceFeedback('Item adicionado à lista com sucesso!');
+        setTimeout(() => setVoiceFeedback(''), 4000);
+        
+        try {
+          await playSound('cash');
+        } catch (e) {}
+
+        return true;
     } catch (e: any) {
         alert("Erro ao adicionar item: " + e.message);
+        return false;
     } finally {
         setAddingItem(false);
     }
@@ -390,7 +558,6 @@ const Market = () => {
           setTimeout(() => resolve(), 150);
         } else if (type === 'cash') {
           // Cha-ching sound simulation
-          // 1. The "Cha" (noise/slide)
           const osc1 = ctx.createOscillator();
           const gain1 = ctx.createGain();
           osc1.connect(gain1);
@@ -407,7 +574,6 @@ const Market = () => {
           osc1.start(ctx.currentTime);
           osc1.stop(ctx.currentTime + 0.15);
           
-          // 2. The "Ching" (high bell)
           const osc2 = ctx.createOscillator();
           const gain2 = ctx.createGain();
           osc2.connect(gain2);
@@ -471,43 +637,88 @@ const Market = () => {
     });
   };
 
+  const resetVoiceFlow = () => {
+    setVoiceStep('idle');
+    setVoiceFeedback('');
+    setIsListening(false);
+    setProcessingVoice(false);
+  };
+
   const handleVoiceInput = async () => {
+    let currentStep = voiceStep;
+    if (currentStep === 'idle') {
+      currentStep = 'product';
+      setVoiceStep('product');
+    }
+
     try {
-      // 1. Play mic open sound for product
       await playSound('beep');
-      
       setIsListening(true);
-      // 2. Listen for product
-      const productTranscript = await listenVoice();
+      const rawTranscript = await listenVoice();
       setIsListening(false);
-      
+
+      if (!rawTranscript || !rawTranscript.trim()) {
+        return;
+      }
+
       setProcessingVoice(true);
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
-      
-      let productName = productTranscript;
-      if (apiKey) {
-        try {
-          const ai = new GoogleGenAI({ apiKey });
-          const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: `Formate o nome deste produto para uma lista de compras. Texto: "${productTranscript}". Retorne APENAS o nome formatado, sem aspas, sem markdown. Exemplo: "Arroz 5 quilos" -> "Arroz 5kg".`,
-          });
-          const text = response.text?.trim();
-          if (text) productName = text;
-        } catch (err) {
-          console.error("Erro ao formatar produto com Gemini:", err);
+
+      if (currentStep === 'product') {
+        const productName = await formatProductWithAI(rawTranscript);
+        setNewItemName(productName);
+        setVoiceStep('price');
+        setVoiceFeedback(`Produto "${productName}" registrado! Fale o preço (Ex: R$ 5,50) ou clique no microfone.`);
+        setProcessingVoice(false);
+        setTimeout(() => {
+          if (priceInputRef.current) {
+            priceInputRef.current.focus();
+            priceInputRef.current.select();
+          }
+        }, 80);
+      } else if (currentStep === 'price') {
+        const parsedPrice = parsePortuguesePrice(rawTranscript);
+        if (parsedPrice !== null && parsedPrice > 0) {
+          const formatted = parsedPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          setNewItemPrice(formatted);
+          setVoiceFeedback(`Preço definido: R$ ${formatted}. Fale a quantidade (Ex: 2 unidades) ou clique no microfone.`);
+        } else {
+          const num = parsePriceStr(rawTranscript);
+          if (num > 0) {
+            const formatted = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            setNewItemPrice(formatted);
+            setVoiceFeedback(`Preço definido: R$ ${formatted}. Fale a quantidade (Ex: 2 unidades) ou clique no microfone.`);
+          }
+        }
+        setVoiceStep('quantity');
+        setProcessingVoice(false);
+        setTimeout(() => {
+          if (qtyInputRef.current) {
+            qtyInputRef.current.focus();
+            qtyInputRef.current.select();
+          }
+        }, 80);
+      } else if (currentStep === 'quantity') {
+        const parsedQty = parsePortugueseQuantity(rawTranscript);
+        setNewItemQty(parsedQty > 0 ? parsedQty : 1);
+        setVoiceStep('confirm');
+        setVoiceFeedback(`Quantidade: ${parsedQty}. Diga "Adicionar" ou clique no botão para salvar.`);
+        setProcessingVoice(false);
+        setTimeout(() => {
+          if (addBtnRef.current) {
+            addBtnRef.current.focus();
+          }
+        }, 80);
+      } else if (currentStep === 'confirm') {
+        setProcessingVoice(false);
+        if (isAddCommand(rawTranscript) || rawTranscript) {
+          await handleAddItem();
         }
       }
-      
-      productName = productName.charAt(0).toUpperCase() + productName.slice(1);
-      setNewItemName(productName);
-      setProcessingVoice(false);
-      
     } catch (err: any) {
       if (err.message === "not-supported") {
         alert("Seu navegador não suporta reconhecimento de voz.");
       } else if (err.message === 'not-allowed') {
-        alert("Permissão negada para usar o microfone. Por favor, permita o acesso ao microfone no seu navegador para usar esta função.");
+        alert("Permissão negada para usar o microfone. Por favor, permita o acesso ao microfone no seu navegador.");
       } else if (err.message !== "no-speech") {
         console.error("Erro no reconhecimento de voz:", err);
       }
@@ -677,14 +888,14 @@ const Market = () => {
         actions={
             <div className="flex gap-2">
                 <button 
-                    className="gm-btn gm-btn-outline" 
+                    className="gm-btn gm-btn-outline shadow-none border-white/10 hover:border-white/20" 
                     onClick={() => setShowHistory(!showHistory)}
                 >
                     <History size={16} /> {showHistory ? "Ver Lista" : "Histórico"}
                 </button>
                 {!showHistory && cartItems.length > 0 && (
                     <button 
-                        className="gm-btn gm-btn-accent" 
+                        className="gm-btn gm-btn-accent shadow-none" 
                         onClick={handleShare}
                     >
                         <Share2 size={16} /> Compartilhar
@@ -695,7 +906,7 @@ const Market = () => {
     >
        
        <Grid cols={1} className="mb-6">
-           <Card className="bg-white/5 backdrop-blur-md border border-white/10 p-0 overflow-hidden">
+           <div className="gm-card fora rounded-2xl border border-white/10 p-0 overflow-hidden shadow-none">
               <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                  <div>
                     <p className="text-xs opacity-70 uppercase tracking-widest font-bold mb-1 text-slate-400">Saldo Disponível</p>
@@ -704,38 +915,39 @@ const Market = () => {
                             {CURRENCY_FORMATTER.format(availableBalanceDisplay)}
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={() => setTopUpModalOpen(true)} className="gm-btn gm-btn-icon gm-btn-soft" title="Adicionar Saldo">
-                                <Plus size={24} />
+                            <button onClick={() => setTopUpModalOpen(true)} className="gm-btn gm-btn-icon gm-btn-soft shadow-none border border-white/10" title="Adicionar Saldo">
+                                <Plus size={22} />
                             </button>
                             {walletBalance > 0 && (
                                 <button 
                                     onClick={() => setShowResetConfirm(true)} 
-                                    className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
+                                    className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white transition-all flex items-center justify-center shrink-0 shadow-none border border-[var(--gm-primary)]/30 cursor-pointer"
                                     title="Zerar Saldo"
                                 >
-                                    <Trash2 size={20} className="text-white" />
+                                    <Trash2 size={18} className="text-white" />
                                 </button>
                             )}
                         </div>
                      </div>
                  </div>
-                 <div className="text-center md:text-right bg-white/5 p-4 rounded-xl border border-white/10 min-w-[180px]">
-                     <p className="text-xs opacity-70 uppercase tracking-widest font-bold mb-1">Total da Lista</p>
-                     <div className="text-2xl font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</div>
+                 <div className="text-center md:text-right barra p-4 rounded-xl border border-white/10 min-w-[180px] shadow-none">
+                     <p className="text-xs opacity-70 uppercase tracking-widest font-bold mb-1 text-slate-400">Total da Lista</p>
+                     <div className="text-2xl font-bold text-white">{CURRENCY_FORMATTER.format(totalListValue)}</div>
                  </div>
               </div>
-           </Card>
+           </div>
        </Grid>
 
        {showHistory ? (
            <Grid cols={1}>
-               <Card title="Histórico de Gastos Mensais">
+               <div className="gm-card fora p-6 rounded-2xl border border-white/10 shadow-none">
+                   <div className="text-lg font-bold text-white mb-5">Histórico de Gastos Mensais</div>
                    {historyLoading ? (
                        <div className="flex justify-center py-12">
                            <Loader2 size={32} className="animate-spin text-slate-500" />
                        </div>
                    ) : history.length === 0 ? (
-                       <div className="text-center opacity-50 py-12 border border-dashed border-white/10 rounded-xl bg-white/5">
+                       <div className="text-center opacity-60 py-12 border border-dashed border-white/10 rounded-xl bg-black/20">
                            <History size={48} className="mb-4 opacity-50 mx-auto" />
                            <p>Nenhum histórico de gastos encontrado.</p>
                        </div>
@@ -745,7 +957,7 @@ const Market = () => {
                                const [year, month] = h.month.split("-");
                                const monthName = new Date(Number(year), Number(month) - 1).toLocaleString('pt-BR', { month: 'long' });
                                return (
-                                   <div key={h.month} className="p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[var(--gm-primary)] transition-all flex flex-col relative">
+                                   <div key={h.month} className="p-5 rounded-2xl gm-card fora border border-white/10 hover:border-[var(--gm-primary)]/40 transition-all flex flex-col relative shadow-none">
                                        <div className="flex justify-between items-start mb-2 pr-14">
                                            <div className="flex items-center gap-2 text-slate-400">
                                                <button
@@ -753,14 +965,14 @@ const Market = () => {
                                                        e.stopPropagation();
                                                        toggleMonth(h.month);
                                                    }}
-                                                   className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
+                                                   className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-[var(--gm-primary)]"
                                                >
                                                    <ChevronDown size={18} className={`transition-transform duration-300 ${expandedMonths.has(h.month) ? "rotate-180" : ""}`} />
                                                </button>
                                                <Calendar size={16} />
-                                               <span className="text-sm font-bold uppercase tracking-widest">{monthName} {year}</span>
+                                               <span className="text-sm font-bold uppercase tracking-widest text-slate-200">{monthName} {year}</span>
                                            </div>
-                                           <div className="text-xs bg-white/10 px-2 py-1 rounded font-bold">{h.count} compras</div>
+                                           <div className="text-xs barra border border-white/10 px-2.5 py-1 rounded-lg font-bold text-slate-300 shadow-none">{h.count} compras</div>
                                        </div>
                                        <div className="text-3xl font-black text-white mb-4">
                                            {CURRENCY_FORMATTER.format(h.total)}
@@ -771,7 +983,7 @@ const Market = () => {
                                            <div className="flex flex-col gap-2 mt-2 pt-4 border-t border-white/10">
                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Relação de Compras</h4>
                                            {h.lists.map(list => (
-                                               <div key={list.id} className="flex flex-col bg-black/20 p-3 rounded-xl border border-white/5 relative group">
+                                               <div key={list.id} className="flex flex-col bg-black/30 p-3.5 rounded-xl border border-white/5 relative group shadow-none">
                                                    <div className="flex justify-between items-center pr-20">
                                                        <div className="flex flex-col">
                                                            <span className="text-white/90 font-bold text-sm">{new Date(list.created_at).toLocaleDateString('pt-BR')}</span>
@@ -781,23 +993,23 @@ const Market = () => {
                                                    </div>
                                                    
                                                    {list.items && list.items.length > 0 && (
-                                                       <div className="mt-3 pt-3 border-t border-white/5 flex flex-col gap-1">
+                                                       <div className="mt-3 pt-3 border-t border-white/5 flex flex-col gap-1.5">
                                                            {list.items.map((item: any, idx: number) => (
                                                                <div key={idx} className="flex justify-between items-center text-xs text-slate-300">
                                                                    <span>{item.quantity}x {item.name}</span>
-                                                                   <span>{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
+                                                                   <span className="font-medium text-slate-200">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
                                                                </div>
                                                            ))}
                                                        </div>
                                                    )}
 
-                                                   <div className="absolute right-2 top-3 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                   <div className="absolute right-2 top-3 flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                        <button 
                                                            onClick={(e) => {
                                                                e.stopPropagation();
                                                                handleShareList(list);
                                                            }}
-                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
+                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white transition-colors border border-[var(--gm-primary)]/20 shadow-none"
                                                            title="Compartilhar esta compra"
                                                        >
                                                            <Share2 size={14} />
@@ -807,7 +1019,7 @@ const Market = () => {
                                                                e.stopPropagation();
                                                                setShowDeleteListConfirm(list.id);
                                                            }}
-                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--gm-primary)] text-white hover:brightness-110 transition-colors shadow-sm cursor-pointer"
+                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--gm-primary)] text-white hover:brightness-110 transition-colors shadow-none border border-[var(--gm-primary)]/30 cursor-pointer"
                                                            title="Excluir esta compra"
                                                        >
                                                            <Trash2 size={14} className="text-white" />
@@ -823,7 +1035,7 @@ const Market = () => {
                                                 e.stopPropagation();
                                                 setShowDeleteHistoryConfirm(h.month);
                                             }}
-                                            className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--gm-primary)] text-white hover:brightness-110 transition-colors z-20 shadow-md cursor-pointer"
+                                            className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--gm-primary)] text-white hover:brightness-110 transition-colors z-20 shadow-none border border-[var(--gm-primary)]/30 cursor-pointer"
                                             title="Excluir este mês"
                                         >
                                             <Trash2 size={18} className="text-white" />
@@ -833,52 +1045,127 @@ const Market = () => {
                            })}
                        </div>
                    )}
-               </Card>
+               </div>
            </Grid>
        ) : (
            <Grid cols={1} className="gap-6">
                 {/* Add Item Form */}
-                <Card title="Adicionar Item" className="!overflow-visible !contain-none relative z-30">
+                <div className="gm-card fora p-6 rounded-2xl border border-white/10 !overflow-visible !contain-none relative z-30 shadow-none">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="text-lg font-bold text-white">Adicionar Item</div>
+                        {voiceStep !== 'idle' && (
+                            <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 px-2.5 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
+                                <span className="w-2 h-2 rounded-full bg-[var(--gm-primary)]"></span>
+                                Comando por Voz Ativo
+                            </span>
+                        )}
+                    </div>
                     <div className="flex flex-col gap-4">
                         <div className="w-full">
-                            <label className="gm-label mb-1 block">Captura por Voz</label>
-                            <div className="flex gap-2">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="gm-label block">Comando por Voz Guiado</label>
+                                {voiceStep !== 'idle' && (
+                                    <button
+                                        type="button"
+                                        onClick={resetVoiceFlow}
+                                        className="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer transition-colors px-2 py-0.5 rounded-lg hover:bg-white/10"
+                                        title="Reiniciar comando por voz"
+                                    >
+                                        <X size={13} /> Cancelar voz
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex flex-col gap-2">
                                 <button 
-                                   className={`gm-btn w-full flex items-center justify-center h-12 !rounded-md shadow-lg gap-2 transition-colors ${isListening ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/30' : processingVoice ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/30' : 'bg-slate-800 text-white hover:bg-slate-700 shadow-black/20'}`}
+                                   type="button"
+                                   className={`gm-btn w-full flex items-center justify-between px-4 h-12 rounded-xl shadow-none border transition-all cursor-pointer ${
+                                     isListening 
+                                       ? 'bg-red-500/25 text-red-200 border-red-500/60 shadow-lg shadow-red-500/20 animate-pulse' 
+                                       : processingVoice 
+                                         ? 'bg-amber-500/25 text-amber-200 border-amber-500/60 shadow-lg shadow-amber-500/20' 
+                                         : voiceStep !== 'idle'
+                                           ? 'bg-[var(--gm-primary)]/20 text-white border-[var(--gm-primary)]/60 shadow-lg shadow-[var(--gm-primary)]/15'
+                                           : 'barra text-white hover:bg-white/10 border-white/10'
+                                   }`}
                                    onClick={handleVoiceInput}
                                    disabled={isListening || processingVoice}
                                 >
-                                   {isListening ? (
-                                      <>
-                                        <span className="relative flex h-3 w-3 mr-1">
-                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                          <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-                                        </span>
-                                        <span className="text-sm font-medium">Ouvindo...</span>
-                                      </>
-                                   ) : processingVoice ? (
-                                      <>
-                                        <Loader2 size={20} className="animate-spin" />
-                                        <span className="text-sm font-medium">Processando...</span>
-                                      </>
-                                   ) : (
-                                      <>
-                                        <Mic size={20} />
-                                        <span className="text-sm font-medium">Voz</span>
-                                      </>
-                                   )}
+                                   <div className="flex items-center gap-2.5">
+                                      {isListening ? (
+                                         <>
+                                           <span className="relative flex h-3.5 w-3.5 mr-0.5">
+                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                             <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500"></span>
+                                           </span>
+                                           <span className="text-sm font-bold text-red-200">
+                                             {voiceStep === 'product' || voiceStep === 'idle'
+                                               ? 'Ouvindo nome do produto...'
+                                               : voiceStep === 'price'
+                                                 ? 'Ouvindo preço (ex: 5 e 50)...'
+                                                 : voiceStep === 'quantity'
+                                                   ? 'Ouvindo quantidade (ex: 2 unidades)...'
+                                                   : 'Ouvindo: diga "Adicionar"...'}
+                                           </span>
+                                         </>
+                                      ) : processingVoice ? (
+                                         <>
+                                           <Loader2 size={18} className="animate-spin text-amber-300" />
+                                           <span className="text-sm font-bold text-amber-200">Processando áudio em português...</span>
+                                         </>
+                                      ) : (
+                                         <>
+                                           <Mic size={18} className={voiceStep !== 'idle' ? 'text-[var(--gm-primary)] animate-bounce' : 'text-[var(--gm-primary)]'} />
+                                           <span className="text-sm font-bold">
+                                             {voiceStep === 'idle' && 'Comando por Voz'}
+                                             {voiceStep === 'product' && '1. Falar Produto (Ex: Arroz 5kg)'}
+                                             {voiceStep === 'price' && '2. Falar Preço (Ex: R$ 5,50)'}
+                                             {voiceStep === 'quantity' && '3. Falar Quantidade (Ex: 2)'}
+                                             {voiceStep === 'confirm' && '4. Diga "Adicionar" (ou clique)'}
+                                           </span>
+                                         </>
+                                      )}
+                                   </div>
+
+                                   {/* Badge do passo */}
+                                   <div className="flex items-center gap-1.5">
+                                     <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-lg border ${
+                                       voiceStep === 'idle'
+                                         ? 'bg-white/5 border-white/10 text-white/60'
+                                         : 'bg-[var(--gm-primary)]/30 border-[var(--gm-primary)]/50 text-[var(--gm-primary)]'
+                                     }`}>
+                                       {voiceStep === 'idle' ? 'Toque para iniciar' : `Passo ${voiceStep === 'product' ? '1/4' : voiceStep === 'price' ? '2/4' : voiceStep === 'quantity' ? '3/4' : '4/4'}`}
+                                     </span>
+                                   </div>
                                 </button>
+
+                                {/* Feedback do fluxo de voz */}
+                                {voiceFeedback && (
+                                  <div className="text-xs text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 px-3.5 py-2 rounded-xl flex items-center justify-between transition-all">
+                                    <span className="font-medium">{voiceFeedback}</span>
+                                    <span className="text-[10px] text-white/40 font-mono">Comando por voz</span>
+                                  </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="flex flex-col gap-2">
                             <div className="flex flex-col md:flex-row gap-4 items-end">
                                 <div className="flex-1 w-full relative" ref={productContainerRef}>
-                                    <label className="gm-label mb-1 block">Produto (Alimento / Item)</label>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="gm-label block">Produto (Alimento / Item)</label>
+                                        {voiceStep === 'product' && (
+                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">1. Passo Atual</span>
+                                        )}
+                                    </div>
                                     <div className="relative">
                                         <input 
+                                            ref={productInputRef}
                                             type="text"
-                                            className="gm-input w-full h-12 pr-10 !rounded-md" 
+                                            className={`gm-input w-full h-12 pr-10 rounded-xl shadow-none bg-black/30 transition-all ${
+                                              voiceStep === 'product'
+                                                ? 'border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40 shadow-lg shadow-[var(--gm-primary)]/10'
+                                                : 'border-white/10'
+                                            }`} 
                                             value={newItemName} 
                                             onChange={e => {
                                                 setNewItemName(e.target.value);
@@ -906,41 +1193,50 @@ const Market = () => {
                                         )}
                                     </div>
 
-                                    {/* Modal de Sugestões flutuante fora do card com Glass Blur e Tom Laranja */}
+                                    {/* Modal de Sugestões flutuante fora do card com Glass Blur */}
                                     {showProductSuggestions && newItemName.trim().length > 0 && productSuggestions.length > 0 && (
-                                        <div className="absolute left-0 right-0 top-full mt-2 bg-zinc-950/95 backdrop-blur-xl border border-orange-500/40 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] z-[9999] p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
-                                            <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-orange-400 uppercase bg-orange-500/10 rounded-md flex items-center justify-between mb-1">
+                                        <div className="absolute left-0 right-0 top-full mt-2 fora border border-white/15 rounded-xl z-[9999] p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar shadow-none">
+                                            <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-[var(--gm-primary)] uppercase barra rounded-lg flex items-center justify-between mb-1 border border-white/10">
                                                 <span>Sugestões de Alimentos</span>
-                                                <span className="text-[9px] text-zinc-400 font-normal">Toque para selecionar</span>
+                                                <span className="text-[9px] text-slate-400 font-normal">Toque para selecionar</span>
                                             </div>
                                             {productSuggestions.map((suggestion) => (
-                                                <button
-                                                    key={suggestion}
-                                                    type="button"
-                                                    className="w-full text-left px-3.5 py-2.5 text-sm text-zinc-100 hover:bg-orange-500/20 hover:text-white transition-all !rounded-md flex items-center justify-between group cursor-pointer border border-transparent hover:border-orange-500/30"
-                                                    onClick={() => selectSuggestion(suggestion)}
-                                                >
-                                                    <span className="font-medium group-hover:translate-x-1 transition-transform flex items-center gap-2">
-                                                        <span className="text-orange-500">🛒</span> {suggestion}
-                                                    </span>
-                                                    <span className="text-[10px] text-orange-400 font-semibold bg-orange-500/10 px-2 py-0.5 !rounded-md border border-orange-500/20">
-                                                        Selecionar
-                                                    </span>
-                                                </button>
+                                                 <button
+                                                     key={suggestion}
+                                                     type="button"
+                                                     className="w-full text-left px-3.5 py-2.5 text-sm text-slate-100 hover:bg-white/10 hover:text-white transition-all rounded-lg flex items-center justify-between group cursor-pointer border border-transparent hover:border-white/10 shadow-none"
+                                                     onClick={() => selectSuggestion(suggestion)}
+                                                 >
+                                                     <span className="font-medium group-hover:translate-x-1 transition-transform flex items-center gap-2">
+                                                         <span className="text-[var(--gm-primary)]">🛒</span> {suggestion}
+                                                     </span>
+                                                     <span className="text-[10px] text-[var(--gm-primary)] font-bold bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-md border border-[var(--gm-primary)]/20">
+                                                         Selecionar
+                                                     </span>
+                                                 </button>
                                             ))}
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="w-full md:w-44">
-                                    <label className="gm-label mb-1 block">Preço (Un)</label>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="gm-label block">Preço (Un)</label>
+                                        {voiceStep === 'price' && (
+                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">2. Passo Atual</span>
+                                        )}
+                                    </div>
                                     <div className="relative flex items-center">
-                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-orange-500 z-10 pointer-events-none select-none">R$</span>
+                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--gm-primary)] z-10 pointer-events-none select-none">R$</span>
                                         <input 
                                             ref={priceInputRef}
                                             type="text" 
                                             inputMode="decimal"
-                                            className="gm-input h-12 w-full !pl-11 pr-3 font-bold text-base md:text-lg text-white !rounded-md" 
+                                            className={`gm-input h-12 w-full !pl-11 pr-3 font-bold text-base md:text-lg text-white rounded-xl shadow-none bg-black/30 transition-all ${
+                                              voiceStep === 'price'
+                                                ? 'border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40 shadow-lg shadow-[var(--gm-primary)]/10'
+                                                : 'border-white/10'
+                                            }`} 
                                             value={newItemPrice} 
                                             onChange={handlePriceChange}
                                             onBlur={handlePriceBlur}
@@ -955,9 +1251,19 @@ const Market = () => {
                                 </div>
 
                                 <div className="w-full md:w-24">
-                                    <label className="gm-label mb-1 block">Qtd</label>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="gm-label block">Qtd</label>
+                                        {voiceStep === 'quantity' && (
+                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">3. Passo</span>
+                                        )}
+                                    </div>
                                     <input 
-                                        className="gm-input text-center h-12 w-full font-bold !rounded-md" 
+                                        ref={qtyInputRef}
+                                        className={`gm-input text-center h-12 w-full font-bold rounded-xl shadow-none bg-black/30 transition-all ${
+                                          voiceStep === 'quantity'
+                                            ? 'border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40 shadow-lg shadow-[var(--gm-primary)]/10'
+                                            : 'border-white/10'
+                                        }`} 
                                         type="text" 
                                         inputMode="numeric"
                                         value={newItemQty} 
@@ -979,53 +1285,60 @@ const Market = () => {
                                     />
                                 </div>
 
-                                <button className="gm-btn h-12 w-full md:w-auto px-8 !rounded-md font-bold flex items-center justify-center gap-2" onClick={handleAddItem} disabled={addingItem}>
+                                <button 
+                                    ref={addBtnRef}
+                                    className={`gm-btn h-12 w-full md:w-auto px-8 rounded-xl font-bold flex items-center justify-center gap-2 shadow-none transition-all cursor-pointer ${
+                                      voiceStep === 'confirm'
+                                        ? 'bg-[var(--gm-primary)] text-white ring-2 ring-[var(--gm-primary)] ring-offset-2 ring-offset-black scale-[1.02] animate-pulse'
+                                        : ''
+                                    }`} 
+                                    onClick={() => handleAddItem()} 
+                                    disabled={addingItem}
+                                >
                                     {addingItem ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />} Adicionar
                                 </button>
                             </div>
                         </div>
                     </div>
-                </Card>
+                </div>
 
-                <Card 
-                    title={`Itens na Lista (${cartItems.length})`}
-                    className="mt-8"
-                    right={
-                        cartItems.length > 0 && (
+                <div className="gm-card fora rounded-2xl border border-white/10 overflow-hidden shadow-none mt-8 p-0">
+                    <div className="barra p-5 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="text-lg font-bold text-white">Itens na Lista ({cartItems.length})</div>
+                        {cartItems.length > 0 && (
                             <button 
-                                className="gm-btn gm-btn-accent font-black transition-all px-6 py-2 !rounded-md flex items-center gap-2"
+                                className="gm-btn gm-btn-accent font-black transition-all px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-none"
                                 onClick={() => setShowFinalizeConfirm(true)}
                                 disabled={finalizing}
                             >
                                 {finalizing ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} strokeWidth={3} />}
                                 FINALIZAR LISTA
                             </button>
-                        )
-                    }
-                >
+                        )}
+                    </div>
                     {cartItems.length === 0 ? (
-                        <div className="text-center opacity-50 py-12 flex flex-col items-center border border-dashed border-white/10 rounded-xl bg-white/5">
-                            <ShoppingCart size={48} className="mb-4 opacity-50" />
-                            <p>Sua lista de compras está vazia.</p>
+                        <div className="text-center opacity-60 py-12 flex flex-col items-center border border-dashed border-white/10 rounded-xl bg-black/20 m-6">
+                            <ShoppingCart size={48} className="mb-4 opacity-50 text-slate-400" />
+                            <p className="text-slate-300">Sua lista de compras está vazia.</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-white/10">
+                        <div className="divide-y divide-white/5">
                             {cartItems.map(item => (
-                                <div key={item.id} className="flex flex-col sm:flex-row justify-between sm:items-center py-4 px-2 hover:bg-white/5 rounded-lg transition-colors gap-4">
+                                <div key={item.id} className="flex flex-col sm:flex-row justify-between sm:items-center py-4 px-6 hover:bg-white/[0.03] transition-colors gap-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-slate-400 text-sm flex-shrink-0">
+                                        <div className="w-10 h-10 rounded-xl barra border border-white/10 flex items-center justify-center font-bold text-slate-300 text-sm flex-shrink-0 shadow-none">
                                             {item.quantity}x
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="font-bold text-lg truncate">{item.name}</div>
-                                            <div className="text-xs opacity-60">Unit: {CURRENCY_FORMATTER.format(item.unit_price)}</div>
+                                            <div className="font-bold text-base text-white truncate">{item.name}</div>
+                                            <div className="text-xs text-slate-400 mt-0.5">Unitário: {CURRENCY_FORMATTER.format(item.unit_price)}</div>
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between sm:justify-end gap-6">
                                         <span className="font-bold text-xl text-[var(--gm-primary)]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
                                         <button 
                                             onClick={() => handleRemoveItem(item.id)} 
-                                            className="h-10 w-10 !rounded-md bg-[var(--gm-primary)] text-white hover:brightness-110 transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
+                                            className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] text-white hover:brightness-110 transition-all flex items-center justify-center shrink-0 shadow-none border border-[var(--gm-primary)]/30 cursor-pointer"
                                             title="Remover item"
                                         >
                                             <Trash2 size={18} className="text-white" />
@@ -1035,42 +1348,41 @@ const Market = () => {
                             ))}
                         </div>
                     )}
-                </Card>
+                </div>
            </Grid>
        )}
 
        <AnimatePresence>
         {topUpModalOpen && (
-            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden">
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden" onClick={() => setTopUpModalOpen(false)}>
                 <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
-                    onClick={() => setTopUpModalOpen(false)}
+                    className="absolute inset-0 bg-black/70 backdrop-blur-md" 
                 />
                 <motion.div 
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    className="gm-modal relative w-full max-w-sm rounded-lg p-8 shadow-lg overflow-hidden" 
+                    className="gm-modal fora border border-white/12 relative w-full max-w-sm rounded-2xl p-7 shadow-none overflow-hidden" 
                     onClick={e => e.stopPropagation()}
                 >
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--gm-primary)] to-[var(--gm-accent)]"></div>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-[var(--gm-primary)]"></div>
                     
                     <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 rounded-lg bg-[var(--gm-primary)]/20 flex items-center justify-center text-[var(--gm-primary)] mb-6">
-                            <Wallet size={32} />
+                        <div className="w-16 h-16 rounded-2xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 flex items-center justify-center text-[var(--gm-primary)] mb-5 shadow-none">
+                            <Wallet size={30} />
                         </div>
                         
-                        <h3 className="text-2xl font-black text-white mb-2">Adicionar Saldo</h3>
-                        <p className="text-sm text-slate-400 mb-8">Insira o valor para recarregar sua carteira.</p>
+                        <h3 className="text-2xl font-black text-white mb-1.5">Adicionar Saldo</h3>
+                        <p className="text-sm text-slate-400 mb-6">Insira o valor para recarregar sua carteira.</p>
                         
-                        <div className="relative w-full mb-8">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-slate-500">R$</span>
+                        <div className="relative w-full mb-6">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-[var(--gm-primary)]">R$</span>
                             <input 
                                 type="number" 
-                                className="w-full bg-white/5 border border-white/10 rounded-lg py-5 pl-14 pr-6 text-3xl font-black text-white focus:outline-none focus:border-[var(--gm-primary)] transition-all text-center" 
+                                className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-14 pr-6 text-3xl font-black text-white focus:outline-none focus:border-[var(--gm-primary)] transition-all text-center shadow-none" 
                                 value={topUpAmount} 
                                 onChange={e => setTopUpAmount(e.target.value)} 
                                 onFocus={(e) => e.target.select()}
@@ -1081,14 +1393,14 @@ const Market = () => {
                         
                         <div className="grid grid-cols-1 gap-3 w-full">
                             <button 
-                                className="gm-btn w-full py-4 font-black text-lg !rounded-md" 
+                                className="gm-btn w-full py-3.5 font-black text-base rounded-xl shadow-none" 
                                 onClick={handleTopUp}
                                 disabled={toppingUp}
                             >
-                                {toppingUp ? <Loader2 size={24} className="animate-spin mx-auto" /> : "CONFIRMAR RECARGA"}
+                                {toppingUp ? <Loader2 size={22} className="animate-spin mx-auto" /> : "CONFIRMAR RECARGA"}
                             </button>
                             <button 
-                                className="gm-btn gm-btn-soft w-full py-3 !rounded-md" 
+                                className="gm-btn gm-btn-soft w-full py-3 rounded-xl shadow-none border border-white/10" 
                                 onClick={() => setTopUpModalOpen(false)}
                             >
                                 CANCELAR
@@ -1102,43 +1414,42 @@ const Market = () => {
 
                 <AnimatePresence>
                     {showDeleteListConfirm && (
-                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" onClick={() => setShowDeleteListConfirm(null)}>
                             <motion.div 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                                onClick={() => setShowDeleteListConfirm(null)}
+                                className="absolute inset-0 bg-black/70 backdrop-blur-md"
                             />
                             <motion.div 
                                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                                className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in"
+                                className="gm-card fora w-full max-w-sm rounded-2xl overflow-hidden border border-white/12 relative z-10 animate-fade-in shadow-none p-0"
                                 onClick={e => e.stopPropagation()}
                             >
-                                <div className="p-8 text-center">
-                                    <div className="w-16 h-16 bg-[var(--gm-primary)] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[var(--gm-primary)]/25">
-                                        <Trash2 size={32} className="text-white" />
+                                <div className="p-7 text-center">
+                                    <div className="w-16 h-16 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-none">
+                                        <Trash2 size={28} className="text-[var(--gm-primary)]" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white mb-2">Excluir Compra?</h3>
-                                    <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                                    <h3 className="text-2xl font-extrabold text-white mb-2.5">Excluir Compra?</h3>
+                                    <p className="text-slate-300 text-base mb-6 leading-relaxed">
                                         Tem certeza que deseja excluir esta compra específica do histórico? Esta ação não pode ser desfeita.
                                     </p>
                                     
                                     <div className="flex gap-3">
                                         <button 
-                                            className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
+                                            className="gm-btn gm-btn-outline flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none border-white/10 hover:border-white/20"
                                             onClick={() => setShowDeleteListConfirm(null)}
                                         >
                                             Voltar
                                         </button>
                                         <button 
-                                            className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
+                                            className="gm-btn flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none"
                                             onClick={() => handleDeleteList(showDeleteListConfirm)}
                                             disabled={historyLoading}
                                         >
-                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Excluir"}
+                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Excluir"}
                                         </button>
                                     </div>
                                 </div>
@@ -1150,27 +1461,27 @@ const Market = () => {
                 {/* Modal de Confirmação de Exclusão de Histórico */}
                 <AnimatePresence>
                     {showDeleteHistoryConfirm && (
-                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" onClick={() => setShowDeleteHistoryConfirm(null)}>
                             <motion.div 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                                className="absolute inset-0 bg-black/70 backdrop-blur-md"
                                 onClick={() => setShowDeleteHistoryConfirm(null)}
                             />
                             <motion.div 
                                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                                className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in"
+                                className="gm-card fora w-full max-w-sm rounded-2xl overflow-hidden border border-white/12 relative z-10 animate-fade-in shadow-none p-0"
                                 onClick={e => e.stopPropagation()}
                             >
-                                <div className="p-8 text-center">
-                                    <div className="w-16 h-16 bg-[var(--gm-primary)] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[var(--gm-primary)]/25">
-                                        <Trash2 size={32} className="text-white" />
+                                <div className="p-7 text-center">
+                                    <div className="w-16 h-16 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-none">
+                                        <Trash2 size={28} className="text-[var(--gm-primary)]" />
                                     </div>
-                                    <h2 className="text-xl font-bold text-white mb-2">Excluir Histórico?</h2>
-                                    <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                                    <h2 className="text-2xl font-extrabold text-white mb-2.5">Excluir Histórico?</h2>
+                                    <p className="text-slate-300 text-base mb-6 leading-relaxed">
                                         Deseja excluir permanentemente todo o histórico de gastos deste mês? 
                                         <br />
                                         Esta ação não pode ser desfeita.
@@ -1178,17 +1489,17 @@ const Market = () => {
                                     
                                     <div className="flex gap-3">
                                         <button 
-                                            className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
+                                            className="gm-btn gm-btn-outline flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none border-white/10 hover:border-white/20"
                                             onClick={() => setShowDeleteHistoryConfirm(null)}
                                         >
                                             Voltar
                                         </button>
                                         <button 
-                                            className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
+                                            className="gm-btn flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none"
                                             onClick={() => handleDeleteHistoryMonth(showDeleteHistoryConfirm)}
                                             disabled={historyLoading}
                                         >
-                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Excluir"}
+                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Excluir"}
                                         </button>
                                     </div>
                                 </div>
@@ -1200,30 +1511,29 @@ const Market = () => {
                {/* Finalize Confirmation Modal */}
         <AnimatePresence>
             {showFinalizeConfirm && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden">
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden" onClick={() => setShowFinalizeConfirm(false)}>
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                        onClick={() => setShowFinalizeConfirm(false)}
+                        className="absolute inset-0 bg-black/70 backdrop-blur-md"
                     />
                     <motion.div 
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="gm-modal relative w-full max-w-sm rounded-lg p-8 shadow-lg overflow-hidden"
+                        className="gm-modal fora border border-white/12 relative w-full max-w-sm rounded-2xl p-7 shadow-none overflow-hidden"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--gm-primary)] to-[var(--gm-accent)]"></div>
+                        <div className="absolute top-0 left-0 w-full h-1 bg-[var(--gm-primary)]"></div>
                         
                         <div className="flex flex-col items-center text-center">
-                            <div className="w-16 h-16 bg-[var(--gm-primary)]/20 rounded-lg flex items-center justify-center mb-6 text-[var(--gm-primary)]">
-                                <ShoppingCart size={32} />
+                            <div className="w-16 h-16 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-2xl flex items-center justify-center mb-5 text-[var(--gm-primary)] shadow-none">
+                                <ShoppingCart size={30} />
                             </div>
-                            <h3 className="text-2xl font-black text-white mb-2">Finalizar Compra?</h3>
-                            <p className="text-slate-400 mb-8">
-                                Deseja finalizar esta lista no valor de <span className="text-white font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
+                            <h3 className="text-2xl font-black text-white mb-2.5">Finalizar Compra?</h3>
+                            <p className="text-slate-300 mb-6 text-base leading-relaxed">
+                                Deseja finalizar esta lista no valor de <span className="text-[var(--gm-primary)] font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
                                 O valor será deduzido do seu saldo de mercado.
                             </p>
                             
@@ -1231,14 +1541,14 @@ const Market = () => {
                                 <button 
                                     onClick={handleFinalize}
                                     disabled={finalizing}
-                                    className="gm-btn w-full py-4 font-black flex items-center justify-center gap-2"
+                                    className="gm-btn w-full py-3.5 font-black flex items-center justify-center gap-2 rounded-xl shadow-none"
                                 >
                                     {finalizing ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
                                     SIM, FINALIZAR AGORA
                                 </button>
                                 <button 
                                     onClick={() => setShowFinalizeConfirm(false)}
-                                    className="gm-btn gm-btn-soft w-full py-3"
+                                    className="gm-btn gm-btn-soft w-full py-3 rounded-xl shadow-none border border-white/10"
                                 >
                                     CANCELAR
                                 </button>
@@ -1252,44 +1562,43 @@ const Market = () => {
         {/* Reset Balance Confirmation Modal */}
         <AnimatePresence>
             {showResetConfirm && (
-                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden">
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden" onClick={() => setShowResetConfirm(false)}>
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-                        onClick={() => setShowResetConfirm(false)}
+                        className="absolute inset-0 bg-black/70 backdrop-blur-md"
                     />
                     <motion.div 
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in"
+                        className="gm-card fora w-full max-w-sm rounded-2xl overflow-hidden border border-white/12 relative z-10 animate-fade-in shadow-none p-0"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="p-8 text-center">
-                            <div className="w-16 h-16 bg-[var(--gm-primary)] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[var(--gm-primary)]/25">
-                                <Trash2 size={32} className="text-white" />
+                        <div className="p-7 text-center">
+                            <div className="w-16 h-16 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-none">
+                                <Trash2 size={28} className="text-[var(--gm-primary)]" />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">Zerar Saldo?</h3>
-                            <p className="text-slate-400 text-sm mb-8 leading-relaxed">
-                                Tem certeza que deseja zerar o seu saldo disponível de <span className="text-white font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
+                            <h3 className="text-2xl font-extrabold text-white mb-2.5">Zerar Saldo?</h3>
+                            <p className="text-slate-300 text-base mb-6 leading-relaxed">
+                                Tem certeza que deseja zerar o seu saldo disponível de <span className="text-[var(--gm-primary)] font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
                                 <br/>Esta ação não pode ser desfeita.
                             </p>
                             
                             <div className="flex gap-3">
                                 <button 
                                     onClick={() => setShowResetConfirm(false)}
-                                    className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
+                                    className="gm-btn gm-btn-outline flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none border-white/10 hover:border-white/20"
                                 >
                                     Cancelar
                                 </button>
                                 <button 
                                     onClick={handleResetBalance}
                                     disabled={resettingBalance}
-                                    className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
+                                    className="gm-btn flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none"
                                 >
-                                    {resettingBalance ? <Loader2 size={24} className="animate-spin mx-auto" /> : "Zerar"}
+                                    {resettingBalance ? <Loader2 size={22} className="animate-spin mx-auto" /> : "Zerar"}
                                 </button>
                             </div>
                         </div>
@@ -1300,29 +1609,29 @@ const Market = () => {
 
         {/* Share Options Modal */}
         {shareData && (
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
-            <div className="bg-dark-card border border-white/10 rounded-lg w-full max-w-md shadow-lg overflow-hidden animate-slide-up" onClick={e => e.stopPropagation()}>
-              <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
-                <h3 className="text-lg font-bold">Compartilhar {shareData.title}</h3>
-                <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={() => setShareData(null)}>
+            <div className="gm-modal fora border border-white/12 rounded-2xl w-full max-w-md overflow-hidden animate-slide-up shadow-none" onClick={e => e.stopPropagation()}>
+              <div className="p-5 border-b border-white/10 flex justify-between items-center barra">
+                <h3 className="text-xl font-extrabold text-white">Compartilhar {shareData.title}</h3>
+                <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white">
                   <X size={20} />
                 </button>
               </div>
               
-              <div className="p-6 space-y-3">
+              <div className="p-5 space-y-3">
                 <button 
                   onClick={() => {
                     openWhatsapp("", shareData.message);
                     setShareData(null);
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40 rounded-xl"
                 >
                   <div className="shrink-0">
-                    <WhatsAppIcon size={24} className="text-[var(--gm-primary)]" />
+                    <WhatsAppIcon size={22} className="text-[var(--gm-primary)]" />
                   </div>
                   <div className="text-left">
                     <p className="font-bold text-[var(--gm-primary)] leading-tight">WhatsApp</p>
-                    <p className="text-[10px] text-white/70 leading-tight">Enviar diretamente para um contato</p>
+                    <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Enviar diretamente para um contato</p>
                   </div>
                 </button>
 
@@ -1331,14 +1640,14 @@ const Market = () => {
                     window.open(`mailto:?subject=${shareData.title}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40 rounded-xl"
                 >
                   <div className="shrink-0">
-                    <Mail size={24} className="text-[var(--gm-primary)]" />
+                    <Mail size={22} className="text-[var(--gm-primary)]" />
                   </div>
                   <div className="text-left">
                     <p className="font-bold text-[var(--gm-primary)] leading-tight">E-mail</p>
-                    <p className="text-[10px] text-white/70 leading-tight">Enviar por correio eletrônico</p>
+                    <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Enviar por correio eletrônico</p>
                   </div>
                 </button>
 
@@ -1352,14 +1661,14 @@ const Market = () => {
                       alert("Erro ao copiar texto.");
                     }
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40 rounded-xl"
                 >
                   <div className="shrink-0">
-                    <Copy size={24} className="text-[var(--gm-primary)]" />
+                    <Copy size={22} className="text-[var(--gm-primary)]" />
                   </div>
                   <div className="text-left">
                     <p className="font-bold text-[var(--gm-primary)] leading-tight">Copiar Texto</p>
-                    <p className="text-[10px] text-white/70 leading-tight">Copiar para colar em outro lugar</p>
+                    <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Copiar para colar em outro lugar</p>
                   </div>
                 </button>
 
@@ -1378,14 +1687,14 @@ const Market = () => {
                         }
                       }
                     }}
-                    className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                    className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40 rounded-xl"
                   >
                     <div className="shrink-0">
-                      <Share2 size={24} className="text-[var(--gm-primary)]" />
+                      <Share2 size={22} className="text-[var(--gm-primary)]" />
                     </div>
                     <div className="text-left">
                       <p className="font-bold text-[var(--gm-primary)] leading-tight">Mais Opções</p>
-                      <p className="text-[10px] text-white/70 leading-tight">Menu de compartilhamento do sistema</p>
+                      <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Menu de compartilhamento do sistema</p>
                     </div>
                   </button>
                 )}

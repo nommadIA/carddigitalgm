@@ -196,10 +196,11 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
           e.stopPropagation();
           if (!disabled) setIsOpen(!isOpen);
         }}
-        className={`cursor-pointer select-none transition-all ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${className}`}
+        className={`cursor-pointer select-none transition-all flex items-center justify-between ${disabled ? 'opacity-40 cursor-not-allowed' : ''} ${className}`}
         style={style}
       >
-        <span>{formatDisplayValue(value)}</span>
+        <span className="truncate">{formatDisplayValue(value)}</span>
+        <CalendarIcon size={13} className="text-slate-400 shrink-0 ml-1.5 opacity-80" />
       </div>
 
       {typeof window !== 'undefined' && document.body && createPortal(

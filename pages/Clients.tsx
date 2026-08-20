@@ -7,7 +7,7 @@ import { Card } from "../components/ui/Card";
 import NewClientPage from "./clients/NewClientPage";
 import EditClientPage from "./clients/EditClientPage";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
-import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User, Zap } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User, Users, Zap } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
 import { openWhatsapp } from "../services/whatsApp";
@@ -115,15 +115,6 @@ function VirtualizedClientList({
   setToast: (msg: string) => void;
   softDelete: (id: string) => void;
 }) {
-  const parentRef = React.useRef<HTMLDivElement>(null);
-
-  const rowVirtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 72,
-    overscan: 10,
-  });
-
   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
     const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 group";
     if (tone === "orange") return `${base} btn-action-edit bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] text-[var(--gm-primary)] hover:text-white`;
@@ -133,87 +124,50 @@ function VirtualizedClientList({
   };
 
   return (
-    <Card className="!p-0 overflow-hidden">
+    <div className="gm-card fora !p-0 overflow-hidden rounded-2xl border border-white/10 shadow-none backdrop-blur-md">
       <div className="overflow-x-auto">
         <div className="text-sm min-w-full">
-          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/10 font-bold opacity-60 uppercase tracking-wider text-xs bg-black/20">
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3.5 border-b border-white/10 font-bold opacity-70 uppercase tracking-wider text-xs barra">
             <div>Avatar</div>
             <div>Cliente</div>
             <div className="text-right">Ações</div>
           </div>
 
-          <div
-            ref={parentRef}
-            className="overflow-y-auto max-h-[680px] no-scrollbar relative"
-            style={{ WebkitOverflowScrolling: "touch" }}
-          >
-            <div
-              style={{
-                height: `${rowVirtualizer.getTotalSize()}px`,
-                width: "100%",
-                position: "relative",
-              }}
-            >
-              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const c = items[virtualRow.index];
-                if (!c) return null;
+          <div className="w-full divide-y divide-white/5">
+            {items.map((c) => {
+              const wppDigits = onlyDigits(c.whatsapp || c.phone || "");
+              const prettyWpp = fmtPhoneBR(c.whatsapp || c.phone || "");
+              const hasWpp = wppDigits.length >= 10;
 
-                const wppDigits = onlyDigits(c.whatsapp || c.phone || "");
-                const prettyWpp = fmtPhoneBR(c.whatsapp || c.phone || "");
-                const hasWpp = wppDigits.length >= 10;
-
-                return (
-                  <div
-                    key={c.id}
-                    data-index={virtualRow.index}
-                    ref={rowVirtualizer.measureElement}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                  >
-                    <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center">
-                      <div className="flex justify-between sm:contents">
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => toggleRow(c.id)}
-                            className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
-                          >
-                            <ChevronDown
-                              size={18}
-                              className={`transition-transform duration-300 ${expandedRows.has(c.id) ? "rotate-180" : ""}`}
-                            />
-                          </button>
-                          <div style={avatarStyle}>
-                            <User size={isMobile ? 18 : 20} className="text-[var(--gm-primary)]" />
-                          </div>
-                          <div className="sm:hidden font-extrabold text-white truncate text-sm">
-                            {c.name}
-                          </div>
+              return (
+                <div
+                  key={c.id}
+                  className="hover:bg-white/5 transition-colors"
+                >
+                  <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center">
+                    <div className="flex justify-between sm:contents">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => toggleRow(c.id)}
+                          className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
+                        >
+                          <ChevronDown
+                            size={18}
+                            className={`transition-transform duration-300 ${expandedRows.has(c.id) ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                        <div style={avatarStyle}>
+                          <User size={isMobile ? 18 : 20} className="text-[var(--gm-primary)]" />
+                        </div>
+                        <div className="sm:hidden font-extrabold text-white truncate text-sm">
+                          {c.name}
                         </div>
                       </div>
+                    </div>
 
-                      <div className="font-medium truncate hidden sm:block">
-                        <div className="font-extrabold text-white text-base truncate">{c.name}</div>
-                        <div className="mt-1 text-xs text-slate-400 flex items-center gap-3">
-                          {prettyWpp ? (
-                            <span className="flex items-center gap-1.5">
-                              <WhatsAppIcon size={14} className="text-[var(--gm-primary)] shrink-0" /> {prettyWpp}
-                            </span>
-                          ) : null}
-                          {c.email ? (
-                            <span className="flex items-center gap-1.5">
-                              <Mail size={13} className="text-slate-400 shrink-0" /> {c.email}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      <div className="sm:hidden mt-2 text-xs text-slate-400 flex flex-col gap-1">
+                    <div className="font-medium truncate hidden sm:block">
+                      <div className="font-extrabold text-white text-base truncate">{c.name}</div>
+                      <div className="mt-1 text-xs text-slate-400 flex items-center gap-3">
                         {prettyWpp ? (
                           <span className="flex items-center gap-1.5">
                             <WhatsAppIcon size={14} className="text-[var(--gm-primary)] shrink-0" /> {prettyWpp}
@@ -225,86 +179,99 @@ function VirtualizedClientList({
                           </span>
                         ) : null}
                       </div>
+                    </div>
 
-                      <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
-                        <div className="flex items-center gap-2">
-                          {tab === "LIXEIRA" ? (
-                            <>
-                              <button className={listBtnClass("green")} title="Restaurar" type="button" onClick={() => restore(c.id)}>
-                                <RotateCcw size={16} />
-                              </button>
-                              <button
-                                className={listBtnClass("red")}
-                                title="Excluir definitivo"
-                                type="button"
-                                onClick={() => confirmHardDelete(c.id)}
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button className={listBtnClass("orange")} title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
-                                <Pencil size={16} />
-                              </button>
+                    <div className="sm:hidden mt-2 text-xs text-slate-400 flex flex-col gap-1">
+                      {prettyWpp ? (
+                        <span className="flex items-center gap-1.5">
+                          <WhatsAppIcon size={14} className="text-[var(--gm-primary)] shrink-0" /> {prettyWpp}
+                        </span>
+                      ) : null}
+                      {c.email ? (
+                        <span className="flex items-center gap-1.5">
+                          <Mail size={13} className="text-slate-400 shrink-0" /> {c.email}
+                        </span>
+                      ) : null}
+                    </div>
 
-                              <button
-                                className={`${listBtnClass("green")} ${!hasWpp ? "opacity-50" : ""}`}
-                                title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
-                                type="button"
-                                onClick={() => {
-                                  if (!hasWpp) return setToast("Sem WhatsApp cadastrado");
-                                  openWhatsApp(wppDigits);
-                                }}
-                              >
-                                <WhatsAppIcon size={16} />
-                              </button>
+                    <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
+                      <div className="flex items-center gap-2">
+                        {tab === "LIXEIRA" ? (
+                          <>
+                            <button className={listBtnClass("green")} title="Restaurar" type="button" onClick={() => restore(c.id)}>
+                              <RotateCcw size={16} />
+                            </button>
+                            <button
+                              className={listBtnClass("red")}
+                              title="Excluir definitivo"
+                              type="button"
+                              onClick={() => confirmHardDelete(c.id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button className={listBtnClass("orange")} title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
+                              <Pencil size={16} />
+                            </button>
 
-                              <button
-                                className={listBtnClass("neutral")}
-                                title="Copiar telefone"
-                                type="button"
-                                onClick={async () => {
-                                  const txt = prettyWpp || "";
-                                  if (!txt) return setToast("Sem telefone");
-                                  const ok = await copyToClipboard(txt);
-                                  setToast(ok ? "Telefone copiado" : "Falha ao copiar");
-                                }}
-                              >
-                                <Copy size={16} />
-                              </button>
+                            <button
+                              className={`${listBtnClass("green")} ${!hasWpp ? "opacity-50" : ""}`}
+                              title={hasWpp ? "WhatsApp" : "Sem WhatsApp"}
+                              type="button"
+                              onClick={() => {
+                                if (!hasWpp) return setToast("Sem WhatsApp cadastrado");
+                                openWhatsApp(wppDigits);
+                              }}
+                            >
+                              <WhatsAppIcon size={16} />
+                            </button>
 
-                              <button
-                                className={listBtnClass("neutral")}
-                                title="Copiar e-mail"
-                                type="button"
-                                onClick={async () => {
-                                  const txt = (c.email || "").trim();
-                                  if (!txt) return setToast("Sem e-mail");
-                                  const ok = await copyToClipboard(txt);
-                                  setToast(ok ? "E-mail copiado" : "Falha ao copiar");
-                                }}
-                              >
-                                <Mail size={16} />
-                              </button>
+                            <button
+                              className={listBtnClass("neutral")}
+                              title="Copiar telefone"
+                              type="button"
+                              onClick={async () => {
+                                const txt = prettyWpp || "";
+                                if (!txt) return setToast("Sem telefone");
+                                const ok = await copyToClipboard(txt);
+                                setToast(ok ? "Telefone copiado" : "Falha ao copiar");
+                              }}
+                            >
+                              <Copy size={16} />
+                            </button>
 
-                              <button className={listBtnClass("red")} title="Mover para lixeira" type="button" onClick={() => softDelete(c.id)}>
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          )}
-                        </div>
+                            <button
+                              className={listBtnClass("neutral")}
+                              title="Copiar e-mail"
+                              type="button"
+                              onClick={async () => {
+                                const txt = (c.email || "").trim();
+                                if (!txt) return setToast("Sem e-mail");
+                                const ok = await copyToClipboard(txt);
+                                setToast(ok ? "E-mail copiado" : "Falha ao copiar");
+                              }}
+                            >
+                              <Mail size={16} />
+                            </button>
+
+                            <button className={listBtnClass("red")} title="Mover para lixeira" type="button" onClick={() => softDelete(c.id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
-                    {expandedRows.has(c.id) && <ExpandedClientRow clientId={c.id} />}
                   </div>
-                );
-              })}
-            </div>
+                  {expandedRows.has(c.id) && <ExpandedClientRow clientId={c.id} />}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -494,7 +461,7 @@ export default function Clients() {
     color: "rgba(255,255,255,0.9)",
     background: "rgba(0,0,0,0.28)",
     border: "1px solid rgba(255,255,255,0.12)",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.30)",
+    boxShadow: "none",
     flexShrink: 0,
   };
 
@@ -509,7 +476,7 @@ export default function Clients() {
       <Page
         title="Clientes"
         actions={
-          <button className="gm-btn h-12 text-xs uppercase tracking-wider" type="button" onClick={() => setOpenNewPage(true)}>
+          <button className="gm-btn h-12 text-xs uppercase tracking-wider shadow-none" type="button" onClick={() => setOpenNewPage(true)}>
             <Plus size={16} />
             Novo Cliente
           </button>
@@ -518,7 +485,7 @@ export default function Clients() {
         <div className="mb-4 space-y-4">
           <SectionDivider label="Resumo" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
+            <div className="gm-dashboard-card fora rounded-2xl p-5 border border-white/10 shadow-none">
               <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
                 Clientes ativos
               </div>
@@ -527,7 +494,7 @@ export default function Clients() {
               </div>
             </div>
 
-            <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
+            <div className="gm-dashboard-card fora rounded-2xl p-5 border border-white/10 shadow-none">
               <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
                 Novos nos últimos 30 dias
               </div>
@@ -536,7 +503,7 @@ export default function Clients() {
               </div>
             </div>
 
-            <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
+            <div className="gm-dashboard-card fora rounded-2xl p-5 border border-white/10 shadow-none">
               <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider mb-2">
                 Cadastros por mês
               </div>
@@ -548,7 +515,7 @@ export default function Clients() {
                     <YAxis hide allowDecimals={false} />
                     <Tooltip
                       cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                      contentStyle={{ backgroundColor: "#0f1117", border: "1px solid #30363d", borderRadius: "8px", color: "#fff", fontSize: 12 }}
+                      contentStyle={{ backgroundColor: "rgba(18, 18, 22, 0.85)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)", border: "1px solid rgba(255, 255, 255, 0.12)", borderRadius: "12px", color: "#fff", fontSize: 12, boxShadow: "none" }}
                     />
                     <Bar dataKey="value" name="Clientes" radius={[4, 4, 0, 0]} fill="var(--gm-primary)" />
                   </BarChart>
@@ -561,11 +528,11 @@ export default function Clients() {
         <div className="mb-3">
           <SectionDivider label="Filtros" />
         </div>
-        <Card className="p-4">
+        <div className="gm-card fora p-4 rounded-2xl border border-white/10 shadow-none mb-4">
           <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
             <div className="flex-1">
               <input
-                className="gm-input"
+                className="gm-input !bg-black/30 border-white/10"
                 placeholder="Pesquisar por nome, telefone ou e-mail"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -573,15 +540,15 @@ export default function Clients() {
             </div>
 
             <div className="flex gap-2">
-              <button type="button" className={`gm-tab ${tab === "ATIVOS" ? "active" : ""}`} onClick={() => setTab("ATIVOS")}>
+              <button type="button" className={`gm-tab shadow-none ${tab === "ATIVOS" ? "active" : ""}`} onClick={() => setTab("ATIVOS")}>
                 Ativos
               </button>
               <button 
                 type="button" 
-                className={`flex-1 h-10 px-4 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border-2 ${
+                className={`flex-1 h-10 px-4 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border ${
                   tab === "LIXEIRA"
-                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-[0_0_20px_var(--gm-primary-20)]"
-                    : "bg-black/40 border-[var(--gm-primary)]/20 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/10 hover:border-[var(--gm-primary)]/40 hover:text-[var(--gm-primary)] shadow-none"
+                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-none"
+                    : "barra border-white/10 text-slate-300 hover:text-[var(--gm-primary)] hover:border-[var(--gm-primary)]/40 shadow-none"
                 }`}
                 onClick={() => setTab("LIXEIRA")}
               >
@@ -589,12 +556,12 @@ export default function Clients() {
               </button>
             </div>
           </div>
-        </Card>
+        </div>
 
         <div className="mb-2 flex items-center justify-between text-xs text-slate-400 px-1">
           <SectionDivider label="Lista de clientes" />
-          <span className="shrink-0 ml-4 px-2.5 py-1 rounded-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5">
-            <Zap size={13} /> Virtual Scroll ({filtered.length})
+          <span className="shrink-0 ml-4 px-2.5 py-1 rounded-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5 shadow-none">
+            <Users size={13} /> Clientes ({filtered.length})
           </span>
         </div>
         <div style={{ height: 8 }} />
@@ -602,11 +569,11 @@ export default function Clients() {
         {loading ? (
           <div style={gridWrap}>
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="p-6">Carregando...</Card>
+              <div key={i} className="gm-card fora p-6 rounded-2xl border border-white/10 shadow-none">Carregando...</div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <Card className="p-10 text-center opacity-70 border-dashed">Nenhum cliente encontrado.</Card>
+          <div className="gm-card fora p-10 text-center opacity-70 border border-dashed border-white/15 rounded-2xl shadow-none">Nenhum cliente encontrado.</div>
         ) : (
           <VirtualizedClientList
             items={filtered}
@@ -635,15 +602,15 @@ export default function Clients() {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 99999,
-            padding: "10px 14px",
+            padding: "10px 18px",
             borderRadius: 14,
-            background: "rgba(0,0,0,0.55)",
+            background: "rgba(18, 18, 22, 0.75)",
             border: "1px solid rgba(255,255,255,0.12)",
-            color: "rgba(255,255,255,0.88)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            boxShadow: "0 18px 60px rgba(0,0,0,0.45)",
-            fontWeight: 900,
+            color: "rgba(255,255,255,0.92)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            boxShadow: "none",
+            fontWeight: 800,
             fontSize: 13,
           }}
         >
@@ -653,11 +620,11 @@ export default function Clients() {
 
       {/* Hard Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
-          <div className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
+          <div className="gm-card fora w-full max-w-sm rounded-[24px] overflow-hidden border border-white/12 shadow-none relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
             <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
-                <Trash2 size={32} className="text-[var(--gm-primary)]" />
+              <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-none">
+                <Trash2 size={30} className="text-[var(--gm-primary)]" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Excluir Definitivamente?</h3>
               <p className="text-slate-400 text-sm mb-8 leading-relaxed">
@@ -666,13 +633,13 @@ export default function Clients() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirmId(null)}
-                  className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
+                  className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black border border-white/10 shadow-none"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={hardDelete}
-                  className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
+                  className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-none bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white"
                 >
                   Excluir
                 </button>

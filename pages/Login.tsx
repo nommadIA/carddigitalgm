@@ -104,17 +104,17 @@ export default function Login() {
               transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
               className="relative mb-6 flex items-center justify-center"
             >
-              <div className="gm-logo-box flex items-center justify-center overflow-hidden" style={{ width: '110px', height: '110px' }}>
+              <div className="gm-logo-box" style={{ width: '104px', height: '104px' }}>
                 <div className="gm-logo-glow-wrapper"></div>
                 <div className="gm-logo-border-wrapper"></div>
                 {settings?.company_logo_url ? (
                   <img
                     src={settings.company_logo_url}
                     alt={settings.company_name || "Logo"}
-                    className="gm-logo w-full h-full object-contain p-2"
+                    className="gm-logo"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[var(--gm-primary)] font-black text-3xl uppercase tracking-wider">
+                  <div className="w-full h-full flex items-center justify-center text-[var(--gm-primary)] font-black text-3xl uppercase tracking-wider relative z-10">
                     {settings?.company_name ? settings.company_name.substring(0, 2) : "GM"}
                   </div>
                 )}

@@ -19,6 +19,7 @@ import {
   GripHorizontal,
   Palette,
   Share2,
+  Download,
   CornerRightDown,
   RefreshCcw,
   ChevronDown,
@@ -297,81 +298,103 @@ export default function Notes() {
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [fontSelectorOpen, setFontSelectorOpen] = useState(false);
 
+  const handleProcessAndSetLayoutImage = async (fileOrBlob: Blob | File) => {
+    setUploadingLayout(true);
+    try {
+      const options = {
+        maxSizeMB: 1.5,
+        maxWidthOrHeight: 1800,
+        useWebWorker: true,
+      };
+      const file =
+        fileOrBlob instanceof File
+          ? fileOrBlob
+          : new File([fileOrBlob], `pasted_layout_${Date.now()}.png`, {
+              type: fileOrBlob.type || "image/png",
+            });
+
+      if (tenantId) {
+        const compressedFile = await imageCompression(file, options);
+        const url = await uploadNoteAsset(tenantId, compressedFile);
+        setLayoutUrl(url);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (ev.target?.result) {
+            setLayoutUrl(ev.target.result as string);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err: any) {
+      console.warn("Erro no upload do storage, convertendo imagem para Base64:", err);
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        if (ev.target?.result) {
+          setLayoutUrl(ev.target.result as string);
+        }
+      };
+      reader.readAsDataURL(fileOrBlob);
+    } finally {
+      setUploadingLayout(false);
+    }
+  };
+
   useEffect(() => {
     const handleGlobalPaste = async (e: ClipboardEvent) => {
-      if (!newNoteModalOpen && !modalOpen) return;
-
-      const el = document.activeElement;
-      if (
-        el &&
-        (el.tagName === "INPUT" || el.tagName === "TEXTAREA") &&
-        el !== contentRef.current
-      ) {
-        const hasImage = Array.from(e.clipboardData?.items || []).some((item) =>
-          item.type.includes("image"),
-        );
-        if (!hasImage) return;
-      }
+      if (!modalOpen) return;
 
       const items = e.clipboardData?.items;
-      if (!items) return;
+      const files = e.clipboardData?.files;
 
-      let hasImageItem = false;
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf("image") !== -1) {
-          hasImageItem = true;
-          break;
+      let imageFile: File | null = null;
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          if (files[i].type.startsWith("image/")) {
+            imageFile = files[i];
+            break;
+          }
         }
       }
 
-      if (hasImageItem) {
+      if (!imageFile && items) {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf("image") !== -1) {
+            imageFile = items[i].getAsFile();
+            if (imageFile) break;
+          }
+        }
+      }
+
+      if (imageFile) {
         e.preventDefault();
-      } else {
+        e.stopPropagation();
+        await handleProcessAndSetLayoutImage(imageFile);
         return;
       }
 
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf("image") !== -1) {
-          let file = items[i].getAsFile();
-          if (!file || !tenantId) continue;
-
-          setUploadingLayout(true);
-          try {
-            const options = {
-              maxSizeMB: 1,
-              maxWidthOrHeight: 1600,
-              useWebWorker: true,
-            };
-            const compressedFile = await imageCompression(file, options);
-            const url = await uploadNoteAsset(tenantId, compressedFile);
-
-            const imgHtml = `<span contenteditable="false" class="note-img-wrapper group" style="position: relative; display: inline-block; max-width: 100%; min-width: 100px; min-height: 100px; padding: 4px; border: 1px dashed rgba(255,255,255,0.3); border-radius: 8px; resize: both; overflow: hidden; margin-top: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.2);"><span class="note-img-number" style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.8); color: white; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; pointer-events: none; z-index: 10; border: 1px solid rgba(255,255,255,0.2);"></span><button class="note-img-delete" onclick="this.parentElement.remove()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,0,0,0.8); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 10; font-size: 14px; font-weight: bold; opacity: 0.8;">✕</button><img src="${url}" alt="pasted layout" style="width: 100%; height: 100%; object-fit: contain; display: block;" /></span>&nbsp;`;
-
-            if (document.activeElement === contentRef.current) {
-              document.execCommand("insertHTML", false, imgHtml);
-            } else {
-              if (contentRef.current) {
-                contentRef.current.innerHTML += `<br>${imgHtml}`;
-              }
-            }
-
-            if (contentRef.current) {
-              const val = contentRef.current.innerHTML;
-              setContent(val);
-              pushToHistory(val, true);
-            }
-          } catch (err) {
-            alert("Erro ao colar imagem: " + err);
-          } finally {
-            setUploadingLayout(false);
-          }
+      // Se o usuário colou uma URL direta de imagem (http/https/data)
+      const pastedText = e.clipboardData?.getData("text/plain")?.trim();
+      if (
+        pastedText &&
+        (pastedText.startsWith("data:image/") ||
+          /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(pastedText))
+      ) {
+        const activeEl = document.activeElement;
+        if (
+          activeEl?.getAttribute("placeholder")?.includes("URL/link") ||
+          !activeEl ||
+          activeEl === document.body
+        ) {
+          e.preventDefault();
+          setLayoutUrl(pastedText);
         }
       }
     };
 
-    window.addEventListener("paste", handleGlobalPaste);
-    return () => window.removeEventListener("paste", handleGlobalPaste);
-  }, [tenantId, newNoteModalOpen, modalOpen]);
+    window.addEventListener("paste", handleGlobalPaste, true);
+    return () => window.removeEventListener("paste", handleGlobalPaste, true);
+  }, [modalOpen, tenantId]);
 
   // Custom Undo/Redo/History for Content Editor
   const historyRef = useRef<string[]>([]);
@@ -1247,10 +1270,30 @@ export default function Notes() {
     setDeleteConfirmId(null);
   }
 
+  const isProductionType = (type?: string | null) => {
+    if (!type) return false;
+    const t = type.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return t === "PRODUCTION" || t === "PRODUCAO";
+  };
+
+  const noteCounts = useMemo(() => {
+    let general = 0;
+    let prod = 0;
+    for (const n of notes) {
+      if (isProductionType(n.type)) {
+        prod++;
+      } else {
+        general++;
+      }
+    }
+    return { general, prod };
+  }, [notes]);
+
   const filteredNotes = useMemo(() => {
-    let base = notes.filter(
-      (n) => (n.type || "note").toUpperCase() === mainTab,
-    );
+    let base = notes.filter((n) => {
+      const isProd = isProductionType(n.type);
+      return mainTab === "PRODUCTION" ? isProd : !isProd;
+    });
 
     const activeTab = mainTab === "NOTE" ? noteTab : prodTab;
     const isTrash = activeTab === "LIXEIRA";
@@ -1289,8 +1332,6 @@ export default function Notes() {
       );
     });
 
-    console.log("Filtered notes:", { mainTab, activeTab, normalizedActiveTab: normalizeStatus(activeTab), results: base.length, allNotes: notes });
-
     return base;
   }, [notes, searchTerm, mainTab, noteTab, prodTab]);
 
@@ -1326,11 +1367,56 @@ export default function Notes() {
 
           <button
             onClick={openNewNote}
-            className="flex items-center gap-2 gm-btn px-6 py-4 rounded-lg shrink-0 w-full md:w-auto shadow-lg"
+            className="flex items-center gap-2 gm-btn px-6 py-4 rounded-lg shrink-0 w-full md:w-auto shadow-lg cursor-pointer"
           >
             <Plus size={20} />
             <span>Criar Nota</span>
           </button>
+        </div>
+
+        {/* Segmented Switcher: NOTAS GERAIS vs NOTAS DE PRODUÇÃO */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-1.5 p-1.5 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 w-fit max-w-full overflow-x-auto shadow-md">
+            <button
+              type="button"
+              onClick={() => setMainTab("NOTE")}
+              className={`flex items-center gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 select-none cursor-pointer ${
+                mainTab === "NOTE"
+                  ? "bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20 scale-[1.02]"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Edit2 size={16} className={mainTab === "NOTE" ? "text-white" : "text-white/60"} />
+              <span>Notas Gerais</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10.5px] font-black tracking-tight ${
+                  mainTab === "NOTE" ? "bg-black/30 text-white" : "bg-white/10 text-white/70"
+                }`}
+              >
+                {noteCounts.general}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMainTab("PRODUCTION")}
+              className={`flex items-center gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 select-none cursor-pointer ${
+                mainTab === "PRODUCTION"
+                  ? "bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20 scale-[1.02]"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Palette size={16} className={mainTab === "PRODUCTION" ? "text-white" : "text-white/60"} />
+              <span>Notas de Produção</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10.5px] font-black tracking-tight ${
+                  mainTab === "PRODUCTION" ? "bg-black/30 text-white" : "bg-white/10 text-white/70"
+                }`}
+              >
+                {noteCounts.prod}
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Workflow Tabs */}
@@ -1340,7 +1426,7 @@ export default function Notes() {
                 <button
                   key={t}
                   onClick={() => setNoteTab(t as any)}
-                  className={`px-4 py-2 font-bold text-xs md:text-sm rounded-xl transition-all whitespace-nowrap ${noteTab === t ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/50" : "text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5"}`}
+                  className={`px-4 py-2 font-bold text-xs md:text-sm rounded-xl transition-all whitespace-nowrap cursor-pointer ${noteTab === t ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/50" : "text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5"}`}
                 >
                   {t}
                 </button>
@@ -1349,7 +1435,7 @@ export default function Notes() {
                 <button
                   key={t}
                   onClick={() => setProdTab(t as any)}
-                  className={`px-4 py-2 font-bold text-xs md:text-sm rounded-xl transition-all whitespace-nowrap ${prodTab === t ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/50" : "text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5"}`}
+                  className={`px-4 py-2 font-bold text-xs md:text-sm rounded-xl transition-all whitespace-nowrap cursor-pointer ${prodTab === t ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/50" : "text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5"}`}
                 >
                   {t}
                 </button>
@@ -1558,14 +1644,7 @@ export default function Notes() {
                         {/* Status label displayed next to action buttons */}
                         {note.status ? (
                           <div className="flex items-center">
-                            <span
-                              className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-md shrink-0 select-none"
-                              style={{
-                                backgroundColor: `${noteColor}15`,
-                                color: noteColor,
-                                border: `1px solid ${noteColor}32`,
-                              }}
-                            >
+                            <span className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 select-none bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/20">
                               {note.status.replace(/_/g, " ")}
                             </span>
                           </div>
@@ -1573,7 +1652,7 @@ export default function Notes() {
                           <div />
                         )}
 
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center gap-3 shrink-0 note-actions">
                           {(mainTab === "NOTE" ? noteTab : prodTab) ===
                           "LIXEIRA" ? (
                             <>
@@ -1582,20 +1661,22 @@ export default function Notes() {
                                   e.stopPropagation();
                                   handleRestore(note.id);
                                 }}
-                                className="text-green-400 hover:text-green-300 h-8 w-8 flex items-center justify-center bg-green-500/10 rounded-lg transition-all hover:scale-105 hover:bg-green-500/20 z-20 relative pointer-events-auto"
+                                className="note-action-icon text-emerald-400 hover:text-emerald-300 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
+                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
                                 title="Restaurar"
                               >
-                                <RefreshCcw size={14} />
+                                <RefreshCcw size={17} />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setDeleteConfirmId(note.id);
                                 }}
-                                className="text-red-500 hover:text-red-400 h-8 w-8 flex items-center justify-center bg-red-500/10 rounded-lg transition-all hover:scale-105 hover:bg-red-500/20 z-20 relative pointer-events-auto"
+                                className="note-action-icon text-red-400 hover:text-red-300 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
+                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
                                 title="Excluir Definitivamente"
                               >
-                                <Trash2 size={14} />
+                                <Trash2 size={17} />
                               </button>
                             </>
                           ) : (
@@ -1605,74 +1686,33 @@ export default function Notes() {
                                   e.stopPropagation();
                                   handleShareClick(note);
                                 }}
-                                className="h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:scale-105 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
-                                style={{
-                                  color: noteColor,
-                                  backgroundColor: `${noteColor}1a`,
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = `${noteColor}33`;
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = `${noteColor}1a`;
-                                }}
+                                className="note-action-icon text-[var(--gm-primary)] hover:text-orange-400 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
+                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
                                 title="Compartilhar Nota"
                               >
-                                <Share2 size={14} />
+                                <Share2 size={17} />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handlePdf(note);
                                 }}
-                                className="h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:scale-105 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
-                                style={{
-                                  color: noteColor,
-                                  backgroundColor: `${noteColor}1a`,
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = `${noteColor}33`;
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = `${noteColor}1a`;
-                                }}
-                                title="Exportar PDF"
+                                className="note-action-icon text-[var(--gm-primary)] hover:text-orange-400 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
+                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
+                                title="Baixar / Exportar PDF"
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2.2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                  <polyline points="7 10 12 15 17 10"></polyline>
-                                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
+                                <Download size={17} />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleSoftDelete(note.id);
                                 }}
-                                className="h-8 w-8 flex items-center justify-center rounded-lg transition-all hover:scale-105 z-20 relative pointer-events-auto text-[var(--gm-accent)]"
-                                style={{
-                                  color: noteColor,
-                                  backgroundColor: `${noteColor}1a`,
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = `${noteColor}33`;
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = `${noteColor}1a`;
-                                }}
+                                className="note-action-icon text-[var(--gm-primary)] hover:text-orange-400 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
+                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
                                 title="Mover para Lixeira"
                               >
-                                <Trash2 size={14} />
+                                <Trash2 size={17} />
                               </button>
                             </>
                           )}
@@ -1777,18 +1817,18 @@ export default function Notes() {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: "100%", opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className={`relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-lg shadow-lg flex flex-col overflow-hidden gm-note-modal ${
+              className={`relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-2xl flex flex-col overflow-hidden gm-note-modal gm-modal barra fora ${
                 highlightedId ? "gm-highlighted-orange-sweep" : ""
               }`}
               style={{
                 maxHeight: window.innerWidth < 768 ? "100dvh" : "90vh",
-                backgroundColor: "var(--gm-card, rgba(17, 19, 24, 0.95))",
-                backdropFilter: "blur(16px)",
+                backdropFilter: "blur(20px) saturate(180%)",
+                WebkitBackdropFilter: "blur(20px) saturate(180%)",
                 borderColor: "var(--gm-primary, #FF6900)",
                 borderWidth: window.innerWidth < 768 ? "0px" : "1px",
                 borderTopWidth: window.innerWidth < 768 ? "2px" : "1px",
                 borderStyle: "solid",
-                boxShadow: "0 20px 50px rgba(0, 0, 0, 0.3)",
+                boxShadow: "none",
               }}
             >
               <div
@@ -1801,7 +1841,7 @@ export default function Notes() {
                 <div className="flex items-center gap-3 w-full">
                   <input
                     type="text"
-                    className="bg-transparent border-none outline-none font-bold text-lg text-white w-full placeholder:text-white/30"
+                    className="bg-transparent border-none outline-none font-bold text-lg text-white w-full placeholder:text-white/30 pl-5"
                     placeholder="Título da nota"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -2294,17 +2334,38 @@ export default function Notes() {
 
                 {/* Campo para Inserção do Layout */}
                 <div className="p-4 md:px-6 py-4 border-b border-white/5 bg-black/10 flex flex-col gap-2 shrink-0">
-                  <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-mono">
-                    Campo para Inserção do Layout
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-mono">
+                      Campo para Inserção do Layout
+                    </span>
+                    <span className="text-[10.5px] text-[var(--gm-primary)] font-bold hidden sm:inline-flex items-center gap-1">
+                      <span>💡 Dica:</span>
+                      <span className="text-white/60 font-normal">Pressione Ctrl+V em qualquer lugar para colar a imagem</span>
+                    </span>
+                  </div>
                   <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
                     <div className="relative flex-1">
                       <input
                         type="text"
-                        placeholder="Cole aqui a URL/link da imagem para o layout..."
+                        placeholder="Cole aqui o link/URL ou pressione Ctrl+V com a imagem..."
                         value={layoutUrl}
                         onChange={(e) => setLayoutUrl(e.target.value)}
-                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-9 pr-3 py-2.5 outline-none focus:border-white/30 w-full"
+                        onPaste={async (e) => {
+                          const items = e.clipboardData?.items;
+                          if (items) {
+                            for (let i = 0; i < items.length; i++) {
+                              if (items[i].type.includes("image")) {
+                                const file = items[i].getAsFile();
+                                if (file) {
+                                  e.preventDefault();
+                                  await handleProcessAndSetLayoutImage(file);
+                                  return;
+                                }
+                              }
+                            }
+                          }
+                        }}
+                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-9 pr-3 py-2.5 outline-none focus:border-white/30 w-full font-medium"
                       />
                       <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={14} />
                     </div>
@@ -2313,60 +2374,22 @@ export default function Notes() {
                       className={`bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/25 rounded-lg text-sm text-orange-300 px-4 py-2.5 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 ${uploadingLayout ? "opacity-50 pointer-events-none" : ""}`}
                     >
                       {uploadingLayout ? (
-                        <Loader2 size={16} className="animate-spin" />
+                        <Loader2 size={16} className="animate-spin text-orange-400" />
                       ) : (
                         <Upload size={14} />
                       )}
-                      <span>{uploadingLayout ? "Enviando..." : "Enviar Layout"}</span>
+                      <span>{uploadingLayout ? "Carregando..." : "Enviar Layout"}</span>
                       <input
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        multiple
+                        multiple={false}
                         disabled={uploadingLayout}
                         onChange={async (e) => {
                           const files = e.target.files;
-                          if (files && files.length > 0 && tenantId) {
-                            setUploadingLayout(true);
-                            try {
-                              let firstUrl = layoutUrl;
-                              const options = {
-                                maxSizeMB: 1,
-                                maxWidthOrHeight: 1600,
-                                useWebWorker: true,
-                              };
-                              for (let i = 0; i < files.length; i++) {
-                                const compressedFile = await imageCompression(
-                                  files[i],
-                                  options,
-                                );
-                                const url = await uploadNoteAsset(
-                                  tenantId,
-                                  compressedFile,
-                                );
-
-                                const imgHtml = `<span contenteditable="false" class="note-img-wrapper group" style="position: relative; display: inline-block; max-width: 100%; min-width: 100px; min-height: 100px; padding: 4px; border: 1px dashed rgba(255,255,255,0.3); border-radius: 8px; resize: both; overflow: hidden; margin-top: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.2);"><span class="note-img-number" style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.8); color: white; border-radius: 50%; width: 26px; height: 26px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; pointer-events: none; z-index: 10; border: 1px solid rgba(255,255,255,0.2);"></span><button class="note-img-delete" onclick="this.parentElement.remove()" style="position: absolute; top: 12px; right: 12px; background: rgba(255,0,0,0.8); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 10; font-size: 14px; font-weight: bold; opacity: 0.8;">✕</button><img src="${url}" alt="layout" style="width: 100%; height: 100%; object-fit: contain; display: block;" /></span>&nbsp;`;
-
-                                if (!firstUrl) {
-                                  firstUrl = url;
-                                  setLayoutUrl(url);
-                                } else {
-                                  if (contentRef.current) {
-                                    contentRef.current.innerHTML += `<br>${imgHtml}`;
-                                  }
-                                }
-                              }
-                              if (contentRef.current) {
-                                const val = contentRef.current.innerHTML;
-                                setContent(val);
-                                pushToHistory(val, true);
-                              }
-                            } catch (err) {
-                              alert("Erro ao enviar layout.");
-                            } finally {
-                              setUploadingLayout(false);
-                              e.target.value = "";
-                            }
+                          if (files && files.length > 0) {
+                            await handleProcessAndSetLayoutImage(files[0]);
+                            e.target.value = "";
                           }
                         }}
                       />
@@ -2379,9 +2402,16 @@ export default function Notes() {
                   {/* Row 1: Layout Preview Panel */}
                   <div className="flex flex-col gap-2 w-full">
                     <div className="flex items-center justify-between w-full">
-                      <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-sans">
-                        LAYOUT
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-sans">
+                          LAYOUT
+                        </span>
+                        {layoutUrl && (
+                          <span className="px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            Carregado
+                          </span>
+                        )}
+                      </div>
                       {layoutUrl && (
                         <button
                           type="button"
@@ -2394,9 +2424,35 @@ export default function Notes() {
                         </button>
                       )}
                     </div>
-                    <div className="w-full rounded-xl border border-white/5 bg-black/25 p-4 flex flex-col items-center justify-center relative overflow-hidden group min-h-[220px]">
-                      {layoutUrl ? (
-                        <div className="w-full flex justify-center items-center py-2 animate-fadeIn">
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onDrop={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                          const file = e.dataTransfer.files[0];
+                          if (file.type.startsWith("image/")) {
+                            await handleProcessAndSetLayoutImage(file);
+                          }
+                        }
+                      }}
+                      className="w-full rounded-xl border border-white/10 bg-black/25 p-4 flex flex-col items-center justify-center relative overflow-hidden group min-h-[220px] transition-all"
+                    >
+                      {uploadingLayout ? (
+                        <div className="flex flex-col items-center justify-center p-8 gap-3 animate-pulse">
+                          <Loader2 size={32} className="animate-spin text-[var(--gm-primary)]" />
+                          <span className="text-sm font-bold text-white tracking-wider">
+                            Carregando imagem no Layout...
+                          </span>
+                          <span className="text-xs text-white/40">
+                            Comprimindo e sincronizando arquivo
+                          </span>
+                        </div>
+                      ) : layoutUrl ? (
+                        <div className="w-full flex justify-center items-center py-2 animate-fadeIn relative">
                           <img
                             src={layoutUrl}
                             alt="Layout"
@@ -2404,11 +2460,28 @@ export default function Notes() {
                           />
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center justify-center text-center p-6 text-white/20 gap-2">
-                          <ImageIcon size={36} className="text-white/10 animate-pulse" />
-                          <span className="text-xs font-bold text-white/40 tracking-wider">NENHUM LAYOUT CARREGADO</span>
-                          <span className="text-[10.5px] text-white/20 max-w-[280px]">Adicione um link ou faça upload de uma imagem acima para visualizar o layout aqui.</span>
-                        </div>
+                        <label className="flex flex-col items-center justify-center text-center p-6 text-white/30 gap-2 cursor-pointer w-full h-full hover:bg-white/[0.02] rounded-lg transition-colors">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              if (e.target.files && e.target.files.length > 0) {
+                                await handleProcessAndSetLayoutImage(e.target.files[0]);
+                                e.target.value = "";
+                              }
+                            }}
+                          />
+                          <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover:text-[var(--gm-primary)] group-hover:border-[var(--gm-primary)]/40 transition-colors">
+                            <ImageIcon size={24} />
+                          </div>
+                          <span className="text-xs font-bold text-white/60 tracking-wider">
+                            NENHUM LAYOUT CARREGADO
+                          </span>
+                          <span className="text-[11px] text-white/40 max-w-[340px] leading-relaxed">
+                            Copie qualquer imagem e pressione <strong className="text-white font-black">Ctrl+V</strong> aqui, arraste um arquivo ou clique para selecionar.
+                          </span>
+                        </label>
                       )}
                     </div>
                   </div>

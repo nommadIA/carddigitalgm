@@ -54,8 +54,8 @@ export default function PixModal({
   return createPortal(
     <div className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
       <div className="glass rounded-lg w-full max-w-sm p-6 shadow-lg bg-zinc-900 border border-zinc-800">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-bold text-lg">Pagamento Pix</h3>
+        <div className="flex items-center justify-between mb-5 border-b border-white/10 pb-3">
+          <h3 className="text-white font-extrabold text-2xl sm:text-3xl tracking-tight">Pagamento Pix</h3>
           <button
             type="button"
             onClick={onClose}
@@ -68,8 +68,8 @@ export default function PixModal({
 
         {!settings.pix_key ? (
           <div className="text-center py-6">
-            <p className="text-slate-300 mb-4">Chave Pix não configurada.</p>
-            <p className="text-sm text-slate-500">Vá em Configurações para adicionar sua chave.</p>
+            <p className="text-slate-100 font-bold text-lg mb-2">Chave Pix não configurada.</p>
+            <p className="text-base text-slate-300">Vá em Configurações para adicionar sua chave.</p>
           </div>
         ) : (
           <>
@@ -81,15 +81,15 @@ export default function PixModal({
                   className="w-full h-auto max-w-[220px]"
                 />
               ) : (
-                <div className="w-48 h-48 flex items-center justify-center text-slate-400">
+                <div className="w-48 h-48 flex items-center justify-center text-slate-600 font-bold">
                     Gerando QR...
                 </div>
               )}
             </div>
 
             <div className="mt-4 text-center">
-               <p className="text-slate-400 text-sm uppercase tracking-wide">Valor a Pagar</p>
-               <p className="text-2xl font-bold text-white">R$ {total.toFixed(2)}</p>
+               <p className="text-slate-300 text-sm font-extrabold uppercase tracking-wide">Valor a Pagar</p>
+               <p className="text-3xl font-black text-white mt-0.5">R$ {total.toFixed(2)}</p>
             </div>
 
             <button

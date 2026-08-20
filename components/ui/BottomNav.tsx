@@ -31,27 +31,58 @@ const allNavItems = [
 
 export default function BottomNav() {
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
   const [expanded, setExpanded] = useState(true);
   const location = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeItemRef = useRef<HTMLAnchorElement>(null);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
 
   useEffect(() => {
     setMounted(true);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Centraliza automaticamente o item ativo no seletor horizontal ao mudar de rota ou expandir
   useEffect(() => {
-    if (expanded && activeItemRef.current) {
+    if (expanded && activeItemRef.current && isMobile) {
       activeItemRef.current.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
         inline: "center",
       });
     }
-  }, [location.pathname, expanded]);
+  }, [location.pathname, expanded, isMobile]);
 
-  if (!mounted) return null;
+  // Suporte a arrastar com mouse para o seletor horizontal
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    isDraggingRef.current = true;
+    startXRef.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeftRef.current = scrollRef.current.scrollLeft;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDraggingRef.current = false;
+  };
+
+  if (!mounted || !isMobile) return null;
 
   const navContent = (
     <div className="md:hidden">
@@ -72,10 +103,19 @@ export default function BottomNav() {
                 setExpanded(false);
               }
             }}
-            className="fixed bottom-0 left-0 right-0 z-[999999] bg-[#121316] backdrop-blur-2xl border-t border-white/10 shadow-[0_-12px_40px_rgba(0,0,0,0.9)] rounded-t-3xl pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] select-none touch-none after:absolute after:top-full after:left-0 after:right-0 after:h-24 after:bg-[#121316]"
-            style={{ zIndex: 999999 }}
+            className="fixed bottom-0 left-0 right-0 w-full z-[999999] gm-bottom-nav bg-black/10 dark:bg-black/10 backdrop-blur-md border-t border-white/10 border-b-0 border-x-0 !rounded-t-[28px] !rounded-b-none pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] shadow-none select-none"
+            style={{
+              zIndex: 999999,
+              borderTopLeftRadius: "28px",
+              borderTopRightRadius: "28px",
+              borderBottomLeftRadius: "0px",
+              borderBottomRightRadius: "0px",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              background: "rgba(10, 10, 14, 0.15)",
+            }}
           >
-            {/* BARRA SUPERIOR LARANJA CENTRALIZADA (CLIQUE OU ARRASTE PARA OCULTAR) */}
+            {/* BARRA SUPERIOR CENTRALIZADA (CLIQUE OU ARRASTE PARA OCULTAR) */}
             <div
               className="w-full flex justify-center py-1 cursor-pointer group active:opacity-80 transition-opacity"
               onClick={() => setExpanded(false)}
@@ -83,19 +123,19 @@ export default function BottomNav() {
               role="button"
               tabIndex={0}
             >
-              <div className="w-12 h-1.5 rounded-full bg-[color:var(--gm-primary)] group-hover:scale-105 active:scale-95 transition-all" />
+              <div className="w-12 h-1.5 rounded-full bg-white/20 group-hover:bg-white/40 active:scale-95 transition-all" />
             </div>
 
             {/* CONTAINER DO SELETOR DE ARRASTAR ESQUERDA/DIREITA */}
-            <div className="relative w-full max-w-lg mx-auto touch-pan-x">
-              {/* Degradês sutis nas bordas para sinalizar visualmente a rolagem horizontal */}
-              <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[#121316] to-transparent z-10 pointer-events-none rounded-l-3xl" />
-              <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[#121316] to-transparent z-10 pointer-events-none rounded-r-3xl" />
-
+            <div className="relative w-full max-w-lg mx-auto">
               {/* SELETOR ARRASTÁVEL COM ÍCONES LARANJA E TEXTO BRANCO */}
               <div
                 ref={scrollRef}
-                className="flex items-center gap-1.5 overflow-x-auto px-5 py-1 no-scrollbar snap-x touch-pan-x scroll-smooth"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUpOrLeave}
+                onMouseLeave={handleMouseUpOrLeave}
+                className="flex items-center gap-1.5 overflow-x-auto px-5 py-1 no-scrollbar snap-x touch-pan-x scroll-smooth cursor-grab active:cursor-grabbing select-none"
               >
                 {allNavItems.map((it) => {
                   const Icon = it.icon;
@@ -164,9 +204,13 @@ export default function BottomNav() {
             <button
               type="button"
               onClick={() => setExpanded(true)}
-              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-[#121316]/92 backdrop-blur-2xl border border-white/20 text-white font-black text-xs uppercase tracking-wider shadow-[0_8px_30px_rgba(0,0,0,0.85)] hover:border-[color:var(--gm-primary)] active:scale-95 transition-all cursor-pointer group"
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-zinc-950/75 dark:bg-zinc-950/75 backdrop-blur-2xl border border-white/15 shadow-xl text-white font-black text-xs uppercase tracking-wider hover:border-white/30 active:scale-95 transition-all cursor-pointer group"
               aria-label="Expandir Menu"
               title="Expandir Menu (Gaveteiro)"
+              style={{
+                backdropFilter: "blur(24px) saturate(180%)",
+                WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              }}
             >
               {/* Pontinhos em Laranja */}
               <GripHorizontal

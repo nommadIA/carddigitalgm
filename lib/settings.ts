@@ -77,7 +77,7 @@ const LOCAL_KEY = "gm.settings.cache.v1";
  * ✅ DEFAULT com shape certo (inclui timbrado_url)
  * Mantém também chaves antigas por compatibilidade.
  */
-const DEFAULT_SETTINGS: AppSettings & any = {
+export const DEFAULT_SETTINGS: AppSettings & any = {
   company_name: "GM edificação",
   pix_type: "CPF",
   pix_key: "",
@@ -137,98 +137,40 @@ export function getContrastColor(hex: string) {
   return yiq >= 128 ? "#000000" : "#ffffff";
 }
 
-export function applySettingsToDOM(s: AppSettings, persist = true) {
+export function getTenantStorageKey(tenantId?: string | null): string {
+  const tid = tenantId || (typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null);
+  return tid ? `gm.settings.cache.${tid}` : LOCAL_KEY;
+}
+
+export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: string | null) {
   const root = document.documentElement;
-  const currentAttr = root.getAttribute("data-theme");
-  const isLight = currentAttr ? currentAttr === "light" : localStorage.getItem("theme") !== "dark";
 
-  root.setAttribute("data-theme", isLight ? "light" : "dark");
-  root.classList.toggle("gm-light", isLight);
-  root.classList.toggle("gm-dark", !isLight);
-  root.classList.toggle("dark", !isLight);
+  // O app é 100% Dark Theme / Dark Glassmorphic (não existe tema claro)
+  root.setAttribute("data-theme", "dark");
+  root.classList.remove("gm-light", "light");
+  root.classList.add("gm-dark", "dark");
+  localStorage.setItem("theme", "dark");
 
-  let primary = s.brand_primary;
-  let accent = s.brand_accent;
-  let bg = s.brand_bg;
-  let title = "";
-  let subtitle = "";
-  let icon = "";
-  let button = "";
+  const tid = tenantId || s.tenant_id || (typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null);
+  const tenantColors = s.bio_config?.theme_colors_dark;
+  const tenantLocalColors = tid && typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem(`gm_colors_dark_${tid}`) || "null") : null;
+  const globalLocalColors = typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem("gm_colors_dark") || "null") : null;
+  const savedDark = tenantLocalColors || globalLocalColors || tenantColors;
 
-  let menu_primary = "";
-  let menu_bg = "";
-  let menu_title = "";
-  let menu_subtitle = "";
-  let menu_icon = "";
-  let menu_button = "";
+  let primary = savedDark?.primary || s.brand_primary || "#FE540B";
+  let accent = savedDark?.accent || s.brand_accent || primary || "#FF7A38";
+  let bg = savedDark?.bg || s.brand_bg || "#0B0B0C";
+  let title = savedDark?.title || "#FFFFFF";
+  let subtitle = savedDark?.subtitle || "#8B8B92";
+  let icon = savedDark?.icon || primary;
+  let button = savedDark?.button || primary;
 
-  if (isLight) {
-    const savedLight = JSON.parse(localStorage.getItem("gm_colors_light") || "null") || s.bio_config?.theme_colors_light;
-    if (savedLight) {
-      primary = savedLight.primary || "#FF6900";
-      accent = savedLight.accent || "#FF6900";
-      bg = savedLight.bg || "#F7F8FA";
-      title = savedLight.title || "#18181B";
-      subtitle = savedLight.subtitle || "#686D76";
-      icon = savedLight.icon || "#FF6900";
-      button = savedLight.button || savedLight.accent || "#FF6900";
-
-      menu_primary = savedLight.menu_primary || "#FF6900";
-      menu_bg = savedLight.menu_bg || "#FF6900";
-      menu_title = savedLight.menu_title || "#FFFFFF";
-      menu_subtitle = savedLight.menu_subtitle || "rgba(255,255,255,0.85)";
-      menu_icon = savedLight.menu_icon || "#FFFFFF";
-      menu_button = savedLight.menu_button || "#FF6900";
-    } else {
-      primary = "#FF6900";
-      accent = "#FF6900";
-      bg = "#F7F8FA";
-      title = "#18181B";
-      subtitle = "#686D76";
-      icon = "#FF6900";
-      button = "#FF6900";
-
-      menu_primary = "#FF6900";
-      menu_bg = "#FF6900";
-      menu_title = "#FFFFFF";
-      menu_subtitle = "rgba(255,255,255,0.85)";
-      menu_icon = "#FFFFFF";
-      menu_button = "#FF6900";
-    }
-  } else {
-    const savedDark = JSON.parse(localStorage.getItem("gm_colors_dark") || "null") || s.bio_config?.theme_colors_dark;
-    if (savedDark) {
-      primary = savedDark.primary || s.brand_primary || "#FF7B17";
-      accent = savedDark.accent || s.brand_accent || "#FF7B17";
-      bg = savedDark.bg || s.brand_bg || "#0F1115";
-      title = savedDark.title || "#FFFFFF";
-      subtitle = savedDark.subtitle || "#B6BDC8";
-      icon = savedDark.icon || s.brand_accent || "#FF7B17";
-      button = savedDark.button || savedDark.accent || "#FF7B17";
-
-      menu_primary = savedDark.menu_primary || s.brand_primary || "#FF7B17";
-      menu_bg = savedDark.menu_bg || s.brand_bg || "#181B22";
-      menu_title = savedDark.menu_title || "#FFFFFF";
-      menu_subtitle = savedDark.menu_subtitle || "#B6BDC8";
-      menu_icon = savedDark.menu_icon || s.brand_accent || "#BFC7D5";
-      menu_button = savedDark.menu_button || savedDark.accent || "#FF7B17";
-    } else {
-      primary = s.brand_primary || "#FF7B17";
-      accent = s.brand_accent || "#FF7B17";
-      bg = s.brand_bg || "#0F1115";
-      title = "#FFFFFF";
-      subtitle = "#B6BDC8";
-      icon = s.brand_accent || "#FF7B17";
-      button = s.brand_accent || "#FF7B17";
-
-      menu_primary = s.brand_primary || "#FF7B17";
-      menu_bg = s.brand_bg || "#181B22";
-      menu_title = "#FFFFFF";
-      menu_subtitle = "#B6BDC8";
-      menu_icon = s.brand_accent || "#BFC7D5";
-      menu_button = s.brand_accent || "#FF7B17";
-    }
-  }
+  let menu_primary = savedDark?.menu_primary || primary;
+  let menu_bg = savedDark?.menu_bg || "#131315";
+  let menu_title = savedDark?.menu_title || "#FFFFFF";
+  let menu_subtitle = savedDark?.menu_subtitle || "#8B8B92";
+  let menu_icon = savedDark?.menu_icon || primary;
+  let menu_button = savedDark?.menu_button || primary;
 
   // No modo preview (!persist), respeita as cores passadas no objeto s sem sobreescrever com localStorage
   if (!persist) {
@@ -239,6 +181,7 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
 
   if (primary) {
     root.style.setProperty("--gm-primary", primary);
+    root.style.setProperty("--primary", primary);
     root.style.setProperty("--brand-primary", primary);
     
     // Atualiza a cor da barra de status do celular
@@ -269,15 +212,18 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
 
   if (bg) {
     root.style.setProperty("--gm-bg", bg);
+    root.style.setProperty("--bg", bg);
     root.style.setProperty("--brand-bg", bg);
   }
 
   if (title) {
     root.style.setProperty("--gm-title", title);
+    root.style.setProperty("--text", title);
   }
 
   if (subtitle) {
     root.style.setProperty("--gm-subtitle", subtitle);
+    root.style.setProperty("--text-secondary", subtitle);
   }
 
   if (icon) {
@@ -317,56 +263,16 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
     root.style.setProperty("--app-font", s.font_family);
   }
 
-  // Configuração dos botões por tema (Modo Claro / Modo Escuro)
-  let btnStyle = "solid";
-  let btnBg = primary || "#FF6900";
-  let btnBorder = primary || "#FF6900";
-  let btnText = isLight ? "#18181B" : "#FFFFFF";
-  let btnIcon = primary || "#FF6900";
+  // Configuração dos botões (Modo Escuro / Vidro Fosco Dark)
+  const tenantBtn = s.button_config_dark || s.bio_config?.button_config_dark;
+  const tenantLocalBtn = tid && typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem(`gm_button_dark_${tid}`) || "null") : null;
+  const savedBtnDark = tenantBtn || tenantLocalBtn;
 
-  if (isLight) {
-    const savedBtnLight = JSON.parse(localStorage.getItem("gm_button_light") || "null") || s.button_config_light || s.bio_config?.button_config_light;
-    if (savedBtnLight) {
-      btnStyle = savedBtnLight.style || "vazado";
-      btnBg = savedBtnLight.bg ?? "transparent";
-      btnBorder = savedBtnLight.border || primary || "#FF6900";
-      btnText = savedBtnLight.text || "#18181B";
-      btnIcon = savedBtnLight.icon || primary || "#FF6900";
-    } else if (s.button_style || localStorage.getItem("gm_button_bg")) {
-      btnStyle = s.button_style || localStorage.getItem("gm_button_style_fallback") || "vazado";
-      btnBg = s.button_bg || localStorage.getItem("gm_button_bg") || "transparent";
-      btnBorder = s.button_border || localStorage.getItem("gm_button_border") || primary || "#FF6900";
-      btnText = s.button_text || localStorage.getItem("gm_button_text") || "#18181B";
-      btnIcon = s.button_icon || localStorage.getItem("gm_button_icon") || primary || "#FF6900";
-    } else {
-      btnStyle = "vazado";
-      btnBg = "transparent";
-      btnBorder = primary || "#FF6900";
-      btnText = "#18181B";
-      btnIcon = primary || "#FF6900";
-    }
-  } else {
-    const savedBtnDark = JSON.parse(localStorage.getItem("gm_button_dark") || "null") || s.button_config_dark || s.bio_config?.button_config_dark;
-    if (savedBtnDark) {
-      btnStyle = savedBtnDark.style || "vazado";
-      btnBg = savedBtnDark.bg ?? "transparent";
-      btnBorder = savedBtnDark.border || primary || "#FF7B17";
-      btnText = savedBtnDark.text || "#FFFFFF";
-      btnIcon = savedBtnDark.icon || primary || "#FF7B17";
-    } else if (s.button_style || localStorage.getItem("gm_button_bg")) {
-      btnStyle = s.button_style || localStorage.getItem("gm_button_style_fallback") || "vazado";
-      btnBg = s.button_bg || localStorage.getItem("gm_button_bg") || "transparent";
-      btnBorder = s.button_border || localStorage.getItem("gm_button_border") || primary || "#FF7B17";
-      btnText = s.button_text || localStorage.getItem("gm_button_text") || "#FFFFFF";
-      btnIcon = s.button_icon || localStorage.getItem("gm_button_icon") || primary || "#FF7B17";
-    } else {
-      btnStyle = "vazado";
-      btnBg = "transparent";
-      btnBorder = primary || "#FF7B17";
-      btnText = "#FFFFFF";
-      btnIcon = primary || "#FF7B17";
-    }
-  }
+  let btnStyle = savedBtnDark?.style || s.button_style || "vazado";
+  let btnBg = savedBtnDark?.bg ?? (s.button_bg || "transparent");
+  let btnBorder = savedBtnDark?.border || s.button_border || primary || "#FF7B17";
+  let btnText = savedBtnDark?.text || s.button_text || "#FFFFFF";
+  let btnIcon = savedBtnDark?.icon || s.button_icon || primary || "#FF7B17";
 
   root.setAttribute("data-button-style", btnStyle);
   if (btnBg) root.style.setProperty("--gm-btn-bg", btnBg);
@@ -385,10 +291,12 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
     root.style.setProperty("--gm-app-bg-url", s.app_background_url ? `url("${s.app_background_url}")` : "none");
   }
   
-  if (s.app_background_url) {
+  if (s.app_background_url || s.mobile_app_background_url) {
     root.classList.add("gm-has-bg");
+    document.body?.classList.add("gm-has-bg");
   } else {
     root.classList.remove("gm-has-bg");
+    document.body?.classList.remove("gm-has-bg");
   }
   
   const videoEl = document.getElementById("gm-video-bg") as HTMLVideoElement;
@@ -436,26 +344,25 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
   root.style.setProperty("--gm-mobile-bg-blur-effective", `${meffectiveBlur}px`);
 
   // ✅ Escala Global do App (Zoom - Padronizado e proporcional)
-  let scale = Number(s.app_scale ?? localStorage.getItem("gm_app_scale_fallback") ?? 1.0);
+  let scale = Number(s.app_scale ?? 1.0);
   if (!Number.isFinite(scale) || scale > 1.35 || scale < 0.75) scale = 1.0;
 
-  let mobileScale = Number(s.mobile_scale ?? localStorage.getItem("gm_mobile_scale_fallback") ?? 1.0);
+  let mobileScale = Number(s.mobile_scale ?? 1.0);
   if (!Number.isFinite(mobileScale) || mobileScale > 1.35 || mobileScale < 0.75) mobileScale = 1.0;
   
   s.app_scale = scale;
   s.mobile_scale = mobileScale;
-  localStorage.setItem("gm_app_scale_fallback", String(scale));
-  localStorage.setItem("gm_mobile_scale_fallback", String(mobileScale));
 
   root.style.setProperty("--gm-app-scale", String(scale));
   root.style.setProperty("--gm-mobile-scale", String(mobileScale));
-  
-  // Se o usuário quer que o máximo (2) seja o tamanho normal (100%), multiplicamos por 50
-  // root.style.fontSize = `${scale * 50}%`; // Removido, agora é feito no CSS via media query
 
   if (persist) {
     try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(s));
+      writeSettingsLocal(s, tid);
+      if (tid) {
+        if (savedDark) localStorage.setItem(`gm_colors_dark_${tid}`, JSON.stringify(savedDark));
+        if (savedBtnDark) localStorage.setItem(`gm_button_dark_${tid}`, JSON.stringify(savedBtnDark));
+      }
     } catch {}
   }
 
@@ -465,9 +372,38 @@ export function applySettingsToDOM(s: AppSettings, persist = true) {
   } catch {}
 }
 
-export function readSettingsLocal(): AppSettings | null {
+export function writeSettingsLocal(s: AppSettings, tenantId?: string | null) {
   try {
-    const raw = localStorage.getItem(LOCAL_KEY);
+    const tidKey = getTenantStorageKey(tenantId || s.tenant_id);
+    const serialized = JSON.stringify(s);
+    localStorage.setItem(tidKey, serialized);
+    localStorage.setItem(LOCAL_KEY, serialized);
+    if (s.owner) {
+      localStorage.setItem(`gm.settings.cache.${s.owner}`, serialized);
+    }
+  } catch {}
+}
+
+export function readSettingsLocal(tenantId?: string | null): AppSettings | null {
+  try {
+    const tidKey = getTenantStorageKey(tenantId);
+    let raw = localStorage.getItem(tidKey);
+    if (!raw && tidKey !== LOCAL_KEY) {
+      raw = localStorage.getItem(LOCAL_KEY);
+    }
+    if (!raw) {
+      // Try search for any owner cache
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith("gm.settings.cache.")) {
+          const val = localStorage.getItem(k);
+          if (val) {
+            raw = val;
+            break;
+          }
+        }
+      }
+    }
     if (!raw) return null;
     return JSON.parse(raw);
   } catch {
@@ -558,13 +494,11 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
         if (!isQuiet) {
           console.warn("fetchSettings warn (tenant):", errorMsg);
         }
-        const local = readSettingsLocal();
+        const local = readSettingsLocal(tenantId);
         if (local) return local;
       } else if (byTenant) {
         const merged = mergeWithFallbacks(byTenant);
-        try {
-          localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
-        } catch {}
+        writeSettingsLocal(merged, tenantId);
         return merged;
       }
 
@@ -583,7 +517,7 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
           if (!isQuiet) {
             console.warn("fetchSettings warn (owner):", errorMsg);
           }
-          const local = readSettingsLocal();
+          const local = readSettingsLocal(tenantId);
           if (local) return local;
           return DEFAULT_SETTINGS;
         }
@@ -614,23 +548,18 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
 
           if (errUpsert) {
             console.error("settings migrate error:", errUpsert);
-            // se falhar migração, pelo menos devolve o do owner para não travar
             const fallbackOwner = mergeWithFallbacks(byOwner);
-            try {
-              localStorage.setItem(LOCAL_KEY, JSON.stringify(fallbackOwner));
-            } catch {}
+            writeSettingsLocal(fallbackOwner, tenantId);
             return fallbackOwner;
           }
 
           const merged = mergeWithFallbacks(migrated);
-          try {
-            localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
-          } catch {}
+          writeSettingsLocal(merged, tenantId);
           return merged;
         }
       }
 
-      const local = readSettingsLocal();
+      const local = readSettingsLocal(tenantId);
       if (local) return local;
       return DEFAULT_SETTINGS;
     }
@@ -651,15 +580,13 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
       if (!isQuiet) {
         console.warn("fetchSettings warn:", errorMsg);
       }
-      const local = readSettingsLocal();
+      const local = readSettingsLocal(null);
       if (local) return local;
       return DEFAULT_SETTINGS;
     }
 
     const merged = mergeWithFallbacks(data);
-    try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
-    } catch {}
+    writeSettingsLocal(merged, null);
     return merged;
   } catch (e: any) {
     const errorMsg = e?.message || String(e);
@@ -667,9 +594,9 @@ export async function fetchSettingsSupabase(tenantId?: string | null) {
     if (!isQuiet) {
       console.warn("fetchSettings warn:", errorMsg);
     }
-    const local = readSettingsLocal();
+    const local = readSettingsLocal(tenantId);
     if (local) return local;
-    return DEFAULT_SETTINGS; // ✅ nunca trava
+    return DEFAULT_SETTINGS;
   }
 }
 
@@ -704,19 +631,12 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
     payload.budget_approved_reminder_times = normalizeReminderTimes(payload.budget_approved_reminder_times);
   }
 
-  // Sempre salva no localStorage para garantir persistência local rápida e offline
-  if (payload.button_config_light) localStorage.setItem("gm_button_light", JSON.stringify(payload.button_config_light));
-  if (payload.button_config_dark) localStorage.setItem("gm_button_dark", JSON.stringify(payload.button_config_dark));
-  if (payload.button_style) localStorage.setItem("gm_button_style_fallback", payload.button_style);
-  if (payload.button_bg) localStorage.setItem("gm_button_bg", payload.button_bg);
-  if (payload.button_border) localStorage.setItem("gm_button_border", payload.button_border);
-  if (payload.button_text) localStorage.setItem("gm_button_text", payload.button_text);
-  if (payload.button_icon) localStorage.setItem("gm_button_icon", payload.button_icon);
-  if (payload.app_scale != null) localStorage.setItem("gm_app_scale_fallback", String(payload.app_scale));
-  if (payload.mobile_scale != null) localStorage.setItem("gm_mobile_scale_fallback", String(payload.mobile_scale));
+  const tid = tenantId || payload.tenant_id;
+  if (tid) {
+    if (payload.button_config_dark) localStorage.setItem(`gm_button_dark_${tid}`, JSON.stringify(payload.button_config_dark));
+  }
 
   // Removemos chaves de colunas virtuais/dinâmicas para enviar ao Supabase sem gerar aviso PGRST204 de coluna ausente
-  // Todas estas customizações continuam salvas perfeitamente dentro de payload.bio_config e localStorage!
   const dbPayload = { ...payload };
   delete (dbPayload as any).button_config_light;
   delete (dbPayload as any).button_config_dark;
@@ -728,24 +648,65 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
 
   let dbData: any = null;
 
-  const res = await supabase
-    .from("app_settings")
-    .upsert(dbPayload, { onConflict: "tenant_id" })
-    .select("*")
-    .maybeSingle();
+  if (tid) {
+    const res = await supabase
+      .from("app_settings")
+      .upsert(dbPayload, { onConflict: "tenant_id" })
+      .select("*")
+      .maybeSingle();
 
-  if (res.error) {
-    console.info("Info do salvamento no Supabase (configurações salvas localmente e no bio_config):", res.error);
-  } else {
-    dbData = res.data;
+    if (res.error) {
+      console.info("Info do salvamento no Supabase por tenant:", res.error);
+      // Fallback: tentar atualizar por owner se existir
+      if (owner) {
+        const { data: existingOwner } = await supabase
+          .from("app_settings")
+          .select("id")
+          .eq("owner", owner)
+          .maybeSingle();
+        
+        if (existingOwner?.id) {
+          const updateRes = await supabase
+            .from("app_settings")
+            .update(dbPayload)
+            .eq("id", existingOwner.id)
+            .select("*")
+            .maybeSingle();
+          if (!updateRes.error) dbData = updateRes.data;
+        }
+      }
+    } else {
+      dbData = res.data;
+    }
+  } else if (owner) {
+    const { data: existingOwner } = await supabase
+      .from("app_settings")
+      .select("id")
+      .eq("owner", owner)
+      .maybeSingle();
+
+    if (existingOwner?.id) {
+      const updateRes = await supabase
+        .from("app_settings")
+        .update(dbPayload)
+        .eq("id", existingOwner.id)
+        .select("*")
+        .maybeSingle();
+      if (!updateRes.error) dbData = updateRes.data;
+    } else {
+      const insertRes = await supabase
+        .from("app_settings")
+        .insert(dbPayload)
+        .select("*")
+        .maybeSingle();
+      if (!insertRes.error) dbData = insertRes.data;
+    }
   }
 
   const settings = { ...DEFAULT_SETTINGS, ...(dbData || {}), ...payload } as AppSettings;
-  try {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(settings));
-  } catch {}
+  writeSettingsLocal(settings, tenantId);
 
-  applySettingsToDOM(settings);
+  applySettingsToDOM(settings, true, tenantId);
   return settings;
 }
 

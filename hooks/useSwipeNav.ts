@@ -4,9 +4,9 @@ type Options = {
   enabled?: boolean;
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
-  thresholdPx?: number;     // distância mínima
-  restraintPx?: number;     // tolerância vertical
-  allowedTimeMs?: number;   // tempo máximo
+  thresholdPx?: number;      // distância mínima do swipe
+  restraintPx?: number;      // tolerância vertical
+  allowedTimeMs?: number;    // tempo máximo do gesto
   stopPropagation?: boolean; // parar propagação do evento
 };
 
@@ -14,9 +14,9 @@ export function useSwipeNav<T extends HTMLElement>({
   enabled = true,
   onSwipeLeft,
   onSwipeRight,
-  thresholdPx = 60,
-  restraintPx = 80,
-  allowedTimeMs = 450,
+  thresholdPx = 50,
+  restraintPx = 100,
+  allowedTimeMs = 500,
   stopPropagation = false,
 }: Options) {
   const ref = useRef<T | null>(null);
@@ -36,7 +36,7 @@ export function useSwipeNav<T extends HTMLElement>({
       if (!node) return false;
       return Boolean(
         node.closest(
-          "input, textarea, select, [data-no-swipe], .no-swipe, .overflow-x-auto, .snap-x"
+          "input, textarea, select, button, a, [data-no-swipe], .no-swipe, .gm-date-picker-popup"
         )
       );
     };
@@ -51,13 +51,6 @@ export function useSwipeNav<T extends HTMLElement>({
       startTime = Date.now();
     };
 
-    const onTouchMove = (e: TouchEvent) => {
-      if (!tracking) return;
-      if (stopPropagation) e.stopPropagation();
-      // Se quiser bloquear “voltar página” do browser em iOS, mantenha:
-      // e.preventDefault();
-    };
-
     const onTouchEnd = (e: TouchEvent) => {
       if (!tracking) return;
       if (stopPropagation) e.stopPropagation();
@@ -67,25 +60,30 @@ export function useSwipeNav<T extends HTMLElement>({
       const distX = t.pageX - startX;
       const distY = t.pageY - startY;
       const elapsed = Date.now() - startTime;
+      const absX = Math.abs(distX);
+      const absY = Math.abs(distY);
 
       if (elapsed > allowedTimeMs) return;
-      if (Math.abs(distY) > restraintPx) return;
-      if (Math.abs(distX) < thresholdPx) return;
 
-      if (distX < 0) onSwipeLeft?.();
-      else onSwipeRight?.();
+      // Swipe Horizontal predominante
+      if (absX >= thresholdPx && absX >= absY * 1.5 && absY <= restraintPx) {
+        if (distX < 0) {
+          onSwipeLeft?.();
+        } else {
+          onSwipeRight?.();
+        }
+      }
     };
 
     el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: true });
     el.addEventListener("touchend", onTouchEnd, { passive: true });
 
     return () => {
       el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [enabled, onSwipeLeft, onSwipeRight, thresholdPx, restraintPx, allowedTimeMs]);
+  }, [enabled, onSwipeLeft, onSwipeRight, thresholdPx, restraintPx, allowedTimeMs, stopPropagation]);
 
   return ref;
 }
+

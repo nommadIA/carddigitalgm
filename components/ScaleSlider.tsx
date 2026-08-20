@@ -24,7 +24,7 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
   };
 
   return (
-    <div className="flex items-center gap-3 bg-white dark:bg-zinc-900/80 backdrop-blur-md p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+    <div className="flex items-center gap-3 fora p-2.5 rounded-xl border border-white/10">
       <input 
         type="range" 
         min={0.8} 
@@ -42,7 +42,7 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
           min={0.8}
           max={1.2}
           step={0.01}
-          className="w-16 bg-zinc-50 dark:bg-zinc-950 text-center font-bold text-sm text-[var(--gm-primary)] rounded-lg border border-zinc-200 dark:border-zinc-800 focus:border-[var(--gm-primary)] focus:outline-none h-8 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="w-16 barra text-center font-bold text-sm text-[var(--gm-primary)] rounded-lg border border-white/10 focus:border-[var(--gm-primary)] focus:outline-none h-8 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           value={localValue}
           onChange={handleInput}
           onBlur={handleCommit}
@@ -51,7 +51,7 @@ export const ScaleSlider = ({ value, onChange, isMobile }: { value: number, onCh
             if (e.key === "Enter") handleCommit();
           }}
         />
-        <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">x</span>
+        <span className="text-xs font-bold text-slate-400">x</span>
       </div>
     </div>
   );

@@ -102,7 +102,23 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const sidebarRef = useRef<HTMLElement | null>(null);
+  const handleRef = useRef<HTMLDivElement | null>(null);
+
+  const EXPANDED_SIDEBAR_WIDTH = 192;
+  const COLLAPSED_SIDEBAR_WIDTH = 56;
+
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("gm.sidebar") === "1");
+  const sidebarWidth = collapsed ? COLLAPSED_SIDEBAR_WIDTH : EXPANDED_SIDEBAR_WIDTH;
+
+  const toggleSidebar = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("gm.sidebar", next ? "1" : "0");
+      return next;
+    });
+  };
+
   const [showTutorial, setShowTutorial] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
@@ -169,6 +185,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     } else {
       setShowTutorial(false);
     }
+
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, behavior: "auto" });
+    }
+    window.scrollTo({ top: 0, behavior: "auto" });
   }, [location.pathname]);
   
   // ✅ 2) Search na Sidebar
@@ -201,24 +222,19 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const handleThemeUpdate = () => {
+    const handleThemeUpdate = (e: any) => {
       localStorage.setItem("theme", "dark");
       document.documentElement.setAttribute("data-theme", "dark");
       document.documentElement.classList.remove("gm-light", "light");
       document.documentElement.classList.add("gm-dark", "dark");
       setThemeMode("dark");
 
-      if (settingsCacheRef.current) {
-        applySettingsToDOM(settingsCacheRef.current);
-      } else {
-        fetchSettingsSupabase(tenantId)
-          .then((s) => {
-            if (s) {
-              settingsCacheRef.current = s;
-              applySettingsToDOM(s);
-            }
-          })
-          .catch(() => {});
+      const localS = readSettingsLocal(tenantId);
+      if (localS) {
+        settingsCacheRef.current = localS;
+        applySettingsToDOM(localS, true, tenantId);
+      } else if (settingsCacheRef.current) {
+        applySettingsToDOM(settingsCacheRef.current, true, tenantId);
       }
     };
 
@@ -281,40 +297,8 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   const mainRef = useRef<HTMLElement | null>(null);
 
-  // Swipe Navigation Logic
-  const currentIndex = nav.findIndex(n => n.to === location.pathname);
-  
-  const handleSwipeLeft = () => {
-    if (currentIndex >= 0 && currentIndex < nav.length - 1) {
-      navigate(nav[currentIndex + 1].to);
-    }
-  };
-
-  const handleSwipeRight = () => {
-    if (currentIndex > 0) {
-      navigate(nav[currentIndex - 1].to);
-    }
-  };
-
-  const swipeRef = useSwipeNav<HTMLDivElement>({
-    onSwipeLeft: handleSwipeLeft,
-    onSwipeRight: handleSwipeRight,
-    thresholdPx: 80, // Aumentado um pouco para evitar swipes acidentais
-    restraintPx: 100, // Permitir um pouco mais de movimento vertical
-  });
-
-  // Merge refs
-  const setRefs = (node: HTMLDivElement | null) => {
-    mainRef.current = node;
-    if (swipeRef) {
-      swipeRef.current = node;
-    }
-  };
-
+  // Efeito de Parallax Suave Contínuo no Plano de Fundo (Mouse + Scroll)
   useEffect(() => {
-    const el = mainRef.current as HTMLElement | null;
-    if (!el) return;
-
     const reduced =
       typeof window !== "undefined" &&
       window.matchMedia &&
@@ -322,6 +306,8 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
     if (reduced) {
       document.documentElement.style.setProperty("--gm-app-bg-parallax-y", "0px");
+      document.documentElement.style.setProperty("--gm-app-bg-parallax-x", "0px");
+      document.documentElement.style.setProperty("--gm-app-bg-parallax-y-mouse", "0px");
       document.documentElement.style.setProperty("--gm-app-bg-depth-scale", "1.04");
       return;
     }
@@ -329,201 +315,139 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-    let targetY = 0;
-    let currentY = 0;
+    // Scroll targets
+    let targetScrollY = 0;
+    let currentScrollY = 0;
     let targetDepth = 1.04;
     let currentDepth = 1.04;
+
+    // Mouse targets
+    let targetMouseX = 0;
+    let targetMouseY = 0;
+    let currentMouseX = 0;
+    let currentMouseY = 0;
+
     let raf = 0;
+    let isRunning = false;
 
-    const STRENGTH = 0.038;
-    const MAX_Y = 80;
+    // Constantes de física ultra suave (damping suave, sem solavancos)
+    const SCROLL_STRENGTH = 0.045; // Suave e contínuo ao rolar
+    const MAX_SCROLL_Y = 160;
     const BASE_DEPTH = 1.04;
-    const DEPTH_GAIN = 0.000012;
-    const MAX_DEPTH_ADD = 0.03;
+    const DEPTH_GAIN = 0.000015;
+    const MAX_DEPTH_ADD = 0.035;
 
-    const updateTargets = () => {
-      const st = el.scrollTop || 0;
-      targetY = clamp(-st * STRENGTH, -MAX_Y, MAX_Y);
-      const d = BASE_DEPTH + clamp(st * DEPTH_GAIN, 0, MAX_DEPTH_ADD);
-      targetDepth = d;
+    const MOUSE_MAX_X = 14;
+    const MOUSE_MAX_Y = 10;
+
+    const getScrollTop = () => {
+      const mainEl = mainRef.current;
+      const mainScroll = mainEl ? mainEl.scrollTop : 0;
+      const winScroll = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      return Math.max(mainScroll, winScroll);
+    };
+
+    const updateScrollTargets = () => {
+      const st = getScrollTop();
+      targetScrollY = clamp(-st * SCROLL_STRENGTH, -MAX_SCROLL_Y, MAX_SCROLL_Y);
+      targetDepth = BASE_DEPTH + clamp(st * DEPTH_GAIN, 0, MAX_DEPTH_ADD);
     };
 
     const tick = () => {
-      raf = 0;
-      currentY = lerp(currentY, targetY, 0.06);
-      currentDepth = lerp(currentDepth, targetDepth, 0.06);
+      // Interpolação amortecida suave (smooth ease-out)
+      currentScrollY = lerp(currentScrollY, targetScrollY, 0.045);
+      currentDepth = lerp(currentDepth, targetDepth, 0.045);
+      currentMouseX = lerp(currentMouseX, targetMouseX, 0.04);
+      currentMouseY = lerp(currentMouseY, targetMouseY, 0.04);
 
-      document.documentElement.style.setProperty("--gm-app-bg-parallax-y", `${currentY.toFixed(2)}px`);
+      document.documentElement.style.setProperty("--gm-app-bg-parallax-y", `${currentScrollY.toFixed(2)}px`);
       document.documentElement.style.setProperty("--gm-app-bg-depth-scale", `${currentDepth.toFixed(3)}`);
+      document.documentElement.style.setProperty("--gm-app-bg-parallax-x", `${currentMouseX.toFixed(2)}px`);
+      document.documentElement.style.setProperty("--gm-app-bg-parallax-y-mouse", `${currentMouseY.toFixed(2)}px`);
 
-      if (Math.abs(currentY - targetY) > 0.08 || Math.abs(currentDepth - targetDepth) > 0.001) {
+      const diffScroll = Math.abs(currentScrollY - targetScrollY);
+      const diffDepth = Math.abs(currentDepth - targetDepth);
+      const diffMouseX = Math.abs(currentMouseX - targetMouseX);
+      const diffMouseY = Math.abs(currentMouseY - targetMouseY);
+
+      if (diffScroll > 0.02 || diffDepth > 0.0005 || diffMouseX > 0.02 || diffMouseY > 0.02) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        isRunning = false;
+      }
+    };
+
+    const startAnimation = () => {
+      if (!isRunning) {
+        isRunning = true;
         raf = requestAnimationFrame(tick);
       }
     };
 
-    let lastScrollY = 0;
     let activeScrollElement: HTMLElement | null = null;
 
     const onScroll = (e: Event) => {
       const target = e.target as HTMLElement;
-      
-      // Ignore scrolls from elements that are not scrollable or very small
-      if (!target || !target.scrollHeight || target.scrollHeight <= target.clientHeight + 10) return;
-      
-      // If we're scrolling a different element, reset
-      if (activeScrollElement !== target) {
-        if (activeScrollElement) {
-          activeScrollElement.removeAttribute('data-active-scroll');
-        }
-        activeScrollElement = target;
-        activeScrollElement.setAttribute('data-active-scroll', 'true');
-        lastScrollY = target.scrollTop;
-      }
-
-      // Update parallax if it's the main container
-      if (target === el) {
-        updateTargets();
-        if (!raf) raf = requestAnimationFrame(tick);
-      }
-
-      const currentScrollY = target.scrollTop;
-      const maxScroll = target.scrollHeight - target.clientHeight;
-      
-      setCanScrollUp(currentScrollY > 100);
-      setCanScrollDown(maxScroll > 0 && currentScrollY < maxScroll - 50);
-      
-      lastScrollY = currentScrollY;
-    };
-
-    // Check periodically to update indicators even if not scrolling (e.g., on mount or resize)
-    const checkScroll = () => {
-      let target = activeScrollElement;
-      if (!target || !document.contains(target)) {
-        // Try to find the scrollable element marked with data-active-scroll
-        target = document.querySelector('[data-active-scroll="true"]') as HTMLElement;
-        
-        if (!target) {
-          const centerEl = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-          if (centerEl) {
-            let curr: HTMLElement | null = centerEl as HTMLElement;
-            while (curr && curr !== document.body) {
-              if (curr.scrollHeight > curr.clientHeight + 10 && 
-                  (window.getComputedStyle(curr).overflowY === 'auto' || window.getComputedStyle(curr).overflowY === 'scroll' || curr.classList.contains('gm-main'))) {
-                target = curr;
-                break;
-              }
-              curr = curr.parentElement;
-            }
+      if (target && target.scrollHeight && target.scrollHeight > target.clientHeight + 10) {
+        if (activeScrollElement !== target) {
+          if (activeScrollElement) {
+            activeScrollElement.removeAttribute('data-active-scroll');
           }
-        }
-
-        // Fallback
-        if (!target) {
-          const elements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
-          for (let i = elements.length - 1; i >= 0; i--) {
-            const el = elements[i] as HTMLElement;
-            if (el.scrollHeight > el.clientHeight + 10) {
-              target = el;
-              break;
-            }
-          }
+          activeScrollElement = target;
+          activeScrollElement.setAttribute('data-active-scroll', 'true');
         }
       }
+
+      updateScrollTargets();
+      startAnimation();
 
       if (target) {
-        const currentScrollY = target.scrollTop;
-        const maxScroll = target.scrollHeight - target.clientHeight;
-        const nextUp = currentScrollY > 20;
-        const nextDown = maxScroll > 10 && currentScrollY < maxScroll - 20;
-        setCanScrollUp(prev => prev !== nextUp ? nextUp : prev);
-        setCanScrollDown(prev => prev !== nextDown ? nextDown : prev);
-      } else {
-        setCanScrollUp(false);
-        setCanScrollDown(false);
+        const currentY = target.scrollTop || window.scrollY || 0;
+        const maxScroll = (target.scrollHeight || document.documentElement.scrollHeight) - (target.clientHeight || window.innerHeight);
+        setCanScrollUp(currentY > 100);
+        setCanScrollDown(maxScroll > 0 && currentY < maxScroll - 50);
       }
     };
 
-    updateTargets();
-    checkScroll();
-    tick();
+    const onMouseMove = (e: MouseEvent | PointerEvent) => {
+      // Ignora eventos de toque no mobile para não interferir na rolagem
+      if ("pointerType" in e && e.pointerType === "touch") return;
 
-    // Use capture: true to catch all scroll events on the page
-    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
-    window.addEventListener("resize", checkScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll, { capture: true } as any);
-      window.removeEventListener("resize", checkScroll);
-      if (raf) cancelAnimationFrame(raf);
-      document.documentElement.style.setProperty("--gm-app-bg-parallax-y", "0px");
-      document.documentElement.style.setProperty("--gm-app-bg-depth-scale", `${BASE_DEPTH}`);
-    };
-  }, []);
-
-  useEffect(() => {
-    const reduced =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    const isTouch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
-
-    if (reduced || isTouch) {
-      document.documentElement.style.setProperty("--gm-app-bg-parallax-x", "0px");
-      document.documentElement.style.setProperty("--gm-app-bg-parallax-y-mouse", "0px");
-      return;
-    }
-
-    const MAX_X = 10;
-    const MAX_Y = 4;
-    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-    let targetX = 0, targetY = 0;
-    let currentX = 0, currentY = 0;
-    let raf = 0;
-
-    const tick = () => {
-      raf = 0;
-      currentX = lerp(currentX, targetX, 0.08);
-      currentY = lerp(currentY, targetY, 0.08);
-
-      document.documentElement.style.setProperty("--gm-app-bg-parallax-x", `${currentX.toFixed(2)}px`);
-      document.documentElement.style.setProperty("--gm-app-bg-parallax-y-mouse", `${currentY.toFixed(2)}px`);
-
-      if (Math.abs(currentX - targetX) > 0.05 || Math.abs(currentY - targetY) > 0.05) {
-        raf = requestAnimationFrame(tick);
-      }
-    };
-
-    let idleTimer: any;
-
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse") return;
-      clearTimeout(idleTimer);
-
+      // Coordenadas normalizadas [-1, 1]
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
       const ny = (e.clientY / window.innerHeight) * 2 - 1;
 
-      targetX = clamp(nx * MAX_X, -MAX_X, MAX_X);
-      targetY = clamp(-ny * MAX_Y, -MAX_Y, MAX_Y);
+      // Movimento suave proporcional e orgânico
+      targetMouseX = clamp(nx * MOUSE_MAX_X, -MOUSE_MAX_X, MOUSE_MAX_X);
+      targetMouseY = clamp(-ny * MOUSE_MAX_Y, -MOUSE_MAX_Y, MOUSE_MAX_Y);
 
-      if (!raf) raf = requestAnimationFrame(tick);
-
-      idleTimer = setTimeout(() => {
-        targetX = 0;
-        targetY = 0;
-        if (!raf) raf = requestAnimationFrame(tick);
-      }, 250);
+      startAnimation();
     };
 
-    window.addEventListener("pointermove", onMove, { passive: true });
+    const onMouseLeave = () => {
+      // Retorna com calma para o centro se o mouse sair da janela
+      targetMouseX = 0;
+      targetMouseY = 0;
+      startAnimation();
+    };
+
+    // Inicialização
+    updateScrollTargets();
+    startAnimation();
+
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    window.addEventListener("pointermove", onMouseMove, { passive: true });
+    window.addEventListener("mouseleave", onMouseLeave, { passive: true });
 
     return () => {
-      window.removeEventListener("pointermove", onMove as any);
+      window.removeEventListener("scroll", onScroll, { capture: true } as any);
+      window.removeEventListener("pointermove", onMouseMove as any);
+      window.removeEventListener("mouseleave", onMouseLeave);
       if (raf) cancelAnimationFrame(raf);
-      clearTimeout(idleTimer);
+      document.documentElement.style.setProperty("--gm-app-bg-parallax-y", "0px");
       document.documentElement.style.setProperty("--gm-app-bg-parallax-x", "0px");
       document.documentElement.style.setProperty("--gm-app-bg-parallax-y-mouse", "0px");
+      document.documentElement.style.setProperty("--gm-app-bg-depth-scale", `${BASE_DEPTH}`);
     };
   }, []);
 
@@ -534,7 +458,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         onClick={handleBellClick}
         title="Atualizações e Informações"
         aria-label="Atualizações e Informações"
-        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center text-orange-500 hover:!bg-[#FE540B] hover:!text-white active:!bg-[#e04808] active:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
+        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))] hover:!bg-[var(--gm-primary,#FE540B)] hover:!text-white active:!bg-[var(--gm-primary-hover,var(--gm-primary,#FE540B))] active:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
         style={{
           width: '36px',
           height: '36px',
@@ -564,7 +488,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         onClick={signOut}
         title="Sair"
         aria-label="Sair"
-        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center text-orange-500 hover:!bg-[#FE540B] hover:!text-white active:!bg-[#e04808] active:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
+        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))] hover:!bg-[var(--gm-primary,#FE540B)] hover:!text-white active:!bg-[var(--gm-primary-hover,var(--gm-primary,#FE540B))] active:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
         style={{
           width: '36px',
           height: '36px',
@@ -596,154 +520,162 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* Tutorial Onboarding do Aplicativo */}
       {showTutorial && <AppTutorial onClose={() => setShowTutorial(false)} />}
 
-      {/* GESTO GLOBAL DE VOLTAR (BORDAS LATERAIS) */}
-      <div 
-        className="fixed top-0 left-0 w-3 h-full z-[9999] pointer-events-auto touch-none"
-        onPointerDown={(e) => {
-          const startX = e.clientX;
-          const onPointerUp = (upEvent: PointerEvent) => {
-            const diffX = upEvent.clientX - startX;
-            if (diffX > 50) {
-              navigate(-1);
-            }
-            window.removeEventListener('pointerup', onPointerUp);
-          };
-          window.addEventListener('pointerup', onPointerUp);
+      {/* MOBILE TOP HEADER - FROSTED GLASS TRANSLUCENT */}
+      <header 
+        className="fixed top-0 left-0 right-0 w-full h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-black/10 dark:bg-black/10 backdrop-blur-md border-b border-white/10 shadow-none gm-mobile-header select-none"
+        style={{
+          zIndex: 100,
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          background: "rgba(10, 10, 14, 0.15)",
         }}
-      />
-      <div 
-        className="fixed top-0 right-0 w-3 h-full z-[9999] pointer-events-auto touch-none"
-        onPointerDown={(e) => {
-          const startX = e.clientX;
-          const onPointerUp = (upEvent: PointerEvent) => {
-            const diffX = startX - upEvent.clientX;
-            if (diffX > 50) {
-              navigate(-1);
-            }
-            window.removeEventListener('pointerup', onPointerUp);
-          };
-          window.addEventListener('pointerup', onPointerUp);
-        }}
-      />
-
-      {/* MOBILE TOP HEADER */}
-      <div className="fixed top-0 left-0 right-0 h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-[var(--gm-surface)] border-b border-[var(--gm-border)]">
+      >
         <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
+              <div className="w-8 h-8 rounded-lg border border-white/15 flex items-center justify-center overflow-hidden shadow-none bg-black/40 !p-0">
                 <img 
-                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                  alt="Logo CardDigital GM" 
-                  className="w-full h-full object-cover"
+                  src={appSettings?.company_logo_url || appSettings?.avatar_url || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"} 
+                  alt={appSettings?.company_name || "Logo CardDigital GM"} 
+                  className="w-full h-full object-contain scale-[1.1] transform"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
+                  }}
                 />
               </div>
             </div>
             <div className="flex flex-col leading-tight">
                 <span className="text-lg font-bold text-slate-900 dark:text-white">
-                  CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span>
+                  {appSettings?.company_name ? (
+                    appSettings.company_name
+                  ) : (
+                    <>CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span></>
+                  )}
                 </span>
             </div>
         </div>
 
         {/* Botões do cabeçalho mobile: caixas quadradas 1:1 com bordas levemente arredondadas e ícones na cor laranja */}
         {renderHeaderActionButtons()}
-      </div>
+      </header>
 
       {/* DESKTOP SIDEBAR */}
-      <aside className={`gm-sidebar ${collapsed ? "collapsed" : ""} hidden md:flex !relative`}>
-        {/* Overlapping vertical border collapse/expand Toggle Button - Grey glass circle with Orange border & Orange chevron arrow, centered vertically */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-1/2 -translate-y-1/2 -right-[12px] w-[25px] h-[25px] rounded-full border-2 border-[var(--gm-primary)] bg-[#242428]/85 backdrop-blur-md flex items-center justify-center text-[var(--gm-primary)] transition-all z-[100] shadow-[0_2px_12px_rgba(0,0,0,0.4)] cursor-pointer shrink-0 hover:scale-110 hover:bg-[#2d2d32]/90"
+      <aside
+        ref={sidebarRef}
+        style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
+        className={`sidebar gm-sidebar ${collapsed ? "collapsed" : ""} hidden md:flex shrink-0 relative`}
+      >
+        {/* Toggle Button on the right edge (Seta de expansão fixa: no hover apenas muda cor e leve escala sem sair do lugar) */}
+        <div
           style={{
-            borderColor: "var(--gm-primary)",
-            color: "var(--gm-primary)"
+            position: "absolute",
+            top: "50%",
+            transform: "translateY(-50%)",
+            right: "-10px",
+            zIndex: 70,
+            pointerEvents: "auto"
           }}
-          type="button"
-          aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+          className="flex items-center justify-center"
         >
-          {collapsed ? (
-            <ChevronRight size={13} className="animate-arrow-right text-[var(--gm-primary)] stroke-[2.5]" />
-          ) : (
-            <ChevronLeft size={13} className="animate-arrow-left text-[var(--gm-primary)] stroke-[2.5]" />
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="w-5 h-9 rounded-full bg-black/85 border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:bg-[var(--gm-primary)] hover:border-[var(--gm-primary)] hover:scale-105 active:scale-95 transition-all duration-150 shadow-xl backdrop-blur-md cursor-pointer outline-none !m-0 !p-0"
+            style={{
+              transformOrigin: "center center"
+            }}
+            title={collapsed ? "Expandir menu" : "Encolher menu"}
+            aria-label={collapsed ? "Expandir menu" : "Encolher menu"}
+          >
+            {collapsed ? (
+              <ChevronRight size={13} className="stroke-[2.5]" />
+            ) : (
+              <ChevronLeft size={13} className="stroke-[2.5]" />
+            )}
+          </button>
+        </div>
 
-        {!collapsed ? (
-          <div className="flex items-center justify-between gap-3 px-2 py-1 mb-4">
-             <div className="flex items-center gap-3 shrink-0">
-                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shadow-md shrink-0">
-                  <img 
-                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                    alt="Logo Official CardDigital GM" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex items-center gap-1 leading-none">
-                    <span className="text-lg font-bold text-[var(--gm-menu-title)]">
-                      CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span>
-                    </span>
-                </div>
-             </div>
-          </div>
-        ) : (
-          <div className="flex justify-center mt-2 mb-6">
-            <div className="relative flex items-center justify-center shrink-0">
-                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shadow-md">
-                  <img 
-                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                    alt="Logo Official CardDigital GM" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-          </div>
-        )}
-
-        <nav className="gm-nav flex-1 flex flex-col justify-start py-1 overflow-visible gap-0.5">
-          {filteredNav.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) => (isActive ? "active" : "")}
-              title={collapsed ? label : undefined}
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="gm-sidebar-footer w-full flex flex-col pb-2 gap-2 mt-auto">
-          {collapsed ? (
-            <div className="flex flex-col items-center gap-2 w-full py-1">
-              {renderHeaderActionButtons("flex-col items-center")}
+        <div className="sidebar-inner flex flex-col h-full w-full">
+          {/* Header */}
+          <header className="flex items-center gap-3.5 px-4 py-4 border-b border-white/10 shrink-0">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center overflow-hidden shrink-0 shadow-none bg-black/40 border border-white/15 !p-0">
+              <img 
+                src={appSettings?.company_logo_url || appSettings?.avatar_url || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"} 
+                alt={appSettings?.company_name || "Logo Official CardDigital GM"} 
+                className="w-full h-full object-contain logo-icon scale-[1.1] transform"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
+                }}
+              />
             </div>
-          ) : (
-            <div className="flex flex-col gap-2 w-full pt-2 border-t border-white/10">
-              <div className="flex items-center justify-center gap-2">
-                {renderHeaderActionButtons()}
+            {!collapsed && (
+              <div className="flex items-center gap-1 leading-none overflow-hidden logo-text">
+                <span className="text-base font-bold text-[var(--gm-menu-title)] truncate">
+                  {appSettings?.company_name ? (
+                    appSettings.company_name
+                  ) : (
+                    <>CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span></>
+                  )}
+                </span>
               </div>
-              <div className="mt-1 text-[11px] text-slate-500 text-center opacity-60 pointer-events-none">
-                <i>Desenvolvido por</i> <span className="font-bold text-[var(--gm-menu-title)]">CardDigital</span> <span className="font-bold text-[var(--gm-menu-primary)] gm-logo-highlight">GM</span>
+            )}
+          </header>
+
+          {/* Navigation List - Espaçamento enxuto, organizado e uniforme */}
+          <ul className="flex flex-col py-2 px-2 gap-1.5 overflow-y-auto overflow-x-hidden">
+            {filteredNav.map(({ to, label, icon: Icon }) => (
+              <li key={to} className="w-full">
+                <NavLink
+                  to={to}
+                  className={({ isActive }) =>
+                    `sidebar-btn w-full h-10 flex items-center gap-3 px-3 rounded-xl text-[13px] font-medium transition-all duration-200 ${
+                      isActive
+                        ? "active font-semibold text-white bg-white/10 border border-white/10 shadow-sm"
+                        : "text-white/80 hover:text-white hover:bg-white/5"
+                    } ${collapsed ? "justify-center !px-0" : ""}`
+                  }
+                  title={collapsed ? label : undefined}
+                >
+                  <Icon size={17} className="shrink-0 text-[var(--gm-menu-primary,#FE540B)]" />
+                  {!collapsed && <p className="truncate text-left">{label}</p>}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+
+          {/* Footer - Linha de divisão logo abaixo dos 9 botões com visual organizado e centralizado */}
+          <div className="sidebar-footer p-2.5 border-t border-white/10 shrink-0 flex flex-col gap-2">
+            {collapsed ? (
+              <div className="flex flex-col items-center gap-2 w-full py-1">
+                {renderHeaderActionButtons("flex-col items-center")}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="flex flex-col gap-1.5 w-full">
+                <div className="flex items-center justify-center gap-3">
+                  {renderHeaderActionButtons()}
+                </div>
+                <div className="mt-0.5 text-[10px] text-center pointer-events-none tracking-tight leading-none whitespace-nowrap flex items-center justify-center gap-1 text-slate-400">
+                  <span className="text-[10px] text-slate-400 font-normal">Desenvolvido por</span>
+                  <span className="text-[10px] font-bold text-[var(--gm-menu-title)]">CardDigital</span>
+                  <span className="text-[10px] font-bold text-[var(--gm-menu-primary)] gm-logo-highlight">GM</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
 
       <main 
-        ref={setRefs}
-        className="gm-main pb-28 md:pb-0"
+        ref={mainRef}
+        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-screen max-h-screen overflow-y-auto overflow-x-hidden w-full pt-20 md:pt-0 pb-24 md:pb-8 scroll-smooth"
       >
-        <div className="gm-container min-h-full flex flex-col">
+        <div className="gm-container w-full max-w-[1400px] mx-auto flex flex-col items-stretch px-4 sm:px-6 md:px-8 py-2 sm:py-6 pb-6">
           {children}
         </div>
       </main>
       
       {/* SCROLL INDICATORS CONTAINER */}
       {createPortal(
-        <div className="fixed right-4 bottom-24 z-[10001] flex flex-col gap-3 pointer-events-none" style={{ zIndex: 10001 }}>
+        <div className="fixed right-4 md:right-8 bottom-24 md:bottom-8 z-[10001] flex flex-col gap-3 pointer-events-none" style={{ zIndex: 10001 }}>
           {/* WHATSAPP SUPPORT BUTTON (GREEN BOX WITH WHITE ICON) */}
           {location.pathname === "/" && (
             <button
@@ -813,16 +745,16 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       {/* UPDATE DIALOG MODAL (NOTIFICAÇÕES CENTER) */}
       {showUpdateModal && (
-        <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" style={{ zIndex: 1000000 }}>
-          <div className="relative w-full max-w-md bg-[#131416]/98 border border-zinc-800 rounded-lg p-5 shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col gap-4 text-white overflow-hidden font-sans">
+        <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl animate-fade-in" style={{ zIndex: 1000000 }}>
+          <div className="relative w-full max-w-md fora border border-white/12 rounded-2xl p-5 shadow-none flex flex-col gap-4 text-white overflow-hidden font-sans">
             
             {/* Ambient Glow */}
-            <div className="absolute -top-12 -left-12 w-28 h-28 bg-[var(--gm-primary)]/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -top-12 -left-12 w-28 h-28 bg-[var(--gm-primary)]/15 rounded-full blur-2xl pointer-events-none" />
             
             {/* Header */}
-            <div className="flex items-center justify-between shrink-0 pb-3 border-b border-zinc-800">
+            <div className="flex items-center justify-between shrink-0 pb-3 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-zinc-800/40 border border-zinc-700/60 flex items-center justify-center text-zinc-300 relative">
+                <div className="w-10 h-10 rounded-xl barra border border-white/10 flex items-center justify-center text-zinc-300 relative shadow-none">
                   <Bell size={18} className={unreadCount > 0 ? "text-[var(--gm-primary)]" : "text-zinc-400"} />
                   {unreadCount > 0 && (
                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-black animate-pulse" />
@@ -837,7 +769,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </div>
               <button
                 type="button"
-                className="w-8 h-8 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-zinc-700/60"
+                className="w-8 h-8 rounded-full barra hover:bg-white/10 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-white/10 shadow-none cursor-pointer"
                 onClick={() => setShowUpdateModal(false)}
                 title="Fechar Notificações"
               >
@@ -846,13 +778,13 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             </div>
 
             {/* Tabs Filter Bar */}
-            <div className="flex items-center gap-1 bg-zinc-950/80 border border-zinc-900 rounded-xl p-1 shrink-0">
+            <div className="flex items-center gap-1 barra border border-white/10 rounded-xl p-1 shrink-0 shadow-none">
               <button
                 type="button"
                 onClick={() => setActiveTab("todas")}
-                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 ${
+                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
                   activeTab === "todas"
-                    ? "bg-[#25262a] text-white border border-zinc-700/50 shadow"
+                    ? "bg-[var(--gm-primary)] text-white border border-[var(--gm-primary)]/40 shadow-none"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
@@ -861,9 +793,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setActiveTab("nao_lidas")}
-                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 ${
+                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
                   activeTab === "nao_lidas"
-                    ? "bg-[#25262a] text-white border border-zinc-700/50 shadow"
+                    ? "bg-[var(--gm-primary)] text-white border border-[var(--gm-primary)]/40 shadow-none"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
@@ -872,9 +804,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setActiveTab("diretas")}
-                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 ${
+                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
                   activeTab === "diretas"
-                    ? "bg-[#25262a] text-white border border-zinc-700/50 shadow"
+                    ? "bg-[var(--gm-primary)] text-white border border-[var(--gm-primary)]/40 shadow-none"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
@@ -888,7 +820,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={markAllAsRead}
-                  className="text-[10px] font-black text-[var(--gm-primary)] hover:text-orange-400 transition-all uppercase tracking-wider flex items-center gap-1 hover:underline"
+                  className="text-[10px] font-black text-[var(--gm-primary)] hover:text-orange-400 transition-all uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   <Check size={11} className="stroke-[3]" />
                   Marcar todas como lidas
@@ -904,10 +836,10 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                     <div
                       key={noti.id}
                       onClick={() => toggleRead(noti.id)}
-                      className={`group relative p-3 border rounded-xl hover:bg-zinc-800/40 transition-all flex gap-3 cursor-pointer select-none ${
+                      className={`group relative p-3 border rounded-xl hover:bg-white/5 transition-all flex gap-3 cursor-pointer select-none shadow-none ${
                         noti.read
-                          ? "bg-zinc-900/30 border-zinc-800/40 opacity-70"
-                          : "bg-zinc-900/70 border-emerald-500/15 hover:border-emerald-500/30"
+                          ? "barra border-white/5 opacity-70"
+                          : "barra border-white/15 hover:border-[var(--gm-primary)]/40"
                       }`}
                     >
                       {/* Badge Icon based on Type */}
@@ -915,7 +847,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                         {noti.type === "direct" && (
                           <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
                             noti.read 
-                              ? "bg-zinc-800/40 border-zinc-700/40 text-zinc-500" 
+                              ? "barra border-white/10 text-zinc-500" 
                               : "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
                           }`}>
                             <MessageSquare size={14} />
@@ -924,7 +856,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                         {noti.type === "update" && (
                           <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
                             noti.read
-                              ? "bg-zinc-800/40 border-zinc-700/40 text-zinc-500"
+                              ? "barra border-white/10 text-zinc-500"
                               : "bg-amber-500/10 border-amber-500/25 text-amber-400"
                           }`}>
                             <Sparkles size={14} className={noti.read ? "" : "animate-pulse"} />
@@ -933,7 +865,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                         {noti.type === "alert" && (
                           <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
                             noti.read
-                              ? "bg-zinc-800/40 border-zinc-700/40 text-zinc-500"
+                              ? "barra border-white/10 text-zinc-500"
                               : "bg-orange-500/10 border-orange-500/25 text-orange-400"
                           }`}>
                             <Clock size={14} />
@@ -942,7 +874,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                       </div>
 
                       <div className="flex-1 space-y-0.5 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1 pb-1 border-b border-zinc-800/60">
+                        <div className="flex items-center gap-1.5 mb-1 pb-1 border-b border-white/10">
                           {appSettings?.company_logo_url ? (
                             <img src={appSettings.company_logo_url} alt={appSettings?.company_name || "Empresa"} className="w-3.5 h-3.5 object-contain rounded shrink-0" />
                           ) : (
@@ -958,7 +890,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                           <h4 className={`text-[11.5px] font-black tracking-wide ${noti.read ? "text-zinc-300" : "text-white"}`}>
                             {noti.title}
                           </h4>
-                          <span className="text-[8.5px] font-bold text-zinc-550 tracking-normal shrink-0">
+                          <span className="text-[8.5px] font-bold text-zinc-400 tracking-normal shrink-0">
                             {noti.time}
                           </span>
                         </div>
@@ -977,28 +909,28 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               ) : (
                 /* EMPTY STATE - MATCHING SCREENSHOT EXACTLY */
                 <div className="flex flex-col items-center justify-center py-10 px-4 text-center space-y-3 animate-fade-in my-auto mx-auto w-full h-full min-h-[200px]">
-                  <div className="w-14 h-14 rounded-lg bg-zinc-800/25 border border-zinc-850 flex items-center justify-center text-zinc-550">
-                    <Bell size={24} className="opacity-30" />
+                  <div className="w-14 h-14 rounded-xl barra border border-white/10 flex items-center justify-center text-zinc-400 shadow-none">
+                    <Bell size={24} className="opacity-40" />
                   </div>
                   <div className="space-y-1">
                     <h4 className="text-sm font-black text-white">Tudo em dia!</h4>
-                    <p className="text-[11px] text-zinc-500 font-bold leading-relaxed">Você está em dia com tudo</p>
+                    <p className="text-[11px] text-zinc-400 font-bold leading-relaxed">Você está em dia com tudo</p>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Footer watermark & CTA close */}
-            <div className="shrink-0 border-t border-zinc-800/80 pt-3 flex items-center justify-between text-[10px] font-bold text-zinc-500 tracking-wider">
+            <div className="shrink-0 border-t border-white/10 pt-3 flex items-center justify-between text-[10px] font-bold text-zinc-400 tracking-wider">
               <span className="flex items-center gap-1">
                 <span className="text-white font-black tracking-normal">CardDigital</span>
                 <span className="text-[var(--gm-primary)] font-black tracking-normal">GM</span>
-                <span className="text-zinc-650 font-medium px-0.5">•</span>
-                <span className="text-zinc-500 lowercase tracking-wide">Notificações</span>
+                <span className="text-zinc-500 font-medium px-0.5">•</span>
+                <span className="text-zinc-400 lowercase tracking-wide">Notificações</span>
               </span>
               <button
                 type="button"
-                className="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800/80 text-zinc-300 hover:text-white rounded-xl text-[9px] font-black transition-all uppercase tracking-widest shrink-0"
+                className="px-3.5 py-1.5 barra border border-white/10 hover:bg-white/15 text-zinc-300 hover:text-white rounded-xl text-[9px] font-black transition-all uppercase tracking-widest shrink-0 shadow-none cursor-pointer"
                 onClick={() => setShowUpdateModal(false)}
               >
                 Fechar

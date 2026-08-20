@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import NewClientModal from "./NewClientModal";
 import { supabase } from "../../lib/supabase";
 import { Client } from "../../types";
+import { Loader2 } from "lucide-react";
 
 export default function EditClientPage({ clientId, onBack, onSuccess }: { clientId: string; onBack: () => void; onSuccess: () => void }) {
   const [client, setClient] = useState<Client | null>(null);
@@ -16,7 +17,16 @@ export default function EditClientPage({ clientId, onBack, onSuccess }: { client
       });
   }, [clientId]);
 
-  if (loading) return null; // Or a spinner
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md">
+        <div className="gm-card fora p-6 rounded-2xl border border-white/10 flex items-center gap-3 shadow-none">
+          <Loader2 className="w-5 h-5 animate-spin text-[var(--gm-primary)]" />
+          <span className="text-white text-sm font-semibold">Carregando cliente...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <NewClientModal

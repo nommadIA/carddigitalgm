@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState, PropsWi
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
 import { ADMIN_EMAIL } from '../constants';
+import { fetchSettingsSupabase, applySettingsToDOM, DEFAULT_SETTINGS } from '../lib/settings';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -107,7 +108,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       }
 
       setTenantId(activeTenantId || null);
-      if (activeTenantId) localStorage.setItem("tenant_id", activeTenantId);
+      if (activeTenantId) {
+        localStorage.setItem("tenant_id", activeTenantId);
+        fetchSettingsSupabase(activeTenantId).then((s) => {
+          if (s) applySettingsToDOM(s, true, activeTenantId);
+        }).catch(() => {});
+      }
 
     } catch (e) {
       console.error("Auth init error:", e);
@@ -169,6 +175,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     setTenantId(null);
     setIsAdmin(false);
     localStorage.removeItem("tenant_id");
+    applySettingsToDOM(DEFAULT_SETTINGS, false, null);
   };
 
   const value = useMemo(() => ({

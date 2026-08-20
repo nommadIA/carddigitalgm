@@ -29,7 +29,8 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  budgetToEditId?: string | null; // ✅ Novo prop para edição
+  budgetToEditId?: string | null; // ✅ Modo edição
+  duplicateFromBudgetId?: string | null; // ✅ Modo usar como modelo
 };
 
 type ClientRow = { id: string; name: string };
@@ -155,44 +156,46 @@ async function insertItemsWithAutoStrip(items: any[]) {
   }
 }
 
-// --- STYLES ---
+// --- STYLES (GLASS TRANSLÚCIDO PREMIUM) ---
 const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "rgba(0, 0, 0, 0.85)",
+  background: "rgba(0, 0, 0, 0.45)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   padding: 16,
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
+  backdropFilter: "blur(28px) saturate(130%)",
+  WebkitBackdropFilter: "blur(28px) saturate(130%)",
 };
 
 const fullScreenContainer: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "#09090b",
+  background: "rgba(10, 11, 14, 0.70)",
   color: "#f4f4f5",
   display: "flex",
   flexDirection: "column",
   overflow: "hidden",
+  backdropFilter: "blur(32px) saturate(125%)",
+  WebkitBackdropFilter: "blur(32px) saturate(125%)",
 };
 
 const topBar: React.CSSProperties = {
   position: "sticky",
   top: 0,
   zIndex: 50,
-  background: "rgba(24, 24, 27, 0.95)",
-  borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "rgba(15, 16, 18, 0.25)",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
   padding: "16px 24px",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  backdropFilter: "blur(16px)",
-  WebkitBackdropFilter: "blur(16px)",
-  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
+  backdropFilter: "blur(30px) saturate(130%)",
+  WebkitBackdropFilter: "blur(30px) saturate(130%)",
+  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
 };
 
 const pageContent: React.CSSProperties = {
@@ -215,13 +218,13 @@ const sectionTitle: React.CSSProperties = {
 };
 
 const card: React.CSSProperties = {
-  background: "rgba(24, 24, 27, 0.75)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "rgba(18, 19, 22, 0.28)",
+  border: "1px solid rgba(255, 255, 255, 0.10)",
   borderRadius: 16,
   padding: 24,
-  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
+  boxShadow: "0 18px 50px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
+  backdropFilter: "blur(28px) saturate(125%)",
+  WebkitBackdropFilter: "blur(28px) saturate(125%)",
 };
 
 const labelTop: React.CSSProperties = {
@@ -236,27 +239,32 @@ const labelTop: React.CSSProperties = {
 
 const inputBig: React.CSSProperties = {
   width: "100%",
-  background: "rgba(0, 0, 0, 0.4)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "rgba(10, 11, 13, 0.20)",
+  border: "1px solid rgba(255, 255, 255, 0.09)",
   borderRadius: 10,
   padding: "12px 14px",
   color: "#FFFFFF",
   fontSize: 15,
   fontWeight: 500,
   outline: "none",
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
   transition: "all 0.2s",
 };
 
 const itemRow: React.CSSProperties = {
-  background: "rgba(24, 24, 27, 0.6)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "rgba(24, 25, 28, 0.24)",
+  border: "1px solid rgba(255, 255, 255, 0.09)",
   borderRadius: 14,
   padding: 20,
   marginBottom: 16,
   position: "relative",
+  backdropFilter: "blur(26px) saturate(130%)",
+  WebkitBackdropFilter: "blur(26px) saturate(130%)",
+  boxShadow: "0 15px 45px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
 };
 
-export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditId }: Props) {
+export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditId, duplicateFromBudgetId }: Props) {
   const { tenantId } = useAuth();
 
   const [step, setStep] = useState<Step>("pick");
@@ -366,9 +374,10 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     setClientName(found?.name || "");
   }, [clientId, clients]);
 
-  // Modo edição: carregar orçamento
+  // Modo edição ou modo modelo: carregar orçamento
+  const targetId = budgetToEditId || duplicateFromBudgetId;
   useEffect(() => {
-    if (!budgetToEditId || !tenantId || !open) return;
+    if (!targetId || !tenantId || !open) return;
 
     setLoadingData(true);
     setStep("form");
@@ -378,7 +387,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         const { data: budget, error } = await supabase
           .from("budgets")
           .select("*, items:budget_items(*)")
-          .eq("id", budgetToEditId)
+          .eq("id", targetId)
           .single();
 
         if (error) throw error;
@@ -423,7 +432,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         setLoadingData(false);
       }
     })();
-  }, [budgetToEditId, tenantId, open]);
+  }, [targetId, tenantId, open]);
 
   const applyTemplate = (nextKind: BudgetKind) => {
     setKind(nextKind);
@@ -641,8 +650,8 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         >
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h2 className="text-2xl font-extrabold text-white mb-1.5">Novo Orçamento</h2>
-              <p className="text-sm font-medium text-slate-400">Selecione o modelo de proposta ideal para este projeto.</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">Novo Orçamento</h2>
+              <p className="text-base font-medium text-slate-300">Selecione o modelo de proposta ideal para este projeto.</p>
             </div>
             <button onClick={onClose} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer">
               <X size={22} />
@@ -651,34 +660,34 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <button
-              className="group relative p-6 rounded-lg border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
+              className="group relative p-6 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer backdrop-blur-xl"
               onClick={() => applyTemplate("agency")}
             >
               <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
                 <Palette size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
+                <h3 className="text-xl font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
                   Agência & Design
                 </h3>
-                <p className="text-xs text-slate-400 mt-1.5 leading-relaxed font-medium">
+                <p className="text-sm text-slate-300 mt-2 leading-relaxed font-medium">
                   Orçamentos baseados em serviços, artes digitais e criação.
                 </p>
               </div>
             </button>
 
             <button
-              className="group relative p-6 rounded-lg border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
+              className="group relative p-6 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer backdrop-blur-xl"
               onClick={() => applyTemplate("print")}
             >
               <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
                 <Printer size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
+                <h3 className="text-xl font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
                   Impressão & Gráfica
                 </h3>
-                <p className="text-xs text-slate-400 mt-1.5 leading-relaxed font-medium">
+                <p className="text-sm text-slate-300 mt-2 leading-relaxed font-medium">
                   Cálculo de Lonas (m²) e Materiais Gráficos (Panfletos, Cartões).
                 </p>
               </div>
@@ -704,7 +713,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             <div className="flex items-center gap-2">
               <div className="flex flex-col">
                 <h2 className="text-lg font-bold text-white leading-none">
-                  {budgetToEditId ? "Editar Proposta" : "Criar Proposta"}
+                  {budgetToEditId ? "Editar Proposta" : duplicateFromBudgetId ? "Novo Orçamento (Usando Modelo)" : "Criar Proposta"}
                 </h2>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span
@@ -1136,7 +1145,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
       {/* 04. AÇÕES */}
       <div
-        className={`p-3.5 sm:p-5 rounded-2xl bg-[#18181b]/95 backdrop-blur-xl border border-white/20 text-white flex flex-row items-center justify-between gap-3 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`p-3.5 sm:p-5 rounded-2xl bg-[rgba(18,19,22,0.45)] backdrop-blur-2xl border border-white/20 text-white flex flex-row items-center justify-between gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.4)] z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         style={{

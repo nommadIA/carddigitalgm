@@ -71,7 +71,7 @@ const PrivateRoutes = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full h-full"
+            className="w-full min-h-full flex-1 flex flex-col"
           >
             <Suspense fallback={<PageLoader />}>
               <Routes location={location}>
@@ -148,8 +148,7 @@ const AppRoutes = () => {
 
   // Wait for auth to be fully initialized before making routing decisions or redirecting
   if (!checked) {
-    const isLight = localStorage.getItem("theme") !== "dark";
-    return <div className={`h-screen w-full ${isLight ? "bg-[#F8FAFC]" : "bg-[#050507]"}`} />;
+    return <div className="h-screen w-full bg-[#050507]" />;
   }
 
   // If a mobile user is not logged in and opens the root, redirect directly to the public bio page
@@ -193,7 +192,7 @@ const AppRoutes = () => {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.97 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full h-full"
+        className="w-full min-h-full flex-1 flex flex-col"
       >
         <Suspense fallback={<PageLoader />}>
           <Routes location={location}>

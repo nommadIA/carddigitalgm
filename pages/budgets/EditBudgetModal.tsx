@@ -244,13 +244,13 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-xl animate-fade-in">
+    <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
       <div 
         onClick={(e) => e.stopPropagation()} 
-        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto gm-modal gm-card bg-[var(--gm-surface)] border-none rounded-2xl shadow-2xl custom-scrollbar flex flex-col gm-reflection-edge"
+        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto gm-modal gm-card barra fora border border-white/10 rounded-2xl custom-scrollbar flex flex-col"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-white/10 sticky top-0 bg-zinc-900/95 backdrop-blur-md z-10">
+        <div className="flex justify-between items-center p-6 border-b border-white/10 sticky top-0 bg-white/5 backdrop-blur-md z-10">
           <div>
             <h2 className="text-xl font-bold text-white">Editar Orçamento</h2>
             <div className="text-xs text-slate-400 mt-1">

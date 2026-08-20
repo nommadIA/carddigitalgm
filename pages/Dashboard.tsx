@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Users,
   Clock,
+  Timer,
   ArrowUpRight,
   Loader2,
   Wallet,
@@ -42,6 +43,18 @@ function formatPhoneBR(value: string) {
   if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
   if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function formatDashboardDate(d: Date) {
+  const raw = d.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  return raw
+    .replace(/^(\p{L})/u, (m) => m.toUpperCase())
+    .replace(/(de\s+)(\p{L})/gu, (_, p1, p2) => p1 + p2.toUpperCase());
 }
 
 interface BudgetRow {
@@ -97,9 +110,9 @@ function MiniSparkline({ data }: { data: number[] }) {
 
 /* ---------- Estilos reutilizáveis (tokens do tema em --gm-*) ---------- */
 const cardBase =
-  "gm-card rounded-2xl transition-all";
+  "fora rounded-2xl transition-all border border-white/10 shadow-none";
 const inputBase =
-  "w-full gm-input rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all";
+  "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none";
 
 export default function Dashboard() {
   const { tenantId } = useAuth();
@@ -120,6 +133,14 @@ export default function Dashboard() {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Real-time analog clock hand angles
+  const clockSeconds = now.getSeconds();
+  const clockMinutes = now.getMinutes();
+  const clockHours = now.getHours();
+  const clockSecondDeg = clockSeconds * 6;
+  const clockMinuteDeg = clockMinutes * 6 + clockSeconds * 0.1;
+  const clockHourDeg = (clockHours % 12) * 30 + clockMinutes * 0.5;
 
   // Form state for "Novo cliente"
   const [newClientName, setNewClientName] = useState("");
@@ -414,84 +435,81 @@ export default function Dashboard() {
   }, [recentBudgets]);
 
   return (
-    <div className="w-full min-h-screen bg-transparent text-[color:var(--gm-text)] p-4 sm:p-6 lg:p-8 space-y-8">
-      {/* 1. TOP HEADER WITH ENLARGED LOGO, TITLE & FULL-WIDTH PROMINENT CLOCK */}
-      <div className="flex flex-col gap-6 pb-6 border-b border-[color:var(--gm-border-light)] w-full">
-        {/* Top: Logo + Title (Ampliados e alinhados até as bordas) */}
-        <div className="w-full flex items-center justify-start gap-4 text-left">
-          {appSettings?.company_logo_url ? (
-            <div className="shrink-0 flex items-center justify-center">
-              <img
-                src={appSettings.company_logo_url}
-                alt={appSettings.company_name || "Logo da Empresa"}
-                className="h-16 sm:h-20 md:h-24 w-auto max-w-[260px] sm:max-w-[340px] object-contain rounded-xl shadow-md"
-              />
-            </div>
-          ) : (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/30 p-3 flex items-center justify-center text-[color:var(--gm-primary)] shadow-md shrink-0 font-black text-2xl sm:text-3xl uppercase tracking-wider">
-              {appSettings?.company_name ? appSettings.company_name.substring(0, 2) : "GM"}
-            </div>
-          )}
-
-          <div className="flex flex-col text-left flex-1 min-w-0">
-            <div className="text-xs sm:text-base font-extrabold tracking-widest text-[color:var(--gm-primary)] uppercase">
-              {appSettings?.company_name ? `${appSettings.company_name} · PAINEL` : "PAINEL · VISÃO GERAL"}
-            </div>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-[color:var(--gm-text)] tracking-tight mt-1 truncate">
-              Dashboard
-            </h1>
+    <div className="w-full bg-transparent text-[color:var(--gm-text)] space-y-6">
+      {/* 1. TOP HEADER WITH USER LOGO & TITLE */}
+      <div className="w-full flex items-center justify-start gap-4 text-left">
+        {appSettings?.company_logo_url ? (
+          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-2xl !p-0 flex items-center justify-center shadow-md shrink-0 overflow-hidden border border-white/15 bg-black/40">
+            <img
+              src={appSettings.company_logo_url}
+              alt={appSettings.company_name || "Logo da Empresa"}
+              className="w-full h-full object-cover"
+            />
           </div>
+        ) : (
+          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-2xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/30 p-3 flex items-center justify-center text-[color:var(--gm-primary)] shadow-md shrink-0 font-black text-2xl sm:text-3xl uppercase tracking-wider">
+            {appSettings?.company_name ? appSettings.company_name.substring(0, 2) : "GM"}
+          </div>
+        )}
+
+        <div className="flex flex-col text-left flex-1 min-w-0">
+          <div className="text-xs sm:text-sm font-extrabold tracking-widest text-[color:var(--gm-primary)] uppercase">
+            {appSettings?.company_name ? `${appSettings.company_name} · PAINEL` : "GM EDIFICAÇÃO · PAINEL"}
+          </div>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-[color:var(--gm-text)] tracking-tight mt-1 truncate">
+            Dashboard
+          </h1>
         </div>
+      </div>
 
-        {/* WIDGET RELÓGIO E DATA (VERSÃO SMARTPHONE: MESMO EFEITO GLASS DO FATURAMENTO DO MÊS) */}
-        <div className="w-full flex flex-col items-center justify-center text-center py-4 px-5 gm-card gm-stat-card gm-clock-card rounded-2xl transition-all">
-          <div className="flex items-center justify-center gap-3 font-mono">
-            <Clock size={32} className="text-[color:var(--gm-primary)] animate-pulse shrink-0" />
-            <span className="text-3xl sm:text-5xl md:text-6xl font-black tracking-widest text-[color:var(--gm-text)]">
-              {now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-            </span>
-          </div>
-          <span className="text-sm sm:text-base font-bold text-[color:var(--gm-text-secondary)] capitalize mt-1.5 tracking-wider">
-            {now.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+      {/* 2. CARD DO RELÓGIO DIGITAL CENTRALIZADO (COMO NO PRINT DO USUÁRIO) */}
+      <div className={`p-6 sm:p-8 flex flex-col items-center justify-center text-center ${cardBase} bg-white/[0.02] backdrop-blur-md`}>
+        <div className="flex items-center justify-center gap-3 sm:gap-4 text-white">
+          <Clock size={28} className="text-slate-400 shrink-0" />
+          <span className="text-4xl sm:text-5xl md:text-6xl font-black font-mono tracking-widest text-white drop-shadow-md">
+            {now.toLocaleTimeString("pt-BR", { hour12: false })}
           </span>
         </div>
-
-        {/* BOTÕES NOVO ORÇAMENTO E EXPORTAR LADO A LADO COM O MESMO VISUAL PADRÃO */}
-        <div className="flex items-center justify-center gap-3 sm:gap-4 w-full">
-          <Link
-            to="/budgets?new=true"
-            className="gm-btn group flex-1 h-12 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] transition-all cursor-pointer"
-          >
-            <Plus size={18} className="transition-transform duration-300 ease-in-out group-hover:rotate-180" />
-            <span>Novo Orçamento</span>
-          </Link>
-
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={exporting}
-            className="gm-btn group flex-1 h-12 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            title="Exportar relatório consolidado (Orçamentos, Clientes, Notas, Financeiro e Mercado) no papel timbrado"
-          >
-            {exporting ? (
-              <>
-                <Loader2 size={18} className="animate-spin text-white" />
-                <span>Exportando...</span>
-              </>
-            ) : (
-              <>
-                <Download size={18} className="transition-transform duration-300 ease-in-out group-hover:scale-110" />
-                <span>Exportar</span>
-              </>
-            )}
-          </button>
+        <div className="mt-2 text-sm sm:text-base font-semibold text-slate-400 tracking-wide">
+          {formatDashboardDate(now)}
         </div>
+      </div>
+
+      {/* 3. BOTÕES NOVO ORÇAMENTO E EXPORTAR LADO A LADO */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+        <Link
+          to="/budgets?new=true"
+          className="gm-btn group h-14 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/5 hover:bg-white/10 text-white shadow-none"
+        >
+          <Plus size={18} className="transition-transform duration-300 ease-in-out group-hover:rotate-180 text-[color:var(--gm-primary)]" />
+          <span>NOVO ORÇAMENTO</span>
+        </Link>
+
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={exporting}
+          className="gm-btn group h-14 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/5 hover:bg-white/10 text-white shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
+          title="Exportar relatório consolidado (Orçamentos, Clientes, Notas, Financeiro e Mercado) no papel timbrado"
+        >
+          {exporting ? (
+            <>
+              <Loader2 size={18} className="animate-spin text-white" />
+              <span>EXPORTANDO...</span>
+            </>
+          ) : (
+            <>
+              <Download size={18} className="transition-transform duration-300 ease-in-out group-hover:scale-110 text-[color:var(--gm-primary)]" />
+              <span>EXPORTAR</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* SEPARADOR: MÉTRICAS */}
       <SectionDivider label="Métricas gerais" />
 
-      {/* 2. TOP METRIC CARDS WITH DISTINCT ICON BOXES (4 COLUMNS) */}
+      {/* 4. TOP METRIC CARDS WITH DISTINCT ICON BOXES (4 COLUMNS) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-1">
         {/* CARD 1: FATURADO NO MÊS (com sparkline e modal interativo) */}
         <div
@@ -508,7 +526,7 @@ export default function Dashboard() {
                 {formatCurrency(stats.faturamentoMensal)}
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+            <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none group-hover:scale-110 transition-transform">
               <TrendingUp size={20} />
             </div>
           </div>
@@ -539,7 +557,7 @@ export default function Dashboard() {
                 {stats.orcametosAbertos}
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-11 h-11 rounded-xl barra border border-amber-500/25 text-amber-400 flex items-center justify-center shrink-0 shadow-none">
               <Clock size={20} />
             </div>
           </div>
@@ -565,7 +583,7 @@ export default function Dashboard() {
                 {formatCurrency(stats.ticketMedio)}
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-11 h-11 rounded-xl barra border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-none">
               <Wallet size={20} />
             </div>
           </div>
@@ -591,7 +609,7 @@ export default function Dashboard() {
                 {stats.clientesAtivos}
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-400 flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-11 h-11 rounded-xl barra border border-blue-500/25 text-blue-400 flex items-center justify-center shrink-0 shadow-none">
               <Users size={20} />
             </div>
           </div>
@@ -614,7 +632,7 @@ export default function Dashboard() {
       <div className="space-y-4 mt-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/20 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl barra border border-[color:var(--gm-primary)]/20 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
               <FileText size={18} />
             </div>
             <h2 className="text-xl font-bold text-[color:var(--gm-text)] tracking-tight">
@@ -622,7 +640,7 @@ export default function Dashboard() {
             </h2>
           </div>
 
-          <Link to="/budgets" className="gm-btn gm-btn-soft h-12 text-xs uppercase tracking-wider">
+          <Link to="/budgets" className="gm-btn gm-btn-soft h-12 text-xs uppercase tracking-wider shadow-none">
             <span>Ver Todos</span>
             <ArrowUpRight size={14} />
           </Link>
@@ -632,23 +650,23 @@ export default function Dashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-white/[0.02] border-b border-[color:var(--gm-border-light)] text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
+                <tr className="barra border-b border-white/10 text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
                   <th className="px-6 py-4">CLIENTE</th>
                   <th className="px-6 py-4">SERVIÇO</th>
                   <th className="px-6 py-4">VALOR</th>
                   <th className="px-6 py-4 text-right">STATUS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[color:var(--gm-border)] text-sm">
+              <tbody className="divide-y divide-white/10 text-sm">
                 {recentBudgets.map((item) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-white/[0.03] transition-colors cursor-pointer group"
+                    className="hover:bg-white/[0.04] transition-colors cursor-pointer group"
                     onClick={() => navigate(`/budgets`)}
                   >
                     <td className="px-6 py-4 font-bold text-[color:var(--gm-text)] whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-[color:var(--gm-border-light)] flex items-center justify-center text-[color:var(--gm-text-secondary)] font-extrabold text-xs uppercase group-hover:bg-[color:var(--gm-primary)] group-hover:text-white group-hover:border-[color:var(--gm-primary)] transition-colors">
+                        <div className="w-8 h-8 rounded-lg barra border border-white/10 flex items-center justify-center text-[color:var(--gm-text-secondary)] font-extrabold text-xs uppercase group-hover:bg-[color:var(--gm-primary)] group-hover:text-white group-hover:border-[color:var(--gm-primary)] transition-colors shadow-none">
                           {item.client_name.substring(0, 2)}
                         </div>
                         <span className="text-sm font-semibold text-[color:var(--gm-text)]">
@@ -684,7 +702,7 @@ export default function Dashboard() {
         {/* LEFT COLUMN: NOVO CLIENTE */}
         <div className={`lg:col-span-2 p-6 ${cardBase}`}>
           <div className="flex items-center gap-3.5 mb-5">
-            <div className="w-11 h-11 rounded-xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
               <UserPlus size={20} />
             </div>
             <div>
@@ -726,7 +744,7 @@ export default function Dashboard() {
             </div>
 
             <div className="pt-2">
-              <button type="submit" disabled={savingClient} className="gm-btn h-12 text-xs uppercase tracking-wider">
+              <button type="submit" disabled={savingClient} className="gm-btn h-12 text-xs uppercase tracking-wider shadow-none">
                 {savingClient ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                 <span>Cadastrar Cliente</span>
               </button>
@@ -771,7 +789,7 @@ export default function Dashboard() {
                       pushToast({ title: "Cor copiada", message: `Cor ${color.name} (${color.hex}) copiada!`, type: "success" });
                     } catch (e) {}
                   }}
-                  className="rounded-lg border border-[#26262A] overflow-hidden bg-[#131315] hover:border-[#F65A1A]/70 transition-all cursor-pointer group shadow-xs flex flex-col"
+                  className="rounded-xl border border-white/10 overflow-hidden barra hover:border-[#F65A1A]/70 transition-all cursor-pointer group shadow-none flex flex-col"
                   title={`Clique para copiar ${color.hex}`}
                 >
                   {/* Bloco Superior com a Cor */}
@@ -785,7 +803,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* Painel Inferior com Nome e Código Hex */}
-                  <div className="p-2 sm:p-2.5 bg-[#131315] border-t border-[#26262A]/60 flex flex-col justify-center">
+                  <div className="p-2 sm:p-2.5 barra border-t border-white/10 flex flex-col justify-center">
                     <h4 className="text-xs font-bold text-white group-hover:text-[#F65A1A] transition-colors leading-tight">
                       {color.name}
                     </h4>
@@ -802,12 +820,12 @@ export default function Dashboard() {
 
       {/* MODAL FATURAMENTO (MÉTRICAS GERAIS) */}
       {faturamentoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-4xl gm-card rounded-3xl border border-white/20 p-6 sm:p-8 shadow-2xl overflow-hidden space-y-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl fora rounded-3xl border border-white/12 p-6 sm:p-8 shadow-none overflow-hidden space-y-6 max-h-[90vh] overflow-y-auto">
             {/* Header do Modal */}
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-[color:var(--gm-primary)]/15 border border-[color:var(--gm-primary)]/30 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-inner">
+                <div className="w-12 h-12 rounded-2xl barra border border-[color:var(--gm-primary)]/30 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
                   <TrendingUp size={24} />
                 </div>
                 <div>
@@ -821,7 +839,7 @@ export default function Dashboard() {
               </div>
               <button
                 onClick={() => setFaturamentoModalOpen(false)}
-                className="p-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer"
+                className="p-2.5 rounded-xl barra hover:bg-white/15 border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-none"
                 title="Fechar modal"
               >
                 <X size={20} />
@@ -830,7 +848,7 @@ export default function Dashboard() {
 
             {/* Resumo em cards dentro do modal */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl gm-card gm-summary-card border-none flex flex-col justify-between">
+              <div className="p-4 rounded-2xl barra border border-white/10 flex flex-col justify-between shadow-none">
                 <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
                   Total Faturado ({faturamentoPeriod === "30d" ? "30 dias" : faturamentoPeriod === "6m" ? "6 meses" : "12 meses"})
                 </span>
@@ -842,7 +860,7 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl gm-card gm-summary-card border-none flex flex-col justify-between">
+              <div className="p-4 rounded-2xl barra border border-white/10 flex flex-col justify-between shadow-none">
                 <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
                   Ticket Médio
                 </span>
@@ -854,7 +872,7 @@ export default function Dashboard() {
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl gm-card gm-summary-card border-none flex flex-col justify-between">
+              <div className="p-4 rounded-2xl barra border border-white/10 flex flex-col justify-between shadow-none">
                 <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
                   Meta Mensal (R$ 50.000)
                 </span>
@@ -875,12 +893,12 @@ export default function Dashboard() {
               <div className="text-sm font-bold text-zinc-300">
                 Gráfico de Faturamento acumulado
               </div>
-              <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/10">
+              <div className="flex items-center gap-2 barra p-1.5 rounded-xl border border-white/10 shadow-none">
                 <button
                   onClick={() => setFaturamentoPeriod("30d")}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     faturamentoPeriod === "30d"
-                      ? "bg-[color:var(--gm-primary)] text-white shadow-md"
+                      ? "bg-[color:var(--gm-primary)] text-white shadow-none"
                       : "text-zinc-400 hover:text-white"
                   }`}
                 >
@@ -890,7 +908,7 @@ export default function Dashboard() {
                   onClick={() => setFaturamentoPeriod("6m")}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     faturamentoPeriod === "6m"
-                      ? "bg-[color:var(--gm-primary)] text-white shadow-md"
+                      ? "bg-[color:var(--gm-primary)] text-white shadow-none"
                       : "text-zinc-400 hover:text-white"
                   }`}
                 >
@@ -900,7 +918,7 @@ export default function Dashboard() {
                   onClick={() => setFaturamentoPeriod("12m")}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     faturamentoPeriod === "12m"
-                      ? "bg-[color:var(--gm-primary)] text-white shadow-md"
+                      ? "bg-[color:var(--gm-primary)] text-white shadow-none"
                       : "text-zinc-400 hover:text-white"
                   }`}
                 >
@@ -910,7 +928,7 @@ export default function Dashboard() {
             </div>
 
             {/* GRÁFICO PRINCIPAL COM ALTURA E VISIBILIDADE GARANTIDAS */}
-            <div className="w-full h-72 bg-black/30 rounded-2xl border border-white/10 p-4 relative overflow-hidden">
+            <div className="w-full h-72 barra rounded-2xl border border-white/10 p-4 relative overflow-hidden shadow-none">
               <SafeResponsive height={260}>
                 <AreaChart data={faturamentoChartData} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
                   <defs>
@@ -930,7 +948,7 @@ export default function Dashboard() {
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="p-3 bg-zinc-900/95 border border-white/20 rounded-xl shadow-2xl backdrop-blur-md text-white">
+                          <div className="p-3 fora border border-white/15 rounded-xl shadow-none backdrop-blur-xl text-white">
                             <p className="text-xs font-bold text-zinc-400 mb-1">{label}</p>
                             <p className="text-sm font-black text-[color:var(--gm-primary)]">
                               {formatCurrency(Number(payload[0].value))}
@@ -963,7 +981,7 @@ export default function Dashboard() {
               <span>* Atualizado em tempo real</span>
               <button
                 onClick={() => setFaturamentoModalOpen(false)}
-                className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer"
+                className="px-5 py-2.5 rounded-xl barra hover:bg-white/15 border border-white/10 text-white font-bold transition-all cursor-pointer shadow-none"
               >
                 Fechar
               </button>

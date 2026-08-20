@@ -21,6 +21,282 @@
 }
 
 /* =========================================================
+   GM EDIFICAÇÃO — GLASS TRANSLÚCIDO PREMIUM
+   ========================================================= */
+
+/* BASE DO VIDRO PRINCIPAL */
+.barra,
+.fora,
+.glass,
+.glass-panel,
+.glass-card,
+.card,
+.panel,
+.container-glass,
+.gm-glass,
+.gm-card,
+.gm-dashboard-card,
+.gm-budget-card,
+.gm-expense-card,
+.expenses-container {
+  background: rgba(18, 19, 22, 0.28) !important;
+  backdrop-filter: blur(28px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(125%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* =========================================================
+   VIDRO MAIS TRANSPARENTE
+   ========================================================= */
+.glass-transparent {
+  background: rgba(20, 21, 24, 0.18) !important;
+  backdrop-filter: blur(24px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(120%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* =========================================================
+   VIDRO MÉDIO
+   ========================================================= */
+.glass-medium {
+  background: rgba(20, 21, 24, 0.32) !important;
+  backdrop-filter: blur(32px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+/* =========================================================
+   VIDRO ESCURO — PARA MODAIS E SOBREPOSIÇÕES
+   ========================================================= */
+.glass-dark {
+  background: rgba(12, 13, 15, 0.42) !important;
+  backdrop-filter: blur(40px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(135%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* =========================================================
+   REFLEXO DO VIDRO
+   ========================================================= */
+.glass::before,
+.glass-panel::before,
+.glass-card::before,
+.card::before,
+.panel::before,
+.gm-glass::before,
+.gm-card::before,
+.gm-dashboard-card::before,
+.gm-budget-card::before,
+.gm-expense-card::before,
+.expenses-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.07) 0%,
+    rgba(255, 255, 255, 0.015) 35%,
+    transparent 65%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* =========================================================
+   BRILHO SUPERIOR
+   ========================================================= */
+.glass::after,
+.glass-panel::after,
+.glass-card::after,
+.gm-glass::after,
+.gm-card::after,
+.gm-dashboard-card::after,
+.gm-budget-card::after,
+.gm-expense-card::after,
+.expenses-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* =========================================================
+   SIDEBAR TRANSLÚCIDA
+   ========================================================= */
+.sidebar,
+aside,
+.sidebar-container,
+.gm-sidebar {
+  background: rgba(10, 11, 13, 0.32) !important;
+  backdrop-filter: blur(35px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(35px) saturate(125%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* =========================================================
+   HEADER TRANSLÚCIDO
+   ========================================================= */
+header,
+.topbar,
+.header,
+.navbar,
+.dashboard-header,
+.gm-header {
+  background: rgba(15, 16, 18, 0.25) !important;
+  backdrop-filter: blur(30px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(130%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* =========================================================
+   CARDS DE MÉTRICAS & RESUMOS
+   ========================================================= */
+.metric-card,
+.stats-card,
+.stat-card,
+.kpi-card {
+  background: rgba(24, 25, 28, 0.24) !important;
+  backdrop-filter: blur(26px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(130%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* =========================================================
+   TABELAS TRANSLÚCIDAS
+   ========================================================= */
+.table-container,
+.table-wrapper,
+.data-table {
+  background: rgba(18, 19, 22, 0.24) !important;
+  backdrop-filter: blur(30px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(125%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+}
+
+/* Cabeçalho da tabela */
+thead {
+  background: rgba(255, 255, 255, 0.045) !important;
+}
+
+/* Linhas */
+tbody tr {
+  background: transparent !important;
+  transition: background 180ms ease;
+}
+
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.045) !important;
+}
+
+/* =========================================================
+   INPUTS TRANSLÚCIDOS
+   ========================================================= */
+input,
+textarea,
+select {
+  background: rgba(10, 11, 13, 0.20) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  color: #ffffff !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  background: rgba(255, 255, 255, 0.045) !important;
+  border-color: rgba(255, 90, 0, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(255, 90, 0, 0.09) !important;
+}
+
+/* =========================================================
+   BOTÕES SECUNDÁRIOS TRANSLÚCIDOS
+   ========================================================= */
+.btn-secondary,
+.button-secondary,
+.secondary-button {
+  background: rgba(255, 255, 255, 0.045) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+/* =========================================================
+   MODAIS & TELAS INTERNAS TRANSLÚCIDAS
+   ========================================================= */
+.modal,
+.dialog,
+.modal-content,
+.dialog-content,
+.gm-modal {
+  background: rgba(20, 21, 24, 0.38) !important;
+  backdrop-filter: blur(42px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(42px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* =========================================================
+   DROPDOWNS
+   ========================================================= */
+.dropdown,
+.menu,
+.popover,
+.select-menu {
+  background: rgba(20, 21, 24, 0.34) !important;
+  backdrop-filter: blur(32px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+/* =========================================================
+   IMPORTANTE:
+   REMOVER FUNDOS OPACOS DOS CONTAINERS INTERNOS
+   ========================================================= */
+.glass .card,
+.glass-panel .card,
+.glass-card .card,
+.gm-glass .card,
+.gm-card .card {
+  background: rgba(255, 255, 255, 0.025) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+@media (max-width: 768px) {
+  .glass,
+  .glass-panel,
+  .glass-card,
+  .card,
+  .panel,
+  .gm-glass,
+  .gm-card,
+  .gm-dashboard-card,
+  .gm-budget-card {
+    background: rgba(18, 19, 22, 0.30) !important;
+    backdrop-filter: blur(22px) !important;
+    -webkit-backdrop-filter: blur(22px) !important;
+  }
+}
+
+/* =========================================================
    CardDigital GM — UI System FINAL (Clean & Flat)
 ========================================================= */
 
@@ -105,8 +381,13 @@
 /* RESET */
 *{ box-sizing:border-box; }
 html {
-  height: 100%;
+  min-height: 100%;
   font-size: calc(var(--gm-app-scale, 1) * 80%);
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scroll-behavior: smooth;
 }
 @media (max-width: 1024px) {
   html {
@@ -115,14 +396,194 @@ html {
 }
 body{
   margin:0;
+  min-height: 100%;
   color:var(--gm-text);
   font-family: var(--gm-font), Inter, ui-sans-serif, system-ui, sans-serif;
   overflow-x:hidden;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling: touch;
   background: var(--gm-bg);
+  touch-action: pan-y;
+  scroll-behavior: smooth;
+}
+
+#root {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: visible !important;
+  touch-action: pan-y;
+}
+
+/* =========================================================
+   ROLAGEM VERTICAL FLUIDA EM TODAS AS TELAS
+   Dashboard, Orçamentos, Clientes, Financeiro, Mercado,
+   Notas, Despesas, Bio, Configurações
+========================================================= */
+.gm-app,
+.gm-layout,
+.gm-main,
+.gm-container,
+[data-page-container],
+.page-container {
+  overflow-y: visible;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Garante rolagem livre em listas, tabelas e modais */
+.gm-scrollable,
+.scroll-y-auto {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scroll-behavior: smooth;
+}
+
+/* Barra de rolagem visualmente discreta e moderna */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gm-primary, #FE540B);
 }
 
 a{ color:inherit; text-decoration:none; }
 button{ font-family:inherit; }
+
+/* =========================================================
+   REACTIVE TOUCH & PRESS SYSTEM (A tela reage no toque, não ao soltar)
+========================================================= */
+.botao,
+button,
+.gm-btn,
+.btn,
+[role="button"],
+input[type="button"],
+input[type="submit"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 100ms ease-out;
+}
+
+.botao:active {
+  transform: scale(0.97);
+  transition: transform 100ms ease-out;
+}
+
+button:active:not(:disabled),
+.gm-btn:active:not(:disabled),
+.botao:active:not(:disabled),
+.btn:active:not(:disabled),
+[role="button"]:active:not([aria-disabled="true"]),
+input[type="button"]:active:not(:disabled),
+input[type="submit"]:active:not(:disabled) {
+  transform: scale(0.97) !important;
+  transition: transform 100ms ease-out !important;
+}
+
+/* =========================================================
+   LOGO NEON ORBIT & GLOW SYSTEM (Flawless Contour)
+========================================================= */
+.gm-logo-box {
+  width: 104px;
+  height: 104px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 26px;
+}
+
+/* Ambient Radial Glow Behind Logo */
+.gm-logo-glow-wrapper {
+  position: absolute;
+  inset: -6px;
+  border-radius: 30px;
+  background: radial-gradient(
+    circle, 
+    rgba(var(--gm-primary-rgb, 246, 90, 26), 0.45) 0%, 
+    rgba(var(--gm-primary-rgb, 246, 90, 26), 0.12) 50%, 
+    transparent 75%
+  );
+  filter: blur(12px);
+  z-index: 0;
+  pointer-events: none;
+  animation: gmPulseGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes gmPulseGlow {
+  0% { opacity: 0.5; transform: scale(0.96); }
+  100% { opacity: 0.95; transform: scale(1.04); }
+}
+
+/* Precision Rotating Neon Contour Border */
+.gm-logo-border-wrapper {
+  position: absolute;
+  inset: -3px;
+  border-radius: 25px;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(var(--gm-primary-rgb, 246, 90, 26), 0.75));
+}
+
+/* Rotating Neon Light Beam Trail */
+.gm-logo-border-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -60%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 220deg,
+    rgba(var(--gm-primary-rgb, 246, 90, 26), 0.25) 260deg,
+    var(--gm-primary, #FF7B17) 310deg,
+    #FFE855 348deg,
+    var(--gm-primary, #FF7B17) 360deg
+  );
+  animation: rotateNeonTrail 2.2s linear infinite;
+}
+
+/* Inner Background Mask to create a clean hollow neon border */
+.gm-logo-border-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: #111317;
+  border-radius: 23px;
+  z-index: 1;
+}
+
+@keyframes rotateNeonTrail {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* The actual logo image */
+.gm-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 22px;
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  display: block;
+}
 
 /* =========================================================
    ANIMATIONS CUSTOM (GM PRO)
@@ -284,62 +745,293 @@ button{ font-family:inherit; }
 /* =========================================================
    LAYOUT
 ========================================================= */
-.gm-layout{ display:flex; min-height:100vh; width:100%; }
-
-/* SIDEBAR: Importante - display flex apenas em desktop */
-.gm-sidebar{
-  width:var(--gm-sidebar-w);
-  min-width:var(--gm-sidebar-w);
-  height:100vh;
-  max-height:100vh;
-  position:sticky; top:0;
-  padding: 18px 14px;
-  backdrop-filter: blur(8px) saturate(135%) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
-  background: linear-gradient(135deg, rgba(255, 122, 0, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(20, 16, 14, 0.35) 100%), rgba(20, 16, 14, 0.55) !important;
-  border: none !important;
-  border-top: none !important;
-  border-right: none !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40) !important;
-  display:flex; flex-direction:column;
-  gap: 10px;
-  z-index: 50;
-  /* Sem transição ao expandir */
-  transition: width 0s, min-width 0s, padding 0s;
+.gm-layout {
+  display: flex;
+  height: 100vh;
+  max-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  overflow: hidden;
+  touch-action: pan-y;
 }
-.gm-sidebar::-webkit-scrollbar {
+
+@media (min-width: 769px) {
+  .gm-layout {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 768px) {
+  .gm-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+}
+
+/* =========================================================
+   SIDEBAR / MENU MODERNO COM FROSTED GLASS E HANDLE
+========================================================= */
+body.resizing button {
+  cursor: ew-resize !important;
+}
+
+body.resizing,
+body.resizing * {
+  user-select: none !important;
+}
+
+.sidebar.is-toggling,
+.gm-sidebar.is-toggling {
+  transition: width 0.3s ease;
+}
+
+.sidebar,
+.gm-sidebar {
+  position: relative;
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 192px;
+  border-radius: 0 24px 24px 0;
+  border-left: none;
+  border-top: none;
+  border-bottom: none;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  z-index: 50;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar::before,
+.gm-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: rgb(255 255 255 / 3%);
+  pointer-events: none;
+}
+
+.sidebar-inner {
+  overflow: hidden;
+  flex: 1;
+  border-radius: inherit;
+  background: rgb(0 0 0 / 14%);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 20px 14px 18px;
+}
+
+.logo-icon {
+  width: 22px;
+}
+
+.logo-text {
+  height: 17px;
+}
+
+.gm-toggle-btn,
+button.handle,
+.handle {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  bottom: auto !important;
+  right: -10px !important;
+  width: 20px !important;
+  height: 40px !important;
+  cursor: pointer !important;
+  z-index: 70 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+}
+
+.gm-toggle-btn:hover,
+.handle:hover {
+  background: transparent !important;
+}
+
+.sidebar button.sidebar-btn,
+.sidebar a.sidebar-btn {
+  position: relative;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  height: 56px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+  padding: 0 20px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  opacity: 0.8;
+  color: rgb(255 255 255 / 95%);
+  transition: all 0.2s ease;
+}
+
+.sidebar button p:nth-child(2),
+.sidebar a.sidebar-btn p {
+  flex: 1 1 auto;
+}
+
+.sidebar button:not(.active):hover,
+.sidebar a.sidebar-btn:not(.active):hover {
+  background: rgb(0 0 0 / 8%);
+  opacity: 1;
+}
+
+.sidebar a.sidebar-btn.active {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+  font-weight: 600;
+  color: #fff;
+}
+
+.sidebar ul {
+  flex: 0 1 auto;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar i,
+.sidebar svg {
+  font-size: 18px;
+  width: 18px;
+  max-width: 18px;
+  min-width: 18px;
+}
+
+.sidebar ul li:last-child {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.sidebar.collapsed,
+.gm-sidebar.collapsed {
+  width: 56px !important;
+  min-width: 56px !important;
+}
+
+.sidebar.collapsed header {
+  padding: 24px 10px 20px;
+  justify-content: center;
+}
+
+.sidebar.collapsed a.sidebar-btn {
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.gm-sidebar::-webkit-scrollbar,
+.sidebar-inner ul::-webkit-scrollbar {
   display: none;
 }
 
 /* Força ocultar sidebar no mobile (css specificity fix) */
 @media (max-width: 768px) {
-  .gm-sidebar {
+  .gm-sidebar,
+  .sidebar {
     display: none !important;
   }
 }
 
-.gm-sidebar.collapsed{
-  width:var(--gm-sidebar-w-collapsed);
-  min-width:var(--gm-sidebar-w-collapsed);
-  /* Animação suave apenas ao encolher */
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: width, min-width, padding;
-  transform: translateZ(0);
+.gm-main {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
-.gm-main{ flex:1; width:100%; padding: 28px; }
-.gm-container{ max-width:var(--gm-container); margin:0 auto; width:100%; }
+@media (min-width: 769px) {
+  .gm-main {
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom Scrollbar Moderno e Discreto */
+.gm-main::-webkit-scrollbar {
+  width: 8px;
+}
+.gm-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gm-main::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+.gm-main::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.gm-container {
+  max-width: 1400px;
+  width: 100%;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: visible;
+  touch-action: pan-y;
+}
 
 /* MOBILE ADJUSTMENTS */
 @media (max-width: 767px){
   .gm-main{ 
     padding: 16px; 
-    /* Espaço para Bottom Nav */
-    padding-bottom: 115px; 
-    /* Espaço para Top Header Mobile */
-    padding-top: 76px; 
+    /* Conteúdo começa logo abaixo do cabeçalho superior e termina com folga acima do menu inferior ao rolar */
+    padding-top: 80px !important; 
+    padding-bottom: 100px !important; 
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    height: 100vh;
+    max-height: 100vh;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -460,7 +1152,7 @@ button{ font-family:inherit; }
 
 @media (max-width: 900px) {
   .gm-grid-4, .gm-grid-3, .gm-grid-2 { grid-template-columns: 1fr; }
-  .gm-main { padding: 16px; padding-bottom: 140px; padding-top: 80px; }
+  .gm-main { padding: 16px; padding-top: 80px !important; padding-bottom: 100px !important; }
 }
 
 /* Mobile Utilities */
@@ -490,21 +1182,31 @@ button{ font-family:inherit; }
 }
 
 /* =========================================================
-   CARDS (Flat)
+   CARDS (Vidro Fosco Cristal Acrylic)
 ========================================================= */
 .gm-card {
-  background: var(--gm-surface);
-  border: 1px solid var(--gm-border);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--gm-radius);
   padding: var(--gm-space-5);
   overflow: hidden;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.4s ease;
   position: relative;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  contain: content; /* PERFORMANCE: Isolate layout/paint */
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+  contain: none !important;
+}
+
+[data-theme="dark"] .gm-card,
+.gm-dark .gm-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-card {
+  background: rgba(18, 18, 24, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 .gm-card::before {
@@ -548,10 +1250,16 @@ button{ font-family:inherit; }
 }
 
 .gm-card:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.75);
   border-color: color-mix(in srgb, var(--gm-primary), transparent 70%);
   transform: none;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 15px color-mix(in srgb, var(--gm-primary), transparent 85%);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .gm-card:hover,
+.gm-dark .gm-card:hover,
+html:not([data-theme="light"]):not(.gm-light) .gm-card:hover {
+  background: rgba(25, 25, 32, 0.75);
 }
 
 .gm-card:hover::before {
@@ -629,7 +1337,8 @@ button{ font-family:inherit; }
   user-select: none;
 }
 .gm-btn:active {
-  transform: none;
+  transform: scale(0.97);
+  transition: transform 100ms ease-out;
 }
 .gm-btn:disabled {
   opacity: 0.5;
@@ -1160,6 +1869,35 @@ button svg.whatsapp-icon {
   stroke: none !important;
 }
 
+/* Garante que o ícone do WhatsApp nos botões de ação dos orçamentos (gm-budget-action-btn e gm-btn) seja LARANJA por padrão */
+.gm-budget-action-btn svg.whatsapp-icon,
+button.gm-budget-action-btn svg.whatsapp-icon,
+.gm-btn svg.whatsapp-icon,
+.gm-budget-action-btn .whatsapp-icon,
+button.gm-budget-action-btn .whatsapp-icon,
+.gm-btn .whatsapp-icon {
+  color: var(--gm-primary, #FF6900) !important;
+  fill: var(--gm-primary, #FF6900) !important;
+  stroke: none !important;
+}
+
+.gm-budget-action-btn svg.whatsapp-icon path,
+button.gm-budget-action-btn svg.whatsapp-icon path,
+.gm-btn svg.whatsapp-icon path,
+.gm-budget-action-btn .whatsapp-icon path,
+button.gm-budget-action-btn .whatsapp-icon path,
+.gm-btn .whatsapp-icon path {
+  fill: var(--gm-primary, #FF6900) !important;
+}
+
+/* Exceção para botões do tipo btn-whatsapp (ex: botão flutuante ou botões verdes) que devem usar a própria cor/branca */
+.btn-whatsapp svg.whatsapp-icon,
+.btn-whatsapp .whatsapp-icon,
+.btn-whatsapp .whatsapp-icon path {
+  color: inherit !important;
+  fill: currentColor !important;
+}
+
 [data-theme="dark"] .gm-btn:hover svg.whatsapp-icon,
 [data-theme="dark"] button:hover svg.whatsapp-icon,
 [data-theme="dark"] .btn-whatsapp:hover svg,
@@ -1167,7 +1905,19 @@ button svg.whatsapp-icon {
 .gm-dark button:hover svg.whatsapp-icon,
 .gm-dark .btn-whatsapp:hover svg,
 main [data-theme="dark"] button:hover svg.whatsapp-icon,
-main .gm-dark button:hover svg.whatsapp-icon {
+main .gm-dark button:hover svg.whatsapp-icon,
+.gm-budget-action-btn:hover svg.whatsapp-icon,
+.gm-budget-action-btn:hover .whatsapp-icon,
+.gm-budget-action-btn:hover .whatsapp-icon path,
+button.gm-budget-action-btn:hover svg.whatsapp-icon,
+button.gm-budget-action-btn:hover .whatsapp-icon,
+button.gm-budget-action-btn:hover .whatsapp-icon path,
+.gm-budget-action-btn:active svg.whatsapp-icon,
+.gm-budget-action-btn:active .whatsapp-icon,
+.gm-budget-action-btn:active .whatsapp-icon path,
+button.gm-budget-action-btn:active svg.whatsapp-icon,
+button.gm-budget-action-btn:active .whatsapp-icon,
+button.gm-budget-action-btn:active .whatsapp-icon path {
   color: #ffffff !important;
   fill: #ffffff !important;
   stroke: none !important;
@@ -1333,63 +2083,74 @@ input[type="range"]::-moz-range-thumb {
   --gm-container: 100%;
 }
 
-/* estrutura ocupa sempre a altura da tela */
+/* estrutura ocupa sempre a altura necessária sem travar a rolagem */
 html, body, #root{
-  height: 100%;
+  min-height: 100%;
+  touch-action: pan-y;
 }
 
-/* layout sempre com altura mínima da viewport */
+/* layout sempre com altura mínima flexível */
 .gm-layout{
-  min-height: 100vh;
+  min-height: 100%;
+  touch-action: pan-y;
 }
 
 /* =========================================================
    GM — GLASS PREMIUM + APPLE SCROLL + BACKGROUND LAYER
 ========================================================= */
 
-body{ overflow: hidden; }
-
-.gm-main{
-  height: 100vh;
+body{
+  overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  scroll-behavior: smooth;
+  touch-action: pan-y;
+}
+
+.gm-main{
+  min-height: 100%;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 /* =========================================================
-   SCROLLBAR (HIDDEN)
+   SCROLLBAR (OCULTA VISUALMENTE / ROLAGEM 100% ATIVA VIA MOUSE E TOUCH)
 ========================================================= */
-::-webkit-scrollbar {
-  display: none;
-}
 * {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+
+.no-scrollbar,
+.custom-scroll,
+.custom-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.no-scrollbar::-webkit-scrollbar,
 .custom-scroll::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {
-  display: block;
-  width: 4px;
-  height: 4px;
-}
-.custom-scroll::-webkit-scrollbar-track,
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scroll::-webkit-scrollbar-thumb,
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-}
-.custom-scroll::-webkit-scrollbar-button,
-.custom-scrollbar::-webkit-scrollbar-button {
-  display: none;
-}
-.custom-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }
 
 /* =========================================================
@@ -1463,45 +2224,159 @@ body{ overflow: hidden; }
 /* sidebar glass */
 aside.gm-sidebar,
 .gm-sidebar {
-  position: relative;
-  backdrop-filter: blur(8px) saturate(135%) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
-  background: linear-gradient(135deg, rgba(255, 122, 0, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(20, 16, 14, 0.35) 100%), rgba(20, 16, 14, 0.55) !important;
-  border: none !important;
-  border-top: none !important;
-  border-right: none !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40) !important;
+  position: relative !important;
+  overflow: visible !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: none !important;
 }
 
-/* cards & containers glass premium - EFEITO GLASSMORPHISM SOLICITADO PELO USUÁRIO */
+/* Toggle de expansão/recolhimento posicionado exatamente e fixo na borda divisória (sem deslocamento ou tremor ao passar o mouse) */
+.gm-sidebar-toggle,
+button.gm-sidebar-toggle,
+.gm-sidebar .gm-sidebar-toggle {
+  position: absolute !important;
+  left: 100% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 100 !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 9999px !important;
+  background: var(--gm-primary, #f97316) !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transition: background 150ms ease, box-shadow 150ms ease, filter 150ms ease !important;
+}
+
+.gm-sidebar-toggle:hover,
+button.gm-sidebar-toggle:hover,
+.gm-sidebar .gm-sidebar-toggle:hover {
+  transform: translate(-50%, -50%) !important;
+  background: var(--gm-primary-hover, #ea580c) !important;
+  filter: brightness(1.1) !important;
+  box-shadow: 0 2px 12px rgba(249, 115, 22, 0.5) !important;
+}
+
+.gm-sidebar-toggle:active,
+button.gm-sidebar-toggle:active,
+.gm-sidebar .gm-sidebar-toggle:active,
+.gm-sidebar-toggle:focus,
+button.gm-sidebar-toggle:focus {
+  transform: translate(-50%, -50%) !important;
+  filter: brightness(0.95) !important;
+  transition: none !important;
+}
+
+.gm-sidebar-toggle svg {
+  transform: none !important;
+  transition: none !important;
+}
+
+[data-theme="dark"] aside.gm-sidebar,
+.gm-dark aside.gm-sidebar,
+[data-theme="dark"] .gm-sidebar,
+.gm-dark .gm-sidebar,
+html:not([data-theme="light"]):not(.gm-light) .gm-sidebar {
+  background: rgba(18, 18, 22, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+}
+
+/* cards & containers glass premium - VIDRO FOSCO NO LUGAR DE SOMBRA PESADA */
+.barra,
+.fora,
 .glass-card,
 .glass,
 .glass-container,
 .gm-card,
+.gm-budget-card,
+.gm-budget-row,
 .gm-dashboard-card,
 .gm-stat-card,
 .gm-chart-container,
 .card,
 .panel,
 .gm-filter-btn,
+.gm-filter-tab,
+.gm-status-capsule,
+.gm-budget-action-btn,
 .btn-glass,
 .gm-btn-secondary,
 .btn-secondary {
   position: relative !important;
   overflow: hidden !important;
-  background: rgba(255, 255, 255, 0.18) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   border-radius: 20px !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 12px 6px rgba(255, 255, 255, 0.25) !important;
+  box-shadow: none !important;
+  contain: none !important;
   transition: all 0.25s ease !important;
+}
+
+[data-theme="dark"] .barra,
+[data-theme="dark"] .fora,
+.gm-dark .barra,
+.gm-dark .fora,
+[data-theme="dark"] .glass-card,
+.gm-dark .glass-card,
+[data-theme="dark"] .glass,
+.gm-dark .glass,
+[data-theme="dark"] .glass-container,
+.gm-dark .glass-container,
+[data-theme="dark"] .gm-card,
+.gm-dark .gm-card,
+[data-theme="dark"] .gm-budget-card,
+.gm-dark .gm-budget-card,
+[data-theme="dark"] .gm-budget-row,
+.gm-dark .gm-budget-row,
+[data-theme="dark"] .gm-dashboard-card,
+.gm-dark .gm-dashboard-card,
+[data-theme="dark"] .gm-stat-card,
+.gm-dark .gm-stat-card,
+[data-theme="dark"] .gm-chart-container,
+.gm-dark .gm-chart-container,
+[data-theme="dark"] .card,
+.gm-dark .card,
+[data-theme="dark"] .panel,
+.gm-dark .panel,
+[data-theme="dark"] .gm-filter-tab,
+.gm-dark .gm-filter-tab,
+[data-theme="dark"] .gm-status-capsule,
+.gm-dark .gm-status-capsule,
+[data-theme="dark"] .gm-budget-action-btn,
+.gm-dark .gm-budget-action-btn,
+html:not([data-theme="light"]):not(.gm-light) .barra,
+html:not([data-theme="light"]):not(.gm-light) .fora,
+html:not([data-theme="light"]):not(.gm-light) .glass-card,
+html:not([data-theme="light"]):not(.gm-light) .glass,
+html:not([data-theme="light"]):not(.gm-light) .glass-container,
+html:not([data-theme="light"]):not(.gm-light) .gm-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-budget-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-budget-row,
+html:not([data-theme="light"]):not(.gm-light) .gm-dashboard-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-stat-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-chart-container,
+html:not([data-theme="light"]):not(.gm-light) .card,
+html:not([data-theme="light"]):not(.gm-light) .panel,
+html:not([data-theme="light"]):not(.gm-light) .gm-filter-tab,
+html:not([data-theme="light"]):not(.gm-light) .gm-status-capsule,
+html:not([data-theme="light"]):not(.gm-light) .gm-budget-action-btn {
+  background: rgba(18, 18, 22, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+  contain: none !important;
 }
 
 /* Tamanho Fixo Específico para .glass-card quando explicitamente definido */
@@ -1610,8 +2485,14 @@ select:focus {
   box-shadow: 0 0 14px rgba(255, 105, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
-/* BG layer global */
-.gm-layout{ position:relative; isolation:isolate; }
+/* BG layer global & Root background container */
+.gm-layout{ position:relative; isolation:isolate; min-height: 100vh; }
+
+html.gm-has-bg,
+html.gm-has-bg body,
+body.gm-has-bg {
+  background-color: transparent !important;
+}
 
 .gm-layout::before{
   content:"";
@@ -1766,8 +2647,14 @@ select:focus {
 }
 
 /* Base text color overrides for light mode and custom theme variables */
-[data-theme="light"] body, .gm-light body, body {
+[data-theme="light"] body:not(.gm-has-bg), .gm-light body:not(.gm-has-bg), body:not(.gm-has-bg) {
   background-color: var(--gm-bg) !important;
+  color: var(--gm-title, var(--gm-text)) !important;
+}
+
+html.gm-has-bg body,
+body.gm-has-bg {
+  background-color: transparent !important;
   color: var(--gm-title, var(--gm-text)) !important;
 }
 
@@ -1858,17 +2745,18 @@ aside.gm-sidebar button.absolute {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
 }
 
-/* Cards override for Light Theme and Dark Theme - GLASSMORPHISM BLUR EM TUDO */
+/* Cards override for Light Theme and Dark Theme - VIDRO FOSCO NO LUGAR DE SOMBRA PESADA */
 [data-theme="light"] .gm-card, .gm-light .gm-card,
 [data-theme="light"] .glass, .gm-light .glass,
-[data-theme="light"] .glass-card, .gm-light .glass-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.72) 100%), rgba(255, 255, 255, 0.75) !important;
-  border: 1px solid rgba(0, 0, 0, 0.10) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.90) !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.80) !important;
+[data-theme="light"] .glass-card, .gm-light .glass-card,
+[data-theme="light"] .barra, .gm-light .barra {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: none !important;
   color: var(--gm-title, #1B1D22) !important;
-  backdrop-filter: blur(20px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
 }
 
 [data-theme="light"] .gm-card::before, .gm-light .gm-card::before,
@@ -1879,18 +2767,19 @@ aside.gm-sidebar button.absolute {
 
 /* Painel de Configurações (Wrapper dos Ajustes) */
 [data-theme="light"] .gm-settings-card, .gm-light .gm-settings-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 255, 255, 0.75) 100%), rgba(255, 255, 255, 0.80) !important;
-  backdrop-filter: blur(20px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.10) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.90) !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: none !important;
   color: var(--gm-title, #1B1D22) !important;
 }
 
 [data-theme="light"] .gm-card:hover, .gm-light .gm-card:hover {
   border-color: var(--gm-primary) !important;
-  box-shadow: 0 12px 28px rgba(0,0,0,.07), 0 0 15px var(--gm-primary-soft) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  box-shadow: none !important;
 }
 
 /* Form fields (inputs, selects, textareas) */
@@ -2686,41 +3575,6 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
   color: #1B1D22 !important;
 }
 
-/* Custom Lixeira/Trash Button Style: Orange Background, White Icon */
-button:has(svg.lucide-trash),
-button:has(svg.lucide-trash-2),
-[data-theme="light"] button:has(svg.lucide-trash),
-[data-theme="light"] button:has(svg.lucide-trash-2),
-.gm-light button:has(svg.lucide-trash),
-.gm-light button:has(svg.lucide-trash-2) {
-  background-color: #FF6900 !important;
-  background: #FF6900 !important;
-  border: none !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 4px 12px rgba(255, 105, 0, 0.15) !important;
-  transition: all 0.2s ease-in-out !important;
-}
-
-button:has(svg.lucide-trash) svg,
-button:has(svg.lucide-trash-2) svg,
-[data-theme="light"] button:has(svg.lucide-trash) svg,
-[data-theme="light"] button:has(svg.lucide-trash-2) svg,
-.gm-light button:has(svg.lucide-trash) svg,
-.gm-light button:has(svg.lucide-trash-2) svg {
-  color: #FFFFFF !important;
-  fill: none !important;
-}
-
-button:has(svg.lucide-trash):hover,
-button:has(svg.lucide-trash-2):hover,
-[data-theme="light"] button:has(svg.lucide-trash):hover,
-[data-theme="light"] button:has(svg.lucide-trash-2):hover {
-  background-color: #FF7F1F !important;
-  background: #FF7F1F !important;
-  box-shadow: 0 6px 16px rgba(255, 105, 0, 0.25) !important;
-  transform: none !important;
-}
-
 /* Note Card and Note Modal Premium Overrides for Light Theme */
 [data-theme="light"] .gm-note-card,
 .gm-light .gm-note-card {
@@ -3407,9 +4261,13 @@ body.bottom-nav-visible .pagination-dots-container {
 
 /* =========================================================
    UNIVERSAL GLASSMORPHISM & BACKGROUND BLUR EFFECTS FOR ALL CONTAINERS
+   (VIDRO FOSCO NO LUGAR DE SOMBRA PESADA - .barra E .fora)
 ========================================================= */
+.barra,
+.fora,
 .gm-card,
 .gm-budget-card,
+.gm-budget-row,
 .gm-client-card,
 .gm-item-card,
 .gm-product-card,
@@ -3425,6 +4283,9 @@ body.bottom-nav-visible .pagination-dots-container {
 .gm-statusmenu,
 .gm-tabs,
 .gm-tabs-container,
+.gm-filter-tab,
+.gm-status-capsule,
+.gm-budget-action-btn,
 .gm-drawer,
 .gm-sheet,
 .gm-dropdown,
@@ -3452,19 +4313,90 @@ body.bottom-nav-visible .pagination-dots-container {
 .gm-accordion,
 .gm-highlighted-budget-glass,
 .gm-highlighted-row-glass,
+.gm-sidebar,
+.gm-navbar,
+.gm-bottom-nav,
+nav.fixed.bottom-0,
 [role="dialog"] {
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  background: rgba(255, 255, 255, 0.28) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(18, 18, 22, 0.6) !important;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 0 8px 4px rgba(255, 255, 255, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+  contain: none !important;
+}
+
+[data-theme="light"] .barra,
+[data-theme="light"] .fora,
+.gm-light .barra,
+.gm-light .fora,
+[data-theme="light"] .gm-card,
+[data-theme="light"] .gm-budget-card,
+[data-theme="light"] .gm-budget-row,
+[data-theme="light"] .gm-client-card,
+[data-theme="light"] .gm-item-card,
+[data-theme="light"] .gm-product-card,
+[data-theme="light"] .gm-stat-card,
+[data-theme="light"] .gm-dashboard-card,
+[data-theme="light"] .gm-settings-card,
+[data-theme="light"] .gm-settings-section,
+[data-theme="light"] .gm-modal,
+[data-theme="light"] .gm-modal-content,
+[data-theme="light"] .gm-panel,
+[data-theme="light"] .gm-toolbar,
+[data-theme="light"] .gm-toolbar-container,
+[data-theme="light"] .gm-statusmenu,
+[data-theme="light"] .gm-tabs,
+[data-theme="light"] .gm-tabs-container,
+[data-theme="light"] .gm-filter-tab,
+[data-theme="light"] .gm-status-capsule,
+[data-theme="light"] .gm-budget-action-btn,
+[data-theme="light"] .gm-drawer,
+[data-theme="light"] .gm-sheet,
+[data-theme="light"] .gm-dropdown,
+[data-theme="light"] .gm-popover,
+[data-theme="light"] .gm-menu-dropdown,
+[data-theme="light"] .gm-glass,
+[data-theme="light"] .glass,
+[data-theme="light"] .glass-card,
+[data-theme="light"] .glass-container,
+[data-theme="light"] .gm-box,
+[data-theme="light"] .gm-section,
+[data-theme="light"] .gm-chart-box,
+[data-theme="light"] .gm-chart-container,
+[data-theme="light"] .gm-note-card,
+[data-theme="light"] .gm-expense-card,
+[data-theme="light"] .gm-market-card,
+[data-theme="light"] .gm-finance-card,
+[data-theme="light"] .gm-report-card,
+[data-theme="light"] .gm-bio-card,
+[data-theme="light"] .gm-bio-container,
+[data-theme="light"] .gm-bio-preview,
+[data-theme="light"] .gm-table-container,
+[data-theme="light"] .gm-widget,
+[data-theme="light"] .gm-filter-bar,
+[data-theme="light"] .gm-accordion,
+[data-theme="light"] [role="dialog"],
+.gm-light .gm-card,
+.gm-light .gm-budget-card,
+.gm-light .gm-budget-row,
+.gm-light .glass-card,
+.gm-light .gm-modal,
+.gm-light [role="dialog"],
+.gm-light .gm-filter-tab,
+.gm-light .gm-status-capsule,
+.gm-light .gm-budget-action-btn,
+.gm-light .gm-settings-card,
+.gm-light .gm-settings-section,
+.gm-light .gm-panel {
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: none !important;
 }
 
 .gm-card::before,
@@ -3578,6 +4510,7 @@ body.bottom-nav-visible .pagination-dots-container {
 /* TRANSPARÊNCIA E DESFOQUE ULTRALÍPIDO QUANDO O BACKGROUND ESTIVER ATIVADO */
 html.gm-has-bg .gm-card,
 html.gm-has-bg .gm-budget-card,
+html.gm-has-bg .gm-budget-row,
 html.gm-has-bg .gm-client-card,
 html.gm-has-bg .gm-item-card,
 html.gm-has-bg .gm-product-card,
@@ -3617,14 +4550,19 @@ html.gm-has-bg .gm-bio-preview,
 html.gm-has-bg .gm-table-container,
 html.gm-has-bg .gm-widget,
 html.gm-has-bg .gm-filter-bar,
-html.gm-has-bg [role="dialog"] {
-  backdrop-filter: blur(40px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.01) 40%, rgba(0, 0, 0, 0.10) 100%), rgba(12, 16, 22, 0.28) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.32) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.24) !important;
-  box-shadow: 0 35px 100px rgba(0, 0, 0, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.30), inset 0 0 35px rgba(255, 255, 255, 0.04) !important;
+html.gm-has-bg .gm-accordion,
+html.gm-has-bg .gm-sidebar,
+html.gm-has-bg .gm-navbar,
+html.gm-has-bg .gm-bottom-nav,
+html.gm-has-bg [role="dialog"],
+html.gm-has-bg .barra,
+html.gm-has-bg .fora {
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(18, 18, 22, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+  contain: none !important;
 }
 
 html.gm-has-bg[data-theme="light"] .gm-card,
@@ -3634,13 +4572,20 @@ html.gm-has-bg.gm-light .glass,
 html.gm-has-bg[data-theme="light"] .glass-card,
 html.gm-has-bg.gm-light .glass-card,
 html.gm-has-bg[data-theme="light"] .gm-settings-card,
-html.gm-has-bg.gm-light .gm-settings-card {
-  backdrop-filter: blur(28px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.35) 100%), rgba(255, 255, 255, 0.45) !important;
-  border: 1px solid rgba(0, 0, 0, 0.10) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.90) !important;
+html.gm-has-bg.gm-light .gm-settings-card,
+html.gm-has-bg[data-theme="light"] .gm-settings-section,
+html.gm-has-bg.gm-light .gm-settings-section,
+html.gm-has-bg[data-theme="light"] .gm-panel,
+html.gm-has-bg.gm-light .gm-panel,
+html.gm-has-bg[data-theme="light"] .barra,
+html.gm-has-bg[data-theme="light"] .fora,
+html.gm-has-bg.gm-light .barra,
+html.gm-has-bg.gm-light .fora {
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: none !important;
 }
 
 .gm-search,
@@ -4152,8 +5097,8 @@ button.bg-\[var\(--gm-primary\)\]\/20 {
 }
 [data-theme="dark"] .gm-nav a.active svg,
 .gm-dark .gm-nav a.active svg {
-  color: #FF7B17 !important;
-  stroke: #FF7B17 !important;
+  color: var(--gm-menu-icon, var(--gm-primary, #FE540B)) !important;
+  stroke: var(--gm-menu-icon, var(--gm-primary, #FE540B)) !important;
 }
 
 /* Botões do Rodapé do Menu (Botões de Ação) */
@@ -4710,25 +5655,6 @@ table td, .gm-table td {
   background-color: #262C39 !important;
 }
 
-/* SCROLLBARS */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gm-scrollbar, #313947);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gm-scrollbar-hover, #FF7B17);
-}
-
 /* =========================================================
    MOBILE RESPONSIVE TABLES (Auto Card Conversion on Smartphone)
 ========================================================= */
@@ -5234,41 +6160,42 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
 :root,
 [data-theme="dark"],
 .gm-dark {
-  --gm-primary: #F65A1A !important;
-  --gm-accent: #FF7A38 !important;
-  --gm-primary-rgb: 246, 90, 26 !important;
-  --gm-accent-rgb: 255, 122, 56 !important;
-  --gm-primary-10: rgba(246, 90, 26, 0.1) !important;
-  --gm-primary-20: rgba(246, 90, 26, 0.2) !important;
-  --gm-primary-30: rgba(246, 90, 26, 0.3) !important;
-  --gm-accent-10: rgba(255, 122, 56, 0.1) !important;
-  --gm-accent-20: rgba(255, 122, 56, 0.2) !important;
-  --gm-primary-hover: #FF7A38 !important;
-  --gm-primary-soft: rgba(246, 90, 26, 0.14) !important;
+  --gm-primary: #FE540B;
+  --gm-accent: #FF7A38;
+  --gm-primary-rgb: 254, 84, 11;
+  --gm-accent-rgb: 255, 122, 56;
+  --gm-primary-10: rgba(254, 84, 11, 0.1);
+  --gm-primary-20: rgba(254, 84, 11, 0.2);
+  --gm-primary-30: rgba(254, 84, 11, 0.3);
+  --gm-accent-10: rgba(255, 122, 56, 0.1);
+  --gm-accent-20: rgba(255, 122, 56, 0.2);
+  --gm-primary-hover: #FF7A38;
+  --gm-primary-soft: rgba(254, 84, 11, 0.14);
 
-  --gm-bg: #0B0B0C !important;
-  --gm-bg-secondary: #131315 !important;
-  --gm-text: #F2F2F3 !important;
-  --gm-text-secondary: #8B8B92 !important;
-  --gm-text-tertiary: #8B8B92 !important;
-  --gm-surface: #131315 !important;
-  --gm-surface-2: #1B1B1E !important;
-  --gm-border: #26262A !important;
-  --gm-border-light: rgba(38, 38, 42, 0.8) !important;
+  --gm-bg: #0B0B0C;
+  --gm-bg-secondary: #131315;
+  --gm-text: #F2F2F3;
+  --gm-text-secondary: #8B8B92;
+  --gm-text-tertiary: #8B8B92;
+  --gm-surface: #131315;
+  --gm-surface-2: #1B1B1E;
+  --gm-border: #26262A;
+  --gm-border-light: rgba(38, 38, 42, 0.8);
 }
 
 [data-theme="light"],
 .gm-light {
-  --gm-primary-soft: #FFF1E8 !important;
-  --gm-bg: #F5F5F5 !important;
-  --gm-bg-secondary: #FFFFFF !important;
-  --gm-text: #161616 !important;
-  --gm-text-secondary: #5E5E5E !important;
-  --gm-text-tertiary: #888888 !important;
-  --gm-surface: #FFFFFF !important;
-  --gm-surface-2: #FAFAFA !important;
-  --gm-border: #E5E5E5 !important;
-  --gm-border-light: #D4D4D4 !important;
+  --gm-primary: #FF6900;
+  --gm-primary-soft: #FFF1E8;
+  --gm-bg: #F5F5F5;
+  --gm-bg-secondary: #FFFFFF;
+  --gm-text: #161616;
+  --gm-text-secondary: #5E5E5E;
+  --gm-text-tertiary: #888888;
+  --gm-surface: #FFFFFF;
+  --gm-surface-2: #FAFAFA;
+  --gm-border: #E5E5E5;
+  --gm-border-light: #D4D4D4;
 }
 
 /* 6) Cards padrão — radius 8px (Segredo 6) */
@@ -5390,7 +6317,7 @@ aside.gm-sidebar .gm-nav a.active span,
 }
 
 /* =========================================================
-   GLASSMORPHISM DO MENU LATERAL (SIDEBAR - SEM BORDAS)
+   GLASSMORPHISM DO MENU LATERAL (SIDEBAR - VIDRO FOSCO)
    ========================================================= */
 aside.gm-sidebar,
 .gm-sidebar,
@@ -5398,15 +6325,11 @@ aside.gm-sidebar,
 .gm-dark aside.gm-sidebar,
 html.gm-has-bg .gm-sidebar {
   position: relative !important;
-  backdrop-filter: blur(8px) saturate(135%) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
-  background: linear-gradient(135deg, rgba(255, 122, 0, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(20, 16, 14, 0.35) 100%), rgba(20, 16, 14, 0.55) !important;
-  border: none !important;
-  border-right: none !important;
-  border-top: none !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(18, 18, 22, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
 }
 
 /* Remoção do container Glassmorphism por trás dos títulos em todas as janelas */
@@ -5428,15 +6351,11 @@ html.gm-has-bg .gm-sidebar {
 .gm-light aside.gm-sidebar,
 html.gm-has-bg[data-theme="light"] .gm-sidebar {
   position: relative !important;
-  backdrop-filter: blur(8px) saturate(135%) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 100%), rgba(255, 255, 255, 0.65) !important;
-  border: none !important;
-  border-right: none !important;
-  border-top: none !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: none !important;
 }
 
 aside.gm-sidebar::before,
@@ -5465,30 +6384,43 @@ aside.gm-sidebar::after,
   outline-offset: 2px !important;
 }
 
-/* Dashboard Cards Glassmorphism (MESMO EFEITO DO MENU LATERAL - SEM BORDAS) - DESKTOP & SMARTPHONE */
+/* Dashboard Cards & All Containers Glassmorphism - VIDRO FOSCO ACRÍLICO (.barra e .fora) */
+.barra,
+.fora,
 .gm-dashboard-card,
 .gm-stat-card,
+.gm-client-card,
+.gm-item-card,
+.gm-product-card,
+.gm-expense-card,
+.gm-note-card,
 .gm-chart-container,
 .gm-toolbar,
+.gm-panel,
+.panel,
 .gm-clock-card,
 .gm-card,
+.card,
 .gm-budget-card,
 .gm-budget-row,
+.gm-budget-action-btn,
+.gm-filter-tab,
+.gm-status-capsule,
 .gm-modal,
 .gm-modal-content,
 .gm-note-modal,
 .gm-summary-card,
-[role="dialog"] {
+.gm-bottom-nav-btn,
+[role="dialog"],
+.modal,
+.dialog {
   position: relative !important;
-  backdrop-filter: blur(8px) saturate(135%) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(135%) !important;
-  background: linear-gradient(135deg, rgba(255, 122, 0, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(20, 16, 14, 0.35) 100%), rgba(20, 16, 14, 0.55) !important;
-  border: none !important;
-  border-top: none !important;
-  border-right: none !important;
-  border-bottom: none !important;
-  border-left: none !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.40) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  background: rgba(18, 18, 24, 0.48) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+  contain: none !important;
 }
 
 /* BOTÕES DE AÇÃO SUPERIOR (TEMA, NOTIFICAÇÃO, SAIR) - FORMATO ESTRITAMENTE QUADRADO (4px) */
@@ -5509,7 +6441,7 @@ button.gm-square-btn,
   aspect-ratio: 1 / 1 !important;
 }
 
-/* FIX SUPREMO PARA A BARRA DE NAVEGAÇÃO INFERIOR NO SMARTPHONE */
+/* FIX SUPREMO PARA A BARRA DE NAVEGAÇÃO INFERIOR E SUPERIOR NO SMARTPHONE - VIDRO CRISTAL GLASS DESFOCADO */
 nav.fixed.bottom-0,
 .gm-bottom-nav {
   position: fixed !important;
@@ -5517,34 +6449,25 @@ nav.fixed.bottom-0,
   left: 0 !important;
   right: 0 !important;
   z-index: 999999 !important;
-  backdrop-filter: blur(24px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
-  background: rgba(18, 18, 22, 0.94) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  background: rgba(10, 10, 14, 0.15) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35) !important;
+  box-shadow: none !important;
 }
 
-[data-theme="light"] nav.fixed.bottom-0,
-[data-theme="light"] .gm-bottom-nav,
-.gm-light nav.fixed.bottom-0,
-.gm-light .gm-bottom-nav,
-html:not(.dark) nav.fixed.bottom-0,
-html:not(.dark) .gm-bottom-nav {
-  background: rgba(255, 255, 255, 0.94) !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05), 0 -1px 3px rgba(0, 0, 0, 0.03) !important;
-}
-
-[data-theme="light"] nav.fixed.bottom-0 a,
-.gm-light nav.fixed.bottom-0 a,
-html:not(.dark) nav.fixed.bottom-0 a {
-  color: #4B5563 !important;
-}
-
-[data-theme="light"] nav.fixed.bottom-0 a.active,
-.gm-light nav.fixed.bottom-0 a.active,
-html:not(.dark) nav.fixed.bottom-0 a.active {
-  color: #F65A1A !important;
+header.fixed.top-0,
+.gm-mobile-header {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 100 !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  background: rgba(10, 10, 14, 0.15) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
 }
 
 /* =========================================================
@@ -5592,36 +6515,6 @@ table tbody tr,
   border-left-color: rgba(255, 255, 255, 0.28) !important;
 }
 
-/* No Tema Claro */
-[data-theme="light"] .gm-dashboard-card,
-[data-theme="light"] .gm-stat-card,
-[data-theme="light"] .gm-chart-container,
-[data-theme="light"] .gm-header,
-[data-theme="light"] .gm-toolbar,
-[data-theme="light"] .gm-card,
-[data-theme="light"] .gm-budget-card,
-[data-theme="light"] .gm-modal,
-[data-theme="light"] .gm-modal-content,
-[data-theme="light"] .gm-summary-card,
-[data-theme="light"] [role="dialog"],
-.gm-light .gm-dashboard-card,
-.gm-light .gm-stat-card,
-.gm-light .gm-chart-container,
-.gm-light .gm-header,
-.gm-light .gm-toolbar,
-.gm-light .gm-card,
-.gm-light .gm-budget-card,
-.gm-light .gm-modal,
-.gm-light .gm-modal-content,
-.gm-light .gm-summary-card,
-.gm-light [role="dialog"] {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 100%), rgba(255, 255, 255, 0.78) !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.90) !important;
-  color: #1A1D24 !important;
-}
-
 /* Suporte para PREFERS-REDUCED-TRANSPARENCY (Acessibilidade) */
 @media (prefers-reduced-transparency: reduce) {
   .gm-card,
@@ -5643,27 +6536,6 @@ table tbody tr,
     background: #12161E !important;
     border: 1px solid rgba(255, 255, 255, 0.20) !important;
     box-shadow: 0 10px 30px rgba(0,0,0,0.80) !important;
-  }
-
-  [data-theme="light"] .gm-card,
-  [data-theme="light"] .glass,
-  [data-theme="light"] .glass-card,
-  [data-theme="light"] .gm-dashboard-card,
-  [data-theme="light"] .gm-stat-card,
-  [data-theme="light"] .gm-header,
-  [data-theme="light"] .gm-toolbar,
-  .gm-light .gm-card,
-  .gm-light .glass,
-  .gm-light .glass-card,
-  .gm-light .gm-dashboard-card,
-  .gm-light .gm-stat-card,
-  .gm-light .gm-header,
-  .gm-light .gm-toolbar {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background: #FFFFFF !important;
-    border: 1px solid #C8CDD5 !important;
-    color: #111318 !important;
   }
 }
 
@@ -5708,12 +6580,40 @@ button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):n
 .gm-btn-icon:active,
 .gm-budget-action-btn:hover,
 .gm-budget-action-btn:active {
-  background-color: #F65A1A !important;
-  background: linear-gradient(135deg, #FF7A2A 0%, #F65A1A 100%) !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  background: linear-gradient(135deg, var(--gm-accent, #FF7A2A) 0%, var(--gm-primary, #FE540B) 100%) !important;
   color: #FFFFFF !important;
   border-color: rgba(255, 255, 255, 0.35) !important;
-  box-shadow: 0 4px 20px rgba(246, 90, 26, 0.5) !important;
+  box-shadow: 0 4px 20px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.5) !important;
   transform: translateY(-1px);
+}
+
+/* TOGGLE BUTTON DA BARRA LATERAL (CIRCULAR, COR DO TEMA) */
+.gm-sidebar-toggle {
+  position: absolute !important;
+  top: 42px !important;
+  right: -13px !important;
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  border-radius: 50% !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  background: var(--gm-primary, #FE540B) !important;
+  color: #FFFFFF !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  z-index: 999 !important;
+  border: 2px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.5) !important;
+  padding: 0 !important;
+  transition: transform 0.15s ease, background-color 0.15s ease !important;
+}
+.gm-sidebar-toggle:hover {
+  transform: scale(1.12) !important;
+  background-color: var(--gm-primary-hover, var(--gm-accent, #FF7A38)) !important;
 }
 
 button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
@@ -5751,11 +6651,21 @@ svg[data-icon="whatsapp"] path {
 .gm-budget-action-btn:hover .whatsapp-icon,
 .gm-budget-action-btn:hover svg.whatsapp-icon,
 .gm-budget-action-btn:hover svg[data-icon="whatsapp"],
+.gm-budget-action-btn:hover .whatsapp-icon path,
+.gm-budget-action-btn:hover svg.whatsapp-icon path,
+.gm-budget-action-btn:hover svg[data-icon="whatsapp"] path,
 .gm-budget-action-btn:active .whatsapp-icon,
 .gm-budget-action-btn:active svg.whatsapp-icon,
 .gm-budget-action-btn:active svg[data-icon="whatsapp"],
+.gm-budget-action-btn:active .whatsapp-icon path,
+.gm-budget-action-btn:active svg.whatsapp-icon path,
+.gm-budget-action-btn:active svg[data-icon="whatsapp"] path,
 button:hover .whatsapp-icon,
-button:active .whatsapp-icon {
+button:hover .whatsapp-icon path,
+button:hover svg.whatsapp-icon,
+button:hover svg.whatsapp-icon path,
+button:active .whatsapp-icon,
+button:active .whatsapp-icon path {
   fill: #FFFFFF !important;
   color: #FFFFFF !important;
 }
@@ -5769,3 +6679,383 @@ button:active .whatsapp-icon {
 svg:not(.whatsapp-icon):not([data-icon="whatsapp"]) {
   stroke-width: 1.75;
 }
+
+/* Regra para ícones de ação das miniaturas de notas */
+.note-actions {
+  gap: 0.75rem !important; /* gap-3 para espaçamento perfeito e confortável */
+}
+
+.note-actions svg {
+  width: 17px !important;
+  height: 17px !important;
+  max-width: 17px !important;
+  max-height: 17px !important;
+  stroke-width: 1.8 !important;
+}
+
+.note-action-icon,
+.note-actions button {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Ícone de relógio moderno e destacado do Dashboard com ponteiro em tempo real */
+.gm-dashboard-clock-container {
+  filter: drop-shadow(0 0 18px rgba(255, 105, 0, 0.4));
+  box-shadow: inset 0 0 15px rgba(255, 105, 0, 0.15), 0 0 20px rgba(255, 105, 0, 0.25) !important;
+}
+
+/* =========================================================
+   ERGENOMIC SLIDERS (22px Track, 28px Thumb & One-Handed Touch Control)
+   ========================================================= */
+.spectrum-slider,
+input[type="range"].spectrum-slider {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  border-radius: 11px !important;
+  background: linear-gradient(
+    to right,
+    #FF0000 0%,
+    #FFFF00 17%,
+    #00FF00 33%,
+    #00FFFF 50%,
+    #0000FF 67%,
+    #FF00FF 83%,
+    #FF0000 100%
+  ) !important;
+  outline: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  cursor: pointer !important;
+  touch-action: pan-y pinch-zoom !important;
+  padding: 0 !important;
+  margin: 4px 0 !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.custom-range-slider,
+input[type="range"].custom-range-slider {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  border-radius: 11px !important;
+  outline: none !important;
+  cursor: pointer !important;
+  touch-action: pan-y pinch-zoom !important;
+  padding: 0 !important;
+  margin: 4px 0 !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* WebKit Thumb (Chrome, Safari, Edge, Mobile Safari) */
+.spectrum-slider::-webkit-slider-thumb,
+.custom-range-slider::-webkit-slider-thumb,
+input[type="range"].spectrum-slider::-webkit-slider-thumb,
+input[type="range"].custom-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  background: #FFFFFF !important;
+  border: 3px solid #121214 !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+  cursor: grab !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.spectrum-slider:active::-webkit-slider-thumb,
+.custom-range-slider:active::-webkit-slider-thumb,
+input[type="range"].spectrum-slider:active::-webkit-slider-thumb,
+input[type="range"].custom-range-slider:active::-webkit-slider-thumb {
+  cursor: grabbing !important;
+  transform: scale(1.15) !important;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 1), 0 6px 18px rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Firefox Thumb */
+.spectrum-slider::-moz-range-thumb,
+.custom-range-slider::-moz-range-thumb,
+input[type="range"].spectrum-slider::-moz-range-thumb,
+input[type="range"].custom-range-slider::-moz-range-thumb {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  background: #FFFFFF !important;
+  border: 3px solid #121214 !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+  cursor: grab !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+/* =========================================================
+   GM EDIFICAÇÃO — GLASS TRANSLÚCIDO PREMIUM (FINAL OVERRIDES)
+   ========================================================= */
+
+/* BASE DO VIDRO */
+.glass,
+.glass-panel,
+.glass-card,
+.card,
+.panel,
+.container-glass,
+.gm-glass,
+.gm-card,
+.fora,
+.barra,
+.gm-panel,
+.gm-box,
+.box,
+.gm-toolbar,
+.gm-dashboard-card,
+.gm-client-card,
+.gm-item-card,
+.gm-product-card,
+.gm-expense-card,
+.gm-note-card,
+.gm-summary-card,
+.gm-clock-card,
+.gm-chart-container,
+.gm-budget-card,
+.gm-budget-row {
+  background: rgba(18, 19, 22, 0.28) !important;
+  backdrop-filter: blur(28px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(125%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* VIDRO MAIS TRANSPARENTE */
+.glass-transparent {
+  background: rgba(20, 21, 24, 0.18) !important;
+  backdrop-filter: blur(24px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(120%) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* VIDRO MÉDIO */
+.glass-medium {
+  background: rgba(20, 21, 24, 0.32) !important;
+  backdrop-filter: blur(32px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+/* VIDRO ESCURO — PARA MODAIS */
+.glass-dark,
+.modal,
+.dialog,
+.modal-content,
+.dialog-content,
+.gm-modal,
+.gm-modal-content,
+.gm-note-modal,
+[role="dialog"] {
+  background: rgba(20, 21, 24, 0.38) !important;
+  backdrop-filter: blur(40px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(135%) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* REFLEXO DO VIDRO */
+.glass::before,
+.glass-panel::before,
+.glass-card::before,
+.card::before,
+.panel::before,
+.gm-glass::before,
+.gm-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.07) 0%,
+    rgba(255,255,255,0.015) 35%,
+    transparent 65%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* BRILHO SUPERIOR */
+.glass::after,
+.glass-panel::after,
+.glass-card::after,
+.gm-glass::after,
+.gm-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.25),
+    transparent
+  );
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* SIDEBAR TRANSLÚCIDA */
+.sidebar,
+aside,
+.sidebar-container,
+.gm-sidebar {
+  background: rgba(10, 11, 13, 0.32) !important;
+  backdrop-filter: blur(35px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(35px) saturate(125%) !important;
+  border-right: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* HEADER TRANSLÚCIDO */
+header,
+.topbar,
+.header,
+.navbar,
+.dashboard-header,
+.gm-mobile-header {
+  background: rgba(15, 16, 18, 0.25) !important;
+  backdrop-filter: blur(30px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(130%) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* CARDS DE MÉTRICAS */
+.metric-card,
+.stats-card,
+.stat-card,
+.kpi-card,
+.gm-stat-card {
+  background: rgba(24, 25, 28, 0.22) !important;
+  backdrop-filter: blur(26px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(130%) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  box-shadow: 0 15px 45px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+/* TABELAS */
+.table-container,
+.table-wrapper,
+.data-table {
+  background: rgba(18, 19, 22, 0.24) !important;
+  backdrop-filter: blur(30px) saturate(125%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(125%) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+}
+
+thead {
+  background: rgba(255,255,255,0.045) !important;
+}
+
+tbody tr {
+  background: transparent !important;
+  transition: background 180ms ease;
+}
+
+tbody tr:hover {
+  background: rgba(255,255,255,0.045) !important;
+}
+
+/* INPUTS TRANSLÚCIDOS */
+input,
+textarea,
+select,
+.gm-input {
+  background: rgba(10, 11, 13, 0.20) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  color: #ffffff !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.gm-input:focus {
+  background: rgba(255,255,255,0.045) !important;
+  border-color: rgba(255,90,0,0.55) !important;
+  box-shadow: 0 0 0 3px rgba(255,90,0,0.09) !important;
+}
+
+/* BOTÕES SECUNDÁRIOS TRANSLÚCIDOS */
+.btn-secondary,
+.button-secondary,
+.secondary-button {
+  background: rgba(255,255,255,0.045) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+/* DROPDOWNS */
+.dropdown,
+.menu,
+.popover,
+.select-menu {
+  background: rgba(20,21,24,0.34) !important;
+  backdrop-filter: blur(32px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+/* CONTAINERS INTERNOS */
+.glass .card,
+.glass-panel .card,
+.glass-card .card,
+.gm-glass .card,
+.fora .gm-card,
+.barra .gm-card {
+  background: rgba(255,255,255,0.025) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+}
+
+/* HOVER REFINADO */
+.fora:hover,
+.gm-card:hover,
+.card:hover,
+.gm-budget-card:hover,
+.gm-dashboard-card:hover,
+.gm-client-card:hover,
+.gm-item-card:hover,
+.gm-product-card:hover,
+.gm-expense-card:hover,
+.gm-note-card:hover {
+  background-color: rgba(28, 29, 34, 0.36) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.09) !important;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .glass,
+  .glass-panel,
+  .glass-card,
+  .card,
+  .panel,
+  .gm-glass,
+  .gm-card {
+    background: rgba(18,19,22,0.30) !important;
+    backdrop-filter: blur(22px) !important;
+    -webkit-backdrop-filter: blur(22px) !important;
+  }
+}
+
+
+

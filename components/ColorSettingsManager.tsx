@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import { 
-  Sun, 
-  Moon,
   Type,
   CheckCircle2,
   RotateCcw,
-  Palette,
   Sparkles,
   Sliders,
   Check,
   Building2,
   Users,
-  Info
+  Palette,
+  Layers,
+  ArrowRight,
+  Edit3
 } from "lucide-react";
+import { hexToRgb, getContrastColor } from "../lib/settings";
+import { ColorSpectrumModal } from "./ui/ColorSpectrumModal";
 
 export interface ColorSettingsManagerProps {
-  isLightMode: boolean;
   // App Body Colors
   brandPrimary: string;
   setBrandPrimary: (v: string) => void;
@@ -53,75 +54,68 @@ export interface ColorSettingsManagerProps {
   updateDomColor: (cssVar: string, value: string) => void;
 }
 
-// 8 CORES OFICIAIS DO SISTEMA (CONFORME IMAGEM DE PALETA)
-export const BASE_ORANGE_PALETTE = [
-  { name: "Ink", hex: "#0B0B0C", desc: "Fundo Profundo / Canvas Dark", category: "Neutral Dark" },
-  { name: "Graphite", hex: "#131315", desc: "Superfície de Cards / Painel", category: "Neutral Dark" },
-  { name: "Slate", hex: "#1B1B1E", desc: "Superfície Secundária / Hover", category: "Neutral Dark" },
-  { name: "Filament", hex: "#26262A", desc: "Bordas & Elementos Neutros", category: "Neutral Dark" },
-  { name: "Ember", hex: "#FE540B", desc: "Cor Primária / Destaque Principal", category: "Accent" },
-  { name: "Spark", hex: "#FF7A38", desc: "Destaque Secundário / Hover Ativo", category: "Accent" },
-  { name: "Bone", hex: "#F2F2F3", desc: "Texto Principal / Fundo Claro", category: "Light / Text" },
-  { name: "Ash", hex: "#8B8B92", desc: "Texto Secundário / Subtítulos", category: "Muted Text" },
-];
-
+// 10 TEMAS PRONTOS E HARMONIZADOS PARA TODO O APLICATIVO (1-CLIQUE)
 export const PRESET_THEMES = [
   {
     id: "orange",
-    name: "Laranja CardDigital (Oficial)",
-    badge: "Padrão",
+    name: "Laranja CardDigital",
+    badge: "Oficial",
+    desc: "Laranja oficial de alto impacto com superfícies grafite e contraste industrial.",
     primary: "#FE540B",
+    accent: "#FF7A38",
     bg: "#0B0B0C",
     title: "#FFFFFF",
-    subtitle: "#A1A1AA",
+    subtitle: "#8B8B92",
     icon: "#FE540B",
-    accent: "#FE540B",
-    menuBg: "#111111",
+    menuBg: "#131315",
     menuTitle: "#FFFFFF",
-    menuSubtitle: "#A1A1AA",
+    menuSubtitle: "#8B8B92",
     menuIcon: "#FE540B",
   },
   {
     id: "emerald",
     name: "Verde Esmeralda Pro",
     badge: "Finanças",
+    desc: "Esmeralda vivo, fundo dark floresta e acentos menta de alta precisão.",
     primary: "#10B981",
-    bg: "#0B0B0C",
+    accent: "#34D399",
+    bg: "#08100C",
     title: "#FFFFFF",
-    subtitle: "#A1A1AA",
+    subtitle: "#94A3B8",
     icon: "#10B981",
-    accent: "#059669",
-    menuBg: "#0F172A",
+    menuBg: "#0D1912",
     menuTitle: "#FFFFFF",
-    menuSubtitle: "#94A3B8",
+    menuSubtitle: "#6EE7B7",
     menuIcon: "#10B981",
   },
   {
     id: "cyan",
     name: "Azul Elétrico Neon",
     badge: "Tech",
+    desc: "Ciano tecnológico, fundo dark oceano e detalhes em azul elétrico futurista.",
     primary: "#06B6D4",
-    bg: "#080E1A",
+    accent: "#38BDF8",
+    bg: "#060D18",
     title: "#FFFFFF",
     subtitle: "#94A3B8",
     icon: "#06B6D4",
-    accent: "#0891B2",
-    menuBg: "#0F172A",
+    menuBg: "#0A1524",
     menuTitle: "#FFFFFF",
-    menuSubtitle: "#64748B",
+    menuSubtitle: "#7DD3FC",
     menuIcon: "#06B6D4",
   },
   {
     id: "purple",
     name: "Roxo Cyberpunk",
     badge: "Design",
+    desc: "Violeta intenso neon, superfícies cósmicas e alto contraste criativo.",
     primary: "#8B5CF6",
-    bg: "#090514",
+    accent: "#A855F7",
+    bg: "#0A0618",
     title: "#FFFFFF",
     subtitle: "#A78BFA",
     icon: "#8B5CF6",
-    accent: "#7C3AED",
-    menuBg: "#13092B",
+    menuBg: "#120A24",
     menuTitle: "#FFFFFF",
     menuSubtitle: "#C4B5FD",
     menuIcon: "#8B5CF6",
@@ -130,54 +124,118 @@ export const PRESET_THEMES = [
     id: "gold",
     name: "Ouro Executivo / Âmbar",
     badge: "Premium",
+    desc: "Dourado nobre âmbar com fundo escuro quente e acabamento luxuoso.",
     primary: "#F59E0B",
-    bg: "#0C0A09",
+    accent: "#FBBF24",
+    bg: "#0C0A06",
     title: "#FFFFFF",
     subtitle: "#A8A29E",
     icon: "#F59E0B",
-    accent: "#D97706",
-    menuBg: "#1C1917",
+    menuBg: "#171309",
     menuTitle: "#FFFFFF",
-    menuSubtitle: "#78716C",
+    menuSubtitle: "#FDE68A",
     menuIcon: "#F59E0B",
+  },
+  {
+    id: "crimson",
+    name: "Vermelho Carmim / Rubi",
+    badge: "Energia",
+    desc: "Vermelho carmim vibrante com alto impacto visual e elegância refinada.",
+    primary: "#E11D48",
+    accent: "#FB7185",
+    bg: "#0F060A",
+    title: "#FFFFFF",
+    subtitle: "#FDA4AF",
+    icon: "#E11D48",
+    menuBg: "#1A0A12",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#FECDD3",
+    menuIcon: "#E11D48",
+  },
+  {
+    id: "sapphire",
+    name: "Azul Real / Safira",
+    badge: "Corporativo",
+    desc: "Azul Safira corporativo moderno com presença sólida e confiável.",
+    primary: "#2563EB",
+    accent: "#60A5FA",
+    bg: "#060A14",
+    title: "#FFFFFF",
+    subtitle: "#93C5FD",
+    icon: "#2563EB",
+    menuBg: "#0C1220",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#BFDBFE",
+    menuIcon: "#2563EB",
+  },
+  {
+    id: "magenta",
+    name: "Rosa Choque / Magenta",
+    badge: "Criativo",
+    desc: "Magenta neon moderno para marcas inovadoras, dinâmicas e contemporâneas.",
+    primary: "#D946EF",
+    accent: "#F472B6",
+    bg: "#0E0512",
+    title: "#FFFFFF",
+    subtitle: "#F0ABFC",
+    icon: "#D946EF",
+    menuBg: "#180920",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#F5D0FE",
+    menuIcon: "#D946EF",
+  },
+  {
+    id: "lime",
+    name: "Verde Lima / Volt",
+    badge: "Performance",
+    desc: "Verde lima energético de alto contraste para máxima visibilidade e agilidade.",
+    primary: "#84CC16",
+    accent: "#A3E635",
+    bg: "#0A0E05",
+    title: "#FFFFFF",
+    subtitle: "#BEF264",
+    icon: "#84CC16",
+    menuBg: "#121808",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#D9F99D",
+    menuIcon: "#84CC16",
+  },
+  {
+    id: "titanium",
+    name: "Titânio / Monocromo Pro",
+    badge: "Minimalista",
+    desc: "Titânio e grafite neutro para visual ultra clean, técnico e sofisticado.",
+    primary: "#94A3B8",
+    accent: "#CBD5E1",
+    bg: "#0B0F19",
+    title: "#FFFFFF",
+    subtitle: "#64748B",
+    icon: "#94A3B8",
+    menuBg: "#131B2E",
+    menuTitle: "#FFFFFF",
+    menuSubtitle: "#94A3B8",
+    menuIcon: "#94A3B8",
   },
 ];
 
-// VALORES PADRÃO INTELIGENTES PARA MODO CLARO E MODO ESCURO
-export const DEFAULT_ORANGE_LIGHT = {
-  primary: "#F65A1A",
-  accent: "#FF7A38",
-  bg: "#F2F2F3",
-  title: "#0B0B0C",
-  subtitle: "#8B8B92",
-  icon: "#F65A1A",
-  button: "#F65A1A",
-  menu_primary: "#F65A1A",
-  menu_bg: "#F65A1A",
-  menu_title: "#FFFFFF",
-  menu_subtitle: "rgba(255, 255, 255, 0.85)",
-  menu_icon: "#FFFFFF",
-  menu_button: "#F65A1A",
-};
-
+// VALORES PADRÃO DO TEMA OFICIAL LARANJA
 export const DEFAULT_ORANGE_DARK = {
-  primary: "#F65A1A",
+  primary: "#FE540B",
   accent: "#FF7A38",
   bg: "#0B0B0C",
-  title: "#F2F2F3",
+  title: "#FFFFFF",
   subtitle: "#8B8B92",
-  icon: "#F65A1A",
-  button: "#F65A1A",
-  menu_primary: "#F65A1A",
+  icon: "#FE540B",
+  button: "#FE540B",
+  menu_primary: "#FE540B",
   menu_bg: "#131315",
-  menu_title: "#F2F2F3",
+  menu_title: "#FFFFFF",
   menu_subtitle: "#8B8B92",
-  menu_icon: "#8B8B92",
-  menu_button: "#F65A1A",
+  menu_icon: "#FE540B",
+  menu_button: "#FE540B",
 };
 
 export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
-  isLightMode,
   brandPrimary,
   setBrandPrimary,
   brandBg,
@@ -207,130 +265,137 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
   setPreviewFont,
   updateDomColor
 }) => {
-  const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+  const [savedSuccess, setSavedSuccess] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState<boolean>(false);
 
-  // Função auxiliar para atualizar uma cor específica e propagar para DOM + LocalStorage
-  const handleUpdateSingleColor = (
-    key: "primary" | "bg" | "title" | "subtitle" | "icon" | "accent" | "menuBg" | "menuTitle" | "menuSubtitle" | "menuIcon",
-    value: string
-  ) => {
-    switch (key) {
-      case "primary":
-        setBrandPrimary(value);
-        setMenuButton(value);
-        updateDomColor("--gm-primary", value);
-        updateDomColor("--gm-button", value);
-        break;
-      case "bg":
-        setBrandBg(value);
-        updateDomColor("--gm-bg", value);
-        break;
-      case "title":
-        setBrandTitle(value);
-        updateDomColor("--gm-title", value);
-        break;
-      case "subtitle":
-        setBrandSubtitle(value);
-        updateDomColor("--gm-subtitle", value);
-        break;
-      case "icon":
-        setBrandIcon(value);
-        updateDomColor("--gm-icon", value);
-        break;
-      case "accent":
-        setBrandAccent(value);
-        updateDomColor("--gm-accent", value);
-        break;
-      case "menuBg":
-        setMenuBg(value);
-        updateDomColor("--gm-menu-bg", value);
-        break;
-      case "menuTitle":
-        setMenuTitle(value);
-        updateDomColor("--gm-menu-title", value);
-        break;
-      case "menuSubtitle":
-        setMenuSubtitle(value);
-        updateDomColor("--gm-menu-subtitle", value);
-        break;
-      case "menuIcon":
-        setMenuIcon(value);
-        updateDomColor("--gm-menu-icon", value);
-        break;
+  // Estado reativo do ID do tema selecionado (atualiza a UI instantaneamente ao clicar)
+  const [activeThemeId, setActiveThemeId] = useState<string>(() => {
+    if (typeof localStorage !== "undefined") {
+      const stored = localStorage.getItem("gm_selected_theme_id");
+      if (stored) return stored;
+      // Tenta inferir pelo brandPrimary
+      const match = PRESET_THEMES.find(t => t.primary.toLowerCase() === brandPrimary?.toLowerCase());
+      if (match) return match.id;
     }
+    return "orange";
+  });
 
-    // Salva no LocalStorage
-    const currentConfig = {
-      primary: key === "primary" ? value : brandPrimary,
-      accent: key === "accent" ? value : brandAccent,
-      bg: key === "bg" ? value : brandBg,
-      title: key === "title" ? value : brandTitle,
-      subtitle: key === "subtitle" ? value : brandSubtitle,
-      icon: key === "icon" ? value : brandIcon,
-      button: key === "primary" ? value : brandPrimary,
-      menu_primary: key === "primary" ? value : brandPrimary,
-      menu_bg: key === "menuBg" ? value : menuBg,
-      menu_title: key === "menuTitle" ? value : menuTitle,
-      menu_subtitle: key === "menuSubtitle" ? value : menuSubtitle,
-      menu_icon: key === "menuIcon" ? value : menuIcon,
-      menu_button: key === "primary" ? value : brandPrimary,
+  // Estado do Modal de Ajuste com Barra de Espectro
+  const [spectrumModal, setSpectrumModal] = useState<{
+    isOpen: boolean;
+    initialColor: string;
+    title: string;
+    subtitle: string;
+    themeId?: string;
+    field?: string;
+  }>({
+    isOpen: false,
+    initialColor: "#FF7B17",
+    title: "Ajustar Matiz",
+    subtitle: "Arraste a barra de espectro para alterar a matiz em tempo real.",
+  });
+
+  // Função auxiliar de aplicação imediata direta no DOM de todas as variáveis
+  const applyAllCssVariables = (colors: {
+    primary: string;
+    accent: string;
+    bg: string;
+    title: string;
+    subtitle: string;
+    icon: string;
+    button: string;
+    menu_primary: string;
+    menu_bg: string;
+    menu_title: string;
+    menu_subtitle: string;
+    menu_icon: string;
+    menu_button: string;
+  }) => {
+    const root = document.documentElement;
+
+    const setVar = (name: string, val: string) => {
+      root.style.setProperty(name, val);
+      root.style.setProperty(name, val, "important");
     };
 
-    const storageKey = isLightMode ? "gm_colors_light" : "gm_colors_dark";
-    localStorage.setItem(storageKey, JSON.stringify(currentConfig));
-    window.dispatchEvent(new Event("gm_theme_updated"));
+    setVar("--gm-primary", colors.primary);
+    setVar("--primary", colors.primary);
+    setVar("--brand-primary", colors.primary);
+    
+    const rgbPrimary = hexToRgb(colors.primary);
+    if (rgbPrimary) {
+      setVar("--gm-primary-rgb", `${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}`);
+    }
+    setVar("--gm-primary-foreground", getContrastColor(colors.primary));
 
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2000);
+    setVar("--gm-accent", colors.accent);
+    setVar("--brand-accent", colors.accent);
+    const rgbAccent = hexToRgb(colors.accent);
+    if (rgbAccent) {
+      setVar("--gm-accent-rgb", `${rgbAccent.r}, ${rgbAccent.g}, ${rgbAccent.b}`);
+    }
+
+    setVar("--gm-bg", colors.bg);
+    setVar("--bg", colors.bg);
+    setVar("--brand-bg", colors.bg);
+
+    setVar("--gm-title", colors.title);
+    setVar("--text", colors.title);
+    setVar("--gm-subtitle", colors.subtitle);
+    setVar("--text-secondary", colors.subtitle);
+
+    setVar("--gm-icon", colors.icon);
+    setVar("--gm-button", colors.button);
+
+    setVar("--gm-menu-primary", colors.menu_primary);
+    setVar("--gm-menu-bg", colors.menu_bg);
+    setVar("--gm-menu-title", colors.menu_title);
+    setVar("--gm-menu-subtitle", colors.menu_subtitle);
+    setVar("--gm-menu-icon", colors.menu_icon);
+    setVar("--gm-menu-button", colors.menu_button);
+
+    setVar("--gm-btn-bg", colors.primary);
+    setVar("--gm-btn-border", colors.primary);
+    setVar("--gm-btn-icon", colors.primary);
+
+    // Atualiza a meta tag do navegador móvel
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute("content", colors.primary);
+    }
   };
 
-  // Reseta todas as cores para o Padrão Tema Laranja Oficial
+  // Reseta todas as cores para o Padrão Tema Laranja Oficial (modo prévia)
   const resetToDefaultOrange = () => {
-    localStorage.removeItem("gm_colors_light");
-    localStorage.removeItem("gm_colors_dark");
-    localStorage.removeItem("gm_selected_theme_id");
+    setActiveThemeId("orange");
 
-    const defaultColors = isLightMode ? DEFAULT_ORANGE_LIGHT : DEFAULT_ORANGE_DARK;
+    setBrandPrimary(DEFAULT_ORANGE_DARK.primary);
+    setBrandBg(DEFAULT_ORANGE_DARK.bg);
+    setBrandTitle(DEFAULT_ORANGE_DARK.title);
+    setBrandSubtitle(DEFAULT_ORANGE_DARK.subtitle);
+    setBrandIcon(DEFAULT_ORANGE_DARK.icon);
+    setBrandAccent(DEFAULT_ORANGE_DARK.accent);
 
-    setBrandPrimary(defaultColors.primary);
-    setBrandBg(defaultColors.bg);
-    setBrandTitle(defaultColors.title);
-    setBrandSubtitle(defaultColors.subtitle);
-    setBrandIcon(defaultColors.icon);
-    setBrandAccent(defaultColors.accent);
+    setMenuPrimary(DEFAULT_ORANGE_DARK.menu_primary);
+    setMenuBg(DEFAULT_ORANGE_DARK.menu_bg);
+    setMenuTitle(DEFAULT_ORANGE_DARK.menu_title);
+    setMenuSubtitle(DEFAULT_ORANGE_DARK.menu_subtitle);
+    setMenuIcon(DEFAULT_ORANGE_DARK.menu_icon);
+    setMenuButton(DEFAULT_ORANGE_DARK.menu_button);
 
-    setMenuPrimary(defaultColors.menu_primary);
-    setMenuBg(defaultColors.menu_bg);
-    setMenuTitle(defaultColors.menu_title);
-    setMenuSubtitle(defaultColors.menu_subtitle);
-    setMenuIcon(defaultColors.menu_icon);
-    setMenuButton(defaultColors.menu_button);
-
-    // Atualiza DOM
-    updateDomColor("--gm-primary", defaultColors.primary);
-    updateDomColor("--gm-accent", defaultColors.accent);
-    updateDomColor("--gm-bg", defaultColors.bg);
-    updateDomColor("--gm-title", defaultColors.title);
-    updateDomColor("--gm-subtitle", defaultColors.subtitle);
-    updateDomColor("--gm-icon", defaultColors.icon);
-    updateDomColor("--gm-button", defaultColors.button);
-
-    updateDomColor("--gm-menu-primary", defaultColors.menu_primary);
-    updateDomColor("--gm-menu-bg", defaultColors.menu_bg);
-    updateDomColor("--gm-menu-title", defaultColors.menu_title);
-    updateDomColor("--gm-menu-subtitle", defaultColors.menu_subtitle);
-    updateDomColor("--gm-menu-icon", defaultColors.menu_icon);
-    updateDomColor("--gm-menu-button", defaultColors.menu_button);
-
-    window.dispatchEvent(new Event("gm_theme_updated"));
+    // Aplica no DOM em tempo real (prévia instantânea)
+    applyAllCssVariables(DEFAULT_ORANGE_DARK);
 
     setResetSuccess(true);
-    setTimeout(() => setResetSuccess(false), 2500);
+    setTimeout(() => setResetSuccess(false), 3000);
   };
 
-  // Aplica um tema pré-definido com 1 clique
+  // Aplica um tema pré-definido em tempo real como PRÉVIA (sem persistir até clicar em Salvar)
   const applyPresetTheme = (preset: typeof PRESET_THEMES[0]) => {
+    // 1. Atualiza estado reativo do botão ativo imediatamente
+    setActiveThemeId(preset.id);
+
+    // 2. Atualiza os estados React locais
     setBrandPrimary(preset.primary);
     setBrandBg(preset.bg);
     setBrandTitle(preset.title);
@@ -344,21 +409,6 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     setMenuSubtitle(preset.menuSubtitle);
     setMenuIcon(preset.menuIcon);
     setMenuButton(preset.primary);
-
-    updateDomColor("--gm-primary", preset.primary);
-    updateDomColor("--gm-accent", preset.accent);
-    updateDomColor("--gm-bg", preset.bg);
-    updateDomColor("--gm-title", preset.title);
-    updateDomColor("--gm-subtitle", preset.subtitle);
-    updateDomColor("--gm-icon", preset.icon);
-    updateDomColor("--gm-button", preset.primary);
-
-    updateDomColor("--gm-menu-primary", preset.primary);
-    updateDomColor("--gm-menu-bg", preset.menuBg);
-    updateDomColor("--gm-menu-title", preset.menuTitle);
-    updateDomColor("--gm-menu-subtitle", preset.menuSubtitle);
-    updateDomColor("--gm-menu-icon", preset.menuIcon);
-    updateDomColor("--gm-menu-button", preset.primary);
 
     const currentConfig = {
       primary: preset.primary,
@@ -376,155 +426,387 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
       menu_button: preset.primary,
     };
 
-    localStorage.setItem("gm_colors_dark", JSON.stringify(currentConfig));
-    localStorage.setItem("gm_selected_theme_id", preset.id);
-    window.dispatchEvent(new Event("gm_theme_updated"));
+    // 3. Aplica todas as variáveis CSS no DOM instantaneamente (Prévia em tempo real)
+    applyAllCssVariables(currentConfig);
 
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2000);
+    // 4. Notifica o usuário que a prévia está ativa e precisa salvar
+    setSavedSuccess(preset.name);
+    setTimeout(() => setSavedSuccess(null), 3500);
   };
 
-  // Alternância Inteligente Modo Claro / Modo Escuro
-  const toggleSmartThemeMode = () => {
-    const newMode = isLightMode ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", newMode);
-    document.documentElement.classList.toggle("gm-light", newMode === "light");
-    document.documentElement.classList.toggle("gm-dark", newMode === "dark");
-    document.documentElement.classList.toggle("dark", newMode === "dark");
-    localStorage.setItem("theme", newMode);
+  // Aplica cor do Modal de Espectro
+  const handleApplySpectrumColor = (newHex: string) => {
+    if (spectrumModal.field) {
+      const field = spectrumModal.field;
+      if (field === "brandPrimary") {
+        setBrandPrimary(newHex);
+        updateDomColor?.("brand_primary", newHex);
+      } else if (field === "brandAccent") {
+        setBrandAccent(newHex);
+        updateDomColor?.("brand_accent", newHex);
+      } else if (field === "brandBg") {
+        setBrandBg(newHex);
+        updateDomColor?.("brand_bg", newHex);
+      } else if (field === "menuBg") {
+        setMenuBg(newHex);
+        updateDomColor?.("menu_bg", newHex);
+      } else if (field === "brandIcon") {
+        setBrandIcon(newHex);
+        updateDomColor?.("brand_icon", newHex);
+      } else if (field === "menuIcon") {
+        setMenuIcon(newHex);
+        updateDomColor?.("menu_icon", newHex);
+      } else if (field === "brandTitle") {
+        setBrandTitle(newHex);
+        updateDomColor?.("brand_title", newHex);
+      } else if (field === "brandSubtitle") {
+        setBrandSubtitle(newHex);
+        updateDomColor?.("brand_subtitle", newHex);
+      }
+    } else {
+      // Ajuste de Matiz do Tema Geral
+      setBrandPrimary(newHex);
+      setBrandAccent(newHex);
+      setMenuPrimary(newHex);
+      setMenuButton(newHex);
 
-    // Aplica paleta inteligente correspondente ao modo
-    const targetColors = newMode === "light" ? DEFAULT_ORANGE_LIGHT : DEFAULT_ORANGE_DARK;
-
-    setBrandPrimary(targetColors.primary);
-    setBrandBg(targetColors.bg);
-    setBrandTitle(targetColors.title);
-    setBrandSubtitle(targetColors.subtitle);
-    setBrandIcon(targetColors.icon);
-    setBrandAccent(targetColors.accent);
-
-    setMenuPrimary(targetColors.menu_primary);
-    setMenuBg(targetColors.menu_bg);
-    setMenuTitle(targetColors.menu_title);
-    setMenuSubtitle(targetColors.menu_subtitle);
-    setMenuIcon(targetColors.menu_icon);
-    setMenuButton(targetColors.menu_button);
-
-    updateDomColor("--gm-primary", targetColors.primary);
-    updateDomColor("--gm-accent", targetColors.accent);
-    updateDomColor("--gm-bg", targetColors.bg);
-    updateDomColor("--gm-title", targetColors.title);
-    updateDomColor("--gm-subtitle", targetColors.subtitle);
-    updateDomColor("--gm-icon", targetColors.icon);
-    updateDomColor("--gm-button", targetColors.button);
-
-    updateDomColor("--gm-menu-primary", targetColors.menu_primary);
-    updateDomColor("--gm-menu-bg", targetColors.menu_bg);
-    updateDomColor("--gm-menu-title", targetColors.menu_title);
-    updateDomColor("--gm-menu-subtitle", targetColors.menu_subtitle);
-    updateDomColor("--gm-menu-icon", targetColors.menu_icon);
-    updateDomColor("--gm-menu-button", targetColors.menu_button);
-
-    window.dispatchEvent(new Event("gm_theme_updated"));
+      const currentConfig = {
+        primary: newHex,
+        accent: newHex,
+        bg: brandBg || activeTheme.bg,
+        title: brandTitle || activeTheme.title,
+        subtitle: brandSubtitle || activeTheme.subtitle,
+        icon: newHex,
+        button: newHex,
+        menu_primary: newHex,
+        menu_bg: menuBg || activeTheme.menuBg,
+        menu_title: menuTitle || activeTheme.menuTitle,
+        menu_subtitle: menuSubtitle || activeTheme.menuSubtitle,
+        menu_icon: newHex,
+        menu_button: newHex,
+      };
+      applyAllCssVariables(currentConfig);
+      setSavedSuccess(`Matiz Personalizada (${newHex})`);
+      setTimeout(() => setSavedSuccess(null), 3500);
+    }
   };
+
+  const activeTheme = PRESET_THEMES.find(t => t.id === activeThemeId) || PRESET_THEMES[0];
 
   return (
     <div className="w-full space-y-8 animate-in fade-in duration-300">
       
-      {/* BANNER PRINCIPAL DE HEADER COM MODO CLARO/ESCURO INTELIGENTE E RESET */}
-      <div className={
-        isLightMode 
-          ? "bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white p-6 sm:p-7 rounded-lg border border-orange-400/40 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
-          : "bg-zinc-900/95 text-white p-6 sm:p-7 rounded-lg border border-zinc-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
-      }>
-        <div className="flex items-center gap-4">
-          <div className="w-13 h-13 rounded-lg bg-white text-[#FF6900] flex items-center justify-center shrink-0 shadow-lg font-black text-xl">
-            <Building2 className="w-7 h-7" />
+      {/* BANNER PRINCIPAL DE HEADER COM RESET E STATUS */}
+      <div 
+        className="p-6 sm:p-7 rounded-2xl border transition-all duration-300 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${activeTheme.primary}12 0%, rgba(18, 18, 22, 0.85) 60%)`,
+          borderColor: "rgba(255, 255, 255, 0.12)"
+        }}
+      >
+        <div className="flex items-center gap-4 relative z-10">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-lg font-black text-xl transition-all duration-300"
+            style={{ 
+              backgroundColor: brandPrimary || activeTheme.primary, 
+              color: "#FFFFFF",
+              boxShadow: `0 8px 24px -4px ${brandPrimary || activeTheme.primary}60`
+            }}
+          >
+            <Palette className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-black uppercase tracking-wider text-amber-200 dark:text-amber-400 flex items-center gap-1.5 drop-shadow-xs">
-                <Sparkles size={14} /> Tema Laranja CardDigital Padrão
+              <span 
+                className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 drop-shadow-xs transition-colors duration-300"
+                style={{ color: brandPrimary || activeTheme.primary }}
+              >
+                <Sparkles size={14} /> Temas Globais de Cores (1-Clique)
               </span>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full font-extrabold bg-white/20 border border-white/30 text-white">
-                Laranja, Branco, Cinza Claro, Cinza Escuro & Preto
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full font-extrabold bg-white/10 border border-white/20 text-zinc-300">
+                10 Paletas Harmonizadas Prontas
               </span>
             </div>
-            <p className="text-xs text-white/90 dark:text-zinc-300 font-medium mt-1">
-              Personalize individualmente a cor de títulos, subtítulos, ícones e fundos. Alternância inteligente de alto contraste.
+            <p className="text-xs text-zinc-300 font-medium mt-1">
+              Clique em qualquer tema abaixo para transformar menus, botões, ícones e telas em tempo real.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0 relative z-10">
+          {/* BOTÃO AJUSTAR MATIZ (ESPECTRO) */}
+          <button
+            type="button"
+            onClick={() => setSpectrumModal({
+              isOpen: true,
+              initialColor: brandPrimary || activeTheme.primary,
+              title: "Ajustar Matiz do Tema",
+              subtitle: "Arraste a barra de espectro para mudar o tom de cor principal do tema em tempo real.",
+            })}
+            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
+            title="Abrir barra de espectro de matiz"
+          >
+            <Sliders size={15} className="text-[var(--gm-primary)]" /> Ajustar Matiz (Espectro)
+          </button>
+
           {/* RESET DE CORES */}
           <button
             type="button"
             onClick={resetToDefaultOrange}
-            className="w-full sm:w-auto px-4 py-3 rounded-lg bg-white/20 hover:bg-white/30 border border-white/30 text-white text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
             title="Restaurar padrão Laranja Oficial"
           >
-            <RotateCcw size={16} /> Resetar Cores
+            <RotateCcw size={15} /> Resetar Padrão
           </button>
         </div>
       </div>
 
-      {/* PALETA BASE DE 8 CORES OFICIAIS (VISUAL CONFORME IMAGEM DE PALETA) */}
-      <div className={
-        isLightMode
-          ? "bg-white p-6 rounded-lg border border-slate-200/90 shadow-sm space-y-4"
-          : "bg-[#0B0B0C] p-6 rounded-lg border border-[#26262A] space-y-4 shadow-sm"
-      }>
-        <div className={
-          isLightMode
-            ? "flex items-center justify-between border-b border-slate-200 pb-3"
-            : "flex items-center justify-between border-b border-[#26262A] pb-3"
-        }>
+      {/* MENSAGENS DE CONFIRMAÇÃO */}
+      {savedSuccess && (
+        <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
+          <CheckCircle2 size={16} /> Prévia em tempo real: Tema &ldquo;{savedSuccess}&rdquo; aplicado! Clique em &ldquo;Salvar Alterações&rdquo; no rodapé para gravar em definitivo.
+        </div>
+      )}
+
+      {resetSuccess && (
+        <div className="p-3.5 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
+          <RotateCcw size={16} /> Prévia redefinida para o padrão Laranja CardDigital! Clique em &ldquo;Salvar Alterações&rdquo; para confirmar.
+        </div>
+      )}
+
+      {/* SEÇÃO PRINCIPAL: OS 10 TEMAS E PALETAS PRONTAS (1-CLIQUE) */}
+      <div 
+        className="p-6 sm:p-8 rounded-3xl border transition-all duration-300 space-y-6 shadow-2xl"
+        style={{
+          background: "rgba(18, 18, 22, 0.65)",
+          borderColor: "rgba(255, 255, 255, 0.12)",
+          backdropFilter: "blur(20px)"
+        }}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
           <div>
-            <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              <Palette className="w-5 h-5 text-[#F65A1A]" />
-              Palette
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-[#8B8B92]">
-              Paleta oficial do sistema. Clique em qualquer amostra para aplicar ou copiar.
+            <h2 className="text-base sm:text-lg font-extrabold uppercase tracking-wider text-white flex items-center gap-2.5">
+              <Sparkles className="w-5 h-5 text-[var(--gm-primary)]" /> 
+              Selecione o Tema de Cores do Aplicativo (10 Opções)
+            </h2>
+            <p className="text-xs text-zinc-400 font-medium mt-1">
+              Mudança imediata: ao clicar, todas as cores se adaptam em todos os elementos do app.
             </p>
           </div>
-          <span className="text-xs font-bold font-mono text-[#F65A1A] bg-[#F65A1A]/10 px-3 py-1 rounded-full border border-[#F65A1A]/30">
-            8 CORES SISTÊMICAS
+
+          <div 
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-bold self-start sm:self-auto transition-all duration-300"
+            style={{
+              background: `linear-gradient(135deg, ${activeTheme.primary}1A, rgba(20, 20, 24, 0.7))`,
+              borderColor: `${activeTheme.primary}50`
+            }}
+          >
+            <span className="text-zinc-300">Tema Ativo:</span>
+            <span 
+              className="w-2.5 h-2.5 rounded-full animate-pulse shadow-sm"
+              style={{ backgroundColor: activeTheme.primary }}
+            />
+            <span 
+              className="uppercase font-black"
+              style={{ color: activeTheme.primary }}
+            >
+              {activeTheme.name}
+            </span>
+          </div>
+        </div>
+
+        {/* GRID DOS 10 TEMAS DE CORES */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+          {PRESET_THEMES.map((preset) => {
+            const isSelected = activeThemeId === preset.id;
+            return (
+              <div
+                key={preset.id}
+                onClick={() => applyPresetTheme(preset)}
+                className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 text-left relative overflow-hidden group hover:scale-[1.02] active:scale-[0.99] ${
+                  isSelected
+                    ? "ring-2 shadow-xl"
+                    : "hover:border-white/25 hover:shadow-md"
+                }`}
+                style={{
+                  background: isSelected 
+                    ? `radial-gradient(circle at top left, ${preset.primary}22 0%, rgba(18, 18, 22, 0.95) 80%)`
+                    : "rgba(18, 18, 22, 0.55)",
+                  borderColor: isSelected ? preset.primary : "rgba(255, 255, 255, 0.08)",
+                  boxShadow: isSelected 
+                    ? `0 0 24px -4px ${preset.primary}45, inset 0 1px 0 rgba(255, 255, 255, 0.15)` 
+                    : undefined,
+                }}
+              >
+                {/* Indicador de Seleção Ativa com Ícone */}
+                {isSelected && (
+                  <div 
+                    className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full text-white flex items-center justify-center shadow-md animate-in zoom-in duration-150"
+                    style={{ backgroundColor: preset.primary }}
+                  >
+                    <Check size={12} strokeWidth={3} />
+                  </div>
+                )}
+
+                {/* Topo do Card com Amostras e Badge */}
+                <div className="flex items-center justify-between w-full pr-5">
+                  <div className="flex items-center gap-1.5">
+                    <span 
+                      className="w-4 h-4 rounded-full border border-white/40 shadow-sm transition-transform group-hover:scale-110" 
+                      style={{ 
+                        backgroundColor: preset.primary,
+                        boxShadow: `0 0 8px ${preset.primary}60`
+                      }} 
+                      title="Cor Primária"
+                    />
+                    <span 
+                      className="w-4 h-4 rounded-full border border-white/20" 
+                      style={{ backgroundColor: preset.menuBg }} 
+                      title="Superfície / Menu"
+                    />
+                    <span 
+                      className="w-4 h-4 rounded-full border border-white/20" 
+                      style={{ backgroundColor: preset.bg }} 
+                      title="Fundo Canvas"
+                    />
+                  </div>
+                  <span 
+                    className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full border transition-colors"
+                    style={{ 
+                      backgroundColor: `${preset.primary}22`,
+                      color: preset.primary,
+                      borderColor: `${preset.primary}40`
+                    }}
+                  >
+                    {preset.badge}
+                  </span>
+                </div>
+
+                {/* Nome do Tema e Descrição */}
+                <div className="space-y-1 mt-1">
+                  <h3 
+                    className="text-sm font-bold transition-colors leading-tight"
+                    style={{ color: isSelected ? "#FFFFFF" : "#F4F4F5" }}
+                  >
+                    {preset.name}
+                  </h3>
+                  <p className="text-[11px] text-[#8B8B92] leading-snug font-medium line-clamp-2">
+                    {preset.desc}
+                  </p>
+                </div>
+
+                {/* Faixa Gradiente Ilustrativa da Paleta */}
+                <div 
+                  className="w-full h-1.5 rounded-full opacity-80 group-hover:opacity-100 transition-opacity"
+                  style={{
+                    background: `linear-gradient(90deg, ${preset.primary} 0%, ${preset.accent} 50%, ${preset.menuBg} 100%)`
+                  }}
+                />
+
+                {/* Ações: HEX e Botão de Ajustar Matiz */}
+                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono font-bold text-zinc-400">
+                  <span>HEX {preset.primary}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      applyPresetTheme(preset);
+                      setSpectrumModal({
+                        isOpen: true,
+                        initialColor: preset.primary,
+                        title: `Ajustar Matiz: ${preset.name}`,
+                        subtitle: "Arraste a barra de espectro para mudar o tom da paleta deste tema.",
+                        themeId: preset.id,
+                      });
+                    }}
+                    className="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white font-sans text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Ajustar com espectro"
+                  >
+                    <Sliders size={10} /> Ajustar
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* PALETA DE AMOSTRAS DO TEMA ATIVO (RESUMO VISUAL EM TEMPO REAL COM AJUSTE DE COR) */}
+      <div 
+        className="p-6 sm:p-7 rounded-3xl border space-y-5 shadow-2xl transition-all duration-300"
+        style={{
+          background: "rgba(18, 18, 22, 0.65)",
+          borderColor: "rgba(255, 255, 255, 0.12)",
+          backdropFilter: "blur(20px)"
+        }}
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+              <Layers className="w-6 h-6 text-[var(--gm-primary)]" />
+              Palette & Amostras Ativas
+            </h3>
+            <p className="text-xs text-[#8B8B92] font-medium mt-0.5">
+              Distribuição harmônica das cores ativas no sistema em tempo real. Clique em qualquer card para ajustar a cor com o espectro.
+            </p>
+          </div>
+          <span 
+            className="text-xs font-mono font-bold px-3.5 py-1 rounded-full border tracking-wider transition-colors duration-300"
+            style={{
+              backgroundColor: `${brandPrimary || activeTheme.primary}18`,
+              color: brandPrimary || activeTheme.primary,
+              borderColor: `${brandPrimary || activeTheme.primary}40`
+            }}
+          >
+            8 ELEMENTOS SINCRONIZADOS
           </span>
         </div>
 
-        {/* GRID DE CARDS DA PALETA IGUAL À IMAGEM DE REFERÊNCIA */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {BASE_ORANGE_PALETTE.map((color) => (
+        {/* GRID DE CARDS DA PALETA */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          {[
+            { name: "Canvas / Fundo", hex: brandBg || activeTheme.bg, desc: "Fundo Geral", field: "brandBg" },
+            { name: "Menu Surface", hex: menuBg || activeTheme.menuBg, desc: "Fundo Sidebar", field: "menuBg" },
+            { name: "Primária / Botões", hex: brandPrimary || activeTheme.primary, desc: "Ação Principal", field: "brandPrimary" },
+            { name: "Destaque / Accent", hex: brandAccent || activeTheme.accent, desc: "Realce & Alertas", field: "brandAccent" },
+            { name: "Ícones App", hex: brandIcon || brandPrimary || activeTheme.primary, desc: "Ícones do Sistema", field: "brandIcon" },
+            { name: "Ícones Menu", hex: menuIcon || menuPrimary || activeTheme.primary, desc: "Ícones da Sidebar", field: "menuIcon" },
+            { name: "Títulos (Display)", hex: brandTitle || activeTheme.title, desc: "Tipografia H1, H2", field: "brandTitle" },
+            { name: "Subtítulos / Muted", hex: brandSubtitle || activeTheme.subtitle, desc: "Textos Secundários", field: "brandSubtitle" },
+          ].map((item) => (
             <div
-              key={color.name}
-              onClick={() => {
-                try {
-                  navigator.clipboard.writeText(color.hex);
-                } catch (e) {}
-              }}
-              className="rounded-lg border border-[#26262A] overflow-hidden bg-[#131315] hover:border-[#F65A1A]/70 transition-all cursor-pointer group shadow-sm flex flex-col"
-              title={`Clique para copiar ${color.hex}`}
+              key={item.name}
+              onClick={() => setSpectrumModal({
+                isOpen: true,
+                initialColor: item.hex,
+                title: `Ajustar Cor: ${item.name}`,
+                subtitle: "Arraste a barra de espectro para escolher a cor desejada.",
+                field: item.field,
+              })}
+              className="rounded-2xl border border-white/10 overflow-hidden transition-all duration-300 flex flex-col relative group hover:border-[var(--gm-primary)] cursor-pointer"
+              style={{ background: "rgba(18, 18, 22, 0.55)" }}
+              title="Clique para ajustar com a barra de espectro"
             >
-              {/* Bloco Superior com a Cor */}
+              {/* Bloco Superior com a Cor Solid */}
               <div
-                className="h-20 sm:h-24 w-full transition-transform duration-300 group-hover:scale-[1.02] relative"
-                style={{ backgroundColor: color.hex }}
+                className="h-16 sm:h-20 w-full transition-all duration-300 relative flex items-center justify-center"
+                style={{ backgroundColor: item.hex }}
               >
-                {/* Borda interna sutil para cores claras como Bone */}
-                {color.hex === "#F2F2F3" && (
+                {(item.hex.toUpperCase() === "#F2F2F3" || item.hex.toUpperCase() === "#FFFFFF") && (
                   <div className="absolute inset-0 border border-slate-300/40 pointer-events-none" />
                 )}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white flex items-center gap-1 backdrop-blur-xs">
+                  <Palette size={11} /> Ajustar
+                </div>
               </div>
 
-              {/* Painel Inferior do Card com Nome e Hex */}
-              <div className="p-3.5 bg-[#131315] border-t border-[#26262A]/60 flex flex-col justify-center">
-                <h4 className="text-sm font-bold text-white group-hover:text-[#F65A1A] transition-colors">
-                  {color.name}
+              {/* Painel Inferior do Card com Nome e Código Hex */}
+              <div className="p-3 border-t border-white/10 flex flex-col justify-center bg-zinc-900/60">
+                <h4 className="text-xs font-bold text-white leading-tight truncate">
+                  {item.name}
                 </h4>
-                <p className="text-xs font-mono text-[#8B8B92] uppercase mt-0.5 tracking-wider font-semibold">
-                  {color.hex}
+                <p className="text-[11px] font-mono font-semibold text-[#8B8B92] uppercase mt-0.5 tracking-wider">
+                  {item.hex}
                 </p>
               </div>
             </div>
@@ -532,598 +814,22 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
         </div>
       </div>
 
-      {/* EDITOR INDIVIDUAL DE CADA COR DO APLICATIVO */}
-      <div className={
-        isLightMode
-          ? "bg-white p-6 sm:p-8 rounded-lg border border-slate-200/90 shadow-sm space-y-6"
-          : "bg-zinc-900/90 p-6 sm:p-8 rounded-lg border border-zinc-800 space-y-6 shadow-sm"
-      }>
-        <div className={
-          isLightMode
-            ? "flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-5"
-            : "flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-5"
-        }>
-          <div>
-            <h2 className="text-base sm:text-lg font-extrabold uppercase tracking-wider text-[#FF6900] flex items-center gap-2.5">
-              <Sliders className="w-5 h-5 text-[#FF6900]" /> 
-              Editar Cada Cor do Aplicativo
-            </h2>
-            <p className="text-xs text-slate-600 dark:text-zinc-400 font-medium mt-1">
-              Ajuste precisamente a cor de cada elemento visual. As alterações são aplicadas instantaneamente no modo {isLightMode ? "Claro" : "Escuro"}.
-            </p>
-          </div>
 
-          <div className={
-            isLightMode
-              ? "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800 self-start sm:self-auto shadow-2xs"
-              : "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-800 border border-zinc-700 text-xs font-bold text-zinc-200 self-start sm:self-auto"
-          }>
-            <span>Modo:</span>
-            <span className="uppercase font-black text-[#FF6900]">
-              {isLightMode ? "Claro Minimalista" : "Escuro OLED"}
-            </span>
-          </div>
-        </div>
-
-        {/* MENSAGENS DE CONFIRMAÇÃO */}
-        {savedSuccess && (
-          <div className="p-3.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
-            <CheckCircle2 size={16} /> Cor atualizada com sucesso no aplicativo!
-          </div>
-        )}
-
-        {resetSuccess && (
-          <div className="p-3.5 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-600 dark:text-sky-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
-            <RotateCcw size={16} /> Cores resetadas para o padrão oficial Laranja!
-          </div>
-        )}
-
-        {/* SEÇÃO DE TEMAS PRÉ-DEFINIDOS RÁPIDOS */}
-        <div className="space-y-3 pb-2 border-b border-slate-200 dark:border-zinc-800">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[var(--gm-primary)]" />
-              TEMAS E PALETAS PRONTAS (1-CLIQUE)
-            </h3>
-            <span className="text-[10px] text-slate-400 font-semibold">
-              Clique para aplicar a paleta completa
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {PRESET_THEMES.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => applyPresetTheme(preset)}
-                className="p-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900/60 hover:border-[var(--gm-primary)] transition-all cursor-pointer flex flex-col items-start gap-2 group text-left shadow-2xs hover:shadow-xs"
-              >
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-2xs" style={{ backgroundColor: preset.primary }} />
-                    <span className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-2xs" style={{ backgroundColor: preset.menuBg }} />
-                  </div>
-                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)]">
-                    {preset.badge}
-                  </span>
-                </div>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate w-full group-hover:text-[var(--gm-primary)] transition-colors">
-                  {preset.name}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* PRÉ-VISUALIZAÇÃO INTERATIVA EM TEMPO REAL */}
-        <div className="p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-100/70 dark:bg-zinc-950/80 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <Sliders size={15} className="text-[var(--gm-primary)]" />
-              Pré-visualização ao Vivo do seu Aplicativo
-            </span>
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-              Reflete suas alterações na hora
-            </span>
-          </div>
-
-          <div className="p-4 rounded-xl border shadow-inner transition-colors flex flex-col sm:flex-row items-stretch gap-4" style={{ backgroundColor: brandBg }}>
-            {/* Sidebar Preview */}
-            <div className="w-full sm:w-44 p-3 rounded-lg flex flex-col gap-2 shrink-0 border border-white/5" style={{ backgroundColor: menuBg }}>
-              <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: menuTitle }}>
-                MARCA / MENU
-              </span>
-              <div className="flex items-center gap-2 p-1.5 rounded-md" style={{ color: menuTitle }}>
-                <Building2 size={16} style={{ color: menuIcon }} />
-                <span className="text-xs font-bold truncate">Dashboard</span>
-              </div>
-              <div className="flex items-center gap-2 p-1.5 rounded-md opacity-80" style={{ color: menuSubtitle }}>
-                <Users size={16} style={{ color: menuIcon }} />
-                <span className="text-xs font-medium truncate">Clientes</span>
-              </div>
-            </div>
-
-            {/* Main Content Area Preview */}
-            <div className="flex-1 space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <h4 className="text-sm font-black tracking-tight" style={{ color: brandTitle }}>
-                    Título de Exemplo
-                  </h4>
-                  <p className="text-[11px]" style={{ color: brandSubtitle }}>
-                    Subtítulo explicativo com a tipografia e cores escolhidas
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-xs flex items-center gap-1.5 cursor-pointer"
-                  style={{ backgroundColor: brandPrimary }}
-                >
-                  <Sparkles size={13} /> Botão Primário
-                </button>
-              </div>
-
-              <div className="p-3 rounded-lg border border-white/10 bg-white/5 flex items-center justify-between">
-                <span className="text-xs font-bold" style={{ color: brandTitle }}>
-                  Orçamento #0042
-                </span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: brandAccent }}>
-                  APROVADO
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* GRID DE CONTROLES DE CORES DO CORPO DO APP */}
-        <div className="space-y-4">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            1. CORES PRINCIPAIS DO APLICATIVO
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            
-            {/* 1. COR PRIMÁRIA / DESTAQUE */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Cor Primária / Destaque
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Botões principais e badges
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: brandPrimary }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={brandPrimary || "#FF6900"}
-                  onChange={(e) => handleUpdateSingleColor("primary", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={brandPrimary || "#FF6900"}
-                  onChange={(e) => handleUpdateSingleColor("primary", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 2. FUNDO DO APLICATIVO */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Fundo do Aplicativo (Canvas)
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Fundo de tela e containers
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: brandBg }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={brandBg || "#FFFBF7"}
-                  onChange={(e) => handleUpdateSingleColor("bg", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={brandBg || "#FFFBF7"}
-                  onChange={(e) => handleUpdateSingleColor("bg", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 3. TÍTULOS E CABEÇALHOS */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Títulos e Cabeçalhos
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Títulos H1, H2, H3
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: brandTitle }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={brandTitle || "#18181B"}
-                  onChange={(e) => handleUpdateSingleColor("title", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={brandTitle || "#18181B"}
-                  onChange={(e) => handleUpdateSingleColor("title", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 4. SUBTÍTULOS E TEXTOS */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Subtítulos e Parágrafos
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Descrições e labels
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: brandSubtitle }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={brandSubtitle || "#475569"}
-                  onChange={(e) => handleUpdateSingleColor("subtitle", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={brandSubtitle || "#475569"}
-                  onChange={(e) => handleUpdateSingleColor("subtitle", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 5. ÍCONES DO SISTEMA */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Ícones do Sistema
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Ícones gerais do app
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: brandIcon }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={brandIcon || "#FF6900"}
-                  onChange={(e) => handleUpdateSingleColor("icon", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={brandIcon || "#FF6900"}
-                  onChange={(e) => handleUpdateSingleColor("icon", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 6. COR DE ACENTO */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Cor de Acento / Alertas
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Bordas ativas e realces
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: brandAccent }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={brandAccent || "#FF3300"}
-                  onChange={(e) => handleUpdateSingleColor("accent", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={brandAccent || "#FF3300"}
-                  onChange={(e) => handleUpdateSingleColor("accent", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* GRID DE CONTROLES DO MENU LATERAL / SIDEBAR */}
-        <div className={
-          isLightMode
-            ? "space-y-4 pt-4 border-t border-slate-200"
-            : "space-y-4 pt-4 border-t border-zinc-800"
-        }>
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            2. CORES DA BARRA LATERAL / MENU
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            {/* 1. FUNDO DO MENU */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Fundo do Menu
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Sidebar background
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: menuBg }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={menuBg || "#FF6900"}
-                  onChange={(e) => handleUpdateSingleColor("menuBg", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={menuBg || "#FF6900"}
-                  onChange={(e) => handleUpdateSingleColor("menuBg", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 2. TÍTULO DO MENU */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Título do Menu
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Itens principais
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: menuTitle }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={menuTitle || "#FFFFFF"}
-                  onChange={(e) => handleUpdateSingleColor("menuTitle", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={menuTitle || "#FFFFFF"}
-                  onChange={(e) => handleUpdateSingleColor("menuTitle", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 3. SUBTÍTULO DO MENU */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Subtítulo do Menu
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Descrições secundárias
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: menuSubtitle }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={menuSubtitle || "#F8FAFC"}
-                  onChange={(e) => handleUpdateSingleColor("menuSubtitle", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={menuSubtitle || "#F8FAFC"}
-                  onChange={(e) => handleUpdateSingleColor("menuSubtitle", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-            {/* 4. ÍCONES DO MENU */}
-            <div className={
-              isLightMode
-                ? "p-4 rounded-lg border border-slate-200 bg-slate-50/70 space-y-3 shadow-2xs"
-                : "p-4 rounded-lg border border-zinc-800 bg-zinc-900/50 space-y-3"
-            }>
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                    Ícones do Menu
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    Ícones na barra lateral
-                  </span>
-                </div>
-                <div 
-                  className="w-8 h-8 rounded-xl shadow-xs border border-slate-300/80 dark:border-black/20 shrink-0" 
-                  style={{ backgroundColor: menuIcon }}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={menuIcon || "#FFFFFF"}
-                  onChange={(e) => handleUpdateSingleColor("menuIcon", e.target.value)}
-                  className="w-9 h-9 rounded-xl border-0 cursor-pointer p-0 overflow-hidden shrink-0 shadow-2xs"
-                />
-                <input
-                  type="text"
-                  value={menuIcon || "#FFFFFF"}
-                  onChange={(e) => handleUpdateSingleColor("menuIcon", e.target.value)}
-                  className={
-                    isLightMode
-                      ? "w-full px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 shadow-2xs focus:border-[#FF6900] focus:ring-1 focus:ring-[#FF6900]"
-                      : "w-full px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 text-xs font-mono font-bold uppercase text-white"
-                  }
-                />
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-      </div>
 
       {/* SEÇÃO DA TIPOGRAFIA (FAMÍLIA DE FONTE) */}
-      <div className={
-        isLightMode
-          ? "bg-white p-6 rounded-lg border border-slate-200/90 shadow-sm space-y-4"
-          : "bg-zinc-900/90 p-6 rounded-lg border border-zinc-800 space-y-4 shadow-xs"
-      }>
-        <label className="text-xs font-extrabold uppercase tracking-wider text-[#FF6900] flex items-center gap-2">
+      <div 
+        className="p-6 rounded-2xl border space-y-4 shadow-xl"
+        style={{
+          background: "rgba(18, 18, 22, 0.65)",
+          borderColor: "rgba(255, 255, 255, 0.12)",
+          backdropFilter: "blur(20px)"
+        }}
+      >
+        <label className="text-xs font-extrabold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
           <Type className="w-4 h-4" /> Tipografia Principal do Aplicativo
         </label>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {[
             "Inter",
             "Space Grotesk",
@@ -1134,6 +840,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
             "Funnel Display",
             "Plus Jakarta Sans",
             "Hubot Sans",
+            "Poppins"
           ].map((font) => {
             const isActive = fontFamily === font;
             return (
@@ -1145,14 +852,17 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                 onMouseLeave={() => setPreviewFont(null)}
                 onTouchStart={() => setPreviewFont(font)}
                 onTouchEnd={() => setPreviewFont(null)}
-                className={`flex items-center justify-center p-3 rounded-lg border-2 transition-all h-12 shadow-2xs hover:shadow-xs cursor-pointer ${
+                className={`flex items-center justify-center p-3 rounded-xl border transition-all h-12 cursor-pointer ${
                   isActive
-                    ? "border-[#FF6900] bg-[#FF6900]/10 text-[#FF6900] font-bold"
-                    : isLightMode
-                    ? "border-slate-200 bg-white hover:bg-slate-50 text-slate-800"
-                    : "border-zinc-700/60 bg-zinc-800/60 hover:bg-zinc-800 text-slate-200"
+                    ? "border-[var(--gm-primary)] text-[var(--gm-primary)] font-bold ring-2 ring-[var(--gm-primary)]/20"
+                    : "border-white/10 hover:border-white/20 text-slate-200"
                 }`}
-                style={{ fontFamily: font }}
+                style={{ 
+                  fontFamily: font,
+                  background: isActive 
+                    ? `linear-gradient(145deg, ${brandPrimary || activeTheme.primary}18, rgba(18, 18, 22, 0.9))`
+                    : "rgba(18, 18, 22, 0.5)"
+                }}
               >
                 <span className="text-xs font-semibold truncate">
                   {font}
@@ -1162,6 +872,16 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
           })}
         </div>
       </div>
+
+      {/* MODAL DE ESPECTRO INTERATIVO PARA TEMAS E CORES */}
+      <ColorSpectrumModal
+        isOpen={spectrumModal.isOpen}
+        onClose={() => setSpectrumModal(prev => ({ ...prev, isOpen: false }))}
+        initialColor={spectrumModal.initialColor}
+        title={spectrumModal.title}
+        subtitle={spectrumModal.subtitle}
+        onApply={handleApplySpectrumColor}
+      />
 
     </div>
   );

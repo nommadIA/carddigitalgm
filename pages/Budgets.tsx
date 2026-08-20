@@ -33,6 +33,7 @@ import {
   ChevronDown,
   ChevronUp,
   Zap,
+  FileText,
 } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { SectionDivider } from "../components/ui/SectionDivider";
@@ -143,6 +144,21 @@ function useIsMobile(breakpoint = 768) {
   return isMobile;
 }
 
+const MONTHS = [
+  { key: 0, label: "JAN", full: "Janeiro" },
+  { key: 1, label: "FEV", full: "Fevereiro" },
+  { key: 2, label: "MAR", full: "Março" },
+  { key: 3, label: "ABR", full: "Abril" },
+  { key: 4, label: "MAI", full: "Maio" },
+  { key: 5, label: "JUN", full: "Junho" },
+  { key: 6, label: "JUL", full: "Julho" },
+  { key: 7, label: "AGO", full: "Agosto" },
+  { key: 8, label: "SET", full: "Setembro" },
+  { key: 9, label: "OUT", full: "Outubro" },
+  { key: 10, label: "NOV", full: "Novembro" },
+  { key: 11, label: "DEZ", full: "Dezembro" },
+];
+
 function VirtualizedBudgetList({
   items,
   highlightedId,
@@ -151,6 +167,7 @@ function VirtualizedBudgetList({
   tab,
   updateStatusInstant,
   setEditId,
+  setDuplicateId,
   handleShare,
   sharing,
   softDelete,
@@ -164,157 +181,139 @@ function VirtualizedBudgetList({
   tab: TabKey;
   updateStatusInstant: (id: string, status: string) => void;
   setEditId: (id: string) => void;
+  setDuplicateId?: (id: string) => void;
   handleShare: (r: BudgetRow) => void;
   sharing: string | null;
   softDelete: (id: string) => void;
   restore: (id: string) => void;
   confirmHardDelete: (id: string) => void;
 }) {
-  const parentRef = React.useRef<HTMLDivElement>(null);
-
-  const rowVirtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 68,
-    overscan: 10,
-  });
-
   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-    const base = "gm-btn gm-budget-action-btn w-10 h-10 flex items-center justify-center shrink-0";
-    if (tone === "orange") return `${base} gm-btn-soft text-amber-500`;
+    const base = "gm-btn gm-budget-action-btn fora w-10 h-10 flex items-center justify-center shrink-0";
+    if (tone === "orange") return `${base} gm-btn-soft text-[var(--gm-primary)]`;
     if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
     if (tone === "red") return `${base} gm-btn-soft text-red-500`;
     return `${base} gm-btn-soft`;
   };
 
   return (
-    <Card className="!p-0 overflow-hidden">
-      <div className="overflow-x-auto">
-        <div className="text-sm min-w-full">
-          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3 border-b border-white/10 font-bold opacity-60 uppercase tracking-wider text-xs bg-black/20">
+    <Card className="gm-card barra !p-0 overflow-hidden min-h-[480px] max-h-[650px] flex flex-col transition-all duration-300">
+      <div className="overflow-x-auto flex-1 flex flex-col">
+        <div className="text-sm min-w-full flex-1 flex flex-col">
+          {/* Header fixo com backdrop-blur */}
+          <div className="sticky top-0 z-20 hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-4 border-b border-white/10 font-bold opacity-85 uppercase tracking-wider text-xs bg-white/[0.045] backdrop-blur-xl shrink-0 shadow-sm">
             <div>Data</div>
             <div>Descrição</div>
             <div className="text-right">Ações</div>
           </div>
 
-          <div
-            ref={parentRef}
-            className="overflow-y-auto max-h-[650px] no-scrollbar relative"
-            style={{ WebkitOverflowScrolling: "touch" }}
-          >
-            <div
-              style={{
-                height: `${rowVirtualizer.getTotalSize()}px`,
-                width: "100%",
-                position: "relative",
-              }}
-            >
-              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const r = items[virtualRow.index];
-                if (!r) return null;
-                const created = r.created_at ? new Date(r.created_at) : null;
-                const isHighlighted = r.id === highlightedId;
+          {/* Lista com rolagem vertical interna independente */}
+          <div className="w-full divide-y divide-white/5 flex-1 overflow-y-auto min-h-0 gm-scrollable">
+            {items.map((r) => {
+              const created = r.created_at ? new Date(r.created_at) : null;
+              const isHighlighted = r.id === highlightedId;
 
-                return (
-                  <div
-                    key={r.id}
-                    data-index={virtualRow.index}
-                    ref={rowVirtualizer.measureElement}
-                    id={`budget-row-${r.id}`}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                    className={`border-b border-white/5 hover:bg-white/5 transition-colors ${
-                      isHighlighted ? "gm-highlighted-row-glass" : ""
-                    }`}
-                  >
-                    <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center">
-                      <div className="flex justify-between sm:contents">
-                        <div className="flex items-center gap-2 text-slate-400 font-mono text-xs sm:text-sm">
-                          <button
-                            onClick={() => toggleRow(r.id)}
-                            className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
-                          >
-                            <ChevronDown
-                              size={18}
-                              className={`transition-transform duration-300 ${expandedRows.has(r.id) ? "rotate-180" : ""}`}
-                            />
-                          </button>
-                          {created ? created.toLocaleDateString("pt-BR") : "-"}
-                        </div>
-                        <div className="sm:hidden text-right font-bold text-[var(--gm-primary)]">
-                          {CURRENCY.format(Number(r.total_amount || 0))}
-                        </div>
+              return (
+                <div
+                  key={r.id}
+                  id={`budget-row-${r.id}`}
+                  className={`hover:bg-white/5 transition-colors ${
+                    isHighlighted ? "gm-highlighted-row-glass" : ""
+                  }`}
+                >
+                  <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-5 py-4 sm:py-4.5 sm:items-center">
+                    <div className="flex justify-between sm:contents">
+                      <div className="flex items-center gap-2 text-slate-400 font-mono text-xs sm:text-sm">
+                        <button
+                          onClick={() => toggleRow(r.id)}
+                          className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
+                        >
+                          <ChevronDown
+                            size={18}
+                            className={`transition-transform duration-300 ${expandedRows.has(r.id) ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                        {created ? created.toLocaleDateString("pt-BR") : "-"}
                       </div>
-                      <div className="font-medium truncate">
-                        <span className="font-extrabold text-white mr-2">{(r.client_name || "CLIENTE").toUpperCase()}</span>
-                        <span className="text-slate-300">{r.title || "Orçamento"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
-                        <div className="hidden sm:block text-right font-bold text-[var(--gm-primary)] mr-4">
-                          {CURRENCY.format(Number(r.total_amount || 0))}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {tab !== "LIXEIRA" ? (
-                            <>
-                              {tab === "CANCELADOS" && (
-                                <button
-                                  className="gm-btn gm-budget-action-btn bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1 px-3 flex items-center gap-1.5 h-10"
-                                  title="Restaurar Orçamento (Voltar para Aguardando)"
-                                  onClick={() => updateStatusInstant(r.id, "AGUARDANDO")}
-                                  type="button"
-                                >
-                                  <RotateCcw size={15} />
-                                  <span className="font-bold">Restaurar</span>
-                                </button>
-                              )}
-                              <button className={listBtnClass("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
-                                <Pencil size={16} />
-                              </button>
-                              <button
-                                className={listBtnClass("green")}
-                                title="Enviar via WhatsApp / Compartilhar"
-                                onClick={() => handleShare(r)}
-                                type="button"
-                                disabled={sharing === r.id}
-                              >
-                                {sharing === r.id ? (
-                                  <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                  <WhatsAppIcon size={16} />
-                                )}
-                              </button>
-                              <button className={listBtnClass("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button className={listBtnClass("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
-                                <RotateCcw size={16} />
-                              </button>
-                              <button
-                                className="gm-btn gm-budget-action-btn h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
-                                title="Excluir Definitivamente"
-                                onClick={() => confirmHardDelete(r.id)}
-                                type="button"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          )}
-                        </div>
+                      <div className="sm:hidden text-right font-bold text-[var(--gm-primary)]">
+                        {CURRENCY.format(Number(r.total_amount || 0))}
                       </div>
                     </div>
-                    {expandedRows.has(r.id) && <ExpandedBudgetRow budgetId={r.id} />}
+                    <div className="font-medium truncate">
+                      <span className="font-extrabold text-white mr-2">{(r.client_name || "CLIENTE").toUpperCase()}</span>
+                      <span className="text-slate-300">{r.title || "Orçamento"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
+                      <div className="hidden sm:block text-right font-bold text-[var(--gm-primary)] mr-4">
+                        {CURRENCY.format(Number(r.total_amount || 0))}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {tab !== "LIXEIRA" ? (
+                          <>
+                            {tab === "CONCLUIDOS" && setDuplicateId && (
+                              <button
+                                className="gm-btn gm-budget-action-btn fora h-10 px-3.5 flex items-center justify-center gap-2 shrink-0 gm-btn-soft text-[var(--gm-primary)]"
+                                title="Usar este orçamento como modelo para criar um novo"
+                                onClick={() => setDuplicateId(r.id)}
+                                type="button"
+                              >
+                                <Copy size={16} />
+                                <span className="font-bold text-xs uppercase tracking-wider">Usar Modelo</span>
+                              </button>
+                            )}
+                            {tab === "CANCELADOS" && (
+                              <button
+                                className="gm-btn gm-budget-action-btn bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1 px-3 flex items-center gap-1.5 h-10"
+                                title="Restaurar Orçamento (Voltar para Aguardando)"
+                                onClick={() => updateStatusInstant(r.id, "AGUARDANDO")}
+                                type="button"
+                              >
+                                <RotateCcw size={15} />
+                                <span className="font-bold">Restaurar</span>
+                              </button>
+                            )}
+                            <button className={listBtnClass("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              className={listBtnClass("orange")}
+                              title="Enviar via WhatsApp / Compartilhar"
+                              onClick={() => handleShare(r)}
+                              type="button"
+                              disabled={sharing === r.id}
+                            >
+                              {sharing === r.id ? (
+                                <div className="w-4 h-4 border-2 border-[var(--gm-primary)] border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <WhatsAppIcon size={16} />
+                              )}
+                            </button>
+                            <button className={listBtnClass("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button className={listBtnClass("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
+                              <RotateCcw size={16} />
+                            </button>
+                            <button
+                              className="gm-btn gm-budget-action-btn h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                              title="Excluir Definitivamente"
+                              onClick={() => confirmHardDelete(r.id)}
+                              type="button"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                  {expandedRows.has(r.id) && <ExpandedBudgetRow budgetId={r.id} />}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -351,204 +350,158 @@ function VirtualizedBudgetGrid({
   confirmHardDelete: (id: string) => void;
   isMobile: boolean;
 }) {
-  const columns = isMobile ? 1 : 2;
-  const rowCount = Math.ceil(items.length / columns);
-  const parentRef = React.useRef<HTMLDivElement>(null);
-
-  const gridVirtualizer = useVirtualizer({
-    count: rowCount,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 220,
-    overscan: 6,
-  });
-
   const iconBtn = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-    const base = "gm-btn gm-budget-action-btn flex-1 h-10 flex items-center justify-center gap-2";
-    if (tone === "orange") return `${base} gm-btn-soft text-amber-500`;
+    const base = "gm-btn gm-budget-action-btn fora flex-1 h-10 flex items-center justify-center gap-2";
+    if (tone === "orange") return `${base} gm-btn-soft text-[var(--gm-primary)]`;
     if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
     if (tone === "red") return `${base} gm-btn-soft text-red-500`;
     return `${base} gm-btn-soft`;
   };
 
   return (
-    <div
-      ref={parentRef}
-      className="overflow-y-auto max-h-[720px] pr-1 no-scrollbar relative"
-      style={{ WebkitOverflowScrolling: "touch" }}
-    >
-      <div
-        style={{
-          height: `${gridVirtualizer.getTotalSize()}px`,
-          width: "100%",
-          position: "relative",
-        }}
-      >
-        {gridVirtualizer.getVirtualItems().map((virtualRow) => {
-          const rowIndex = virtualRow.index;
-          const rowItems = items.slice(rowIndex * columns, rowIndex * columns + columns);
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-3">
+      {items.map((r) => {
+        const created = r.created_at ? new Date(r.created_at) : null;
+        const currentStatus = normalizeStatus(r.status);
 
-          return (
-            <div
-              key={virtualRow.key}
-              data-index={virtualRow.index}
-              ref={gridVirtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-              className="pb-3"
-            >
-              <div className={`grid ${columns === 2 ? "grid-cols-2" : "grid-cols-1"} gap-3`}>
-                {rowItems.map((r) => {
-                  const created = r.created_at ? new Date(r.created_at) : null;
-                  const currentStatus = normalizeStatus(r.status);
+        const sortedOptions = [
+          ...STATUS_OPTIONS.filter((o) => o.value === currentStatus),
+          ...STATUS_OPTIONS.filter((o) => o.value !== currentStatus),
+        ];
 
-                  const sortedOptions = [
-                    ...STATUS_OPTIONS.filter((o) => o.value === currentStatus),
-                    ...STATUS_OPTIONS.filter((o) => o.value !== currentStatus),
-                  ];
+        const isHighlighted = r.id === highlightedId;
 
-                  const isHighlighted = r.id === highlightedId;
+        return (
+          <Card
+            key={r.id}
+            id={`budget-card-${r.id}`}
+            className={`gm-budget-card barra flex flex-col justify-between !p-4 transition-all duration-300 ${
+              isHighlighted ? "gm-highlighted-budget-glass" : ""
+            }`}
+          >
+            {/* HEADER compacto */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="font-extrabold truncate text-white text-[15px]">
+                  {(r.client_name || "CLIENTE").toUpperCase()}
+                </div>
+                <div className="gm-muted text-sm truncate mt-1 font-medium text-slate-300">
+                  {r.title || "Orçamento"}
+                </div>
+
+                <div className="flex items-center gap-4 mt-2 gm-muted text-xs">
+                  <div className="flex items-center gap-1">
+                    <Calendar size={14} />
+                    <span>{created ? created.toLocaleDateString("pt-BR") : "-"}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock size={14} />
+                    <span>{r.delivery_days ?? 5} dias úteis</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <div className="font-extrabold text-[18px] text-[var(--gm-primary)]">
+                  {CURRENCY.format(Number(r.total_amount || 0))}
+                </div>
+                <div className="gm-muted text-xs">Total</div>
+              </div>
+            </div>
+
+            {/* FOOTER em 2 linhas (caps + ações) */}
+            <div className="mt-5 pt-4 border-t border-white/5 flex flex-col gap-3">
+              {/* cápsulas de status uniformes e expandidas até o final */}
+              <div className="grid grid-cols-4 gap-2 w-full">
+                {sortedOptions.map((opt) => {
+                  const isActive = currentStatus === opt.value;
+                  const activeCls = pillClass(opt.value);
+                  const inactiveCls =
+                    "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
 
                   return (
-                    <Card
-                      key={r.id}
-                      id={`budget-card-${r.id}`}
-                      className={`gm-budget-card flex flex-col justify-between !p-4 transition-all duration-300 ${
-                        isHighlighted ? "gm-highlighted-budget-glass" : ""
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateStatusInstant(r.id, opt.value);
+                      }}
+                      className={`gm-status-capsule fora w-full h-8 px-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-tight transition-all truncate flex items-center justify-center border ${
+                        isActive ? activeCls : inactiveCls
                       }`}
                     >
-                      {/* HEADER compacto */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="font-extrabold truncate text-white text-[15px]">
-                            {(r.client_name || "CLIENTE").toUpperCase()}
-                          </div>
-                          <div className="gm-muted text-sm truncate mt-1 font-medium text-slate-300">
-                            {r.title || "Orçamento"}
-                          </div>
-
-                          <div className="flex items-center gap-4 mt-2 gm-muted text-xs">
-                            <div className="flex items-center gap-1">
-                              <Calendar size={14} />
-                              <span>{created ? created.toLocaleDateString("pt-BR") : "-"}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock size={14} />
-                              <span>{r.delivery_days ?? 5} dias úteis</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="text-right shrink-0">
-                          <div className="font-extrabold text-[18px] text-[var(--gm-primary)]">
-                            {CURRENCY.format(Number(r.total_amount || 0))}
-                          </div>
-                          <div className="gm-muted text-xs">Total</div>
-                        </div>
-                      </div>
-
-                      {/* FOOTER em 2 linhas (caps + ações) */}
-                      <div className="mt-5 pt-4 border-t border-white/5 flex flex-col gap-3">
-                        {/* cápsulas de status uniformes e expandidas até o final */}
-                        <div className="grid grid-cols-4 gap-2 w-full">
-                          {sortedOptions.map((opt) => {
-                            const isActive = currentStatus === opt.value;
-                            const activeCls = pillClass(opt.value);
-                            const inactiveCls =
-                              "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
-
-                            return (
-                              <button
-                                key={opt.value}
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateStatusInstant(r.id, opt.value);
-                                }}
-                                className={`w-full h-8 px-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-tight transition-all truncate flex items-center justify-center border ${
-                                  isActive ? activeCls + " shadow-md" : inactiveCls
-                                }`}
-                              >
-                                {opt.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* ações compactas */}
-                        <div className="flex items-center gap-2">
-                          {(tab as any) !== "LIXEIRA" ? (
-                            <>
-                              <button className={iconBtn("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
-                                <Pencil size={16} />
-                              </button>
-
-                              <button
-                                className={iconBtn("orange")}
-                                title="Enviar via WhatsApp / Compartilhar"
-                                onClick={() => handleShare(r)}
-                                type="button"
-                                disabled={sharing === r.id}
-                              >
-                                {sharing === r.id ? (
-                                  <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                  <WhatsAppIcon size={16} />
-                                )}
-                              </button>
-
-                              <button
-                                className={iconBtn("neutral")}
-                                title="PDF"
-                                onClick={() => handlePdf(r.id, r.tenant_id)}
-                                type="button"
-                              >
-                                <FileDown size={16} />
-                              </button>
-
-                              <button
-                                className={iconBtn("neutral")}
-                                title="Lembretes"
-                                onClick={() => setReminderConfigOpen(true)}
-                                type="button"
-                              >
-                                <Bell size={16} />
-                              </button>
-
-                              <button className={iconBtn("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button className={iconBtn("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
-                                <RotateCcw size={16} /> Restaurar
-                              </button>
-
-                              <button
-                                className="gm-btn gm-budget-action-btn h-10 w-12 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shadow-[0_0_10px_rgba(255,123,0,0.1)]"
-                                title="Excluir Definitivo"
-                                onClick={() => confirmHardDelete(r.id)}
-                                type="button"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
+                      {opt.label}
+                    </button>
                   );
                 })}
               </div>
+
+              {/* ações compactas */}
+              <div className="flex items-center gap-2">
+                {(tab as any) !== "LIXEIRA" ? (
+                  <>
+                    <button className={iconBtn("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
+                      <Pencil size={16} />
+                    </button>
+
+                    <button
+                      className={iconBtn("orange")}
+                      title="Enviar via WhatsApp / Compartilhar"
+                      onClick={() => handleShare(r)}
+                      type="button"
+                      disabled={sharing === r.id}
+                    >
+                      {sharing === r.id ? (
+                        <div className="w-4 h-4 border-2 border-[var(--gm-primary)] border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <WhatsAppIcon size={16} />
+                      )}
+                    </button>
+
+                    <button
+                      className={iconBtn("neutral")}
+                      title="PDF"
+                      onClick={() => handlePdf(r.id, r.tenant_id)}
+                      type="button"
+                    >
+                      <FileDown size={16} />
+                    </button>
+
+                    <button
+                      className={iconBtn("neutral")}
+                      title="Lembretes"
+                      onClick={() => setReminderConfigOpen(true)}
+                      type="button"
+                    >
+                      <Bell size={16} />
+                    </button>
+
+                    <button className={iconBtn("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
+                      <Trash2 size={16} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className={iconBtn("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
+                      <RotateCcw size={16} /> Restaurar
+                    </button>
+
+                    <button
+                      className="gm-btn gm-budget-action-btn h-10 w-12 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shadow-[0_0_10px_rgba(255,123,0,0.1)]"
+                      title="Excluir Definitivo"
+                      onClick={() => confirmHardDelete(r.id)}
+                      type="button"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          );
-        })}
-      </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
@@ -562,11 +515,37 @@ export default function Budgets() {
   const [rows, setRows] = useState<BudgetRow[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [tab, setTab] = useState<TabKey>("AGUARDANDO");
+  const [tab, setTabState] = useState<TabKey>(() => {
+    const saved = localStorage.getItem("gm_budgets_tab");
+    if (saved && ["AGUARDANDO", "APROVADO", "CONCLUIDOS", "CANCELADOS", "LIXEIRA"].includes(saved)) {
+      return saved as TabKey;
+    }
+    return "CONCLUIDOS";
+  });
+
+  const setTab = (newTab: TabKey) => {
+    setTabState(newTab);
+    localStorage.setItem("gm_budgets_tab", newTab);
+  };
+
   const [q, setQ] = useState("");
+
+  const currentCalMonth = useMemo(() => new Date().getMonth(), []);
+  const [selectedMonth, setSelectedMonthState] = useState<number | "TODOS">(() => {
+    const saved = localStorage.getItem("gm_budgets_month");
+    if (saved === "TODOS") return "TODOS";
+    if (saved !== null && !isNaN(Number(saved))) return Number(saved);
+    return new Date().getMonth();
+  });
+
+  const setSelectedMonth = (m: number | "TODOS") => {
+    setSelectedMonthState(m);
+    localStorage.setItem("gm_budgets_month", String(m));
+  };
 
   const [newOpen, setNewOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [duplicateId, setDuplicateId] = useState<string | null>(null);
   const [reminderConfigOpen, setReminderConfigOpen] = useState(false);
   const [shareData, setShareData] = useState<{ budget: BudgetRow; message: string } | null>(null);
   const [sharing, setSharing] = useState<string | null>(null);
@@ -733,7 +712,7 @@ export default function Budgets() {
     const isTrash = tab === "LIXEIRA";
     const base = rows.filter((r) => (isTrash ? !!r.deleted_at : !r.deleted_at));
 
-    const byTab = (() => {
+    let byTab = (() => {
       if (isTrash) return base;
       if (tab === "AGUARDANDO") return base.filter((r) => normalizeStatus(r.status) === "AGUARDANDO");
       if (tab === "APROVADO") return base.filter((r) => normalizeStatus(r.status) === "APROVADO");
@@ -741,6 +720,15 @@ export default function Budgets() {
       if (tab === "CANCELADOS") return base.filter((r) => normalizeStatus(r.status) === "CANCELADO");
       return base;
     })();
+
+    if (selectedMonth !== "TODOS") {
+      byTab = byTab.filter((r) => {
+        const dateStr = r.created_at || (r as any).updated_at;
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        return d.getMonth() === selectedMonth;
+      });
+    }
 
     if (!needle) return byTab;
 
@@ -751,7 +739,7 @@ export default function Budgets() {
         .toLowerCase();
       return blob.includes(needle);
     });
-  }, [rows, tab, q]);
+  }, [rows, tab, q, selectedMonth]);
 
   // Resumo por status (todos os orçamentos não excluídos) — usado no gráfico do topo
   const statusSummary = useMemo(() => {
@@ -957,7 +945,7 @@ export default function Budgets() {
   // botões compactos
   const iconBtn = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
     const base = "gm-btn gm-budget-action-btn flex-1 h-10 flex items-center justify-center gap-2";
-    if (tone === "orange") return `${base} gm-btn-soft text-amber-500`;
+    if (tone === "orange") return `${base} gm-btn-soft text-[var(--gm-primary)]`;
     if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
     if (tone === "red") return `${base} gm-btn-soft text-red-500`;
     return `${base} gm-btn-soft`;
@@ -966,8 +954,9 @@ export default function Budgets() {
   return (
     <Page
       title="Orçamentos"
+      className="pb-24"
       actions={
-        <button className="gm-btn h-12 text-xs uppercase tracking-wider" type="button" onClick={() => setNewOpen(true)}>
+        <button className="gm-btn fora h-12 text-xs uppercase tracking-wider" type="button" onClick={() => setNewOpen(true)}>
           <Plus size={16} />
           Novo Orçamento
         </button>
@@ -978,7 +967,7 @@ export default function Budgets() {
         <SectionDivider label="Resumo" />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
+          <div className="gm-dashboard-card barra rounded-2xl p-5">
             <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
               Em aberto (aguardando + aprovado)
             </div>
@@ -988,7 +977,7 @@ export default function Budgets() {
             <div className="text-xs text-[color:var(--gm-text-tertiary)] mt-1">{statusSummary.countAtivo} orçamento(s)</div>
           </div>
 
-          <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg">
+          <div className="gm-dashboard-card barra rounded-2xl p-5">
             <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
               Concluídos
             </div>
@@ -998,7 +987,7 @@ export default function Budgets() {
             <div className="text-xs text-[color:var(--gm-text-tertiary)] mt-1">{statusSummary.countConcluido} orçamento(s)</div>
           </div>
 
-          <div className="gm-dashboard-card rounded-2xl p-5 shadow-lg sm:col-span-1 col-span-1 overflow-hidden">
+          <div className="gm-dashboard-card barra rounded-2xl p-5 sm:col-span-1 col-span-1 overflow-hidden">
             <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider mb-2">
               Valor por status
             </div>
@@ -1011,7 +1000,7 @@ export default function Budgets() {
                   <Tooltip
                     formatter={(val: number) => CURRENCY.format(val)}
                     cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                    contentStyle={{ backgroundColor: "#0f1117", border: "1px solid #30363d", borderRadius: "8px", color: "#fff", fontSize: 12 }}
+                    contentStyle={{ backgroundColor: "rgba(18, 18, 22, 0.85)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#fff", fontSize: 12, backdropFilter: "blur(12px)" }}
                   />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                     {statusSummary.chartData.map((entry, index) => (
@@ -1025,10 +1014,10 @@ export default function Budgets() {
         </div>
       </div>
 
-      {/* ✅ Tabs + Busca */}
+      {/* ✅ Tabs + Busca + Divisor Mensal */}
       <div className="mb-6 space-y-4">
         <SectionDivider label="Filtros" />
-        <DraggableScroll className="mb-4 pb-2">
+        <DraggableScroll className="pb-1">
           {[
             { key: "AGUARDANDO", label: "AGUARDANDO", statusVal: "AGUARDANDO" },
             { key: "APROVADO", label: "APROVADO", statusVal: "APROVADO" },
@@ -1045,8 +1034,8 @@ export default function Budgets() {
                 key={item.key}
                 type="button"
                 onClick={() => setTab(item.key as TabKey)}
-                className={`snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border ${
-                  active ? activeCls + " shadow-md" : inactiveCls
+                className={`gm-filter-tab fora snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border ${
+                  active ? activeCls : inactiveCls
                 }`}
               >
                 {item.label}
@@ -1058,9 +1047,9 @@ export default function Budgets() {
           <button
             type="button"
             onClick={() => setTab("LIXEIRA")}
-            className={`snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border ${
+            className={`gm-filter-tab fora snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border ${
               tab === "LIXEIRA"
-                ? pillClass("CANCELADO") + " shadow-md"
+                ? pillClass("CANCELADO")
                 : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
             }`}
           >
@@ -1068,12 +1057,81 @@ export default function Budgets() {
           </button>
         </DraggableScroll>
 
-        <div className="relative gm-dashboard-card !p-0 rounded-2xl overflow-hidden">
+        {/* ✅ Divisor Mensal de Busca (JAN a DEZ) */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
+            <span className="flex items-center gap-1.5 text-slate-300">
+              <Calendar size={13} className="text-[var(--gm-primary)]" />
+              Filtrar por Mês
+            </span>
+            {selectedMonth !== "TODOS" && (
+              <span className="text-[var(--gm-primary)] font-extrabold flex items-center gap-1">
+                {MONTHS.find((m) => m.key === selectedMonth)?.full}{" "}
+                {selectedMonth === currentCalMonth && (
+                  <span className="text-[10px] uppercase px-1.5 py-0.2 rounded bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 font-bold ml-1">
+                    Mês Atual
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
+          <DraggableScroll className="pb-1">
+            {MONTHS.map((m) => {
+              const isSelected = selectedMonth === m.key;
+              const isCurrent = currentCalMonth === m.key;
+
+              return (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => setSelectedMonth(m.key)}
+                  className={`gm-filter-tab fora relative snap-start shrink-0 px-3.5 h-8 rounded-xl text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center gap-1.5 border cursor-pointer ${
+                    isSelected
+                      ? "bg-[var(--gm-primary)] border-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20"
+                      : isCurrent
+                      ? "bg-[var(--gm-primary)]/10 border-[var(--gm-primary)]/40 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20"
+                      : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
+                  }`}
+                  title={`${m.full}${isCurrent ? " (Mês Atual no Calendário)" : ""}`}
+                >
+                  <span>{m.label}</span>
+                  {isCurrent && (
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isSelected ? "bg-white" : "bg-[var(--gm-primary)] animate-pulse"
+                      }`}
+                    />
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Opção TODOS os meses */}
+            <button
+              type="button"
+              onClick={() => setSelectedMonth("TODOS")}
+              className={`gm-filter-tab fora snap-start shrink-0 px-4 h-8 rounded-xl text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border cursor-pointer ${
+                selectedMonth === "TODOS"
+                  ? "bg-[var(--gm-primary)] border-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20"
+                  : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
+              }`}
+            >
+              TODOS
+            </button>
+          </DraggableScroll>
+        </div>
+
+        {/* ✅ Busca Inteligente */}
+        <div className="relative gm-dashboard-card barra !p-0 rounded-2xl overflow-hidden">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
             type="text"
             className="w-full !pl-12 pr-4 py-3.5 bg-transparent border-none text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--gm-primary)] transition-all rounded-2xl"
-            placeholder="Buscar por cliente ou valor..."
+            placeholder={
+              tab === "CONCLUIDOS"
+                ? "Buscar orçamentos concluídos..."
+                : "Buscar por cliente ou valor..."
+            }
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -1083,7 +1141,7 @@ export default function Budgets() {
       <div className="mb-2 flex items-center justify-between text-xs text-slate-400 px-1">
         <SectionDivider label="Lista de orçamentos" />
         <span className="shrink-0 ml-4 px-2.5 py-1 rounded-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5">
-          <Zap size={13} /> Virtual Scroll ({filtered.length})
+          <FileText size={13} /> Orçamentos ({filtered.length})
         </span>
       </div>
       <div style={{ height: 8 }} />
@@ -1097,7 +1155,9 @@ export default function Budgets() {
           ))}
         </Grid>
       ) : filtered.length === 0 ? (
-        <Card className="gm-dashboard-card text-center p-12 opacity-90 rounded-2xl">Nenhum orçamento encontrado.</Card>
+        <Card className="gm-dashboard-card text-center p-12 opacity-90 rounded-2xl">
+          Nenhum orçamento encontrado {selectedMonth !== "TODOS" ? `para ${MONTHS.find(m => m.key === selectedMonth)?.full}.` : "."}
+        </Card>
       ) : tab === "CONCLUIDOS" || tab === "CANCELADOS" || tab === "LIXEIRA" ? (
         <VirtualizedBudgetList
           items={filtered}
@@ -1107,6 +1167,7 @@ export default function Budgets() {
           tab={tab}
           updateStatusInstant={updateStatusInstant}
           setEditId={setEditId}
+          setDuplicateId={setDuplicateId}
           handleShare={handleShare}
           sharing={sharing}
           softDelete={softDelete}
@@ -1145,6 +1206,16 @@ export default function Budgets() {
           budgetToEditId={editId}
           onClose={handleCloseEdit} 
           onSuccess={() => { handleCloseEdit(); load(); }} 
+        />
+      )}
+
+      {/* Instance for creating new budget from template (duplicate) */}
+      {duplicateId && (
+        <NewBudgetModal 
+          open={true}
+          duplicateFromBudgetId={duplicateId}
+          onClose={() => setDuplicateId(null)} 
+          onSuccess={() => { setDuplicateId(null); load(); }} 
         />
       )}
 

@@ -65,13 +65,13 @@ const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 9999,
-  background: "rgba(8, 8, 12, 0.85)",
+  background: "rgba(0, 0, 0, 0.6)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   padding: "12px",
-  backdropFilter: "blur(16px)",
-  WebkitBackdropFilter: "blur(16px)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
 };
 
 const modal: React.CSSProperties = {
@@ -81,9 +81,11 @@ const modal: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   borderRadius: 20,
-  background: "#12151A",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
-  boxShadow: "0 24px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 107, 26, 0.05)",
+  background: "rgba(18, 18, 22, 0.6)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
+  boxShadow: "none",
   overflow: "hidden",
   color: "#FFFFFF",
 };
@@ -100,33 +102,35 @@ const header: React.CSSProperties = {
   alignItems: "flex-start",
   justifyContent: "space-between",
   gap: 12,
-  borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-  background: "#181C22",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.10)",
 };
 
 const title: React.CSSProperties = {
   fontWeight: 800,
-  fontSize: 20,
+  fontSize: 22,
   color: "#FFFFFF",
   letterSpacing: "-0.02em",
+  lineHeight: 1.25,
 };
 
 const subtitle: React.CSSProperties = {
-  marginTop: 4,
-  fontSize: 13,
-  color: "#B6BCC7",
-  fontWeight: 400,
+  marginTop: 6,
+  fontSize: 15,
+  color: "#cbd5e1",
+  fontWeight: 500,
+  lineHeight: 1.4,
 };
 
 const closeBtn: React.CSSProperties = {
   borderRadius: 10,
   padding: "8px 14px",
-  background: "rgba(255, 255, 255, 0.05)",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
+  background: "rgba(255, 255, 255, 0.06)",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
   color: "#B6BCC7",
   fontWeight: 600,
   fontSize: 13,
   cursor: "pointer",
+  boxShadow: "none",
   transition: "all 0.15s ease",
 };
 
@@ -143,13 +147,14 @@ const input: React.CSSProperties = {
   width: "100%",
   borderRadius: 12,
   padding: "12px 16px",
-  background: "#181C22",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
+  background: "rgba(0, 0, 0, 0.35)",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
   color: "#FFFFFF",
   outline: "none",
   fontSize: 14,
   fontWeight: 400,
-  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+  boxShadow: "none",
+  transition: "border-color 0.2s ease",
 };
 
 const hint: React.CSSProperties = {
@@ -166,18 +171,19 @@ const footer: React.CSSProperties = {
   alignItems: "center",
   gap: 12,
   paddingTop: 16,
-  borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+  borderTop: "1px solid rgba(255, 255, 255, 0.10)",
 };
 
 const btnGhost: React.CSSProperties = {
   borderRadius: 12,
   padding: "12px 20px",
   fontWeight: 700,
-  background: "rgba(255, 255, 255, 0.05)",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
+  background: "rgba(255, 255, 255, 0.06)",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
   color: "#FFFFFF",
   fontSize: 13,
   cursor: "pointer",
+  boxShadow: "none",
 };
 
 const btnPrimary: React.CSSProperties = {
@@ -189,7 +195,7 @@ const btnPrimary: React.CSSProperties = {
   color: "#FFFFFF",
   fontSize: 13,
   cursor: "pointer",
-  boxShadow: "0 4px 20px rgba(255, 107, 26, 0.35)",
+  boxShadow: "none",
 };
 
 export default function NewClientModal({ open, onClose, onSuccess, clientToEdit }: Props) {
@@ -275,8 +281,8 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
     <div style={overlay} onClick={onClose}>
       <div style={{ display: "flex", width: "100%", maxWidth: modal.width as any }} onClick={(e) => e.stopPropagation()}>
         <div style={leftAccent} />
-        <div style={modal}>
-          <div style={header}>
+        <div className="gm-card fora" style={modal}>
+          <div className="barra" style={header}>
             <div>
               <div style={title}>{clientToEdit ? "Editar Cliente" : "Novo Cliente"}</div>
               <div style={subtitle}>

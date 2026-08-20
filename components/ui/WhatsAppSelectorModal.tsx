@@ -122,20 +122,20 @@ export const WhatsAppSelectorModal: React.FC = () => {
             {/* Content body */}
             <div className="p-6">
               {/* Icon & Title */}
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-[var(--gm-primary)]/10 flex items-center justify-center border border-[var(--gm-primary)]/20">
-                  <WhatsAppIcon size={22} className="text-[var(--gm-primary)]" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-[var(--gm-primary)]/10 flex items-center justify-center border border-[var(--gm-primary)]/20 shrink-0">
+                  <WhatsAppIcon size={26} className="text-[var(--gm-primary)]" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-extrabold uppercase tracking-widest text-[#ff7b00]">
+                  <h3 className="text-2xl font-extrabold tracking-tight text-white">
                     Enviar Mensagem
                   </h3>
-                  <p className="text-[10px] text-white/50">Múltiplos aplicativos detectados</p>
+                  <p className="text-base text-slate-300 font-medium">Múltiplos aplicativos detectados</p>
                 </div>
               </div>
 
               {/* Explanatory text */}
-              <p className="text-xs text-white/80 leading-relaxed mb-5">
+              <p className="text-base text-slate-200 leading-relaxed mb-5">
                 Detectamos que você pode ter mais de um WhatsApp instalado (como o 
                 <strong className="text-emerald-400"> Pessoal</strong> e o 
                 <strong className="text-sky-400"> Business</strong>) no seu dispositivo ou PC. Escolha o mensageiro de destino:
@@ -148,14 +148,14 @@ export const WhatsAppSelectorModal: React.FC = () => {
                   onClick={() => handleSelectApp('personal')}
                   className="w-full flex items-center gap-3.5 p-3.5 rounded-xl border border-white/5 bg-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left group"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-all">
-                    <Smartphone size={18} className="text-emerald-400" />
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-all shrink-0">
+                    <Smartphone size={20} className="text-emerald-400" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
+                    <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
                       WhatsApp Padrão
                     </h4>
-                    <p className="text-[9px] text-white/40 mt-0.5">Conta pessoal, contatos gerais ou web app</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Conta pessoal, contatos gerais ou web app</p>
                   </div>
                 </button>
 
@@ -164,21 +164,21 @@ export const WhatsAppSelectorModal: React.FC = () => {
                   onClick={() => handleSelectApp('business')}
                   className="w-full flex items-center gap-3.5 p-3.5 rounded-xl border border-white/5 bg-white/5 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all text-left group"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:bg-sky-500/20 transition-all">
-                    <Building2 size={18} className="text-sky-400" />
+                  <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:bg-sky-500/20 transition-all shrink-0">
+                    <Building2 size={20} className="text-sky-400" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white group-hover:text-sky-400 transition-colors">
+                    <h4 className="text-sm font-bold text-white group-hover:text-sky-400 transition-colors">
                       WhatsApp Business
                     </h4>
-                    <p className="text-[9px] text-white/40 mt-0.5">Conta comercial de negócios (ideal para orçamentos)</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Conta comercial de negócios (ideal para orçamentos)</p>
                   </div>
                 </button>
               </div>
 
               {/* Checkbox Remember choice */}
               <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <div className="relative">
                     <input
                       type="checkbox"
@@ -186,17 +186,17 @@ export const WhatsAppSelectorModal: React.FC = () => {
                       checked={remember}
                       onChange={(e) => setRemember(e.target.checked)}
                     />
-                    <div className="w-4 h-4 rounded border border-white/20 bg-black/40 peer-checked:bg-[#ff7b00] peer-checked:border-[#ff7b00] flex items-center justify-center transition-all">
+                    <div className="w-4 h-4 rounded border border-white/20 bg-black/40 peer-checked:bg-[var(--gm-primary)] peer-checked:border-[var(--gm-primary)] flex items-center justify-center transition-all">
                       {remember && <Check size={10} className="text-white stroke-[3]" />}
                     </div>
                   </div>
-                  <span className="text-[10px] text-white/60">Lembrar escolha para futuros envios</span>
+                  <span className="text-xs text-slate-300 font-medium">Lembrar escolha para futuros envios</span>
                 </label>
               </div>
 
               {/* Info footer */}
-              <p className="text-[9px] text-white/30 leading-snug mt-3 flex items-start gap-1">
-                <HelpCircle size={10} className="shrink-0 mt-0.5" />
+              <p className="text-xs text-slate-400 leading-snug mt-3.5 flex items-start gap-1.5">
+                <HelpCircle size={14} className="shrink-0 mt-0.5 text-slate-400" />
                 No PC, se selecionada uma opção, abrirá o aplicativo padrão ou o WhatsApp Web integrado.
               </p>
             </div>

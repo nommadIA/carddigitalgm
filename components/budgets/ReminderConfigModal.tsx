@@ -132,34 +132,37 @@ export default function ReminderConfigModal({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="bg-[#151619] border border-white/5 rounded-lg w-full max-w-md shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-slide-up">
-        {/* Header - Hardware Style */}
-        <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xl animate-fade-in">
+      <div className="glass-dark border border-white/10 rounded-2xl w-full max-w-md shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden animate-slide-up">
+        {/* Header */}
+        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.03]">
           <div className="flex items-center gap-3">
             <div
-              className={`w-2 h-2 rounded-full ${remindersEnabled ? "bg-[var(--gm-accent)] shadow-[0_0_8px_rgba(var(--gm-accent-rgb),0.6)]" : "bg-red-500"} animate-pulse`}
+              className={`w-3 h-3 rounded-full ${remindersEnabled ? "bg-[var(--gm-accent)] shadow-[0_0_10px_rgba(var(--gm-accent-rgb),0.8)]" : "bg-red-500"} animate-pulse`}
             />
-            <h3 className="text-[10px] uppercase font-mono tracking-[2px] text-white/40">
-              Sistema // Notificações
-            </h3>
+            <div>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                Lembretes Automáticos
+              </h3>
+              <p className="text-xs text-slate-300 font-medium mt-0.5">Alertas e notificações para orçamentos aprovados</p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-white/30 hover:text-white transition-colors"
+            className="text-white/50 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
-        <div className="p-6 space-y-8">
+        <div className="p-6 space-y-6">
           {/* Status Control */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.04] border border-white/10 backdrop-blur-md">
             <div>
-              <div className="text-xs font-bold text-white uppercase tracking-wider">
+              <div className="text-sm font-bold text-white uppercase tracking-wider">
                 Status APROVADO
               </div>
-              <div className="text-[10px] text-white/40 mt-1 font-mono uppercase">
+              <div className="text-xs text-slate-300 mt-1 font-mono uppercase">
                 Auto-disparo: {remindersEnabled ? "Ativado" : "Desativado"}
               </div>
             </div>
