@@ -156,46 +156,44 @@ async function insertItemsWithAutoStrip(items: any[]) {
   }
 }
 
-// --- STYLES (GLASS TRANSLÚCIDO PREMIUM) ---
+// --- STYLES ---
 const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "rgba(0, 0, 0, 0.45)",
+  background: "rgba(0, 0, 0, 0.6)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   padding: 16,
-  backdropFilter: "blur(28px) saturate(130%)",
-  WebkitBackdropFilter: "blur(28px) saturate(130%)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
 };
 
 const fullScreenContainer: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "rgba(10, 11, 14, 0.70)",
+  background: "#09090b",
   color: "#f4f4f5",
   display: "flex",
   flexDirection: "column",
   overflow: "hidden",
-  backdropFilter: "blur(32px) saturate(125%)",
-  WebkitBackdropFilter: "blur(32px) saturate(125%)",
 };
 
 const topBar: React.CSSProperties = {
   position: "sticky",
   top: 0,
   zIndex: 50,
-  background: "rgba(15, 16, 18, 0.25)",
-  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+  background: "rgba(24, 24, 27, 0.95)",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
   padding: "16px 24px",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  backdropFilter: "blur(30px) saturate(130%)",
-  WebkitBackdropFilter: "blur(30px) saturate(130%)",
-  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
 };
 
 const pageContent: React.CSSProperties = {
@@ -218,13 +216,13 @@ const sectionTitle: React.CSSProperties = {
 };
 
 const card: React.CSSProperties = {
-  background: "rgba(18, 19, 22, 0.28)",
-  border: "1px solid rgba(255, 255, 255, 0.10)",
+  background: "rgba(24, 24, 27, 0.75)",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
   borderRadius: 16,
   padding: 24,
-  boxShadow: "0 18px 50px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
-  backdropFilter: "blur(28px) saturate(125%)",
-  WebkitBackdropFilter: "blur(28px) saturate(125%)",
+  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
 };
 
 const labelTop: React.CSSProperties = {
@@ -239,29 +237,24 @@ const labelTop: React.CSSProperties = {
 
 const inputBig: React.CSSProperties = {
   width: "100%",
-  background: "rgba(10, 11, 13, 0.20)",
-  border: "1px solid rgba(255, 255, 255, 0.09)",
+  background: "rgba(0, 0, 0, 0.4)",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
   borderRadius: 10,
   padding: "12px 14px",
   color: "#FFFFFF",
   fontSize: 15,
   fontWeight: 500,
   outline: "none",
-  backdropFilter: "blur(18px)",
-  WebkitBackdropFilter: "blur(18px)",
   transition: "all 0.2s",
 };
 
 const itemRow: React.CSSProperties = {
-  background: "rgba(24, 25, 28, 0.24)",
-  border: "1px solid rgba(255, 255, 255, 0.09)",
+  background: "rgba(24, 24, 27, 0.6)",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
   borderRadius: 14,
   padding: 20,
   marginBottom: 16,
   position: "relative",
-  backdropFilter: "blur(26px) saturate(130%)",
-  WebkitBackdropFilter: "blur(26px) saturate(130%)",
-  boxShadow: "0 15px 45px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
 };
 
 export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditId, duplicateFromBudgetId }: Props) {
@@ -660,7 +653,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <button
-              className="group relative p-6 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer backdrop-blur-xl"
+              className="group relative p-6 rounded-xl border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
               onClick={() => applyTemplate("agency")}
             >
               <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
@@ -677,7 +670,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             </button>
 
             <button
-              className="group relative p-6 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer backdrop-blur-xl"
+              className="group relative p-6 rounded-xl border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
               onClick={() => applyTemplate("print")}
             >
               <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
@@ -1145,7 +1138,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
       {/* 04. AÇÕES */}
       <div
-        className={`p-3.5 sm:p-5 rounded-2xl bg-[rgba(18,19,22,0.45)] backdrop-blur-2xl border border-white/20 text-white flex flex-row items-center justify-between gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.4)] z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`p-3.5 sm:p-5 rounded-2xl bg-[#18181b]/95 backdrop-blur-xl border border-white/20 text-white flex flex-row items-center justify-between gap-3 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         style={{

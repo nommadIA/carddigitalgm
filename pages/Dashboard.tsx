@@ -12,23 +12,7 @@ import {
   Wallet,
   FileText,
   UserPlus,
-  BarChart3,
-  X,
-  Maximize2,
-  CheckCircle2,
 } from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Cell,
-} from "recharts";
-import SafeResponsive from "../components/ui/SafeResponsive";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
 import { pushToast } from "../store/toast";
@@ -65,49 +49,6 @@ interface BudgetRow {
   status: string;
 }
 
-/* ---------- Componente MiniSparkline para a miniatura do gráfico ---------- */
-function MiniSparkline({ data }: { data: number[] }) {
-  if (!data || data.length === 0) return null;
-
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
-
-  const width = 200;
-  const height = 40;
-  const padding = 4;
-  const usableHeight = height - padding * 2;
-
-  const points = data.map((val, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - padding - ((val - min) / range) * usableHeight;
-    return { x, y };
-  });
-
-  let pathD = `M ${points[0].x},${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const curr = points[i];
-    const next = points[i + 1];
-    const mx = (curr.x + next.x) / 2;
-    pathD += ` C ${mx},${curr.y} ${mx},${next.y} ${next.x},${next.y}`;
-  }
-
-  const fillD = `${pathD} L ${width},${height} L 0,${height} Z`;
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="miniSparkGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--gm-primary)" stopOpacity={0.45} />
-          <stop offset="100%" stopColor="var(--gm-primary)" stopOpacity={0.0} />
-        </linearGradient>
-      </defs>
-      <path d={fillD} fill="url(#miniSparkGrad)" />
-      <path d={pathD} fill="none" stroke="var(--gm-primary)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 /* ---------- Estilos reutilizáveis (tokens do tema em --gm-*) ---------- */
 const cardBase =
   "fora rounded-2xl transition-all border border-white/10 shadow-none";
@@ -118,10 +59,6 @@ export default function Dashboard() {
   const { tenantId } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
-  // Modal Faturamento State
-  const [faturamentoModalOpen, setFaturamentoModalOpen] = useState(false);
-  const [faturamentoPeriod, setFaturamentoPeriod] = useState<"30d" | "6m" | "12m">("30d");
 
   // App Settings (for user registered company logo & name)
   const [appSettings, setAppSettings] = useState<AppSettings | null>(() => readSettingsLocal());
@@ -380,44 +317,6 @@ export default function Dashboard() {
   }, [recentBudgets]);
 
   // Dados do gráfico detalhado do Modal de Faturamento
-  const faturamentoChartData = useMemo(() => {
-    if (faturamentoPeriod === "30d") {
-      return [
-        { date: "Dia 01", valor: Math.round(stats.faturamentoMensal * 0.15), orcamentos: 2 },
-        { date: "Dia 05", valor: Math.round(stats.faturamentoMensal * 0.28), orcamentos: 4 },
-        { date: "Dia 10", valor: Math.round(stats.faturamentoMensal * 0.45), orcamentos: 7 },
-        { date: "Dia 15", valor: Math.round(stats.faturamentoMensal * 0.62), orcamentos: 10 },
-        { date: "Dia 20", valor: Math.round(stats.faturamentoMensal * 0.78), orcamentos: 13 },
-        { date: "Dia 25", valor: Math.round(stats.faturamentoMensal * 0.90), orcamentos: 15 },
-        { date: "Hoje", valor: stats.faturamentoMensal, orcamentos: stats.orcametosAbertos },
-      ];
-    } else if (faturamentoPeriod === "6m") {
-      return [
-        { date: "Mar", valor: Math.round(stats.faturamentoMensal * 0.72), orcamentos: 11 },
-        { date: "Abr", valor: Math.round(stats.faturamentoMensal * 0.80), orcamentos: 13 },
-        { date: "Mai", valor: Math.round(stats.faturamentoMensal * 0.88), orcamentos: 14 },
-        { date: "Jun", valor: Math.round(stats.faturamentoMensal * 0.84), orcamentos: 13 },
-        { date: "Jul", valor: Math.round(stats.faturamentoMensal * 0.94), orcamentos: 16 },
-        { date: "Ago", valor: stats.faturamentoMensal, orcamentos: stats.orcametosAbertos },
-      ];
-    } else {
-      return [
-        { date: "Set", valor: 28000, orcamentos: 10 },
-        { date: "Out", valor: 32000, orcamentos: 12 },
-        { date: "Nov", valor: 39000, orcamentos: 14 },
-        { date: "Dez", valor: 45000, orcamentos: 18 },
-        { date: "Jan", valor: 31000, orcamentos: 11 },
-        { date: "Fev", valor: 36000, orcamentos: 13 },
-        { date: "Mar", valor: 38000, orcamentos: 14 },
-        { date: "Abr", valor: 41000, orcamentos: 15 },
-        { date: "Mai", valor: 44000, orcamentos: 16 },
-        { date: "Jun", valor: 42000, orcamentos: 15 },
-        { date: "Jul", valor: 46000, orcamentos: 16 },
-        { date: "Ago", valor: stats.faturamentoMensal, orcamentos: stats.orcametosAbertos },
-      ];
-    }
-  }, [faturamentoPeriod, stats]);
-
   // Distribuição por status dos orçamentos recentes (dado real, derivado do que já foi buscado)
   const statusChartData = useMemo(() => {
     const counts = { Aprovado: 0, "Na Fila": 0, Recusado: 0 };
@@ -511,12 +410,8 @@ export default function Dashboard() {
 
       {/* 4. TOP METRIC CARDS WITH DISTINCT ICON BOXES (4 COLUMNS) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-1">
-        {/* CARD 1: FATURADO NO MÊS (com sparkline e modal interativo) */}
-        <div
-          onClick={() => setFaturamentoModalOpen(true)}
-          className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/60 cursor-pointer relative overflow-hidden`}
-          title="Clique para ver o gráfico detalhado do Faturamento"
-        >
+        {/* CARD 1: FATURADO NO MÊS */}
+        <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
@@ -526,23 +421,18 @@ export default function Dashboard() {
                 {formatCurrency(stats.faturamentoMensal)}
               </div>
             </div>
-            <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none group-hover:scale-110 transition-transform">
+            <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
               <TrendingUp size={20} />
             </div>
           </div>
 
-          <div className="h-10 my-1 relative overflow-hidden">
-            <MiniSparkline data={sparklineValues} />
-          </div>
+          <div className="h-10 my-1" />
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg w-fit border border-emerald-500/20">
               <ArrowUpRight size={14} />
               <span>+12,4% este mês</span>
             </div>
-            <span className="text-[10px] font-bold text-[color:var(--gm-primary)] flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-              <Maximize2 size={12} /> Gráfico
-            </span>
           </div>
         </div>
 
@@ -817,178 +707,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* MODAL FATURAMENTO (MÉTRICAS GERAIS) */}
-      {faturamentoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
-          <div className="relative w-full max-w-4xl fora rounded-3xl border border-white/12 p-6 sm:p-8 shadow-none overflow-hidden space-y-6 max-h-[90vh] overflow-y-auto">
-            {/* Header do Modal */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl barra border border-[color:var(--gm-primary)]/30 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
-                  <TrendingUp size={24} />
-                </div>
-                <div>
-                  <span className="text-xs font-extrabold text-[color:var(--gm-primary)] uppercase tracking-wider block">
-                    Métricas Gerais · Detalhamento
-                  </span>
-                  <h3 className="text-2xl font-black text-[color:var(--gm-text)] tracking-tight">
-                    Evolução do Faturamento
-                  </h3>
-                </div>
-              </div>
-              <button
-                onClick={() => setFaturamentoModalOpen(false)}
-                className="p-2.5 rounded-xl barra hover:bg-white/15 border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer shadow-none"
-                title="Fechar modal"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Resumo em cards dentro do modal */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl barra border border-white/10 flex flex-col justify-between shadow-none">
-                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                  Total Faturado ({faturamentoPeriod === "30d" ? "30 dias" : faturamentoPeriod === "6m" ? "6 meses" : "12 meses"})
-                </span>
-                <div className="text-2xl font-black text-[color:var(--gm-text)] mt-1">
-                  {formatCurrency(stats.faturamentoMensal)}
-                </div>
-                <span className="text-xs font-semibold text-emerald-400 mt-1 flex items-center gap-1">
-                  <ArrowUpRight size={14} /> +12,4% no período
-                </span>
-              </div>
-
-              <div className="p-4 rounded-2xl barra border border-white/10 flex flex-col justify-between shadow-none">
-                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                  Ticket Médio
-                </span>
-                <div className="text-2xl font-black text-[color:var(--gm-text)] mt-1">
-                  {formatCurrency(stats.ticketMedio)}
-                </div>
-                <span className="text-xs font-semibold text-emerald-400 mt-1 flex items-center gap-1">
-                  <CheckCircle2 size={14} /> Meta alinhada
-                </span>
-              </div>
-
-              <div className="p-4 rounded-2xl barra border border-white/10 flex flex-col justify-between shadow-none">
-                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                  Meta Mensal (R$ 50.000)
-                </span>
-                <div className="text-2xl font-black text-[color:var(--gm-text)] mt-1">
-                  {Math.min(100, Math.round((stats.faturamentoMensal / 50000) * 100))}% Atingido
-                </div>
-                <div className="w-full bg-white/10 h-2 rounded-full mt-2 overflow-hidden">
-                  <div
-                    className="bg-[color:var(--gm-primary)] h-full rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(100, Math.round((stats.faturamentoMensal / 50000) * 100))}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Controles do Gráfico (Filtros de Período) */}
-            <div className="flex items-center justify-between flex-wrap gap-3 pt-2">
-              <div className="text-sm font-bold text-zinc-300">
-                Gráfico de Faturamento acumulado
-              </div>
-              <div className="flex items-center gap-2 barra p-1.5 rounded-xl border border-white/10 shadow-none">
-                <button
-                  onClick={() => setFaturamentoPeriod("30d")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    faturamentoPeriod === "30d"
-                      ? "bg-[color:var(--gm-primary)] text-white shadow-none"
-                      : "text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  30 Dias
-                </button>
-                <button
-                  onClick={() => setFaturamentoPeriod("6m")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    faturamentoPeriod === "6m"
-                      ? "bg-[color:var(--gm-primary)] text-white shadow-none"
-                      : "text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  6 Meses
-                </button>
-                <button
-                  onClick={() => setFaturamentoPeriod("12m")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    faturamentoPeriod === "12m"
-                      ? "bg-[color:var(--gm-primary)] text-white shadow-none"
-                      : "text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  12 Meses
-                </button>
-              </div>
-            </div>
-
-            {/* GRÁFICO PRINCIPAL COM ALTURA E VISIBILIDADE GARANTIDAS */}
-            <div className="w-full h-72 barra rounded-2xl border border-white/10 p-4 relative overflow-hidden shadow-none">
-              <SafeResponsive height={260}>
-                <AreaChart data={faturamentoChartData} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="modalFaturamentoGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--gm-primary)" stopOpacity={0.5} />
-                      <stop offset="95%" stopColor="var(--gm-primary)" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                  <XAxis dataKey="date" stroke="#8B8B92" tick={{ fill: "#8B8B92", fontSize: 12 }} />
-                  <YAxis
-                    stroke="#8B8B92"
-                    tick={{ fill: "#8B8B92", fontSize: 12 }}
-                    tickFormatter={(val) => `R$ ${(val / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="p-3 fora border border-white/15 rounded-xl shadow-none backdrop-blur-xl text-white">
-                            <p className="text-xs font-bold text-zinc-400 mb-1">{label}</p>
-                            <p className="text-sm font-black text-[color:var(--gm-primary)]">
-                              {formatCurrency(Number(payload[0].value))}
-                            </p>
-                            {payload[0].payload.orcamentos ? (
-                              <p className="text-[11px] font-semibold text-zinc-300 mt-0.5">
-                                {payload[0].payload.orcamentos} orçamentos
-                              </p>
-                            ) : null}
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="valor"
-                    stroke="var(--gm-primary)"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#modalFaturamentoGradient)"
-                  />
-                </AreaChart>
-              </SafeResponsive>
-            </div>
-
-            {/* Footer do Modal */}
-            <div className="flex items-center justify-between pt-2 text-xs text-zinc-400 border-t border-white/10">
-              <span>* Atualizado em tempo real</span>
-              <button
-                onClick={() => setFaturamentoModalOpen(false)}
-                className="px-5 py-2.5 rounded-xl barra hover:bg-white/15 border border-white/10 text-white font-bold transition-all cursor-pointer shadow-none"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -43,112 +43,30 @@ const AlarmToast = () => {
   useEffect(() => {
     // Solicita permissão para notifications do navegador
     if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission().catch(() => {});
+      Notification.requestPermission();
     }
 
-    const triggerAlarm = (alarm: BudgetAlarm) => {
-      setAlarms((prev) => {
-        // Evita duplicatas visuais
-        if (prev.find((a) => a.id === alarm.id)) return prev;
-        try {
-          playNotificationSound(); // ✅ Add sound for new alarm
-        } catch (e) {}
-        return [alarm, ...prev];
-      });
-
-      // Dispara notificação nativa do sistema operacional (crucial para app minimizado / background)
-      try {
-        if ("Notification" in window && Notification.permission === "granted") {
-          const settings = readSettingsLocal();
-          const companyName = settings?.company_name || "CardDigital GM";
-          const companyLogo =
-            settings?.company_logo_url ||
-            "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
-
-          const notifTitle =
-            alarm.type === "EXPENSE"
-              ? `Lembrete de Despesa • ${companyName}`
-              : alarm.type === "NOTE"
-                ? `Lembrete de Nota: ${alarm.clientName}`
-                : `Orçamento em Andamento • ${companyName}`;
-
-          const notifBody = getNotificationText(alarm);
-          const targetUrl =
-            alarm.type === "NOTE"
-              ? `/notes?id=${alarm.budgetId}`
-              : alarm.type === "EXPENSE"
-                ? `/expenses?id=${alarm.budgetId}`
-                : `/budgets?id=${alarm.budgetId}`;
-
-          // Se Service Worker estiver disponível, usa showNotification (funciona com app minimizado/fechado)
-          if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.ready
-              .then((registration) => {
-                registration.showNotification(notifTitle, {
-                  body: notifBody,
-                  icon: companyLogo,
-                  badge: companyLogo,
-                  tag: `alarm-${alarm.id}`,
-                  renotify: true,
-                  requireInteraction: true,
-                  data: { url: targetUrl },
-                } as any);
-              })
-              .catch(() => {
-                new Notification(notifTitle, {
-                  body: notifBody,
-                  icon: companyLogo,
-                  tag: `alarm-${alarm.id}`,
-                });
-              });
-          } else {
-            const notif = new Notification(notifTitle, {
-              body: notifBody,
-              icon: companyLogo,
-              tag: `alarm-${alarm.id}`,
-            });
-            notif.onclick = () => {
-              window.focus();
-              navigate(targetUrl);
-              notif.close();
-            };
-          }
-        }
-      } catch (errNotif) {
-        console.warn("[AlarmToast] Erro ao disparar notificação do SO:", errNotif);
-      }
-
-      // Marca como disparado (no storage e IndexedDB)
-      markAlarmAsTriggered(alarm.id);
-    };
-
-    const runCheck = () => {
+    // Polling a cada 10 segundos para verificar alarmes
+    const interval = setInterval(() => {
       const alarm = checkAlarms();
       if (alarm) {
-        triggerAlarm(alarm);
+        setAlarms((prev) => {
+          // Evita duplicatas visuais
+          if (prev.find(a => a.id === alarm.id)) return prev;
+          playNotificationSound(); // ✅ Add sound for new alarm
+          return [alarm, ...prev];
+        });
+
+        // Notificação em tela (In-App Floating Toast) ativada exclusivamente
+        // (Notificações nativas do sistema operacional desativadas para não exibir o link/domínio do Netlify no SO)
+
+        // Marca como disparado (no storage e IndexedDB)
+        markAlarmAsTriggered(alarm.id);
       }
-    };
+    }, 10000);
 
-    // Checagem imediata
-    runCheck();
-
-    // Polling a cada 5 segundos para verificar alarmes com precisão de minutos
-    const interval = setInterval(runCheck, 5000);
-
-    // Checa imediatamente ao restaurar/desminimizar a aba
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        runCheck();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [navigate]);
+    return () => clearInterval(interval);
+  }, []);
 
   const dismiss = (id: string) => {
     setAlarms(prev => prev.filter(a => a.id !== id));
@@ -156,7 +74,7 @@ const AlarmToast = () => {
 
   const getNotificationText = (alarm: BudgetAlarm) => {
     if (alarm.type === 'EXPENSE') {
-      return `Atenção: A despesa "${alarm.clientName}" vence hoje. Lembrete de pagamento programado para às ${alarm.time}.`;
+      return `Lembrete: O pagamento da despesa de "${alarm.clientName}" está agendado para às ${alarm.time}.`;
     }
     if (alarm.type === 'NOTE') {
       return `Atenção: O lembrete da nota "${alarm.clientName}" está programado para às ${alarm.time}.`;

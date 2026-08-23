@@ -132,10 +132,10 @@ export default function ReminderConfigModal({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xl animate-fade-in">
-      <div className="glass-dark border border-white/10 rounded-2xl w-full max-w-md shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden animate-slide-up">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-[#151619] border border-white/5 rounded-lg w-full max-w-md shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-slide-up">
         {/* Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.03]">
+        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black/30">
           <div className="flex items-center gap-3">
             <div
               className={`w-3 h-3 rounded-full ${remindersEnabled ? "bg-[var(--gm-accent)] shadow-[0_0_10px_rgba(var(--gm-accent-rgb),0.8)]" : "bg-red-500"} animate-pulse`}
@@ -157,7 +157,7 @@ export default function ReminderConfigModal({
 
         <div className="p-6 space-y-6">
           {/* Status Control */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.04] border border-white/10 backdrop-blur-md">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
             <div>
               <div className="text-sm font-bold text-white uppercase tracking-wider">
                 Status APROVADO

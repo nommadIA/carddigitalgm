@@ -41,6 +41,7 @@ import { playNotificationSound } from "../../lib/audio";
 import { useAuth } from "../../store/AuthContext";
 import { fetchSettingsSupabase, applySettingsToDOM, readSettingsLocal } from "../../lib/settings";
 import AlarmToast from "./AlarmToast";
+import SmartphonePermissionModal from "./SmartphonePermissionModal";
 import { ToastHost } from "./Toast";
 import BottomNav from "./BottomNav";
 
@@ -105,7 +106,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   const sidebarRef = useRef<HTMLElement | null>(null);
   const handleRef = useRef<HTMLDivElement | null>(null);
 
-  const EXPANDED_SIDEBAR_WIDTH = 192;
+  const EXPANDED_SIDEBAR_WIDTH = 224;
   const COLLAPSED_SIDEBAR_WIDTH = 56;
 
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("gm.sidebar") === "1");
@@ -517,6 +518,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* Novo componente de alarmes para orçamentos aprovados */}
       <AlarmToast />
 
+      {/* Modal de Permissões para Smartphone (Notificações em tempo real simultâneas) */}
+      <SmartphonePermissionModal />
+
       {/* Tutorial Onboarding do Aplicativo */}
       {showTutorial && <AppTutorial onClose={() => setShowTutorial(false)} />}
 
@@ -534,22 +538,15 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             <div className="relative flex items-center justify-center shrink-0">
               <div className="w-8 h-8 rounded-lg border border-white/15 flex items-center justify-center overflow-hidden shadow-none bg-black/40 !p-0">
                 <img 
-                  src={appSettings?.company_logo_url || appSettings?.avatar_url || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"} 
-                  alt={appSettings?.company_name || "Logo CardDigital GM"} 
-                  className="w-full h-full object-contain scale-[1.1] transform"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
-                  }}
+                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
+                  alt="Logo CardDigital GM" 
+                  className="w-full h-full object-cover scale-[1.3] transform"
                 />
               </div>
             </div>
             <div className="flex flex-col leading-tight">
                 <span className="text-lg font-bold text-slate-900 dark:text-white">
-                  {appSettings?.company_name ? (
-                    appSettings.company_name
-                  ) : (
-                    <>CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span></>
-                  )}
+                  CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span>
                 </span>
             </div>
         </div>
@@ -599,22 +596,15 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           <header className="flex items-center gap-3.5 px-4 py-4 border-b border-white/10 shrink-0">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center overflow-hidden shrink-0 shadow-none bg-black/40 border border-white/15 !p-0">
               <img 
-                src={appSettings?.company_logo_url || appSettings?.avatar_url || "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"} 
-                alt={appSettings?.company_name || "Logo Official CardDigital GM"} 
-                className="w-full h-full object-contain logo-icon scale-[1.1] transform"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
-                }}
+                src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
+                alt="Logo Official CardDigital GM" 
+                className="w-full h-full object-cover logo-icon scale-[1.3] transform"
               />
             </div>
             {!collapsed && (
               <div className="flex items-center gap-1 leading-none overflow-hidden logo-text">
                 <span className="text-base font-bold text-[var(--gm-menu-title)] truncate">
-                  {appSettings?.company_name ? (
-                    appSettings.company_name
-                  ) : (
-                    <>CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span></>
-                  )}
+                  CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span>
                 </span>
               </div>
             )}

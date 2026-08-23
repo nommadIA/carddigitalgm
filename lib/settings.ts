@@ -375,12 +375,8 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
 export function writeSettingsLocal(s: AppSettings, tenantId?: string | null) {
   try {
     const tidKey = getTenantStorageKey(tenantId || s.tenant_id);
-    const serialized = JSON.stringify(s);
-    localStorage.setItem(tidKey, serialized);
-    localStorage.setItem(LOCAL_KEY, serialized);
-    if (s.owner) {
-      localStorage.setItem(`gm.settings.cache.${s.owner}`, serialized);
-    }
+    localStorage.setItem(tidKey, JSON.stringify(s));
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(s));
   } catch {}
 }
 
@@ -390,19 +386,6 @@ export function readSettingsLocal(tenantId?: string | null): AppSettings | null 
     let raw = localStorage.getItem(tidKey);
     if (!raw && tidKey !== LOCAL_KEY) {
       raw = localStorage.getItem(LOCAL_KEY);
-    }
-    if (!raw) {
-      // Try search for any owner cache
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith("gm.settings.cache.")) {
-          const val = localStorage.getItem(k);
-          if (val) {
-            raw = val;
-            break;
-          }
-        }
-      }
     }
     if (!raw) return null;
     return JSON.parse(raw);
@@ -648,59 +631,16 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
 
   let dbData: any = null;
 
-  if (tid) {
-    const res = await supabase
-      .from("app_settings")
-      .upsert(dbPayload, { onConflict: "tenant_id" })
-      .select("*")
-      .maybeSingle();
+  const res = await supabase
+    .from("app_settings")
+    .upsert(dbPayload, { onConflict: "tenant_id" })
+    .select("*")
+    .maybeSingle();
 
-    if (res.error) {
-      console.info("Info do salvamento no Supabase por tenant:", res.error);
-      // Fallback: tentar atualizar por owner se existir
-      if (owner) {
-        const { data: existingOwner } = await supabase
-          .from("app_settings")
-          .select("id")
-          .eq("owner", owner)
-          .maybeSingle();
-        
-        if (existingOwner?.id) {
-          const updateRes = await supabase
-            .from("app_settings")
-            .update(dbPayload)
-            .eq("id", existingOwner.id)
-            .select("*")
-            .maybeSingle();
-          if (!updateRes.error) dbData = updateRes.data;
-        }
-      }
-    } else {
-      dbData = res.data;
-    }
-  } else if (owner) {
-    const { data: existingOwner } = await supabase
-      .from("app_settings")
-      .select("id")
-      .eq("owner", owner)
-      .maybeSingle();
-
-    if (existingOwner?.id) {
-      const updateRes = await supabase
-        .from("app_settings")
-        .update(dbPayload)
-        .eq("id", existingOwner.id)
-        .select("*")
-        .maybeSingle();
-      if (!updateRes.error) dbData = updateRes.data;
-    } else {
-      const insertRes = await supabase
-        .from("app_settings")
-        .insert(dbPayload)
-        .select("*")
-        .maybeSingle();
-      if (!insertRes.error) dbData = insertRes.data;
-    }
+  if (res.error) {
+    console.info("Info do salvamento no Supabase (configurações salvas localmente e no bio_config):", res.error);
+  } else {
+    dbData = res.data;
   }
 
   const settings = { ...DEFAULT_SETTINGS, ...(dbData || {}), ...payload } as AppSettings;

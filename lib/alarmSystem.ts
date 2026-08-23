@@ -228,53 +228,6 @@ export const syncAlarmsWithNotes = (notes: any[]) => {
   saveAlarms([...nonNoteAlarms, ...newAlarms]);
 };
 
-// ✅ NOVO: Sincroniza alarmes com a lista de despesas (Despertador no Vencimento)
-export const syncAlarmsWithExpenses = (expenses: any[]) => {
-  const currentAlarms = getAlarms();
-  const nonExpenseAlarms = currentAlarms.filter(a => a.type !== "EXPENSE");
-  const expenseAlarms = currentAlarms.filter(a => a.type === "EXPENSE");
-
-  const newAlarms: BudgetAlarm[] = [];
-  const existingAlarmsMap = new Map<string, BudgetAlarm>();
-  expenseAlarms.forEach(a => {
-    existingAlarmsMap.set(`${a.budgetId}_${a.time}`, a);
-  });
-
-  expenses.forEach(exp => {
-    // Alarme ativo para despesas não pagas, não excluídas e com despertador ativado
-    const isPaid = !!exp.paid;
-    const isDeleted = !!exp.deleted_at;
-    const hasAlarm = exp.reminder_alarm !== false; // Padrão ativo
-    const dDate = exp.dueDate || exp.due_date;
-
-    if (!isDeleted && !isPaid && dDate && hasAlarm) {
-      const times = (exp.reminder_time || "09:00")
-        .split(",")
-        .map((t: string) => t.trim())
-        .filter((t: string) => /^\d{2}:\d{2}$/.test(t));
-      
-      if (times.length === 0) times.push("09:00");
-
-      times.forEach((time: string) => {
-        const existing = existingAlarmsMap.get(`${exp.id}_${time}`);
-        newAlarms.push({
-          id: existing ? existing.id : crypto.randomUUID(),
-          budgetId: exp.id,
-          clientName: exp.description || "Despesa",
-          time,
-          active: existing ? existing.active : true,
-          triggered: existing ? existing.triggered : false,
-          type: "EXPENSE",
-          date: dDate, // Dispara no dia de vencimento
-          lastTriggeredOn: existing ? existing.lastTriggeredOn : null as any,
-        });
-      });
-    }
-  });
-
-  saveAlarms([...nonExpenseAlarms, ...newAlarms]);
-};
-
 export const toggleAlarmsForBudget = (budgetId: string, active: boolean) => {
   const current = getAlarms();
   const updated = current.map((a) => (a.budgetId === budgetId ? { ...a, active } : a));

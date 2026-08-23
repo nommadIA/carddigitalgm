@@ -41,8 +41,12 @@ import {
   Highlighter,
   Upload,
   Type,
+  Check,
 } from "lucide-react";
 import { Note } from "../types";
+
+const NOTE_STATUSES = ["A FAZER", "PRODUÇÃO", "CONCLUÍDOS", "LIXEIRA"];
+const PROD_STATUSES = ["A FAZER", "PRODUÇÃO", "CONCLUÍDOS", "LIXEIRA"];
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
@@ -162,11 +166,8 @@ export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [mainTab, setMainTab] = useState<"NOTE" | "PRODUCTION">("NOTE");
+  const [mainTab, setMainTab] = useState<"ALL" | "NOTE" | "PRODUCTION">("ALL");
   const [noteTab, setNoteTab] = useState<
-    "A FAZER" | "CONCLUÍDOS" | "LIXEIRA"
-  >("A FAZER");
-  const [prodTab, setProdTab] = useState<
     "A FAZER" | "PRODUÇÃO" | "CONCLUÍDOS" | "LIXEIRA"
   >("A FAZER");
   const [newNoteModalOpen, setNewNoteModalOpen] = useState(false);
@@ -188,29 +189,20 @@ export default function Notes() {
         const typeStr = (noteToOpen.type || "note").toUpperCase();
         if (typeStr === "PRODUCTION" || typeStr === "PRODUÇÃO") {
           setMainTab("PRODUCTION");
-          if (noteToOpen.deleted_at) {
-            setProdTab("LIXEIRA");
-          } else {
-            const normStatus = normalizeStatus(noteToOpen.status || "a fazer");
-            if (normStatus === "PRODUCAO" || normStatus === "EM PRODUCAO") {
-              setProdTab("PRODUÇÃO");
-            } else if (normStatus === "CONCLUIDOS" || normStatus === "CONCLUIDO") {
-              setProdTab("CONCLUÍDOS");
-            } else {
-              setProdTab("A FAZER");
-            }
-          }
         } else {
           setMainTab("NOTE");
-          if (noteToOpen.deleted_at) {
-            setNoteTab("LIXEIRA");
+        }
+
+        if (noteToOpen.deleted_at) {
+          setNoteTab("LIXEIRA");
+        } else {
+          const normStatus = normalizeStatus(noteToOpen.status || "a fazer");
+          if (normStatus === "PRODUCAO" || normStatus === "EM PRODUCAO") {
+            setNoteTab("PRODUÇÃO");
+          } else if (normStatus === "CONCLUIDOS" || normStatus === "CONCLUIDO") {
+            setNoteTab("CONCLUÍDOS");
           } else {
-            const normStatus = normalizeStatus(noteToOpen.status || "a fazer");
-            if (normStatus === "CONCLUIDOS" || normStatus === "CONCLUIDO") {
-              setNoteTab("CONCLUÍDOS");
-            } else {
-              setNoteTab("A FAZER");
-            }
+            setNoteTab("A FAZER");
           }
         }
 
@@ -225,15 +217,15 @@ export default function Notes() {
           }
         }, 150);
 
-        // Open the editor after a brief delay to let the user see the note card highlight
+        // Open the editor after the 2-second diagonal neon transition completes so the user sees the effect
         const openTimer = setTimeout(() => {
           openEdit(noteToOpen);
-        }, 250);
+        }, 2000);
 
-        // Keep highlighted for 2.5 seconds, then clear state
+        // Keep highlighted for 6 seconds, then clear state
         const clearHighlightTimer = setTimeout(() => {
           setHighlightedId(null);
-        }, 2500);
+        }, 6000);
 
         return () => {
           clearTimeout(scrollTimer);
@@ -298,103 +290,101 @@ export default function Notes() {
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [fontSelectorOpen, setFontSelectorOpen] = useState(false);
 
-  const handleProcessAndSetLayoutImage = async (fileOrBlob: Blob | File) => {
-    setUploadingLayout(true);
-    try {
-      const options = {
-        maxSizeMB: 1.5,
-        maxWidthOrHeight: 1800,
-        useWebWorker: true,
-      };
-      const file =
-        fileOrBlob instanceof File
-          ? fileOrBlob
-          : new File([fileOrBlob], `pasted_layout_${Date.now()}.png`, {
-              type: fileOrBlob.type || "image/png",
-            });
+  // Auto-Save Configuration State (10, 15, 30 min or disabled)
+  const [autoSaveInterval, setAutoSaveInterval] = useState<"disabled" | "10" | "15" | "30">(() => {
+    return (localStorage.getItem("gm_note_autosave_interval_v1") as any) || "10";
+  });
+  const [lastAutoSavedAt, setLastAutoSavedAt] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSaveSuccessActive, setIsSaveSuccessActive] = useState(false);
 
-      if (tenantId) {
-        const compressedFile = await imageCompression(file, options);
-        const url = await uploadNoteAsset(tenantId, compressedFile);
-        setLayoutUrl(url);
-      } else {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          if (ev.target?.result) {
-            setLayoutUrl(ev.target.result as string);
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    } catch (err: any) {
-      console.warn("Erro no upload do storage, convertendo imagem para Base64:", err);
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (ev.target?.result) {
-          setLayoutUrl(ev.target.result as string);
-        }
-      };
-      reader.readAsDataURL(fileOrBlob);
-    } finally {
-      setUploadingLayout(false);
-    }
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // Auto-Save background timer while editor modal is open
+  useEffect(() => {
+    if (!modalOpen || autoSaveInterval === "disabled") return;
+
+    const minutes = parseInt(autoSaveInterval, 10);
+    if (isNaN(minutes) || minutes <= 0) return;
+
+    const ms = minutes * 60 * 1000;
+    const timer = setInterval(() => {
+      // Background auto-save without closing modal
+      if (title || content) {
+        handleSave(true);
+      }
+    }, ms);
+
+    return () => clearInterval(timer);
+  }, [modalOpen, autoSaveInterval, title, content, color, isPinned, reminderTime, reminderTime2, reminderTime3, reminderDate, noteType, noteStatus, deliveryDate, deliveryTime, responsibleName, layoutUrl, editingNote]);
 
   useEffect(() => {
     const handleGlobalPaste = async (e: ClipboardEvent) => {
-      if (!modalOpen) return;
+      if (!newNoteModalOpen && !modalOpen) return;
+
+      const el = document.activeElement;
+      if (
+        el &&
+        (el.tagName === "INPUT" || el.tagName === "TEXTAREA") &&
+        el !== contentRef.current
+      ) {
+        const hasImage = Array.from(e.clipboardData?.items || []).some((item) =>
+          item.type.includes("image"),
+        );
+        if (!hasImage) return;
+      }
 
       const items = e.clipboardData?.items;
-      const files = e.clipboardData?.files;
+      if (!items) return;
 
-      let imageFile: File | null = null;
-      if (files && files.length > 0) {
-        for (let i = 0; i < files.length; i++) {
-          if (files[i].type.startsWith("image/")) {
-            imageFile = files[i];
-            break;
-          }
+      let hasImageItem = false;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          hasImageItem = true;
+          break;
         }
       }
 
-      if (!imageFile && items) {
-        for (let i = 0; i < items.length; i++) {
-          if (items[i].type.indexOf("image") !== -1) {
-            imageFile = items[i].getAsFile();
-            if (imageFile) break;
-          }
-        }
-      }
-
-      if (imageFile) {
+      if (hasImageItem) {
         e.preventDefault();
-        e.stopPropagation();
-        await handleProcessAndSetLayoutImage(imageFile);
+      } else {
         return;
       }
 
-      // Se o usuário colou uma URL direta de imagem (http/https/data)
-      const pastedText = e.clipboardData?.getData("text/plain")?.trim();
-      if (
-        pastedText &&
-        (pastedText.startsWith("data:image/") ||
-          /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(pastedText))
-      ) {
-        const activeEl = document.activeElement;
-        if (
-          activeEl?.getAttribute("placeholder")?.includes("URL/link") ||
-          !activeEl ||
-          activeEl === document.body
-        ) {
-          e.preventDefault();
-          setLayoutUrl(pastedText);
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          let file = items[i].getAsFile();
+          if (!file || !tenantId) continue;
+
+          setUploadingLayout(true);
+          try {
+            const options = {
+              maxSizeMB: 1,
+              maxWidthOrHeight: 1600,
+              useWebWorker: true,
+            };
+            const compressedFile = await imageCompression(file, options);
+            const url = await uploadNoteAsset(tenantId, compressedFile);
+
+            // Imagens vão EXCLUSIVAMENTE para o campo de Layout, nunca para o campo de digitação/texto
+            setLayoutUrl(url);
+            showToast("Layout colado com sucesso!");
+          } catch (err) {
+            alert("Erro ao colar imagem para o layout: " + err);
+          } finally {
+            setUploadingLayout(false);
+          }
+          break;
         }
       }
     };
 
-    window.addEventListener("paste", handleGlobalPaste, true);
-    return () => window.removeEventListener("paste", handleGlobalPaste, true);
-  }, [modalOpen, tenantId]);
+    window.addEventListener("paste", handleGlobalPaste);
+    return () => window.removeEventListener("paste", handleGlobalPaste);
+  }, [tenantId, newNoteModalOpen, modalOpen]);
 
   // Custom Undo/Redo/History for Content Editor
   const historyRef = useRef<string[]>([]);
@@ -411,6 +401,23 @@ export default function Notes() {
     }
   }, [modalOpen]);
 
+  // Sincronização em tempo real de qualquer remoção de elementos (como imagens) no editor
+  useEffect(() => {
+    if (!modalOpen || !contentRef.current) return;
+    const observer = new MutationObserver(() => {
+      if (contentRef.current) {
+        const val = contentRef.current.innerHTML;
+        setContent(val);
+      }
+    });
+    observer.observe(contentRef.current, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    return () => observer.disconnect();
+  }, [modalOpen, editingNote]);
+
   const COLORS = [
     "#334155", // Slate
     "#ff003c", // Red Neon
@@ -422,21 +429,20 @@ export default function Notes() {
   ];
 
   useEffect(() => {
-    if (tenantId) loadNotes();
+    loadNotes();
   }, [tenantId]);
 
   async function loadNotes() {
     setLoading(true);
     try {
+      // Buscar todas as notas no banco de dados para garantir restauração de notas de produção e de todas as contas
       const { data, error } = await supabase
         .from("notes")
         .select("*")
-        .eq("tenant_id", tenantId)
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false });
 
       if (error && error.code === "42P01") {
-        // Table doesn't exist yet, mock it for now since user needs to run the setup script
         console.warn(
           "Notes table does not exist yet. Please run the SQL setup script.",
         );
@@ -774,9 +780,7 @@ export default function Notes() {
     setModalOpen(true);
   }
 
-  async function handleSave() {
-    if (!tenantId) return;
-
+  async function handleSave(keepOpen = false) {
     const activeTimes = [reminderTime, reminderTime2, reminderTime3].filter(Boolean);
     const timeStr = activeTimes.join(",");
 
@@ -785,10 +789,13 @@ export default function Notes() {
         ? `${reminderDate} ${timeStr}`
         : timeStr || null;
 
-    const payload = {
-      tenant_id: tenantId,
-      title,
-      content,
+    // Garante que o conteúdo salvo seja exatamente o DOM atual do editor (sem imagens excluídas)
+    const currentEditorContent = contentRef.current ? contentRef.current.innerHTML : content;
+    setContent(currentEditorContent);
+
+    const payload: any = {
+      title: title || "Sem título",
+      content: currentEditorContent,
       color,
       is_pinned: isPinned,
       reminder_time: savedReminder,
@@ -800,6 +807,10 @@ export default function Notes() {
       layout_url: layoutUrl || null,
       updated_at: new Date().toISOString(),
     };
+
+    if (tenantId) {
+      payload.tenant_id = tenantId;
+    }
 
     let savedNote: Note | null = null;
 
@@ -838,6 +849,7 @@ export default function Notes() {
         if (result.error) throw result.error;
         savedNote = result.data;
         setNotes((prev) => [result.data, ...prev]);
+        setEditingNote(result.data);
       }
 
       // Update Alarm Schedule if reminder format is valid
@@ -868,14 +880,25 @@ export default function Notes() {
           removeAlarmsForBudget(savedNote.id);
         }
       }
+
+      const nowStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      setLastAutoSavedAt(nowStr);
+      showToast(`Nota salva com sucesso! (${nowStr})`);
+
+      // Ativa efeito verde neon no botão salvar por 2 segundos
+      setIsSaveSuccessActive(true);
+      setTimeout(() => {
+        setIsSaveSuccessActive(false);
+      }, 2000);
+
+      // A nota NÃO fecha ao salvar (só fecha com o botão Fechar ou 'X')
     } catch (e: any) {
+      console.error(e);
       alert(
         "Falha ao salvar a nota. Verifique se as permissões/tabelas no Supabase foram criadas.\n\n" +
           e.message,
       );
     }
-
-    setModalOpen(false);
   }
 
   async function togglePin(note: Note, e: React.MouseEvent) {
@@ -1270,32 +1293,16 @@ export default function Notes() {
     setDeleteConfirmId(null);
   }
 
-  const isProductionType = (type?: string | null) => {
-    if (!type) return false;
-    const t = type.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return t === "PRODUCTION" || t === "PRODUCAO";
-  };
-
-  const noteCounts = useMemo(() => {
-    let general = 0;
-    let prod = 0;
-    for (const n of notes) {
-      if (isProductionType(n.type)) {
-        prod++;
-      } else {
-        general++;
-      }
-    }
-    return { general, prod };
-  }, [notes]);
-
   const filteredNotes = useMemo(() => {
-    let base = notes.filter((n) => {
-      const isProd = isProductionType(n.type);
-      return mainTab === "PRODUCTION" ? isProd : !isProd;
-    });
+    let base = notes;
 
-    const activeTab = mainTab === "NOTE" ? noteTab : prodTab;
+    if (mainTab === "NOTE") {
+      base = base.filter((n) => (n.type || "note").toLowerCase() === "note");
+    } else if (mainTab === "PRODUCTION") {
+      base = base.filter((n) => (n.type || "note").toLowerCase() === "production");
+    }
+
+    const activeTab = noteTab;
     const isTrash = activeTab === "LIXEIRA";
 
     if (isTrash) {
@@ -1305,11 +1312,8 @@ export default function Notes() {
 
       const normalizedActiveTab = normalizeStatus(activeTab);
       base = base.filter((n) => {
-        let st = normalizeStatus(
-          n.status || "a fazer",
-        );
-        if (normalizedActiveTab === "PRODUCAO" && st === "EM PRODUCAO")
-          return true;
+        let st = normalizeStatus(n.status || "a fazer");
+        if (normalizedActiveTab === "PRODUCAO" && (st === "EM PRODUCAO" || st === "PRODUCAO")) return true;
         return st === normalizedActiveTab;
       });
     }
@@ -1319,7 +1323,8 @@ export default function Notes() {
       base = base.filter(
         (n) =>
           (n.title && n.title.toLowerCase().includes(q)) ||
-          (n.content && n.content.toLowerCase().includes(q)),
+          (n.content && n.content.toLowerCase().includes(q)) ||
+          (n.responsible_name && n.responsible_name.toLowerCase().includes(q))
       );
     }
 
@@ -1333,14 +1338,9 @@ export default function Notes() {
     });
 
     return base;
-  }, [notes, searchTerm, mainTab, noteTab, prodTab]);
+  }, [notes, searchTerm, mainTab, noteTab]);
 
-  const NOTE_STATUSES = [
-    "A FAZER",
-    "CONCLUÍDOS",
-    "LIXEIRA",
-  ] as const;
-  const PROD_STATUSES = [
+  const WORKFLOW_STATUSES = [
     "A FAZER",
     "PRODUÇÃO",
     "CONCLUÍDOS",
@@ -1348,18 +1348,18 @@ export default function Notes() {
   ] as const;
 
   return (
-    <Page title="Notes" className="animate-fade-in relative min-h-screen">
-      <div className="flex flex-col gap-6 mb-8">
+    <Page title="Notas" className="animate-fade-in relative min-h-screen">
+      <div className="flex flex-col gap-5 mb-8">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="relative w-full md:max-w-md gm-btn !p-0 !cursor-text hover:!scale-100 active:!scale-100 !transform-none !justify-start h-14 rounded-lg overflow-hidden shadow-lg border-2 border-transparent focus-within:border-[var(--gm-primary)] transition-colors">
+          <div className="relative w-full md:max-w-md gm-btn !p-0 !cursor-text hover:!scale-100 active:!scale-100 !transform-none !justify-start h-14 rounded-xl overflow-hidden shadow-lg border border-white/10 focus-within:border-[var(--gm-primary)] transition-colors">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10 pointer-events-none"
               size={20}
             />
             <input
               type="text"
-              className="pl-12 h-full w-full bg-transparent outline-none border-none text-white placeholder:text-white/40 text-base relative z-20"
-              placeholder="Pesquisar notas..."
+              className="pl-12 h-full w-full bg-transparent outline-none border-none text-white placeholder:text-white/40 text-base relative z-20 font-bold"
+              placeholder="Pesquisar notas em todas as contas..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -1367,79 +1367,53 @@ export default function Notes() {
 
           <button
             onClick={openNewNote}
-            className="flex items-center gap-2 gm-btn px-6 py-4 rounded-lg shrink-0 w-full md:w-auto shadow-lg cursor-pointer"
+            className="flex items-center gap-2 gm-btn px-6 py-4 rounded-xl shrink-0 w-full md:w-auto shadow-lg bg-[var(--gm-primary)] text-white font-extrabold"
           >
             <Plus size={20} />
             <span>Criar Nota</span>
           </button>
         </div>
 
-        {/* Segmented Switcher: NOTAS GERAIS vs NOTAS DE PRODUÇÃO */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-1.5 p-1.5 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 w-fit max-w-full overflow-x-auto shadow-md">
-            <button
-              type="button"
-              onClick={() => setMainTab("NOTE")}
-              className={`flex items-center gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 select-none cursor-pointer ${
-                mainTab === "NOTE"
-                  ? "bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20 scale-[1.02]"
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <Edit2 size={16} className={mainTab === "NOTE" ? "text-white" : "text-white/60"} />
-              <span>Notas Gerais</span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10.5px] font-black tracking-tight ${
-                  mainTab === "NOTE" ? "bg-black/30 text-white" : "bg-white/10 text-white/70"
+        {/* Primary Category Selector (Todas as Notas, Notas Gerais, Notas de Produção) */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-black/40 border border-white/10 p-2 rounded-2xl">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+            {[
+              { id: "ALL", label: "Todas as Notas" },
+              { id: "NOTE", label: "Notas Gerais" },
+              { id: "PRODUCTION", label: "Notas de Produção" },
+            ].map((tabItem) => (
+              <button
+                key={tabItem.id}
+                onClick={() => setMainTab(tabItem.id as any)}
+                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-extrabold transition-all whitespace-nowrap ${
+                  mainTab === tabItem.id
+                    ? "bg-[var(--gm-primary)] text-white shadow-md shadow-orange-500/20"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
                 }`}
               >
-                {noteCounts.general}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setMainTab("PRODUCTION")}
-              className={`flex items-center gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 select-none cursor-pointer ${
-                mainTab === "PRODUCTION"
-                  ? "bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20 scale-[1.02]"
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <Palette size={16} className={mainTab === "PRODUCTION" ? "text-white" : "text-white/60"} />
-              <span>Notas de Produção</span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10.5px] font-black tracking-tight ${
-                  mainTab === "PRODUCTION" ? "bg-black/30 text-white" : "bg-white/10 text-white/70"
-                }`}
-              >
-                {noteCounts.prod}
-              </span>
-            </button>
+                {tabItem.label}
+              </button>
+            ))}
           </div>
-        </div>
 
-        {/* Workflow Tabs */}
-        <div className="flex items-center gap-2 border-b border-white/5 pb-2 overflow-x-auto scrollbar-hide">
-          {mainTab === "NOTE"
-            ? NOTE_STATUSES.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setNoteTab(t as any)}
-                  className={`px-4 py-2 font-bold text-xs md:text-sm rounded-xl transition-all whitespace-nowrap cursor-pointer ${noteTab === t ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/50" : "text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5"}`}
-                >
-                  {t}
-                </button>
-              ))
-            : PROD_STATUSES.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setProdTab(t as any)}
-                  className={`px-4 py-2 font-bold text-xs md:text-sm rounded-xl transition-all whitespace-nowrap cursor-pointer ${prodTab === t ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/50" : "text-white/40 border border-transparent hover:text-white/80 hover:bg-white/5"}`}
-                >
-                  {t}
-                </button>
-              ))}
+          {/* Sub-Tabs de Status / Workflow */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide border-t sm:border-t-0 pt-2 sm:pt-0 border-white/5">
+            {WORKFLOW_STATUSES.map((t) => (
+              <button
+                key={t}
+                onClick={() => setNoteTab(t as any)}
+                className={`px-3.5 py-1.5 font-bold text-xs rounded-xl transition-all whitespace-nowrap ${
+                  noteTab === t
+                    ? t === "LIXEIRA"
+                      ? "bg-red-500/20 text-red-400 border border-red-500/40"
+                      : "bg-white/15 text-white border border-white/20"
+                    : "text-white/40 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -1469,35 +1443,59 @@ export default function Notes() {
                 >
                   <div
                     id={`note-card-${note.id}`}
-                    className={`rounded-lg p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full gm-note-card ${
+                    className={`rounded-2xl p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full gm-note-card ${
                       isExpanded
                         ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]"
                         : "overflow-hidden min-h-[280px]"
-                    } ${note.id === highlightedId ? "gm-highlighted-budget-glass" : ""}`}
+                    } ${
+                      note.id === highlightedId
+                        ? "ring-2 ring-[var(--gm-primary,#FF6900)] ring-offset-2 ring-offset-black/60 shadow-[0_0_35px_rgba(255,105,0,0.85),inset_0_0_20px_rgba(255,105,0,0.3)] animate-pulse"
+                        : ""
+                    }`}
                     style={{
                       backgroundColor: "var(--gm-card, rgba(17, 19, 24, 0.8))",
                       backdropFilter: "blur(12px)",
                       borderColor: "var(--gm-primary, #FF6900)",
                       borderWidth: "1px",
                       borderStyle: "solid",
-                      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                      boxShadow: note.id === highlightedId ? "0 0 35px rgba(255, 105, 0, 0.75)" : "0 4px 20px rgba(0, 0, 0, 0.08)",
                     }}
                   >
-                    {/* Pin Toggle */}
+                    {/* Transição Laranja Neon Esfumaçada: Canto Superior Esquerdo -> Canto Inferior Direito (Duração 2s) */}
+                    {note.id === highlightedId && (
+                      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-30">
+                        {/* Esfumaçado Laranja Neon que viaja diagonalmente */}
+                        <div 
+                          className="absolute -inset-10 animate-smoky-neon-sweep rounded-full"
+                          style={{
+                            background: "radial-gradient(circle at center, rgba(255, 105, 0, 0.95) 0%, rgba(255, 140, 0, 0.6) 35%, rgba(255, 75, 0, 0.25) 60%, transparent 80%)",
+                            filter: "blur(26px)"
+                          }}
+                        />
+                        {/* Feixe Laser / Reflexo Diagonal Laranja Neon */}
+                        <div 
+                          className="absolute -inset-full animate-smoky-laser-beam"
+                          style={{
+                            background: "linear-gradient(135deg, transparent 35%, rgba(255, 120, 0, 0.3) 44%, rgba(255, 200, 80, 0.9) 49%, rgba(255, 105, 0, 1) 50%, rgba(255, 80, 0, 0.9) 51%, rgba(255, 120, 0, 0.3) 56%, transparent 65%)",
+                            boxShadow: "0 0 35px rgba(255, 105, 0, 0.85)"
+                          }}
+                        />
+                      </div>
+                    )}
+                    {/* Visual Aprimorado de Pinar Nota (Pushpin Badge) */}
                     <button
                       onClick={(e) => togglePin(note, e)}
-                      className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors z-10 animate-fade-in"
-                      style={{
-                        color: note.is_pinned
-                          ? noteColor
-                          : "rgba(255, 255, 255, 0.5)",
-                      }}
+                      className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all z-10 ${
+                        note.is_pinned
+                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/50 scale-110 border border-orange-300/40"
+                          : "bg-white/10 text-white/40 hover:text-white hover:bg-white/20 hover:scale-105"
+                      }`}
+                      title={note.is_pinned ? "Desafixar nota" : "Fixar nota no topo"}
                     >
-                      {note.is_pinned ? (
-                        <Pin size={13} fill={noteColor} />
-                      ) : (
-                        <PinOff size={13} />
-                      )}
+                      <Pin
+                        size={14}
+                        className={note.is_pinned ? "fill-white rotate-[-30deg] transition-transform" : "rotate-0 transition-transform"}
+                      />
                     </button>
 
                     {/* Title */}
@@ -1553,10 +1551,6 @@ export default function Notes() {
                           __html: note.content || "...",
                         }}
                       />
-                      {/* Fade out bottom of long text */}
-                      {!isExpanded && isLong && (
-                        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#111318] to-transparent pointer-events-none"></div>
-                      )}
                     </div>
 
                     {/* Expand Arrow for long text */}
@@ -1653,8 +1647,7 @@ export default function Notes() {
                         )}
 
                         <div className="flex items-center gap-3 shrink-0 note-actions">
-                          {(mainTab === "NOTE" ? noteTab : prodTab) ===
-                          "LIXEIRA" ? (
+                          {noteTab === "LIXEIRA" ? (
                             <>
                               <button
                                 onClick={(e) => {
@@ -1817,9 +1810,7 @@ export default function Notes() {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: "100%", opacity: 0, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className={`relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-2xl flex flex-col overflow-hidden gm-note-modal gm-modal barra fora ${
-                highlightedId ? "gm-highlighted-orange-sweep" : ""
-              }`}
+              className={`relative w-full h-[100dvh] md:h-auto md:max-w-2xl md:rounded-2xl flex flex-col overflow-hidden gm-note-modal gm-modal barra fora`}
               style={{
                 maxHeight: window.innerWidth < 768 ? "100dvh" : "90vh",
                 backdropFilter: "blur(20px) saturate(180%)",
@@ -1828,11 +1819,39 @@ export default function Notes() {
                 borderWidth: window.innerWidth < 768 ? "0px" : "1px",
                 borderTopWidth: window.innerWidth < 768 ? "2px" : "1px",
                 borderStyle: "solid",
-                boxShadow: "none",
+                boxShadow: highlightedId && editingNote && highlightedId === editingNote.id ? "0 0 35px rgba(255, 105, 0, 0.6)" : "none",
               }}
             >
+              {/* Toast Feedback Flutuante no CENTRO da Nota */}
+              <AnimatePresence>
+                {toastMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.75, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.85, y: -10 }}
+                    transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] pointer-events-none"
+                  >
+                    <div 
+                      className="bg-[#0b1b11]/95 text-white font-black text-xs md:text-sm px-7 py-4 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-2xl border-2 border-green-500 flex items-center gap-3 text-center"
+                      style={{
+                        boxShadow: "0 0 45px rgba(34, 197, 94, 0.65), 0 25px 60px rgba(0, 0, 0, 0.95)"
+                      }}
+                    >
+                      <span className="relative flex h-3.5 w-3.5 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-80" />
+                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-500" />
+                      </span>
+                      <span className="tracking-wide uppercase text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)] font-black text-sm">
+                        {toastMessage}
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div
-                className="p-4 md:px-6 flex items-center justify-between shrink-0"
+                className="p-4 md:px-6 flex items-center justify-between shrink-0 relative z-20"
                 style={{
                   borderBottom: "1px solid var(--gm-primary, #FF6900)",
                   backgroundColor: "rgba(255, 105, 0, 0.08)",
@@ -1845,6 +1864,12 @@ export default function Notes() {
                     placeholder="Título da nota"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSave(true);
+                      }
+                    }}
                   />
                 </div>
                 <div className="flex items-center gap-2 shrink-0 pl-2">
@@ -2334,38 +2359,52 @@ export default function Notes() {
 
                 {/* Campo para Inserção do Layout */}
                 <div className="p-4 md:px-6 py-4 border-b border-white/5 bg-black/10 flex flex-col gap-2 shrink-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-mono">
-                      Campo para Inserção do Layout
-                    </span>
-                    <span className="text-[10.5px] text-[var(--gm-primary)] font-bold hidden sm:inline-flex items-center gap-1">
-                      <span>💡 Dica:</span>
-                      <span className="text-white/60 font-normal">Pressione Ctrl+V em qualquer lugar para colar a imagem</span>
-                    </span>
-                  </div>
+                  <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-mono">
+                    Campo para Inserção do Layout
+                  </span>
                   <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
                     <div className="relative flex-1">
                       <input
                         type="text"
-                        placeholder="Cole aqui o link/URL ou pressione Ctrl+V com a imagem..."
+                        placeholder="Cole aqui a URL/link da imagem para o layout..."
                         value={layoutUrl}
                         onChange={(e) => setLayoutUrl(e.target.value)}
                         onPaste={async (e) => {
-                          const items = e.clipboardData?.items;
-                          if (items) {
-                            for (let i = 0; i < items.length; i++) {
-                              if (items[i].type.includes("image")) {
-                                const file = items[i].getAsFile();
-                                if (file) {
-                                  e.preventDefault();
-                                  await handleProcessAndSetLayoutImage(file);
-                                  return;
-                                }
-                              }
+                          const clipboardData = e.clipboardData;
+                          if (!clipboardData) return;
+
+                          const items = clipboardData.items;
+                          let imageFile: File | null = null;
+
+                          for (let i = 0; i < items.length; i++) {
+                            if (items[i].type.indexOf("image") !== -1) {
+                              imageFile = items[i].getAsFile();
+                              break;
+                            }
+                          }
+
+                          if (imageFile) {
+                            e.preventDefault();
+                            if (!tenantId) return;
+                            setUploadingLayout(true);
+                            try {
+                              const options = {
+                                maxSizeMB: 1,
+                                maxWidthOrHeight: 1600,
+                                useWebWorker: true,
+                              };
+                              const compressed = await imageCompression(imageFile, options);
+                              const url = await uploadNoteAsset(tenantId, compressed);
+                              setLayoutUrl(url);
+                              showToast("Imagem do layout carregada com sucesso!");
+                            } catch (err: any) {
+                              alert("Erro ao enviar imagem colada: " + err.message);
+                            } finally {
+                              setUploadingLayout(false);
                             }
                           }
                         }}
-                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-9 pr-3 py-2.5 outline-none focus:border-white/30 w-full font-medium"
+                        className="bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-9 pr-3 py-2.5 outline-none focus:border-white/30 w-full"
                       />
                       <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={14} />
                     </div>
@@ -2374,22 +2413,45 @@ export default function Notes() {
                       className={`bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/25 rounded-lg text-sm text-orange-300 px-4 py-2.5 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 ${uploadingLayout ? "opacity-50 pointer-events-none" : ""}`}
                     >
                       {uploadingLayout ? (
-                        <Loader2 size={16} className="animate-spin text-orange-400" />
+                        <Loader2 size={16} className="animate-spin" />
                       ) : (
                         <Upload size={14} />
                       )}
-                      <span>{uploadingLayout ? "Carregando..." : "Enviar Layout"}</span>
+                      <span>{uploadingLayout ? "Enviando..." : "Enviar Layout"}</span>
                       <input
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        multiple={false}
+                        multiple
                         disabled={uploadingLayout}
                         onChange={async (e) => {
                           const files = e.target.files;
-                          if (files && files.length > 0) {
-                            await handleProcessAndSetLayoutImage(files[0]);
-                            e.target.value = "";
+                          if (files && files.length > 0 && tenantId) {
+                            setUploadingLayout(true);
+                            try {
+                              const options = {
+                                maxSizeMB: 1,
+                                maxWidthOrHeight: 1600,
+                                useWebWorker: true,
+                              };
+                              const compressedFile = await imageCompression(
+                                files[0],
+                                options,
+                              );
+                              const url = await uploadNoteAsset(
+                                tenantId,
+                                compressedFile,
+                              );
+
+                              // Seta exclusivamente a imagem no campo de Layout
+                              setLayoutUrl(url);
+                              showToast("Layout enviado com sucesso!");
+                            } catch (err) {
+                              alert("Erro ao enviar layout.");
+                            } finally {
+                              setUploadingLayout(false);
+                              e.target.value = "";
+                            }
                           }
                         }}
                       />
@@ -2402,16 +2464,9 @@ export default function Notes() {
                   {/* Row 1: Layout Preview Panel */}
                   <div className="flex flex-col gap-2 w-full">
                     <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-sans">
-                          LAYOUT
-                        </span>
-                        {layoutUrl && (
-                          <span className="px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            Carregado
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-sans">
+                        LAYOUT
+                      </span>
                       {layoutUrl && (
                         <button
                           type="button"
@@ -2424,35 +2479,9 @@ export default function Notes() {
                         </button>
                       )}
                     </div>
-                    <div
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onDrop={async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                          const file = e.dataTransfer.files[0];
-                          if (file.type.startsWith("image/")) {
-                            await handleProcessAndSetLayoutImage(file);
-                          }
-                        }
-                      }}
-                      className="w-full rounded-xl border border-white/10 bg-black/25 p-4 flex flex-col items-center justify-center relative overflow-hidden group min-h-[220px] transition-all"
-                    >
-                      {uploadingLayout ? (
-                        <div className="flex flex-col items-center justify-center p-8 gap-3 animate-pulse">
-                          <Loader2 size={32} className="animate-spin text-[var(--gm-primary)]" />
-                          <span className="text-sm font-bold text-white tracking-wider">
-                            Carregando imagem no Layout...
-                          </span>
-                          <span className="text-xs text-white/40">
-                            Comprimindo e sincronizando arquivo
-                          </span>
-                        </div>
-                      ) : layoutUrl ? (
-                        <div className="w-full flex justify-center items-center py-2 animate-fadeIn relative">
+                    <div className="w-full rounded-xl border border-white/5 bg-black/25 p-4 flex flex-col items-center justify-center relative overflow-hidden group min-h-[220px]">
+                      {layoutUrl ? (
+                        <div className="w-full flex justify-center items-center py-2 animate-fadeIn">
                           <img
                             src={layoutUrl}
                             alt="Layout"
@@ -2460,28 +2489,11 @@ export default function Notes() {
                           />
                         </div>
                       ) : (
-                        <label className="flex flex-col items-center justify-center text-center p-6 text-white/30 gap-2 cursor-pointer w-full h-full hover:bg-white/[0.02] rounded-lg transition-colors">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={async (e) => {
-                              if (e.target.files && e.target.files.length > 0) {
-                                await handleProcessAndSetLayoutImage(e.target.files[0]);
-                                e.target.value = "";
-                              }
-                            }}
-                          />
-                          <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover:text-[var(--gm-primary)] group-hover:border-[var(--gm-primary)]/40 transition-colors">
-                            <ImageIcon size={24} />
-                          </div>
-                          <span className="text-xs font-bold text-white/60 tracking-wider">
-                            NENHUM LAYOUT CARREGADO
-                          </span>
-                          <span className="text-[11px] text-white/40 max-w-[340px] leading-relaxed">
-                            Copie qualquer imagem e pressione <strong className="text-white font-black">Ctrl+V</strong> aqui, arraste um arquivo ou clique para selecionar.
-                          </span>
-                        </label>
+                        <div className="flex flex-col items-center justify-center text-center p-6 text-white/20 gap-2">
+                          <ImageIcon size={36} className="text-white/10 animate-pulse" />
+                          <span className="text-xs font-bold text-white/40 tracking-wider">NENHUM LAYOUT CARREGADO</span>
+                          <span className="text-[10.5px] text-white/20 max-w-[280px]">Adicione um link ou faça upload de uma imagem acima para visualizar o layout aqui.</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -2504,6 +2516,23 @@ export default function Notes() {
                         }}
                         key={editingNote ? editingNote.id : "new-note"}
                         contentEditable
+                        onClick={(e) => {
+                          const target = e.target as HTMLElement;
+                          const deleteBtn = target.closest(".note-img-delete");
+                          if (deleteBtn) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const wrapper = deleteBtn.closest(".note-img-wrapper");
+                            if (wrapper) {
+                              wrapper.remove();
+                              if (contentRef.current) {
+                                const val = contentRef.current.innerHTML;
+                                setContent(val);
+                                pushToHistory(val, true);
+                              }
+                            }
+                          }
+                        }}
                         onKeyDown={(e) => {
                           if (
                             (e.ctrlKey || e.metaKey) &&
@@ -2515,13 +2544,30 @@ export default function Notes() {
                           } else if (
                             ((e.ctrlKey || e.metaKey) &&
                               e.key.toLowerCase() === "y") ||
-                          ((e.ctrlKey || e.metaKey) &&
-                            e.shiftKey &&
-                            e.key.toLowerCase() === "z")
+                            ((e.ctrlKey || e.metaKey) &&
+                              e.shiftKey &&
+                              e.key.toLowerCase() === "z")
                           ) {
                             e.preventDefault();
                             performRedo();
                           }
+                        }}
+                        onKeyUp={() => {
+                          if (contentRef.current) {
+                            const val = contentRef.current.innerHTML;
+                            if (val !== content) {
+                              setContent(val);
+                            }
+                          }
+                        }}
+                        onCut={() => {
+                          setTimeout(() => {
+                            if (contentRef.current) {
+                              const val = contentRef.current.innerHTML;
+                              setContent(val);
+                              pushToHistory(val, true);
+                            }
+                          }, 10);
                         }}
                         onInput={(e) => {
                           const val = e.currentTarget.innerHTML;
@@ -2539,212 +2585,265 @@ export default function Notes() {
 
               {/* Action Bar */}
               <div
-                className="p-4 pb-28 md:pb-5 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 shrink-0 relative z-20"
+                className="p-4 pb-28 md:pb-5 md:p-5 flex flex-col gap-3.5 shrink-0 relative z-20"
                 style={{
                   borderTop: `1px solid ${color}40`,
                   backgroundColor: "rgba(0,0,0,0.5)",
                 }}
               >
-                <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto flex-1">
-                  <div className="flex items-center gap-2 w-full md:w-auto flex-1">
-                    {/* Lembrete Data */}
-                    <div className="relative flex-1">
-                      <GlassDatePicker
-                        className="w-full bg-black/40 border border-white/5 rounded-xl text-[15.5px] font-bold text-white/95 pl-10 pr-3.5 py-2.5 outline-none transition-all flex items-center min-h-[46px] select-none"
-                        value={reminderDate}
-                        onChange={setReminderDate}
-                        title="Data do Lembrete"
-                        style={{ borderColor: `${color}20` }}
-                        themeColor={color}
-                      />
-                      <Calendar
-                        size={16}
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                        style={{ color: color }}
-                      />
-                    </div>
+                {/* Linha 1: Data do Lembrete & Horários (Formato e Cor Base do Botão Fechar Anexo 2) */}
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+                  {/* Lembrete Data */}
+                  <div className="relative flex-1 w-full">
+                    <GlassDatePicker
+                      className="w-full bg-black/60 hover:bg-black/80 border border-white/15 hover:border-white/30 rounded-xl text-[14px] font-black uppercase text-white pl-10 pr-3.5 py-3 outline-none transition-all flex items-center min-h-[46px] select-none cursor-pointer shadow-sm"
+                      value={reminderDate}
+                      onChange={setReminderDate}
+                      title="Data do Lembrete"
+                      style={{ borderColor: "rgba(255,255,255,0.15)" }}
+                      themeColor={color}
+                    />
+                    <Calendar
+                      size={16}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none"
+                    />
+                  </div>
 
-                    {/* Lembrete Horários Alarme (Expansível para Cima) */}
-                    {(() => {
-                      const activeClocksCount = [reminderTime, reminderTime2, reminderTime3].filter(Boolean).length;
-                      const hasActiveClocks = activeClocksCount > 0;
-                      return (
-                        <div className="relative flex-1 min-w-[120px] sm:min-w-[140px]">
-                          <button
-                            type="button"
-                            onClick={() => setClocksExpanded(!clocksExpanded)}
-                            className="w-full bg-black/40 border hover:bg-black/50 rounded-xl text-[15.5px] font-bold text-white/95 px-3.5 py-2.5 outline-none transition-all flex items-center justify-between min-h-[46px]"
-                            style={{ 
-                              borderColor: clocksExpanded 
-                                ? (hasActiveClocks ? '#22c55e' : color) 
-                                : (hasActiveClocks ? 'rgba(34, 197, 94, 0.4)' : `${color}20`),
-                              boxShadow: hasActiveClocks ? '0 0 10px rgba(34, 197, 94, 0.15)' : 'none'
-                            }}
-                          >
-                            <div className="flex items-center gap-1.5 overflow-hidden">
-                              <Clock
-                                size={16}
-                                className={`shrink-0 ${hasActiveClocks ? "text-green-500 animate-pulse" : "text-white/50"}`}
-                                style={{ color: hasActiveClocks ? '#22c55e' : color }}
-                              />
-                              <span className={`truncate ${hasActiveClocks ? "text-green-400 font-bold" : "text-white/80"}`}>
-                                Horários
-                              </span>
-                            </div>
+                  {/* Lembrete Horários Alarme (Formato e Cor Base do Botão Fechar Anexo 2) */}
+                  {(() => {
+                    const activeClocksCount = [reminderTime, reminderTime2, reminderTime3].filter(Boolean).length;
+                    const hasActiveClocks = activeClocksCount > 0;
+                    return (
+                      <div className="relative flex-1 w-full">
+                        <button
+                          type="button"
+                          onClick={() => setClocksExpanded(!clocksExpanded)}
+                          className="w-full bg-black/60 hover:bg-black/80 border border-white/15 hover:border-white/30 rounded-xl text-[14px] font-black uppercase text-white px-4 py-3 outline-none transition-all flex items-center justify-between min-h-[46px] shadow-sm cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <Clock
+                              size={17}
+                              className={`shrink-0 ${hasActiveClocks ? "text-green-400 animate-pulse" : "text-white/70"}`}
+                            />
+                            <span className="truncate text-white font-black tracking-wide uppercase">
+                              Horários
+                            </span>
+                          </div>
 
-                            <div className="flex items-center gap-1 shrink-0">
-                              {/* numeral count badge */}
-                              {hasActiveClocks && (
-                                <span 
-                                  className="w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-black"
-                                  style={{ 
-                                    backgroundColor: '#22c55e', 
-                                    color: "#000",
-                                    textShadow: "0 1px 0 rgba(255,255,255,0.4)" 
-                                  }}
-                                >
-                                  {activeClocksCount}
-                                </span>
-                              )}
-                              {clocksExpanded ? (
-                                <ChevronDown size={14} className="text-white/70" />
-                              ) : (
-                                <ChevronUp size={14} className="text-white/70 animate-[bounce_2s_infinite]" />
-                              )}
-                            </div>
-                          </button>
-
-                          {/* Expandable Panel (Upward) */}
-                          <AnimatePresence>
-                            {clocksExpanded && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                                transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                                className="absolute bottom-full right-0 mb-3 w-64 bg-[#141517] border border-zinc-800 rounded-lg p-4 space-y-4 z-[100] shadow-[0_25px_50px_rgba(0,0,0,0.95)] text-left"
-                                style={{ borderTopWidth: '3px', borderTopColor: hasActiveClocks ? '#22c55e' : color }}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {/* numeral count badge */}
+                            {hasActiveClocks && (
+                              <span 
+                                className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black bg-green-500 text-black shadow-sm"
                               >
-                                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                                  <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color: hasActiveClocks ? '#22c55e' : color }}>
-                                    <Clock size={13} className={hasActiveClocks ? "animate-pulse" : ""} />
-                                    Configurar Alertas
-                                  </span>
-                                  <span className="text-[10px] bg-zinc-800/80 border border-zinc-700/60 text-zinc-200 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
-                                    Diário
-                                  </span>
-                                </div>
-
-                                <div className="space-y-3.5 text-xs text-white">
-                                  {/* SLOT 1 */}
-                                  <div className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
-                                      <span className="flex items-center gap-1">
-                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime ? (hasActiveClocks ? '#22c55e' : color) : '#3f3f46' }} />
-                                        Horário 1
-                                      </span>
-                                      {reminderTime && (
-                                        <button
-                                          type="button"
-                                          onClick={() => setReminderTime("")}
-                                          className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30"
-                                        >
-                                          Limpar
-                                        </button>
-                                      )}
-                                    </div>
-                                    <div className="relative">
-                                      <GlassTimePicker
-                                        value={reminderTime}
-                                        onChange={setReminderTime}
-                                        className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
-                                        title="Definir Horário 1"
-                                      />
-                                      <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-450 pointer-events-none" style={{ color: reminderTime ? (hasActiveClocks ? '#22c55e' : color) : '#71717a' }} />
-                                    </div>
-                                  </div>
-
-                                  {/* SLOT 2 */}
-                                  <div className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
-                                      <span className="flex items-center gap-1">
-                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime2 ? (hasActiveClocks ? '#22c55e' : color) : '#3f3f46' }} />
-                                        Horário 2
-                                      </span>
-                                      {reminderTime2 && (
-                                        <button
-                                          type="button"
-                                          onClick={() => setReminderTime2("")}
-                                          className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30"
-                                        >
-                                          Limpar
-                                        </button>
-                                      )}
-                                    </div>
-                                    <div className="relative">
-                                      <GlassTimePicker
-                                        value={reminderTime2}
-                                        onChange={setReminderTime2}
-                                        className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
-                                        title="Definir Horário 2"
-                                      />
-                                      <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-450 pointer-events-none" style={{ color: reminderTime2 ? (hasActiveClocks ? '#22c55e' : color) : '#71717a' }} />
-                                    </div>
-                                  </div>
-
-                                  {/* SLOT 3 */}
-                                  <div className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
-                                      <span className="flex items-center gap-1">
-                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime3 ? (hasActiveClocks ? '#22c55e' : color) : '#3f3f46' }} />
-                                        Horário 3
-                                      </span>
-                                      {reminderTime3 && (
-                                        <button
-                                          type="button"
-                                          onClick={() => setReminderTime3("")}
-                                          className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30"
-                                        >
-                                          Limpar
-                                        </button>
-                                      )}
-                                    </div>
-                                    <div className="relative">
-                                      <GlassTimePicker
-                                        value={reminderTime3}
-                                        onChange={setReminderTime3}
-                                        className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
-                                        title="Definir Horário 3"
-                                      />
-                                      <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-450 pointer-events-none" style={{ color: reminderTime3 ? (hasActiveClocks ? '#22c55e' : color) : '#71717a' }} />
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="pt-3 border-t border-zinc-800 flex justify-end">
-                                  <button
-                                    type="button"
-                                    onClick={() => setClocksExpanded(false)}
-                                    className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 rounded-xl text-[10px] font-black text-zinc-200 hover:text-white transition-all uppercase tracking-widest"
-                                  >
-                                    Fechar
-                                  </button>
-                                </div>
-                              </motion.div>
+                                {activeClocksCount}
+                              </span>
                             )}
-                          </AnimatePresence>
-                        </div>
-                      );
-                    })()}
+                            {clocksExpanded ? (
+                              <ChevronDown size={16} className="text-white/70" />
+                            ) : (
+                              <ChevronUp size={16} className="text-white/70" />
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Expandable Panel (Upward) */}
+                        <AnimatePresence>
+                          {clocksExpanded && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                              transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                              className="absolute bottom-full right-0 mb-3 w-72 max-w-[90vw] bg-[#141517] border border-zinc-800 rounded-xl p-4 space-y-4 z-[100] shadow-[0_25px_50px_rgba(0,0,0,0.95)] text-left"
+                              style={{ borderTopWidth: '3px', borderTopColor: '#FF6900' }}
+                            >
+                              <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                                <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-orange-500">
+                                  <Clock size={13} className={hasActiveClocks ? "animate-pulse text-orange-500" : "text-orange-500"} />
+                                  Configurar Alertas
+                                </span>
+                                <span className="text-[10px] bg-zinc-800/80 border border-zinc-700/60 text-zinc-200 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
+                                  Diário
+                                </span>
+                              </div>
+
+                              <div className="space-y-3.5 text-xs text-white">
+                                {/* SLOT 1 */}
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                    <span className="flex items-center gap-1">
+                                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime ? '#FF6900' : '#3f3f46' }} />
+                                      Horário 1
+                                    </span>
+                                    {reminderTime && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setReminderTime("")}
+                                        className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30 cursor-pointer"
+                                      >
+                                        Limpar
+                                      </button>
+                                    )}
+                                  </div>
+                                  <div className="relative">
+                                    <GlassTimePicker
+                                      value={reminderTime}
+                                      onChange={setReminderTime}
+                                      className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
+                                      title="Definir Horário 1"
+                                    />
+                                    <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime ? '#FF6900' : '#71717a' }} />
+                                  </div>
+                                </div>
+
+                                {/* SLOT 2 */}
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                    <span className="flex items-center gap-1">
+                                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime2 ? '#FF6900' : '#3f3f46' }} />
+                                      Horário 2
+                                    </span>
+                                    {reminderTime2 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setReminderTime2("")}
+                                        className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30 cursor-pointer"
+                                      >
+                                        Limpar
+                                      </button>
+                                    )}
+                                  </div>
+                                  <div className="relative">
+                                    <GlassTimePicker
+                                      value={reminderTime2}
+                                      onChange={setReminderTime2}
+                                      className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
+                                      title="Definir Horário 2"
+                                    />
+                                    <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime2 ? '#FF6900' : '#71717a' }} />
+                                  </div>
+                                </div>
+
+                                {/* SLOT 3 */}
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                    <span className="flex items-center gap-1">
+                                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime3 ? '#FF6900' : '#3f3f46' }} />
+                                      Horário 3
+                                    </span>
+                                    {reminderTime3 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setReminderTime3("")}
+                                        className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30 cursor-pointer"
+                                      >
+                                        Limpar
+                                      </button>
+                                    )}
+                                  </div>
+                                  <div className="relative">
+                                    <GlassTimePicker
+                                      value={reminderTime3}
+                                      onChange={setReminderTime3}
+                                      className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
+                                      title="Definir Horário 3"
+                                    />
+                                    <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime3 ? '#FF6900' : '#71717a' }} />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Botão Confirmar Limpo (sem texto de instrução) */}
+                              <div className="pt-3 border-t border-zinc-800 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleSave(true);
+                                    setClocksExpanded(false);
+                                  }}
+                                  className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-500 border border-green-500/30 active:scale-95 rounded-xl text-xs font-black text-white transition-all uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-green-600/30 cursor-pointer"
+                                >
+                                  <Check size={14} />
+                                  Confirmar
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Linha 2 (ABAIXO): Salvar Auto - Cápsulas estendendo até a borda direita com o mesmo tamanho */}
+                <div className="w-full flex items-center gap-3 bg-black/40 border border-white/10 p-2.5 rounded-xl">
+                  <span className="text-white/70 font-black uppercase tracking-wider text-[11px] whitespace-nowrap shrink-0">
+                    SALVAR AUTO:
+                  </span>
+                  <div className="flex-1 grid grid-cols-4 gap-1.5">
+                    {[
+                      { val: "10", label: "10 min" },
+                      { val: "15", label: "15 min" },
+                      { val: "30", label: "30 min" },
+                      { val: "disabled", label: "Off" },
+                    ].map((item) => (
+                      <button
+                        key={item.val}
+                        type="button"
+                        onClick={() => {
+                          setAutoSaveInterval(item.val as any);
+                          localStorage.setItem("gm_note_autosave_interval_v1", item.val);
+                          showToast(`Salvamento automático: ${item.label}`);
+                        }}
+                        className={`w-full py-1.5 rounded-lg text-xs font-black transition-all text-center cursor-pointer ${
+                          autoSaveInterval === item.val
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-md shadow-orange-500/30"
+                            : "bg-white/[0.04] text-white/50 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <div className="w-full md:w-auto">
+                {/* Linha 3 (ABAIXO DE SALVAR AUTO): Botões Fechar e Salvar Nota Lado a Lado 50%/50% (Estilo Anexo 2 com Hovers e Animação 2s) */}
+                <div className="w-full grid grid-cols-2 gap-3 pt-0.5">
+                  {/* Botão FECHAR: Fica Laranja no Hover */}
                   <button
-                    onClick={handleSave}
-                    className="w-full md:w-auto px-8 py-3 rounded-xl text-base font-extrabold flex items-center justify-center transition-all shadow-xl text-white bg-green-500 hover:bg-green-600 shadow-green-500/25 hover:shadow-green-500/45 md:ml-1"
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    className="w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider text-white/90 bg-black/60 hover:bg-[#FF6900] border border-white/15 hover:border-[#FF6900] hover:text-white hover:shadow-[0_0_20px_rgba(255,105,0,0.5)] transition-all flex items-center justify-center cursor-pointer active:scale-95 min-h-[46px]"
                   >
-                    Salvar
+                    FECHAR
+                  </button>
+
+                  {/* Botão SALVAR: Fica Verde no Hover, e Verde por 2 segundos com animação moderna e suave ao clicar */}
+                  <button
+                    type="button"
+                    onClick={() => handleSave(true)}
+                    className={`relative overflow-hidden w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ease-out border min-h-[46px] cursor-pointer active:scale-95 ${
+                      isSaveSuccessActive
+                        ? "bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 border-green-300 text-white shadow-[0_0_30px_rgba(34,197,94,0.75),inset_0_1px_1px_rgba(255,255,255,0.4)] scale-[1.02]"
+                        : "bg-black/60 hover:bg-emerald-600 border-white/15 hover:border-emerald-400 text-white/90 hover:text-white hover:shadow-[0_0_22px_rgba(16,185,129,0.5)]"
+                    }`}
+                  >
+                    {/* Efeito feixe de luz suave quando ativo */}
+                    {isSaveSuccessActive && (
+                      <div 
+                        className="absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]"
+                      />
+                    )}
+                    <Check 
+                      size={16} 
+                      className={`shrink-0 transition-all duration-500 ${
+                        isSaveSuccessActive ? "scale-125 text-white stroke-[2.5]" : ""
+                      }`} 
+                    />
+                    <span className="transition-all duration-300">
+                      {isSaveSuccessActive ? "SALVO COM SUCESSO!" : "SALVAR NOTA"}
+                    </span>
                   </button>
                 </div>
               </div>

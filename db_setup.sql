@@ -269,10 +269,6 @@ create table if not exists public.expenses (
 
 alter table public.expenses add column if not exists deleted_at timestamptz;
 alter table public.expenses add column if not exists deleted_by uuid;
-alter table public.expenses add column if not exists is_recurring boolean default false;
-alter table public.expenses add column if not exists recurring_frequency text default 'MONTHLY';
-alter table public.expenses add column if not exists reminder_alarm boolean default true;
-alter table public.expenses add column if not exists reminder_time text default '09:00';
 
 do $$
 begin

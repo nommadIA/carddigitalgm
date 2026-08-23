@@ -56,7 +56,6 @@ import {
   ChevronDown,
   ChevronUp,
   Square,
-  Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -818,9 +817,9 @@ export default function Configuracoes() {
       applySettingsToDOM(next);
 
       // Dispara eventos globais para que todos os componentes em aberto se atualizem
-      window.dispatchEvent(new CustomEvent("gm_theme_updated", { detail: next }));
-      window.dispatchEvent(new CustomEvent("gm_colors_updated", { detail: next }));
-      window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: next }));
+      window.dispatchEvent(new CustomEvent("gm_theme_updated", { detail: payloadDark }));
+      window.dispatchEvent(new CustomEvent("gm_colors_updated", { detail: payloadDark }));
+      window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: payloadDark }));
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -848,6 +847,7 @@ export default function Configuracoes() {
     setStats: (s: any) => void,
     setUrl: (url: string) => void
   ) {
+    if (!tenantId) return;
     setUploading(true);
     setProgress(15);
     setStatusText("Prévia instantânea...");
@@ -914,29 +914,13 @@ export default function Configuracoes() {
       const finalUrl = `${remoteUrl}?t=${Date.now()}`;
 
       setProgress(90);
-      setStatusText("Sincronizando no banco...");
+      setStatusText("Sincronizando...");
 
       URL.revokeObjectURL(localBlobUrl);
       setUrl(finalUrl);
 
-      if (kind === "logo") {
-        setCompanyLogoUrl(finalUrl);
-        setAvatarUrl(finalUrl);
-        const updated = await upsertSettingsSupabase(tenantId, {
-          company_logo_url: finalUrl,
-          avatar_url: finalUrl,
-        });
-        window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
-      } else {
-        setAvatarUrl(finalUrl);
-        const updated = await upsertSettingsSupabase(tenantId, {
-          avatar_url: finalUrl,
-        });
-        window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
-      }
-
       setProgress(100);
-      setStatusText("Salvo no banco com sucesso!");
+      setStatusText("Carregado com sucesso!");
 
       setTimeout(() => {
         setProgress(0);
@@ -981,6 +965,7 @@ export default function Configuracoes() {
   const [uploadingBackground, setUploadingBackground] = useState(false);
 
   async function onUploadBackground(file: File) {
+    if (!tenantId) return;
     setUploadingBackground(true);
     try {
       let fileToUpload = file;
@@ -1013,30 +998,8 @@ export default function Configuracoes() {
       const url = await uploadTenantAsset(tenantId, fileToUpload, "background");
       if (viewMode === "smartphone") {
         setMobileBgUrl(url);
-        setMobileBgEnabled(true);
-        const op = mobileBgOpacity > 0 ? mobileBgOpacity : (mobileBgOpacityPrev || 0.18);
-        setMobileBgOpacity(op);
-        const updated = await upsertSettingsSupabase(tenantId, {
-          mobile_app_background_url: url,
-          mobile_app_background_opacity: op,
-          mobile_app_background_fit: mobileBgFit,
-          mobile_app_background_scale: mobileBgScale,
-          mobile_app_background_blur: mobileBgBlur,
-        });
-        window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
       } else {
         setBgUrl(url);
-        setBgEnabled(true);
-        const op = bgOpacity > 0 ? bgOpacity : (bgOpacityPrev || 0.18);
-        setBgOpacity(op);
-        const updated = await upsertSettingsSupabase(tenantId, {
-          app_background_url: url,
-          app_background_opacity: op,
-          app_background_fit: bgFit,
-          app_background_scale: bgScale,
-          app_background_blur: bgBlur,
-        });
-        window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
       }
     } catch (e: any) {
       alert(e.message || "Erro no upload");
@@ -1782,42 +1745,22 @@ export default function Configuracoes() {
                         </div>
 
                         {/* BOTÃO PARA SUBIR LOGO ABAIXO DA FOTO DA LOGO */}
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label
-                            className={"gm-btn py-2 px-4 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-none hover:shadow-sm transition-all rounded-xl border border-[var(--gm-primary)]/40 bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white w-full " + (uploadingLogo ? "opacity-50 pointer-events-none" : "")}
-                          >
-                            {uploadingLogo ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                            <span>{uploadingLogo ? "Otimizando..." : "Alterar Logo"}</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              disabled={uploadingLogo}
-                              onChange={(e) => {
-                                const f = e.target.files?.[0];
-                                if (f) onUploadLogo(f);
-                              }}
-                            />
-                          </label>
-
-                          {companyLogoUrl && (
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                setCompanyLogoUrl(null);
-                                setAvatarUrl(null);
-                                const updated = await upsertSettingsSupabase(tenantId, {
-                                  company_logo_url: null,
-                                  avatar_url: null,
-                                });
-                                window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
-                              }}
-                              className="text-[11px] font-bold text-red-400 hover:text-red-300 transition-colors py-1 flex items-center justify-center gap-1 cursor-pointer"
-                            >
-                              <Trash2 size={12} /> Remover Logo
-                            </button>
-                          )}
-                        </div>
+                        <label
+                          className={"gm-btn py-2 px-4 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-none hover:shadow-sm transition-all rounded-xl border border-[var(--gm-primary)]/40 bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white w-full " + (uploadingLogo ? "opacity-50 pointer-events-none" : "")}
+                        >
+                          {uploadingLogo ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                          <span>{uploadingLogo ? "Otimizando..." : "Alterar Logo"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={uploadingLogo}
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) onUploadLogo(f);
+                            }}
+                          />
+                        </label>
                       </div>
 
                       {/* LADO DIREITO: TODAS AS INFORMAÇÕES DE TEXTO E ORIENTAÇÕES */}
@@ -2304,54 +2247,22 @@ export default function Configuracoes() {
                           )}
                         </div>
 
-                        <div className="flex flex-col gap-2 w-full">
-                          <label
-                            className={"gm-btn w-full py-2.5 flex items-center justify-center gap-2 cursor-pointer " + (uploadingBackground ? "opacity-50 pointer-events-none" : "")}
-                          >
-                            {uploadingBackground ? <Loader2 size={16} className="animate-spin" /> : <FileImage size={16} />}
-                            <span className="font-bold text-xs">{uploadingBackground ? "Enviando..." : "Upload Background"}</span>
-                            <input
-                              type="file"
-                              accept="image/*,video/mp4,video/webm"
-                              className="hidden"
-                              disabled={uploadingBackground}
-                              onChange={(e) => {
-                                const f = e.target.files?.[0];
-                                if (f) onUploadBackground(f);
-                              }}
-                            />
-                          </label>
-
-                          {(viewMode === "smartphone" ? mobileBgUrl : bgUrl) && (
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (viewMode === "smartphone") {
-                                  setMobileBgUrl(null);
-                                  setMobileBgEnabled(false);
-                                  setMobileBgOpacity(0);
-                                  const updated = await upsertSettingsSupabase(tenantId, {
-                                    mobile_app_background_url: null,
-                                    mobile_app_background_opacity: 0,
-                                  });
-                                  window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
-                                } else {
-                                  setBgUrl(null);
-                                  setBgEnabled(false);
-                                  setBgOpacity(0);
-                                  const updated = await upsertSettingsSupabase(tenantId, {
-                                    app_background_url: null,
-                                    app_background_opacity: 0,
-                                  });
-                                  window.dispatchEvent(new CustomEvent("gm_settings_updated", { detail: updated }));
-                                }
-                              }}
-                              className="text-[11px] font-bold text-red-400 hover:text-red-300 transition-colors py-1 flex items-center justify-center gap-1 cursor-pointer"
-                            >
-                              <Trash2 size={12} /> Remover Imagem de Fundo
-                            </button>
-                          )}
-                        </div>
+                        <label
+                          className={"gm-btn w-full py-2.5 flex items-center justify-center gap-2 cursor-pointer " + (uploadingBackground ? "opacity-50 pointer-events-none" : "")}
+                        >
+                          {uploadingBackground ? <Loader2 size={16} className="animate-spin" /> : <FileImage size={16} />}
+                          <span className="font-bold text-xs">{uploadingBackground ? "Enviando..." : "Upload Background"}</span>
+                          <input
+                            type="file"
+                            accept="image/*,video/mp4,video/webm"
+                            className="hidden"
+                            disabled={uploadingBackground}
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) onUploadBackground(f);
+                            }}
+                          />
+                        </label>
                       </div>
                     </div>
                   </div>

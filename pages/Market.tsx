@@ -89,16 +89,15 @@ const Market = () => {
   const [addingItem, setAddingItem] = useState(false);
   const [showProductSuggestions, setShowProductSuggestions] = useState(false);
 
-  // Voice Workflow States
-  type VoiceStep = 'idle' | 'product' | 'price' | 'quantity' | 'confirm';
-  const [voiceStep, setVoiceStep] = useState<VoiceStep>('idle');
-  const [voiceFeedback, setVoiceFeedback] = useState<string>('');
-
-  const productInputRef = React.useRef<HTMLInputElement>(null);
+  const nameInputRef = React.useRef<HTMLInputElement>(null);
   const priceInputRef = React.useRef<HTMLInputElement>(null);
   const qtyInputRef = React.useRef<HTMLInputElement>(null);
-  const addBtnRef = React.useRef<HTMLButtonElement>(null);
   const productContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Estados para os 4 comandos de voz e fluxo guiado
+  const [voiceStep, setVoiceStep] = useState<'idle' | 'product' | 'price' | 'value' | 'quantity' | 'ready'>('idle');
+  const [activeVoiceCommand, setActiveVoiceCommand] = useState<null | 'product' | 'price' | 'value' | 'quantity' | 'sequential'>(null);
+  const [voiceStatusText, setVoiceStatusText] = useState<string>('');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -116,6 +115,15 @@ const Market = () => {
     return parseFloat(clean) || 0;
   };
 
+  const handleProductNameChange = (val: string) => {
+    setNewItemName(val);
+    setShowProductSuggestions(val.trim().length > 0);
+    // Se o usuário apagar manualmente o produto, a ação não conclui e volta para a etapa 1 (Produto)
+    if (val.trim() === '') {
+      setVoiceStep('product');
+    }
+  };
+
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
     val = val.replace(/[^0-9.,]/g, '');
@@ -128,6 +136,20 @@ const Market = () => {
       val = val.replace(/^0+/, '');
     }
     setNewItemPrice(val);
+    // Se o usuário apagar manualmente o preço/valor, a ação não conclui e volta para a etapa 2/3 (Preço/Valor)
+    if (val.trim() === '' || val === '0,00' || val === '0') {
+      setVoiceStep('price');
+    }
+  };
+
+  const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    const clean = val.replace(/^0+(?=\d)/, '');
+    setNewItemQty(clean);
+    // Se o usuário apagar manualmente a quantidade, a ação não conclui e volta para a etapa 4 (Quantidade)
+    if (clean === '' || clean === '0') {
+      setVoiceStep('quantity');
+    }
   };
 
   const handlePriceBlur = () => {
@@ -160,6 +182,7 @@ const Market = () => {
   const selectSuggestion = (name: string) => {
     setNewItemName(name);
     setShowProductSuggestions(false);
+    setVoiceStep('price');
     setTimeout(() => {
       if (priceInputRef.current) {
         priceInputRef.current.focus();
@@ -340,160 +363,10 @@ const Market = () => {
         }
     };
 
-  const PT_NUMBERS_MAP: Record<string, number> = {
-    'zero': 0, 'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'três': 3, 'tres': 3, 'quatro': 4,
-    'cinco': 5, 'seis': 6, 'meia': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10,
-    'onze': 11, 'doze': 12, 'duzia': 12, 'dúzia': 12, 'treze': 13, 'quatorze': 14,
-    'catorze': 14, 'quinze': 15, 'dezesseis': 16, 'dezessete': 17, 'dezoito': 18,
-    'dezenove': 19, 'vinte': 20, 'trinta': 30, 'quarenta': 40, 'cinquenta': 50,
-    'sessenta': 60, 'setenta': 70, 'oitenta': 80, 'noventa': 90, 'cem': 100,
-    'cento': 100, 'duzentos': 200, 'duzentas': 200, 'trezentos': 300, 'quatrocentos': 400,
-    'quinhentos': 500, 'seiscentos': 600, 'setecentos': 700, 'oitocentos': 800, 'novecentos': 900
-  };
-
-  const parsePtBrWordsToNumber = (text: string): number | null => {
-    const clean = text.toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9\s]/g, ' ')
-      .trim();
-    
-    if (!clean) return null;
-    const words = clean.split(/\s+/).filter(w => w !== 'e' && w !== 'de');
-    
-    if (words.length === 1 && !isNaN(Number(words[0]))) {
-      return Number(words[0]);
-    }
-
-    let total = 0;
-    let current = 0;
-    let hasMatch = false;
-
-    for (const w of words) {
-      if (!isNaN(Number(w))) {
-        current += Number(w);
-        hasMatch = true;
-      } else if (PT_NUMBERS_MAP[w] !== undefined) {
-        current += PT_NUMBERS_MAP[w];
-        hasMatch = true;
-      } else if (w === 'mil') {
-        current = current === 0 ? 1000 : current * 1000;
-        total += current;
-        current = 0;
-        hasMatch = true;
-      }
-    }
-
-    return hasMatch ? total + current : null;
-  };
-
-  const parsePortuguesePrice = (transcript: string): number | null => {
-    if (!transcript) return null;
-    const raw = transcript.toLowerCase().trim();
-
-    // Pattern 1: Direct number with comma/dot (e.g. "5,50", "12.90", "R$ 4,50", "3.00")
-    const directMatch = raw.match(/(?:r\$)?\s*(\d+(?:[.,]\d{1,2})?)/i);
-    if (directMatch && (raw.includes(',') || raw.includes('.'))) {
-      const num = parseFloat(directMatch[1].replace(',', '.'));
-      if (!isNaN(num) && num > 0) return num;
-    }
-
-    // Pattern 2: "X reais e Y centavos" or "X e Y" or "X com Y"
-    const reaisAndCentavosMatch = raw.match(/^(?:r\$\s*)?(.+?)\s*(?:reais|real)?\s*(?:e|com|vírgula|virgula|ponto|,|\.)\s*(.+?)(?:\s*centavos?)?$/i);
-    if (reaisAndCentavosMatch) {
-      const intPartStr = reaisAndCentavosMatch[1].trim();
-      const decPartStr = reaisAndCentavosMatch[2].trim();
-      
-      const intPart = parsePtBrWordsToNumber(intPartStr);
-      const decPart = parsePtBrWordsToNumber(decPartStr);
-
-      if (intPart !== null && decPart !== null) {
-        const decFormatted = decPart < 10 && decPartStr.length === 1 ? decPart * 10 : decPart;
-        return intPart + decFormatted / 100;
-      }
-    }
-
-    // Pattern 3: "X centavos"
-    const centavosOnly = raw.match(/^(.+?)\s*centavos?$/i);
-    if (centavosOnly) {
-      const cent = parsePtBrWordsToNumber(centavosOnly[1]);
-      if (cent !== null) return cent / 100;
-    }
-
-    // Pattern 4: "X reais" or single number
-    const reaisOnly = raw.match(/^(.+?)(?:\s*(?:reais|real))?$/i);
-    if (reaisOnly) {
-      const val = parsePtBrWordsToNumber(reaisOnly[1]);
-      if (val !== null) return val;
-    }
-
-    return null;
-  };
-
-  const parsePortugueseQuantity = (transcript: string): number => {
-    if (!transcript) return 1;
-    const raw = transcript.toLowerCase().trim();
-
-    if (raw.includes("meia duzia") || raw.includes("meia dúzia")) return 6;
-    if (raw.includes("duzia") || raw.includes("dúzia")) return 12;
-
-    const numMatch = raw.match(/\d+/);
-    if (numMatch) {
-      const n = parseInt(numMatch[0], 10);
-      if (!isNaN(n) && n > 0) return n;
-    }
-
-    const wordVal = parsePtBrWordsToNumber(raw);
-    if (wordVal !== null && wordVal > 0) return wordVal;
-
-    return 1;
-  };
-
-  const isAddCommand = (transcript: string): boolean => {
-    const clean = transcript.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return /\b(adicionar|adicione|adiciona|adicionou|inserir|insere|salvar|salve|confirmar|confirma|ok|sim|pronto|colocar|bota)\b/i.test(clean);
-  };
-
-  const formatProductWithAI = async (rawTranscript: string): Promise<string> => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
-    if (apiKey) {
-      try {
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: `Você é um assistente de supermercado brasileiro. Corrija a ortografia e formate o nome do produto para uma lista de compras em português brasileiro.
-Regras:
-1. Retorne APENAS o nome do produto formatado em português brasileiro correto.
-2. Sem markdown, sem aspas, sem pontuação final.
-3. Padronize unidades usuais (Ex: "Arroz cinco quilos" -> "Arroz 5kg", "feijao carioca" -> "Feijão Carioca 1kg", "leite integral" -> "Leite Integral 1L", "detergente neutro" -> "Detergente Neutro 500ml", "papel higienico" -> "Papel Higiênico", "ovos brancos" -> "Ovos Brancos Dúzia").
-Texto falado: "${rawTranscript}"`,
-        });
-        const text = response.text?.trim();
-        if (text) return text;
-      } catch (err) {
-        console.warn("Erro ao formatar com Gemini, usando fallback local:", err);
-      }
-    }
-
-    let clean = rawTranscript.trim();
-    clean = clean
-      .replace(/\bquilos?\b/gi, 'kg')
-      .replace(/\bquilo\b/gi, 'kg')
-      .replace(/\blitros?\b/gi, 'L')
-      .replace(/\bgramas?\b/gi, 'g')
-      .replace(/\bml\b/gi, 'ml')
-      .replace(/\bcaixas?\b/gi, 'cx');
-    return clean.charAt(0).toUpperCase() + clean.slice(1);
-  };
-
-  const handleAddItem = async (
-    overrideName?: string,
-    overridePrice?: number,
-    overrideQty?: number
-  ) => {
-    const nome = (overrideName ?? newItemName).trim();
-    const preco = overridePrice !== undefined ? overridePrice : parsePriceStr(newItemPrice);
-    const qtd = overrideQty !== undefined ? overrideQty : (Number(newItemQty) || 1);
-    if (!nome) return false;
+  const handleAddItem = async () => {
+    const nome = newItemName.trim();
+    const preco = parsePriceStr(newItemPrice);
+    if (!nome) return;
     
     setAddingItem(true);
     try {
@@ -502,7 +375,7 @@ Texto falado: "${rawTranscript}"`,
             user_id: user?.id,
             name: nome,
             unit_price: preco,
-            quantity: qtd
+            quantity: Number(newItemQty) || 1
         }).select().single();
 
         if (error) throw error;
@@ -512,18 +385,8 @@ Texto falado: "${rawTranscript}"`,
         setNewItemPrice(""); 
         setNewItemQty(1);
         setShowProductSuggestions(false);
-        setVoiceStep('idle');
-        setVoiceFeedback('Item adicionado à lista com sucesso!');
-        setTimeout(() => setVoiceFeedback(''), 4000);
-        
-        try {
-          await playSound('cash');
-        } catch (e) {}
-
-        return true;
     } catch (e: any) {
         alert("Erro ao adicionar item: " + e.message);
-        return false;
     } finally {
         setAddingItem(false);
     }
@@ -558,6 +421,7 @@ Texto falado: "${rawTranscript}"`,
           setTimeout(() => resolve(), 150);
         } else if (type === 'cash') {
           // Cha-ching sound simulation
+          // 1. The "Cha" (noise/slide)
           const osc1 = ctx.createOscillator();
           const gain1 = ctx.createGain();
           osc1.connect(gain1);
@@ -574,6 +438,7 @@ Texto falado: "${rawTranscript}"`,
           osc1.start(ctx.currentTime);
           osc1.stop(ctx.currentTime + 0.15);
           
+          // 2. The "Ching" (high bell)
           const osc2 = ctx.createOscillator();
           const gain2 = ctx.createGain();
           osc2.connect(gain2);
@@ -597,6 +462,99 @@ Texto falado: "${rawTranscript}"`,
         resolve();
       }
     });
+  };
+
+  // Helper para converter palavras em números (português)
+  const parsePortugueseWordsToNumber = (text: string): number | null => {
+    if (!text) return null;
+    const lower = text.toLowerCase().trim();
+
+    // Se já tiver dígitos
+    const directMatch = lower.match(/\d+([.,]\d+)?/);
+    if (directMatch) {
+      const num = parseFloat(directMatch[0].replace(',', '.'));
+      if (!isNaN(num)) return num;
+    }
+
+    const wordMap: Record<string, number> = {
+      "zero": 0, "um": 1, "uma": 1, "dois": 2, "duas": 2, "três": 3, "tres": 3,
+      "quatro": 4, "cinco": 5, "seis": 6, "meia": 6, "sete": 7, "oito": 8, "nove": 9,
+      "dez": 10, "onze": 11, "doze": 12, "treze": 13, "quatorze": 14, "catorze": 14,
+      "quinze": 15, "dezesseis": 16, "dezessete": 17, "dezoito": 18, "dezenove": 19,
+      "vinte": 20, "trinta": 30, "quarenta": 40, "cinquenta": 50, "sessenta": 60,
+      "setenta": 70, "oitenta": 80, "noventa": 90, "cem": 100, "cento": 100,
+      "duzentos": 200, "trezentos": 300, "quatrocentos": 400, "quinhentos": 500
+    };
+
+    if (wordMap[lower] !== undefined) return wordMap[lower];
+
+    let total = 0;
+    const tokens = lower.split(/\s+/).filter(t => t !== "e" && t !== "com" && t !== "de" && t !== "unidades" && t !== "unidade");
+    let matched = false;
+    for (const token of tokens) {
+      if (wordMap[token] !== undefined) {
+        total += wordMap[token];
+        matched = true;
+      }
+    }
+    return matched ? total : null;
+  };
+
+  // Helper para converter áudio de preço ou valor falado em número
+  const parsePriceFromVoiceText = (transcript: string): number | null => {
+    if (!transcript) return null;
+    const text = transcript.toLowerCase()
+      .replace(/r\$/gi, '')
+      .replace(/reais/gi, 'reais')
+      .replace(/real/gi, 'real')
+      .trim();
+
+    // Se tiver dígitos: "10,50", "10.50", "10 e 50", "10 reais e 50 centavos"
+    const digitRegex = /(\d+)(?:[.,](\d{1,2})|\s+(?:reais|real)?\s*(?:e|com)?\s*(\d{1,2})\s*(?:centavos|centavo)?)?/i;
+    const match = text.match(digitRegex);
+    if (match) {
+      const whole = match[1];
+      let decimal = match[2] || match[3] || '00';
+      if (decimal.length === 1) decimal += '0';
+      return parseFloat(`${whole}.${decimal}`);
+    }
+
+    // Se for apenas palavras: "dez reais e cinquenta centavos", "cinco reais"
+    const reaisPart = text.split(/reais|real/)[0]?.trim();
+    const centavosPart = (text.includes('reais') || text.includes('real')) ? text.split(/reais|real/)[1]?.replace(/centavos|centavo/g, '').trim() : '';
+
+    if (reaisPart) {
+      const wholeNum = parsePortugueseWordsToNumber(reaisPart);
+      if (wholeNum !== null) {
+        let decNum = 0;
+        if (centavosPart) {
+          const parsedDec = parsePortugueseWordsToNumber(centavosPart);
+          if (parsedDec !== null) decNum = parsedDec;
+        }
+        return wholeNum + (decNum / 100);
+      }
+    }
+
+    return parsePortugueseWordsToNumber(text);
+  };
+
+  // Helper para converter áudio de quantidade falada em número
+  const parseQtyFromVoiceText = (transcript: string): number => {
+    if (!transcript) return 1;
+    const num = parsePortugueseWordsToNumber(transcript);
+    if (num && num > 0) return Math.round(num);
+    return 1;
+  };
+
+  // Helper para limpar e formatar nome de produto
+  const cleanProductName = (transcript: string): string => {
+    if (!transcript) return '';
+    let cleaned = transcript
+      .replace(/^(produto|o produto é|cadastrar|adicionar|item|o item é|quero|coloca|coloque|anote)\s*:?/i, '')
+      .replace(/["'“”]/g, '')
+      .trim();
+    if (!cleaned) cleaned = transcript.trim();
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   };
 
   const listenVoice = (): Promise<string> => {
@@ -637,93 +595,236 @@ Texto falado: "${rawTranscript}"`,
     });
   };
 
-  const resetVoiceFlow = () => {
-    setVoiceStep('idle');
-    setVoiceFeedback('');
-    setIsListening(false);
-    setProcessingVoice(false);
+  const formatProductNameWithAI = async (rawText: string): Promise<string> => {
+    let productName = cleanProductName(rawText);
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
+    if (apiKey) {
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: `Formate o nome deste produto para uma lista de compras de supermercado. Texto: "${rawText}". Retorne APENAS o nome formatado, sem aspas, sem markdown. Exemplo: "Arroz 5 quilos" -> "Arroz 5kg", "leite desnatado 1 litro" -> "Leite Desnatado 1L".`,
+        });
+        const text = response.text?.trim();
+        if (text) productName = text;
+      } catch (err) {
+        console.error("Erro ao formatar produto com Gemini:", err);
+      }
+    }
+    return productName.charAt(0).toUpperCase() + productName.slice(1);
   };
 
-  const handleVoiceInput = async () => {
-    let currentStep = voiceStep;
-    if (currentStep === 'idle') {
-      currentStep = 'product';
-      setVoiceStep('product');
+  const handleVoiceError = (err: any) => {
+    if (err.message === "not-supported") {
+      alert("Seu navegador não suporta reconhecimento de voz.");
+    } else if (err.message === 'not-allowed') {
+      alert("Permissão negada para usar o microfone. Por favor, permita o acesso ao microfone no seu navegador para usar esta função.");
+    } else if (err.message !== "no-speech") {
+      console.error("Erro no reconhecimento de voz:", err);
     }
+    setVoiceStatusText('');
+  };
 
+  // 1. Comando de Voz: PRODUTO
+  const handleVoiceCommand1Product = async () => {
     try {
+      setActiveVoiceCommand('product');
+      setVoiceStep('product');
+      setVoiceStatusText('1. Fale o nome do Produto...');
       await playSound('beep');
       setIsListening(true);
-      const rawTranscript = await listenVoice();
+      const productTranscript = await listenVoice();
       setIsListening(false);
-
-      if (!rawTranscript || !rawTranscript.trim()) {
-        return;
-      }
-
+      
       setProcessingVoice(true);
-
-      if (currentStep === 'product') {
-        const productName = await formatProductWithAI(rawTranscript);
-        setNewItemName(productName);
-        setVoiceStep('price');
-        setVoiceFeedback(`Produto "${productName}" registrado! Fale o preço (Ex: R$ 5,50) ou clique no microfone.`);
-        setProcessingVoice(false);
-        setTimeout(() => {
-          if (priceInputRef.current) {
-            priceInputRef.current.focus();
-            priceInputRef.current.select();
-          }
-        }, 80);
-      } else if (currentStep === 'price') {
-        const parsedPrice = parsePortuguesePrice(rawTranscript);
-        if (parsedPrice !== null && parsedPrice > 0) {
-          const formatted = parsedPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          setNewItemPrice(formatted);
-          setVoiceFeedback(`Preço definido: R$ ${formatted}. Fale a quantidade (Ex: 2 unidades) ou clique no microfone.`);
-        } else {
-          const num = parsePriceStr(rawTranscript);
-          if (num > 0) {
-            const formatted = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            setNewItemPrice(formatted);
-            setVoiceFeedback(`Preço definido: R$ ${formatted}. Fale a quantidade (Ex: 2 unidades) ou clique no microfone.`);
-          }
+      setVoiceStatusText('Formatando produto...');
+      const formatted = await formatProductNameWithAI(productTranscript);
+      setNewItemName(formatted);
+      setProcessingVoice(false);
+      setVoiceStatusText(`Produto: ${formatted}`);
+      
+      // Avança para a etapa de Preço e foca no campo
+      setVoiceStep('price');
+      setTimeout(() => {
+        if (priceInputRef.current) {
+          priceInputRef.current.focus();
+          priceInputRef.current.select();
         }
-        setVoiceStep('quantity');
-        setProcessingVoice(false);
-        setTimeout(() => {
-          if (qtyInputRef.current) {
-            qtyInputRef.current.focus();
-            qtyInputRef.current.select();
-          }
-        }, 80);
-      } else if (currentStep === 'quantity') {
-        const parsedQty = parsePortugueseQuantity(rawTranscript);
-        setNewItemQty(parsedQty > 0 ? parsedQty : 1);
-        setVoiceStep('confirm');
-        setVoiceFeedback(`Quantidade: ${parsedQty}. Diga "Adicionar" ou clique no botão para salvar.`);
-        setProcessingVoice(false);
-        setTimeout(() => {
-          if (addBtnRef.current) {
-            addBtnRef.current.focus();
-          }
-        }, 80);
-      } else if (currentStep === 'confirm') {
-        setProcessingVoice(false);
-        if (isAddCommand(rawTranscript) || rawTranscript) {
-          await handleAddItem();
-        }
-      }
+      }, 100);
     } catch (err: any) {
-      if (err.message === "not-supported") {
-        alert("Seu navegador não suporta reconhecimento de voz.");
-      } else if (err.message === 'not-allowed') {
-        alert("Permissão negada para usar o microfone. Por favor, permita o acesso ao microfone no seu navegador.");
-      } else if (err.message !== "no-speech") {
-        console.error("Erro no reconhecimento de voz:", err);
-      }
+      handleVoiceError(err);
+    } finally {
       setIsListening(false);
       setProcessingVoice(false);
+      setActiveVoiceCommand(null);
+    }
+  };
+
+  // 2. Comando de Voz: PREÇO
+  const handleVoiceCommand2Price = async () => {
+    try {
+      setActiveVoiceCommand('price');
+      setVoiceStep('price');
+      setVoiceStatusText('2. Fale o Preço (ex: dez reais e cinquenta)...');
+      await playSound('beep');
+      setIsListening(true);
+      const priceTranscript = await listenVoice();
+      setIsListening(false);
+      
+      setProcessingVoice(true);
+      setVoiceStatusText('Processando preço...');
+      const priceNum = parsePriceFromVoiceText(priceTranscript);
+      if (priceNum !== null && !isNaN(priceNum) && priceNum > 0) {
+        setNewItemPrice(priceNum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        setVoiceStatusText(`Preço: R$ ${priceNum.toFixed(2).replace('.', ',')}`);
+      } else {
+        const clean = priceTranscript.replace(/[^0-9.,]/g, '').replace('.', ',');
+        setNewItemPrice(clean || '0,00');
+      }
+      setProcessingVoice(false);
+      
+      // Avança para a etapa de Quantidade e foca
+      setVoiceStep('quantity');
+      setTimeout(() => {
+        if (qtyInputRef.current) {
+          qtyInputRef.current.focus();
+          qtyInputRef.current.select();
+        }
+      }, 100);
+    } catch (err: any) {
+      handleVoiceError(err);
+    } finally {
+      setIsListening(false);
+      setProcessingVoice(false);
+      setActiveVoiceCommand(null);
+    }
+  };
+
+  // 3. Comando de Voz: VALOR
+  const handleVoiceCommand3Value = async () => {
+    try {
+      setActiveVoiceCommand('value');
+      setVoiceStep('value');
+      setVoiceStatusText('3. Fale o Valor (ex: quinze reais)...');
+      await playSound('beep');
+      setIsListening(true);
+      const valTranscript = await listenVoice();
+      setIsListening(false);
+      
+      setProcessingVoice(true);
+      setVoiceStatusText('Processando valor...');
+      const priceNum = parsePriceFromVoiceText(valTranscript);
+      if (priceNum !== null && !isNaN(priceNum) && priceNum > 0) {
+        setNewItemPrice(priceNum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        setVoiceStatusText(`Valor: R$ ${priceNum.toFixed(2).replace('.', ',')}`);
+      } else {
+        const clean = valTranscript.replace(/[^0-9.,]/g, '').replace('.', ',');
+        setNewItemPrice(clean || '0,00');
+      }
+      setProcessingVoice(false);
+      
+      // Avança para a etapa de Quantidade e foca
+      setVoiceStep('quantity');
+      setTimeout(() => {
+        if (qtyInputRef.current) {
+          qtyInputRef.current.focus();
+          qtyInputRef.current.select();
+        }
+      }, 100);
+    } catch (err: any) {
+      handleVoiceError(err);
+    } finally {
+      setIsListening(false);
+      setProcessingVoice(false);
+      setActiveVoiceCommand(null);
+    }
+  };
+
+  // 4. Comando de Voz: QUANTIDADE
+  const handleVoiceCommand4Quantity = async () => {
+    try {
+      setActiveVoiceCommand('quantity');
+      setVoiceStep('quantity');
+      setVoiceStatusText('4. Fale a Quantidade (ex: 2 unidades, 3)...');
+      await playSound('beep');
+      setIsListening(true);
+      const qtyTranscript = await listenVoice();
+      setIsListening(false);
+      
+      setProcessingVoice(true);
+      setVoiceStatusText('Processando quantidade...');
+      const qtyNum = parseQtyFromVoiceText(qtyTranscript);
+      setNewItemQty(qtyNum || 1);
+      setProcessingVoice(false);
+      setVoiceStatusText(`Quantidade: ${qtyNum || 1}`);
+      setVoiceStep('ready');
+      await playSound('cash');
+    } catch (err: any) {
+      handleVoiceError(err);
+    } finally {
+      setIsListening(false);
+      setProcessingVoice(false);
+      setActiveVoiceCommand(null);
+    }
+  };
+
+  // Gravação Sequencial Completa (1 ➔ 2 ➔ 4)
+  const handleVoiceSequential = async () => {
+    try {
+      setActiveVoiceCommand('sequential');
+      
+      // 1. PRODUTO
+      setVoiceStep('product');
+      setVoiceStatusText('1/3. Diga o nome do Produto...');
+      await playSound('beep');
+      setIsListening(true);
+      const productTranscript = await listenVoice();
+      setIsListening(false);
+      
+      setProcessingVoice(true);
+      setVoiceStatusText('Formatando produto...');
+      const formattedProd = await formatProductNameWithAI(productTranscript);
+      setNewItemName(formattedProd);
+      setProcessingVoice(false);
+
+      // 2. PREÇO / VALOR
+      setVoiceStep('price');
+      setVoiceStatusText('2/3. Diga o Preço ou Valor...');
+      await playSound('beep');
+      setIsListening(true);
+      const priceTranscript = await listenVoice();
+      setIsListening(false);
+      
+      setProcessingVoice(true);
+      setVoiceStatusText('Processando preço...');
+      const priceNum = parsePriceFromVoiceText(priceTranscript);
+      if (priceNum !== null && !isNaN(priceNum) && priceNum > 0) {
+        setNewItemPrice(priceNum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      }
+      setProcessingVoice(false);
+
+      // 3. QUANTIDADE
+      setVoiceStep('quantity');
+      setVoiceStatusText('3/3. Diga a Quantidade...');
+      await playSound('beep');
+      setIsListening(true);
+      const qtyTranscript = await listenVoice();
+      setIsListening(false);
+
+      setProcessingVoice(true);
+      const qtyNum = parseQtyFromVoiceText(qtyTranscript);
+      setNewItemQty(qtyNum || 1);
+      setProcessingVoice(false);
+
+      setVoiceStep('ready');
+      setVoiceStatusText('Cadastro por voz concluído com sucesso!');
+      await playSound('cash');
+    } catch (err: any) {
+      handleVoiceError(err);
+    } finally {
+      setIsListening(false);
+      setProcessingVoice(false);
+      setActiveVoiceCommand(null);
     }
   };
 
@@ -1051,130 +1152,212 @@ Texto falado: "${rawTranscript}"`,
            <Grid cols={1} className="gap-6">
                 {/* Add Item Form */}
                 <div className="gm-card fora p-6 rounded-2xl border border-white/10 !overflow-visible !contain-none relative z-30 shadow-none">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="text-lg font-bold text-white">Adicionar Item</div>
-                        {voiceStep !== 'idle' && (
-                            <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 px-2.5 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
-                                <span className="w-2 h-2 rounded-full bg-[var(--gm-primary)]"></span>
-                                Comando por Voz Ativo
-                            </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div className="text-lg font-bold text-white flex items-center gap-2">
+                            <span>Adicionar Item</span>
+                        </div>
+                        {voiceStatusText && (
+                            <div className="text-xs px-3 py-1.5 rounded-lg bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 font-bold flex items-center gap-2 animate-pulse">
+                                <span className="inline-block w-2 h-2 rounded-full bg-[var(--gm-primary)]"></span>
+                                {voiceStatusText}
+                            </div>
                         )}
                     </div>
-                    <div className="flex flex-col gap-4">
-                        <div className="w-full">
-                            <div className="flex items-center justify-between mb-1.5">
-                                <label className="gm-label block">Comando por Voz Guiado</label>
-                                {voiceStep !== 'idle' && (
-                                    <button
-                                        type="button"
-                                        onClick={resetVoiceFlow}
-                                        className="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer transition-colors px-2 py-0.5 rounded-lg hover:bg-white/10"
-                                        title="Reiniciar comando por voz"
-                                    >
-                                        <X size={13} /> Cancelar voz
-                                    </button>
-                                )}
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <button 
-                                   type="button"
-                                   className={`gm-btn w-full flex items-center justify-between px-4 h-12 rounded-xl shadow-none border transition-all cursor-pointer ${
-                                     isListening 
-                                       ? 'bg-red-500/25 text-red-200 border-red-500/60 shadow-lg shadow-red-500/20 animate-pulse' 
-                                       : processingVoice 
-                                         ? 'bg-amber-500/25 text-amber-200 border-amber-500/60 shadow-lg shadow-amber-500/20' 
-                                         : voiceStep !== 'idle'
-                                           ? 'bg-[var(--gm-primary)]/20 text-white border-[var(--gm-primary)]/60 shadow-lg shadow-[var(--gm-primary)]/15'
-                                           : 'barra text-white hover:bg-white/10 border-white/10'
-                                   }`}
-                                   onClick={handleVoiceInput}
-                                   disabled={isListening || processingVoice}
-                                >
-                                   <div className="flex items-center gap-2.5">
-                                      {isListening ? (
-                                         <>
-                                           <span className="relative flex h-3.5 w-3.5 mr-0.5">
-                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                             <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500"></span>
-                                           </span>
-                                           <span className="text-sm font-bold text-red-200">
-                                             {voiceStep === 'product' || voiceStep === 'idle'
-                                               ? 'Ouvindo nome do produto...'
-                                               : voiceStep === 'price'
-                                                 ? 'Ouvindo preço (ex: 5 e 50)...'
-                                                 : voiceStep === 'quantity'
-                                                   ? 'Ouvindo quantidade (ex: 2 unidades)...'
-                                                   : 'Ouvindo: diga "Adicionar"...'}
-                                           </span>
-                                         </>
-                                      ) : processingVoice ? (
-                                         <>
-                                           <Loader2 size={18} className="animate-spin text-amber-300" />
-                                           <span className="text-sm font-bold text-amber-200">Processando áudio em português...</span>
-                                         </>
-                                      ) : (
-                                         <>
-                                           <Mic size={18} className={voiceStep !== 'idle' ? 'text-[var(--gm-primary)] animate-bounce' : 'text-[var(--gm-primary)]'} />
-                                           <span className="text-sm font-bold">
-                                             {voiceStep === 'idle' && 'Comando por Voz'}
-                                             {voiceStep === 'product' && '1. Falar Produto (Ex: Arroz 5kg)'}
-                                             {voiceStep === 'price' && '2. Falar Preço (Ex: R$ 5,50)'}
-                                             {voiceStep === 'quantity' && '3. Falar Quantidade (Ex: 2)'}
-                                             {voiceStep === 'confirm' && '4. Diga "Adicionar" (ou clique)'}
-                                           </span>
-                                         </>
-                                      )}
-                                   </div>
 
-                                   {/* Badge do passo */}
-                                   <div className="flex items-center gap-1.5">
-                                     <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-lg border ${
-                                       voiceStep === 'idle'
-                                         ? 'bg-white/5 border-white/10 text-white/60'
-                                         : 'bg-[var(--gm-primary)]/30 border-[var(--gm-primary)]/50 text-[var(--gm-primary)]'
-                                     }`}>
-                                       {voiceStep === 'idle' ? 'Toque para iniciar' : `Passo ${voiceStep === 'product' ? '1/4' : voiceStep === 'price' ? '2/4' : voiceStep === 'quantity' ? '3/4' : '4/4'}`}
-                                     </span>
-                                   </div>
+                    <div className="flex flex-col gap-5">
+                        {/* 4 Voice Commands Section */}
+                        <div className="w-full barra p-4 rounded-xl border border-white/10">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                                <span className="text-xs uppercase tracking-wider font-bold text-slate-300 flex items-center gap-1.5">
+                                    <Mic size={15} className="text-[var(--gm-primary)]" />
+                                    Captação por Voz (4 Comandos)
+                                </span>
+                                <span className="text-[11px] text-slate-400">
+                                    {voiceStep === 'product' && '📍 Etapa atual: 1. Produto'}
+                                    {voiceStep === 'price' && '📍 Etapa atual: 2. Preço'}
+                                    {voiceStep === 'value' && '📍 Etapa atual: 3. Valor'}
+                                    {voiceStep === 'quantity' && '📍 Etapa atual: 4. Quantidade'}
+                                    {voiceStep === 'ready' && '✅ Todas as etapas preenchidas!'}
+                                    {voiceStep === 'idle' && 'Toque em um comando ou no fluxo sequencial'}
+                                </span>
+                            </div>
+
+                            {/* 4 Comandos de Voz */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2.5">
+                                {/* 1. PRODUTO */}
+                                <button 
+                                    type="button"
+                                    onClick={handleVoiceCommand1Product}
+                                    disabled={isListening || processingVoice}
+                                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                        activeVoiceCommand === 'product' && isListening 
+                                            ? 'bg-red-500 text-white border-red-400 animate-pulse'
+                                            : activeVoiceCommand === 'product' && processingVoice
+                                            ? 'bg-amber-500 text-white border-amber-400'
+                                            : voiceStep === 'product'
+                                            ? 'bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40'
+                                            : 'bg-black/40 text-slate-200 border-white/10 hover:bg-white/10 hover:border-white/20'
+                                    }`}
+                                    title="Gravar por voz: 1. Produto"
+                                >
+                                    {activeVoiceCommand === 'product' && isListening ? (
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                        </span>
+                                    ) : activeVoiceCommand === 'product' && processingVoice ? (
+                                        <Loader2 size={13} className="animate-spin" />
+                                    ) : (
+                                        <Mic size={13} className={voiceStep === 'product' ? 'text-white' : 'text-[var(--gm-primary)]'} />
+                                    )}
+                                    <span>1. Produto</span>
                                 </button>
 
-                                {/* Feedback do fluxo de voz */}
-                                {voiceFeedback && (
-                                  <div className="text-xs text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 px-3.5 py-2 rounded-xl flex items-center justify-between transition-all">
-                                    <span className="font-medium">{voiceFeedback}</span>
-                                    <span className="text-[10px] text-white/40 font-mono">Comando por voz</span>
-                                  </div>
-                                )}
+                                {/* 2. PREÇO */}
+                                <button 
+                                    type="button"
+                                    onClick={handleVoiceCommand2Price}
+                                    disabled={isListening || processingVoice}
+                                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                        activeVoiceCommand === 'price' && isListening 
+                                            ? 'bg-red-500 text-white border-red-400 animate-pulse'
+                                            : activeVoiceCommand === 'price' && processingVoice
+                                            ? 'bg-amber-500 text-white border-amber-400'
+                                            : voiceStep === 'price'
+                                            ? 'bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40'
+                                            : 'bg-black/40 text-slate-200 border-white/10 hover:bg-white/10 hover:border-white/20'
+                                    }`}
+                                    title="Gravar por voz: 2. Preço"
+                                >
+                                    {activeVoiceCommand === 'price' && isListening ? (
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                        </span>
+                                    ) : activeVoiceCommand === 'price' && processingVoice ? (
+                                        <Loader2 size={13} className="animate-spin" />
+                                    ) : (
+                                        <Mic size={13} className={voiceStep === 'price' ? 'text-white' : 'text-[var(--gm-primary)]'} />
+                                    )}
+                                    <span>2. Preço</span>
+                                </button>
+
+                                {/* 3. VALOR */}
+                                <button 
+                                    type="button"
+                                    onClick={handleVoiceCommand3Value}
+                                    disabled={isListening || processingVoice}
+                                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                        activeVoiceCommand === 'value' && isListening 
+                                            ? 'bg-red-500 text-white border-red-400 animate-pulse'
+                                            : activeVoiceCommand === 'value' && processingVoice
+                                            ? 'bg-amber-500 text-white border-amber-400'
+                                            : voiceStep === 'value'
+                                            ? 'bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40'
+                                            : 'bg-black/40 text-slate-200 border-white/10 hover:bg-white/10 hover:border-white/20'
+                                    }`}
+                                    title="Gravar por voz: 3. Valor"
+                                >
+                                    {activeVoiceCommand === 'value' && isListening ? (
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                        </span>
+                                    ) : activeVoiceCommand === 'value' && processingVoice ? (
+                                        <Loader2 size={13} className="animate-spin" />
+                                    ) : (
+                                        <Mic size={13} className={voiceStep === 'value' ? 'text-white' : 'text-[var(--gm-primary)]'} />
+                                    )}
+                                    <span>3. Valor</span>
+                                </button>
+
+                                {/* 4. QUANTIDADE */}
+                                <button 
+                                    type="button"
+                                    onClick={handleVoiceCommand4Quantity}
+                                    disabled={isListening || processingVoice}
+                                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                        activeVoiceCommand === 'quantity' && isListening 
+                                            ? 'bg-red-500 text-white border-red-400 animate-pulse'
+                                            : activeVoiceCommand === 'quantity' && processingVoice
+                                            ? 'bg-amber-500 text-white border-amber-400'
+                                            : voiceStep === 'quantity'
+                                            ? 'bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40'
+                                            : 'bg-black/40 text-slate-200 border-white/10 hover:bg-white/10 hover:border-white/20'
+                                    }`}
+                                    title="Gravar por voz: 4. Quantidade"
+                                >
+                                    {activeVoiceCommand === 'quantity' && isListening ? (
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                        </span>
+                                    ) : activeVoiceCommand === 'quantity' && processingVoice ? (
+                                        <Loader2 size={13} className="animate-spin" />
+                                    ) : (
+                                        <Mic size={13} className={voiceStep === 'quantity' ? 'text-white' : 'text-[var(--gm-primary)]'} />
+                                    )}
+                                    <span>4. Quantidade</span>
+                                </button>
                             </div>
+
+                            {/* Botão de Gravação Sequencial Completa */}
+                            <button 
+                                type="button"
+                                onClick={handleVoiceSequential}
+                                disabled={isListening || processingVoice}
+                                className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all shadow-none cursor-pointer ${
+                                    activeVoiceCommand === 'sequential' && isListening
+                                        ? 'bg-red-500 text-white border-red-400 animate-pulse'
+                                        : activeVoiceCommand === 'sequential' && processingVoice
+                                        ? 'bg-amber-500 text-white border-amber-400'
+                                        : 'bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white border-[var(--gm-primary)]/30'
+                                }`}
+                            >
+                                {activeVoiceCommand === 'sequential' && isListening ? (
+                                    <>
+                                        <Loader2 size={14} className="animate-spin" />
+                                        <span>Ouvindo passo atual...</span>
+                                    </>
+                                ) : activeVoiceCommand === 'sequential' && processingVoice ? (
+                                    <>
+                                        <Loader2 size={14} className="animate-spin" />
+                                        <span>Processando fala...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Mic size={14} />
+                                        <span>🎙️ Gravar Sequencial Completo (1. Produto ➔ 2. Preço ➔ 4. Qtd)</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
 
                         <div className="flex flex-col gap-2">
                             <div className="flex flex-col md:flex-row gap-4 items-end">
                                 <div className="flex-1 w-full relative" ref={productContainerRef}>
-                                    <div className="flex items-center justify-between mb-1.5">
-                                        <label className="gm-label block">Produto (Alimento / Item)</label>
+                                    <label className="gm-label mb-1.5 flex items-center justify-between">
+                                        <span>Produto (1. Alimento / Item)</span>
                                         {voiceStep === 'product' && (
-                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">1. Passo Atual</span>
+                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">● Etapa 1 Ativa</span>
                                         )}
-                                    </div>
+                                    </label>
                                     <div className="relative">
                                         <input 
-                                            ref={productInputRef}
+                                            ref={nameInputRef}
                                             type="text"
                                             className={`gm-input w-full h-12 pr-10 rounded-xl shadow-none bg-black/30 transition-all ${
-                                              voiceStep === 'product'
-                                                ? 'border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40 shadow-lg shadow-[var(--gm-primary)]/10'
-                                                : 'border-white/10'
+                                                voiceStep === 'product' 
+                                                    ? 'border-[var(--gm-primary)] ring-1 ring-[var(--gm-primary)]/50' 
+                                                    : 'border-white/10'
                                             }`} 
                                             value={newItemName} 
-                                            onChange={e => {
-                                                setNewItemName(e.target.value);
-                                                setShowProductSuggestions(true);
-                                            }}
+                                            onChange={e => handleProductNameChange(e.target.value)}
                                             onFocus={() => {
                                                 if (newItemName.trim()) {
                                                     setShowProductSuggestions(true);
                                                 }
+                                                setVoiceStep('product');
                                             }}
                                             placeholder="Ex: Arroz 5kg, Feijão, Leite..." 
                                             autoComplete="off"
@@ -1185,8 +1368,11 @@ Texto falado: "${rawTranscript}"`,
                                                 onClick={() => {
                                                     setNewItemName('');
                                                     setShowProductSuggestions(false);
+                                                    setVoiceStep('product');
+                                                    nameInputRef.current?.focus();
                                                 }}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
+                                                title="Apagar produto e retornar à etapa 1"
                                             >
                                                 <X size={16} />
                                             </button>
@@ -1201,31 +1387,31 @@ Texto falado: "${rawTranscript}"`,
                                                 <span className="text-[9px] text-slate-400 font-normal">Toque para selecionar</span>
                                             </div>
                                             {productSuggestions.map((suggestion) => (
-                                                 <button
-                                                     key={suggestion}
-                                                     type="button"
-                                                     className="w-full text-left px-3.5 py-2.5 text-sm text-slate-100 hover:bg-white/10 hover:text-white transition-all rounded-lg flex items-center justify-between group cursor-pointer border border-transparent hover:border-white/10 shadow-none"
-                                                     onClick={() => selectSuggestion(suggestion)}
-                                                 >
-                                                     <span className="font-medium group-hover:translate-x-1 transition-transform flex items-center gap-2">
-                                                         <span className="text-[var(--gm-primary)]">🛒</span> {suggestion}
-                                                     </span>
-                                                     <span className="text-[10px] text-[var(--gm-primary)] font-bold bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-md border border-[var(--gm-primary)]/20">
-                                                         Selecionar
-                                                     </span>
-                                                 </button>
+                                                <button
+                                                    key={suggestion}
+                                                    type="button"
+                                                    className="w-full text-left px-3.5 py-2.5 text-sm text-slate-100 hover:bg-white/10 hover:text-white transition-all rounded-lg flex items-center justify-between group cursor-pointer border border-transparent hover:border-white/10 shadow-none"
+                                                    onClick={() => selectSuggestion(suggestion)}
+                                                >
+                                                    <span className="font-medium group-hover:translate-x-1 transition-transform flex items-center gap-2">
+                                                        <span className="text-[var(--gm-primary)]">🛒</span> {suggestion}
+                                                    </span>
+                                                    <span className="text-[10px] text-[var(--gm-primary)] font-bold bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-md border border-[var(--gm-primary)]/20">
+                                                        Selecionar
+                                                    </span>
+                                                </button>
                                             ))}
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="w-full md:w-44">
-                                    <div className="flex items-center justify-between mb-1.5">
-                                        <label className="gm-label block">Preço (Un)</label>
-                                        {voiceStep === 'price' && (
-                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">2. Passo Atual</span>
+                                    <label className="gm-label mb-1.5 flex items-center justify-between">
+                                        <span>Preço / Valor (2/3)</span>
+                                        {(voiceStep === 'price' || voiceStep === 'value') && (
+                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">● Etapa 2/3</span>
                                         )}
-                                    </div>
+                                    </label>
                                     <div className="relative flex items-center">
                                         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--gm-primary)] z-10 pointer-events-none select-none">R$</span>
                                         <input 
@@ -1233,14 +1419,17 @@ Texto falado: "${rawTranscript}"`,
                                             type="text" 
                                             inputMode="decimal"
                                             className={`gm-input h-12 w-full !pl-11 pr-3 font-bold text-base md:text-lg text-white rounded-xl shadow-none bg-black/30 transition-all ${
-                                              voiceStep === 'price'
-                                                ? 'border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40 shadow-lg shadow-[var(--gm-primary)]/10'
-                                                : 'border-white/10'
+                                                voiceStep === 'price' || voiceStep === 'value'
+                                                    ? 'border-[var(--gm-primary)] ring-1 ring-[var(--gm-primary)]/50' 
+                                                    : 'border-white/10'
                                             }`} 
                                             value={newItemPrice} 
                                             onChange={handlePriceChange}
                                             onBlur={handlePriceBlur}
-                                            onFocus={handlePriceFocus} 
+                                            onFocus={(e) => {
+                                                handlePriceFocus(e);
+                                                setVoiceStep('price');
+                                            }} 
                                             onClick={(e) => {
                                                 (e.target as HTMLInputElement).select();
                                                 if (newItemPrice === '0,00' || newItemPrice === '0') setNewItemPrice('');
@@ -1251,27 +1440,23 @@ Texto falado: "${rawTranscript}"`,
                                 </div>
 
                                 <div className="w-full md:w-24">
-                                    <div className="flex items-center justify-between mb-1.5">
-                                        <label className="gm-label block">Qtd</label>
+                                    <label className="gm-label mb-1.5 flex items-center justify-between">
+                                        <span>Qtd (4)</span>
                                         {voiceStep === 'quantity' && (
-                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">3. Passo</span>
+                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">● Etapa 4</span>
                                         )}
-                                    </div>
+                                    </label>
                                     <input 
                                         ref={qtyInputRef}
                                         className={`gm-input text-center h-12 w-full font-bold rounded-xl shadow-none bg-black/30 transition-all ${
-                                          voiceStep === 'quantity'
-                                            ? 'border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)]/40 shadow-lg shadow-[var(--gm-primary)]/10'
-                                            : 'border-white/10'
+                                            voiceStep === 'quantity' 
+                                                ? 'border-[var(--gm-primary)] ring-1 ring-[var(--gm-primary)]/50' 
+                                                : 'border-white/10'
                                         }`} 
                                         type="text" 
                                         inputMode="numeric"
                                         value={newItemQty} 
-                                        onChange={e => {
-                                            const val = e.target.value.replace(/[^0-9]/g, '');
-                                            const clean = val.replace(/^0+(?=\d)/, '');
-                                            setNewItemQty(clean);
-                                        }} 
+                                        onChange={handleQtyChange} 
                                         onBlur={() => {
                                             if (!newItemQty || Number(newItemQty) < 1) {
                                                 setNewItemQty(1);
@@ -1280,21 +1465,13 @@ Texto falado: "${rawTranscript}"`,
                                         onFocus={(e) => {
                                             e.target.select();
                                             if (newItemQty === 0 || newItemQty === '0') setNewItemQty('');
+                                            setVoiceStep('quantity');
                                         }}
                                         placeholder="1" 
                                     />
                                 </div>
 
-                                <button 
-                                    ref={addBtnRef}
-                                    className={`gm-btn h-12 w-full md:w-auto px-8 rounded-xl font-bold flex items-center justify-center gap-2 shadow-none transition-all cursor-pointer ${
-                                      voiceStep === 'confirm'
-                                        ? 'bg-[var(--gm-primary)] text-white ring-2 ring-[var(--gm-primary)] ring-offset-2 ring-offset-black scale-[1.02] animate-pulse'
-                                        : ''
-                                    }`} 
-                                    onClick={() => handleAddItem()} 
-                                    disabled={addingItem}
-                                >
+                                <button className="gm-btn h-12 w-full md:w-auto px-8 rounded-xl font-bold flex items-center justify-center gap-2 shadow-none" onClick={handleAddItem} disabled={addingItem}>
                                     {addingItem ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />} Adicionar
                                 </button>
                             </div>

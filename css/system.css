@@ -180,25 +180,16 @@ body {
   box-shadow: none !important;
 }
 
-/* 6) Cards, Modais, Sidebar, Bottom Nav, Painéis - GLASS TRANSLÚCIDO PREMIUM */
-/* =========================================================
-   GM EDIFICAÇÃO — GLASS TRANSLÚCIDO PREMIUM (SYSTEM)
-   ========================================================= */
-
-/* BASE DO VIDRO */
-.glass,
-.glass-panel,
-.glass-card,
+/* 6) Cards, Modais, Sidebar, Bottom Nav, Painéis - VIDRO FOSCO NO LUGAR DE SOMBRA PESADA (.barra e .fora) */
 .card,
 .panel,
-.container-glass,
-.gm-glass,
 .gm-panel,
 .gm-toolbar,
 .gm-card,
 .gm-budget-card,
 .gm-budget-row,
 .gm-dashboard-card,
+.gm-stat-card,
 .gm-client-card,
 .gm-item-card,
 .gm-product-card,
@@ -207,244 +198,216 @@ body {
 .gm-summary-card,
 .gm-clock-card,
 .gm-chart-container,
+.gm-modal,
+.gm-modal-content,
+.gm-note-modal,
+[role="dialog"],
+.modal,
+.dialog,
 .barra,
 .fora {
-  background: rgba(18, 19, 22, 0.28) !important;
-  backdrop-filter: blur(28px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(125%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
   border-radius: 20px;
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: none !important;
   contain: none !important;
   transition: all .22s;
 }
 
-/* VIDRO MAIS TRANSPARENTE */
-.glass-transparent {
-  background: rgba(20, 21, 24, 0.18) !important;
-  backdrop-filter: blur(24px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(120%) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-}
-
-/* VIDRO MÉDIO */
-.glass-medium {
-  background: rgba(20, 21, 24, 0.32) !important;
-  backdrop-filter: blur(32px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-}
-
-/* VIDRO ESCURO — PARA MODAIS */
-.glass-dark,
-.modal,
-.dialog,
-.modal-content,
-.dialog-content,
-.gm-modal,
-.gm-modal-content,
-.gm-note-modal,
-[role="dialog"] {
-  background: rgba(20, 21, 24, 0.38) !important;
-  backdrop-filter: blur(40px) saturate(135%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(135%) !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-
-/* REFLEXO DO VIDRO */
-.glass::before,
-.glass-panel::before,
-.glass-card::before,
-.card::before,
-.panel::before,
-.gm-glass::before,
-.gm-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255,255,255,0.07) 0%,
-    rgba(255,255,255,0.015) 35%,
-    transparent 65%
-  );
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* BRILHO SUPERIOR */
-.glass::after,
-.glass-panel::after,
-.glass-card::after,
-.gm-glass::after,
-.gm-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 5%;
-  right: 5%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255,255,255,0.25),
-    transparent
-  );
-  opacity: 0.55;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* SIDEBAR TRANSLÚCIDA */
-.sidebar,
-aside,
-.sidebar-container,
 aside.gm-sidebar,
 .gm-sidebar {
-  background: rgba(10, 11, 13, 0.32) !important;
-  backdrop-filter: blur(35px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(35px) saturate(125%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
   border-top-left-radius: 0px !important;
   border-bottom-left-radius: 0px !important;
   border-top-right-radius: 24px !important;
   border-bottom-right-radius: 24px !important;
   border-left: none !important;
-  border-right: 1px solid rgba(255,255,255,0.08) !important;
-  border-top: 1px solid rgba(255,255,255,0.08) !important;
-  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow: none !important;
   contain: none !important;
 }
 
-/* HEADER TRANSLÚCIDO */
-header,
-.topbar,
-.header,
-.navbar,
-.dashboard-header,
-header.fixed.top-0,
-.gm-mobile-header {
-  background: rgba(15, 16, 18, 0.25) !important;
-  backdrop-filter: blur(30px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(130%) !important;
-  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+[data-theme="dark"] .card,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .gm-panel,
+[data-theme="dark"] .gm-toolbar,
+[data-theme="dark"] .gm-card,
+[data-theme="dark"] .gm-budget-card,
+[data-theme="dark"] .gm-budget-row,
+[data-theme="dark"] .gm-dashboard-card,
+[data-theme="dark"] .gm-stat-card,
+[data-theme="dark"] .gm-client-card,
+[data-theme="dark"] .gm-item-card,
+[data-theme="dark"] .gm-product-card,
+[data-theme="dark"] .gm-expense-card,
+[data-theme="dark"] .gm-note-card,
+[data-theme="dark"] .gm-summary-card,
+[data-theme="dark"] .gm-clock-card,
+[data-theme="dark"] .gm-chart-container,
+[data-theme="dark"] .gm-modal,
+[data-theme="dark"] .gm-modal-content,
+[data-theme="dark"] .gm-note-modal,
+[data-theme="dark"] [role="dialog"],
+[data-theme="dark"] .modal,
+[data-theme="dark"] .dialog,
+[data-theme="dark"] .gm-bottom-nav-btn,
+[data-theme="dark"] .gm-budget-action-btn,
+[data-theme="dark"] .gm-filter-tab,
+[data-theme="dark"] .gm-status-capsule,
+[data-theme="dark"] .barra,
+[data-theme="dark"] .fora,
+.gm-dark .card,
+.gm-dark .panel,
+.gm-dark .gm-panel,
+.gm-dark .gm-toolbar,
+.gm-dark .gm-card,
+.gm-dark .gm-budget-card,
+.gm-dark .gm-budget-row,
+.gm-dark .gm-dashboard-card,
+.gm-dark .gm-stat-card,
+.gm-dark .gm-client-card,
+.gm-dark .gm-item-card,
+.gm-dark .gm-product-card,
+.gm-dark .gm-expense-card,
+.gm-dark .gm-note-card,
+.gm-dark .gm-summary-card,
+.gm-dark .gm-clock-card,
+.gm-dark .gm-chart-container,
+.gm-dark .gm-modal,
+.gm-dark .gm-modal-content,
+.gm-dark .gm-note-modal,
+.gm-dark [role="dialog"],
+.gm-dark .modal,
+.gm-dark .dialog,
+.gm-dark .gm-bottom-nav-btn,
+.gm-dark .gm-budget-action-btn,
+.gm-dark .gm-filter-tab,
+.gm-dark .gm-status-capsule,
+.gm-dark .barra,
+.gm-dark .fora,
+html:not([data-theme="light"]):not(.gm-light) .card,
+html:not([data-theme="light"]):not(.gm-light) .panel,
+html:not([data-theme="light"]):not(.gm-light) .gm-panel,
+html:not([data-theme="light"]):not(.gm-light) .gm-toolbar,
+html:not([data-theme="light"]):not(.gm-light) .gm-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-budget-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-budget-row,
+html:not([data-theme="light"]):not(.gm-light) .gm-dashboard-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-stat-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-client-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-item-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-product-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-expense-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-note-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-summary-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-clock-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-chart-container,
+html:not([data-theme="light"]):not(.gm-light) .gm-modal,
+html:not([data-theme="light"]):not(.gm-light) .gm-modal-content,
+html:not([data-theme="light"]):not(.gm-light) .gm-note-modal,
+html:not([data-theme="light"]):not(.gm-light) [role="dialog"],
+html:not([data-theme="light"]):not(.gm-light) .modal,
+html:not([data-theme="light"]):not(.gm-light) .dialog,
+html:not([data-theme="light"]):not(.gm-light) .gm-bottom-nav-btn,
+html:not([data-theme="light"]):not(.gm-light) .gm-budget-action-btn,
+html:not([data-theme="light"]):not(.gm-light) .gm-filter-tab,
+html:not([data-theme="light"]):not(.gm-light) .gm-status-capsule,
+html:not([data-theme="light"]):not(.gm-light) .barra,
+html:not([data-theme="light"]):not(.gm-light) .fora {
+  background: rgba(18, 18, 22, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
+  contain: none !important;
 }
 
-/* BOTTOM NAV TRANSLÚCIDA */
+/* Glassmorphism Efeito Vidro Desfocado (Clean Frosted Glass) para as barras inferior e superior no smartphone */
+[data-theme="dark"] nav.fixed.bottom-0,
+[data-theme="dark"] .gm-bottom-nav,
+.gm-dark nav.fixed.bottom-0,
+.gm-dark .gm-bottom-nav,
+html:not([data-theme="light"]):not(.gm-light) nav.fixed.bottom-0,
+html:not([data-theme="light"]):not(.gm-light) .gm-bottom-nav,
 nav.fixed.bottom-0,
 .gm-bottom-nav {
-  background: rgba(10, 11, 13, 0.30) !important;
-  backdrop-filter: blur(30px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(130%) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  background: rgba(10, 10, 14, 0.15) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
 }
 
-/* CARDS DE MÉTRICAS */
-.metric-card,
-.stats-card,
-.stat-card,
-.kpi-card,
-.gm-stat-card {
-  background: rgba(24, 25, 28, 0.22) !important;
-  backdrop-filter: blur(26px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(130%) !important;
-  border: 1px solid rgba(255,255,255,0.09) !important;
-  box-shadow: 0 15px 45px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+[data-theme="dark"] header.fixed.top-0,
+[data-theme="dark"] .gm-mobile-header,
+.gm-dark header.fixed.top-0,
+.gm-dark .gm-mobile-header,
+html:not([data-theme="light"]):not(.gm-light) header.fixed.top-0,
+html:not([data-theme="light"]):not(.gm-light) .gm-mobile-header,
+header.fixed.top-0,
+.gm-mobile-header {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  background: rgba(10, 10, 14, 0.15) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
 }
 
-/* TABELAS */
-.table-container,
-.table-wrapper,
-.data-table {
-  background: rgba(18, 19, 22, 0.24) !important;
-  backdrop-filter: blur(30px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(125%) !important;
-  border: 1px solid rgba(255,255,255,0.09) !important;
+[data-theme="dark"] aside.gm-sidebar,
+[data-theme="dark"] .gm-sidebar,
+.gm-dark aside.gm-sidebar,
+.gm-dark .gm-sidebar,
+html:not([data-theme="light"]):not(.gm-light) aside.gm-sidebar,
+html:not([data-theme="light"]):not(.gm-light) .gm-sidebar {
+  background: rgba(18, 18, 22, 0.6) !important;
+  border-top-left-radius: 0px !important;
+  border-bottom-left-radius: 0px !important;
+  border-top-right-radius: 24px !important;
+  border-bottom-right-radius: 24px !important;
+  border-left: none !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+  contain: none !important;
 }
 
-thead {
-  background: rgba(255,255,255,0.045) !important;
-}
-
-tbody tr {
-  background: transparent !important;
-  transition: background 180ms ease;
-}
-
-tbody tr:hover {
-  background: rgba(255,255,255,0.045) !important;
-}
-
-/* INPUTS TRANSLÚCIDOS */
-input,
-textarea,
-select,
-.gm-input {
-  background: rgba(10, 11, 13, 0.20) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border: 1px solid rgba(255,255,255,0.09) !important;
-  color: #ffffff !important;
-}
-
-input:focus,
-textarea:focus,
-select:focus,
-.gm-input:focus {
-  background: rgba(255,255,255,0.045) !important;
-  border-color: rgba(255,90,0,0.55) !important;
-  box-shadow: 0 0 0 3px rgba(255,90,0,0.09) !important;
-}
-
-/* BOTÕES SECUNDÁRIOS TRANSLÚCIDOS */
-.btn-secondary,
-.button-secondary,
-.secondary-button {
-  background: rgba(255,255,255,0.045) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-}
-
-/* DROPDOWNS */
-.dropdown,
-.menu,
-.popover,
-.select-menu {
-  background: rgba(20,21,24,0.34) !important;
-  backdrop-filter: blur(32px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-}
-
-/* CONTAINERS INTERNOS */
-.glass .card,
-.glass-panel .card,
-.glass-card .card,
-.gm-glass .card,
-.fora .gm-card,
-.barra .gm-card {
-  background: rgba(255,255,255,0.025) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-}
-
-/* HOVER */
 .card:hover,
 .gm-card:hover,
 .gm-budget-card:hover,
 .gm-dashboard-card:hover,
 .barra:hover,
 .fora:hover {
-  background: rgba(28, 29, 34, 0.36) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.09) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .card:hover,
+[data-theme="dark"] .gm-card:hover,
+[data-theme="dark"] .gm-budget-card:hover,
+[data-theme="dark"] .gm-dashboard-card:hover,
+[data-theme="dark"] .barra:hover,
+[data-theme="dark"] .fora:hover,
+.gm-dark .card:hover,
+.gm-dark .gm-card:hover,
+.gm-dark .gm-budget-card:hover,
+.gm-dark .gm-dashboard-card:hover,
+.gm-dark .barra:hover,
+.gm-dark .fora:hover,
+html:not([data-theme="light"]):not(.gm-light) .card:hover,
+html:not([data-theme="light"]):not(.gm-light) .gm-card:hover,
+html:not([data-theme="light"]):not(.gm-light) .gm-budget-card:hover,
+html:not([data-theme="light"]):not(.gm-light) .gm-dashboard-card:hover,
+html:not([data-theme="light"]):not(.gm-light) .barra:hover,
+html:not([data-theme="light"]):not(.gm-light) .fora:hover {
+  background: rgba(28, 28, 34, 0.75) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  box-shadow: none !important;
 }
 
 .gm-card-header {

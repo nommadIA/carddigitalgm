@@ -201,7 +201,7 @@ function VirtualizedBudgetList({
       <div className="overflow-x-auto flex-1 flex flex-col">
         <div className="text-sm min-w-full flex-1 flex flex-col">
           {/* Header fixo com backdrop-blur */}
-          <div className="sticky top-0 z-20 hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-4 border-b border-white/10 font-bold opacity-85 uppercase tracking-wider text-xs bg-white/[0.045] backdrop-blur-xl shrink-0 shadow-sm">
+          <div className="sticky top-0 z-20 hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-4 border-b border-white/10 font-bold opacity-85 uppercase tracking-wider text-xs bg-[#121216]/95 backdrop-blur-md shrink-0 shadow-sm">
             <div>Data</div>
             <div>Descrição</div>
             <div className="text-right">Ações</div>
@@ -247,18 +247,18 @@ function VirtualizedBudgetList({
                       <div className="hidden sm:block text-right font-bold text-[var(--gm-primary)] mr-4">
                         {CURRENCY.format(Number(r.total_amount || 0))}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap justify-end">
                         {tab !== "LIXEIRA" ? (
                           <>
                             {tab === "CONCLUIDOS" && setDuplicateId && (
                               <button
-                                className="gm-btn gm-budget-action-btn fora h-10 px-3.5 flex items-center justify-center gap-2 shrink-0 gm-btn-soft text-[var(--gm-primary)]"
+                                className="gm-btn gm-budget-action-btn fora h-10 px-3 sm:px-3.5 flex items-center justify-center gap-2 shrink-0 gm-btn-soft text-[var(--gm-primary)]"
                                 title="Usar este orçamento como modelo para criar um novo"
                                 onClick={() => setDuplicateId(r.id)}
                                 type="button"
                               >
                                 <Copy size={16} />
-                                <span className="font-bold text-xs uppercase tracking-wider">Usar Modelo</span>
+                                <span className="hidden sm:inline font-bold text-xs uppercase tracking-wider">Usar Modelo</span>
                               </button>
                             )}
                             {tab === "CANCELADOS" && (

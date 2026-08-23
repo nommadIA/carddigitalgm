@@ -21,279 +21,38 @@
 }
 
 /* =========================================================
-   GM EDIFICAÇÃO — GLASS TRANSLÚCIDO PREMIUM
-   ========================================================= */
-
-/* BASE DO VIDRO PRINCIPAL */
+   VIDRO FOSCO NO LUGAR DE SOMBRA PESADA (.barra e .fora)
+========================================================= */
 .barra,
-.fora,
-.glass,
-.glass-panel,
-.glass-card,
-.card,
-.panel,
-.container-glass,
-.gm-glass,
-.gm-card,
-.gm-dashboard-card,
-.gm-budget-card,
-.gm-expense-card,
-.expenses-container {
-  background: rgba(18, 19, 22, 0.28) !important;
-  backdrop-filter: blur(28px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(125%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
+.fora {
+  background: rgba(18, 18, 22, 0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: none !important;
 }
 
-/* =========================================================
-   VIDRO MAIS TRANSPARENTE
-   ========================================================= */
-.glass-transparent {
-  background: rgba(20, 21, 24, 0.18) !important;
-  backdrop-filter: blur(24px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(120%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+[data-theme="light"] .barra,
+[data-theme="light"] .fora,
+.gm-light .barra,
+.gm-light .fora {
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: none !important;
 }
 
-/* =========================================================
-   VIDRO MÉDIO
-   ========================================================= */
-.glass-medium {
-  background: rgba(20, 21, 24, 0.32) !important;
-  backdrop-filter: blur(32px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-}
-
-/* =========================================================
-   VIDRO ESCURO — PARA MODAIS E SOBREPOSIÇÕES
-   ========================================================= */
-.glass-dark {
-  background: rgba(12, 13, 15, 0.42) !important;
-  backdrop-filter: blur(40px) saturate(135%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(135%) !important;
+[data-theme="dark"] .barra,
+[data-theme="dark"] .fora,
+.gm-dark .barra,
+.gm-dark .fora,
+html:not([data-theme="light"]):not(.gm-light) .barra,
+html:not([data-theme="light"]):not(.gm-light) .fora {
+  background: rgba(18, 18, 22, 0.5) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-}
-
-/* =========================================================
-   REFLEXO DO VIDRO
-   ========================================================= */
-.glass::before,
-.glass-panel::before,
-.glass-card::before,
-.card::before,
-.panel::before,
-.gm-glass::before,
-.gm-card::before,
-.gm-dashboard-card::before,
-.gm-budget-card::before,
-.gm-expense-card::before,
-.expenses-container::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.07) 0%,
-    rgba(255, 255, 255, 0.015) 35%,
-    transparent 65%
-  );
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* =========================================================
-   BRILHO SUPERIOR
-   ========================================================= */
-.glass::after,
-.glass-panel::after,
-.glass-card::after,
-.gm-glass::after,
-.gm-card::after,
-.gm-dashboard-card::after,
-.gm-budget-card::after,
-.gm-expense-card::after,
-.expenses-container::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 5%;
-  right: 5%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.25),
-    transparent
-  );
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-/* =========================================================
-   SIDEBAR TRANSLÚCIDA
-   ========================================================= */
-.sidebar,
-aside,
-.sidebar-container,
-.gm-sidebar {
-  background: rgba(10, 11, 13, 0.32) !important;
-  backdrop-filter: blur(35px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(35px) saturate(125%) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-/* =========================================================
-   HEADER TRANSLÚCIDO
-   ========================================================= */
-header,
-.topbar,
-.header,
-.navbar,
-.dashboard-header,
-.gm-header {
-  background: rgba(15, 16, 18, 0.25) !important;
-  backdrop-filter: blur(30px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(130%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-/* =========================================================
-   CARDS DE MÉTRICAS & RESUMOS
-   ========================================================= */
-.metric-card,
-.stats-card,
-.stat-card,
-.kpi-card {
-  background: rgba(24, 25, 28, 0.24) !important;
-  backdrop-filter: blur(26px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(130%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-}
-
-/* =========================================================
-   TABELAS TRANSLÚCIDAS
-   ========================================================= */
-.table-container,
-.table-wrapper,
-.data-table {
-  background: rgba(18, 19, 22, 0.24) !important;
-  backdrop-filter: blur(30px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(125%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-}
-
-/* Cabeçalho da tabela */
-thead {
-  background: rgba(255, 255, 255, 0.045) !important;
-}
-
-/* Linhas */
-tbody tr {
-  background: transparent !important;
-  transition: background 180ms ease;
-}
-
-tbody tr:hover {
-  background: rgba(255, 255, 255, 0.045) !important;
-}
-
-/* =========================================================
-   INPUTS TRANSLÚCIDOS
-   ========================================================= */
-input,
-textarea,
-select {
-  background: rgba(10, 11, 13, 0.20) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  color: #ffffff !important;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  background: rgba(255, 255, 255, 0.045) !important;
-  border-color: rgba(255, 90, 0, 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(255, 90, 0, 0.09) !important;
-}
-
-/* =========================================================
-   BOTÕES SECUNDÁRIOS TRANSLÚCIDOS
-   ========================================================= */
-.btn-secondary,
-.button-secondary,
-.secondary-button {
-  background: rgba(255, 255, 255, 0.045) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-}
-
-/* =========================================================
-   MODAIS & TELAS INTERNAS TRANSLÚCIDAS
-   ========================================================= */
-.modal,
-.dialog,
-.modal-content,
-.dialog-content,
-.gm-modal {
-  background: rgba(20, 21, 24, 0.38) !important;
-  backdrop-filter: blur(42px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(42px) saturate(140%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-}
-
-/* =========================================================
-   DROPDOWNS
-   ========================================================= */
-.dropdown,
-.menu,
-.popover,
-.select-menu {
-  background: rgba(20, 21, 24, 0.34) !important;
-  backdrop-filter: blur(32px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-}
-
-/* =========================================================
-   IMPORTANTE:
-   REMOVER FUNDOS OPACOS DOS CONTAINERS INTERNOS
-   ========================================================= */
-.glass .card,
-.glass-panel .card,
-.glass-card .card,
-.gm-glass .card,
-.gm-card .card {
-  background: rgba(255, 255, 255, 0.025) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-}
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-@media (max-width: 768px) {
-  .glass,
-  .glass-panel,
-  .glass-card,
-  .card,
-  .panel,
-  .gm-glass,
-  .gm-card,
-  .gm-dashboard-card,
-  .gm-budget-card {
-    background: rgba(18, 19, 22, 0.30) !important;
-    backdrop-filter: blur(22px) !important;
-    -webkit-backdrop-filter: blur(22px) !important;
-  }
+  box-shadow: none !important;
 }
 
 /* =========================================================
@@ -1182,12 +941,12 @@ button.handle,
 }
 
 /* =========================================================
-   CARDS (Vidro Fosco Cristal Acrylic)
+   CARDS (Vidro Fosco)
 ========================================================= */
 .gm-card {
   background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--gm-radius);
   padding: var(--gm-space-5);
@@ -1197,16 +956,15 @@ button.handle,
   flex-direction: column;
   transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.4s ease;
   position: relative;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
   contain: none !important;
 }
 
 [data-theme="dark"] .gm-card,
 .gm-dark .gm-card,
 html:not([data-theme="light"]):not(.gm-light) .gm-card {
-  background: rgba(18, 18, 24, 0.48);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+  background: rgba(18, 18, 22, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .gm-card::before {
@@ -2287,7 +2045,7 @@ button.gm-sidebar-toggle:focus {
 [data-theme="dark"] .gm-sidebar,
 .gm-dark .gm-sidebar,
 html:not([data-theme="light"]):not(.gm-light) .gm-sidebar {
-  background: rgba(18, 18, 22, 0.6) !important;
+  background: rgba(18, 18, 22, 0.5) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: none !important;
 }
@@ -2373,7 +2131,7 @@ html:not([data-theme="light"]):not(.gm-light) .panel,
 html:not([data-theme="light"]):not(.gm-light) .gm-filter-tab,
 html:not([data-theme="light"]):not(.gm-light) .gm-status-capsule,
 html:not([data-theme="light"]):not(.gm-light) .gm-budget-action-btn {
-  background: rgba(18, 18, 22, 0.6) !important;
+  background: rgba(18, 18, 22, 0.5) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
   contain: none !important;
@@ -4322,7 +4080,7 @@ nav.fixed.bottom-0,
   overflow: hidden;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  background: rgba(18, 18, 22, 0.6) !important;
+  background: rgba(18, 18, 22, 0.5) !important;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
@@ -4559,7 +4317,7 @@ html.gm-has-bg .barra,
 html.gm-has-bg .fora {
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  background: rgba(18, 18, 22, 0.6) !important;
+  background: rgba(18, 18, 22, 0.5) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
   contain: none !important;
@@ -6327,7 +6085,7 @@ html.gm-has-bg .gm-sidebar {
   position: relative !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  background: rgba(18, 18, 22, 0.6) !important;
+  background: rgba(18, 18, 22, 0.5) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: none !important;
 }
@@ -6384,7 +6142,7 @@ aside.gm-sidebar::after,
   outline-offset: 2px !important;
 }
 
-/* Dashboard Cards & All Containers Glassmorphism - VIDRO FOSCO ACRÍLICO (.barra e .fora) */
+/* Dashboard Cards Glassmorphism - VIDRO FOSCO NO LUGAR DE SOMBRA PESADA (.barra e .fora) */
 .barra,
 .fora,
 .gm-dashboard-card,
@@ -6415,11 +6173,11 @@ aside.gm-sidebar::after,
 .modal,
 .dialog {
   position: relative !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  background: rgba(18, 18, 24, 0.48) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(18, 18, 22, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
   contain: none !important;
 }
 
@@ -6795,267 +6553,98 @@ input[type="range"].custom-range-slider::-moz-range-thumb {
   transition: transform 0.15s ease, box-shadow 0.15s ease !important;
 }
 
+.spectrum-slider:active::-moz-range-thumb,
+.custom-range-slider:active::-moz-range-thumb,
+input[type="range"].spectrum-slider:active::-moz-range-thumb,
+input[type="range"].custom-range-slider:active::-moz-range-thumb {
+  cursor: grabbing !important;
+  transform: scale(1.15) !important;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 1), 0 6px 18px rgba(0, 0, 0, 0.75) !important;
+}
+
+
+
 /* =========================================================
-   GM EDIFICAÇÃO — GLASS TRANSLÚCIDO PREMIUM (FINAL OVERRIDES)
-   ========================================================= */
-
-/* BASE DO VIDRO */
-.glass,
-.glass-panel,
-.glass-card,
-.card,
-.panel,
-.container-glass,
-.gm-glass,
-.gm-card,
-.fora,
-.barra,
-.gm-panel,
-.gm-box,
-.box,
-.gm-toolbar,
-.gm-dashboard-card,
-.gm-client-card,
-.gm-item-card,
-.gm-product-card,
-.gm-expense-card,
-.gm-note-card,
-.gm-summary-card,
-.gm-clock-card,
-.gm-chart-container,
-.gm-budget-card,
-.gm-budget-row {
-  background: rgba(18, 19, 22, 0.28) !important;
-  backdrop-filter: blur(28px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(125%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-/* VIDRO MAIS TRANSPARENTE */
-.glass-transparent {
-  background: rgba(20, 21, 24, 0.18) !important;
-  backdrop-filter: blur(24px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(120%) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-}
-
-/* VIDRO MÉDIO */
-.glass-medium {
-  background: rgba(20, 21, 24, 0.32) !important;
-  backdrop-filter: blur(32px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-}
-
-/* VIDRO ESCURO — PARA MODAIS */
-.glass-dark,
-.modal,
-.dialog,
-.modal-content,
-.dialog-content,
-.gm-modal,
-.gm-modal-content,
-.gm-note-modal,
-[role="dialog"] {
-  background: rgba(20, 21, 24, 0.38) !important;
-  backdrop-filter: blur(40px) saturate(135%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(135%) !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-
-/* REFLEXO DO VIDRO */
-.glass::before,
-.glass-panel::before,
-.glass-card::before,
-.card::before,
-.panel::before,
-.gm-glass::before,
-.gm-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255,255,255,0.07) 0%,
-    rgba(255,255,255,0.015) 35%,
-    transparent 65%
-  );
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* BRILHO SUPERIOR */
-.glass::after,
-.glass-panel::after,
-.glass-card::after,
-.gm-glass::after,
-.gm-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 5%;
-  right: 5%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255,255,255,0.25),
-    transparent
-  );
-  opacity: 0.55;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* SIDEBAR TRANSLÚCIDA */
-.sidebar,
-aside,
-.sidebar-container,
-.gm-sidebar {
-  background: rgba(10, 11, 13, 0.32) !important;
-  backdrop-filter: blur(35px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(35px) saturate(125%) !important;
-  border-right: 1px solid rgba(255,255,255,0.08) !important;
-}
-
-/* HEADER TRANSLÚCIDO */
-header,
-.topbar,
-.header,
-.navbar,
-.dashboard-header,
-.gm-mobile-header {
-  background: rgba(15, 16, 18, 0.25) !important;
-  backdrop-filter: blur(30px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(130%) !important;
-  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-}
-
-/* CARDS DE MÉTRICAS */
-.metric-card,
-.stats-card,
-.stat-card,
-.kpi-card,
-.gm-stat-card {
-  background: rgba(24, 25, 28, 0.22) !important;
-  backdrop-filter: blur(26px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(130%) !important;
-  border: 1px solid rgba(255,255,255,0.09) !important;
-  box-shadow: 0 15px 45px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.05) !important;
-}
-
-/* TABELAS */
-.table-container,
-.table-wrapper,
-.data-table {
-  background: rgba(18, 19, 22, 0.24) !important;
-  backdrop-filter: blur(30px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(125%) !important;
-  border: 1px solid rgba(255,255,255,0.09) !important;
-}
-
-thead {
-  background: rgba(255,255,255,0.045) !important;
-}
-
-tbody tr {
-  background: transparent !important;
-  transition: background 180ms ease;
-}
-
-tbody tr:hover {
-  background: rgba(255,255,255,0.045) !important;
-}
-
-/* INPUTS TRANSLÚCIDOS */
-input,
-textarea,
-select,
-.gm-input {
-  background: rgba(10, 11, 13, 0.20) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border: 1px solid rgba(255,255,255,0.09) !important;
-  color: #ffffff !important;
-}
-
-input:focus,
-textarea:focus,
-select:focus,
-.gm-input:focus {
-  background: rgba(255,255,255,0.045) !important;
-  border-color: rgba(255,90,0,0.55) !important;
-  box-shadow: 0 0 0 3px rgba(255,90,0,0.09) !important;
-}
-
-/* BOTÕES SECUNDÁRIOS TRANSLÚCIDOS */
-.btn-secondary,
-.button-secondary,
-.secondary-button {
-  background: rgba(255,255,255,0.045) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-}
-
-/* DROPDOWNS */
-.dropdown,
-.menu,
-.popover,
-.select-menu {
-  background: rgba(20,21,24,0.34) !important;
-  backdrop-filter: blur(32px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(130%) !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
-}
-
-/* CONTAINERS INTERNOS */
-.glass .card,
-.glass-panel .card,
-.glass-card .card,
-.gm-glass .card,
-.fora .gm-card,
-.barra .gm-card {
-  background: rgba(255,255,255,0.025) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-}
-
-/* HOVER REFINADO */
-.fora:hover,
-.gm-card:hover,
-.card:hover,
-.gm-budget-card:hover,
-.gm-dashboard-card:hover,
-.gm-client-card:hover,
-.gm-item-card:hover,
-.gm-product-card:hover,
-.gm-expense-card:hover,
-.gm-note-card:hover {
-  background-color: rgba(28, 29, 34, 0.36) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.09) !important;
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-  .glass,
-  .glass-panel,
-  .glass-card,
-  .card,
-  .panel,
-  .gm-glass,
-  .gm-card {
-    background: rgba(18,19,22,0.30) !important;
-    backdrop-filter: blur(22px) !important;
-    -webkit-backdrop-filter: blur(22px) !important;
+   TRANSIÇÃO LARANJA NEON ESFUMAÇADA (2 Segundos)
+   Canto Superior Esquerdo -> Canto Inferior Direito
+========================================================= */
+@keyframes smokyNeonDiagonalSweep {
+  0% {
+    opacity: 0;
+    transform: translate3d(-100%, -100%, 0) scale(0.6);
+    filter: blur(28px) brightness(1.2);
+  }
+  15% {
+    opacity: 1;
+    transform: translate3d(-40%, -40%, 0) scale(1.1);
+    filter: blur(20px) brightness(1.9);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translate3d(0%, 0%, 0) scale(1.3);
+    filter: blur(24px) brightness(2.2);
+  }
+  85% {
+    opacity: 0.8;
+    transform: translate3d(50%, 50%, 0) scale(1.2);
+    filter: blur(28px) brightness(1.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(120%, 120%, 0) scale(1.5);
+    filter: blur(36px) brightness(1);
   }
 }
 
+@keyframes smokyNeonLaserBeam {
+  0% {
+    opacity: 0;
+    transform: translate3d(-120%, -120%, 0) rotate(45deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(140%, 140%, 0) rotate(45deg);
+  }
+}
 
+.animate-smoky-neon-sweep {
+  animation: smokyNeonDiagonalSweep 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
 
+.animate-smoky-laser-beam {
+  animation: smokyNeonLaserBeam 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* =========================================================
+   CAMADA AMBIENTE — dá "vida" ao vidro nas telas sem imagem de
+   fundo (o vidro só fica visível de verdade quando há algo colorido
+   atrás para desfocar). Sutil, sempre presente, atrás de tudo.
+   Onde o Dashboard já tem imagem própria, ela desenha por cima disso.
+========================================================= */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -4;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 90, 26, 0.16), transparent 42%),
+    radial-gradient(circle at 88% 18%, rgba(255, 90, 26, 0.08), transparent 38%),
+    radial-gradient(circle at 50% 92%, rgba(80, 130, 255, 0.07), transparent 45%);
+}
+[data-theme="light"] body::before,
+.gm-light body::before {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 90, 26, 0.10), transparent 42%),
+    radial-gradient(circle at 88% 18%, rgba(255, 90, 26, 0.06), transparent 38%),
+    radial-gradient(circle at 50% 92%, rgba(80, 130, 255, 0.05), transparent 45%);
+}
+@media (prefers-reduced-transparency: reduce) {
+  body::before { display: none !important; }
+}

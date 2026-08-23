@@ -27,7 +27,7 @@ export default function ExpandedBudgetRow({ budgetId }: { budgetId: string }) {
   if (!data) return <div className="p-4 text-slate-500">Erro ao carregar detalhes.</div>;
 
   return (
-    <div className="p-5 bg-white/[0.025] backdrop-blur-xl border-t border-white/10 text-sm animate-fade-in">
+    <div className="p-5 bg-black/20 border-t border-white/5 text-sm">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
         <div>
           <div className="text-slate-400 text-xs uppercase font-bold tracking-wider mb-1">Subtotal</div>
@@ -62,7 +62,7 @@ export default function ExpandedBudgetRow({ budgetId }: { budgetId: string }) {
           <div className="text-[var(--gm-primary)] text-xs uppercase font-bold tracking-wider mb-3">Itens do Orçamento</div>
           <div className="space-y-3">
             {data.items.map((item: any) => (
-              <div key={item.id} className="bg-white/[0.03] backdrop-blur-md p-4 rounded-xl flex justify-between items-start border border-white/10">
+              <div key={item.id} className="bg-white/5 p-4 rounded-xl flex justify-between items-start border border-white/5">
                 <div className="pr-4">
                   <div className="font-bold text-white text-base mb-1.5">{item.title}</div>
                   <div className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{item.description}</div>
