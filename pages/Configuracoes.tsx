@@ -61,6 +61,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSwipeNav } from "../hooks/useSwipeNav";
 import { playNotificationSound, NOTIFICATION_SOUNDS } from "../lib/audio";
+import { triggerRealNotification } from "../lib/realNotification";
 
 type Fit = "cover" | "contain";
 
@@ -2551,10 +2552,11 @@ export default function Configuracoes() {
                           setShakeTest(true);
                           setTimeout(() => setShakeTest(false), 450);
 
-                          if (pushPermission !== "granted") {
-                            const permission = await Notification.requestPermission();
-                            setPushPermission(permission);
-                            if (permission !== "granted") return;
+                          if (pushPermission !== "granted" && typeof Notification !== "undefined") {
+                            try {
+                              const permission = await Notification.requestPermission();
+                              setPushPermission(permission);
+                            } catch (e) {}
                           }
 
                           if (!pushActive) {
@@ -2564,15 +2566,18 @@ export default function Configuracoes() {
 
                           setTesting(true);
                           try {
-                            playNotificationSound(activeSound);
-                          } catch (e) {}
-                          if ("serviceWorker" in navigator) {
-                            const reg = await navigator.serviceWorker.ready;
-                            reg.active?.postMessage("TEST_NOTIFICATION");
+                            await triggerRealNotification({
+                              title: "🔔 CardDigital GM · Notificação de Teste",
+                              body: "Notificação em tempo real funcionando com sucesso dentro e fora do app!",
+                              soundId: activeSound,
+                            });
+                          } catch (e) {
+                            console.error("[Notification Test]", e);
+                          } finally {
+                            setTimeout(() => setTesting(false), 1200);
                           }
-                          setTimeout(() => setTesting(false), 1000);
                         }}
-                        className="gm-btn py-3 flex items-center justify-center gap-2 text-xs font-bold w-full transition-all text-white rounded-xl shadow-none hover:brightness-110 active:scale-[0.98] mt-2"
+                        className="gm-btn py-3 flex items-center justify-center gap-2 text-xs font-bold w-full transition-all text-white rounded-xl shadow-none hover:brightness-110 active:scale-[0.98] mt-2 cursor-pointer"
                       >
                         {testing ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}
                         {testing ? "Testando Notificação..." : "Enviar Notificação de Teste"}

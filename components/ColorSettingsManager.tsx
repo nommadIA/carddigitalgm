@@ -280,6 +280,9 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     return "orange";
   });
 
+  // Estado do tema em prévia por hover (passar o mouse)
+  const [hoveredThemeId, setHoveredThemeId] = useState<string | null>(null);
+
   // Estado do Modal de Ajuste com Barra de Espectro
   const [spectrumModal, setSpectrumModal] = useState<{
     isOpen: boolean;
@@ -363,6 +366,54 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     if (metaTheme) {
       metaTheme.setAttribute("content", colors.primary);
     }
+
+    // Dispara evento global de sincronização
+    try {
+      window.dispatchEvent(new CustomEvent("gm_theme_updated", { detail: colors }));
+    } catch (e) {}
+  };
+
+  // Prévia instantânea ao passar o mouse por cima do tema (hover)
+  const handlePreviewThemeHover = (preset: typeof PRESET_THEMES[0]) => {
+    setHoveredThemeId(preset.id);
+    const previewConfig = {
+      primary: preset.primary,
+      accent: preset.accent,
+      bg: preset.bg,
+      title: preset.title,
+      subtitle: preset.subtitle,
+      icon: preset.icon,
+      button: preset.primary,
+      menu_primary: preset.primary,
+      menu_bg: preset.menuBg,
+      menu_title: preset.menuTitle,
+      menu_subtitle: preset.menuSubtitle,
+      menu_icon: preset.menuIcon,
+      menu_button: preset.primary,
+    };
+    applyAllCssVariables(previewConfig);
+  };
+
+  // Restaura o tema ativo quando o mouse sai do card (leave), caso não tenha clicado
+  const handleRevertThemePreview = () => {
+    setHoveredThemeId(null);
+    const activePreset = PRESET_THEMES.find(t => t.id === activeThemeId) || PRESET_THEMES[0];
+    const currentConfig = {
+      primary: brandPrimary || activePreset.primary,
+      accent: brandAccent || activePreset.accent,
+      bg: brandBg || activePreset.bg,
+      title: brandTitle || activePreset.title,
+      subtitle: brandSubtitle || activePreset.subtitle,
+      icon: brandIcon || activePreset.icon,
+      button: brandPrimary || activePreset.primary,
+      menu_primary: menuPrimary || activePreset.primary,
+      menu_bg: menuBg || activePreset.menuBg,
+      menu_title: menuTitle || activePreset.menuTitle,
+      menu_subtitle: menuSubtitle || activePreset.menuSubtitle,
+      menu_icon: menuIcon || activePreset.menuIcon,
+      menu_button: menuButton || activePreset.primary,
+    };
+    applyAllCssVariables(currentConfig);
   };
 
   // Reseta todas as cores para o Padrão Tema Laranja Oficial (modo prévia)
@@ -394,6 +445,10 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
   const applyPresetTheme = (preset: typeof PRESET_THEMES[0]) => {
     // 1. Atualiza estado reativo do botão ativo imediatamente
     setActiveThemeId(preset.id);
+    setHoveredThemeId(null);
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("gm_selected_theme_id", preset.id);
+    }
 
     // 2. Atualiza os estados React locais
     setBrandPrimary(preset.primary);
@@ -426,7 +481,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
       menu_button: preset.primary,
     };
 
-    // 3. Aplica todas as variáveis CSS no DOM instantaneamente (Prévia em tempo real)
+    // 3. Aplica todas as variáveis CSS no DOM instantaneamente (Prévia em tempo real em todos os elementos)
     applyAllCssVariables(currentConfig);
 
     // 4. Notifica o usuário que a prévia está ativa e precisa salvar
@@ -492,6 +547,9 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
   };
 
   const activeTheme = PRESET_THEMES.find(t => t.id === activeThemeId) || PRESET_THEMES[0];
+  const currentDisplayTheme = hoveredThemeId 
+    ? (PRESET_THEMES.find(t => t.id === hoveredThemeId) || activeTheme) 
+    : activeTheme;
 
   return (
     <div className="w-full space-y-8 animate-in fade-in duration-300">
@@ -595,46 +653,55 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
           </div>
 
           <div 
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-bold self-start sm:self-auto transition-all duration-300"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-bold self-start sm:self-auto transition-all duration-300 shadow-md"
             style={{
-              background: `linear-gradient(135deg, ${activeTheme.primary}1A, rgba(20, 20, 24, 0.7))`,
-              borderColor: `${activeTheme.primary}50`
+              background: `linear-gradient(135deg, ${currentDisplayTheme.primary}22, rgba(20, 20, 24, 0.8))`,
+              borderColor: `${currentDisplayTheme.primary}60`
             }}
           >
-            <span className="text-zinc-300">Tema Ativo:</span>
+            <span className="text-zinc-300">{hoveredThemeId ? "Prévia (Hover):" : "Tema Ativo:"}</span>
             <span 
               className="w-2.5 h-2.5 rounded-full animate-pulse shadow-sm"
-              style={{ backgroundColor: activeTheme.primary }}
+              style={{ backgroundColor: currentDisplayTheme.primary }}
             />
             <span 
-              className="uppercase font-black"
-              style={{ color: activeTheme.primary }}
+              className="uppercase font-black tracking-wide"
+              style={{ color: currentDisplayTheme.primary }}
             >
-              {activeTheme.name}
+              {currentDisplayTheme.name}
             </span>
           </div>
         </div>
 
-        {/* GRID DOS 10 TEMAS DE CORES */}
+        {/* GRID DOS 10 TEMAS DE CORES COM PRÉVIA INSTANTÂNEA AO PASSAR O MOUSE OU CLICAR */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
           {PRESET_THEMES.map((preset) => {
             const isSelected = activeThemeId === preset.id;
+            const isHovered = hoveredThemeId === preset.id;
             return (
               <div
                 key={preset.id}
                 onClick={() => applyPresetTheme(preset)}
-                className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 text-left relative overflow-hidden group hover:scale-[1.02] active:scale-[0.99] ${
+                onMouseEnter={() => handlePreviewThemeHover(preset)}
+                onMouseLeave={handleRevertThemePreview}
+                className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 text-left relative overflow-hidden group hover:scale-[1.03] active:scale-[0.99] ${
                   isSelected
                     ? "ring-2 shadow-xl"
+                    : isHovered
+                    ? "ring-1 shadow-lg"
                     : "hover:border-white/25 hover:shadow-md"
                 }`}
                 style={{
                   background: isSelected 
-                    ? `radial-gradient(circle at top left, ${preset.primary}22 0%, rgba(18, 18, 22, 0.95) 80%)`
+                    ? `radial-gradient(circle at top left, ${preset.primary}25 0%, rgba(18, 18, 22, 0.95) 80%)`
+                    : isHovered
+                    ? `radial-gradient(circle at top left, ${preset.primary}18 0%, rgba(22, 22, 28, 0.9) 80%)`
                     : "rgba(18, 18, 22, 0.55)",
-                  borderColor: isSelected ? preset.primary : "rgba(255, 255, 255, 0.08)",
+                  borderColor: isSelected ? preset.primary : isHovered ? `${preset.primary}80` : "rgba(255, 255, 255, 0.08)",
                   boxShadow: isSelected 
                     ? `0 0 24px -4px ${preset.primary}45, inset 0 1px 0 rgba(255, 255, 255, 0.15)` 
+                    : isHovered
+                    ? `0 0 16px -4px ${preset.primary}35`
                     : undefined,
                 }}
               >
@@ -643,8 +710,19 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                   <div 
                     className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full text-white flex items-center justify-center shadow-md animate-in zoom-in duration-150"
                     style={{ backgroundColor: preset.primary }}
+                    title="Tema Ativo Selecionado"
                   >
                     <Check size={12} strokeWidth={3} />
+                  </div>
+                )}
+
+                {/* Indicador de Prévia no Hover */}
+                {!isSelected && isHovered && (
+                  <div 
+                    className="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase animate-pulse shadow-md"
+                    style={{ backgroundColor: preset.primary }}
+                  >
+                    Prévia
                   </div>
                 )}
 
@@ -762,17 +840,17 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
           </span>
         </div>
 
-        {/* GRID DE CARDS DA PALETA */}
+        {/* GRID DE CARDS DA PALETA COM PRÉVIA INSTANTÂNEA */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           {[
-            { name: "Canvas / Fundo", hex: brandBg || activeTheme.bg, desc: "Fundo Geral", field: "brandBg" },
-            { name: "Menu Surface", hex: menuBg || activeTheme.menuBg, desc: "Fundo Sidebar", field: "menuBg" },
-            { name: "Primária / Botões", hex: brandPrimary || activeTheme.primary, desc: "Ação Principal", field: "brandPrimary" },
-            { name: "Destaque / Accent", hex: brandAccent || activeTheme.accent, desc: "Realce & Alertas", field: "brandAccent" },
-            { name: "Ícones App", hex: brandIcon || brandPrimary || activeTheme.primary, desc: "Ícones do Sistema", field: "brandIcon" },
-            { name: "Ícones Menu", hex: menuIcon || menuPrimary || activeTheme.primary, desc: "Ícones da Sidebar", field: "menuIcon" },
-            { name: "Títulos (Display)", hex: brandTitle || activeTheme.title, desc: "Tipografia H1, H2", field: "brandTitle" },
-            { name: "Subtítulos / Muted", hex: brandSubtitle || activeTheme.subtitle, desc: "Textos Secundários", field: "brandSubtitle" },
+            { name: "Canvas / Fundo", hex: hoveredThemeId ? currentDisplayTheme.bg : (brandBg || activeTheme.bg), desc: "Fundo Geral", field: "brandBg" },
+            { name: "Menu Surface", hex: hoveredThemeId ? currentDisplayTheme.menuBg : (menuBg || activeTheme.menuBg), desc: "Fundo Sidebar", field: "menuBg" },
+            { name: "Primária / Botões", hex: hoveredThemeId ? currentDisplayTheme.primary : (brandPrimary || activeTheme.primary), desc: "Ação Principal", field: "brandPrimary" },
+            { name: "Destaque / Accent", hex: hoveredThemeId ? currentDisplayTheme.accent : (brandAccent || activeTheme.accent), desc: "Realce & Alertas", field: "brandAccent" },
+            { name: "Ícones App", hex: hoveredThemeId ? currentDisplayTheme.icon : (brandIcon || brandPrimary || activeTheme.primary), desc: "Ícones do Sistema", field: "brandIcon" },
+            { name: "Ícones Menu", hex: hoveredThemeId ? currentDisplayTheme.icon : (menuIcon || menuPrimary || activeTheme.primary), desc: "Ícones da Sidebar", field: "menuIcon" },
+            { name: "Títulos (Display)", hex: hoveredThemeId ? currentDisplayTheme.title : (brandTitle || activeTheme.title), desc: "Tipografia H1, H2", field: "brandTitle" },
+            { name: "Subtítulos / Muted", hex: hoveredThemeId ? currentDisplayTheme.subtitle : (brandSubtitle || activeTheme.subtitle), desc: "Textos Secundários", field: "brandSubtitle" },
           ].map((item) => (
             <div
               key={item.name}

@@ -25,7 +25,7 @@ export function Page({ title, subtitle, actions, children, className }: PageProp
               title
             )}
             {subtitle && (
-              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              <p className="gm-subtitle-text text-sm sm:text-base md:text-lg font-medium text-slate-500 dark:text-slate-300 mt-1.5 leading-relaxed">
                 {subtitle}
               </p>
             )}

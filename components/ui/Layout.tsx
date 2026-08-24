@@ -656,9 +656,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       <main 
         ref={mainRef}
-        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-screen max-h-screen overflow-y-auto overflow-x-hidden w-full pt-20 md:pt-0 pb-24 md:pb-8 scroll-smooth"
+        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-screen max-h-screen overflow-y-auto overflow-x-hidden w-full p-0 scroll-smooth"
       >
-        <div className="gm-container w-full max-w-[1400px] mx-auto flex flex-col items-stretch px-4 sm:px-6 md:px-8 py-2 sm:py-6 pb-6">
+        <div className="gm-container w-full max-w-[1400px] mx-auto flex flex-col items-stretch px-3 sm:px-6 md:px-8 pt-20 md:pt-6 pb-64 md:pb-8">
           {children}
         </div>
       </main>

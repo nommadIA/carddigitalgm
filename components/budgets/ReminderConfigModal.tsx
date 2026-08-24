@@ -12,6 +12,7 @@ import {
 import { readSettingsLocal } from "../../lib/settings";
 import { playNotificationSound } from "../../lib/audio";
 import { pushToast } from "../../store/toast";
+import { triggerRealNotification } from "../../lib/realNotification";
 
 interface ReminderConfigModalProps {
   open: boolean;
@@ -114,15 +115,10 @@ export default function ReminderConfigModal({
     }, 2000);
   }
 
-  function handleTestNotification() {
-    try {
-      playNotificationSound();
-    } catch (e) {}
-
-    pushToast({
-      type: "success",
-      title: "Teste de Notificação Executado",
-      message: "Seu sistema de som e alertas de lembretes está ativo e funcionando!",
+  async function handleTestNotification() {
+    await triggerRealNotification({
+      title: "⏰ CardDigital GM · Lembrete de Orçamentos",
+      body: "Seus alertas e notificações de prazos estão ativos e funcionando dentro e fora do app!",
     });
 
     setSavedToast("Notificação de teste executada com sucesso!");

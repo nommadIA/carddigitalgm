@@ -6,6 +6,7 @@ import { Bell, BellOff, X } from "lucide-react";
 import { BudgetAlarm } from "../../types";
 import { playNotificationSound } from "../../lib/audio";
 import { readSettingsLocal } from "../../lib/settings";
+import { triggerRealNotification } from "../../lib/realNotification";
 
 // Fast typing effect for premium notifications
 const TypewriterText = ({ text }: { text: string }) => {
@@ -57,8 +58,13 @@ const AlarmToast = () => {
           return [alarm, ...prev];
         });
 
-        // Notificação em tela (In-App Floating Toast) ativada exclusivamente
-        // (Notificações nativas do sistema operacional desativadas para não exibir o link/domínio do Netlify no SO)
+        // Dispara notificação nativa fora do app / segundo plano
+        const text = getNotificationText(alarm);
+        triggerRealNotification({
+          title: `⏰ CardDigital GM · Alarme (${alarm.time})`,
+          body: text,
+          inAppToast: false, // O AlarmToast já renderiza o card visual interno
+        }).catch(() => {});
 
         // Marca como disparado (no storage e IndexedDB)
         markAlarmAsTriggered(alarm.id);

@@ -89,6 +89,39 @@ self.addEventListener('notificationclick', function(event) {
 
 let intervalId;
 self.addEventListener('message', (event) => {
+  if (!event.data) return;
+
+  if (event.data === 'TEST_NOTIFICATION' || event.data.type === 'TEST_NOTIFICATION') {
+    const title = event.data.title || "🔔 CardDigital GM · Notificação de Teste";
+    const body = event.data.body || "Sua notificação em tempo real está funcionando perfeitamente dentro e fora do app!";
+    const icon = event.data.icon || "/icon-192.png";
+    const options = {
+      body: body,
+      icon: icon,
+      badge: icon,
+      vibrate: [200, 100, 200, 100, 200],
+      tag: 'test-notification-' + Date.now(),
+      renotify: true,
+      requireInteraction: false,
+      data: { url: event.data.url || '/' }
+    };
+    self.registration.showNotification(title, options);
+  }
+
+  if (event.data.type === 'SHOW_NOTIFICATION') {
+    const title = event.data.title || "CardDigital GM";
+    const options = {
+      body: event.data.body || "",
+      icon: event.data.icon || '/icon-192.png',
+      badge: event.data.badge || '/icon-192.png',
+      vibrate: event.data.vibrate || [200, 100, 200],
+      tag: event.data.tag || 'gm-notif-' + Date.now(),
+      renotify: true,
+      data: event.data.data || { url: '/' }
+    };
+    self.registration.showNotification(title, options);
+  }
+
   if (event.data && event.data.type === 'START_BACKGROUND_SYNC') {
     if (!intervalId) {
        intervalId = setInterval(() => {
