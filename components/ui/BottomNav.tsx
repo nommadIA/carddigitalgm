@@ -103,9 +103,9 @@ export default function BottomNav() {
                 setExpanded(false);
               }
             }}
-            className="fixed bottom-0 left-0 right-0 w-full z-[999999] gm-bottom-nav bg-black/10 dark:bg-black/10 backdrop-blur-md border-t border-white/10 border-b-0 border-x-0 !rounded-t-[28px] !rounded-b-none pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] shadow-none select-none"
+            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav bg-black/10 dark:bg-black/10 backdrop-blur-md border-t border-white/10 border-b-0 border-x-0 !rounded-t-[28px] !rounded-b-none pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] shadow-none select-none"
             style={{
-              zIndex: 999999,
+              zIndex: 800,
               borderTopLeftRadius: "28px",
               borderTopRightRadius: "28px",
               borderBottomLeftRadius: "0px",
@@ -198,8 +198,8 @@ export default function BottomNav() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[999999]"
-            style={{ zIndex: 999999 }}
+            className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[800]"
+            style={{ zIndex: 800 }}
           >
             <button
               type="button"

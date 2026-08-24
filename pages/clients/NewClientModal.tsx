@@ -303,7 +303,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
             </button>
           </div>
 
-          <div className="p-4 sm:p-6 overflow-y-auto flex-1 max-h-[calc(92vh-90px)]">
+          <div className="p-4 sm:p-6 pb-32 sm:pb-6 overflow-y-auto flex-1 max-h-[calc(92vh-90px)]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div style={label}>Nome</div>

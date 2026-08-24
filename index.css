@@ -794,8 +794,8 @@ button.handle,
     -webkit-overflow-scrolling: touch;
   }
   .gm-container {
-    padding-top: 76px !important;
-    padding-bottom: 260px !important;
+    padding-top: 80px !important;
+    padding-bottom: calc(580px + env(safe-area-inset-bottom, 0px)) !important;
     padding-left: 12px !important;
     padding-right: 12px !important;
     width: 100%;
@@ -1870,16 +1870,17 @@ html, body, #root{
 
 body{
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
 }
 
 .gm-main{
   min-height: 100%;
-  height: auto;
-  overflow-x: hidden;
-  overflow-y: visible;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
 }
@@ -5907,33 +5908,58 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
 /* =========================================================================
    SMARTPHONE / MOBILE RESPONSIVENESS REFINEMENTS
    ========================================================================= */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   /* Prevent horizontal scrolling on mobile */
   body, html {
     overflow-x: hidden !important;
   }
 
-  /* Compact containers and paddings */
+  /* Compact containers and generous scroll paddings */
   .gm-container {
-    padding-top: 76px !important;
-    padding-bottom: 260px !important;
+    padding-top: 80px !important;
+    padding-bottom: calc(580px + env(safe-area-inset-bottom, 0px)) !important;
     padding-left: 12px !important;
     padding-right: 12px !important;
+  }
+
+  /* Responsive modal overlays allowing smooth vertical drag/scroll */
+  .fixed.inset-0:not(.pointer-events-none) {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+    z-index: 1000000 !important;
+    padding: 12px 8px calc(80px + env(safe-area-inset-bottom, 0px)) 8px !important;
   }
 
   /* Responsive modals on small screens */
-  .fixed.inset-0 > div {
+  .fixed.inset-0 > div:not(.absolute):not(.fixed),
+  .fixed.inset-0 > form,
+  .gm-modal,
+  .gm-note-modal,
+  [role="dialog"] {
     max-width: calc(100vw - 16px) !important;
-    max-height: calc(100vh - 24px) !important;
-    border-radius: 16px !important;
+    max-height: calc(100dvh - 28px) !important;
+    border-radius: 18px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    box-sizing: border-box !important;
+    z-index: 1000001 !important;
   }
 
-  /* Smooth scrollable modal content */
-  .fixed.inset-0 .overflow-y-auto {
-    -webkit-overflow-scrolling: touch;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    padding-bottom: 80px !important;
+  /* Smooth scrollable modal content and bottom action clearance */
+  .fixed.inset-0 .overflow-y-auto,
+  .gm-modal .overflow-y-auto,
+  .gm-modal form,
+  .gm-modal-body,
+  .gm-note-modal,
+  [role="dialog"] .overflow-y-auto {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    padding-bottom: 160px !important;
   }
 
   /* Touch-friendly target heights */
@@ -5948,17 +5974,17 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
 
   /* Page titles on mobile */
   h1, .gm-h1 {
-    font-size: 26px !important;
-    line-height: 1.15 !important;
+    font-size: 24px !important;
+    line-height: 1.18 !important;
   }
 
   h2, .gm-h2 {
-    font-size: 20px !important;
-    line-height: 1.2 !important;
+    font-size: 19px !important;
+    line-height: 1.22 !important;
   }
 
   h3, .gm-h3 {
-    font-size: 17px !important;
+    font-size: 16px !important;
   }
 }
 

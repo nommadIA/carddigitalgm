@@ -201,8 +201,8 @@ const pageContent: React.CSSProperties = {
   width: "100%",
   maxWidth: "1100px",
   margin: "0 auto",
-  // ✅ mais espaço no final + safe-area (iPhone/Android gesture bar)
-  padding: "32px 24px calc(160px + env(safe-area-inset-bottom, 0px)) 24px",
+  // ✅ amplo espaço no final + safe-area para rolar todo o conteúdo e total final acima da barra de ações
+  padding: "32px 16px calc(340px + env(safe-area-inset-bottom, 0px)) 16px",
 };
 
 const sectionTitle: React.CSSProperties = {

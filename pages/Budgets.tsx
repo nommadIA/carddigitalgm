@@ -197,18 +197,18 @@ function VirtualizedBudgetList({
   };
 
   return (
-    <Card className="gm-card barra !p-0 overflow-hidden min-h-[480px] max-h-[650px] flex flex-col transition-all duration-300">
-      <div className="overflow-x-auto flex-1 flex flex-col">
-        <div className="text-sm min-w-full flex-1 flex flex-col">
+    <Card className="gm-card barra !p-0 overflow-hidden min-h-[300px] flex flex-col transition-all duration-300">
+      <div className="overflow-x-auto w-full">
+        <div className="text-sm min-w-full">
           {/* Header fixo com backdrop-blur */}
-          <div className="sticky top-0 z-20 hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-4 border-b border-white/10 font-bold opacity-85 uppercase tracking-wider text-xs bg-[#121216]/95 backdrop-blur-md shrink-0 shadow-sm">
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-4 border-b border-white/10 font-bold opacity-85 uppercase tracking-wider text-xs bg-[#121216]/95 backdrop-blur-md shrink-0 shadow-sm">
             <div>Data</div>
             <div>Descrição</div>
             <div className="text-right">Ações</div>
           </div>
 
-          {/* Lista com rolagem vertical interna independente */}
-          <div className="w-full divide-y divide-white/5 flex-1 overflow-y-auto min-h-0 gm-scrollable">
+          {/* Lista fluida sem corte de altura */}
+          <div className="w-full divide-y divide-white/5">
             {items.map((r) => {
               const created = r.created_at ? new Date(r.created_at) : null;
               const isHighlighted = r.id === highlightedId;

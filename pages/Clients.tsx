@@ -575,21 +575,23 @@ export default function Clients() {
         ) : filtered.length === 0 ? (
           <div className="gm-card fora p-10 text-center opacity-70 border border-dashed border-white/15 rounded-2xl shadow-none">Nenhum cliente encontrado.</div>
         ) : (
-          <VirtualizedClientList
-            items={filtered}
-            expandedRows={expandedRows}
-            toggleRow={toggleRow}
-            tab={tab}
-            isMobile={isMobile}
-            avatarStyle={avatarStyle}
-            restore={restore}
-            confirmHardDelete={confirmHardDelete}
-            setEditPageId={setEditPageId}
-            openWhatsApp={openWhatsApp}
-            copyToClipboard={copyToClipboard}
-            setToast={setToast}
-            softDelete={softDelete}
-          />
+          <div className="pb-12 sm:pb-0">
+            <VirtualizedClientList
+              items={filtered}
+              expandedRows={expandedRows}
+              toggleRow={toggleRow}
+              tab={tab}
+              isMobile={isMobile}
+              avatarStyle={avatarStyle}
+              restore={restore}
+              confirmHardDelete={confirmHardDelete}
+              setEditPageId={setEditPageId}
+              openWhatsApp={openWhatsApp}
+              copyToClipboard={copyToClipboard}
+              setToast={setToast}
+              softDelete={softDelete}
+            />
+          </div>
         )}
       </Page>
 

@@ -658,8 +658,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         ref={mainRef}
         className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-screen max-h-screen overflow-y-auto overflow-x-hidden w-full p-0 scroll-smooth"
       >
-        <div className="gm-container w-full max-w-[1400px] mx-auto flex flex-col items-stretch px-3 sm:px-6 md:px-8 pt-20 md:pt-6 pb-64 md:pb-8">
+        <div className="gm-container w-full max-w-[1400px] mx-auto flex flex-col items-stretch px-3 sm:px-6 md:px-8 pt-20 md:pt-6 pb-28 md:pb-8">
           {children}
+
+          {/* Spacer exclusivo para smartphone que garante rolagem total de 100% do conteúdo acima do BottomNav */}
+          <div 
+            className="w-full h-[540px] sm:h-[600px] md:hidden shrink-0 pointer-events-none select-none" 
+            aria-hidden="true" 
+          />
         </div>
       </main>
       

@@ -675,7 +675,7 @@ export default function Expenses() {
       </div>
 
       {/* LISTA DE DESPESAS COM EXPANSÃO INLINE ESTILO NOTION */}
-      <div className="gm-card barra !p-0 overflow-hidden min-h-[420px] flex flex-col transition-all duration-300 rounded-2xl border border-white/10 shadow-none mb-24">
+      <div className="gm-card barra !p-0 overflow-hidden min-h-[300px] flex flex-col transition-all duration-300 rounded-2xl border border-white/10 shadow-none mb-12">
         {/* Header fixo da tabela */}
         <div className="hidden sm:grid grid-cols-[150px_1fr_160px_140px] gap-4 px-6 py-4 border-b border-white/10 font-black opacity-80 uppercase tracking-widest text-[11px] bg-[#121216]/95 backdrop-blur-md shrink-0 shadow-sm text-slate-300">
           <div>Vencimento</div>
@@ -685,7 +685,7 @@ export default function Expenses() {
         </div>
 
         {/* Conteúdo da Lista */}
-        <div className="flex-1 overflow-y-auto min-h-0 gm-scrollable">
+        <div className="w-full">
           {loading ? (
             <div className="p-16 flex flex-col items-center justify-center gap-3 opacity-60">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500" />
