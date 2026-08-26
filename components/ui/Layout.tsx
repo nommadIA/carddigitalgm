@@ -7,7 +7,7 @@ import AppTutorial from "./AppTutorial";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid,
   FileText,
@@ -111,6 +111,20 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("gm.sidebar") === "1");
   const sidebarWidth = collapsed ? COLLAPSED_SIDEBAR_WIDTH : EXPANDED_SIDEBAR_WIDTH;
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const updateSidebarWidth = () => {
+        document.documentElement.style.setProperty(
+          "--gm-sidebar-width",
+          window.innerWidth >= 768 ? `${sidebarWidth}px` : "0px"
+        );
+      };
+      updateSidebarWidth();
+      window.addEventListener("resize", updateSidebarWidth);
+      return () => window.removeEventListener("resize", updateSidebarWidth);
+    }
+  }, [sidebarWidth]);
 
   const toggleSidebar = () => {
     setCollapsed((prev) => {
@@ -298,6 +312,70 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   const mainRef = useRef<HTMLElement | null>(null);
 
+  // Navegação por Gesto de Arrastar (Swipe) Esquerda/Direita para mudar de tela
+  const currentNavIndex = useMemo(() => {
+    return nav.findIndex((it) => {
+      if (it.to === "/") return location.pathname === "/";
+      return location.pathname.startsWith(it.to);
+    });
+  }, [nav, location.pathname]);
+
+  const handleSwipeLeft = () => {
+    const hasOpenModal = Boolean(
+      document.querySelector('[role="dialog"], .gm-modal, .fixed.inset-0:not(.pointer-events-none)')
+    );
+    if (hasOpenModal) return;
+
+    if (currentNavIndex !== -1 && currentNavIndex < nav.length - 1) {
+      navigate(nav[currentNavIndex + 1].to);
+    }
+  };
+
+  const handleSwipeRight = () => {
+    const hasOpenModal = Boolean(
+      document.querySelector('[role="dialog"], .gm-modal, .fixed.inset-0:not(.pointer-events-none)')
+    );
+    if (hasOpenModal) return;
+
+    if (currentNavIndex > 0) {
+      navigate(nav[currentNavIndex - 1].to);
+    }
+  };
+
+  const swipeMainRef = useSwipeNav<HTMLElement>({
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+    thresholdPx: 80,
+    restraintPx: 60,
+    allowedTimeMs: 450,
+  });
+
+  const setMainRefs = (el: HTMLElement | null) => {
+    mainRef.current = el;
+    swipeMainRef.current = el;
+  };
+
+  // Reseta a rolagem vertical para o topo sempre que o usuário troca de rota e atualiza indicadores de rolagem
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+
+    const checkScroll = () => {
+      const el = mainRef.current || (document.querySelector('.gm-main') as HTMLElement);
+      if (el) {
+        const currentY = el.scrollTop || window.scrollY || 0;
+        const maxScroll = el.scrollHeight - el.clientHeight;
+        setCanScrollUp(currentY > 60);
+        setCanScrollDown(maxScroll > 20 && currentY < maxScroll - 40);
+      }
+    };
+
+    const timer = setTimeout(checkScroll, 200);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
   // Efeito de Parallax Suave Contínuo no Plano de Fundo (Mouse + Scroll)
   useEffect(() => {
     const reduced =
@@ -405,8 +483,8 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       if (target) {
         const currentY = target.scrollTop || window.scrollY || 0;
         const maxScroll = (target.scrollHeight || document.documentElement.scrollHeight) - (target.clientHeight || window.innerHeight);
-        setCanScrollUp(currentY > 100);
-        setCanScrollDown(maxScroll > 0 && currentY < maxScroll - 50);
+        setCanScrollUp(currentY > 60);
+        setCanScrollDown(maxScroll > 20 && currentY < maxScroll - 40);
       }
     };
 
@@ -655,84 +733,106 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       </aside>
 
       <main 
-        ref={mainRef}
-        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-screen max-h-screen overflow-y-auto overflow-x-hidden w-full p-0 scroll-smooth"
+        ref={setMainRefs}
+        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden w-full p-0 scroll-smooth"
       >
-        <div className="gm-container w-full max-w-[1400px] mx-auto flex flex-col items-stretch px-3 sm:px-6 md:px-8 pt-20 md:pt-6 pb-28 md:pb-8">
+        <div className="gm-container w-full max-w-[1400px] mx-auto flex flex-col items-stretch px-3 sm:px-6 md:px-8 pt-20 md:pt-6 pb-[var(--bottom-nav-safe-space)] md:pb-8">
           {children}
-
-          {/* Spacer exclusivo para smartphone que garante rolagem total de 100% do conteúdo acima do BottomNav */}
-          <div 
-            className="w-full h-[540px] sm:h-[600px] md:hidden shrink-0 pointer-events-none select-none" 
-            aria-hidden="true" 
-          />
         </div>
       </main>
       
-      {/* SCROLL INDICATORS CONTAINER */}
+      {/* FLOATING ACTION & SCROLL INDICATORS */}
       {createPortal(
-        <div className="fixed right-4 md:right-8 bottom-24 md:bottom-8 z-[10001] flex flex-col gap-3 pointer-events-none" style={{ zIndex: 10001 }}>
-          {/* WHATSAPP SUPPORT BUTTON (GREEN BOX WITH WHITE ICON) */}
-          {location.pathname === "/" && (
-            <button
-              onClick={() => openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.")}
-              className="transition-all duration-200 flex items-center justify-center w-12 h-12 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white border border-white/20 shadow-[0_4px_20px_rgba(37,211,102,0.45)] pointer-events-auto cursor-pointer hover:scale-105 active:scale-95"
-              aria-label="Ajuda via WhatsApp"
-              title="Ajuda via WhatsApp"
-            >
-              <WhatsAppIcon size={26} className="text-white" />
-            </button>
-          )}
+        <>
+          {/* WHATSAPP SUPPORT BUTTON (EXCLUSIVO NA PÁGINA DO DASHBOARD NO CANTO INFERIOR DIREITO) */}
+          <AnimatePresence mode="wait">
+            {location.pathname === "/" && (
+              <motion.div
+                key="dashboard-whatsapp-floating-btn"
+                initial={{ scale: 0, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0, opacity: 0, y: 15 }}
+                transition={{ type: "spring", damping: 22, stiffness: 350 }}
+                className="fixed bottom-[calc(var(--bottom-nav-height,96px)+16px)] md:bottom-7 right-4 md:right-7 z-[10002] pointer-events-auto"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.");
+                  }}
+                  className="flex items-center justify-center w-12 h-12 md:w-13 md:h-13 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white border border-white/25 shadow-[0_8px_28px_rgba(37,211,102,0.45)] hover:shadow-[0_12px_36px_rgba(37,211,102,0.65)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer focus:outline-none"
+                  aria-label="Ajuda via WhatsApp"
+                  title="Ajuda via WhatsApp"
+                >
+                  <WhatsAppIcon size={26} className="text-white pointer-events-none" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* BACK TO TOP BUTTON (GLASS) */}
-          <button
-            onClick={() => {
-              const activeEl = document.querySelector('[data-active-scroll="true"]');
-              if (activeEl) {
-                activeEl.scrollTo({ top: 0, behavior: "smooth" });
-              } else {
-                const scrollableElements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
-                scrollableElements.forEach(el => el.scrollTo({ top: 0, behavior: "smooth" }));
-              }
-            }}
-            className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900/90 dark:bg-zinc-900/90 border border-[var(--gm-primary)]/50 shadow-xl pointer-events-auto cursor-pointer ${
-              canScrollUp ? "opacity-90 hover:opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
-            }`}
-            aria-label="Voltar ao topo"
-            title="Rolar para o topo"
+          {/* SCROLL INDICATOR ARROWS (CENTERED VERTICALLY IN THE MIDDLE OF THE SCREEN ON THE RIGHT - NO BOX/BACKGROUND, ONLY ARROW STROKE) */}
+          <div 
+            className="fixed right-1.5 sm:right-2.5 md:right-4 top-1/2 -translate-y-1/2 z-[10001] flex flex-col items-center gap-2 pointer-events-none select-none" 
+            style={{ zIndex: 10001 }}
           >
-            <ChevronUp size={20} className="text-[var(--gm-primary)] animate-pulse" />
-          </button>
-
-          {/* SCROLL DOWN INDICATOR (GLASS) */}
-          {location.pathname !== '/' && (
-            <button 
+            {/* BACK TO TOP ARROW (PURE CHEVRON STROKE) */}
+            <button
               onClick={() => {
-                let target = document.querySelector('[data-active-scroll="true"]') as HTMLElement;
-                if (!target) {
-                  const elements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
-                  for (let i = elements.length - 1; i >= 0; i--) {
-                    const el = elements[i] as HTMLElement;
-                    if (el.scrollHeight > el.clientHeight + 10) {
-                      target = el;
-                      break;
-                    }
-                  }
-                }
-                if (target) {
-                  target.scrollBy({ top: Math.min(target.clientHeight * 0.7, 320), behavior: "smooth" });
+                const activeEl = document.querySelector('[data-active-scroll="true"]');
+                if (activeEl) {
+                  activeEl.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  const scrollableElements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
+                  scrollableElements.forEach(el => el.scrollTo({ top: 0, behavior: "smooth" }));
                 }
               }}
-              className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900/90 dark:bg-zinc-900/90 border border-[var(--gm-primary)]/50 shadow-xl pointer-events-auto cursor-pointer ${
-                canScrollDown ? "opacity-90 hover:opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+              className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-transparent border-0 shadow-none pointer-events-auto cursor-pointer focus:outline-none group ${
+                canScrollUp ? "opacity-85 hover:opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
               }`}
-              aria-label="Rolar para baixo"
-              title="Rolar para baixo"
+              aria-label="Rolar para o topo"
+              title="Rolar para o topo"
             >
-              <ChevronDown size={20} className="text-[var(--gm-primary)] animate-bounce" />
+              <ChevronUp 
+                size={34} 
+                strokeWidth={2.8} 
+                className="text-[var(--gm-primary,#FE540B)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] group-hover:scale-125 group-active:scale-90 transition-transform duration-200" 
+              />
             </button>
-          )}
-        </div>,
+
+            {/* SCROLL DOWN ARROW (PURE CHEVRON STROKE) */}
+            {location.pathname !== '/' && (
+              <button 
+                onClick={() => {
+                  let target = document.querySelector('[data-active-scroll="true"]') as HTMLElement;
+                  if (!target) {
+                    const elements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
+                    for (let i = elements.length - 1; i >= 0; i--) {
+                      const el = elements[i] as HTMLElement;
+                      if (el.scrollHeight > el.clientHeight + 10) {
+                        target = el;
+                        break;
+                      }
+                    }
+                  }
+                  if (target) {
+                    target.scrollBy({ top: Math.min(target.clientHeight * 0.7, 320), behavior: "smooth" });
+                  }
+                }}
+                className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-transparent border-0 shadow-none pointer-events-auto cursor-pointer focus:outline-none group ${
+                  canScrollDown ? "opacity-85 hover:opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
+                }`}
+                aria-label="Rolar para baixo"
+                title="Rolar para baixo"
+              >
+                <ChevronDown 
+                  size={34} 
+                  strokeWidth={2.8} 
+                  className="text-[var(--gm-primary,#FE540B)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] group-hover:scale-125 group-active:scale-90 transition-transform duration-200" 
+                />
+              </button>
+            )}
+          </div>
+        </>,
         document.body
       )}
 

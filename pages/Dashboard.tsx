@@ -86,37 +86,15 @@ export default function Dashboard() {
 
   // Stats
   const [stats, setStats] = useState({
-    faturamentoMensal: 48230,
-    orcametosAbertos: 17,
-    aguardando: 6,
-    ticketMedio: 2836,
-    clientesAtivos: 132,
+    faturamentoMensal: 0,
+    orcametosAbertos: 0,
+    aguardando: 0,
+    ticketMedio: 0,
+    clientesAtivos: 0,
   });
 
-  // Recent budgets list
-  const [recentBudgets, setRecentBudgets] = useState<BudgetRow[]>([
-    {
-      id: "1",
-      client_name: "Studio Marés",
-      service_name: "Identidade visual",
-      total_amount: 3400,
-      status: "APROVADO",
-    },
-    {
-      id: "2",
-      client_name: "Casa Bento",
-      service_name: "Site institucional",
-      total_amount: 6150,
-      status: "NA FILA",
-    },
-    {
-      id: "3",
-      client_name: "Bruta Café",
-      service_name: "Cardápio digital",
-      total_amount: 980,
-      status: "RECUSADO",
-    },
-  ]);
+  // Recent budgets list (starts empty for new accounts)
+  const [recentBudgets, setRecentBudgets] = useState<BudgetRow[]>([]);
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -133,47 +111,78 @@ export default function Dashboard() {
           if (s) setAppSettings(s);
         });
 
+        let budgetsQuery = supabase
+          .from("budgets")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (tenantId) {
+          budgetsQuery = budgetsQuery.eq("tenant_id", tenantId);
+        }
+
+        let clientsQuery = supabase
+          .from("clients")
+          .select("id", { count: "exact", head: true });
+
+        if (tenantId) {
+          clientsQuery = clientsQuery.eq("tenant_id", tenantId);
+        }
+
         const [budgetsRes, clientsRes] = await Promise.all([
-          supabase
-            .from("budgets")
-            .select("*")
-            .eq("tenant_id", tenantId)
-            .is("deleted_at", null)
-            .order("created_at", { ascending: false })
-            .limit(5),
-          supabase
-            .from("clients")
-            .select("id", { count: "exact", head: true })
-            .eq("tenant_id", tenantId)
-            .is("deleted_at", null),
+          budgetsQuery,
+          clientsQuery,
         ]);
 
-        if (budgetsRes.data && budgetsRes.data.length > 0) {
-          const mapped: BudgetRow[] = budgetsRes.data.map((b: any) => ({
-            id: b.id,
-            client_name: b.client_name || b.title || "Cliente sem nome",
-            service_name: b.service_name || b.category || "Serviço padrão",
-            total_amount: Number(b.total_amount || b.total || 0),
-            status: (b.status || "NA FILA").toUpperCase(),
-          }));
-          setRecentBudgets(mapped);
+        const allBudgets = (budgetsRes.data || []).filter((b: any) => !b.deleted_at);
+        const mapped: BudgetRow[] = allBudgets.slice(0, 5).map((b: any) => ({
+          id: b.id,
+          client_name: b.client_name || b.title || b.customer_name || "Cliente",
+          service_name: b.service_name || b.category || b.items?.[0]?.description || b.items?.[0]?.name || "Orçamento",
+          total_amount: Number(b.total_amount || b.total || 0),
+          status: (b.status || "AGUARDANDO").toUpperCase(),
+        }));
+        setRecentBudgets(mapped);
 
-          // Calculate real metrics if data exists
-          const totalFaturamento = mapped.reduce(
-            (acc, curr) =>
-              curr.status === "APROVADO" || curr.status === "CONCLUIDO"
-                ? acc + curr.total_amount
-                : acc,
-            0
-          );
-          if (totalFaturamento > 0) {
-            setStats((prev) => ({
-              ...prev,
-              faturamentoMensal: totalFaturamento,
-              clientesAtivos: clientsRes.count || prev.clientesAtivos,
-            }));
+        // Calculate real metrics directly from user's tenant budgets
+        let faturamento = 0;
+        let abertos = 0;
+        let aguardando = 0;
+        let countAprovados = 0;
+        let totalGeral = 0;
+
+        for (const b of allBudgets) {
+          const status = (b.status || "").toString().toUpperCase().trim();
+          const valor = Number(b.total_amount || b.total || 0);
+          totalGeral += valor;
+
+          if (
+            status.includes("APROV") ||
+            status.includes("CONCL") ||
+            status.includes("FINAL") ||
+            status.includes("PROD") ||
+            status.includes("PRONTO")
+          ) {
+            faturamento += valor;
+            countAprovados += 1;
+          } else if (status.includes("AGUAR") || status.includes("ENVI")) {
+            aguardando += 1;
+          } else if (!status.includes("CANC")) {
+            abertos += 1;
           }
         }
+
+        const displayFaturamento = faturamento > 0 ? faturamento : (countAprovados === 0 && allBudgets.length > 0 ? totalGeral : faturamento);
+        const divisor = countAprovados > 0 ? countAprovados : allBudgets.length;
+        const ticketMedio = divisor > 0 ? Math.round(displayFaturamento / divisor) : 0;
+        const totalClientes = clientsRes.count || 0;
+
+        setStats({
+          faturamentoMensal: displayFaturamento,
+          orcametosAbertos: abertos,
+          aguardando: aguardando,
+          ticketMedio: ticketMedio,
+          clientesAtivos: totalClientes,
+        });
       } catch (err) {
         console.error("Erro ao carregar dados do dashboard:", err);
       } finally {
@@ -353,7 +362,7 @@ export default function Dashboard() {
 
         <div className="flex flex-col text-left flex-1 min-w-0">
           <div className="text-xs sm:text-sm font-extrabold tracking-widest text-[color:var(--gm-primary)] uppercase">
-            {appSettings?.company_name ? `${appSettings.company_name} · PAINEL` : "GM EDIFICAÇÃO · PAINEL"}
+            {appSettings?.company_name ? `${appSettings.company_name} · PAINEL` : "PAINEL"}
           </div>
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-[color:var(--gm-text)] tracking-tight mt-1 truncate">
             Dashboard
@@ -548,36 +557,44 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10 text-sm">
-                {recentBudgets.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-white/[0.04] transition-colors cursor-pointer group"
-                    onClick={() => navigate(`/budgets`)}
-                  >
-                    <td className="px-6 py-4 font-bold text-[color:var(--gm-text)] whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg barra border border-white/10 flex items-center justify-center text-[color:var(--gm-text-secondary)] font-extrabold text-xs uppercase group-hover:bg-[color:var(--gm-primary)] group-hover:text-white group-hover:border-[color:var(--gm-primary)] transition-colors shadow-none">
-                          {item.client_name.substring(0, 2)}
-                        </div>
-                        <span className="text-sm font-semibold text-[color:var(--gm-text)]">
-                          {item.client_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-[color:var(--gm-text-secondary)] font-medium whitespace-nowrap">
-                      {item.service_name}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-[color:var(--gm-text)] whitespace-nowrap">
-                      {item.total_amount.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      {getStatusBadge(item.status)}
+                {recentBudgets.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-xs font-semibold text-[color:var(--gm-text-secondary)]">
+                      Nenhum orçamento emitido ainda. Clique em "Novo Orçamento" para começar.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  recentBudgets.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-white/[0.04] transition-colors cursor-pointer group"
+                      onClick={() => navigate(`/budgets`)}
+                    >
+                      <td className="px-6 py-4 font-bold text-[color:var(--gm-text)] whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg barra border border-white/10 flex items-center justify-center text-[color:var(--gm-text-secondary)] font-extrabold text-xs uppercase group-hover:bg-[color:var(--gm-primary)] group-hover:text-white group-hover:border-[color:var(--gm-primary)] transition-colors shadow-none">
+                            {item.client_name.substring(0, 2)}
+                          </div>
+                          <span className="text-sm font-semibold text-[color:var(--gm-text)]">
+                            {item.client_name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-[color:var(--gm-text-secondary)] font-medium whitespace-nowrap">
+                        {item.service_name}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-[color:var(--gm-text)] whitespace-nowrap">
+                        {item.total_amount.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        {getStatusBadge(item.status)}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

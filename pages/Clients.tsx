@@ -575,7 +575,7 @@ export default function Clients() {
         ) : filtered.length === 0 ? (
           <div className="gm-card fora p-10 text-center opacity-70 border border-dashed border-white/15 rounded-2xl shadow-none">Nenhum cliente encontrado.</div>
         ) : (
-          <div className="pb-12 sm:pb-0">
+          <div>
             <VirtualizedClientList
               items={filtered}
               expandedRows={expandedRows}

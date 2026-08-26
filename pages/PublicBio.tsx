@@ -179,7 +179,7 @@ export default function PublicBio() {
   // If loading is finished but no data found, display the Page Not Found error layout
   if (!apiLoading && !data) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0c] text-white p-6 relative overflow-hidden animate-[gm-fade-in_0.5s_ease-out_forwards]">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0c] text-white p-6 relative overflow-y-auto animate-[gm-fade-in_0.5s_ease-out_forwards]">
         {/* Decorative ambient spots */}
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />

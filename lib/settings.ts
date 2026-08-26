@@ -78,12 +78,12 @@ const LOCAL_KEY = "gm.settings.cache.v1";
  * Mantém também chaves antigas por compatibilidade.
  */
 export const DEFAULT_SETTINGS: AppSettings & any = {
-  company_name: "GM edificação",
+  company_name: "",
   pix_type: "CPF",
   pix_key: "",
-  brand_primary: "#FF7B17",
-  brand_accent: "#FF7B17",
-  brand_bg: "#0F1115",
+  brand_primary: "#FE540B",
+  brand_accent: "#FE540B",
+  brand_bg: "#0B0B0C",
   font_family: "Inter",
   avatar_url: null,
   company_logo_url: null,

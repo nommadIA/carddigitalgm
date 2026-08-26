@@ -1345,7 +1345,7 @@ export default function Bio() {
   return (
     <Page title="">
       <div 
-        className="w-full max-w-[1440px] mx-auto pb-20 space-y-6 px-4 sm:px-6"
+        className="w-full max-w-[1440px] mx-auto pb-2 sm:pb-0 space-y-6 px-4 sm:px-6"
         style={{
           '--primary-color': primaryColor,
           '--primary-color-hover': `${primaryColor}cc`,

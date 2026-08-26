@@ -8,43 +8,21 @@ import { fetchSettingsSupabase, applySettingsToDOM, AppSettings } from "./lib/se
 import ThemeSync from './components/ui/ThemeSync';
 import RouteBoundary from './RouteBoundary';
 
-// Resilient Lazy Loader to recover from stale Vite chunk / dynamic import fetch errors
-function lazyWithRetry<T extends React.ComponentType<any>>(
-  componentImport: () => Promise<{ default: T }>
-) {
-  return lazy(async () => {
-    const pageHasAlreadyBeenReloaded = sessionStorage.getItem('gm_lazy_retry');
-    try {
-      const component = await componentImport();
-      sessionStorage.removeItem('gm_lazy_retry');
-      return component;
-    } catch (error) {
-      if (!pageHasAlreadyBeenReloaded) {
-        sessionStorage.setItem('gm_lazy_retry', 'true');
-        window.location.reload();
-        return new Promise<{ default: T }>(() => {});
-      }
-      throw error;
-    }
-  });
-}
-
-// Lazy load pages for better performance with auto-retry
-const Login = lazyWithRetry(() => import('./pages/Login'));
-const Register = lazyWithRetry(() => import('./pages/Register'));
-const Dashboard = lazyWithRetry(() => import('./pages/Dashboard'));
-const Budgets = lazyWithRetry(() => import('./pages/Budgets'));
-const Clients = lazyWithRetry(() => import('./pages/Clients'));
-const Market = lazyWithRetry(() => import('./pages/Market'));
-const Financial = lazyWithRetry(() => import('./pages/Financial'));
-const Expenses = lazyWithRetry(() => import('./pages/Expenses'));
-const Configuracoes = lazyWithRetry(() => import('./pages/Configuracoes'));
-const Notes = lazyWithRetry(() => import('./pages/Notes'));
-const Bio = lazyWithRetry(() => import('./pages/Bio'));
-const PublicBio = lazyWithRetry(() => import('./pages/PublicBio'));
-const AuthCallback = lazyWithRetry(() => import('./pages/AuthCallback'));
-const UpdatePassword = lazyWithRetry(() => import('./pages/UpdatePassword'));
-const PixCopy = lazyWithRetry(() => import('./pages/PixCopy'));
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Budgets from './pages/Budgets';
+import Clients from './pages/Clients';
+import Market from './pages/Market';
+import Financial from './pages/Financial';
+import Expenses from './pages/Expenses';
+import Configuracoes from './pages/Configuracoes';
+import Notes from './pages/Notes';
+import Bio from './pages/Bio';
+import PublicBio from './pages/PublicBio';
+import AuthCallback from './pages/AuthCallback';
+import UpdatePassword from './pages/UpdatePassword';
+import PixCopy from './pages/PixCopy';
 
 const PageLoader = () => null;
 
@@ -151,9 +129,9 @@ const AppRoutes = () => {
     return <div className="h-screen w-full bg-[#050507]" />;
   }
 
-  // If a mobile user is not logged in and opens the root, redirect directly to the public bio page
-  if (isMobile && !user && !subdomainTenant && (location.pathname === '/' || location.pathname === '')) {
-    return <Navigate to="/gmedificacao" replace />;
+  // If a user is not logged in and opens the root, redirect directly to the application login page
+  if (!user && !subdomainTenant && (location.pathname === '/' || location.pathname === '')) {
+    return <Navigate to="/login" replace />;
   }
 
   // Intercept direct tenant URLs (e.g., /gmedificacao) that are not reserved administrative/auth pages

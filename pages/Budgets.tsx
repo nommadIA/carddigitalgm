@@ -954,7 +954,6 @@ export default function Budgets() {
   return (
     <Page
       title="Orçamentos"
-      className="pb-24"
       actions={
         <button className="gm-btn fora h-12 text-xs uppercase tracking-wider" type="button" onClick={() => setNewOpen(true)}>
           <Plus size={16} />

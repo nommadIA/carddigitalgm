@@ -22,7 +22,7 @@ export async function fetchTenantsSafe(userId: string) {
 
     if (error) {
       const msg = error?.message || String(error);
-      if (!msg.includes("Failed to fetch")) {
+      if (!msg.includes("Failed to fetch") && !msg.includes("future") && !msg.includes("JWT")) {
         console.warn("Erro ao buscar tenants:", msg);
       }
       return [];
@@ -32,7 +32,7 @@ export async function fetchTenantsSafe(userId: string) {
     return ids;
   } catch (e: any) {
     const msg = e?.message || String(e);
-    if (!msg.includes("Failed to fetch")) {
+    if (!msg.includes("Failed to fetch") && !msg.includes("future") && !msg.includes("JWT")) {
       console.warn("Erro ao buscar tenants:", msg);
     }
     return []; // ✅ nunca trava

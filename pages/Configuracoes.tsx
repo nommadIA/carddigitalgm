@@ -186,7 +186,7 @@ export default function Configuracoes() {
     }
   };
 
-  const [companyName, setCompanyName] = useState("GM edificação");
+  const [companyName, setCompanyName] = useState("");
   const [pixType, setPixType] = useState("CPF");
   const [pixKey, setPixKey] = useState("");
 
@@ -547,7 +547,7 @@ export default function Configuracoes() {
       // ✅ settings
       const s = await fetchSettingsSupabase(tenantId);
       if (s) {
-        setCompanyName(s.company_name || "GM edificação");
+        setCompanyName(s.company_name || "");
         setPixType(s.pix_type || "CPF");
         setPixKey(s.pix_key || "");
 
@@ -1467,7 +1467,7 @@ export default function Configuracoes() {
     >
       <div className="flex flex-col flex-1 w-full">
         {/* CONTENT */}
-        <div className="w-full max-w-[1440px] mx-auto flex flex-col gap-6 pb-60">
+        <div className="w-full max-w-[1440px] mx-auto flex flex-col gap-6 pb-2 sm:pb-0">
           {loading ? (
             <Card className="text-center p-10">Carregando...</Card>
           ) : (

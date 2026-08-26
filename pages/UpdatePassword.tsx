@@ -59,7 +59,7 @@ export default function UpdatePassword() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#0a0a0a] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 py-8 bg-[#0a0a0a] relative overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}

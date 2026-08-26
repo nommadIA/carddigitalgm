@@ -400,6 +400,9 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 {saving ? "Salvando..." : "Salvar"}
               </button>
             </div>
+
+            {/* Espaço vazio garantido no final para visualização limpa do background */}
+            <div className="w-full h-24 sm:h-8 pointer-events-none select-none" aria-hidden="true" />
           </div>
         </div>
       </div>

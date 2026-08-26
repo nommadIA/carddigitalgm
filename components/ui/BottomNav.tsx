@@ -51,9 +51,21 @@ export default function BottomNav() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Centraliza automaticamente o item ativo no seletor horizontal ao mudar de rota ou expandir
+  // Alinhamento inteligente do menu: se for um dos 5 primeiros ícones, mantém Início até Mercado 100% visíveis
   useEffect(() => {
-    if (expanded && activeItemRef.current && isMobile) {
+    if (!expanded || !isMobile || !scrollRef.current) return;
+
+    const activeIndex = allNavItems.findIndex(
+      (it) =>
+        location.pathname === it.to ||
+        (it.to !== "/" && location.pathname.startsWith(it.to))
+    );
+
+    if (activeIndex <= 4) {
+      // 5 primeiros ícones: reseta para o início para que fiquem os 5 perfeitamente alinhados e visíveis
+      scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (activeItemRef.current) {
+      // Se for um item além dos 5 primeiros (ex: Notas, Financeiro, Bio, Ajustes), traz para a visão
       activeItemRef.current.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
@@ -62,7 +74,7 @@ export default function BottomNav() {
     }
   }, [location.pathname, expanded, isMobile]);
 
-  // Suporte a arrastar com mouse para o seletor horizontal
+  // Suporte a arrastar com mouse/touch para o seletor horizontal
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!scrollRef.current) return;
     isDraggingRef.current = true;
@@ -88,7 +100,7 @@ export default function BottomNav() {
     <div className="md:hidden">
       <AnimatePresence mode="wait">
         {expanded ? (
-          /* MENU EXPANDIDO (GAVETEIRO) COM EFEITO GLASS BLUR E BARRA LARANJA NO TOPO */
+          /* MENU EXPANDIDO COM EFEITO GLASS BLUR E 5 PRIMEIROS ÍCONES ALINHADOS */
           <motion.nav
             key="expanded-menu"
             initial={{ y: 120, opacity: 0 }}
@@ -103,21 +115,21 @@ export default function BottomNav() {
                 setExpanded(false);
               }
             }}
-            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav bg-black/10 dark:bg-black/10 backdrop-blur-md border-t border-white/10 border-b-0 border-x-0 !rounded-t-[28px] !rounded-b-none pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] shadow-none select-none"
+            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav backdrop-blur-2xl border-t border-white/15 border-b-0 border-x-0 !rounded-t-[28px] !rounded-b-none pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+400px+12px)] -mb-[400px] shadow-none select-none overflow-hidden"
             style={{
               zIndex: 800,
               borderTopLeftRadius: "28px",
               borderTopRightRadius: "28px",
               borderBottomLeftRadius: "0px",
               borderBottomRightRadius: "0px",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              background: "rgba(10, 10, 14, 0.15)",
+              backdropFilter: "blur(28px) saturate(180%)",
+              WebkitBackdropFilter: "blur(28px) saturate(180%)",
+              background: "rgba(10, 10, 14, 0.45)",
             }}
           >
             {/* BARRA SUPERIOR CENTRALIZADA (CLIQUE OU ARRASTE PARA OCULTAR) */}
             <div
-              className="w-full flex justify-center py-1 cursor-pointer group active:opacity-80 transition-opacity"
+              className="w-full flex justify-center py-1.5 cursor-pointer group active:opacity-80 transition-opacity"
               onClick={() => setExpanded(false)}
               title="Toque ou arraste para baixo para ocultar o menu"
               role="button"
@@ -126,16 +138,15 @@ export default function BottomNav() {
               <div className="w-12 h-1.5 rounded-full bg-white/20 group-hover:bg-white/40 active:scale-95 transition-all" />
             </div>
 
-            {/* CONTAINER DO SELETOR DE ARRASTAR ESQUERDA/DIREITA */}
+            {/* CONTAINER DO SELETOR COM 5 ÍCONES VISÍVEIS POR PADRÃO */}
             <div className="relative w-full max-w-lg mx-auto">
-              {/* SELETOR ARRASTÁVEL COM ÍCONES LARANJA E TEXTO BRANCO */}
               <div
                 ref={scrollRef}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUpOrLeave}
                 onMouseLeave={handleMouseUpOrLeave}
-                className="flex items-center gap-1.5 overflow-x-auto px-5 py-1 no-scrollbar snap-x touch-pan-x scroll-smooth cursor-grab active:cursor-grabbing select-none"
+                className="flex items-center overflow-x-auto px-1 py-1.5 no-scrollbar snap-x touch-pan-x scroll-smooth cursor-grab active:cursor-grabbing select-none w-full"
               >
                 {allNavItems.map((it) => {
                   const Icon = it.icon;
@@ -150,7 +161,7 @@ export default function BottomNav() {
                       end={it.to === "/"}
                       ref={isActive ? activeItemRef : undefined}
                       className={({ isActive: navActive }) =>
-                        `shrink-0 snap-center flex flex-col items-center justify-center min-w-[64px] px-2 py-1.5 rounded-xl transition-all relative group cursor-pointer ${
+                        `shrink-0 snap-start basis-1/5 min-w-[20%] flex flex-col items-center justify-center min-h-[50px] px-1 py-1 rounded-xl transition-all relative group cursor-pointer ${
                           isActive || navActive
                             ? "text-white font-black"
                             : "text-zinc-300 hover:text-white font-medium"
@@ -161,9 +172,9 @@ export default function BottomNav() {
                         const active = isActive || navActive;
                         return (
                           <>
-                            {/* Ícone na cor laranja (var(--gm-primary)) limpo e sem efeito neon */}
+                            {/* Ícone na cor laranja (var(--gm-primary)) */}
                             <Icon
-                              size={21}
+                              size={22}
                               style={active ? { color: "var(--gm-primary)" } : undefined}
                               className={`transition-all duration-200 ${
                                 active
@@ -171,9 +182,9 @@ export default function BottomNav() {
                                   : "text-zinc-400 group-hover:text-zinc-200 group-hover:scale-105"
                               }`}
                             />
-                            {/* Texto BRANCO */}
+                            {/* Texto BRANCO centralizado */}
                             <span
-                              className={`text-[10.5px] tracking-tight mt-1 whitespace-nowrap ${
+                              className={`text-[10px] sm:text-[11px] tracking-tight mt-1 text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-full ${
                                 active
                                   ? "text-white font-black drop-shadow-xs"
                                   : "text-zinc-300 font-medium opacity-85 group-hover:opacity-100 group-hover:text-white"

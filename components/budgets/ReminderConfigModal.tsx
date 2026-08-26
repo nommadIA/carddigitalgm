@@ -273,6 +273,9 @@ export default function ReminderConfigModal({
                 Testar
               </button>
             </div>
+
+            {/* Espaço vazio garantido no final para visualização limpa do background */}
+            <div className="w-full h-16 sm:h-4 pointer-events-none select-none" aria-hidden="true" />
           </div>
         </div>
       </div>

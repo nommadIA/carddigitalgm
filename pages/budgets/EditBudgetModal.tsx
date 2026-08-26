@@ -450,6 +450,9 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                         <div className="text-[10px] text-slate-600 text-center">
                             * Lembrete “APROVADO” usa seus 3 horários em Configurações.
                         </div>
+
+                        {/* Espaço vazio garantido no final para visualização limpa do background */}
+                        <div className="w-full h-24 sm:h-8 pointer-events-none select-none" aria-hidden="true" />
                     </div>
                 </div>
             </div>

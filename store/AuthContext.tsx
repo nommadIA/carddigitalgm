@@ -62,7 +62,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       let tenants: any = null;
       let error: any = null;
       try {
-        const res = await supabase.rpc("get_my_tenants");
+        let res = await supabase.rpc("get_my_tenants");
+        if (res.error && String(res.error?.message || res.error).includes("future")) {
+          // Token clock skew: wait 400ms and retry once
+          await new Promise((r) => setTimeout(r, 400));
+          res = await supabase.rpc("get_my_tenants");
+        }
         tenants = res.data;
         error = res.error;
       } catch (err) {
@@ -71,7 +76,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       if (error) {
         const errorMsg = error?.message || String(error);
-        if (!errorMsg.includes("Failed to fetch")) {
+        if (!errorMsg.includes("Failed to fetch") && !errorMsg.includes("future") && !errorMsg.includes("JWT")) {
           console.warn("Erro ao buscar tenants:", errorMsg);
         }
         // não trava o app — usa tenant salvo se existir
@@ -170,11 +175,20 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {}
     setUser(null);
     setTenantId(null);
     setIsAdmin(false);
-    localStorage.removeItem("tenant_id");
+    try {
+      localStorage.removeItem("tenant_id");
+      localStorage.removeItem("gm.settings.cache.v1");
+      localStorage.removeItem("gm_colors_dark");
+      localStorage.removeItem("gm_button_dark");
+      localStorage.removeItem("gm.notifications");
+      localStorage.removeItem("gm.isNewUser");
+    } catch {}
     applySettingsToDOM(DEFAULT_SETTINGS, false, null);
   };
 

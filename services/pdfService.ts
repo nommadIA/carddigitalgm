@@ -1117,3 +1117,534 @@ export async function generateFullAppSummaryPdf(data: FullAppSummaryData) {
     throw err;
   }
 }
+
+export type NotePdfItem = {
+  id?: string;
+  title: string;
+  content: string;
+  category?: string;
+  type?: string;
+  status?: string;
+  responsible_name?: string;
+  delivery_date?: string;
+  delivery_time?: string;
+  created_at?: string;
+  layout_url?: string;
+};
+
+export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) {
+  try {
+    const timbradoUrl = settings?.timbrado_url || "";
+    if (!timbradoUrl) {
+      throw new Error(
+        "Nenhum timbrado configurado. Vá em Configurações e envie o timbrado A4 (PNG/JPG)."
+      );
+    }
+
+    const doc = await PDFDocument.create();
+    const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+
+    const bgImage = await embedBackgroundImage(doc, timbradoUrl);
+
+    const W = 595.28;
+    const H = 841.89;
+
+    const PX_W = 2480;
+    const PX_H = 3508;
+
+    // Margens e limites idênticos aos dos Orçamentos
+    const CONTENT_X_PX = 160;
+    const CONTENT_TOP_PX = 230;
+    const CONTENT_W_PX = 2160;
+    const CONTENT_H_PX = 2260;
+
+    const CONTENT_X = (CONTENT_X_PX / PX_W) * W;
+    const CONTENT_W = (CONTENT_W_PX / PX_W) * W;
+    const CONTENT_RIGHT_X = CONTENT_X + CONTENT_W;
+
+    const CONTENT_TOP_Y = H - (CONTENT_TOP_PX / PX_H) * H;
+    const CONTENT_BOTTOM_Y = H - ((CONTENT_TOP_PX + CONTENT_H_PX) / PX_H) * H;
+
+    let cursorY = CONTENT_TOP_Y;
+    let page: PDFPage;
+
+    const cText = rgb(0.1, 0.1, 0.1);
+    const cGray = rgb(0.3, 0.3, 0.3);
+    const cLine = rgb(0.85, 0.85, 0.85);
+
+    const addPage = () => {
+      const p = doc.addPage([W, H]);
+      p.drawImage(bgImage, { x: 0, y: 0, width: W, height: H });
+      page = p;
+      cursorY = CONTENT_TOP_Y;
+    };
+
+    const checkSpace = (heightNeeded: number) => {
+      if (cursorY - heightNeeded < CONTENT_BOTTOM_Y) addPage();
+    };
+
+    addPage();
+
+    const drawLeft = (txt: string, size: number, yPos: number, bold = false, color = cText) => {
+      page.drawText(stripEmojis(txt), {
+        x: CONTENT_X,
+        y: yPos,
+        size,
+        font: bold ? fontBold : fontRegular,
+        color,
+      });
+    };
+
+    const hr = (yPos: number) => {
+      page.drawLine({
+        start: { x: CONTENT_X, y: yPos },
+        end: { x: CONTENT_RIGHT_X, y: yPos },
+        thickness: 0.8,
+        color: cLine,
+      });
+    };
+
+    // --- CABEÇALHO DA NOTA (PADRÃO ORÇAMENTO) ---
+    checkSpace(60);
+    const safeTitle = note.title || "NOTA / ORDEM DE SERVIÇO";
+    drawLeft(safeTitle.toUpperCase(), 13, cursorY, true);
+    cursorY -= 13;
+
+    const dateStr = note.created_at
+      ? new Date(note.created_at).toLocaleDateString("pt-BR")
+      : new Date().toLocaleDateString("pt-BR");
+    drawLeft(`Criado em: ${dateStr}`, 9, cursorY, false, cGray);
+
+    if (note.delivery_date) {
+      cursorY -= 11;
+      const formattedDate = note.delivery_date.includes("-")
+        ? note.delivery_date.split("-").reverse().join("/")
+        : note.delivery_date;
+      const timeStr = note.delivery_time ? ` às ${note.delivery_time}` : "";
+      drawLeft(`Prazo de Entrega: ${formattedDate}${timeStr}`, 9, cursorY, false, cGray);
+    }
+
+    if (note.responsible_name) {
+      cursorY -= 11;
+      drawLeft(`Responsável: ${note.responsible_name}`, 9, cursorY, false, cGray);
+    }
+
+    if (note.status) {
+      cursorY -= 11;
+      drawLeft(`Status: ${note.status.toUpperCase()}`, 9, cursorY, false, cGray);
+    }
+
+    cursorY -= 20; // Respiro padrão
+
+    // --- SEÇÃO 1: DESCRIÇÃO / TEXTO EM DUAS COLUNAS LADO A LADO ---
+    checkSpace(25);
+    drawLeft("DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO", 10, cursorY, true);
+    cursorY -= 15;
+    hr(cursorY);
+    cursorY -= 18;
+
+    // --- CONVERSÃO LIMPA DE HTML PARA TEXTO ---
+    const cleanLines: string[] = [];
+    if (typeof document !== "undefined") {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = note.content || "";
+
+      // Add line breaks after block elements
+      tempDiv.querySelectorAll("p, div, li, h1, h2, h3, h4, h5, h6, tr").forEach((el) => {
+        el.insertAdjacentText("afterend", "\n");
+      });
+      tempDiv.querySelectorAll("br").forEach((el) => {
+        el.insertAdjacentText("afterend", "\n");
+      });
+
+      const raw = tempDiv.textContent || tempDiv.innerText || "";
+      raw.split(/\r?\n/).forEach((l) => {
+        const normalized = l.replace(/\s+/g, " ").trim();
+        if (normalized) {
+          cleanLines.push(normalized);
+        }
+      });
+    } else {
+      const raw = (note.content || "")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/(p|div|li|tr|h[1-6])>/gi, "\n")
+        .replace(/<[^>]+>/g, "");
+      raw.split(/\r?\n/).forEach((l) => {
+        const normalized = l.replace(/\s+/g, " ").trim();
+        if (normalized) {
+          cleanLines.push(normalized);
+        }
+      });
+    }
+
+    // Configuração de 2 colunas lado a lado no timbrado
+    const bodySize = 9.5;
+    const bodyLineHeight = 13.5;
+    const colGap = 16;
+    const colW = (CONTENT_W - colGap) / 2;
+    const col1X = CONTENT_X;
+    const col2X = CONTENT_X + colW + colGap;
+    const textBottomLimit = CONTENT_BOTTOM_Y + 55; // Reservado para assinaturas e rodapé delimitado
+
+    if (cleanLines.length === 0) {
+      drawLeft("Nenhuma descrição informada.", bodySize, cursorY, false, cGray);
+      cursorY -= bodyLineHeight + 10;
+    } else {
+      // Coleta todas as linhas quebradas para a largura da coluna
+      const allWrappedLines: string[] = [];
+      for (let pIdx = 0; pIdx < cleanLines.length; pIdx++) {
+        const paragraph = cleanLines[pIdx];
+        const lines = wrapText(paragraph, colW, fontRegular, bodySize);
+        for (const l of lines) {
+          allWrappedLines.push(l);
+        }
+      }
+
+      let currentCol: 1 | 2 = 1;
+      let col1StartY = cursorY;
+      let col1CursorY = cursorY;
+      let col2CursorY = cursorY;
+
+      for (let i = 0; i < allWrappedLines.length; i++) {
+        const line = allWrappedLines[i];
+
+        if (currentCol === 1) {
+          if (col1CursorY - bodyLineHeight < textBottomLimit) {
+            // Transborda para a Coluna 2 na mesma página
+            currentCol = 2;
+            col2CursorY = col1StartY;
+            page.drawText(stripEmojis(line), {
+              x: col2X,
+              y: col2CursorY,
+              size: bodySize,
+              font: fontRegular,
+              color: cText,
+            });
+            col2CursorY -= bodyLineHeight;
+          } else {
+            page.drawText(stripEmojis(line), {
+              x: col1X,
+              y: col1CursorY,
+              size: bodySize,
+              font: fontRegular,
+              color: cText,
+            });
+            col1CursorY -= bodyLineHeight;
+          }
+        } else {
+          // Coluna 2
+          if (col2CursorY - bodyLineHeight < textBottomLimit) {
+            // Ambas as colunas foram preenchidas nesta página: cria nova página
+            addPage();
+            col1StartY = CONTENT_TOP_Y;
+            col1CursorY = CONTENT_TOP_Y;
+            col2CursorY = CONTENT_TOP_Y;
+            currentCol = 1;
+
+            page.drawText(stripEmojis(line), {
+              x: col1X,
+              y: col1CursorY,
+              size: bodySize,
+              font: fontRegular,
+              color: cText,
+            });
+            col1CursorY -= bodyLineHeight;
+          } else {
+            page.drawText(stripEmojis(line), {
+              x: col2X,
+              y: col2CursorY,
+              size: bodySize,
+              font: fontRegular,
+              color: cText,
+            });
+            col2CursorY -= bodyLineHeight;
+          }
+        }
+      }
+
+      // Atualiza cursorY global para o menor cursor entre as colunas ativas
+      cursorY = Math.min(col1CursorY, currentCol === 2 ? col2CursorY : col1CursorY) - 14;
+    }
+
+    // --- SEÇÃO 2: IMAGENS DE LAYOUT COM PRÉVIAS AMPLIADAS ---
+    const imagesToRender: string[] = [];
+    if (note.layout_url) {
+      const trimmed = note.layout_url.trim();
+      let parsedUrls: string[] = [];
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        try {
+          const arr = JSON.parse(trimmed);
+          if (Array.isArray(arr)) parsedUrls = arr.map((s) => String(s).trim()).filter(Boolean);
+        } catch (e) {}
+      }
+      if (parsedUrls.length === 0) {
+        parsedUrls = trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+      }
+      for (const p of parsedUrls) {
+        if (!imagesToRender.includes(p)) imagesToRender.push(p);
+      }
+    }
+
+    if (typeof document !== "undefined") {
+      try {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = note.content || "";
+        const imgElements = tempDiv.getElementsByTagName("img");
+        for (let i = 0; i < imgElements.length; i++) {
+          const src = imgElements[i].getAttribute("src");
+          if (src && !imagesToRender.includes(src)) {
+            imagesToRender.push(src);
+          }
+        }
+      } catch (e) {}
+    }
+
+    const limitedImages = imagesToRender.slice(0, 6);
+
+    if (limitedImages.length > 0) {
+      interface LoadedNoteImg {
+        img: any;
+        w: number;
+        h: number;
+        index: number;
+      }
+
+      const loadedImages: LoadedNoteImg[] = [];
+
+      for (let imgIdx = 0; imgIdx < limitedImages.length; imgIdx++) {
+        const imgUrl = limitedImages[imgIdx];
+        try {
+          let fetchUrl = imgUrl;
+          let res = await fetch(fetchUrl);
+          if (!res.ok) {
+            const path =
+              tryExtractSupabaseStoragePath(imgUrl, "note_assets") ||
+              tryExtractSupabaseStoragePath(imgUrl, "timbrados");
+            if (path) {
+              const bucket = imgUrl.includes("/timbrados/") ? "timbrados" : "note_assets";
+              const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 10);
+              if (data?.signedUrl) {
+                fetchUrl = data.signedUrl;
+                res = await fetch(fetchUrl);
+              }
+            }
+          }
+
+          const ab = await res.arrayBuffer();
+          const bytes = bytesFromArrayBuffer(ab);
+
+          if (looksLikePNG(bytes)) {
+            const embedded = await doc.embedPng(bytes);
+            loadedImages.push({ img: embedded, w: embedded.width, h: embedded.height, index: imgIdx + 1 });
+          } else if (looksLikeJPG(bytes)) {
+            const embedded = await doc.embedJpg(bytes);
+            loadedImages.push({ img: embedded, w: embedded.width, h: embedded.height, index: imgIdx + 1 });
+          } else if (typeof document !== "undefined") {
+            const canvasRes = await new Promise<LoadedNoteImg | null>((resolve) => {
+              const htmlImg = new Image();
+              htmlImg.crossOrigin = "anonymous";
+              htmlImg.onload = async () => {
+                try {
+                  const canvas = document.createElement("canvas");
+                  canvas.width = htmlImg.naturalWidth || htmlImg.width || 400;
+                  canvas.height = htmlImg.naturalHeight || htmlImg.height || 300;
+                  const ctx = canvas.getContext("2d");
+                  if (ctx) {
+                    ctx.drawImage(htmlImg, 0, 0);
+                    const dataUrl = canvas.toDataURL("image/png");
+                    const resCanvas = await fetch(dataUrl);
+                    const abCanvas = await resCanvas.arrayBuffer();
+                    const embedded = await doc.embedPng(new Uint8Array(abCanvas));
+                    resolve({ img: embedded, w: canvas.width, h: canvas.height, index: imgIdx + 1 });
+                    return;
+                  }
+                } catch (e) {}
+                resolve(null);
+              };
+              htmlImg.onerror = () => resolve(null);
+              htmlImg.src = imgUrl;
+            });
+
+            if (canvasRes) loadedImages.push(canvasRes);
+          }
+        } catch (errImg) {
+          console.warn("Falha ao embutir imagem no PDF da nota:", imgUrl, errImg);
+        }
+      }
+
+      if (loadedImages.length > 0) {
+        const count = loadedImages.length;
+        // Agrupamento estrito:
+        // 1 img: [1] | 2 imgs: [2] | 3 imgs: [2, 1] | 4 imgs: [2, 2] | 5 imgs: [3, 2] | 6 imgs: [3, 3]
+        let rowChunks: (typeof loadedImages)[] = [];
+        if (count === 1) {
+          rowChunks = [loadedImages.slice(0, 1)];
+        } else if (count === 2) {
+          rowChunks = [loadedImages.slice(0, 2)];
+        } else if (count === 3) {
+          rowChunks = [loadedImages.slice(0, 2), loadedImages.slice(2, 3)];
+        } else if (count === 4) {
+          rowChunks = [loadedImages.slice(0, 2), loadedImages.slice(2, 4)];
+        } else if (count === 5) {
+          rowChunks = [loadedImages.slice(0, 3), loadedImages.slice(3, 5)];
+        } else {
+          rowChunks = [loadedImages.slice(0, 3), loadedImages.slice(3, 6)];
+        }
+
+        const totalRows = rowChunks.length;
+
+        // Otimização de altura para encaixar e ampliar as prévias de imagem
+        const spaceLeftOnCurrentPage = cursorY - CONTENT_BOTTOM_Y - 50; // 50pt reservado para assinaturas no rodapé
+        const canFitOnCurrentPage =
+          totalRows === 1
+            ? spaceLeftOnCurrentPage >= 100
+            : spaceLeftOnCurrentPage >= 180;
+
+        if (!canFitOnCurrentPage) {
+          addPage();
+        }
+
+        // Prévia das imagens ampliada conforme solicitado pelo usuário
+        const availableHeight = cursorY - CONTENT_BOTTOM_Y - 50;
+        let maxRowHeight = 135;
+        if (totalRows === 1) {
+          maxRowHeight = Math.min(Math.max(90, availableHeight - 30), count === 1 ? 220 : 160);
+        } else {
+          // Para 2 linhas (3, 4, 5 ou 6 imagens), ampliamos a altura de cada linha
+          maxRowHeight = Math.min(Math.max(75, (availableHeight - 35) / totalRows), count <= 4 ? 135 : 105);
+        }
+
+        checkSpace(28);
+        drawLeft("MÍDIAS E LAYOUTS", 10, cursorY, true);
+        cursorY -= 13;
+        hr(cursorY);
+        cursorY -= 14;
+
+        for (const rowImages of rowChunks) {
+          const rowCols = rowImages.length;
+          const gap = rowCols === 1 ? 0 : rowCols === 2 ? 12 : 9;
+          const colWidth = (CONTENT_W - (rowCols - 1) * gap) / rowCols;
+
+          const calculatedHeights = rowImages.map((im) => {
+            const aspect = im.h / im.w;
+            return Math.min(colWidth * aspect, maxRowHeight);
+          });
+          const rowHeight = Math.max(...calculatedHeights, 50);
+
+          checkSpace(rowHeight + 12);
+
+          const rowTotalWidth = rowCols * colWidth + (rowCols - 1) * gap;
+          const startX = CONTENT_X + (CONTENT_W - rowTotalWidth) / 2;
+
+          rowImages.forEach((im, colIdx) => {
+            const posX = startX + colIdx * (colWidth + gap);
+            const aspect = im.h / im.w;
+            const drawH = Math.min(colWidth * aspect, maxRowHeight);
+            const drawW = drawH / aspect;
+            const offsetX = (colWidth - drawW) / 2;
+            const offsetY = (rowHeight - drawH) / 2;
+
+            const finalX = posX + offsetX;
+            const finalY = cursorY - rowHeight + offsetY;
+
+            // Borda sutil ao redor do quadro da imagem
+            page.drawRectangle({
+              x: finalX - 0.8,
+              y: finalY - 0.8,
+              width: drawW + 1.6,
+              height: drawH + 1.6,
+              borderColor: cLine,
+              borderWidth: 0.8,
+            });
+
+            // Desenha a imagem ampliada
+            page.drawImage(im.img, {
+              x: finalX,
+              y: finalY,
+              width: drawW,
+              height: drawH,
+            });
+
+            // Badge com o número da ordem da miniatura no canto superior
+            const badgeTxt = String(im.index);
+            const badgeW = 13;
+            const badgeH = 11;
+            const badgeX = finalX + drawW - badgeW - 2;
+            const badgeY = finalY + drawH - badgeH - 2;
+
+            page.drawRectangle({
+              x: badgeX,
+              y: badgeY,
+              width: badgeW,
+              height: badgeH,
+              color: im.index === 1 ? rgb(1, 0.41, 0) : rgb(0.12, 0.12, 0.14),
+            });
+            page.drawText(badgeTxt, {
+              x: badgeX + (im.index < 10 ? 4 : 2),
+              y: badgeY + 2.5,
+              size: 7,
+              font: fontBold,
+              color: rgb(1, 1, 1),
+            });
+          });
+
+          cursorY -= rowHeight + 12;
+        }
+      }
+    }
+
+    // --- SEÇÃO 3: ASSINATURAS SEMPRE PERTO DO LIMITE DA PARTE INFERIOR DELIMITADA ---
+    // Se o conteúdo ultrapassou o espaço para assinaturas, pula para uma nova página
+    if (cursorY < CONTENT_BOTTOM_Y + 45) {
+      addPage();
+    }
+
+    // Fixa as assinaturas sempre rentes ao limite inferior delimitado (CONTENT_BOTTOM_Y + 30)
+    const sigY = CONTENT_BOTTOM_Y + 30;
+    const colSigW = (CONTENT_W - 40) / 2;
+
+    // Assinatura Recebedor
+    page.drawLine({
+      start: { x: CONTENT_X, y: sigY },
+      end: { x: CONTENT_X + colSigW, y: sigY },
+      thickness: 0.8,
+      color: cLine,
+    });
+    page.drawText("Assinatura do Recebedor", {
+      x: CONTENT_X + 5,
+      y: sigY - 12,
+      size: 8.5,
+      font: fontRegular,
+      color: cGray,
+    });
+
+    // Assinatura Responsável
+    page.drawLine({
+      start: { x: CONTENT_RIGHT_X - colSigW, y: sigY },
+      end: { x: CONTENT_RIGHT_X, y: sigY },
+      thickness: 0.8,
+      color: cLine,
+    });
+    page.drawText("Assinatura do Responsável", {
+      x: CONTENT_RIGHT_X - colSigW + 5,
+      y: sigY - 12,
+      size: 8.5,
+      font: fontRegular,
+      color: cGray,
+    });
+
+    // Salvar e fazer download
+    const pdfBytes = await doc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const cleanFileName = sanitizeFilename(note.title || "NOTA");
+    link.download = `NOTA ${cleanFileName}.pdf`;
+    link.click();
+  } catch (err: any) {
+    console.error("Erro gerando PDF da Nota", err);
+    alert("Erro ao gerar PDF: " + (err?.message || "Verifique o timbrado nas configurações."));
+  }
+}
+

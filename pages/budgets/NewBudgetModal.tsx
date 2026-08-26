@@ -1133,6 +1133,9 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
               </div>
             </div>
           </div>
+
+          {/* Espaço vazio garantido no final para visualização limpa do background */}
+          <div className="w-full h-28 sm:h-12 pointer-events-none select-none" aria-hidden="true" />
         </div>
       </div>
 
