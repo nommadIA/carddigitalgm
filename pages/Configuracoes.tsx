@@ -308,21 +308,108 @@ export default function Configuracoes() {
   }, [tenantId]);
 
   // Helper ultra fluido para aplicar alterações de cores instantaneamente no DOM
-  const updateDomColor = (cssVar: string, value: string) => {
+  const updateDomColor = (cssVarOrKey: string, value: string) => {
+    if (!value) return;
     const root = document.documentElement;
-    root.style.setProperty(cssVar, value);
-    if (cssVar === "--gm-primary") {
+    const normalized = cssVarOrKey.startsWith("--") ? cssVarOrKey : `--${cssVarOrKey.replace(/_/g, "-")}`;
+
+    // Mapeamento abrangente de variáveis
+    if (
+      normalized === "--brand-primary" ||
+      normalized === "--gm-primary" ||
+      cssVarOrKey === "brand_primary" ||
+      cssVarOrKey === "primary"
+    ) {
+      root.style.setProperty("--gm-primary", value);
+      root.style.setProperty("--primary", value);
       root.style.setProperty("--brand-primary", value);
+      root.style.setProperty("--gm-btn-bg", value);
+      root.style.setProperty("--gm-btn-border", value);
+      root.style.setProperty("--gm-btn-icon", value);
       const rgb = hexToRgb(value);
       if (rgb) root.style.setProperty("--gm-primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
       root.style.setProperty("--gm-primary-foreground", getContrastColor(value));
-    } else if (cssVar === "--gm-accent") {
+    } else if (
+      normalized === "--brand-accent" ||
+      normalized === "--gm-accent" ||
+      cssVarOrKey === "brand_accent" ||
+      cssVarOrKey === "accent"
+    ) {
+      root.style.setProperty("--gm-accent", value);
       root.style.setProperty("--brand-accent", value);
       root.style.setProperty("--gm-button", value);
       const rgb = hexToRgb(value);
       if (rgb) root.style.setProperty("--gm-accent-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
-    } else if (cssVar === "--gm-bg") {
+    } else if (
+      normalized === "--brand-bg" ||
+      normalized === "--gm-bg" ||
+      cssVarOrKey === "brand_bg" ||
+      cssVarOrKey === "bg"
+    ) {
+      root.style.setProperty("--gm-bg", value);
+      root.style.setProperty("--bg", value);
       root.style.setProperty("--brand-bg", value);
+    } else if (
+      normalized === "--brand-title" ||
+      normalized === "--gm-title" ||
+      cssVarOrKey === "brand_title" ||
+      cssVarOrKey === "title"
+    ) {
+      root.style.setProperty("--gm-title", value);
+      root.style.setProperty("--text", value);
+    } else if (
+      normalized === "--brand-subtitle" ||
+      normalized === "--gm-subtitle" ||
+      cssVarOrKey === "brand_subtitle" ||
+      cssVarOrKey === "subtitle"
+    ) {
+      root.style.setProperty("--gm-subtitle", value);
+      root.style.setProperty("--text-secondary", value);
+    } else if (
+      normalized === "--brand-icon" ||
+      normalized === "--gm-icon" ||
+      cssVarOrKey === "brand_icon" ||
+      cssVarOrKey === "icon"
+    ) {
+      root.style.setProperty("--gm-icon", value);
+    } else if (
+      normalized === "--menu-primary" ||
+      normalized === "--gm-menu-primary" ||
+      cssVarOrKey === "menu_primary"
+    ) {
+      root.style.setProperty("--gm-menu-primary", value);
+    } else if (
+      normalized === "--menu-bg" ||
+      normalized === "--gm-menu-bg" ||
+      cssVarOrKey === "menu_bg"
+    ) {
+      root.style.setProperty("--gm-menu-bg", value);
+    } else if (
+      normalized === "--menu-title" ||
+      normalized === "--gm-menu-title" ||
+      cssVarOrKey === "menu_title"
+    ) {
+      root.style.setProperty("--gm-menu-title", value);
+    } else if (
+      normalized === "--menu-subtitle" ||
+      normalized === "--gm-menu-subtitle" ||
+      cssVarOrKey === "menu_subtitle"
+    ) {
+      root.style.setProperty("--gm-menu-subtitle", value);
+    } else if (
+      normalized === "--menu-icon" ||
+      normalized === "--gm-menu-icon" ||
+      cssVarOrKey === "menu_icon"
+    ) {
+      root.style.setProperty("--gm-menu-icon", value);
+    } else if (
+      normalized === "--menu-button" ||
+      normalized === "--gm-menu-button" ||
+      cssVarOrKey === "menu_button"
+    ) {
+      root.style.setProperty("--gm-menu-button", value);
+    } else {
+      root.style.setProperty(normalized, value);
     }
   };
 
@@ -437,6 +524,16 @@ export default function Configuracoes() {
           brand_primary: brandPrimary,
           brand_accent: brandAccent,
           brand_bg: brandBg,
+          brand_title: brandTitle,
+          brand_subtitle: brandSubtitle,
+          brand_icon: brandIcon,
+          brand_button: brandAccent,
+          menu_primary: menuPrimary,
+          menu_bg: menuBg,
+          menu_title: menuTitle,
+          menu_subtitle: menuSubtitle,
+          menu_icon: menuIcon,
+          menu_button: menuButton,
           font_family: previewFont || fontFamily,
           button_config_dark: {
             style: buttonStyleDark,
@@ -476,6 +573,15 @@ export default function Configuracoes() {
     brandPrimary,
     brandAccent,
     brandBg,
+    brandTitle,
+    brandSubtitle,
+    brandIcon,
+    menuPrimary,
+    menuBg,
+    menuTitle,
+    menuSubtitle,
+    menuIcon,
+    menuButton,
     fontFamily,
     previewFont,
     buttonStyleDark,
@@ -1419,6 +1525,7 @@ export default function Configuracoes() {
           initialColor={value}
           title="Ajustar Cor"
           subtitle="Arraste a barra de espectro para alterar a matiz ou refine a saturação e luminosidade."
+          onPreview={(newHex) => onChange(newHex)}
           onApply={(newHex) => onChange(newHex)}
         />
       </>
@@ -2688,111 +2795,48 @@ export default function Configuracoes() {
         </div>
       </div>
 
-      {/* PAINEL / BOTÃO FLUTUANTE "SALVAR" NO LADO DIREITO DO APP (IGUAL O DA BIO EDITOR) */}
-      <div className="fixed top-1/2 -translate-y-1/2 right-0 z-[9999] select-none pointer-events-none flex flex-col items-end">
-        <AnimatePresence mode="wait">
-          {isDocked ? (
-            /* Estado Recolhido (Docked): Barra vertical de cor fixada na borda direita com sensibilidade a toque e arrasto */
+      {/* BOTÃO FLUTUANTE "SALVAR" NO CANTO INFERIOR DIREITO DA TELA DO APP (MESMA POSIÇÃO DO WHATSAPP) */}
+      <div 
+        className="fixed bottom-[calc(var(--bottom-nav-height,96px)+16px)] md:bottom-7 right-4 md:right-7 z-[10002] select-none pointer-events-auto flex items-center gap-3"
+      >
+        <AnimatePresence>
+          {saveSuccess && (
             <motion.div
-              key="docked"
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
-              transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              drag="x"
-              dragConstraints={{ left: -150, right: 0 }}
-              dragElastic={0.15}
-              onDragStart={() => {
-                isDraggingRef.current = true;
-              }}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -20) {
-                  setIsDocked(false);
-                }
-                setTimeout(() => {
-                  isDraggingRef.current = false;
-                }, 100);
-              }}
-              onClick={() => {
-                if (isDraggingRef.current) return;
-                setIsDocked(false);
-              }}
-              whileDrag={{ scale: 1.02 }}
-              className="pointer-events-auto cursor-grab active:cursor-grabbing flex flex-col items-end group"
-              title="Clique ou arraste para a esquerda para abrir o botão Salvar"
+              initial={{ opacity: 0, scale: 0.8, x: 20 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.8, x: 20 }}
+              className="flex items-center gap-2 text-[var(--gm-primary,#FE540B)] bg-white/95 dark:bg-zinc-900/95 border border-[var(--gm-primary,#FE540B)]/40 px-3.5 py-2 rounded-xl text-xs font-black shadow-2xl backdrop-blur-md"
             >
-              <div className="flex flex-col gap-2 py-8 pl-10 pr-1 bg-transparent select-none">
-                <div className="w-3.5 h-20 rounded-full bg-[var(--gm-primary)] shadow-xl transition-all group-hover:w-5 flex items-center justify-center text-white border border-amber-300/40">
-                  <Save size={15} className="opacity-90 animate-pulse text-white" />
-                </div>
-              </div>
-            </motion.div>
-          ) : (
-            /* Estado Expandido: Botão circular flutuante arrastável no lado direito */
-            <motion.div
-              key="expanded"
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
-              transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              drag="x"
-              dragConstraints={{ left: -100, right: 100 }}
-              dragElastic={0.15}
-              onDragStart={() => {
-                isDraggingRef.current = true;
-              }}
-              onDragEnd={(e, info) => {
-                if (info.offset.x > 30 || info.offset.x < -30) {
-                  setIsDocked(true);
-                }
-                setTimeout(() => {
-                  isDraggingRef.current = false;
-                }, 100);
-              }}
-              whileDrag={{ scale: 0.95, opacity: 0.9 }}
-              className="pointer-events-auto flex flex-col gap-3 pr-3 sm:pr-5 items-end justify-center cursor-grab active:cursor-grabbing"
-            >
-              <AnimatePresence>
-                {saveSuccess && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8, x: 20 }}
-                    animate={{ opacity: 1, scale: 1, x: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                    className="flex items-center gap-2 text-[var(--gm-primary)] bg-white/95 dark:bg-zinc-900/95 border border-[var(--gm-primary)]/40 px-3.5 py-2 rounded-lg text-xs font-black shadow-lg backdrop-blur-md"
-                  >
-                    <CheckCircle2 size={16} className="text-[var(--gm-primary)] animate-bounce" />
-                    <span>Configurações Salvas!</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="relative group flex items-center">
-                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
-                  {saving ? "Salvando..." : "Salvar Configurações"}
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (isDraggingRef.current) return;
-                    handleSave();
-                  }}
-                  disabled={saving}
-                  className="gm-floating-save-btn w-14 h-14 bg-[var(--gm-primary)] hover:brightness-110 active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(255,105,0,0.45)] hover:shadow-[0_12px_32px_rgba(255,105,0,0.65)] transition-all duration-300 hover:scale-110 disabled:opacity-50 border border-orange-300/40 cursor-pointer outline-none"
-                  title="Salvar todas as alterações de configurações"
-                >
-                  {saving ? (
-                    <Loader2 className="w-6 h-6 animate-spin text-white" />
-                  ) : saveSuccess ? (
-                    <CheckCircle2 className="w-6 h-6 text-white animate-bounce" />
-                  ) : (
-                    <Save className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-200" />
-                  )}
-                </button>
-              </div>
+              <CheckCircle2 size={16} className="text-[var(--gm-primary,#FE540B)] animate-bounce" />
+              <span>Configurações Salvas!</span>
             </motion.div>
           )}
         </AnimatePresence>
+
+        <div className="relative group flex items-center">
+          <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
+            {saving ? "Salvando..." : "Salvar Configurações"}
+          </span>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="gm-floating-save-btn w-12 h-12 md:w-14 md:h-14 hover:brightness-110 active:scale-95 text-white rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-105 disabled:opacity-50 border border-white/30 cursor-pointer outline-none shadow-2xl"
+            style={{
+              backgroundColor: "var(--gm-primary, #FE540B)",
+              boxShadow: "0 8px 28px var(--gm-primary, rgba(255,105,0,0.5))"
+            }}
+            title="Salvar todas as alterações de configurações"
+          >
+            {saving ? (
+              <Loader2 className="w-6 h-6 animate-spin text-white" />
+            ) : saveSuccess ? (
+              <CheckCircle2 className="w-6 h-6 text-white animate-bounce" />
+            ) : (
+              <Save className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-200" />
+            )}
+          </button>
+        </div>
       </div>
     </Page>
   );

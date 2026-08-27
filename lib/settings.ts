@@ -21,6 +21,18 @@ export type AppSettings = {
   brand_primary?: string | null;
   brand_accent?: string | null;
   brand_bg?: string | null;
+  brand_title?: string | null;
+  brand_subtitle?: string | null;
+  brand_icon?: string | null;
+  brand_button?: string | null;
+
+  menu_primary?: string | null;
+  menu_bg?: string | null;
+  menu_title?: string | null;
+  menu_subtitle?: string | null;
+  menu_icon?: string | null;
+  menu_button?: string | null;
+
   font_family?: string | null;
 
   avatar_url?: string | null;
@@ -161,14 +173,14 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
   let accent = savedDark?.accent || s.brand_accent || primary || "#FF7A38";
   let bg = savedDark?.bg || s.brand_bg || "#0B0B0C";
   let title = savedDark?.title || "#FFFFFF";
-  let subtitle = savedDark?.subtitle || "#8B8B92";
+  let subtitle = savedDark?.subtitle || "#CBD5E1";
   let icon = savedDark?.icon || primary;
   let button = savedDark?.button || primary;
 
   let menu_primary = savedDark?.menu_primary || primary;
   let menu_bg = savedDark?.menu_bg || "#131315";
   let menu_title = savedDark?.menu_title || "#FFFFFF";
-  let menu_subtitle = savedDark?.menu_subtitle || "#8B8B92";
+  let menu_subtitle = savedDark?.menu_subtitle || "#CBD5E1";
   let menu_icon = savedDark?.menu_icon || primary;
   let menu_button = savedDark?.menu_button || primary;
 
@@ -177,6 +189,22 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
     if (s.brand_primary) primary = s.brand_primary;
     if (s.brand_accent) accent = s.brand_accent;
     if (s.brand_bg) bg = s.brand_bg;
+    if (s.brand_title) title = s.brand_title;
+    if (s.brand_subtitle) subtitle = s.brand_subtitle;
+    if (s.brand_icon) icon = s.brand_icon;
+    else if (s.brand_primary) icon = s.brand_primary;
+    if (s.brand_button) button = s.brand_button;
+    else if (s.brand_primary) button = s.brand_primary;
+
+    if (s.menu_primary) menu_primary = s.menu_primary;
+    else if (s.brand_primary) menu_primary = s.brand_primary;
+    if (s.menu_bg) menu_bg = s.menu_bg;
+    if (s.menu_title) menu_title = s.menu_title;
+    if (s.menu_subtitle) menu_subtitle = s.menu_subtitle;
+    if (s.menu_icon) menu_icon = s.menu_icon;
+    else if (s.brand_primary) menu_icon = s.brand_primary;
+    if (s.menu_button) menu_button = s.menu_button;
+    else if (s.brand_primary) menu_button = s.brand_primary;
   }
 
   if (primary) {

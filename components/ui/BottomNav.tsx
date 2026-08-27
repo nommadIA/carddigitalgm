@@ -172,14 +172,14 @@ export default function BottomNav() {
                         const active = isActive || navActive;
                         return (
                           <>
-                            {/* Ícone na cor laranja (var(--gm-primary)) */}
+                            {/* Ícone na cor dinâmica do tema (var(--gm-menu-icon, var(--gm-primary))) */}
                             <Icon
                               size={22}
-                              style={active ? { color: "var(--gm-primary)" } : undefined}
+                              style={{ color: "var(--gm-menu-icon, var(--gm-primary, #FE540B))" }}
                               className={`transition-all duration-200 ${
                                 active
-                                  ? "scale-110"
-                                  : "text-zinc-400 group-hover:text-zinc-200 group-hover:scale-105"
+                                  ? "scale-110 opacity-100 drop-shadow-sm"
+                                  : "opacity-75 group-hover:opacity-100 group-hover:scale-105"
                               }`}
                             />
                             {/* Texto BRANCO centralizado */}

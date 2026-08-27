@@ -84,12 +84,15 @@ html:not([data-theme="light"]):not(.gm-light) .fora {
   --gm-accent-10: rgba(255, 122, 56, 0.1);
   --gm-accent-20: rgba(255, 122, 56, 0.2);
 
-  /* Dark Mode Default - Official Palette (Ink, Graphite, Slate, Filament, Ember, Spark, Bone, Ash) */
+  /* Dark Mode Default - High Contrast Palette */
   --gm-bg: #0B0B0C;
   --gm-bg-secondary: #131315;
-  --gm-text: #F2F2F3;
-  --gm-text-secondary: #8B8B92;
-  --gm-text-tertiary: #8B8B92;
+  --gm-text: #FFFFFF;
+  --gm-text-secondary: #CBD5E1;
+  --gm-text-tertiary: #94A3B8;
+  --gm-subtitle: #CBD5E1;
+  --text: #FFFFFF;
+  --text-secondary: #CBD5E1;
   --gm-surface: #131315;
   --gm-surface-2: #1B1B1E;
   --gm-border: #26262A;
@@ -1219,7 +1222,7 @@ html:not([data-theme="light"]):not(.gm-light) .gm-card:hover {
   border-color: var(--gm-primary) !important;
   color: #ffffff !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 6px 20px rgba(254, 84, 11, 0.45) !important;
+  box-shadow: 0 6px 20px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.45) !important;
 }
 
 [data-button-style="outline"] .gm-btn:hover span,
@@ -1950,7 +1953,7 @@ body{
   justify-content: center;
   overflow: hidden;
   background: #0b0e14;
-  box-shadow: 0 0 30px rgba(255, 122, 0, 0.15);
+  box-shadow: 0 0 30px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.15);
 }
 
 .gm-neon-box::before {
@@ -1986,7 +1989,7 @@ body{
 
 .gm-neon-glow {
   position: absolute;
-  background: radial-gradient(circle, rgba(255, 122, 0, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.3) 0%, transparent 70%);
   border-radius: 50%;
   z-index: -1;
   animation: glowPulse 2s ease-in-out infinite;
@@ -2373,9 +2376,9 @@ body.gm-has-bg {
   z-index: -1;
   pointer-events: none;
   background:
-    /* luz premium (mantém) */
-    radial-gradient(900px 420px at 15% 0%, rgba(255,123,0,0.15), transparent 55%),
-    radial-gradient(900px 420px at 85% 0%, rgba(255,154,26,0.10), transparent 55%),
+    /* luz premium adaptativa ao tema */
+    radial-gradient(900px 420px at 15% 0%, rgba(var(--gm-primary-rgb, 254,84,11),0.15), transparent 55%),
+    radial-gradient(900px 420px at 85% 0%, rgba(var(--gm-accent-rgb, var(--gm-primary-rgb, 254,84,11)),0.10), transparent 55%),
 
     /* vinheta (controlada por variável) */
     radial-gradient(1400px 700px at 50% 30%, transparent 40%, rgba(0,0,0,var(--gm-app-vignette-alpha,0.22)) 85%),
@@ -2609,8 +2612,8 @@ aside.gm-sidebar button.absolute {
 [data-theme="light"] .gm-input:focus, .gm-light .gm-input:focus {
   background: #FFFFFF !important;
   background-color: #FFFFFF !important;
-  border-color: #FF6900 !important;
-  box-shadow: 0 0 0 4px rgba(255,105,0,.15) !important;
+  border-color: var(--gm-primary) !important;
+  box-shadow: 0 0 0 4px rgba(var(--gm-primary-rgb, 254, 84, 11), .15) !important;
 }
 
 [data-theme="light"] select.gm-input option, .gm-light select.gm-input option {
@@ -2907,18 +2910,18 @@ aside.gm-sidebar button.absolute {
 }
 
 [data-theme="light"] .fixed.bottom-0.left-0.right-0.z-\[10002\] a.active {
-  color: #FF6900 !important;
+  color: var(--gm-primary) !important;
 }
 
 [data-theme="light"] .fixed.bottom-0.left-0.right-0.z-\[10002\] a.active span {
-  color: #FF6900 !important;
+  color: var(--gm-primary) !important;
   opacity: 1 !important;
 }
 
 [data-theme="light"] .fixed.bottom-0.left-0.right-0.z-\[10001\] button {
-  background-color: #FF6900 !important;
+  background-color: var(--gm-primary) !important;
   color: #FFFFFF !important;
-  box-shadow: 0 4px 15px rgba(255, 105, 0, 0.2) !important;
+  box-shadow: 0 4px 15px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.2) !important;
 }
 
 /* Specific button lists like tabs and navigation options */
@@ -2939,9 +2942,9 @@ aside.gm-sidebar button.absolute {
 [data-theme="light"] .tab-list button.active,
 [data-theme="light"] .tabs-container button[data-state="active"],
 [data-theme="light"] .tab-list button[data-state="active"] {
-  background-color: #FF6900 !important;
-  background: #FF6900 !important;
-  border-color: #FF6900 !important;
+  background-color: var(--gm-primary) !important;
+  background: var(--gm-primary) !important;
+  border-color: var(--gm-primary) !important;
   color: #FFFFFF !important;
 }
 
@@ -3047,11 +3050,11 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.bg-\[var\(--gm-primary\)\]\/10,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.bg-\[var\(--gm-primary\)\]\/20,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] .btn-action-edit {
-  background-color: #FF6900 !important;
-  background: #FF6900 !important;
+  background-color: var(--gm-primary) !important;
+  background: var(--gm-primary) !important;
   color: #FFFFFF !important;
   border: none !important;
-  box-shadow: 0 4px 12px rgba(255, 105, 0, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.15) !important;
 }
 
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] .gm-btn.gm-btn-soft svg,
@@ -3068,10 +3071,11 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.gm-btn-soft:hover,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"]).gm-light button.gm-btn-soft:hover,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] .btn-action-edit:hover {
-  background-color: #FF7F1F !important;
-  background: #FF7F1F !important;
+  background-color: var(--gm-primary) !important;
+  background: var(--gm-primary) !important;
+  filter: brightness(1.1);
   color: #FFFFFF !important;
-  box-shadow: 0 6px 16px rgba(255, 105, 0, 0.25) !important;
+  box-shadow: 0 6px 16px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.25) !important;
 }
 
 /* Botões Secundários Estilo Outline */
@@ -3080,16 +3084,16 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.border-\[var\(--gm-primary\)\] {
   background-color: #FFFFFF !important;
   background: #FFFFFF !important;
-  border: 1px solid #FF6900 !important;
-  color: #FF6900 !important;
+  border: 1px solid var(--gm-primary) !important;
+  color: var(--gm-primary) !important;
 }
 
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] .gm-btn.gm-btn-outline:hover,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.border-gm-primary:hover,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.border-\[var\(--gm-primary\)\]:hover {
-  background-color: #FFF1E8 !important;
-  background: #FFF1E8 !important;
-  color: #FF6900 !important;
+  background-color: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.1) !important;
+  background: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.1) !important;
+  color: var(--gm-primary) !important;
 }
 
 /* Botões de Ação Específicos */
@@ -3097,8 +3101,8 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.bg-amber-500\/20,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.bg-orange-500\/20,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] .btn-action-edit {
-  background-color: #FF6900 !important;
-  background: #FF6900 !important;
+  background-color: var(--gm-primary) !important;
+  background: var(--gm-primary) !important;
   color: #FFFFFF !important;
   border: none !important;
 }
@@ -3106,8 +3110,9 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.bg-amber-500\/20:hover,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.bg-orange-500\/20:hover,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] .btn-action-edit:hover {
-  background-color: #FF7F1F !important;
-  background: #FF7F1F !important;
+  background-color: var(--gm-primary) !important;
+  background: var(--gm-primary) !important;
+  filter: brightness(1.1);
 }
 
 /* Excluir */
@@ -3128,16 +3133,16 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
 /* WhatsApp */
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.bg-emerald-500\/20,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] .btn-whatsapp {
-  background-color: rgba(255, 105, 0, 0.1) !important;
-  background: rgba(255, 105, 0, 0.1) !important;
-  color: var(--gm-primary, #FF6900) !important;
-  border: 1px solid rgba(255, 105, 0, 0.2) !important;
+  background-color: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.1) !important;
+  background: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.1) !important;
+  color: var(--gm-primary) !important;
+  border: 1px solid rgba(var(--gm-primary-rgb, 254, 84, 11), 0.2) !important;
 }
 
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] button.bg-emerald-500\/20:hover,
 html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-button-style="gradient"]):not([data-button-style="vazado"]):not([data-button-style="outline"])[data-theme="light"] .btn-whatsapp:hover {
-  background-color: var(--gm-primary, #FF6900) !important;
-  background: var(--gm-primary, #FF6900) !important;
+  background-color: var(--gm-primary) !important;
+  background: var(--gm-primary) !important;
   color: #FFFFFF !important;
 }
 
@@ -5217,31 +5222,32 @@ main [data-button-style="outline"] .gm-btn svg {
 :root:not([data-button-style="solid"]) .gm-btn:hover,
 .gm-preview-container[data-button-style="vazado"] .gm-btn:hover,
 .gm-preview-container[data-button-style="outline"] .gm-btn:hover {
-  background-color: var(--gm-primary-10, rgba(255, 105, 0, 0.12)) !important;
-  border-color: var(--gm-btn-border, var(--gm-primary, #FF6900)) !important;
+  background-color: var(--gm-primary-10, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.12)) !important;
+  border-color: var(--gm-btn-border, var(--gm-primary, #FE540B)) !important;
   transform: none !important;
 }
 
-/* Botão Flutuante de Salvar - Sempre Sólido Laranja com Ícone Branco Visível */
+/* Botão Flutuante de Salvar - Sempre Sólido com Cor do Tema e Ícone Branco Visível */
 .gm-floating-save-btn,
 button.gm-floating-save-btn,
 html[data-theme="light"] .gm-floating-save-btn,
 html[data-theme="light"] button.gm-floating-save-btn,
 html.gm-light .gm-floating-save-btn,
 html.gm-light button.gm-floating-save-btn {
-  background-color: var(--gm-primary, #FF6900) !important;
-  background: var(--gm-primary, #FF6900) !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  background: var(--gm-primary, #FE540B) !important;
   color: #FFFFFF !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 8px 25px rgba(255, 105, 0, 0.45) !important;
+  box-shadow: 0 8px 25px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.45) !important;
 }
 
 .gm-floating-save-btn:hover,
 button.gm-floating-save-btn:hover {
-  background-color: #FF7F1F !important;
-  background: #FF7F1F !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  background: var(--gm-primary, #FE540B) !important;
+  filter: brightness(1.15) !important;
   color: #FFFFFF !important;
-  box-shadow: 0 12px 32px rgba(255, 105, 0, 0.65) !important;
+  box-shadow: 0 12px 32px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.65) !important;
 }
 
 .gm-floating-save-btn svg,
@@ -5394,9 +5400,9 @@ input, select, textarea, .gm-input {
 .gm-dark input:focus,
 .gm-dark select:focus,
 .gm-dark textarea:focus {
-  border-color: #FF7B17 !important;
+  border-color: var(--gm-primary, #FE540B) !important;
   outline: none !important;
-  box-shadow: 0 0 0 3px rgba(255, 123, 23, 0.22) !important;
+  box-shadow: 0 0 0 3px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.22) !important;
 }
 
 /* MODALS */
@@ -6456,7 +6462,7 @@ button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):n
 .gm-budget-action-btn:hover,
 .gm-budget-action-btn:active {
   background-color: var(--gm-primary, #FE540B) !important;
-  background: linear-gradient(135deg, var(--gm-accent, #FF7A2A) 0%, var(--gm-primary, #FE540B) 100%) !important;
+  background: linear-gradient(135deg, var(--gm-accent, var(--gm-primary, #FE540B)) 0%, var(--gm-primary, #FE540B) 100%) !important;
   color: #FFFFFF !important;
   border-color: rgba(255, 255, 255, 0.35) !important;
   box-shadow: 0 4px 20px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.5) !important;
@@ -6751,16 +6757,16 @@ body::before {
   z-index: -4;
   pointer-events: none;
   background:
-    radial-gradient(circle at 12% 8%, rgba(254, 84, 11, 0.12), transparent 45%),
-    radial-gradient(circle at 88% 18%, rgba(255, 122, 56, 0.08), transparent 42%),
-    radial-gradient(circle at 50% 92%, rgba(254, 84, 11, 0.06), transparent 50%);
+    radial-gradient(circle at 12% 8%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.12), transparent 45%),
+    radial-gradient(circle at 88% 18%, rgba(var(--gm-accent-rgb, var(--gm-primary-rgb, 254, 84, 11)), 0.08), transparent 42%),
+    radial-gradient(circle at 50% 92%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.06), transparent 50%);
 }
 [data-theme="light"] body::before,
 .gm-light body::before {
   background:
-    radial-gradient(circle at 12% 8%, rgba(254, 84, 11, 0.08), transparent 45%),
-    radial-gradient(circle at 88% 18%, rgba(255, 122, 56, 0.05), transparent 42%),
-    radial-gradient(circle at 50% 92%, rgba(254, 84, 11, 0.04), transparent 50%);
+    radial-gradient(circle at 12% 8%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.08), transparent 45%),
+    radial-gradient(circle at 88% 18%, rgba(var(--gm-accent-rgb, var(--gm-primary-rgb, 254, 84, 11)), 0.05), transparent 42%),
+    radial-gradient(circle at 50% 92%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.04), transparent 50%);
 }
 @media (prefers-reduced-transparency: reduce) {
   body::before { display: none !important; }

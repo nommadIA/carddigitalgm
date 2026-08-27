@@ -244,12 +244,26 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       document.documentElement.classList.add("gm-dark", "dark");
       setThemeMode("dark");
 
-      const localS = readSettingsLocal(tenantId);
-      if (localS) {
-        settingsCacheRef.current = localS;
-        applySettingsToDOM(localS, true, tenantId);
-      } else if (settingsCacheRef.current) {
-        applySettingsToDOM(settingsCacheRef.current, true, tenantId);
+      if (e?.detail) {
+        // Aplica cores do evento de preview diretamente sem ler cache antigo
+        applySettingsToDOM(
+          {
+            brand_primary: e.detail.primary,
+            brand_accent: e.detail.accent,
+            brand_bg: e.detail.bg,
+            brand_title: e.detail.title,
+            brand_subtitle: e.detail.subtitle,
+            brand_icon: e.detail.icon,
+            brand_button: e.detail.button || e.detail.primary,
+            menu_primary: e.detail.menu_primary || e.detail.primary,
+            menu_bg: e.detail.menu_bg || e.detail.bg,
+            menu_title: e.detail.menu_title || e.detail.title,
+            menu_subtitle: e.detail.menu_subtitle || e.detail.subtitle,
+            menu_icon: e.detail.menu_icon || e.detail.icon,
+            menu_button: e.detail.menu_button || e.detail.primary,
+          },
+          false
+        );
       }
     };
 
@@ -281,10 +295,8 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     };
 
     window.addEventListener("gm_settings_updated", handleSettingsUpdate);
-    window.addEventListener("gm_theme_updated", handleSettingsUpdate);
     return () => {
       window.removeEventListener("gm_settings_updated", handleSettingsUpdate);
-      window.removeEventListener("gm_theme_updated", handleSettingsUpdate);
     };
   }, [tenantId]);
 
@@ -537,7 +549,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         onClick={handleBellClick}
         title="Atualizações e Informações"
         aria-label="Atualizações e Informações"
-        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))] hover:!bg-[var(--gm-primary,#FE540B)] hover:!text-white active:!bg-[var(--gm-primary-hover,var(--gm-primary,#FE540B))] active:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
+        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
         style={{
           width: '36px',
           height: '36px',
@@ -553,7 +565,8 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           padding: '0',
           margin: '0',
           boxSizing: 'border-box',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
         }}
       >
         <Bell size={20} className="animate-swing text-current shrink-0" />
@@ -567,7 +580,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         onClick={signOut}
         title="Sair"
         aria-label="Sair"
-        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))] hover:!bg-[var(--gm-primary,#FE540B)] hover:!text-white active:!bg-[var(--gm-primary-hover,var(--gm-primary,#FE540B))] active:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
+        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
         style={{
           width: '36px',
           height: '36px',
@@ -583,7 +596,8 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           padding: '0',
           margin: '0',
           boxSizing: 'border-box',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
         }}
       >
         <LogOut size={20} className="text-current shrink-0" />
@@ -682,7 +696,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             {!collapsed && (
               <div className="flex items-center gap-1 leading-none overflow-hidden logo-text">
                 <span className="text-base font-bold text-[var(--gm-menu-title)] truncate">
-                  CardDigital <span className="gm-logo-highlight text-[var(--gm-menu-primary)] font-black">GM</span>
+                  CardDigital <span className="gm-logo-highlight font-black transition-colors duration-200" style={{ color: "var(--gm-menu-primary, var(--gm-primary, #FE540B))" }}>GM</span>
                 </span>
               </div>
             )}
@@ -703,7 +717,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   }
                   title={collapsed ? label : undefined}
                 >
-                  <Icon size={17} className="shrink-0 text-[var(--gm-menu-primary,#FE540B)]" />
+                  <Icon 
+                    size={17} 
+                    className="shrink-0 transition-colors duration-200" 
+                    style={{ color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))" }}
+                  />
                   {!collapsed && <p className="truncate text-left">{label}</p>}
                 </NavLink>
               </li>
@@ -724,7 +742,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 <div className="mt-0.5 text-[10px] text-center pointer-events-none tracking-tight leading-none whitespace-nowrap flex items-center justify-center gap-1 text-slate-400">
                   <span className="text-[10px] text-slate-400 font-normal">Desenvolvido por</span>
                   <span className="text-[10px] font-bold text-[var(--gm-menu-title)]">CardDigital</span>
-                  <span className="text-[10px] font-bold text-[var(--gm-menu-primary)] gm-logo-highlight">GM</span>
+                  <span className="text-[10px] font-bold gm-logo-highlight transition-colors duration-200" style={{ color: "var(--gm-menu-primary, var(--gm-primary, #FE540B))" }}>GM</span>
                 </div>
               </div>
             )}

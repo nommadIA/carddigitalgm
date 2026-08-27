@@ -1466,12 +1466,26 @@ export default function Notes() {
                       if (cardLayouts.length === 0) return null;
                       if (cardLayouts.length === 1) {
                         return (
-                          <div className="w-full h-32 rounded-xl overflow-hidden mt-1 shrink-0 relative bg-black/40 border border-white/5">
+                          <div 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setZoomImage({ url: cardLayouts[0], index: 0 });
+                              setZoomScale(1);
+                            }}
+                            className="w-full h-32 rounded-xl overflow-hidden mt-1 shrink-0 relative bg-black/40 border border-white/10 cursor-pointer group/thumb shadow-md"
+                            title="Clique para ampliar miniatura com fundo desfocado"
+                          >
                             <img
                               src={cardLayouts[0]}
                               alt="Layout Thumbnail"
-                              className="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-opacity"
+                              className="w-full h-full object-cover opacity-90 group-hover/thumb:opacity-100 group-hover/thumb:scale-105 transition-all duration-300"
                             />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                              <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold flex items-center gap-1">
+                                <ZoomIn size={12} className="text-[var(--gm-primary,#FF6900)]" />
+                                Ampliar
+                              </span>
+                            </div>
                           </div>
                         );
                       }
@@ -1490,16 +1504,25 @@ export default function Notes() {
                           {cardLayouts.map((lUrl, lIdx) => (
                             <div
                               key={lIdx}
-                              className="w-full h-full rounded-lg overflow-hidden relative bg-black/40 border border-white/5 group/thumb"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setZoomImage({ url: lUrl, index: lIdx });
+                                setZoomScale(1);
+                              }}
+                              className="w-full h-full rounded-lg overflow-hidden relative bg-black/40 border border-white/10 group/thumb cursor-pointer shadow-sm"
+                              title={`Clique para ampliar miniatura ${lIdx + 1}`}
                             >
                               <img
                                 src={lUrl}
                                 alt={`Layout ${lIdx + 1}`}
-                                className="w-full h-full object-cover opacity-85 group-hover/thumb:opacity-100 transition-opacity"
+                                className="w-full h-full object-cover opacity-90 group-hover/thumb:opacity-100 group-hover/thumb:scale-105 transition-all duration-300"
                               />
-                              <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/70 text-[9px] font-mono text-white/80 border border-white/10">
+                              <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/75 text-[9px] font-mono text-white/90 border border-white/15 backdrop-blur-sm">
                                 {lIdx + 1}
                               </span>
+                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                <ZoomIn size={13} className="text-white drop-shadow-md" />
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -1762,12 +1785,16 @@ export default function Notes() {
       <AnimatePresence>
         {modalOpen && (
           <div className="fixed inset-0 z-[1000] pointer-events-none">
-            {/* Dark blur backdrop */}
+            {/* Dark blur backdrop Apple Glass Style */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 md:bg-black/65 backdrop-blur-sm pointer-events-auto"
+              className="fixed inset-0 bg-black/75 md:bg-black/65 pointer-events-auto"
+              style={{
+                backdropFilter: "blur(28px) saturate(180%)",
+                WebkitBackdropFilter: "blur(28px) saturate(180%)",
+              }}
               onClick={() => setModalOpen(false)}
             />
 
@@ -1778,19 +1805,20 @@ export default function Notes() {
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: "100%", opacity: 0, scale: 0.95 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className={`relative w-full h-[100dvh] md:h-auto md:w-[94%] md:max-w-6xl md:rounded-2xl flex flex-col overflow-hidden gm-note-modal gm-modal barra fora pointer-events-auto`}
+                className={`relative w-full h-[100dvh] md:h-auto md:w-[94%] md:max-w-6xl md:rounded-2xl flex flex-col overflow-hidden gm-note-modal gm-modal barra fora pointer-events-auto shadow-[0_30px_70px_rgba(0,0,0,0.85)]`}
                 style={{
                   width: window.innerWidth >= 768 && modalCustomSize.width ? `${modalCustomSize.width}px` : undefined,
                   height: window.innerWidth >= 768 && modalCustomSize.height ? `${modalCustomSize.height}px` : undefined,
                   maxWidth: "calc(100vw - var(--gm-sidebar-width, 224px) - 24px)",
                   maxHeight: window.innerWidth < 768 ? "100dvh" : modalCustomSize.height ? `${modalCustomSize.height}px` : "92vh",
-                  backdropFilter: "blur(20px) saturate(180%)",
-                  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                  backgroundColor: "rgba(14, 16, 20, 0.95)",
+                  backdropFilter: "blur(32px) saturate(190%)",
+                  WebkitBackdropFilter: "blur(32px) saturate(190%)",
                   borderColor: "var(--gm-primary, #FF6900)",
                   borderWidth: window.innerWidth < 768 ? "0px" : "1px",
                   borderTopWidth: window.innerWidth < 768 ? "2px" : "1px",
                   borderStyle: "solid",
-                  boxShadow: highlightedId && editingNote && highlightedId === editingNote.id ? "0 0 35px rgba(255, 105, 0, 0.6)" : "none",
+                  boxShadow: highlightedId && editingNote && highlightedId === editingNote.id ? "0 0 35px rgba(255, 105, 0, 0.6)" : "0 30px 70px rgba(0, 0, 0, 0.85)",
                 }}
               >
               {/* Toast Feedback Flutuante no CENTRO da Nota */}
@@ -2207,333 +2235,199 @@ export default function Notes() {
               >
                 {/* Metadata Fields com Expansor Superior Elegante (Tipo, Status, Prazo, Responsável, Horário) */}
                 <div className="border-b border-white/5 bg-black/25 shrink-0 w-full animate-fadeIn">
-                  {/* Barra de Expansão Superior com Botão Centralizado (mesmo tamanho e estilo da barra inferior) */}
-                  <div className="p-2.5 flex items-center justify-center relative w-full bg-white/[0.02]">
-                    {/* Resumo visual à esquerda para telas médias */}
-                    <div className="hidden sm:flex items-center gap-1.5 absolute left-3 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-white/10 text-white/90 border border-white/10">
+                  {/* Cabeçalho da Seção com Botão de Olho no Lado Direito */}
+                  <div className="p-3 md:px-5 py-2.5 flex items-center justify-between w-full flex-wrap gap-2 bg-white/[0.02]">
+                    {/* Lado Esquerdo: Título e Badges */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setTopDetailsVisible(!topDetailsVisible)}
+                        className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-white/70 hover:text-white font-bold font-sans transition-colors cursor-pointer group"
+                        title={topDetailsVisible ? "Ocultar configurações da nota" : "Exibir configurações da nota"}
+                      >
+                        <Palette size={13} className="text-[var(--gm-primary,#FF6900)]" />
+                        <Clock size={13} className={deliveryTime ? "text-orange-400" : "text-white/40"} />
+                        <span>CONFIGURAÇÕES DA NOTA (TIPO, STATUS, PRAZO, RESPONSÁVEL)</span>
+                        {topDetailsVisible ? (
+                          <ChevronUp size={13} className="text-white/40 group-hover:text-white transition-colors" />
+                        ) : (
+                          <ChevronDown size={13} className="text-white/40 group-hover:text-white transition-colors animate-pulse" />
+                        )}
+                      </button>
+
+                      <span className="text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-white/10 text-white/90 border border-white/10">
                         {noteType === "production" ? "PRODUÇÃO" : "GERAL"}
                       </span>
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 truncate max-w-[90px]">
+                      <span className="text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 truncate max-w-[110px]">
                         {noteStatus.replace(/_/g, " ")}
                       </span>
+
+                      {deliveryDate && (
+                        <span className="hidden sm:inline-flex text-[9px] font-bold text-orange-300 items-center gap-1 bg-orange-500/10 px-2 py-0.5 rounded-md border border-orange-500/20">
+                          <Calendar size={10} />
+                          {deliveryDate.split("-").reverse().join("/")}
+                        </span>
+                      )}
+                      {responsibleName && (
+                        <span className="hidden md:inline-flex text-[9px] font-bold text-white/70 items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/10 truncate max-w-[120px]">
+                          {responsibleName}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Botão Centralizado com Mesmo Tamanho e Estilo do Inferior */}
-                    <button
-                      type="button"
-                      onClick={() => setTopDetailsVisible(!topDetailsVisible)}
-                      className="group px-3.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-2 transition-all border border-white/5 hover:border-white/20 cursor-pointer shadow-sm active:scale-95 z-10"
-                      title={topDetailsVisible ? "Ocultar configurações da nota" : "Exibir configurações da nota"}
-                    >
-                      <span className="flex items-center gap-1">
-                        <Palette size={9} className="text-white/40" />
-                        <Clock size={9} className={deliveryTime ? "text-orange-400" : "text-white/40"} />
-                      </span>
-                      <span className="tracking-wider">
-                        CONFIGURAÇÕES DA NOTA (TIPO, STATUS, PRAZO, RESPONSÁVEL)
-                      </span>
-                      {topDetailsVisible ? (
-                        <ChevronUp
-                          size={12}
-                          className="text-[var(--gm-primary,#FF6900)] transition-all group-hover:-translate-y-0.5"
-                          style={{
-                            filter: "drop-shadow(0 0 6px rgba(255, 105, 0, 0.95)) drop-shadow(0 0 10px rgba(255, 105, 0, 0.5))",
-                            opacity: 0.9,
-                          }}
-                        />
-                      ) : (
-                        <ChevronDown
-                          size={12}
-                          className="text-[var(--gm-primary,#FF6900)] transition-all group-hover:translate-y-0.5 animate-pulse"
-                          style={{
-                            filter: "drop-shadow(0 0 6px rgba(255, 105, 0, 0.95)) drop-shadow(0 0 10px rgba(255, 105, 0, 0.5))",
-                            opacity: 0.9,
-                          }}
-                        />
-                      )}
-                    </button>
-
-                    {/* Resumo visual à direita para telas grandes */}
-                    {(deliveryDate || responsibleName) && (
-                      <div className="hidden md:flex items-center gap-1.5 absolute right-3 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                        {deliveryDate && (
-                          <span className="text-[10px] font-bold text-orange-300 flex items-center gap-1 bg-orange-500/10 px-2 py-0.5 rounded-md border border-orange-500/20">
-                            <Calendar size={10} />
-                            {deliveryDate.split("-").reverse().join("/")}
-                          </span>
-                        )}
-                        {responsibleName && (
-                          <span className="text-[10px] font-bold text-white/70 flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/10 truncate max-w-[120px]">
-                            {responsibleName}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {/* Lado Direito: Botão com Ícone de Olho */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTopDetailsVisible(!topDetailsVisible)}
+                        className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                        title={topDetailsVisible ? "Ocultar configurações" : "Expandir configurações"}
+                      >
+                        {topDetailsVisible ? <EyeOff size={11} /> : <Eye size={11} />}
+                        <span>{topDetailsVisible ? "Ocultar" : "Expandir"}</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Campos Editáveis - Exibidos quando o expansor estiver aberto */}
-                  {topDetailsVisible && (
-                    <div className="p-4 md:px-6 py-4 border-t border-white/5 bg-black/30 flex flex-col gap-4 w-full animate-fadeIn">
-                      {/* Linha Superior: Tipo de Nota, Status e Prazo de Entrega */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Tipo da Nota */}
-                        <div className="flex flex-col gap-1 w-full">
-                          <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                            Tipo da Nota
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={noteType}
-                              onChange={(e) => {
-                                setNoteType(e.target.value as any);
-                                setNoteStatus(
-                                  e.target.value === "note"
-                                    ? "a fazer"
-                                    : "a fazer",
-                                );
-                              }}
-                              className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-white/30 cursor-pointer font-bold transition-all"
-                            >
-                              <option value="note">GERAL</option>
-                              <option value="production">PRODUÇÃO</option>
-                            </select>
-                            <ChevronDown
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                              size={16}
-                            />
+                  <AnimatePresence>
+                    {topDetailsVisible && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.22 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-4 md:px-6 py-4 border-t border-white/5 bg-black/30 flex flex-col gap-4 w-full animate-fadeIn">
+                          {/* Linha Superior: Tipo de Nota, Status e Prazo de Entrega */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Tipo da Nota */}
+                            <div className="flex flex-col gap-1 w-full">
+                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                                Tipo da Nota
+                              </label>
+                              <div className="relative">
+                                <select
+                                  value={noteType}
+                                  onChange={(e) => {
+                                    setNoteType(e.target.value as any);
+                                    setNoteStatus(
+                                      e.target.value === "note"
+                                        ? "a fazer"
+                                        : "a fazer",
+                                    );
+                                  }}
+                                  className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-white/30 cursor-pointer font-bold transition-all"
+                                >
+                                  <option value="note">GERAL</option>
+                                  <option value="production">PRODUÇÃO</option>
+                                </select>
+                                <ChevronDown
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+                                  size={16}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Status */}
+                            <div className="flex flex-col gap-1 w-full">
+                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                                Status
+                              </label>
+                              <div className="relative">
+                                <select
+                                  value={noteStatus}
+                                  onChange={(e) => setNoteStatus(e.target.value)}
+                                  className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-white/30 cursor-pointer font-bold transition-all"
+                                >
+                                  {noteType === "note"
+                                    ? NOTE_STATUSES.filter((s) => s !== "LIXEIRA").map(
+                                        (s) => (
+                                          <option key={s} value={s.toLowerCase()}>
+                                            {s}
+                                          </option>
+                                        ),
+                                      )
+                                    : PROD_STATUSES.filter((s) => s !== "LIXEIRA").map(
+                                        (s) => (
+                                          <option key={s} value={s.toLowerCase()}>
+                                            {s}
+                                          </option>
+                                        ),
+                                      )}
+                                </select>
+                                <ChevronDown
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+                                  size={16}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Prazo de Entrega */}
+                            <div className="flex flex-col gap-1 w-full">
+                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                                Prazo de Entrega
+                              </label>
+                              <div className="relative">
+                                <GlassDatePicker
+                                  value={deliveryDate}
+                                  onChange={setDeliveryDate}
+                                  className="w-full bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-9 pr-3.5 h-[44px] flex items-center outline-none focus:border-white/30 select-none font-bold transition-all"
+                                  title="Prazo"
+                                  themeColor={color}
+                                />
+                                <Calendar
+                                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+                                  size={14}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Linha Inferior: Responsável e Horário de Entrega */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Responsável */}
+                            <div className="flex flex-col gap-1 w-full md:col-span-2 animate-fadeIn">
+                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                                Responsável
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Nome do responsável"
+                                value={responsibleName}
+                                onChange={(e) => setResponsibleName(e.target.value)}
+                                className="bg-black/40 border border-white/10 rounded-lg text-[14px] text-white px-3.5 h-[44px] outline-none focus:border-white/30 w-full font-bold transition-all"
+                              />
+                            </div>
+
+                            {/* Horário de Entrega */}
+                            <div className="flex flex-col gap-1 w-full animate-fadeIn">
+                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                                Horário de Entrega
+                              </label>
+                              <div className="relative">
+                                <GlassTimePicker
+                                  value={deliveryTime}
+                                  onChange={setDeliveryTime}
+                                  className="w-full bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-white/30 font-bold transition-all"
+                                />
+                                <Clock
+                                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
+                                  size={14}
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
-
-                        {/* Status */}
-                        <div className="flex flex-col gap-1 w-full">
-                          <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                            Status
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={noteStatus}
-                              onChange={(e) => setNoteStatus(e.target.value)}
-                              className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-white/30 cursor-pointer font-bold transition-all"
-                            >
-                              {noteType === "note"
-                                ? NOTE_STATUSES.filter((s) => s !== "LIXEIRA").map(
-                                    (s) => (
-                                      <option key={s} value={s.toLowerCase()}>
-                                        {s}
-                                      </option>
-                                    ),
-                                  )
-                                : PROD_STATUSES.filter((s) => s !== "LIXEIRA").map(
-                                    (s) => (
-                                      <option key={s} value={s.toLowerCase()}>
-                                        {s}
-                                      </option>
-                                    ),
-                                  )}
-                            </select>
-                            <ChevronDown
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                              size={16}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Prazo de Entrega */}
-                        <div className="flex flex-col gap-1 w-full">
-                          <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                            Prazo de Entrega
-                          </label>
-                          <div className="relative">
-                            <GlassDatePicker
-                              value={deliveryDate}
-                              onChange={setDeliveryDate}
-                              className="w-full bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-9 pr-3.5 h-[44px] flex items-center outline-none focus:border-white/30 select-none font-bold transition-all"
-                              title="Prazo"
-                              themeColor={color}
-                            />
-                            <Calendar
-                              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                              size={14}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Linha Inferior: Responsável e Horário de Entrega */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Responsável */}
-                        <div className="flex flex-col gap-1 w-full md:col-span-2 animate-fadeIn">
-                          <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                            Responsável
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Nome do responsável"
-                            value={responsibleName}
-                            onChange={(e) => setResponsibleName(e.target.value)}
-                            className="bg-black/40 border border-white/10 rounded-lg text-[14px] text-white px-3.5 h-[44px] outline-none focus:border-white/30 w-full font-bold transition-all"
-                          />
-                        </div>
-
-                        {/* Horário de Entrega */}
-                        <div className="flex flex-col gap-1 w-full animate-fadeIn">
-                          <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                            Horário de Entrega
-                          </label>
-                          <div className="relative">
-                            <GlassTimePicker
-                              value={deliveryTime}
-                              onChange={setDeliveryTime}
-                              className="w-full bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-white/30 font-bold transition-all"
-                            />
-                            <Clock
-                              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                              size={14}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Campo para Inserção do Layout (Até 6 Imagens) */}
-                <div className="p-4 md:px-6 py-4 border-b border-white/5 bg-black/10 flex flex-col gap-2.5 shrink-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-widest text-white/45 font-bold font-mono">
-                      Campo para Inserção do Layout (Até 6 Imagens Lado a Lado)
-                    </span>
-                    <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                      layoutUrls.length >= 6 
-                        ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
-                        : "bg-white/5 text-white/50 border-white/10"
-                    }`}>
-                      {layoutUrls.length}/6 layouts
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
-                    <div className="relative flex-1 flex gap-2">
-                      <div className="relative flex-1">
-                        <input
-                          type="text"
-                          placeholder={
-                            layoutUrls.length >= 6
-                              ? "Limite máximo de 6 layouts atingido"
-                              : "Cole aqui a URL/link da imagem para o layout..."
-                          }
-                          disabled={layoutUrls.length >= 6}
-                          value={layoutUrlInput}
-                          onChange={(e) => setLayoutUrlInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && layoutUrlInput.trim()) {
-                              e.preventDefault();
-                              if (layoutUrls.length >= 6) {
-                                showToast("Limite máximo de 6 layouts atingido!");
-                                return;
-                              }
-                              const val = layoutUrlInput.trim();
-                              setLayoutUrls((prev) =>
-                                prev.includes(val) ? prev : [...prev, val].slice(0, 6)
-                              );
-                              setLayoutUrlInput("");
-                              showToast("Layout adicionado!");
-                            }
-                          }}
-                          className="bg-black/40 border border-white/10 rounded-lg text-sm text-white pl-9 pr-3 py-2.5 outline-none focus:border-white/30 w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
-                        <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={14} />
-                      </div>
-
-                      {layoutUrlInput.trim() && (
-                        <button
-                          type="button"
-                          disabled={layoutUrls.length >= 6}
-                          onClick={() => {
-                            if (layoutUrls.length >= 6) {
-                              showToast("Limite máximo de 6 layouts atingido!");
-                              return;
-                            }
-                            const val = layoutUrlInput.trim();
-                            setLayoutUrls((prev) =>
-                              prev.includes(val) ? prev : [...prev, val].slice(0, 6)
-                            );
-                            setLayoutUrlInput("");
-                            showToast("Layout adicionado!");
-                          }}
-                          className="bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg text-xs font-bold text-white px-3.5 py-2.5 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
-                          title="Adicionar layout"
-                        >
-                          <Plus size={14} />
-                          <span>Adicionar</span>
-                        </button>
-                      )}
-                    </div>
-
-                    <label
-                      className={`bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/25 rounded-lg text-sm text-orange-300 px-4 py-2.5 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 ${
-                        uploadingLayout || layoutUrls.length >= 6 ? "opacity-50 pointer-events-none" : ""
-                      }`}
-                    >
-                      {uploadingLayout ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <Upload size={14} />
-                      )}
-                      <span>{uploadingLayout ? "Enviando..." : "Enviar Layouts (Até 6)"}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        multiple
-                        disabled={uploadingLayout || layoutUrls.length >= 6}
-                        onChange={async (e) => {
-                          const files = e.target.files;
-                          if (files && files.length > 0 && tenantId) {
-                            const availableSlots = 6 - layoutUrls.length;
-                            if (availableSlots <= 0) {
-                              showToast("Limite máximo de 6 layouts atingido!");
-                              return;
-                            }
-                            const filesToUpload = Array.from(files).slice(0, availableSlots);
-                            setUploadingLayout(true);
-                            try {
-                              const options = {
-                                maxSizeMB: 1,
-                                maxWidthOrHeight: 1600,
-                                useWebWorker: true,
-                              };
-                              const uploadedUrls: string[] = [];
-                              for (const file of filesToUpload) {
-                                const compressedFile = await imageCompression(file, options);
-                                const url = await uploadNoteAsset(tenantId, compressedFile);
-                                if (url) {
-                                  uploadedUrls.push(url);
-                                }
-                              }
-
-                              setLayoutUrls((prev) => {
-                                const uniqueNew = uploadedUrls.filter((u) => !prev.includes(u));
-                                return [...prev, ...uniqueNew].slice(0, 6);
-                              });
-                              showToast(`${uploadedUrls.length} layout(s) enviado(s) com sucesso!`);
-                            } catch (err) {
-                              alert("Erro ao enviar layout(s).");
-                            } finally {
-                              setUploadingLayout(false);
-                              e.target.value = "";
-                            }
-                          }
-                        }}
-                      />
-                    </label>
-                  </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Stacked Layout Block: Layout Top (Large) & Typing Editor Bottom */}
                 <div className="p-4 md:p-6 flex flex-col gap-5 flex-1 touch-pan-y">
-                  {/* Row 1: Layout Preview Panel com Expansor/Ocultador, Zoom, Arrastar para Reorganizar e Organização Apple */}
+                  {/* Row 1: Layout Preview Panel com Expansor/Ocultador, Campo de Inserção Embutido, Zoom, Arrastar para Reorganizar e Organização Apple */}
                   <div className="flex flex-col gap-2.5 w-full bg-white/[0.015] border border-white/5 p-3 rounded-2xl">
                     <div className="flex items-center justify-between w-full flex-wrap gap-2">
                       <div className="flex items-center gap-2">
@@ -2585,7 +2479,7 @@ export default function Notes() {
                       </div>
                     </div>
 
-                    {/* Conteúdo Expansível das Prévias de Layout */}
+                    {/* Conteúdo Expansível das Prévias de Layout + Campo de Inserção Embutido */}
                     <AnimatePresence>
                       {layoutPreviewsVisible && (
                         <motion.div
@@ -2593,8 +2487,142 @@ export default function Notes() {
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.25 }}
-                          className="overflow-hidden"
+                          className="overflow-hidden flex flex-col gap-3"
                         >
+                          {/* Campo para Inserção do Layout (Embutido dentro da seção oculta) */}
+                          <div className="p-3 md:p-3.5 rounded-xl border border-white/10 bg-black/40 flex flex-col gap-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold font-mono">
+                                Campo para Inserção do Layout (Até 6 Imagens Lado a Lado)
+                              </span>
+                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                                layoutUrls.length >= 6 
+                                  ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
+                                  : "bg-white/5 text-white/50 border-white/10"
+                              }`}>
+                                {layoutUrls.length}/6 layouts
+                              </span>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+                              <div className="relative flex-1 flex gap-2">
+                                <div className="relative flex-1">
+                                  <input
+                                    type="text"
+                                    placeholder={
+                                      layoutUrls.length >= 6
+                                        ? "Limite máximo de 6 layouts atingido"
+                                        : "Cole aqui a URL/link da imagem para o layout..."
+                                    }
+                                    disabled={layoutUrls.length >= 6}
+                                    value={layoutUrlInput}
+                                    onChange={(e) => setLayoutUrlInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" && layoutUrlInput.trim()) {
+                                        e.preventDefault();
+                                        if (layoutUrls.length >= 6) {
+                                          showToast("Limite máximo de 6 layouts atingido!");
+                                          return;
+                                        }
+                                        const val = layoutUrlInput.trim();
+                                        setLayoutUrls((prev) =>
+                                          prev.includes(val) ? prev : [...prev, val].slice(0, 6)
+                                        );
+                                        setLayoutUrlInput("");
+                                        showToast("Layout adicionado!");
+                                      }
+                                    }}
+                                    className="bg-black/50 border border-white/10 rounded-lg text-sm text-white pl-9 pr-3 py-2 outline-none focus:border-white/30 w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                                  />
+                                  <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={14} />
+                                </div>
+
+                                {layoutUrlInput.trim() && (
+                                  <button
+                                    type="button"
+                                    disabled={layoutUrls.length >= 6}
+                                    onClick={() => {
+                                      if (layoutUrls.length >= 6) {
+                                        showToast("Limite máximo de 6 layouts atingido!");
+                                        return;
+                                      }
+                                      const val = layoutUrlInput.trim();
+                                      setLayoutUrls((prev) =>
+                                        prev.includes(val) ? prev : [...prev, val].slice(0, 6)
+                                      );
+                                      setLayoutUrlInput("");
+                                      showToast("Layout adicionado!");
+                                    }}
+                                    className="bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg text-xs font-bold text-white px-3.5 py-2 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                                    title="Adicionar layout"
+                                  >
+                                    <Plus size={14} />
+                                    <span>Adicionar</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              <label
+                                className={`bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 rounded-lg text-xs font-bold text-orange-300 px-3.5 py-2 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 ${
+                                  uploadingLayout || layoutUrls.length >= 6 ? "opacity-50 pointer-events-none" : ""
+                                }`}
+                              >
+                                {uploadingLayout ? (
+                                  <Loader2 size={15} className="animate-spin" />
+                                ) : (
+                                  <Upload size={14} />
+                                )}
+                                <span>{uploadingLayout ? "Enviando..." : "Enviar Layouts (Até 6)"}</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  multiple
+                                  disabled={uploadingLayout || layoutUrls.length >= 6}
+                                  onChange={async (e) => {
+                                    const files = e.target.files;
+                                    if (files && files.length > 0 && tenantId) {
+                                      const availableSlots = 6 - layoutUrls.length;
+                                      if (availableSlots <= 0) {
+                                        showToast("Limite máximo de 6 layouts atingido!");
+                                        return;
+                                      }
+                                      const filesToUpload = Array.from(files).slice(0, availableSlots);
+                                      setUploadingLayout(true);
+                                      try {
+                                        const options = {
+                                          maxSizeMB: 1,
+                                          maxWidthOrHeight: 1600,
+                                          useWebWorker: true,
+                                        };
+                                        const uploadedUrls: string[] = [];
+                                        for (const file of filesToUpload) {
+                                          const compressedFile = await imageCompression(file, options);
+                                          const url = await uploadNoteAsset(tenantId, compressedFile);
+                                          if (url) {
+                                            uploadedUrls.push(url);
+                                          }
+                                        }
+
+                                        setLayoutUrls((prev) => {
+                                          const uniqueNew = uploadedUrls.filter((u) => !prev.includes(u));
+                                          return [...prev, ...uniqueNew].slice(0, 6);
+                                        });
+                                        showToast(`${uploadedUrls.length} layout(s) enviado(s) com sucesso!`);
+                                      } catch (err) {
+                                        alert("Erro ao enviar layout(s).");
+                                      } finally {
+                                        setUploadingLayout(false);
+                                        e.target.value = "";
+                                      }
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Grid com Prévias dos Layouts */}
                           {layoutUrls.length > 0 ? (
                             <div
                               className={`w-full py-1 animate-fadeIn grid gap-3.5 ${
@@ -2886,41 +2914,48 @@ export default function Notes() {
                   backgroundColor: "rgba(0,0,0,0.65)",
                 }}
               >
-                {/* Botão sutil para exibir / ocultar DATA, HORÁRIOS, SALVAR AUTO */}
-                <div className="w-full flex items-center justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setBottomDetailsVisible(!bottomDetailsVisible)}
-                    className="group px-3.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-2 transition-all border border-white/5 hover:border-white/20 cursor-pointer shadow-sm active:scale-95"
-                    title={bottomDetailsVisible ? "Ocultar configurações de data, hora e salvar auto" : "Exibir configurações de data, hora e salvar auto"}
-                  >
-                    <span className="flex items-center gap-1">
-                      <Calendar size={9} className={reminderDate ? "text-orange-400" : "text-white/40"} />
-                      <Clock size={9} className={[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 ? "text-green-400" : "text-white/40"} />
-                    </span>
-                    <span className="tracking-wider">
-                      CONFIGURAÇÕES DE DATA, HORA E SALVAR AUTO
-                    </span>
-                    {bottomDetailsVisible ? (
-                      <ChevronDown
-                        size={12}
-                        className="text-[var(--gm-primary,#FF6900)] transition-all group-hover:translate-y-0.5"
-                        style={{
-                          filter: "drop-shadow(0 0 6px rgba(255, 105, 0, 0.95)) drop-shadow(0 0 10px rgba(255, 105, 0, 0.5))",
-                          opacity: 0.9,
-                        }}
-                      />
-                    ) : (
-                      <ChevronUp
-                        size={12}
-                        className="text-[var(--gm-primary,#FF6900)] transition-all group-hover:-translate-y-0.5 animate-pulse"
-                        style={{
-                          filter: "drop-shadow(0 0 6px rgba(255, 105, 0, 0.95)) drop-shadow(0 0 10px rgba(255, 105, 0, 0.5))",
-                          opacity: 0.9,
-                        }}
-                      />
+                {/* Cabeçalho de Configurações de Data, Hora e Salvar Auto com Botão de Olho no Lado Direito */}
+                <div className="w-full flex items-center justify-between flex-wrap gap-2 px-1 pb-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setBottomDetailsVisible(!bottomDetailsVisible)}
+                      className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-white/70 hover:text-white font-bold font-sans transition-colors cursor-pointer group"
+                      title={bottomDetailsVisible ? "Ocultar configurações de data, hora e salvar auto" : "Exibir configurações de data, hora e salvar auto"}
+                    >
+                      <Calendar size={13} className={reminderDate ? "text-orange-400" : "text-[var(--gm-primary,#FF6900)]"} />
+                      <Clock size={13} className={[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 ? "text-green-400" : "text-white/40"} />
+                      <span>CONFIGURAÇÃO DE DATA, HORA E SALVAR AUTO</span>
+                      {bottomDetailsVisible ? (
+                        <ChevronUp size={13} className="text-white/40 group-hover:text-white transition-colors" />
+                      ) : (
+                        <ChevronDown size={13} className="text-white/40 group-hover:text-white transition-colors animate-pulse" />
+                      )}
+                    </button>
+
+                    {reminderDate && (
+                      <span className="hidden sm:inline-flex text-[9px] font-bold text-orange-300 items-center gap-1 bg-orange-500/10 px-2 py-0.5 rounded-md border border-orange-500/20">
+                        {reminderDate.split("-").reverse().join("/")}
+                      </span>
                     )}
-                  </button>
+                    {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 && (
+                      <span className="hidden sm:inline-flex text-[9px] font-bold text-green-400 items-center gap-1 bg-green-500/10 px-2 py-0.5 rounded-md border border-green-500/20">
+                        {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length} alarme(s)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBottomDetailsVisible(!bottomDetailsVisible)}
+                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                      title={bottomDetailsVisible ? "Ocultar configurações" : "Expandir configurações"}
+                    >
+                      {bottomDetailsVisible ? <EyeOff size={11} /> : <Eye size={11} />}
+                      <span>{bottomDetailsVisible ? "Ocultar" : "Expandir"}</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Detalhes Expansíveis Opcionais (DATA, HORÁRIOS e SALVAR AUTO) */}
@@ -2980,136 +3015,166 @@ export default function Notes() {
                                       {activeClocksCount}
                                     </span>
                                   )}
-                                  {clocksExpanded ? (
-                                    <ChevronDown size={16} className="text-white/70" />
-                                  ) : (
-                                    <ChevronUp size={16} className="text-white/70" />
-                                  )}
+                                  <ChevronUp size={16} className="text-white/70" />
                                 </div>
                               </button>
 
-                              {/* Expandable Panel (Upward) */}
+                              {/* Modal de Horários / Alertas Apple Style - Renderizado fora do corte de overflow */}
                               <AnimatePresence>
                                 {clocksExpanded && (
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                                    transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                                    className="absolute bottom-full right-0 mb-3 w-72 max-w-[90vw] bg-[#141517] border border-zinc-800 rounded-xl p-4 space-y-4 z-[100] shadow-[0_25px_50px_rgba(0,0,0,0.95)] text-left"
-                                    style={{ borderTopWidth: '3px', borderTopColor: '#FF6900' }}
-                                  >
-                                    <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                                      <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-orange-500">
-                                        <Clock size={13} className={hasActiveClocks ? "animate-pulse text-orange-500" : "text-orange-500"} />
-                                        Configurar Alertas
-                                      </span>
-                                      <span className="text-[10px] bg-zinc-800/80 border border-zinc-700/60 text-zinc-200 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
-                                        Diário
-                                      </span>
-                                    </div>
+                                  <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 pointer-events-auto">
+                                    {/* Backdrop transparente/desfocado para fechar ao clicar fora */}
+                                    <motion.div
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      exit={{ opacity: 0 }}
+                                      className="fixed inset-0 bg-black/70 backdrop-blur-md"
+                                      onClick={() => setClocksExpanded(false)}
+                                    />
 
-                                    <div className="space-y-3.5 text-xs text-white">
-                                      {/* SLOT 1 */}
-                                      <div className="flex flex-col gap-1.5">
-                                        <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
-                                          <span className="flex items-center gap-1">
-                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime ? '#FF6900' : '#3f3f46' }} />
-                                            Horário 1
+                                    <motion.div
+                                      initial={{ opacity: 0, scale: 0.92, y: 15 }}
+                                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                                      exit={{ opacity: 0, scale: 0.92, y: 15 }}
+                                      transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                                      className="relative w-84 max-w-[92vw] bg-[#121418]/98 border border-white/20 rounded-2xl p-5 space-y-4 shadow-[0_30px_70px_rgba(0,0,0,0.95)] text-left z-10"
+                                      style={{
+                                        borderTopWidth: "3px",
+                                        borderTopColor: "var(--gm-primary, #FF6900)",
+                                        backdropFilter: "blur(24px) saturate(190%)",
+                                        WebkitBackdropFilter: "blur(24px) saturate(190%)",
+                                      }}
+                                    >
+                                      <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                                        <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-[var(--gm-primary,#FF6900)]">
+                                          <Clock size={15} className={hasActiveClocks ? "animate-pulse text-[var(--gm-primary,#FF6900)]" : "text-[var(--gm-primary,#FF6900)]"} />
+                                          Configurar Horários
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] bg-white/10 border border-white/10 text-white/80 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
+                                            Diário
                                           </span>
-                                          {reminderTime && (
-                                            <button
-                                              type="button"
-                                              onClick={() => setReminderTime("")}
-                                              className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30 cursor-pointer"
-                                            >
-                                              Limpar
-                                            </button>
-                                          )}
-                                        </div>
-                                        <div className="relative">
-                                          <GlassTimePicker
-                                            value={reminderTime}
-                                            onChange={setReminderTime}
-                                            className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
-                                            title="Definir Horário 1"
-                                          />
-                                          <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime ? '#FF6900' : '#71717a' }} />
+                                          <button
+                                            type="button"
+                                            onClick={() => setClocksExpanded(false)}
+                                            className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                                            title="Fechar"
+                                          >
+                                            <X size={15} />
+                                          </button>
                                         </div>
                                       </div>
 
-                                      {/* SLOT 2 */}
-                                      <div className="flex flex-col gap-1.5">
-                                        <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
-                                          <span className="flex items-center gap-1">
-                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime2 ? '#FF6900' : '#3f3f46' }} />
-                                            Horário 2
-                                          </span>
-                                          {reminderTime2 && (
-                                            <button
-                                              type="button"
-                                              onClick={() => setReminderTime2("")}
-                                              className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30 cursor-pointer"
-                                            >
-                                              Limpar
-                                            </button>
-                                          )}
+                                      <div className="space-y-3.5 text-xs text-white">
+                                        {/* SLOT 1 */}
+                                        <div className="flex flex-col gap-1.5">
+                                          <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                            <span className="flex items-center gap-1.5">
+                                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
+                                              Horário 1
+                                            </span>
+                                            {reminderTime && (
+                                              <button
+                                                type="button"
+                                                onClick={() => setReminderTime("")}
+                                                className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
+                                              >
+                                                Limpar
+                                              </button>
+                                            )}
+                                          </div>
+                                          <div className="relative">
+                                            <GlassTimePicker
+                                              value={reminderTime}
+                                              onChange={setReminderTime}
+                                              className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
+                                              title="Definir Horário 1"
+                                            />
+                                            <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
+                                          </div>
                                         </div>
-                                        <div className="relative">
-                                          <GlassTimePicker
-                                            value={reminderTime2}
-                                            onChange={setReminderTime2}
-                                            className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
-                                            title="Definir Horário 2"
-                                          />
-                                          <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime2 ? '#FF6900' : '#71717a' }} />
+
+                                        {/* SLOT 2 */}
+                                        <div className="flex flex-col gap-1.5">
+                                          <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                            <span className="flex items-center gap-1.5">
+                                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime2 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
+                                              Horário 2
+                                            </span>
+                                            {reminderTime2 && (
+                                              <button
+                                                type="button"
+                                                onClick={() => setReminderTime2("")}
+                                                className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
+                                              >
+                                                Limpar
+                                              </button>
+                                            )}
+                                          </div>
+                                          <div className="relative">
+                                            <GlassTimePicker
+                                              value={reminderTime2}
+                                              onChange={setReminderTime2}
+                                              className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
+                                              title="Definir Horário 2"
+                                            />
+                                            <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime2 ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
+                                          </div>
+                                        </div>
+
+                                        {/* SLOT 3 */}
+                                        <div className="flex flex-col gap-1.5">
+                                          <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                            <span className="flex items-center gap-1.5">
+                                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime3 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
+                                              Horário 3
+                                            </span>
+                                            {reminderTime3 && (
+                                              <button
+                                                type="button"
+                                                onClick={() => setReminderTime3("")}
+                                                className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
+                                              >
+                                                Limpar
+                                              </button>
+                                            )}
+                                          </div>
+                                          <div className="relative">
+                                            <GlassTimePicker
+                                              value={reminderTime3}
+                                              onChange={setReminderTime3}
+                                              className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
+                                              title="Definir Horário 3"
+                                            />
+                                            <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime3 ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
+                                          </div>
                                         </div>
                                       </div>
 
-                                      {/* SLOT 3 */}
-                                      <div className="flex flex-col gap-1.5">
-                                        <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
-                                          <span className="flex items-center gap-1">
-                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: reminderTime3 ? '#FF6900' : '#3f3f46' }} />
-                                            Horário 3
-                                          </span>
-                                          {reminderTime3 && (
-                                            <button
-                                              type="button"
-                                              onClick={() => setReminderTime3("")}
-                                              className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/30 px-1.5 py-0.5 rounded border border-red-900/30 cursor-pointer"
-                                            >
-                                              Limpar
-                                            </button>
-                                          )}
-                                        </div>
-                                        <div className="relative">
-                                          <GlassTimePicker
-                                            value={reminderTime3}
-                                            onChange={setReminderTime3}
-                                            className="w-full appearance-none bg-zinc-900/80 border border-zinc-700/60 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2 outline-none focus:border-zinc-400"
-                                            title="Definir Horário 3"
-                                          />
-                                          <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime3 ? '#FF6900' : '#71717a' }} />
-                                        </div>
+                                      {/* Botão Confirmar Limpo */}
+                                      <div className="pt-3 border-t border-white/10 flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => setClocksExpanded(false)}
+                                          className="flex-1 px-3 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-white transition-all uppercase tracking-wider cursor-pointer"
+                                        >
+                                          Fechar
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            handleSave(true);
+                                            setClocksExpanded(false);
+                                            showToast("Horários configurados com sucesso!");
+                                          }}
+                                          className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-500 border border-green-500/30 active:scale-95 rounded-xl text-xs font-black text-white transition-all uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-green-600/30 cursor-pointer"
+                                        >
+                                          <Check size={14} />
+                                          Confirmar
+                                        </button>
                                       </div>
-                                    </div>
-
-                                    {/* Botão Confirmar Limpo */}
-                                    <div className="pt-3 border-t border-zinc-800 flex justify-end">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          handleSave(true);
-                                          setClocksExpanded(false);
-                                        }}
-                                        className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-500 border border-green-500/30 active:scale-95 rounded-xl text-xs font-black text-white transition-all uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-green-600/30 cursor-pointer"
-                                      >
-                                        <Check size={14} />
-                                        Confirmar
-                                      </button>
-                                    </div>
-                                  </motion.div>
+                                    </motion.div>
+                                  </div>
                                 )}
                               </AnimatePresence>
                             </div>
@@ -3323,7 +3388,12 @@ export default function Notes() {
       <AnimatePresence>
         {zoomImage && (
           <div
-            className="fixed inset-0 z-[3000] flex flex-col items-center justify-between bg-black/95 backdrop-blur-2xl p-4 md:p-6 select-none animate-fadeIn"
+            className="fixed inset-0 z-[3000] flex flex-col items-center justify-between p-4 md:p-6 select-none animate-fadeIn"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.85)",
+              backdropFilter: "blur(36px) saturate(200%)",
+              WebkitBackdropFilter: "blur(36px) saturate(200%)",
+            }}
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setZoomImage(null);

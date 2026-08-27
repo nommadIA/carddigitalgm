@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   Type,
   CheckCircle2,
@@ -54,82 +54,87 @@ export interface ColorSettingsManagerProps {
   updateDomColor: (cssVar: string, value: string) => void;
 }
 
-// 10 TEMAS PRONTOS E HARMONIZADOS PARA TODO O APLICATIVO (1-CLIQUE)
+// 10 TEMAS PRONTOS E HARMONIZADOS PARA TODO O APLICATIVO (1-CLIQUE) COM ALTO CONTRASTE E UI APPLE
 export const PRESET_THEMES = [
   {
     id: "orange",
     name: "Laranja CardDigital",
-    badge: "Oficial",
+    badge: "OFICIAL",
     desc: "Laranja oficial de alto impacto com superfícies grafite e contraste industrial.",
+    legend: "Laranja #FE540B • Grafite #0B0B0C • Fogo #FF7A38",
     primary: "#FE540B",
     accent: "#FF7A38",
     bg: "#0B0B0C",
     title: "#FFFFFF",
-    subtitle: "#8B8B92",
+    subtitle: "#E2E8F0",
     icon: "#FE540B",
     menuBg: "#131315",
     menuTitle: "#FFFFFF",
-    menuSubtitle: "#8B8B92",
+    menuSubtitle: "#E2E8F0",
     menuIcon: "#FE540B",
   },
   {
     id: "emerald",
     name: "Verde Esmeralda Pro",
-    badge: "Finanças",
+    badge: "FINANÇAS",
     desc: "Esmeralda vivo, fundo dark floresta e acentos menta de alta precisão.",
+    legend: "Esmeralda #10B981 • Floresta #08100C • Menta #34D399",
     primary: "#10B981",
     accent: "#34D399",
     bg: "#08100C",
     title: "#FFFFFF",
-    subtitle: "#94A3B8",
+    subtitle: "#E2E8F0",
     icon: "#10B981",
     menuBg: "#0D1912",
     menuTitle: "#FFFFFF",
-    menuSubtitle: "#6EE7B7",
+    menuSubtitle: "#A7F3D0",
     menuIcon: "#10B981",
   },
   {
     id: "cyan",
     name: "Azul Elétrico Neon",
-    badge: "Tech",
+    badge: "TECH",
     desc: "Ciano tecnológico, fundo dark oceano e detalhes em azul elétrico futurista.",
+    legend: "Ciano #06B6D4 • Oceano #060D18 • Sky Neon #38BDF8",
     primary: "#06B6D4",
     accent: "#38BDF8",
     bg: "#060D18",
     title: "#FFFFFF",
-    subtitle: "#94A3B8",
+    subtitle: "#E2E8F0",
     icon: "#06B6D4",
     menuBg: "#0A1524",
     menuTitle: "#FFFFFF",
-    menuSubtitle: "#7DD3FC",
+    menuSubtitle: "#BAE6FD",
     menuIcon: "#06B6D4",
   },
   {
     id: "purple",
     name: "Roxo Cyberpunk",
-    badge: "Design",
+    badge: "DESIGN",
     desc: "Violeta intenso neon, superfícies cósmicas e alto contraste criativo.",
+    legend: "Violeta #8B5CF6 • Cósmico #0A0618 • Púrpura #A855F7",
     primary: "#8B5CF6",
     accent: "#A855F7",
     bg: "#0A0618",
     title: "#FFFFFF",
-    subtitle: "#A78BFA",
+    subtitle: "#E2E8F0",
     icon: "#8B5CF6",
     menuBg: "#120A24",
     menuTitle: "#FFFFFF",
-    menuSubtitle: "#C4B5FD",
+    menuSubtitle: "#DDD6FE",
     menuIcon: "#8B5CF6",
   },
   {
     id: "gold",
     name: "Ouro Executivo / Âmbar",
-    badge: "Premium",
+    badge: "PREMIUM",
     desc: "Dourado nobre âmbar com fundo escuro quente e acabamento luxuoso.",
+    legend: "Dourado #F59E0B • Âmbar Dark #0C0A06 • Ouro #FBBF24",
     primary: "#F59E0B",
     accent: "#FBBF24",
     bg: "#0C0A06",
     title: "#FFFFFF",
-    subtitle: "#A8A29E",
+    subtitle: "#E2E8F0",
     icon: "#F59E0B",
     menuBg: "#171309",
     menuTitle: "#FFFFFF",
@@ -139,13 +144,14 @@ export const PRESET_THEMES = [
   {
     id: "crimson",
     name: "Vermelho Carmim / Rubi",
-    badge: "Energia",
+    badge: "ENERGIA",
     desc: "Vermelho carmim vibrante com alto impacto visual e elegância refinada.",
+    legend: "Carmim #E11D48 • Rubi Dark #0F060A • Coral #FB7185",
     primary: "#E11D48",
     accent: "#FB7185",
     bg: "#0F060A",
     title: "#FFFFFF",
-    subtitle: "#FDA4AF",
+    subtitle: "#E2E8F0",
     icon: "#E11D48",
     menuBg: "#1A0A12",
     menuTitle: "#FFFFFF",
@@ -155,13 +161,14 @@ export const PRESET_THEMES = [
   {
     id: "sapphire",
     name: "Azul Real / Safira",
-    badge: "Corporativo",
+    badge: "CORPORATIVO",
     desc: "Azul Safira corporativo moderno com presença sólida e confiável.",
+    legend: "Azul Safira #2563EB • Marinho #060A14 • Royal #60A5FA",
     primary: "#2563EB",
     accent: "#60A5FA",
     bg: "#060A14",
     title: "#FFFFFF",
-    subtitle: "#93C5FD",
+    subtitle: "#E2E8F0",
     icon: "#2563EB",
     menuBg: "#0C1220",
     menuTitle: "#FFFFFF",
@@ -171,13 +178,14 @@ export const PRESET_THEMES = [
   {
     id: "magenta",
     name: "Rosa Choque / Magenta",
-    badge: "Criativo",
+    badge: "CRIATIVO",
     desc: "Magenta neon moderno para marcas inovadoras, dinâmicas e contemporâneas.",
+    legend: "Magenta #D946EF • Dark Violet #0E0512 • Pink #F472B6",
     primary: "#D946EF",
     accent: "#F472B6",
     bg: "#0E0512",
     title: "#FFFFFF",
-    subtitle: "#F0ABFC",
+    subtitle: "#E2E8F0",
     icon: "#D946EF",
     menuBg: "#180920",
     menuTitle: "#FFFFFF",
@@ -187,13 +195,14 @@ export const PRESET_THEMES = [
   {
     id: "lime",
     name: "Verde Lima / Volt",
-    badge: "Performance",
+    badge: "PERFORMANCE",
     desc: "Verde lima energético de alto contraste para máxima visibilidade e agilidade.",
+    legend: "Lima Volt #84CC16 • Musgo Dark #0A0E05 • Acento #A3E635",
     primary: "#84CC16",
     accent: "#A3E635",
     bg: "#0A0E05",
     title: "#FFFFFF",
-    subtitle: "#BEF264",
+    subtitle: "#E2E8F0",
     icon: "#84CC16",
     menuBg: "#121808",
     menuTitle: "#FFFFFF",
@@ -203,34 +212,35 @@ export const PRESET_THEMES = [
   {
     id: "titanium",
     name: "Titânio / Monocromo Pro",
-    badge: "Minimalista",
+    badge: "MINIMALISTA",
     desc: "Titânio e grafite neutro para visual ultra clean, técnico e sofisticado.",
+    legend: "Titânio #94A3B8 • Grafite Dark #0B0F19 • Platina #CBD5E1",
     primary: "#94A3B8",
     accent: "#CBD5E1",
     bg: "#0B0F19",
     title: "#FFFFFF",
-    subtitle: "#64748B",
+    subtitle: "#E2E8F0",
     icon: "#94A3B8",
     menuBg: "#131B2E",
     menuTitle: "#FFFFFF",
-    menuSubtitle: "#94A3B8",
+    menuSubtitle: "#CBD5E1",
     menuIcon: "#94A3B8",
   },
 ];
 
-// VALORES PADRÃO DO TEMA OFICIAL LARANJA
+// VALORES PADRÃO DO TEMA OFICIAL LARANJA COM ALTO CONTRASTE
 export const DEFAULT_ORANGE_DARK = {
   primary: "#FE540B",
   accent: "#FF7A38",
   bg: "#0B0B0C",
   title: "#FFFFFF",
-  subtitle: "#8B8B92",
+  subtitle: "#E2E8F0",
   icon: "#FE540B",
   button: "#FE540B",
   menu_primary: "#FE540B",
   menu_bg: "#131315",
   menu_title: "#FFFFFF",
-  menu_subtitle: "#8B8B92",
+  menu_subtitle: "#E2E8F0",
   menu_icon: "#FE540B",
   menu_button: "#FE540B",
 };
@@ -283,6 +293,62 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
   // Estado do tema em prévia por hover (passar o mouse)
   const [hoveredThemeId, setHoveredThemeId] = useState<string | null>(null);
 
+  // Refs de controle para evitar perda de estado durante preview em tempo real (hover/drag)
+  const activePresetRef = useRef<typeof PRESET_THEMES[0]>(
+    PRESET_THEMES.find(t => t.id === activeThemeId) || PRESET_THEMES[0]
+  );
+  const isHoverPreviewingRef = useRef<boolean>(false);
+
+  const currentConfigRef = useRef({
+    primary: brandPrimary || DEFAULT_ORANGE_DARK.primary,
+    accent: brandAccent || DEFAULT_ORANGE_DARK.accent,
+    bg: brandBg || DEFAULT_ORANGE_DARK.bg,
+    title: brandTitle || DEFAULT_ORANGE_DARK.title,
+    subtitle: brandSubtitle || DEFAULT_ORANGE_DARK.subtitle,
+    icon: brandIcon || DEFAULT_ORANGE_DARK.icon,
+    button: brandPrimary || DEFAULT_ORANGE_DARK.primary,
+    menu_primary: menuPrimary || DEFAULT_ORANGE_DARK.menu_primary,
+    menu_bg: menuBg || DEFAULT_ORANGE_DARK.menu_bg,
+    menu_title: menuTitle || DEFAULT_ORANGE_DARK.menu_title,
+    menu_subtitle: menuSubtitle || DEFAULT_ORANGE_DARK.menu_subtitle,
+    menu_icon: menuIcon || DEFAULT_ORANGE_DARK.menu_icon,
+    menu_button: menuButton || DEFAULT_ORANGE_DARK.menu_button,
+  });
+
+  // Sincroniza o ref de configuração atual com as props quando não estiver em hover
+  useEffect(() => {
+    if (!isHoverPreviewingRef.current) {
+      currentConfigRef.current = {
+        primary: brandPrimary || currentConfigRef.current.primary,
+        accent: brandAccent || currentConfigRef.current.accent,
+        bg: brandBg || currentConfigRef.current.bg,
+        title: brandTitle || currentConfigRef.current.title,
+        subtitle: brandSubtitle || currentConfigRef.current.subtitle,
+        icon: brandIcon || currentConfigRef.current.icon,
+        button: brandPrimary || currentConfigRef.current.button,
+        menu_primary: menuPrimary || currentConfigRef.current.menu_primary,
+        menu_bg: menuBg || currentConfigRef.current.menu_bg,
+        menu_title: menuTitle || currentConfigRef.current.menu_title,
+        menu_subtitle: menuSubtitle || currentConfigRef.current.menu_subtitle,
+        menu_icon: menuIcon || currentConfigRef.current.menu_icon,
+        menu_button: menuButton || currentConfigRef.current.menu_button,
+      };
+    }
+  }, [
+    brandPrimary,
+    brandAccent,
+    brandBg,
+    brandTitle,
+    brandSubtitle,
+    brandIcon,
+    menuPrimary,
+    menuBg,
+    menuTitle,
+    menuSubtitle,
+    menuIcon,
+    menuButton
+  ]);
+
   // Estado do Modal de Ajuste com Barra de Espectro
   const [spectrumModal, setSpectrumModal] = useState<{
     isOpen: boolean;
@@ -318,7 +384,6 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
 
     const setVar = (name: string, val: string) => {
       root.style.setProperty(name, val);
-      root.style.setProperty(name, val, "important");
     };
 
     setVar("--gm-primary", colors.primary);
@@ -373,8 +438,9 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     } catch (e) {}
   };
 
-  // Prévia instantânea ao passar o mouse por cima do tema (hover)
+  // Prévia instantânea ao passar o mouse ou arrastar por cima do tema (hover/drag)
   const handlePreviewThemeHover = (preset: typeof PRESET_THEMES[0]) => {
+    isHoverPreviewingRef.current = true;
     setHoveredThemeId(preset.id);
     const previewConfig = {
       primary: preset.primary,
@@ -396,29 +462,20 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
 
   // Restaura o tema ativo quando o mouse sai do card (leave), caso não tenha clicado
   const handleRevertThemePreview = () => {
+    if (!isHoverPreviewingRef.current) return;
+    isHoverPreviewingRef.current = false;
     setHoveredThemeId(null);
-    const activePreset = PRESET_THEMES.find(t => t.id === activeThemeId) || PRESET_THEMES[0];
-    const currentConfig = {
-      primary: brandPrimary || activePreset.primary,
-      accent: brandAccent || activePreset.accent,
-      bg: brandBg || activePreset.bg,
-      title: brandTitle || activePreset.title,
-      subtitle: brandSubtitle || activePreset.subtitle,
-      icon: brandIcon || activePreset.icon,
-      button: brandPrimary || activePreset.primary,
-      menu_primary: menuPrimary || activePreset.primary,
-      menu_bg: menuBg || activePreset.menuBg,
-      menu_title: menuTitle || activePreset.menuTitle,
-      menu_subtitle: menuSubtitle || activePreset.menuSubtitle,
-      menu_icon: menuIcon || activePreset.menuIcon,
-      menu_button: menuButton || activePreset.primary,
-    };
-    applyAllCssVariables(currentConfig);
+    applyAllCssVariables(currentConfigRef.current);
   };
 
   // Reseta todas as cores para o Padrão Tema Laranja Oficial (modo prévia)
   const resetToDefaultOrange = () => {
+    isHoverPreviewingRef.current = false;
     setActiveThemeId("orange");
+    setHoveredThemeId(null);
+    activePresetRef.current = PRESET_THEMES[0];
+
+    currentConfigRef.current = { ...DEFAULT_ORANGE_DARK };
 
     setBrandPrimary(DEFAULT_ORANGE_DARK.primary);
     setBrandBg(DEFAULT_ORANGE_DARK.bg);
@@ -443,27 +500,14 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
 
   // Aplica um tema pré-definido em tempo real como PRÉVIA (sem persistir até clicar em Salvar)
   const applyPresetTheme = (preset: typeof PRESET_THEMES[0]) => {
-    // 1. Atualiza estado reativo do botão ativo imediatamente
+    // 1. Atualiza estado reativo do botão ativo e refs imediatamente
+    isHoverPreviewingRef.current = false;
+    activePresetRef.current = preset;
     setActiveThemeId(preset.id);
     setHoveredThemeId(null);
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("gm_selected_theme_id", preset.id);
     }
-
-    // 2. Atualiza os estados React locais
-    setBrandPrimary(preset.primary);
-    setBrandBg(preset.bg);
-    setBrandTitle(preset.title);
-    setBrandSubtitle(preset.subtitle);
-    setBrandIcon(preset.icon);
-    setBrandAccent(preset.accent);
-
-    setMenuPrimary(preset.primary);
-    setMenuBg(preset.menuBg);
-    setMenuTitle(preset.menuTitle);
-    setMenuSubtitle(preset.menuSubtitle);
-    setMenuIcon(preset.menuIcon);
-    setMenuButton(preset.primary);
 
     const currentConfig = {
       primary: preset.primary,
@@ -480,43 +524,89 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
       menu_icon: preset.menuIcon,
       menu_button: preset.primary,
     };
+    currentConfigRef.current = currentConfig;
+
+    // 2. Atualiza os estados React locais
+    setBrandPrimary(preset.primary);
+    setBrandBg(preset.bg);
+    setBrandTitle(preset.title);
+    setBrandSubtitle(preset.subtitle);
+    setBrandIcon(preset.icon);
+    setBrandAccent(preset.accent);
+
+    setMenuPrimary(preset.primary);
+    setMenuBg(preset.menuBg);
+    setMenuTitle(preset.menuTitle);
+    setMenuSubtitle(preset.menuSubtitle);
+    setMenuIcon(preset.menuIcon);
+    setMenuButton(preset.primary);
 
     // 3. Aplica todas as variáveis CSS no DOM instantaneamente (Prévia em tempo real em todos os elementos)
     applyAllCssVariables(currentConfig);
 
-    // 4. Notifica o usuário que a prévia está ativa e precisa salvar
+    // 4. Sincroniza callbacks DOM do componente pai
+    updateDomColor?.("brand_primary", preset.primary);
+    updateDomColor?.("brand_accent", preset.accent);
+    updateDomColor?.("brand_bg", preset.bg);
+    updateDomColor?.("brand_title", preset.title);
+    updateDomColor?.("brand_subtitle", preset.subtitle);
+    updateDomColor?.("brand_icon", preset.icon);
+    updateDomColor?.("menu_bg", preset.menuBg);
+    updateDomColor?.("menu_icon", preset.menuIcon);
+    updateDomColor?.("menu_title", preset.menuTitle);
+    updateDomColor?.("menu_subtitle", preset.menuSubtitle);
+
+    // 5. Notifica o usuário que a prévia está ativa e precisa salvar
     setSavedSuccess(preset.name);
     setTimeout(() => setSavedSuccess(null), 3500);
   };
 
   // Aplica cor do Modal de Espectro
   const handleApplySpectrumColor = (newHex: string) => {
+    isHoverPreviewingRef.current = false;
     if (spectrumModal.field) {
       const field = spectrumModal.field;
       if (field === "brandPrimary") {
         setBrandPrimary(newHex);
         updateDomColor?.("brand_primary", newHex);
+        currentConfigRef.current.primary = newHex;
+        currentConfigRef.current.button = newHex;
+        applyAllCssVariables(currentConfigRef.current);
       } else if (field === "brandAccent") {
         setBrandAccent(newHex);
         updateDomColor?.("brand_accent", newHex);
+        currentConfigRef.current.accent = newHex;
+        applyAllCssVariables(currentConfigRef.current);
       } else if (field === "brandBg") {
         setBrandBg(newHex);
         updateDomColor?.("brand_bg", newHex);
+        currentConfigRef.current.bg = newHex;
+        applyAllCssVariables(currentConfigRef.current);
       } else if (field === "menuBg") {
         setMenuBg(newHex);
         updateDomColor?.("menu_bg", newHex);
+        currentConfigRef.current.menu_bg = newHex;
+        applyAllCssVariables(currentConfigRef.current);
       } else if (field === "brandIcon") {
         setBrandIcon(newHex);
         updateDomColor?.("brand_icon", newHex);
+        currentConfigRef.current.icon = newHex;
+        applyAllCssVariables(currentConfigRef.current);
       } else if (field === "menuIcon") {
         setMenuIcon(newHex);
         updateDomColor?.("menu_icon", newHex);
+        currentConfigRef.current.menu_icon = newHex;
+        applyAllCssVariables(currentConfigRef.current);
       } else if (field === "brandTitle") {
         setBrandTitle(newHex);
         updateDomColor?.("brand_title", newHex);
+        currentConfigRef.current.title = newHex;
+        applyAllCssVariables(currentConfigRef.current);
       } else if (field === "brandSubtitle") {
         setBrandSubtitle(newHex);
         updateDomColor?.("brand_subtitle", newHex);
+        currentConfigRef.current.subtitle = newHex;
+        applyAllCssVariables(currentConfigRef.current);
       }
     } else {
       // Ajuste de Matiz do Tema Geral
@@ -524,6 +614,15 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
       setBrandAccent(newHex);
       setMenuPrimary(newHex);
       setMenuButton(newHex);
+      setBrandIcon(newHex);
+      setMenuIcon(newHex);
+
+      updateDomColor?.("brand_primary", newHex);
+      updateDomColor?.("brand_accent", newHex);
+      updateDomColor?.("brand_icon", newHex);
+      updateDomColor?.("menu_icon", newHex);
+      updateDomColor?.("menu_primary", newHex);
+      updateDomColor?.("menu_button", newHex);
 
       const currentConfig = {
         primary: newHex,
@@ -540,6 +639,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
         menu_icon: newHex,
         menu_button: newHex,
       };
+      currentConfigRef.current = currentConfig;
       applyAllCssVariables(currentConfig);
       setSavedSuccess(`Matiz Personalizada (${newHex})`);
       setTimeout(() => setSavedSuccess(null), 3500);
@@ -673,7 +773,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
           </div>
         </div>
 
-        {/* GRID DOS 10 TEMAS DE CORES COM PRÉVIA INSTANTÂNEA AO PASSAR O MOUSE OU CLICAR */}
+        {/* GRID DOS 10 TEMAS DE CORES COM PRÉVIA INSTANTÂNEA AO PASSAR O MOUSE OU CLICAR (UI APPLE) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
           {PRESET_THEMES.map((preset) => {
             const isSelected = activeThemeId === preset.id;
@@ -683,107 +783,129 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                 key={preset.id}
                 onClick={() => applyPresetTheme(preset)}
                 onMouseEnter={() => handlePreviewThemeHover(preset)}
+                onMouseMove={() => {
+                  if (hoveredThemeId !== preset.id) {
+                    handlePreviewThemeHover(preset);
+                  }
+                }}
+                onPointerEnter={() => handlePreviewThemeHover(preset)}
+                onTouchStart={() => handlePreviewThemeHover(preset)}
                 onMouseLeave={handleRevertThemePreview}
-                className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 text-left relative overflow-hidden group hover:scale-[1.03] active:scale-[0.99] ${
+                className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 text-left relative overflow-hidden group hover:scale-[1.02] active:scale-[0.99] ${
                   isSelected
-                    ? "ring-2 shadow-xl"
+                    ? "ring-2 shadow-2xl"
                     : isHovered
-                    ? "ring-1 shadow-lg"
-                    : "hover:border-white/25 hover:shadow-md"
+                    ? "ring-1 shadow-xl"
+                    : "hover:border-white/30 hover:shadow-lg"
                 }`}
                 style={{
                   background: isSelected 
-                    ? `radial-gradient(circle at top left, ${preset.primary}25 0%, rgba(18, 18, 22, 0.95) 80%)`
+                    ? `radial-gradient(circle at top left, ${preset.primary}28 0%, rgba(18, 18, 22, 0.95) 85%)`
                     : isHovered
-                    ? `radial-gradient(circle at top left, ${preset.primary}18 0%, rgba(22, 22, 28, 0.9) 80%)`
-                    : "rgba(18, 18, 22, 0.55)",
-                  borderColor: isSelected ? preset.primary : isHovered ? `${preset.primary}80` : "rgba(255, 255, 255, 0.08)",
+                    ? `radial-gradient(circle at top left, ${preset.primary}20 0%, rgba(22, 22, 28, 0.92) 85%)`
+                    : "rgba(18, 18, 22, 0.65)",
+                  borderColor: isSelected ? preset.primary : isHovered ? `${preset.primary}90` : "rgba(255, 255, 255, 0.12)",
                   boxShadow: isSelected 
-                    ? `0 0 24px -4px ${preset.primary}45, inset 0 1px 0 rgba(255, 255, 255, 0.15)` 
+                    ? `0 0 28px -4px ${preset.primary}50, inset 0 1px 0 rgba(255, 255, 255, 0.2)` 
                     : isHovered
-                    ? `0 0 16px -4px ${preset.primary}35`
+                    ? `0 0 20px -4px ${preset.primary}40, inset 0 1px 0 rgba(255, 255, 255, 0.1)`
                     : undefined,
+                  backdropFilter: "blur(16px)",
                 }}
               >
                 {/* Indicador de Seleção Ativa com Ícone */}
                 {isSelected && (
                   <div 
-                    className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full text-white flex items-center justify-center shadow-md animate-in zoom-in duration-150"
-                    style={{ backgroundColor: preset.primary }}
+                    className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full text-white flex items-center justify-center shadow-lg animate-in zoom-in duration-150 z-10"
+                    style={{ 
+                      backgroundColor: preset.primary,
+                      boxShadow: `0 0 12px ${preset.primary}80`
+                    }}
                     title="Tema Ativo Selecionado"
                   >
-                    <Check size={12} strokeWidth={3} />
+                    <Check size={12} strokeWidth={3.5} />
                   </div>
                 )}
 
                 {/* Indicador de Prévia no Hover */}
                 {!isSelected && isHovered && (
                   <div 
-                    className="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase animate-pulse shadow-md"
+                    className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold text-white uppercase tracking-wider animate-pulse shadow-md z-10"
                     style={{ backgroundColor: preset.primary }}
                   >
-                    Prévia
+                    PRÉVIA
                   </div>
                 )}
 
-                {/* Topo do Card com Amostras e Badge */}
+                {/* Topo do Card: Amostras Apple (3 Cápsulas/Pills Circulares) e Badge Apple */}
                 <div className="flex items-center justify-between w-full pr-5">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-full border border-white/10 backdrop-blur-md">
+                    {/* Amostra 1: Primária */}
                     <span 
-                      className="w-4 h-4 rounded-full border border-white/40 shadow-sm transition-transform group-hover:scale-110" 
+                      className="w-4 h-4 rounded-full border border-white/50 shadow-sm transition-transform group-hover:scale-110" 
                       style={{ 
                         backgroundColor: preset.primary,
-                        boxShadow: `0 0 8px ${preset.primary}60`
+                        boxShadow: `0 0 10px ${preset.primary}90`
                       }} 
-                      title="Cor Primária"
+                      title={`Primária: ${preset.primary}`}
                     />
+                    {/* Amostra 2: Acento */}
                     <span 
-                      className="w-4 h-4 rounded-full border border-white/20" 
-                      style={{ backgroundColor: preset.menuBg }} 
-                      title="Superfície / Menu"
+                      className="w-4 h-4 rounded-full border border-white/40 shadow-xs" 
+                      style={{ 
+                        backgroundColor: preset.accent,
+                        boxShadow: `0 0 6px ${preset.accent}60`
+                      }} 
+                      title={`Acento: ${preset.accent}`}
                     />
+                    {/* Amostra 3: Fundo/Superfície */}
                     <span 
-                      className="w-4 h-4 rounded-full border border-white/20" 
-                      style={{ backgroundColor: preset.bg }} 
-                      title="Fundo Canvas"
+                      className="w-4 h-4 rounded-full border border-white/30 shadow-xs" 
+                      style={{ 
+                        backgroundColor: preset.bg,
+                        boxShadow: `inset 0 0 4px rgba(255,255,255,0.2)`
+                      }} 
+                      title={`Fundo: ${preset.bg}`}
                     />
                   </div>
                   <span 
-                    className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full border transition-colors"
+                    className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border backdrop-blur-sm transition-all"
                     style={{ 
-                      backgroundColor: `${preset.primary}22`,
-                      color: preset.primary,
-                      borderColor: `${preset.primary}40`
+                      backgroundColor: `${preset.primary}25`,
+                      color: "#FFFFFF",
+                      borderColor: `${preset.primary}60`,
+                      textShadow: "0 1px 2px rgba(0,0,0,0.6)"
                     }}
                   >
                     {preset.badge}
                   </span>
                 </div>
 
-                {/* Nome do Tema e Descrição */}
-                <div className="space-y-1 mt-1">
-                  <h3 
-                    className="text-sm font-bold transition-colors leading-tight"
-                    style={{ color: isSelected ? "#FFFFFF" : "#F4F4F5" }}
-                  >
+                {/* Nome do Tema (Clean e Moderno) */}
+                <div className="pt-0.5">
+                  <h3 className="text-[13px] font-bold transition-colors leading-tight text-white truncate">
                     {preset.name}
                   </h3>
-                  <p className="text-[11px] text-[#8B8B92] leading-snug font-medium line-clamp-2">
-                    {preset.desc}
-                  </p>
                 </div>
 
-                {/* Faixa Gradiente Ilustrativa da Paleta */}
+                {/* Faixa Gradiente Ilustrativa da Paleta com Brilho Apple */}
                 <div 
-                  className="w-full h-1.5 rounded-full opacity-80 group-hover:opacity-100 transition-opacity"
+                  className="w-full h-1.5 rounded-full opacity-90 group-hover:opacity-100 transition-all shadow-inner"
                   style={{
-                    background: `linear-gradient(90deg, ${preset.primary} 0%, ${preset.accent} 50%, ${preset.menuBg} 100%)`
+                    background: `linear-gradient(90deg, ${preset.primary} 0%, ${preset.accent} 50%, ${preset.menuBg} 100%)`,
+                    boxShadow: `0 0 8px ${preset.primary}40`
                   }}
                 />
 
-                {/* Ações: HEX e Botão de Ajustar Matiz */}
-                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono font-bold text-zinc-400">
-                  <span>HEX {preset.primary}</span>
+                {/* Ações: Código HEX em 1 linha e Botão Ajustar abaixo */}
+                <div className="pt-2 border-t border-white/10 flex flex-col gap-2 w-full">
+                  {/* Linha Única HEX */}
+                  <div className="w-full py-1.5 px-2.5 rounded-lg bg-black/40 border border-white/10 flex items-center justify-between text-[11px] font-mono font-bold text-slate-200">
+                    <span className="text-slate-400 text-[10px] font-sans font-semibold">HEX</span>
+                    <span className="text-white font-extrabold tracking-wide">{preset.primary}</span>
+                  </div>
+
+                  {/* Botão de Ajustar Abaixo */}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -792,15 +914,16 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                       setSpectrumModal({
                         isOpen: true,
                         initialColor: preset.primary,
-                        title: `Ajustar Matiz: ${preset.name}`,
-                        subtitle: "Arraste a barra de espectro para mudar o tom da paleta deste tema.",
+                        title: `Ajustar: ${preset.name}`,
+                        subtitle: "Arraste a barra de espectro para personalizar a paleta deste tema.",
                         themeId: preset.id,
                       });
                     }}
-                    className="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white font-sans text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
+                    className="w-full py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-sans font-bold text-[11px] flex items-center justify-center gap-1.5 border border-white/15 hover:border-[var(--gm-primary)] transition-all cursor-pointer shadow-xs"
                     title="Ajustar com espectro"
                   >
-                    <Sliders size={10} /> Ajustar
+                    <Sliders size={13} style={{ color: preset.primary }} />
+                    <span>Ajustar</span>
                   </button>
                 </div>
               </div>
@@ -818,29 +941,29 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
           backdropFilter: "blur(20px)"
         }}
       >
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between flex-wrap gap-2">
           <div>
             <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
               <Layers className="w-6 h-6 text-[var(--gm-primary)]" />
               Palette & Amostras Ativas
             </h3>
-            <p className="text-xs text-[#8B8B92] font-medium mt-0.5">
+            <p className="text-xs text-slate-300 font-medium mt-0.5">
               Distribuição harmônica das cores ativas no sistema em tempo real. Clique em qualquer card para ajustar a cor com o espectro.
             </p>
           </div>
           <span 
             className="text-xs font-mono font-bold px-3.5 py-1 rounded-full border tracking-wider transition-colors duration-300"
             style={{
-              backgroundColor: `${brandPrimary || activeTheme.primary}18`,
-              color: brandPrimary || activeTheme.primary,
-              borderColor: `${brandPrimary || activeTheme.primary}40`
+              backgroundColor: `${brandPrimary || activeTheme.primary}20`,
+              color: "#FFFFFF",
+              borderColor: `${brandPrimary || activeTheme.primary}50`
             }}
           >
             8 ELEMENTOS SINCRONIZADOS
           </span>
         </div>
 
-        {/* GRID DE CARDS DA PALETA COM PRÉVIA INSTANTÂNEA */}
+        {/* GRID DE CARDS DA PALETA COM PRÉVIA INSTANTÂNEA E ALTO CONTRASTE */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           {[
             { name: "Canvas / Fundo", hex: hoveredThemeId ? currentDisplayTheme.bg : (brandBg || activeTheme.bg), desc: "Fundo Geral", field: "brandBg" },
@@ -861,8 +984,8 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                 subtitle: "Arraste a barra de espectro para escolher a cor desejada.",
                 field: item.field,
               })}
-              className="rounded-2xl border border-white/10 overflow-hidden transition-all duration-300 flex flex-col relative group hover:border-[var(--gm-primary)] cursor-pointer"
-              style={{ background: "rgba(18, 18, 22, 0.55)" }}
+              className="rounded-2xl border border-white/15 overflow-hidden transition-all duration-300 flex flex-col relative group hover:border-[var(--gm-primary)] cursor-pointer shadow-lg hover:scale-[1.02]"
+              style={{ background: "rgba(18, 18, 22, 0.65)" }}
               title="Clique para ajustar com a barra de espectro"
             >
               {/* Bloco Superior com a Cor Solid */}
@@ -873,17 +996,17 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                 {(item.hex.toUpperCase() === "#F2F2F3" || item.hex.toUpperCase() === "#FFFFFF") && (
                   <div className="absolute inset-0 border border-slate-300/40 pointer-events-none" />
                 )}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white flex items-center gap-1 backdrop-blur-xs">
-                  <Palette size={11} /> Ajustar
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-3 py-1 rounded-lg text-[11px] font-bold text-white flex items-center gap-1.5 backdrop-blur-md shadow-md">
+                  <Palette size={12} /> Ajustar
                 </div>
               </div>
 
               {/* Painel Inferior do Card com Nome e Código Hex */}
-              <div className="p-3 border-t border-white/10 flex flex-col justify-center bg-zinc-900/60">
+              <div className="p-3 border-t border-white/10 flex flex-col justify-center bg-zinc-900/80">
                 <h4 className="text-xs font-bold text-white leading-tight truncate">
                   {item.name}
                 </h4>
-                <p className="text-[11px] font-mono font-semibold text-[#8B8B92] uppercase mt-0.5 tracking-wider">
+                <p className="text-[11px] font-mono font-bold text-slate-300 uppercase mt-0.5 tracking-wider">
                   {item.hex}
                 </p>
               </div>
@@ -958,6 +1081,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
         initialColor={spectrumModal.initialColor}
         title={spectrumModal.title}
         subtitle={spectrumModal.subtitle}
+        onPreview={handleApplySpectrumColor}
         onApply={handleApplySpectrumColor}
       />
 
