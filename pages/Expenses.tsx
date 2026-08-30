@@ -20,6 +20,9 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  ListFilter,
   MessageSquare,
   AlertTriangle,
   ArrowRight
@@ -27,6 +30,8 @@ import {
 import { GlassDatePicker } from "../components/ui/GlassDatePicker";
 import { GlassTimePicker } from "../components/ui/GlassTimePicker";
 import { addAlarmsForBudget, removeAlarmsForBudget } from "../lib/alarmSystem";
+import { useAuth } from "../store/AuthContext";
+import { broadcastAppNotification } from "../lib/syncHub";
 import { motion, AnimatePresence } from "motion/react";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
@@ -79,6 +84,7 @@ function monthRange(monthYYYYMM: string) {
 }
 
 export default function Expenses() {
+  const { tenantId } = useAuth();
   const [expenses, setExpenses] = useState<ExpenseUI[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -246,6 +252,32 @@ export default function Expenses() {
     }
   }, [month]);
 
+  const handlePrevMonth = () => {
+    try {
+      const [yearStr, monthStr] = month.split("-");
+      let y = Number(yearStr);
+      let m = Number(monthStr) - 1;
+      if (m < 1) {
+        m = 12;
+        y -= 1;
+      }
+      setMonth(`${y}-${String(m).padStart(2, "0")}`);
+    } catch {}
+  };
+
+  const handleNextMonth = () => {
+    try {
+      const [yearStr, monthStr] = month.split("-");
+      let y = Number(yearStr);
+      let m = Number(monthStr) + 1;
+      if (m > 12) {
+        m = 1;
+        y += 1;
+      }
+      setMonth(`${y}-${String(m).padStart(2, "0")}`);
+    } catch {}
+  };
+
   // Open inline Notion-style editor
   const handleToggleExpand = (ex: ExpenseUI) => {
     if (expandedRowId === ex.id) {
@@ -383,6 +415,17 @@ export default function Expenses() {
       if (data && newReminderEnabled && newReminderTime) {
         addAlarmsForBudget(data.id, newDesc.trim(), [newReminderTime], "EXPENSE", undefined, newReminderDate || newDueDate);
       }
+
+      // Notificação simultânea para Smartphone & Desktop
+      try {
+        broadcastAppNotification(tenantId, {
+          title: "💸 Nova Despesa Cadastrada",
+          message: `${newDesc.trim()} • R$ ${numAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          type: "expense",
+          amount: numAmount,
+          url: "/expenses",
+        });
+      } catch (e) {}
 
       setShowNewModal(false);
       setNewDesc("");
@@ -585,86 +628,112 @@ export default function Expenses() {
         )}
       </AnimatePresence>
 
-      {/* TOP CONTROL CONTAINER: PAGO / PENDENTE / ATUALIZAR / TABS */}
-      <div className="gm-card fora p-5 rounded-2xl border border-white/10 shadow-none mb-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          {/* Mês Selector */}
-          <div className="flex items-center gap-3 bg-black/40 border border-white/10 px-4 py-2 rounded-xl">
-            <Calendar size={18} className="text-orange-400 shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Mês de Referência</span>
+      {/* TOP CONTROL CONTAINER: MÊS DE REFERÊNCIA / STATUS / ATUALIZAR / ABAS */}
+      <div className="gm-card fora p-4 sm:p-6 rounded-2xl border border-white/10 shadow-none mb-6">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+          {/* Mês Selector com Setas de Navegação - Alinhado, Centralizado e Legível */}
+          <div className="flex items-center gap-2 justify-center sm:justify-start w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/40 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
+              title="Mês anterior"
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            <div className="relative flex items-center justify-center gap-3 bg-black/40 border border-white/10 hover:border-orange-500/50 px-4 py-2.5 rounded-xl flex-1 sm:flex-initial min-w-[210px] transition-all cursor-pointer shadow-sm">
+              <Calendar size={20} className="text-orange-400 shrink-0" />
+              <div className="flex flex-col items-center sm:items-start text-center sm:text-left select-none">
+                <span className="text-[10px] uppercase tracking-widest text-white/50 font-black">Mês de Referência</span>
+                <span className="text-sm sm:text-base font-black text-white capitalize leading-tight">
+                  {monthFormatted}
+                </span>
+              </div>
               <input
-                className="bg-transparent text-white font-bold text-sm outline-none cursor-pointer"
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 type="month"
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
+                title="Clique para selecionar o mês"
               />
             </div>
+
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/40 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
+              title="Próximo mês"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
 
           {/* Workflow Tabs: Todas do Mês / Recorrentes / Lixeira */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10 shadow-none">
+          <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 p-1.5 rounded-xl bg-black/40 border border-white/10 shadow-none w-full sm:w-auto">
             <button
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              className={`h-11 px-3 sm:px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tab === "active"
                   ? "bg-white/15 text-white font-black border border-white/20 shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
               onClick={() => setTab("active")}
             >
-              Todas do Mês
+              <ListFilter size={14} className="shrink-0" />
+              <span className="truncate">Todas do Mês</span>
             </button>
             <button
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`h-11 px-3 sm:px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tab === "recurring"
                   ? "bg-orange-500/20 text-orange-400 font-black border border-orange-500/30 shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
               onClick={() => setTab("recurring")}
             >
-              <Repeat size={13} />
-              Recorrentes
+              <Repeat size={14} className="shrink-0" />
+              <span className="truncate">Recorrentes</span>
             </button>
             <button
-              className={`px-4 py-2 rounded-lg text-xs font-black tracking-wider uppercase transition-all whitespace-nowrap border ${
+              className={`h-11 px-3 sm:px-4 rounded-lg text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${
                 tab === "trash"
                   ? "bg-red-500/20 border-red-500/40 text-red-400"
                   : "bg-transparent border-transparent text-slate-400 hover:text-red-400"
               }`}
               onClick={() => setTab("trash")}
             >
-              Lixeira
+              <Trash2 size={14} className="shrink-0" />
+              <span className="truncate">Lixeira</span>
             </button>
           </div>
         </div>
 
         {/* Status Containers (Pago / Pendente / Total / Atualizar) */}
-        <div className="mt-5 flex gap-3 flex-wrap items-center justify-between border-t border-white/5 pt-4">
-          <div className="flex gap-3 flex-wrap items-center">
+        <div className="mt-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between border-t border-white/5 pt-4">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 items-center">
             {/* PAGO Container */}
-            <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-extrabold text-sm shadow-sm">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-extrabold text-xs sm:text-sm shadow-sm justify-center sm:justify-start min-h-[44px]">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <span>PAGO:</span>
-              <span className="font-mono text-base">{CURRENCY_FORMATTER.format(totalPago)}</span>
+              <span className="font-mono text-sm sm:text-base font-black">{CURRENCY_FORMATTER.format(totalPago)}</span>
             </div>
 
             {/* PENDENTE Container */}
-            <div className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-extrabold text-sm shadow-sm">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse" />
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-extrabold text-xs sm:text-sm shadow-sm justify-center sm:justify-start min-h-[44px]">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse shrink-0" />
               <span>PENDENTE:</span>
-              <span className="font-mono text-base">{CURRENCY_FORMATTER.format(totalPendente)}</span>
+              <span className="font-mono text-sm sm:text-base font-black">{CURRENCY_FORMATTER.format(totalPendente)}</span>
             </div>
 
             {/* TOTAL GERAL */}
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white/70 text-xs font-bold">
-              <span>TOTAL:</span>
-              <span className="font-mono text-white font-extrabold text-sm">{CURRENCY_FORMATTER.format(totalGeral)}</span>
+            <div className="col-span-2 sm:col-span-1 flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/80 text-xs font-bold justify-center sm:justify-start min-h-[44px]">
+              <span className="font-black uppercase tracking-wider text-white/50">TOTAL:</span>
+              <span className="font-mono text-white font-black text-sm sm:text-base">{CURRENCY_FORMATTER.format(totalGeral)}</span>
             </div>
           </div>
 
           <button
             type="button"
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95 cursor-pointer"
+            className="h-11 px-5 rounded-xl bg-white/5 hover:bg-white/10 text-white/90 hover:text-white border border-white/10 text-xs font-black transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 cursor-pointer shrink-0"
             onClick={() => loadExpenses()}
             title="Recarregar despesas"
           >
@@ -674,17 +743,17 @@ export default function Expenses() {
         </div>
       </div>
 
-      {/* LISTA DE DESPESAS COM EXPANSÃO INLINE ESTILO NOTION */}
-      <div className="gm-card barra !p-0 overflow-hidden min-h-[300px] flex flex-col transition-all duration-300 rounded-2xl border border-white/10 shadow-none mb-12">
-        {/* Header fixo da tabela */}
-        <div className="hidden sm:grid grid-cols-[150px_1fr_160px_140px] gap-4 px-6 py-4 border-b border-white/10 font-black opacity-80 uppercase tracking-widest text-[11px] bg-[#121216]/95 backdrop-blur-md shrink-0 shadow-sm text-slate-300">
+      {/* LISTA DE DESPESAS DIRETA COM EXPANSÃO INLINE ESTILO NOTION */}
+      <div className="w-full bg-[#121216]/60 backdrop-blur-md rounded-2xl border border-white/10 shadow-none mb-12 flex flex-col">
+        {/* Header fixo da tabela (visível no desktop) */}
+        <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-4 border-b border-white/10 font-black opacity-80 uppercase tracking-widest text-[11px] bg-[#121216]/95 text-slate-300">
           <div>Vencimento</div>
           <div>Descrição da Despesa</div>
           <div className="text-right">Valor (R$)</div>
           <div className="text-right pr-2">Ações & Status</div>
         </div>
 
-        {/* Conteúdo da Lista */}
+        {/* Conteúdo da Lista Direta (sem barra de rolagem interna ou altura travada) */}
         <div className="w-full">
           {loading ? (
             <div className="p-16 flex flex-col items-center justify-center gap-3 opacity-60">
@@ -715,114 +784,121 @@ export default function Expenses() {
                         : "hover:bg-white/[0.03]"
                     }`}
                   >
-                    {/* Linha Principal da Despesa */}
+                    {/* Linha Principal da Despesa: Adaptada para Smartphone e Desktop */}
                     <div
-                      className="p-4 sm:px-6 sm:py-4 flex flex-col sm:grid sm:grid-cols-[150px_1fr_160px_140px] sm:items-center gap-3 cursor-pointer select-none"
+                      className="p-4 sm:px-6 sm:py-4 flex flex-col sm:grid sm:grid-cols-[160px_1fr_160px_140px] sm:items-center gap-3 cursor-pointer select-none"
                       onClick={() => handleToggleExpand(e)}
                     >
                       {/* Vencimento e Status Pill */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between sm:justify-start gap-2">
                         <div className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
                           <Calendar size={14} className="text-orange-400 shrink-0" />
                           {e.dueDate ? e.dueDate.split("-").reverse().join("/") : "-"}
                         </div>
                         {e.paid ? (
-                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 tracking-wider">
                             PAGO
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-red-500/20 text-red-400 border border-red-500/30">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-500/20 text-red-400 border border-red-500/40 tracking-wider">
                             PENDENTE
                           </span>
                         )}
                       </div>
 
                       {/* Descrição + Badges de Recorrência/Lembrete */}
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-bold text-white text-base truncate">
+                      <div className="flex items-center gap-2 min-w-0 flex-wrap sm:flex-nowrap">
+                        <span className="font-bold text-white text-base sm:text-sm md:text-base truncate">
                           {e.description}
                         </span>
                         {e.isRecurring && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-orange-500/20 text-orange-400 border border-orange-500/30 shrink-0 flex items-center gap-1" title="Despesa Recorrente">
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-orange-500/20 text-orange-400 border border-orange-500/30 shrink-0 flex items-center gap-1" title="Despesa Recorrente">
                             <Repeat size={10} />
                             Recorrente
                           </span>
                         )}
                         {(e.reminderTime || e.reminderDate) && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 shrink-0 flex items-center gap-1" title={`Lembrete: ${e.reminderDate ? e.reminderDate + ' ' : ''}${e.reminderTime}`}>
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 shrink-0 flex items-center gap-1" title={`Lembrete: ${e.reminderDate ? e.reminderDate + ' ' : ''}${e.reminderTime}`}>
                             <Bell size={10} />
                             {e.reminderTime}
                           </span>
                         )}
                       </div>
 
-                      {/* Valor Formatado */}
-                      <div
-                        className={`text-base font-extrabold sm:text-right font-mono ${
-                          e.paid ? "text-emerald-400" : "text-red-400"
-                        }`}
-                      >
-                        {CURRENCY_FORMATTER.format(e.amount)}
-                      </div>
-
-                      {/* Botões de Ação */}
-                      <div className="flex items-center justify-end gap-2" onClick={(ev) => ev.stopPropagation()}>
-                        {/* Toggle Pago Rápido */}
-                        <button
-                          type="button"
-                          onClick={(ev) => handleTogglePaid(e, ev)}
-                          className={`h-9 w-9 rounded-xl flex items-center justify-center transition-all border ${
-                            e.paid
-                              ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30"
-                              : "bg-black/40 border-white/10 text-white/40 hover:text-white hover:border-white/25"
+                      {/* Smartphone Layout para Linha Inferior (Valor à esquerda + Ações à direita) / Desktop Grid */}
+                      <div className="flex items-center justify-between sm:contents pt-2 sm:pt-0 border-t border-white/5 sm:border-0">
+                        {/* Valor Formatado */}
+                        <div
+                          className={`text-lg sm:text-base font-extrabold sm:text-right font-mono ${
+                            e.paid ? "text-emerald-400" : "text-red-400"
                           }`}
-                          title={e.paid ? "Marcar como Pendente" : "Marcar como Pago"}
                         >
-                          <Check size={16} />
-                        </button>
+                          {CURRENCY_FORMATTER.format(e.amount)}
+                        </div>
 
-                        {/* Expandir / Editar Estilo Notion */}
-                        <button
-                          type="button"
-                          onClick={() => handleToggleExpand(e)}
-                          className={`h-9 px-3 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all border ${
-                            isExpanded
-                              ? "bg-orange-500/20 border-orange-500/40 text-orange-400"
-                              : "bg-black/40 border-white/10 text-white/60 hover:text-white hover:border-white/25"
-                          }`}
-                          title="Editar detalhes (Notion)"
-                        >
-                          <Pencil size={13} />
-                          {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                        </button>
-
-                        {/* Excluir / Restaurar */}
-                        {tab === "active" || tab === "recurring" ? (
+                        {/* Botões de Ação Padronizados (Tamanho e Alinhamento Idênticos) */}
+                        <div className="flex items-center justify-end gap-2 shrink-0" onClick={(ev) => ev.stopPropagation()}>
+                          {/* Toggle Pago Rápido */}
                           <button
-                            className="h-9 w-9 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0 border border-red-500/20"
-                            onClick={() => softDeleteExpense(e.id)}
-                            title="Mover para lixeira"
+                            type="button"
+                            onClick={(ev) => handleTogglePaid(e, ev)}
+                            data-icon-btn="true"
+                            className={`w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-xl flex items-center justify-center shrink-0 transition-all border cursor-pointer active:scale-90 ${
+                              e.paid
+                                ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 shadow-sm"
+                                : "bg-black/40 border-white/10 text-white/40 hover:text-white hover:border-white/25"
+                            }`}
+                            title={e.paid ? "Marcar como Pendente" : "Marcar como Pago"}
                           >
-                            <Trash2 size={14} />
+                            <Check size={18} />
                           </button>
-                        ) : (
-                          <>
+
+                          {/* Expandir / Editar Estilo Notion */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleExpand(e)}
+                            data-icon-btn="true"
+                            className={`w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-xl flex items-center justify-center shrink-0 transition-all border cursor-pointer active:scale-90 ${
+                              isExpanded
+                                ? "bg-orange-500/20 border-orange-500/40 text-orange-400 shadow-sm"
+                                : "bg-black/40 border-white/10 text-white/60 hover:text-white hover:border-white/25"
+                            }`}
+                            title="Editar detalhes (Modo Notion)"
+                          >
+                            <Pencil size={16} />
+                          </button>
+
+                          {/* Excluir / Restaurar */}
+                          {tab === "active" || tab === "recurring" ? (
                             <button
-                              className="h-9 w-9 rounded-xl bg-white/5 text-white/80 hover:text-white transition-all flex items-center justify-center shrink-0 border border-white/10"
-                              onClick={() => restoreExpense(e.id)}
-                              title="Restaurar"
+                              data-icon-btn="true"
+                              className="w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shrink-0 border border-red-500/20 cursor-pointer active:scale-90"
+                              onClick={() => softDeleteExpense(e.id)}
+                              title="Mover para lixeira"
                             >
-                              <RotateCcw size={14} />
+                              <Trash2 size={16} />
                             </button>
-                            <button
-                              className="h-9 w-9 rounded-xl bg-red-600 text-white hover:bg-red-500 transition-all flex items-center justify-center shrink-0"
-                              onClick={() => setDeleteConfirmId(e.id)}
-                              title="Excluir definitivo"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </>
-                        )}
+                          ) : (
+                            <>
+                              <button
+                                data-icon-btn="true"
+                                className="w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-xl bg-white/5 text-white/80 hover:text-white transition-all flex items-center justify-center shrink-0 border border-white/10 cursor-pointer active:scale-90"
+                                onClick={() => restoreExpense(e.id)}
+                                title="Restaurar"
+                              >
+                                <RotateCcw size={16} />
+                              </button>
+                              <button
+                                data-icon-btn="true"
+                                className="w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-xl bg-red-600 text-white hover:bg-red-500 transition-all flex items-center justify-center shrink-0 cursor-pointer active:scale-90 shadow-sm"
+                                onClick={() => setDeleteConfirmId(e.id)}
+                                title="Excluir definitivo"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -1022,68 +1098,89 @@ export default function Expenses() {
         </div>
       </div>
 
-      {/* MODAL CRIAR NOVA DESPESA */}
+      {/* MODAL CRIAR NOVA DESPESA - PROPORCIONAL, ESPAÇOSO E ORGANIZADO */}
       <AnimatePresence>
         {showNewModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-md"
+            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
             onClick={() => setShowNewModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="gm-card fora w-full max-w-lg rounded-2xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0"
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="gm-card fora w-full max-w-2xl lg:max-w-3xl rounded-3xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0 my-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-5 border-b border-white/10 bg-[#121216]">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Plus size={18} className="text-orange-400" />
-                  Nova Despesa
-                </h3>
+              {/* Header do Modal */}
+              <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-[#121216]/95">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                    <Plus size={22} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-black text-white leading-tight">
+                      Cadastrar Nova Despesa
+                    </h3>
+                    <p className="text-xs text-white/50 font-medium mt-0.5">
+                      Preencha os detalhes da conta para acompanhamento financeiro
+                    </p>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setShowNewModal(false)}
-                  className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Fechar"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handleCreateNew} className="p-6 space-y-4">
+              {/* Formulário com Grade Espaçosa */}
+              <form onSubmit={handleCreateNew} className="p-6 sm:p-8 space-y-5">
+                {/* Descrição da Despesa */}
                 <div>
-                  <label className="text-xs uppercase font-bold text-slate-400 block mb-1.5">
-                    Descrição da Despesa
+                  <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                    Descrição da Despesa *
                   </label>
                   <input
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-bold outline-none focus:border-orange-500 transition-all"
+                    className="w-full bg-black/40 border border-white/10 focus:border-orange-500 rounded-2xl px-4 sm:px-5 py-3 text-sm sm:text-base text-white font-bold outline-none transition-all placeholder:text-white/30"
                     value={newDesc}
                     onChange={(e) => setNewDesc(e.target.value)}
-                    placeholder="Ex: Conta de luz, Internet, Fornecedor X..."
+                    placeholder="Ex: Conta de Luz, Internet Fibra, Fornecedor de Alvenaria..."
                     autoFocus
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Valor e Vencimento em 2 Colunas */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="text-xs uppercase font-bold text-slate-400 block mb-1.5">
-                      Valor (R$)
+                    <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                      Valor da Conta (R$) *
                     </label>
-                    <input
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-emerald-400 font-mono font-bold outline-none focus:border-emerald-500 transition-all"
-                      value={newAmount}
-                      onChange={(e) => setNewAmount(e.target.value)}
-                      placeholder="0,00"
-                      inputMode="decimal"
-                    />
+                    <div className="relative flex items-center">
+                      <span className="absolute left-4 text-xs font-bold text-white/40 font-mono">
+                        R$
+                      </span>
+                      <input
+                        className="w-full bg-black/40 border border-white/10 focus:border-emerald-500 rounded-2xl pl-11 pr-4 py-3 text-base sm:text-lg text-emerald-400 font-mono font-extrabold outline-none transition-all placeholder:text-emerald-400/30"
+                        value={newAmount}
+                        onChange={(e) => setNewAmount(e.target.value)}
+                        placeholder="0,00"
+                        inputMode="decimal"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="text-xs uppercase font-bold text-slate-400 block mb-1.5">
-                      Vencimento
+                    <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                      Data de Vencimento *
                     </label>
                     <GlassDatePicker
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-bold outline-none focus:border-orange-500 transition-all flex items-center min-h-[42px]"
+                      className="w-full bg-black/40 border border-white/10 focus:border-orange-500 rounded-2xl px-4 sm:px-5 py-3 text-sm sm:text-base text-white font-bold outline-none transition-all flex items-center min-h-[48px]"
                       value={newDueDate}
                       onChange={setNewDueDate}
                       title="Vencimento"
@@ -1091,38 +1188,54 @@ export default function Expenses() {
                   </div>
                 </div>
 
-                {/* Lembrete / Notificação */}
-                <div className="bg-black/30 border border-white/10 rounded-xl p-4 space-y-3">
+                {/* Bloco de Lembrete / Notificação */}
+                <div className="bg-black/30 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-yellow-300 flex items-center gap-1.5">
-                      <Bell size={14} className="text-yellow-400" />
-                      Definir Lembrete / Alerta
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={newReminderEnabled}
-                      onChange={(e) => setNewReminderEnabled(e.target.checked)}
-                      className="w-4 h-4 accent-yellow-500 cursor-pointer"
-                    />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-400 shrink-0">
+                        <Bell size={16} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs sm:text-sm font-extrabold text-white">
+                          Ativar Lembrete / Alerta Programado
+                        </span>
+                        <span className="text-[11px] text-white/50">
+                          Receba aviso no sistema e smartphone antes do vencimento
+                        </span>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newReminderEnabled}
+                        onChange={(e) => setNewReminderEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+                    </label>
                   </div>
 
                   {newReminderEnabled && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/5">
                       <div>
-                        <span className="text-[10px] text-white/40 block mb-1">Data do Alerta</span>
+                        <span className="text-xs font-bold text-white/60 block mb-1.5">
+                          Data do Alerta
+                        </span>
                         <GlassDatePicker
-                          className="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-bold"
+                          className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white font-bold"
                           value={newReminderDate}
                           onChange={setNewReminderDate}
                           title="Data do Alerta"
                         />
                       </div>
                       <div>
-                        <span className="text-[10px] text-white/40 block mb-1">Horário do Alerta</span>
+                        <span className="text-xs font-bold text-white/60 block mb-1.5">
+                          Horário do Alerta
+                        </span>
                         <GlassTimePicker
                           value={newReminderTime}
                           onChange={setNewReminderTime}
-                          className="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-bold"
+                          className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white font-bold"
                           title="Horário do Alerta"
                         />
                       </div>
@@ -1130,61 +1243,76 @@ export default function Expenses() {
                   )}
                 </div>
 
-                {/* Recorrente e Pago */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Opções: Recorrente Mensal e Já Pago */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div
                     onClick={() => setNewIsRecurring(!newIsRecurring)}
-                    className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                    className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all select-none ${
                       newIsRecurring
-                        ? "bg-orange-500/15 border-orange-500/40 text-orange-300"
-                        : "bg-black/30 border-white/10 text-white/60"
+                        ? "bg-orange-500/15 border-orange-500/40 text-orange-300 shadow-sm"
+                        : "bg-black/30 border-white/10 text-white/70 hover:text-white hover:border-white/20"
                     }`}
                   >
-                    <span className="text-xs font-bold flex items-center gap-1.5">
-                      <Repeat size={14} /> Recorrente Mensal
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${newIsRecurring ? 'bg-orange-500/20 text-orange-400' : 'bg-white/5 text-white/40'}`}>
+                        <Repeat size={16} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs sm:text-sm font-bold">Despesa Recorrente</span>
+                        <span className="text-[11px] opacity-70">Lança automaticamente todo mês</span>
+                      </div>
+                    </div>
                     <input
                       type="checkbox"
                       checked={newIsRecurring}
                       onChange={() => {}}
-                      className="w-4 h-4 accent-orange-500"
+                      className="w-4 h-4 accent-orange-500 cursor-pointer pointer-events-none"
                     />
                   </div>
 
                   <div
                     onClick={() => setNewPaid(!newPaid)}
-                    className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                    className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all select-none ${
                       newPaid
-                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
-                        : "bg-black/30 border-white/10 text-white/60"
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-sm"
+                        : "bg-black/30 border-white/10 text-white/70 hover:text-white hover:border-white/20"
                     }`}
                   >
-                    <span className="text-xs font-bold flex items-center gap-1.5">
-                      <Check size={14} /> Já Pago
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${newPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/40'}`}>
+                        <Check size={16} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs sm:text-sm font-bold">Status do Pagamento</span>
+                        <span className="text-[11px] opacity-70">
+                          {newPaid ? "Conta quitada (Pago)" : "Aguardando pagamento"}
+                        </span>
+                      </div>
+                    </div>
                     <input
                       type="checkbox"
                       checked={newPaid}
                       onChange={() => {}}
-                      className="w-4 h-4 accent-emerald-500"
+                      className="w-4 h-4 accent-emerald-500 cursor-pointer pointer-events-none"
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-3 justify-end pt-4 border-t border-white/10">
+                {/* Ações do Modal */}
+                <div className="flex items-center justify-end gap-3 pt-5 border-t border-white/10">
                   <button
                     type="button"
                     onClick={() => setShowNewModal(false)}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-white/60 hover:text-white bg-white/5 hover:bg-white/10 transition-all"
+                    className="h-11 px-5 rounded-xl text-xs sm:text-sm font-bold text-white/70 hover:text-white bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white text-xs font-extrabold transition-all flex items-center gap-2 shadow-lg shadow-orange-500/20"
+                    className="h-11 px-7 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white text-xs sm:text-sm font-black transition-all flex items-center gap-2 shadow-lg shadow-orange-500/25 active:scale-95 cursor-pointer"
                   >
-                    <Plus size={16} />
-                    Cadastrar Despesa
+                    <Plus size={18} className="stroke-[2.5]" />
+                    <span>Cadastrar Despesa</span>
                   </button>
                 </div>
               </form>
@@ -1197,49 +1325,58 @@ export default function Expenses() {
       <AnimatePresence>
         {showShareModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 backdrop-blur-md"
+            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
             onClick={() => setShowShareModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="gm-card fora w-full max-w-lg rounded-2xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0"
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="gm-card fora w-full max-w-2xl rounded-3xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0 my-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-5 border-b border-white/10 bg-[#121216]">
-                <div className="flex items-center gap-2">
-                  <Share2 size={18} className="text-green-400" />
-                  <h3 className="text-lg font-bold text-white">Relatório de Despesas</h3>
+              <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-[#121216]/95">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <Share2 size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-black text-white">Relatório Mensal de Despesas</h3>
+                    <p className="text-xs text-white/50 font-medium mt-0.5">
+                      Copie o resumo formatado ou envie diretamente para o WhatsApp
+                    </p>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowShareModal(false)}
-                  className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Fechar"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
-                <div className="bg-black/50 border border-white/10 rounded-xl p-4 text-xs font-mono text-white/90 whitespace-pre-wrap max-h-[320px] overflow-y-auto leading-relaxed">
+              <div className="p-6 sm:p-8 space-y-5">
+                <div className="bg-black/50 border border-white/10 rounded-2xl p-5 text-xs sm:text-sm font-mono text-white/90 whitespace-pre-wrap max-h-[340px] overflow-y-auto leading-relaxed shadow-inner">
                   {generateReportText()}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
                   <button
                     type="button"
                     onClick={handleCopyReport}
-                    className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 border border-white/10 active:scale-95"
+                    className="h-12 px-5 rounded-2xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 border border-white/10 active:scale-95 cursor-pointer"
                   >
                     {copiedReport ? (
                       <>
-                        <CheckCircle2 size={16} className="text-emerald-400" />
-                        <span className="text-emerald-400">Copiado!</span>
+                        <CheckCircle2 size={18} className="text-emerald-400" />
+                        <span className="text-emerald-400 font-extrabold">Copiado para a Área de Transferência!</span>
                       </>
                     ) : (
                       <>
-                        <Copy size={16} />
+                        <Copy size={18} />
                         <span>Copiar Relatório</span>
                       </>
                     )}
@@ -1248,9 +1385,9 @@ export default function Expenses() {
                   <button
                     type="button"
                     onClick={handleSendWhatsApp}
-                    className="px-4 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white text-xs font-extrabold transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-600/30 active:scale-95"
+                    className="h-12 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-95 cursor-pointer"
                   >
-                    <MessageSquare size={16} />
+                    <MessageSquare size={18} />
                     <span>Enviar para WhatsApp</span>
                   </button>
                 </div>

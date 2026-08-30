@@ -33,7 +33,7 @@ export function Page({ title, subtitle, actions, children, className }: PageProp
           {actions && <div className="gm-row shrink-0 flex flex-wrap items-center gap-2 sm:gap-3">{actions}</div>}
         </div>
       )}
-      <div className="flex-1 min-h-0 flex flex-col pb-6 sm:pb-0">{children}</div>
+      <div className="flex-1 min-h-0 flex flex-col pb-4 sm:pb-6 md:pb-8">{children}</div>
     </div>
   );
 }

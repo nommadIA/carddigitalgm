@@ -62,14 +62,20 @@ html:not([data-theme="light"]):not(.gm-light) .fora {
 :root{
   --gm-sidebar-width: 224px;
   /* =========================================================
-     MOBILE — ÁREA SEGURA PARA CONTEÚDO ROLÁVEL
-     Impede que o conteúdo fique atrás do menu inferior
+     MOBILE — ÁREA SEGURA DINÂMICA PARA CONTEÚDO ROLÁVEL
+     Calcula dinamicamente a altura do menu inferior + safe area do iOS/Android + respiro visual
      ========================================================= */
-  --bottom-nav-height: 96px;
+  --bottom-nav-height: 84px;
+  /* Espaçamento e Respiro Dinâmico no Smartphone (garante distância generosa acima da navegação inferior) */
   --bottom-nav-safe-space: calc(
-    var(--bottom-nav-height, 96px) +
-    env(safe-area-inset-bottom, 0px) +
-    88px
+    var(--bottom-nav-height) +
+    max(env(safe-area-inset-bottom, 0px), 16px) +
+    120px
+  );
+  --smartphone-modal-respiro: calc(
+    var(--bottom-nav-height) +
+    max(env(safe-area-inset-bottom, 0px), 16px) +
+    90px
   );
 
   --gm-primary: #F65A1A;
@@ -162,6 +168,10 @@ html {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   scroll-behavior: smooth;
+  scroll-snap-type: none !important;
+  overscroll-behavior-y: auto !important;
+  overscroll-behavior-x: none !important;
+  scroll-padding-bottom: var(--bottom-nav-safe-space) !important;
 }
 @media (max-width: 1024px) {
   html {
@@ -179,6 +189,10 @@ body{
   background: var(--gm-bg);
   touch-action: pan-y;
   scroll-behavior: smooth;
+  scroll-snap-type: none !important;
+  overscroll-behavior-y: auto !important;
+  overscroll-behavior-x: none !important;
+  scroll-padding-bottom: var(--bottom-nav-safe-space) !important;
 }
 
 #root {
@@ -189,6 +203,8 @@ body{
   overflow-x: hidden;
   overflow-y: visible !important;
   touch-action: pan-y;
+  scroll-snap-type: none !important;
+  overscroll-behavior-y: auto;
 }
 
 /* =========================================================
@@ -205,6 +221,8 @@ body{
   overflow-y: visible;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: none !important;
+  overscroll-behavior-y: auto;
 }
 
 /* Garante rolagem livre em listas, tabelas e modais */
@@ -214,6 +232,20 @@ body{
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   scroll-behavior: smooth;
+  scroll-snap-type: none !important;
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: none;
+  scroll-padding-bottom: var(--bottom-nav-safe-space) !important;
+}
+
+/* Carrosséis e barras horizontais com snap horizontal suave (sem travar rolagem vertical) */
+.overflow-x-auto,
+.snap-x,
+[data-snap-x] {
+  overscroll-behavior-x: contain !important;
+  overscroll-behavior-y: auto !important;
+  touch-action: pan-x pan-y !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Barra de rolagem visualmente discreta e moderna */
@@ -780,7 +812,7 @@ button.handle,
 }
 
 .gm-container {
-  max-width: 1400px;
+  max-width: 1440px;
   width: 100%;
   margin-left: auto !important;
   margin-right: auto !important;
@@ -788,6 +820,19 @@ button.handle,
   overflow-x: hidden;
   overflow-y: visible;
   touch-action: pan-y;
+  padding-left: 32px;
+  padding-right: 32px;
+  padding-top: 32px;
+  padding-bottom: 180px;
+}
+
+@media (min-width: 1024px) {
+  .gm-container {
+    padding-left: 44px;
+    padding-right: 44px;
+    padding-top: 36px;
+    padding-bottom: 220px;
+  }
 }
 
 /* MOBILE ADJUSTMENTS */
@@ -807,17 +852,22 @@ button.handle,
     max-height: 100dvh;
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
-    scroll-padding-bottom: var(--bottom-nav-safe-space) !important;
+    scroll-snap-type: none !important;
+    overscroll-behavior-y: auto !important;
+    overscroll-behavior-x: none !important;
+    scroll-padding-bottom: calc(var(--bottom-nav-safe-space) + 64px) !important;
   }
   .gm-container {
-    padding-top: 80px !important;
-    padding-bottom: var(--bottom-nav-safe-space) !important;
-    scroll-padding-bottom: var(--bottom-nav-safe-space) !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    padding-top: 88px !important;
+    padding-bottom: calc(var(--bottom-nav-safe-space) + 64px) !important;
+    scroll-padding-bottom: calc(var(--bottom-nav-safe-space) + 64px) !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
     width: 100%;
     box-sizing: border-box;
     overflow-y: visible !important;
+    scroll-snap-type: none !important;
+    overscroll-behavior-y: auto !important;
     min-height: 100%;
   }
 }
@@ -2276,20 +2326,38 @@ select:focus {
 }
 
 /* BG layer global & Root background container */
-.gm-layout{ position:relative; isolation:isolate; min-height: 100vh; }
+.gm-layout {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background-color: var(--gm-bg, #0b0f14);
+}
 
+html,
+body,
+#root,
+.app-bg,
+[data-theme="dark"] body,
+.gm-dark body,
 html.gm-has-bg,
 html.gm-has-bg body,
 body.gm-has-bg {
-  background-color: transparent !important;
+  background-color: var(--gm-bg, #0b0f14) !important;
+  color: var(--gm-title, var(--gm-text, #ffffff)) !important;
 }
 
-.gm-layout::before{
-  content:"";
+html:not(.gm-has-bg) .gm-layout::after {
+  background:
+    radial-gradient(900px 420px at 15% 0%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.08), transparent 60%),
+    radial-gradient(900px 420px at 85% 0%, rgba(var(--gm-accent-rgb, var(--gm-primary-rgb, 254, 84, 11)), 0.05), transparent 60%) !important;
+}
+
+.gm-layout::before {
+  content: "";
   position: fixed;
   inset: 0;
   z-index: -2;
-  pointer-events:none;
+  pointer-events: none;
 
   background-image: var(--gm-app-bg-url);
   background-size: var(--gm-app-bg-fit, cover);
@@ -2444,7 +2512,7 @@ body.gm-has-bg {
 
 html.gm-has-bg body,
 body.gm-has-bg {
-  background-color: transparent !important;
+  background-color: var(--gm-bg, #0b0f14) !important;
   color: var(--gm-title, var(--gm-text)) !important;
 }
 
@@ -5940,13 +6008,12 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   /* Containers com rolagem vertical & área de segurança inferior */
   .gm-container,
   .scrollable-content,
-  .modal-content,
-  .modal-body,
-  .gm-modal-body,
   .page-content,
   .main-content {
     padding-bottom: var(--bottom-nav-safe-space) !important;
     scroll-padding-bottom: var(--bottom-nav-safe-space) !important;
+    scroll-snap-type: none !important;
+    overscroll-behavior-y: auto !important;
   }
 
   /* Responsive modal overlays allowing smooth vertical drag/scroll */
@@ -5956,19 +6023,24 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     touch-action: pan-y !important;
     overscroll-behavior: contain !important;
     z-index: 1000000 !important;
-    padding: 12px 8px var(--bottom-nav-safe-space) 8px !important;
-    scroll-padding-bottom: var(--bottom-nav-safe-space) !important;
+    padding: 16px 12px var(--smartphone-modal-respiro) 12px !important;
+    scroll-padding-bottom: var(--smartphone-modal-respiro) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
-  /* Responsive modals on small screens */
-  .fixed.inset-0 > div:not(.absolute):not(.fixed),
+  /* Responsive modals on small screens - centralizados com respiro total em relação ao menu inferior */
+  .fixed.inset-0 > div:not(.absolute):not(.fixed):not(.pointer-events-none),
   .fixed.inset-0 > form,
   .gm-modal,
   .gm-note-modal,
   [role="dialog"] {
-    max-width: calc(100vw - 16px) !important;
-    max-height: calc(100dvh - 20px) !important;
-    border-radius: 18px !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - var(--smartphone-modal-respiro) - 32px) !important;
+    margin-bottom: calc(var(--bottom-nav-height) + 14px) !important;
+    border-radius: 20px !important;
     display: flex !important;
     flex-direction: column !important;
     overflow-y: auto !important;
@@ -5976,7 +6048,7 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     touch-action: pan-y !important;
     box-sizing: border-box !important;
     z-index: 1000001 !important;
-    scroll-padding-bottom: var(--bottom-nav-safe-space) !important;
+    scroll-padding-bottom: 24px !important;
   }
 
   /* Smooth scrollable modal content and bottom action clearance */
@@ -5988,13 +6060,28 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   [role="dialog"] .overflow-y-auto {
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
-    padding-bottom: var(--bottom-nav-safe-space) !important;
-    scroll-padding-bottom: var(--bottom-nav-safe-space) !important;
+    padding-bottom: 24px !important;
+    scroll-padding-bottom: 24px !important;
   }
 
-  /* Touch-friendly target heights */
-  button, .gm-btn, input, select, textarea {
-    min-height: 44px !important;
+  /* Touch-friendly target heights (exceto botões de ícones e touch nav) */
+  button:not([class*="w-9"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="w-7"]):not([class*="w-6"]):not([class*="h-9"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="h-7"]):not([class*="aspect-square"]):not([data-icon-btn]):not(.p-0):not([data-touch-nav]),
+  .gm-btn, input, select, textarea {
+    min-height: 44px;
+  }
+
+  /* Botões de ícones sempre quadrados com cantos arredondados (squircle / rounded square) */
+  button[class*="aspect-square"],
+  button[class*="w-9"][class*="h-9"],
+  button[class*="w-8"][class*="h-8"],
+  button[class*="w-10"][class*="h-10"],
+  [data-icon-btn] {
+    min-height: unset !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   /* Mobile Grid spacing */

@@ -40,6 +40,7 @@ import {
 import { playNotificationSound } from "../../lib/audio";
 import { useAuth } from "../../store/AuthContext";
 import { fetchSettingsSupabase, applySettingsToDOM, readSettingsLocal } from "../../lib/settings";
+import { initSyncHub, getSavedNotifications, saveNotifications } from "../../lib/syncHub";
 import AlarmToast from "./AlarmToast";
 import SmartphonePermissionModal from "./SmartphonePermissionModal";
 import { ToastHost } from "./Toast";
@@ -274,6 +275,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   const [appSettings, setAppSettings] = useState<any>(() => readSettingsLocal());
 
   useEffect(() => {
+    // Inicializa a sincronização em tempo real simultânea entre Desktop & Smartphone
+    const cleanupSync = initSyncHub(tenantId);
+
     fetchSettingsSupabase(tenantId)
       .then((s) => {
         if (s) {
@@ -294,9 +298,22 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       }
     };
 
+    const handleNotificationsChanged = (e: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setNotifications(e.detail);
+      } else {
+        const saved = getSavedNotifications();
+        if (saved.length > 0) setNotifications(saved);
+      }
+    };
+
     window.addEventListener("gm_settings_updated", handleSettingsUpdate);
+    window.addEventListener("gm_notifications_changed", handleNotificationsChanged);
+
     return () => {
+      cleanupSync();
       window.removeEventListener("gm_settings_updated", handleSettingsUpdate);
+      window.removeEventListener("gm_notifications_changed", handleNotificationsChanged);
     };
   }, [tenantId]);
 
@@ -324,7 +341,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   const mainRef = useRef<HTMLElement | null>(null);
 
-  // Navegação por Gesto de Arrastar (Swipe) Esquerda/Direita para mudar de tela
+  // Navegação por Gesto de Arrastar (Swipe) e Touch Lateral Esquerda/Direita para mudar de tela
   const currentNavIndex = useMemo(() => {
     return nav.findIndex((it) => {
       if (it.to === "/") return location.pathname === "/";
@@ -332,26 +349,46 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     });
   }, [nav, location.pathname]);
 
-  const handleSwipeLeft = () => {
+  const [pageToast, setPageToast] = useState<{ label: string; dir: "left" | "right" } | null>(null);
+
+  const goToPrevPage = () => {
     const hasOpenModal = Boolean(
       document.querySelector('[role="dialog"], .gm-modal, .fixed.inset-0:not(.pointer-events-none)')
     );
     if (hasOpenModal) return;
 
-    if (currentNavIndex !== -1 && currentNavIndex < nav.length - 1) {
-      navigate(nav[currentNavIndex + 1].to);
-    }
+    const idx = currentNavIndex >= 0 ? currentNavIndex : 0;
+    const prevIdx = idx <= 0 ? nav.length - 1 : idx - 1;
+    const target = nav[prevIdx];
+    setPageToast({ label: target.label, dir: "left" });
+    navigate(target.to);
+  };
+
+  const goToNextPage = () => {
+    const hasOpenModal = Boolean(
+      document.querySelector('[role="dialog"], .gm-modal, .fixed.inset-0:not(.pointer-events-none)')
+    );
+    if (hasOpenModal) return;
+
+    const idx = currentNavIndex >= 0 ? currentNavIndex : 0;
+    const nextIdx = idx >= nav.length - 1 ? 0 : idx + 1;
+    const target = nav[nextIdx];
+    setPageToast({ label: target.label, dir: "right" });
+    navigate(target.to);
+  };
+
+  useEffect(() => {
+    if (!pageToast) return;
+    const timer = setTimeout(() => setPageToast(null), 900);
+    return () => clearTimeout(timer);
+  }, [pageToast]);
+
+  const handleSwipeLeft = () => {
+    goToNextPage();
   };
 
   const handleSwipeRight = () => {
-    const hasOpenModal = Boolean(
-      document.querySelector('[role="dialog"], .gm-modal, .fixed.inset-0:not(.pointer-events-none)')
-    );
-    if (hasOpenModal) return;
-
-    if (currentNavIndex > 0) {
-      navigate(nav[currentNavIndex - 1].to);
-    }
+    goToPrevPage();
   };
 
   const swipeMainRef = useSwipeNav<HTMLElement>({
@@ -549,7 +586,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         onClick={handleBellClick}
         title="Atualizações e Informações"
         aria-label="Atualizações e Informações"
-        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
+        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
         style={{
           width: '36px',
           height: '36px',
@@ -557,7 +594,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           minHeight: '36px',
           maxWidth: '36px',
           maxHeight: '36px',
-          borderRadius: '50%',
+          borderRadius: '10px',
           aspectRatio: '1 / 1',
           display: 'inline-flex',
           alignItems: 'center',
@@ -580,7 +617,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         onClick={signOut}
         title="Sair"
         aria-label="Sair"
-        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-full flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
+        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
         style={{
           width: '36px',
           height: '36px',
@@ -588,7 +625,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           minHeight: '36px',
           maxWidth: '36px',
           maxHeight: '36px',
-          borderRadius: '50%',
+          borderRadius: '10px',
           aspectRatio: '1 / 1',
           display: 'inline-flex',
           alignItems: 'center',
@@ -754,7 +791,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         ref={setMainRefs}
         className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden w-full p-0 scroll-smooth"
       >
-        <div className="gm-container w-full max-w-[1400px] mx-auto flex flex-col items-stretch px-3 sm:px-6 md:px-8 pt-20 md:pt-6 pb-[var(--bottom-nav-safe-space)] md:pb-8">
+        <div className="gm-container w-full max-w-[1440px] mx-auto flex flex-col items-stretch px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 pt-20 md:pt-10 pb-[calc(var(--bottom-nav-safe-space)+80px)] md:pb-44 lg:pb-52 xl:pb-60">
           {children}
         </div>
       </main>
@@ -850,6 +887,25 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </button>
             )}
           </div>
+
+          {/* HUD TOAST INDICADOR DE TROCA DE PÁGINA */}
+          <AnimatePresence>
+            {pageToast && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                transition={{ duration: 0.18 }}
+                className="fixed top-[72px] left-1/2 -translate-x-1/2 z-[10000] pointer-events-none md:hidden"
+              >
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-950/90 backdrop-blur-xl border border-white/20 text-white text-xs font-bold shadow-2xl">
+                  {pageToast.dir === "left" && <ChevronLeft size={14} className="text-[var(--gm-primary)]" />}
+                  <span className="tracking-tight">{pageToast.label}</span>
+                  {pageToast.dir === "right" && <ChevronRight size={14} className="text-[var(--gm-primary)]" />}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>,
         document.body
       )}

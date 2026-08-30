@@ -62,6 +62,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSwipeNav } from "../hooks/useSwipeNav";
 import { playNotificationSound, NOTIFICATION_SOUNDS } from "../lib/audio";
 import { triggerRealNotification } from "../lib/realNotification";
+import { broadcastBackgroundChange, broadcastAppNotification } from "../lib/syncHub";
+import SmartphonePermissionModal from "../components/ui/SmartphonePermissionModal";
 
 type Fit = "cover" | "contain";
 
@@ -131,6 +133,7 @@ export default function Configuracoes() {
     return localStorage.getItem("gm.notificationsMuted") === "true";
   });
   const [shakeTest, setShakeTest] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
 
   const variants = {
     enter: (direction: number) => ({
@@ -922,6 +925,26 @@ export default function Configuracoes() {
       });
 
       applySettingsToDOM(next);
+
+      // Sincroniza em tempo real o plano de fundo e tema com todos os outros dispositivos
+      broadcastBackgroundChange(tenantId, {
+        enabled: bgEnabled || mobileBgEnabled,
+        bgUrl,
+        bgOpacity: bgEnabled ? (bgOpacity || bgOpacityPrev) : 0,
+        bgScale,
+        bgBlur,
+        bgFit,
+        bgPosX: `${bgPosX}%`,
+        bgPosY: `${bgPosY}%`,
+        mobileBgUrl: mobileBgUrl || bgUrl,
+        mobileBgOpacity: mobileBgEnabled ? (mobileBgOpacity || mobileBgOpacityPrev) : 0,
+        mobileBgScale,
+        mobileBgBlur,
+        mobileBgFit,
+        mobileBgPosX: `${mobileBgPosX}%`,
+        mobileBgPosY: `${mobileBgPosY}%`,
+        timestamp: Date.now(),
+      });
 
       // Dispara eventos globais para que todos os componentes em aberto se atualizem
       window.dispatchEvent(new CustomEvent("gm_theme_updated", { detail: payloadDark }));
@@ -2183,34 +2206,66 @@ export default function Configuracoes() {
                     <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 fora p-4">
                       <div>
                         <div className="font-bold text-sm text-slate-800 dark:text-white">
-                          Exibir Plano de Fundo
+                          Exibir Plano de Fundo (Smartphone & Desktop)
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
-                          Ative para renderizar no fundo do aplicativo
+                          Ativa ou desativa o plano de fundo simultaneamente em todos os seus dispositivos
                         </div>
                       </div>
                       <button
                         type="button"
-                        className={"gm-btn py-1.5 px-4 text-xs font-bold transition-all " + ((viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) ? "bg-emerald-600 text-white" : "bg-zinc-700 text-zinc-300")}
-                        onClick={() => {
-                          if (viewMode === "smartphone") {
-                            setMobileBgEnabled((v) => {
-                              const next = !v;
-                              if (next && mobileBgOpacity <= 0) setMobileBgOpacity(mobileBgOpacityPrev || 0.18);
-                              else if (!next && mobileBgOpacity > 0) setMobileBgOpacityPrev(mobileBgOpacity);
-                              return next;
-                            });
+                        className={"gm-btn py-1.5 px-4 text-xs font-bold transition-all " + ((bgEnabled || mobileBgEnabled) ? "bg-emerald-600 text-white" : "bg-zinc-700 text-zinc-300")}
+                        onClick={async () => {
+                          const next = !(bgEnabled || mobileBgEnabled);
+                          setBgEnabled(next);
+                          setMobileBgEnabled(next);
+
+                          const targetOp = next ? (bgOpacity > 0 ? bgOpacity : bgOpacityPrev || 0.18) : 0;
+                          const targetMobileOp = next ? (mobileBgOpacity > 0 ? mobileBgOpacity : mobileBgOpacityPrev || 0.18) : 0;
+
+                          if (next) {
+                            setBgOpacity(targetOp);
+                            setMobileBgOpacity(targetMobileOp);
                           } else {
-                            setBgEnabled((v) => {
-                              const next = !v;
-                              if (next && bgOpacity <= 0) setBgOpacity(bgOpacityPrev || 0.18);
-                              else if (!next && bgOpacity > 0) setBgOpacityPrev(bgOpacity);
-                              return next;
-                            });
+                            if (bgOpacity > 0) setBgOpacityPrev(bgOpacity);
+                            if (mobileBgOpacity > 0) setMobileBgOpacityPrev(mobileBgOpacity);
+                            setBgOpacity(0);
+                            setMobileBgOpacity(0);
+                          }
+
+                          // Transmite em tempo real para os dois dispositivos (Smartphone e Desktop)
+                          broadcastBackgroundChange(tenantId, {
+                            enabled: next,
+                            bgUrl,
+                            bgOpacity: targetOp,
+                            bgScale,
+                            bgBlur,
+                            bgFit,
+                            bgPosX: `${bgPosX}%`,
+                            bgPosY: `${bgPosY}%`,
+                            mobileBgUrl: mobileBgUrl || bgUrl,
+                            mobileBgOpacity: targetMobileOp,
+                            mobileBgScale,
+                            mobileBgBlur,
+                            mobileBgFit,
+                            mobileBgPosX: `${mobileBgPosX}%`,
+                            mobileBgPosY: `${mobileBgPosY}%`,
+                            timestamp: Date.now(),
+                          });
+
+                          if (tenantId) {
+                            try {
+                              await upsertSettingsSupabase(tenantId, {
+                                app_background_url: bgUrl,
+                                app_background_opacity: targetOp,
+                                mobile_app_background_url: mobileBgUrl || bgUrl,
+                                mobile_app_background_opacity: targetMobileOp,
+                              });
+                            } catch (e) {}
                           }
                         }}
                       >
-                        {(viewMode === "smartphone" ? mobileBgEnabled : bgEnabled) ? "Ativo" : "Desativado"}
+                        {(bgEnabled || mobileBgEnabled) ? "Ativo (Ambos)" : "Desativado"}
                       </button>
                     </div>
 
@@ -2673,10 +2728,18 @@ export default function Configuracoes() {
 
                           setTesting(true);
                           try {
+                            // 1. Dispara localmente
                             await triggerRealNotification({
-                              title: "🔔 CardDigital GM · Notificação de Teste",
-                              body: "Notificação em tempo real funcionando com sucesso dentro e fora do app!",
+                              title: "🔔 CardDigital GM · Notificação Simultânea",
+                              body: "Notificação funcionando simultaneamente no Smartphone e Desktop!",
                               soundId: activeSound,
+                            });
+
+                            // 2. Dispara simultaneamente para todos os dispositivos logados na mesma conta
+                            broadcastAppNotification(tenantId, {
+                              title: "🔔 CardDigital GM · Teste Simultâneo",
+                              message: "Notificação disparada e sincronizada em todos os seus dispositivos!",
+                              type: "system",
                             });
                           } catch (e) {
                             console.error("[Notification Test]", e);
@@ -2687,8 +2750,17 @@ export default function Configuracoes() {
                         className="gm-btn py-3 flex items-center justify-center gap-2 text-xs font-bold w-full transition-all text-white rounded-xl shadow-none hover:brightness-110 active:scale-[0.98] mt-2 cursor-pointer"
                       >
                         {testing ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}
-                        {testing ? "Testando Notificação..." : "Enviar Notificação de Teste"}
+                        {testing ? "Disparando nos Dispositivos..." : "Enviar Notificação de Teste Simultânea"}
                       </motion.button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowPermissionModal(true)}
+                        className="w-full py-2.5 px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-300 hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      >
+                        <Sparkles size={14} className="text-[var(--gm-primary)]" />
+                        Ativar Todas as Permissões (Notificações em 2º Plano, Câmera e Microfone)
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -2838,6 +2910,11 @@ export default function Configuracoes() {
           </button>
         </div>
       </div>
+
+      <SmartphonePermissionModal
+        forceOpen={showPermissionModal}
+        onClose={() => setShowPermissionModal(false)}
+      />
     </Page>
   );
 }

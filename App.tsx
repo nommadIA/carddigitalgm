@@ -42,13 +42,13 @@ const PrivateRoutes = () => {
   return (
     <ProtectedRoute>
       <Layout>
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, scale: 0.97 }}
+            initial={{ opacity: 0, scale: 0.99 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, scale: 0.99 }}
+            transition={{ duration: 0.16, ease: [0.32, 0.72, 0, 1] }}
             className="w-full min-h-full flex-1 flex flex-col"
           >
             <Suspense fallback={<PageLoader />}>

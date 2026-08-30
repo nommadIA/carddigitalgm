@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
+import { broadcastAppNotification } from "../lib/syncHub";
 import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
@@ -50,9 +51,36 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Eraser,
 } from "lucide-react";
 import { Note } from "../types";
 import { generateNotePdf } from "../services/pdfService";
+
+export const HIGHLIGHT_COLORS = [
+  { hex: "#fef08a", label: "Amarelo Flúor" },
+  { hex: "#fde047", label: "Amarelo Ouro" },
+  { hex: "#bbf7d0", label: "Verde Menta" },
+  { hex: "#86efac", label: "Verde Lima" },
+  { hex: "#cffafe", label: "Azul Celeste" },
+  { hex: "#7dd3fc", label: "Ciano Piscina" },
+  { hex: "#fbcfe8", label: "Rosa Pastel" },
+  { hex: "#f472b6", label: "Rosa Choque" },
+  { hex: "#fed7aa", label: "Laranja Suave" },
+  { hex: "#e9d5ff", label: "Roxo Lavanda" },
+];
+
+export const TEXT_COLORS = [
+  { hex: "#ffffff", label: "Branco" },
+  { hex: "#ef4444", label: "Vermelho" },
+  { hex: "#f97316", label: "Laranja" },
+  { hex: "#eab308", label: "Amarelo" },
+  { hex: "#22c55e", label: "Verde" },
+  { hex: "#06b6d4", label: "Ciano" },
+  { hex: "#3b82f6", label: "Azul Royal" },
+  { hex: "#a855f7", label: "Roxo" },
+  { hex: "#ec4899", label: "Rosa" },
+  { hex: "#cbd5e1", label: "Cinza Claro" },
+];
 
 export function parseLayoutUrls(val?: string | null): string[] {
   if (!val) return [];
@@ -319,10 +347,39 @@ export default function Notes() {
     message: string;
   } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const saveCurrentSelection = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      if (
+        contentRef.current &&
+        contentRef.current.contains(range.commonAncestorContainer)
+      ) {
+        savedRangeRef.current = range.cloneRange();
+      }
+    }
+  };
+
+  const restoreSelection = () => {
+    if (!savedRangeRef.current) return;
+    const sel = window.getSelection();
+    if (sel) {
+      try {
+        sel.removeAllRanges();
+        sel.addRange(savedRangeRef.current.cloneRange());
+      } catch (e) {
+        // Range might have become detached, ignore
+      }
+    }
+  };
 
   const [selectedTextColor, setSelectedTextColor] = useState("#ffffff");
+  const [selectedHighlightColor, setSelectedHighlightColor] = useState("#fef08a");
   const [fontSizeMode, setFontSizeMode] = useState<"P" | "M" | "G">("M");
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [highlighterPickerOpen, setHighlighterPickerOpen] = useState(false);
   const [fontSelectorOpen, setFontSelectorOpen] = useState(false);
 
   // Exibidor sutil para a parte debaixo da nota (Data, Horários, Salvar Auto)
@@ -798,6 +855,7 @@ export default function Notes() {
   };
 
   const applyStyleToSelection = (styles: Record<string, string>) => {
+    restoreSelection();
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
     const range = selection.getRangeAt(0);
@@ -828,6 +886,7 @@ export default function Notes() {
       newRange.collapse(true);
       selection.removeAllRanges();
       selection.addRange(newRange);
+      savedRangeRef.current = newRange.cloneRange();
     } else {
       const fragment = range.extractContents();
 
@@ -860,6 +919,7 @@ export default function Notes() {
       newRange.selectNodeContents(span);
       selection.removeAllRanges();
       selection.addRange(newRange);
+      savedRangeRef.current = newRange.cloneRange();
     }
 
     if (contentRef.current) {
@@ -925,8 +985,132 @@ export default function Notes() {
     }
   };
 
+  const removeHighlight = () => {
+    restoreSelection();
+    const selection = window.getSelection();
+    if (!contentRef.current) return;
+
+    const cleanHighlightProps = (el: HTMLElement) => {
+      el.style.removeProperty("background-color");
+      el.style.removeProperty("background");
+      el.style.removeProperty("border-radius");
+      el.style.removeProperty("padding");
+      el.removeAttribute("data-highlight");
+      if (el.tagName === "MARK") {
+        const parent = el.parentNode;
+        while (el.firstChild) {
+          parent?.insertBefore(el.firstChild, el);
+        }
+        el.remove();
+      } else if (el.tagName === "SPAN") {
+        const remainingStyle = el.getAttribute("style");
+        if (!remainingStyle || remainingStyle.trim() === "") {
+          const parent = el.parentNode;
+          while (el.firstChild) {
+            parent?.insertBefore(el.firstChild, el);
+          }
+          el.remove();
+        }
+      }
+    };
+
+    // Tentar comandos padrão do navegador primeiro
+    try {
+      document.execCommand("hiliteColor", false, "transparent");
+    } catch (e) {}
+    try {
+      document.execCommand("backColor", false, "transparent");
+    } catch (e) {}
+
+    const hasSelection =
+      selection &&
+      selection.rangeCount > 0 &&
+      contentRef.current.contains(selection.getRangeAt(0).commonAncestorContainer);
+
+    if (hasSelection && selection) {
+      const range = selection.getRangeAt(0);
+
+      if (range.collapsed) {
+        // Cursor pontual: limpa o elemento em que o cursor está
+        let current: Node | null = range.startContainer;
+        let cleanedAny = false;
+        while (current && current !== contentRef.current) {
+          if (current.nodeType === Node.ELEMENT_NODE) {
+            const el = current as HTMLElement;
+            if (
+              el.style.backgroundColor ||
+              el.style.background ||
+              el.tagName === "MARK"
+            ) {
+              cleanHighlightProps(el);
+              cleanedAny = true;
+            }
+          }
+          current = current.parentNode;
+        }
+
+        if (!cleanedAny) {
+          // Se não havia marcação sob o cursor, limpa todas as marcações da nota
+          const allHighlighted = contentRef.current.querySelectorAll(
+            "mark, [style*='background-color'], [style*='background']"
+          );
+          allHighlighted.forEach((node) => cleanHighlightProps(node as HTMLElement));
+        }
+      } else {
+        // Seleção com texto:
+        // 1. Limpa ancestrais que englobam a seleção
+        let ancestor: Node | null = range.commonAncestorContainer;
+        while (ancestor && ancestor !== contentRef.current) {
+          if (ancestor.nodeType === Node.ELEMENT_NODE) {
+            const el = ancestor as HTMLElement;
+            if (
+              el.style.backgroundColor ||
+              el.style.background ||
+              el.tagName === "MARK"
+            ) {
+              cleanHighlightProps(el);
+            }
+          }
+          ancestor = ancestor.parentNode;
+        }
+
+        // 2. Extrai e limpa todos os nós dentro do fragmento da seleção
+        const fragment = range.extractContents();
+        const cleanNodeTree = (node: Node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            cleanHighlightProps(node as HTMLElement);
+          }
+          Array.from(node.childNodes).forEach(cleanNodeTree);
+        };
+        cleanNodeTree(fragment);
+        range.insertNode(fragment);
+        savedRangeRef.current = range.cloneRange();
+      }
+    } else {
+      // Se não havia seleção ativa, limpa todas as marcações da nota
+      const allHighlighted = contentRef.current.querySelectorAll(
+        "mark, [style*='background-color'], [style*='background']"
+      );
+      allHighlighted.forEach((node) => cleanHighlightProps(node as HTMLElement));
+    }
+
+    if (contentRef.current) {
+      const val = contentRef.current.innerHTML;
+      setContent(val);
+      pushToHistory(val, true);
+    }
+  };
+
   const applyHighlight = (bgColor: string) => {
-    applyStyleToSelection({ "background-color": bgColor });
+    if (!bgColor || bgColor === "transparent") {
+      removeHighlight();
+      return;
+    }
+    applyStyleToSelection({
+      "background-color": bgColor,
+      "border-radius": "3px",
+      padding: "1px 3px",
+    });
   };
 
   const cycleFontSize = () => {
@@ -1125,6 +1309,16 @@ export default function Notes() {
       const nowStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
       setLastAutoSavedAt(nowStr);
       showToast(`Nota salva com sucesso! (${nowStr})`);
+
+      // Transmissão simultânea de notificação para todos os dispositivos
+      try {
+        broadcastAppNotification(tenantId, {
+          title: editingNote ? "📝 Nota Atualizada" : "📝 Nova Nota Criada",
+          message: savedNote?.title || "Nota salva com sucesso",
+          type: "note",
+          url: "/notes",
+        });
+      } catch (e) {}
 
       // Ativa efeito verde neon no botão salvar por 2 segundos
       setIsSaveSuccessActive(true);
@@ -1950,21 +2144,22 @@ export default function Notes() {
                     <Strikethrough size={15} />
                   </button>
 
-                  {/* Cores do Texto Dropdown */}
+                  {/* Cores do Texto Dropdown com Seta de Expansão (10 Cores) */}
                   <div className="relative shrink-0">
                     <button
                       type="button"
                       onMouseDown={(e) => {
                         e.preventDefault();
                         setColorPickerOpen(!colorPickerOpen);
+                        setHighlighterPickerOpen(false);
                         setFontSelectorOpen(false);
                       }}
-                      className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px]"
+                      className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px] cursor-pointer"
                       title="Cor do Texto"
                     >
-                      <Palette size={15} className="text-white/60" />
+                      <Palette size={15} className="text-white/70" />
                       <span
-                        className="w-3 h-3 rounded-full border border-white/30"
+                        className="w-3.5 h-3.5 rounded-full border border-white/30"
                         style={{ backgroundColor: selectedTextColor }}
                       />
                       <ChevronDown size={11} className="text-white/40" />
@@ -1980,44 +2175,55 @@ export default function Notes() {
                             setColorPickerOpen(false);
                           }}
                         />
-                        <div className="absolute top-10 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-1.5 shadow-lg z-[9991] backdrop-blur-md min-w-[124px]">
-                          <div className="px-1 py-0.5 text-[8px] font-extrabold uppercase tracking-widest text-white/30 border-b border-white/5">
-                            Cor do Texto
+                        <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2.5 rounded-2xl flex flex-col gap-2 shadow-2xl z-[9995] backdrop-blur-md min-w-[210px]">
+                          <div className="flex items-center justify-between px-1 text-[9px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/5 pb-1">
+                            <span>Cor do Texto</span>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedTextColor("#ffffff");
+                                applyStyleToSelection({ color: "#ffffff" });
+                                setColorPickerOpen(false);
+                              }}
+                              className="text-[10px] font-bold text-white/50 hover:text-white flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded hover:bg-white/10 cursor-pointer"
+                              title="Redefinir para Branco"
+                            >
+                              <span>Padrão</span>
+                            </button>
                           </div>
-                          <div className="grid grid-cols-4 gap-1.5 p-0.5">
-                            {[
-                              "#ffffff", // White
-                              "#ff003c", // Red
-                              "#ff6600", // Orange
-                              "#ffff00", // Yellow
-                              "#00ff66", // Green
-                              "#00e5ff", // Cyan
-                              "#b400ff", // Violet
-                              "#ff00a0", // Pink
-                            ].map((hex) => {
-                              const isActive = selectedTextColor === hex;
+                          <div className="grid grid-cols-5 gap-2 p-1">
+                            {TEXT_COLORS.map((col) => {
+                              const isActive = selectedTextColor === col.hex;
                               return (
                                 <button
-                                  key={hex}
+                                  key={col.hex}
                                   type="button"
                                   onMouseDown={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    setSelectedTextColor(hex);
-                                    applyStyleToSelection({ color: hex });
+                                    setSelectedTextColor(col.hex);
+                                    applyStyleToSelection({ color: col.hex });
                                     setColorPickerOpen(false);
                                   }}
-                                  className={`w-5 h-5 rounded-full border border-solid transition-all duration-200 shrink-0 ${
+                                  className={`w-7 h-7 rounded-full border transition-all duration-200 shrink-0 flex items-center justify-center cursor-pointer ${
                                     isActive
-                                      ? "border-white scale-105 z-10"
-                                      : "border-white/20 hover:border-white/45 opacity-60 hover:opacity-100"
+                                      ? "opacity-100 scale-110 shadow-lg ring-2 ring-white/60 border-white/90"
+                                      : "opacity-40 hover:opacity-100 hover:scale-105 border-white/10 hover:border-white/40"
                                   }`}
                                   style={{
-                                    backgroundColor: hex,
-                                    boxShadow: isActive ? `0 0 6px ${hex}` : "none",
+                                    backgroundColor: col.hex,
                                   }}
-                                  title={hex}
-                                />
+                                  title={col.label}
+                                >
+                                  {isActive && (
+                                    <Check
+                                      size={12}
+                                      className={col.hex === "#ffffff" ? "text-black stroke-[3]" : "text-white stroke-[3]"}
+                                    />
+                                  )}
+                                </button>
                               );
                             })}
                           </div>
@@ -2193,30 +2399,98 @@ export default function Notes() {
 
                   <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
 
-                  {/* Highlighter Text Option Group */}
-                  <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg shrink-0 mr-1.5">
-                    <Highlighter size={13} className="text-white/60 mr-1" />
-                    {[
-                      { hex: "transparent", label: "Limpar" },
-                      { hex: "#fef08a", label: "Amarelo" },
-                      { hex: "#bbf7d0", label: "Verde" },
-                      { hex: "#fbcfe8", label: "Rosa" },
-                      { hex: "#cffafe", label: "Azul" },
-                    ].map((marker) => (
-                      <button
-                        key={marker.hex}
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          applyHighlight(marker.hex);
-                        }}
-                        className="w-5 h-5 rounded-full border border-white/20 transition-all hover:scale-110"
-                        style={{
-                          backgroundColor: marker.hex === "transparent" ? "rgba(255,255,255,0.1)" : marker.hex,
-                        }}
-                        title={`Marcador ${marker.label}`}
+                  {/* Highlighter Text Option Dropdown com Seta de Expansão (10 Cores + Opção Inteligente de Remoção) */}
+                  <div className="relative shrink-0">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setHighlighterPickerOpen(!highlighterPickerOpen);
+                        setColorPickerOpen(false);
+                        setFontSelectorOpen(false);
+                      }}
+                      className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px] cursor-pointer"
+                      title="Marcador de Texto"
+                    >
+                      <Highlighter size={15} className="text-white/70" />
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-white/30"
+                        style={{ backgroundColor: selectedHighlightColor || "transparent" }}
                       />
-                    ))}
+                      <ChevronDown size={11} className="text-white/40" />
+                    </button>
+
+                    {highlighterPickerOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-[9990]"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setHighlighterPickerOpen(false);
+                          }}
+                        />
+                        <div className="absolute top-11 right-0 sm:left-0 sm:right-auto bg-[#141821]/95 border border-white/10 p-2.5 rounded-2xl flex flex-col gap-2 shadow-2xl z-[9995] backdrop-blur-md min-w-[210px]">
+                          <div className="flex items-center justify-between px-1 text-[9px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/5 pb-1">
+                            <span>Marcador de Texto</span>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedHighlightColor("");
+                                removeHighlight();
+                                setHighlighterPickerOpen(false);
+                              }}
+                              className="text-[10px] font-bold text-red-400/80 hover:text-red-300 flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded hover:bg-red-500/15 cursor-pointer"
+                              title="Remover marcação do texto selecionado"
+                            >
+                              <Eraser size={11} />
+                              <span>Limpar</span>
+                            </button>
+                          </div>
+
+                          {/* Grid com as 10 Cores do Marcador */}
+                          <div className="grid grid-cols-5 gap-2 p-1">
+                            {HIGHLIGHT_COLORS.map((col) => {
+                              const isActive = selectedHighlightColor === col.hex;
+                              return (
+                                <button
+                                  key={col.hex}
+                                  type="button"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (isActive) {
+                                      // Toggle inteligente: clicar na cor ativa remove o marcador
+                                      setSelectedHighlightColor("");
+                                      removeHighlight();
+                                    } else {
+                                      setSelectedHighlightColor(col.hex);
+                                      applyHighlight(col.hex);
+                                    }
+                                    setHighlighterPickerOpen(false);
+                                  }}
+                                  className={`w-7 h-7 rounded-full border transition-all duration-200 shrink-0 flex items-center justify-center cursor-pointer ${
+                                    isActive
+                                      ? "opacity-100 scale-110 shadow-lg ring-2 ring-white/60 border-white/90"
+                                      : "opacity-40 hover:opacity-100 hover:scale-105 border-white/10 hover:border-white/40"
+                                  }`}
+                                  style={{
+                                    backgroundColor: col.hex,
+                                  }}
+                                  title={col.label}
+                                >
+                                  {isActive && (
+                                    <Check size={12} className="text-black stroke-[3]" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
 
 
@@ -2864,6 +3138,7 @@ export default function Notes() {
                               }
                             }}
                             onKeyUp={() => {
+                              saveCurrentSelection();
                               if (contentRef.current) {
                                 const val = contentRef.current.innerHTML;
                                 if (val !== content) {
@@ -2871,12 +3146,25 @@ export default function Notes() {
                                 }
                               }
                             }}
+                            onMouseUp={() => {
+                              saveCurrentSelection();
+                            }}
+                            onPointerUp={() => {
+                              saveCurrentSelection();
+                            }}
+                            onTouchEnd={() => {
+                              saveCurrentSelection();
+                            }}
+                            onSelect={() => {
+                              saveCurrentSelection();
+                            }}
                             onCut={() => {
                               setTimeout(() => {
                                 if (contentRef.current) {
                                   const val = contentRef.current.innerHTML;
                                   setContent(val);
                                   pushToHistory(val, true);
+                                  saveCurrentSelection();
                                 }
                               }, 10);
                             }}
@@ -2884,6 +3172,7 @@ export default function Notes() {
                               const val = e.currentTarget.innerHTML;
                               setContent(val);
                               pushToHistory(val);
+                              saveCurrentSelection();
                             }}
                             className="w-full h-auto min-h-[170px] bg-transparent outline-none text-white/95 focus:outline-none relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0 text-[15.5px] md:text-[16.5px] font-medium leading-relaxed"
                             {...{ placeholder: "Escreva seu texto aqui..." }}

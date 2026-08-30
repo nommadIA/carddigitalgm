@@ -9,6 +9,7 @@ import { fetchSettingsSupabase, readSettingsLocal } from "../lib/settings";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
 import { useAuth } from "../store/AuthContext";
 import { scheduleApprovedBudgetReminders, removeAlarmsForBudget, getBudgetRemindersEnabled, getBudgetReminderTimes, syncAlarmsWithBudgets } from "../lib/alarmSystem";
+import { broadcastAppNotification } from "../lib/syncHub";
 import { generateOrcamentoPdf } from "../services/pdfService";
 import { buildWhatsappMessage, openWhatsapp } from "../services/whatsApp";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -359,7 +360,7 @@ function VirtualizedBudgetGrid({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8 sm:pb-4">
       {items.map((r) => {
         const created = r.created_at ? new Date(r.created_at) : null;
         const currentStatus = normalizeStatus(r.status);
@@ -815,6 +816,23 @@ export default function Budgets() {
 
       if (nextNorm === "CONCLUIDO" || nextNorm === "CANCELADO" || nextNorm === "LIXEIRA" || nextNorm === "AGUARDANDO") {
         removeAlarmsForBudget(id);
+      }
+
+      // Notificação simultânea nos 2 dispositivos
+      if (nextNorm === "APROVADO") {
+        broadcastAppNotification(tenantId, {
+          title: "✅ Orçamento Aprovado",
+          message: `${row?.client_name || "Cliente"} • R$ ${Number(row?.total_amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          type: "budget",
+          url: "/budgets",
+        });
+      } else if (nextNorm === "CONCLUIDO") {
+        broadcastAppNotification(tenantId, {
+          title: "🎉 Orçamento Concluído",
+          message: `${row?.client_name || "Cliente"} foi finalizado com sucesso!`,
+          type: "budget",
+          url: "/budgets",
+        });
       }
     } catch {}
   };

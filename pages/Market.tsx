@@ -5,6 +5,7 @@ import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 import { CURRENCY_FORMATTER } from '../constants';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../store/AuthContext';
+import { broadcastAppNotification } from '../lib/syncHub';
 import { openWhatsapp } from '../services/whatsApp';
 import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
@@ -935,6 +936,18 @@ const Market = () => {
         await fetchWalletBalance();
         await fetchHistory();
         setShowFinalizeConfirm(false);
+
+        // Notificação simultânea para Smartphone & Desktop
+        try {
+          broadcastAppNotification(tenantId, {
+            title: "🛒 Compras de Mercado Finalizadas",
+            message: `Total: R$ ${totalListValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            type: "expense",
+            amount: totalListValue,
+            url: "/market",
+          });
+        } catch (e) {}
+
         alert("Lista finalizada com sucesso!");
     } catch (e: any) {
         console.error("Erro completo na finalização:", e);

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import Select from "../../components/ui/Select";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../store/AuthContext";
+import { broadcastAppNotification } from "../../lib/syncHub";
 import {
   Palette,
   Printer,
@@ -619,6 +620,17 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
       });
 
       await insertItemsWithAutoStrip(dbItems);
+
+      // Disparo simultâneo de notificação para Smartphone & Desktop
+      try {
+        broadcastAppNotification(tenantId, {
+          title: budgetToEditId ? "📋 Orçamento Atualizado" : "📋 Novo Orçamento Criado",
+          message: `${clientName || "Cliente"} • R$ ${totalFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          type: "budget",
+          amount: totalFinal,
+          url: "/budgets",
+        });
+      } catch (e) {}
 
       // PDF Auto removido conforme solicitado
       if (!budgetToEditId) resetForm();

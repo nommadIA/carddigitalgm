@@ -2,6 +2,7 @@ import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFString, PDFName }
 import QRCode from "qrcode";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 import { buildPixPayload } from "../lib/pix";
 import type { AppSettings } from "../lib/settings";
 import { PaymentMethod, Expense } from "../types";
@@ -1132,6 +1133,46 @@ export type NotePdfItem = {
   layout_url?: string;
 };
 
+// Helper para carregar imagem remota em Base64 Data URL (evita qualquer bloqueio de CORS no html2canvas/jsPDF)
+async function fetchImageAsDataUrl(url: string, bucketHint?: string): Promise<string> {
+  if (!url) return "";
+  if (url.startsWith("data:")) return url;
+
+  try {
+    let fetchUrl = url;
+    let res = await fetch(fetchUrl);
+    if (!res.ok) {
+      const path =
+        tryExtractSupabaseStoragePath(url, "timbrados") ||
+        tryExtractSupabaseStoragePath(url, "note_assets") ||
+        (bucketHint ? tryExtractSupabaseStoragePath(url, bucketHint) : null);
+      if (path) {
+        const bucket = url.includes("/timbrados/") ? "timbrados" : (bucketHint || "note_assets");
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 10);
+        if (data?.signedUrl) {
+          fetchUrl = data.signedUrl;
+          res = await fetch(fetchUrl);
+        }
+      }
+    }
+
+    if (!res.ok) {
+      return url;
+    }
+
+    const blob = await res.blob();
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve((reader.result as string) || url);
+      reader.onerror = () => resolve(url);
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.warn("fetchImageAsDataUrl falhou para", url, err);
+    return url;
+  }
+}
+
 export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) {
   try {
     const timbradoUrl = settings?.timbrado_url || "";
@@ -1141,233 +1182,10 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
       );
     }
 
-    const doc = await PDFDocument.create();
-    const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+    // 1. Converter timbrado para DataURL Base64
+    const timbradoDataUrl = await fetchImageAsDataUrl(timbradoUrl, "timbrados");
 
-    const bgImage = await embedBackgroundImage(doc, timbradoUrl);
-
-    const W = 595.28;
-    const H = 841.89;
-
-    const PX_W = 2480;
-    const PX_H = 3508;
-
-    // Margens e limites idênticos aos dos Orçamentos
-    const CONTENT_X_PX = 160;
-    const CONTENT_TOP_PX = 230;
-    const CONTENT_W_PX = 2160;
-    const CONTENT_H_PX = 2260;
-
-    const CONTENT_X = (CONTENT_X_PX / PX_W) * W;
-    const CONTENT_W = (CONTENT_W_PX / PX_W) * W;
-    const CONTENT_RIGHT_X = CONTENT_X + CONTENT_W;
-
-    const CONTENT_TOP_Y = H - (CONTENT_TOP_PX / PX_H) * H;
-    const CONTENT_BOTTOM_Y = H - ((CONTENT_TOP_PX + CONTENT_H_PX) / PX_H) * H;
-
-    let cursorY = CONTENT_TOP_Y;
-    let page: PDFPage;
-
-    const cText = rgb(0.1, 0.1, 0.1);
-    const cGray = rgb(0.3, 0.3, 0.3);
-    const cLine = rgb(0.85, 0.85, 0.85);
-
-    const addPage = () => {
-      const p = doc.addPage([W, H]);
-      p.drawImage(bgImage, { x: 0, y: 0, width: W, height: H });
-      page = p;
-      cursorY = CONTENT_TOP_Y;
-    };
-
-    const checkSpace = (heightNeeded: number) => {
-      if (cursorY - heightNeeded < CONTENT_BOTTOM_Y) addPage();
-    };
-
-    addPage();
-
-    const drawLeft = (txt: string, size: number, yPos: number, bold = false, color = cText) => {
-      page.drawText(stripEmojis(txt), {
-        x: CONTENT_X,
-        y: yPos,
-        size,
-        font: bold ? fontBold : fontRegular,
-        color,
-      });
-    };
-
-    const hr = (yPos: number) => {
-      page.drawLine({
-        start: { x: CONTENT_X, y: yPos },
-        end: { x: CONTENT_RIGHT_X, y: yPos },
-        thickness: 0.8,
-        color: cLine,
-      });
-    };
-
-    // --- CABEÇALHO DA NOTA (PADRÃO ORÇAMENTO) ---
-    checkSpace(60);
-    const safeTitle = note.title || "NOTA / ORDEM DE SERVIÇO";
-    drawLeft(safeTitle.toUpperCase(), 13, cursorY, true);
-    cursorY -= 13;
-
-    const dateStr = note.created_at
-      ? new Date(note.created_at).toLocaleDateString("pt-BR")
-      : new Date().toLocaleDateString("pt-BR");
-    drawLeft(`Criado em: ${dateStr}`, 9, cursorY, false, cGray);
-
-    if (note.delivery_date) {
-      cursorY -= 11;
-      const formattedDate = note.delivery_date.includes("-")
-        ? note.delivery_date.split("-").reverse().join("/")
-        : note.delivery_date;
-      const timeStr = note.delivery_time ? ` às ${note.delivery_time}` : "";
-      drawLeft(`Prazo de Entrega: ${formattedDate}${timeStr}`, 9, cursorY, false, cGray);
-    }
-
-    if (note.responsible_name) {
-      cursorY -= 11;
-      drawLeft(`Responsável: ${note.responsible_name}`, 9, cursorY, false, cGray);
-    }
-
-    if (note.status) {
-      cursorY -= 11;
-      drawLeft(`Status: ${note.status.toUpperCase()}`, 9, cursorY, false, cGray);
-    }
-
-    cursorY -= 20; // Respiro padrão
-
-    // --- SEÇÃO 1: DESCRIÇÃO / TEXTO EM DUAS COLUNAS LADO A LADO ---
-    checkSpace(25);
-    drawLeft("DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO", 10, cursorY, true);
-    cursorY -= 15;
-    hr(cursorY);
-    cursorY -= 18;
-
-    // --- CONVERSÃO LIMPA DE HTML PARA TEXTO ---
-    const cleanLines: string[] = [];
-    if (typeof document !== "undefined") {
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = note.content || "";
-
-      // Add line breaks after block elements
-      tempDiv.querySelectorAll("p, div, li, h1, h2, h3, h4, h5, h6, tr").forEach((el) => {
-        el.insertAdjacentText("afterend", "\n");
-      });
-      tempDiv.querySelectorAll("br").forEach((el) => {
-        el.insertAdjacentText("afterend", "\n");
-      });
-
-      const raw = tempDiv.textContent || tempDiv.innerText || "";
-      raw.split(/\r?\n/).forEach((l) => {
-        const normalized = l.replace(/\s+/g, " ").trim();
-        if (normalized) {
-          cleanLines.push(normalized);
-        }
-      });
-    } else {
-      const raw = (note.content || "")
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<\/(p|div|li|tr|h[1-6])>/gi, "\n")
-        .replace(/<[^>]+>/g, "");
-      raw.split(/\r?\n/).forEach((l) => {
-        const normalized = l.replace(/\s+/g, " ").trim();
-        if (normalized) {
-          cleanLines.push(normalized);
-        }
-      });
-    }
-
-    // Configuração de 2 colunas lado a lado no timbrado
-    const bodySize = 9.5;
-    const bodyLineHeight = 13.5;
-    const colGap = 16;
-    const colW = (CONTENT_W - colGap) / 2;
-    const col1X = CONTENT_X;
-    const col2X = CONTENT_X + colW + colGap;
-    const textBottomLimit = CONTENT_BOTTOM_Y + 55; // Reservado para assinaturas e rodapé delimitado
-
-    if (cleanLines.length === 0) {
-      drawLeft("Nenhuma descrição informada.", bodySize, cursorY, false, cGray);
-      cursorY -= bodyLineHeight + 10;
-    } else {
-      // Coleta todas as linhas quebradas para a largura da coluna
-      const allWrappedLines: string[] = [];
-      for (let pIdx = 0; pIdx < cleanLines.length; pIdx++) {
-        const paragraph = cleanLines[pIdx];
-        const lines = wrapText(paragraph, colW, fontRegular, bodySize);
-        for (const l of lines) {
-          allWrappedLines.push(l);
-        }
-      }
-
-      let currentCol: 1 | 2 = 1;
-      let col1StartY = cursorY;
-      let col1CursorY = cursorY;
-      let col2CursorY = cursorY;
-
-      for (let i = 0; i < allWrappedLines.length; i++) {
-        const line = allWrappedLines[i];
-
-        if (currentCol === 1) {
-          if (col1CursorY - bodyLineHeight < textBottomLimit) {
-            // Transborda para a Coluna 2 na mesma página
-            currentCol = 2;
-            col2CursorY = col1StartY;
-            page.drawText(stripEmojis(line), {
-              x: col2X,
-              y: col2CursorY,
-              size: bodySize,
-              font: fontRegular,
-              color: cText,
-            });
-            col2CursorY -= bodyLineHeight;
-          } else {
-            page.drawText(stripEmojis(line), {
-              x: col1X,
-              y: col1CursorY,
-              size: bodySize,
-              font: fontRegular,
-              color: cText,
-            });
-            col1CursorY -= bodyLineHeight;
-          }
-        } else {
-          // Coluna 2
-          if (col2CursorY - bodyLineHeight < textBottomLimit) {
-            // Ambas as colunas foram preenchidas nesta página: cria nova página
-            addPage();
-            col1StartY = CONTENT_TOP_Y;
-            col1CursorY = CONTENT_TOP_Y;
-            col2CursorY = CONTENT_TOP_Y;
-            currentCol = 1;
-
-            page.drawText(stripEmojis(line), {
-              x: col1X,
-              y: col1CursorY,
-              size: bodySize,
-              font: fontRegular,
-              color: cText,
-            });
-            col1CursorY -= bodyLineHeight;
-          } else {
-            page.drawText(stripEmojis(line), {
-              x: col2X,
-              y: col2CursorY,
-              size: bodySize,
-              font: fontRegular,
-              color: cText,
-            });
-            col2CursorY -= bodyLineHeight;
-          }
-        }
-      }
-
-      // Atualiza cursorY global para o menor cursor entre as colunas ativas
-      cursorY = Math.min(col1CursorY, currentCol === 2 ? col2CursorY : col1CursorY) - 14;
-    }
-
-    // --- SEÇÃO 2: IMAGENS DE LAYOUT COM PRÉVIAS AMPLIADAS ---
+    // 2. Extrair e converter URLs das imagens de layout para DataURL
     const imagesToRender: string[] = [];
     if (note.layout_url) {
       const trimmed = note.layout_url.trim();
@@ -1401,247 +1219,330 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
     }
 
     const limitedImages = imagesToRender.slice(0, 6);
-
-    if (limitedImages.length > 0) {
-      interface LoadedNoteImg {
-        img: any;
-        w: number;
-        h: number;
-        index: number;
-      }
-
-      const loadedImages: LoadedNoteImg[] = [];
-
-      for (let imgIdx = 0; imgIdx < limitedImages.length; imgIdx++) {
-        const imgUrl = limitedImages[imgIdx];
-        try {
-          let fetchUrl = imgUrl;
-          let res = await fetch(fetchUrl);
-          if (!res.ok) {
-            const path =
-              tryExtractSupabaseStoragePath(imgUrl, "note_assets") ||
-              tryExtractSupabaseStoragePath(imgUrl, "timbrados");
-            if (path) {
-              const bucket = imgUrl.includes("/timbrados/") ? "timbrados" : "note_assets";
-              const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 10);
-              if (data?.signedUrl) {
-                fetchUrl = data.signedUrl;
-                res = await fetch(fetchUrl);
-              }
-            }
-          }
-
-          const ab = await res.arrayBuffer();
-          const bytes = bytesFromArrayBuffer(ab);
-
-          if (looksLikePNG(bytes)) {
-            const embedded = await doc.embedPng(bytes);
-            loadedImages.push({ img: embedded, w: embedded.width, h: embedded.height, index: imgIdx + 1 });
-          } else if (looksLikeJPG(bytes)) {
-            const embedded = await doc.embedJpg(bytes);
-            loadedImages.push({ img: embedded, w: embedded.width, h: embedded.height, index: imgIdx + 1 });
-          } else if (typeof document !== "undefined") {
-            const canvasRes = await new Promise<LoadedNoteImg | null>((resolve) => {
-              const htmlImg = new Image();
-              htmlImg.crossOrigin = "anonymous";
-              htmlImg.onload = async () => {
-                try {
-                  const canvas = document.createElement("canvas");
-                  canvas.width = htmlImg.naturalWidth || htmlImg.width || 400;
-                  canvas.height = htmlImg.naturalHeight || htmlImg.height || 300;
-                  const ctx = canvas.getContext("2d");
-                  if (ctx) {
-                    ctx.drawImage(htmlImg, 0, 0);
-                    const dataUrl = canvas.toDataURL("image/png");
-                    const resCanvas = await fetch(dataUrl);
-                    const abCanvas = await resCanvas.arrayBuffer();
-                    const embedded = await doc.embedPng(new Uint8Array(abCanvas));
-                    resolve({ img: embedded, w: canvas.width, h: canvas.height, index: imgIdx + 1 });
-                    return;
-                  }
-                } catch (e) {}
-                resolve(null);
-              };
-              htmlImg.onerror = () => resolve(null);
-              htmlImg.src = imgUrl;
-            });
-
-            if (canvasRes) loadedImages.push(canvasRes);
-          }
-        } catch (errImg) {
-          console.warn("Falha ao embutir imagem no PDF da nota:", imgUrl, errImg);
-        }
-      }
-
-      if (loadedImages.length > 0) {
-        const count = loadedImages.length;
-        // Agrupamento estrito:
-        // 1 img: [1] | 2 imgs: [2] | 3 imgs: [2, 1] | 4 imgs: [2, 2] | 5 imgs: [3, 2] | 6 imgs: [3, 3]
-        let rowChunks: (typeof loadedImages)[] = [];
-        if (count === 1) {
-          rowChunks = [loadedImages.slice(0, 1)];
-        } else if (count === 2) {
-          rowChunks = [loadedImages.slice(0, 2)];
-        } else if (count === 3) {
-          rowChunks = [loadedImages.slice(0, 2), loadedImages.slice(2, 3)];
-        } else if (count === 4) {
-          rowChunks = [loadedImages.slice(0, 2), loadedImages.slice(2, 4)];
-        } else if (count === 5) {
-          rowChunks = [loadedImages.slice(0, 3), loadedImages.slice(3, 5)];
-        } else {
-          rowChunks = [loadedImages.slice(0, 3), loadedImages.slice(3, 6)];
-        }
-
-        const totalRows = rowChunks.length;
-
-        // Otimização de altura para encaixar e ampliar as prévias de imagem
-        const spaceLeftOnCurrentPage = cursorY - CONTENT_BOTTOM_Y - 50; // 50pt reservado para assinaturas no rodapé
-        const canFitOnCurrentPage =
-          totalRows === 1
-            ? spaceLeftOnCurrentPage >= 100
-            : spaceLeftOnCurrentPage >= 180;
-
-        if (!canFitOnCurrentPage) {
-          addPage();
-        }
-
-        // Prévia das imagens ampliada conforme solicitado pelo usuário
-        const availableHeight = cursorY - CONTENT_BOTTOM_Y - 50;
-        let maxRowHeight = 135;
-        if (totalRows === 1) {
-          maxRowHeight = Math.min(Math.max(90, availableHeight - 30), count === 1 ? 220 : 160);
-        } else {
-          // Para 2 linhas (3, 4, 5 ou 6 imagens), ampliamos a altura de cada linha
-          maxRowHeight = Math.min(Math.max(75, (availableHeight - 35) / totalRows), count <= 4 ? 135 : 105);
-        }
-
-        checkSpace(28);
-        drawLeft("MÍDIAS E LAYOUTS", 10, cursorY, true);
-        cursorY -= 13;
-        hr(cursorY);
-        cursorY -= 14;
-
-        for (const rowImages of rowChunks) {
-          const rowCols = rowImages.length;
-          const gap = rowCols === 1 ? 0 : rowCols === 2 ? 12 : 9;
-          const colWidth = (CONTENT_W - (rowCols - 1) * gap) / rowCols;
-
-          const calculatedHeights = rowImages.map((im) => {
-            const aspect = im.h / im.w;
-            return Math.min(colWidth * aspect, maxRowHeight);
-          });
-          const rowHeight = Math.max(...calculatedHeights, 50);
-
-          checkSpace(rowHeight + 12);
-
-          const rowTotalWidth = rowCols * colWidth + (rowCols - 1) * gap;
-          const startX = CONTENT_X + (CONTENT_W - rowTotalWidth) / 2;
-
-          rowImages.forEach((im, colIdx) => {
-            const posX = startX + colIdx * (colWidth + gap);
-            const aspect = im.h / im.w;
-            const drawH = Math.min(colWidth * aspect, maxRowHeight);
-            const drawW = drawH / aspect;
-            const offsetX = (colWidth - drawW) / 2;
-            const offsetY = (rowHeight - drawH) / 2;
-
-            const finalX = posX + offsetX;
-            const finalY = cursorY - rowHeight + offsetY;
-
-            // Borda sutil ao redor do quadro da imagem
-            page.drawRectangle({
-              x: finalX - 0.8,
-              y: finalY - 0.8,
-              width: drawW + 1.6,
-              height: drawH + 1.6,
-              borderColor: cLine,
-              borderWidth: 0.8,
-            });
-
-            // Desenha a imagem ampliada
-            page.drawImage(im.img, {
-              x: finalX,
-              y: finalY,
-              width: drawW,
-              height: drawH,
-            });
-
-            // Badge com o número da ordem da miniatura no canto superior
-            const badgeTxt = String(im.index);
-            const badgeW = 13;
-            const badgeH = 11;
-            const badgeX = finalX + drawW - badgeW - 2;
-            const badgeY = finalY + drawH - badgeH - 2;
-
-            page.drawRectangle({
-              x: badgeX,
-              y: badgeY,
-              width: badgeW,
-              height: badgeH,
-              color: im.index === 1 ? rgb(1, 0.41, 0) : rgb(0.12, 0.12, 0.14),
-            });
-            page.drawText(badgeTxt, {
-              x: badgeX + (im.index < 10 ? 4 : 2),
-              y: badgeY + 2.5,
-              size: 7,
-              font: fontBold,
-              color: rgb(1, 1, 1),
-            });
-          });
-
-          cursorY -= rowHeight + 12;
-        }
-      }
+    const loadedLayoutDataUrls: string[] = [];
+    for (const imgUrl of limitedImages) {
+      const dataUrl = await fetchImageAsDataUrl(imgUrl, "note_assets");
+      loadedLayoutDataUrls.push(dataUrl);
     }
 
-    // --- SEÇÃO 3: ASSINATURAS SEMPRE PERTO DO LIMITE DA PARTE INFERIOR DELIMITADA ---
-    // Se o conteúdo ultrapassou o espaço para assinaturas, pula para uma nova página
-    if (cursorY < CONTENT_BOTTOM_Y + 45) {
-      addPage();
+    // 3. Preparar metadados do cabeçalho
+    const safeTitle = note.title || "NOTA / ORDEM DE SERVIÇO";
+    const dateStr = note.created_at
+      ? new Date(note.created_at).toLocaleDateString("pt-BR")
+      : new Date().toLocaleDateString("pt-BR");
+
+    const deliveryStr = note.delivery_date
+      ? `${note.delivery_date.includes("-") ? note.delivery_date.split("-").reverse().join("/") : note.delivery_date}${
+          note.delivery_time ? ` às ${note.delivery_time}` : ""
+        }`
+      : "";
+
+    // 4. Construir o container visual DOM A4 (largura 794px, altura 1123px na proporção A4 padrão)
+    const hiddenContainer = document.createElement("div");
+    hiddenContainer.style.position = "fixed";
+    hiddenContainer.style.left = "-99999px";
+    hiddenContainer.style.top = "0";
+    hiddenContainer.style.width = "794px";
+    hiddenContainer.style.minHeight = "1123px";
+    hiddenContainer.style.backgroundColor = "#ffffff";
+    hiddenContainer.style.zIndex = "-9999";
+    hiddenContainer.style.fontFamily =
+      "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'";
+    hiddenContainer.style.color = "#1e293b";
+    hiddenContainer.style.boxSizing = "border-box";
+    hiddenContainer.style.overflow = "visible";
+
+    // Estrutura interna da página com imagem do timbrado de fundo e margens
+    const pageDiv = document.createElement("div");
+    pageDiv.style.position = "relative";
+    pageDiv.style.width = "794px";
+    pageDiv.style.minHeight = "1123px";
+    pageDiv.style.boxSizing = "border-box";
+    pageDiv.style.padding = "76px 52px 90px 52px"; // Margens perfeitamente ajustadas ao timbrado A4
+    pageDiv.style.display = "flex";
+    pageDiv.style.flexDirection = "column";
+    pageDiv.style.justifyContent = "space-between";
+
+    // Imagem do Timbrado de fundo
+    if (timbradoDataUrl) {
+      const bgImg = document.createElement("img");
+      bgImg.src = timbradoDataUrl;
+      bgImg.crossOrigin = "anonymous";
+      bgImg.style.position = "absolute";
+      bgImg.style.top = "0";
+      bgImg.style.left = "0";
+      bgImg.style.width = "100%";
+      bgImg.style.height = "100%";
+      bgImg.style.objectFit = "fill";
+      bgImg.style.zIndex = "0";
+      bgImg.style.pointerEvents = "none";
+      pageDiv.appendChild(bgImg);
     }
 
-    // Fixa as assinaturas sempre rentes ao limite inferior delimitado (CONTENT_BOTTOM_Y + 30)
-    const sigY = CONTENT_BOTTOM_Y + 30;
-    const colSigW = (CONTENT_W - 40) / 2;
+    // Conteúdo principal (Camada superior Z-10)
+    const contentWrapper = document.createElement("div");
+    contentWrapper.style.position = "relative";
+    contentWrapper.style.zIndex = "10";
+    contentWrapper.style.display = "flex";
+    contentWrapper.style.flexDirection = "column";
+    contentWrapper.style.gap = "12px";
+    contentWrapper.style.width = "100%";
+    contentWrapper.style.flex = "1";
+
+    // --- CABEÇALHO DA NOTA ---
+    const headerDiv = document.createElement("div");
+    headerDiv.style.display = "flex";
+    headerDiv.style.flexDirection = "column";
+    headerDiv.style.gap = "3px";
+    headerDiv.style.borderBottom = "1px solid #cbd5e1";
+    headerDiv.style.paddingBottom = "10px";
+
+    const titleEl = document.createElement("h1");
+    titleEl.style.fontSize = "16px";
+    titleEl.style.fontWeight = "800";
+    titleEl.style.color = "#0f172a";
+    titleEl.style.margin = "0";
+    titleEl.style.textTransform = "uppercase";
+    titleEl.style.letterSpacing = "0.5px";
+    titleEl.textContent = safeTitle;
+    headerDiv.appendChild(titleEl);
+
+    const metaRow = document.createElement("div");
+    metaRow.style.display = "flex";
+    metaRow.style.flexWrap = "wrap";
+    metaRow.style.gap = "14px";
+    metaRow.style.fontSize = "11px";
+    metaRow.style.color = "#475569";
+    metaRow.style.fontWeight = "600";
+    metaRow.style.marginTop = "2px";
+
+    metaRow.innerHTML = `
+      <span>Criado em: <strong style="color: #1e293b;">${dateStr}</strong></span>
+      ${deliveryStr ? `<span>Prazo de Entrega: <strong style="color: #1e293b;">${deliveryStr}</strong></span>` : ""}
+      ${note.responsible_name ? `<span>Responsável: <strong style="color: #1e293b;">${note.responsible_name}</strong></span>` : ""}
+      ${note.status ? `<span>Status: <strong style="color: #ea580c; text-transform: uppercase;">${note.status}</strong></span>` : ""}
+    `;
+    headerDiv.appendChild(metaRow);
+    contentWrapper.appendChild(headerDiv);
+
+    // --- SEÇÃO 1: DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO (LADO A LADO) ---
+    const descSection = document.createElement("div");
+    descSection.style.display = "flex";
+    descSection.style.flexDirection = "column";
+    descSection.style.gap = "8px";
+    descSection.style.width = "100%";
+    descSection.style.flex = "1";
+
+    const descTitle = document.createElement("div");
+    descTitle.style.fontSize = "11.5px";
+    descTitle.style.fontWeight = "800";
+    descTitle.style.color = "#0f172a";
+    descTitle.style.textTransform = "uppercase";
+    descTitle.style.letterSpacing = "0.5px";
+    descTitle.style.display = "flex";
+    descTitle.style.alignItems = "center";
+    descTitle.style.gap = "6px";
+    descTitle.innerHTML = `<span>DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO</span>`;
+    descSection.appendChild(descTitle);
+
+    // Container do texto da Nota estruturado em 2 COLUNAS LADO A LADO
+    const textColumnsContainer = document.createElement("div");
+    textColumnsContainer.style.width = "100%";
+    textColumnsContainer.style.columnCount = "2";
+    textColumnsContainer.style.columnGap = "24px";
+    textColumnsContainer.style.columnFill = "balance";
+    textColumnsContainer.style.fontSize = "12px";
+    textColumnsContainer.style.lineHeight = "1.55";
+    textColumnsContainer.style.color = "#1e293b";
+    textColumnsContainer.style.wordBreak = "break-word";
+    textColumnsContainer.style.textAlign = "justify";
+
+    // Aplicar CSS especial para preservar todos os destaques, negritos, emojis e tags
+    const cleanContentHtml = note.content && note.content.trim() ? note.content : "<p>Nenhuma descrição informada.</p>";
+    textColumnsContainer.innerHTML = cleanContentHtml;
+
+    // Normalizar estilos dentro do container HTML
+    const allSpans = textColumnsContainer.querySelectorAll("span, mark, b, strong, i, em, u, s, p, div, li");
+    allSpans.forEach((el) => {
+      const htmlEl = el as HTMLElement;
+      // Garante que elementos de bloco não quebrem no meio
+      htmlEl.style.breakInside = "avoid";
+      htmlEl.style.pageBreakInside = "avoid";
+      // Se tem background-color (marcador), adicionar padding e border-radius elegante
+      if (htmlEl.style.backgroundColor && htmlEl.style.backgroundColor !== "transparent") {
+        htmlEl.style.padding = "1px 3px";
+        htmlEl.style.borderRadius = "3px";
+      }
+    });
+
+    descSection.appendChild(textColumnsContainer);
+    contentWrapper.appendChild(descSection);
+
+    // --- SEÇÃO 2: MÍDIAS E LAYOUTS (SE HOUVER) ---
+    if (loadedLayoutDataUrls.length > 0) {
+      const layoutsSection = document.createElement("div");
+      layoutsSection.style.display = "flex";
+      layoutsSection.style.flexDirection = "column";
+      layoutsSection.style.gap = "8px";
+      layoutsSection.style.width = "100%";
+      layoutsSection.style.marginTop = "8px";
+      layoutsSection.style.borderTop = "1px solid #e2e8f0";
+      layoutsSection.style.paddingTop = "8px";
+
+      const layoutsTitle = document.createElement("div");
+      layoutsTitle.style.fontSize = "11.5px";
+      layoutsTitle.style.fontWeight = "800";
+      layoutsTitle.style.color = "#0f172a";
+      layoutsTitle.style.textTransform = "uppercase";
+      layoutsTitle.style.letterSpacing = "0.5px";
+      layoutsTitle.textContent = "MÍDIAS E LAYOUTS";
+      layoutsSection.appendChild(layoutsTitle);
+
+      const gridDiv = document.createElement("div");
+      gridDiv.style.display = "grid";
+      gridDiv.style.width = "100%";
+      gridDiv.style.gap = "10px";
+
+      const count = loadedLayoutDataUrls.length;
+      if (count === 1) {
+        gridDiv.style.gridTemplateColumns = "1fr";
+      } else if (count === 2 || count === 4) {
+        gridDiv.style.gridTemplateColumns = "1fr 1fr";
+      } else {
+        gridDiv.style.gridTemplateColumns = "1fr 1fr 1fr";
+      }
+
+      loadedLayoutDataUrls.forEach((imgSrc, idx) => {
+        const itemWrap = document.createElement("div");
+        itemWrap.style.position = "relative";
+        itemWrap.style.border = "1px solid #cbd5e1";
+        itemWrap.style.borderRadius = "6px";
+        itemWrap.style.overflow = "hidden";
+        itemWrap.style.backgroundColor = "#f8fafc";
+        itemWrap.style.display = "flex";
+        itemWrap.style.alignItems = "center";
+        itemWrap.style.justifyContent = "center";
+        itemWrap.style.maxHeight = count === 1 ? "240px" : count <= 4 ? "140px" : "110px";
+
+        const imgEl = document.createElement("img");
+        imgEl.src = imgSrc;
+        imgEl.crossOrigin = "anonymous";
+        imgEl.style.width = "100%";
+        imgEl.style.height = "100%";
+        imgEl.style.objectFit = "contain";
+        itemWrap.appendChild(imgEl);
+
+        const badge = document.createElement("div");
+        badge.style.position = "absolute";
+        badge.style.top = "4px";
+        badge.style.right = "4px";
+        badge.style.backgroundColor = idx === 0 ? "#ff6900" : "#1e293b";
+        badge.style.color = "#ffffff";
+        badge.style.fontSize = "9px";
+        badge.style.fontWeight = "800";
+        badge.style.padding = "1px 5px";
+        badge.style.borderRadius = "4px";
+        badge.textContent = `${idx + 1}`;
+        itemWrap.appendChild(badge);
+
+        gridDiv.appendChild(itemWrap);
+      });
+
+      layoutsSection.appendChild(gridDiv);
+      contentWrapper.appendChild(layoutsSection);
+    }
+
+    // --- SEÇÃO 3: ASSINATURAS NO RODAPÉ ---
+    const sigSection = document.createElement("div");
+    sigSection.style.position = "relative";
+    sigSection.style.zIndex = "10";
+    sigSection.style.width = "100%";
+    sigSection.style.display = "flex";
+    sigSection.style.justifyContent = "space-between";
+    sigSection.style.alignItems = "flex-end";
+    sigSection.style.gap = "40px";
+    sigSection.style.marginTop = "20px";
+    sigSection.style.paddingTop = "10px";
 
     // Assinatura Recebedor
-    page.drawLine({
-      start: { x: CONTENT_X, y: sigY },
-      end: { x: CONTENT_X + colSigW, y: sigY },
-      thickness: 0.8,
-      color: cLine,
-    });
-    page.drawText("Assinatura do Recebedor", {
-      x: CONTENT_X + 5,
-      y: sigY - 12,
-      size: 8.5,
-      font: fontRegular,
-      color: cGray,
-    });
+    const sigRecebedor = document.createElement("div");
+    sigRecebedor.style.flex = "1";
+    sigRecebedor.style.display = "flex";
+    sigRecebedor.style.flexDirection = "column";
+    sigRecebedor.style.alignItems = "center";
+    sigRecebedor.style.gap = "4px";
+    sigRecebedor.innerHTML = `
+      <div style="width: 100%; border-top: 1px solid #64748b;"></div>
+      <span style="font-size: 10px; color: #475569; font-weight: 600;">Assinatura do Recebedor</span>
+    `;
 
     // Assinatura Responsável
-    page.drawLine({
-      start: { x: CONTENT_RIGHT_X - colSigW, y: sigY },
-      end: { x: CONTENT_RIGHT_X, y: sigY },
-      thickness: 0.8,
-      color: cLine,
-    });
-    page.drawText("Assinatura do Responsável", {
-      x: CONTENT_RIGHT_X - colSigW + 5,
-      y: sigY - 12,
-      size: 8.5,
-      font: fontRegular,
-      color: cGray,
+    const sigResponsavel = document.createElement("div");
+    sigResponsavel.style.flex = "1";
+    sigResponsavel.style.display = "flex";
+    sigResponsavel.style.flexDirection = "column";
+    sigResponsavel.style.alignItems = "center";
+    sigResponsavel.style.gap = "4px";
+    sigResponsavel.innerHTML = `
+      <div style="width: 100%; border-top: 1px solid #64748b;"></div>
+      <span style="font-size: 10px; color: #475569; font-weight: 600;">Assinatura do Responsável</span>
+    `;
+
+    sigSection.appendChild(sigRecebedor);
+    sigSection.appendChild(sigResponsavel);
+
+    pageDiv.appendChild(contentWrapper);
+    pageDiv.appendChild(sigSection);
+    hiddenContainer.appendChild(pageDiv);
+    document.body.appendChild(hiddenContainer);
+
+    // 5. Aguardar carregamento de fontes e renderização DOM
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+    await new Promise((r) => setTimeout(r, 120));
+
+    // 6. Renderizar Canvas com alta fidelidade (scale: 2.5 para qualidade cristalina de impressão)
+    const canvas = await html2canvas(pageDiv, {
+      scale: 2.5,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      logging: false,
     });
 
-    // Salvar e fazer download
-    const pdfBytes = await doc.save();
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
+    // Remover container temporário do DOM
+    document.body.removeChild(hiddenContainer);
+
+    // 7. Gerar PDF com jsPDF no padrão A4
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfW = 210;
+    const pdfH = 297;
+
+    const imgData = canvas.toDataURL("image/jpeg", 0.98);
+    const canvasH = (canvas.height * pdfW) / canvas.width;
+
+    if (canvasH <= pdfH + 2) {
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfW, pdfH, undefined, "FAST");
+    } else {
+      // Caso o conteúdo seja extenso e necessite de páginas subsequentes
+      let heightLeft = canvasH;
+      let position = 0;
+
+      pdf.addImage(imgData, "JPEG", 0, position, pdfW, canvasH, undefined, "FAST");
+      heightLeft -= pdfH;
+
+      while (heightLeft > 0) {
+        position = heightLeft - canvasH;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, pdfW, canvasH, undefined, "FAST");
+        heightLeft -= pdfH;
+      }
+    }
+
+    // 8. Fazer download automático
     const cleanFileName = sanitizeFilename(note.title || "NOTA");
-    link.download = `NOTA ${cleanFileName}.pdf`;
-    link.click();
+    pdf.save(`NOTA ${cleanFileName}.pdf`);
   } catch (err: any) {
     console.error("Erro gerando PDF da Nota", err);
     alert("Erro ao gerar PDF: " + (err?.message || "Verifique o timbrado nas configurações."));

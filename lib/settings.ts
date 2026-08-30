@@ -242,6 +242,9 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
     root.style.setProperty("--gm-bg", bg);
     root.style.setProperty("--bg", bg);
     root.style.setProperty("--brand-bg", bg);
+    if (document.body) {
+      document.body.style.backgroundColor = bg;
+    }
   }
 
   if (title) {
@@ -312,14 +315,19 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
 
   // Background do app (imagem/video)
   const isVideo = s.app_background_url?.toLowerCase().endsWith(".mp4") || s.app_background_url?.toLowerCase().endsWith(".webm");
+  const bgOpacityNum = Number(s.app_background_opacity ?? 0);
+  const isBgActive = Boolean(s.app_background_url && bgOpacityNum > 0);
+
+  const mobileBgOpacityNum = Number(s.mobile_app_background_opacity ?? s.app_background_opacity ?? 0);
+  const isMobileBgActive = Boolean((s.mobile_app_background_url || s.app_background_url) && mobileBgOpacityNum > 0);
   
-  if (isVideo) {
+  if (isVideo && isBgActive) {
     root.style.setProperty("--gm-app-bg-url", "none");
   } else {
-    root.style.setProperty("--gm-app-bg-url", s.app_background_url ? `url("${s.app_background_url}")` : "none");
+    root.style.setProperty("--gm-app-bg-url", isBgActive && s.app_background_url ? `url("${s.app_background_url}")` : "none");
   }
   
-  if (s.app_background_url || s.mobile_app_background_url) {
+  if (isBgActive || isMobileBgActive) {
     root.classList.add("gm-has-bg");
     document.body?.classList.add("gm-has-bg");
   } else {
@@ -329,7 +337,7 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
   
   const videoEl = document.getElementById("gm-video-bg") as HTMLVideoElement;
   if (videoEl) {
-    if (isVideo && s.app_background_url) {
+    if (isVideo && isBgActive && s.app_background_url) {
       if (videoEl.src !== s.app_background_url) {
         videoEl.src = s.app_background_url;
       }
@@ -341,14 +349,14 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
   }
 
   root.style.setProperty("--gm-app-bg-fit", String(s.app_background_fit || "cover"));
-  root.style.setProperty("--gm-app-bg-opacity", String(s.app_background_opacity ?? 0));
+  root.style.setProperty("--gm-app-bg-opacity", String(isBgActive ? bgOpacityNum : 0));
   root.style.setProperty("--gm-app-bg-pos-x", s.app_background_pos_x || "50%");
   root.style.setProperty("--gm-app-bg-pos-y", s.app_background_pos_y || "50%");
   root.style.setProperty("--gm-app-bg-scale", String(s.app_background_scale ?? 1));
   root.style.setProperty("--gm-app-bg-blur", (s.app_background_blur ?? 10) + "px");
 
   // ✅ auto-dimming do blur
-  const op = Number(s.app_background_opacity ?? 0);
+  const op = isBgActive ? bgOpacityNum : 0;
   const blur = Number(s.app_background_blur ?? 10);
   const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
   const factor = clamp(op * 1.2, 0.25, 1);
@@ -356,16 +364,17 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
   root.style.setProperty("--gm-app-bg-blur-effective", `${effectiveBlur}px`);
 
   // Mobile backgrounds
-  root.style.setProperty("--gm-mobile-bg-url", s.mobile_app_background_url ? `url("${s.mobile_app_background_url}")` : (s.app_background_url ? `url("${s.app_background_url}")` : "none"));
+  const mobileBgUrlResolved = isMobileBgActive ? (s.mobile_app_background_url || s.app_background_url) : null;
+  root.style.setProperty("--gm-mobile-bg-url", mobileBgUrlResolved ? `url("${mobileBgUrlResolved}")` : "none");
   root.style.setProperty("--gm-mobile-bg-fit", String(s.mobile_app_background_fit || s.app_background_fit || "cover"));
-  root.style.setProperty("--gm-mobile-bg-opacity", String(s.mobile_app_background_opacity ?? s.app_background_opacity ?? 0));
+  root.style.setProperty("--gm-mobile-bg-opacity", String(isMobileBgActive ? mobileBgOpacityNum : 0));
   root.style.setProperty("--gm-mobile-bg-pos-x", s.mobile_app_background_pos_x || s.app_background_pos_x || "50%");
   root.style.setProperty("--gm-mobile-bg-pos-y", s.mobile_app_background_pos_y || s.app_background_pos_y || "50%");
   root.style.setProperty("--gm-mobile-bg-scale", String(s.mobile_app_background_scale ?? s.app_background_scale ?? 1));
   root.style.setProperty("--gm-mobile-bg-blur", (s.mobile_app_background_blur ?? s.app_background_blur ?? 10) + "px");
 
   // ✅ auto-dimming do blur (Mobile)
-  const mop = Number(s.mobile_app_background_opacity ?? s.app_background_opacity ?? 0);
+  const mop = isMobileBgActive ? mobileBgOpacityNum : 0;
   const mblur = Number(s.mobile_app_background_blur ?? s.app_background_blur ?? 10);
   const mfactor = clamp(mop * 1.2, 0.25, 1);
   const meffectiveBlur = Math.round(mblur * mfactor);

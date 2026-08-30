@@ -7,6 +7,7 @@ import { BudgetAlarm } from "../../types";
 import { playNotificationSound } from "../../lib/audio";
 import { readSettingsLocal } from "../../lib/settings";
 import { triggerRealNotification } from "../../lib/realNotification";
+import { broadcastAppNotification } from "../../lib/syncHub";
 
 // Fast typing effect for premium notifications
 const TypewriterText = ({ text }: { text: string }) => {
@@ -65,6 +66,18 @@ const AlarmToast = () => {
           body: text,
           inAppToast: false, // O AlarmToast já renderiza o card visual interno
         }).catch(() => {});
+
+        // Transmissão simultânea de alarme para Smartphone & Desktop
+        try {
+          const tid = typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null;
+          broadcastAppNotification(tid, {
+            id: `alarm_${alarm.id}`,
+            title: `⏰ Alarme (${alarm.time}): ${alarm.clientName}`,
+            message: text,
+            type: "alarm",
+            url: alarm.type === "EXPENSE" ? "/expenses" : alarm.type === "NOTE" ? "/notes" : "/budgets",
+          });
+        } catch (e) {}
 
         // Marca como disparado (no storage e IndexedDB)
         markAlarmAsTriggered(alarm.id);

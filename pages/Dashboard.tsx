@@ -605,7 +605,7 @@ export default function Dashboard() {
       <SectionDivider label="Ações rápidas" />
 
       {/* 5. LOWER SECTION: GRID 2 COLUMNS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-1 mb-8 sm:mb-12 md:mb-16">
         {/* LEFT COLUMN: NOVO CLIENTE */}
         <div className={`lg:col-span-2 p-6 ${cardBase}`}>
           <div className="flex items-center gap-3.5 mb-5">

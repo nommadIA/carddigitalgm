@@ -14,9 +14,9 @@ export function useSwipeNav<T extends HTMLElement>({
   enabled = true,
   onSwipeLeft,
   onSwipeRight,
-  thresholdPx = 80,
-  restraintPx = 60,
-  allowedTimeMs = 450,
+  thresholdPx = 45,
+  restraintPx = 90,
+  allowedTimeMs = 600,
   stopPropagation = false,
 }: Options) {
   const ref = useRef<T | null>(null);
@@ -72,8 +72,11 @@ export function useSwipeNav<T extends HTMLElement>({
 
       if (elapsed > allowedTimeMs) return;
 
-      // Gesto de swipe estritamente horizontal (não interfere na rolagem vertical)
-      if (absX >= thresholdPx && absX >= absY * 2.2 && absY <= restraintPx) {
+      // Gesto de swipe estritamente horizontal (não interfere de forma alguma na rolagem vertical da página)
+      // Se houver qualquer deslocamento vertical significativo (> 40px), é rolagem e não troca de página.
+      if (absY > 40) return;
+
+      if (absX >= 65 && absX >= absY * 2.5) {
         if (distX < 0) {
           onSwipeLeft?.();
         } else {
