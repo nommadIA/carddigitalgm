@@ -1133,47 +1133,32 @@ export type NotePdfItem = {
   layout_url?: string;
 };
 
-// Helper para carregar imagem remota em Base64 Data URL (evita qualquer bloqueio de CORS no html2canvas/jsPDF)
-async function fetchImageAsDataUrl(url: string, bucketHint?: string): Promise<string> {
+function bytesToDataUrl(bytes: Uint8Array, contentType: string = "image/png"): string {
+  let binary = "";
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const base64 = btoa(binary);
+  return `data:${contentType || "image/png"};base64,${base64}`;
+}
+
+async function convertImageUrlToDataUrl(url: string, bucketHint?: string): Promise<string> {
   if (!url) return "";
   if (url.startsWith("data:")) return url;
-
   try {
-    let fetchUrl = url;
-    let res = await fetch(fetchUrl);
-    if (!res.ok) {
-      const path =
-        tryExtractSupabaseStoragePath(url, "timbrados") ||
-        tryExtractSupabaseStoragePath(url, "note_assets") ||
-        (bucketHint ? tryExtractSupabaseStoragePath(url, bucketHint) : null);
-      if (path) {
-        const bucket = url.includes("/timbrados/") ? "timbrados" : (bucketHint || "note_assets");
-        const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 10);
-        if (data?.signedUrl) {
-          fetchUrl = data.signedUrl;
-          res = await fetch(fetchUrl);
-        }
-      }
+    const { bytes, contentType } = await resolveTimbradoBytesWithFallback(url);
+    if (bytes && bytes.length > 0) {
+      return bytesToDataUrl(bytes, contentType);
     }
-
-    if (!res.ok) {
-      return url;
-    }
-
-    const blob = await res.blob();
-    return await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve((reader.result as string) || url);
-      reader.onerror = () => resolve(url);
-      reader.readAsDataURL(blob);
-    });
-  } catch (err) {
-    console.warn("fetchImageAsDataUrl falhou para", url, err);
-    return url;
+  } catch (e) {
+    console.warn("Falha convertImageUrlToDataUrl:", url, e);
   }
+  return url;
 }
 
 export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) {
+  let iframe: HTMLIFrameElement | null = null;
   try {
     const timbradoUrl = settings?.timbrado_url || "";
     if (!timbradoUrl) {
@@ -1182,25 +1167,21 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
       );
     }
 
-    // 1. Converter timbrado para DataURL Base64
-    const timbradoDataUrl = await fetchImageAsDataUrl(timbradoUrl, "timbrados");
+    // 1. Converter timbrado para DataURL Base64 para garantir carregamento instantâneo sem CORS
+    const timbradoDataUrl = await convertImageUrlToDataUrl(timbradoUrl, "timbrados");
 
-    // 2. Extrair e converter URLs das imagens de layout para DataURL
-    const imagesToRender: string[] = [];
+    // 2. Extrair mídias e layouts da nota na mesma ordem
+    let layoutUrls: string[] = [];
     if (note.layout_url) {
       const trimmed = note.layout_url.trim();
-      let parsedUrls: string[] = [];
       if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
         try {
           const arr = JSON.parse(trimmed);
-          if (Array.isArray(arr)) parsedUrls = arr.map((s) => String(s).trim()).filter(Boolean);
+          if (Array.isArray(arr)) layoutUrls = arr.map((s) => String(s).trim()).filter(Boolean);
         } catch (e) {}
       }
-      if (parsedUrls.length === 0) {
-        parsedUrls = trimmed.split(",").map((s) => s.trim()).filter(Boolean);
-      }
-      for (const p of parsedUrls) {
-        if (!imagesToRender.includes(p)) imagesToRender.push(p);
+      if (layoutUrls.length === 0) {
+        layoutUrls = trimmed.split(",").map((s) => s.trim()).filter(Boolean);
       }
     }
 
@@ -1211,341 +1192,413 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
         const imgElements = tempDiv.getElementsByTagName("img");
         for (let i = 0; i < imgElements.length; i++) {
           const src = imgElements[i].getAttribute("src");
-          if (src && !imagesToRender.includes(src)) {
-            imagesToRender.push(src);
+          if (src && !layoutUrls.includes(src)) {
+            layoutUrls.push(src);
           }
         }
       } catch (e) {}
     }
 
-    const limitedImages = imagesToRender.slice(0, 6);
-    const loadedLayoutDataUrls: string[] = [];
-    for (const imgUrl of limitedImages) {
-      const dataUrl = await fetchImageAsDataUrl(imgUrl, "note_assets");
-      loadedLayoutDataUrls.push(dataUrl);
+    // Converter cada imagem de layout para DataURL Base64 na ordem original
+    const layoutDataUrls: string[] = [];
+    for (const url of layoutUrls) {
+      const dUrl = await convertImageUrlToDataUrl(url, "note_assets");
+      if (dUrl) layoutDataUrls.push(dUrl);
     }
 
-    // 3. Preparar metadados do cabeçalho
-    const safeTitle = note.title || "NOTA / ORDEM DE SERVIÇO";
+    // 3. Preparar metadados da Nota
+    const noteTitle = note.title && note.title.trim() ? note.title.toUpperCase() : "NOTA SEM TÍTULO";
     const dateStr = note.created_at
       ? new Date(note.created_at).toLocaleDateString("pt-BR")
       : new Date().toLocaleDateString("pt-BR");
 
-    const deliveryStr = note.delivery_date
-      ? `${note.delivery_date.includes("-") ? note.delivery_date.split("-").reverse().join("/") : note.delivery_date}${
-          note.delivery_time ? ` às ${note.delivery_time}` : ""
-        }`
-      : "";
-
-    // 4. Construir o container visual DOM A4 (largura 794px, altura 1123px na proporção A4 padrão)
-    const hiddenContainer = document.createElement("div");
-    hiddenContainer.style.position = "fixed";
-    hiddenContainer.style.left = "-99999px";
-    hiddenContainer.style.top = "0";
-    hiddenContainer.style.width = "794px";
-    hiddenContainer.style.minHeight = "1123px";
-    hiddenContainer.style.backgroundColor = "#ffffff";
-    hiddenContainer.style.zIndex = "-9999";
-    hiddenContainer.style.fontFamily =
-      "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'";
-    hiddenContainer.style.color = "#1e293b";
-    hiddenContainer.style.boxSizing = "border-box";
-    hiddenContainer.style.overflow = "visible";
-
-    // Estrutura interna da página com imagem do timbrado de fundo e margens
-    const pageDiv = document.createElement("div");
-    pageDiv.style.position = "relative";
-    pageDiv.style.width = "794px";
-    pageDiv.style.minHeight = "1123px";
-    pageDiv.style.boxSizing = "border-box";
-    pageDiv.style.padding = "76px 52px 90px 52px"; // Margens perfeitamente ajustadas ao timbrado A4
-    pageDiv.style.display = "flex";
-    pageDiv.style.flexDirection = "column";
-    pageDiv.style.justifyContent = "space-between";
-
-    // Imagem do Timbrado de fundo
-    if (timbradoDataUrl) {
-      const bgImg = document.createElement("img");
-      bgImg.src = timbradoDataUrl;
-      bgImg.crossOrigin = "anonymous";
-      bgImg.style.position = "absolute";
-      bgImg.style.top = "0";
-      bgImg.style.left = "0";
-      bgImg.style.width = "100%";
-      bgImg.style.height = "100%";
-      bgImg.style.objectFit = "fill";
-      bgImg.style.zIndex = "0";
-      bgImg.style.pointerEvents = "none";
-      pageDiv.appendChild(bgImg);
+    let deliveryStr = "";
+    if (note.delivery_date) {
+      const [y, m, d] = note.delivery_date.split("-");
+      const dFormatted = y && m && d ? `${d}/${m}/${y}` : note.delivery_date;
+      deliveryStr = `${dFormatted}${note.delivery_time ? ` às ${note.delivery_time}` : ""}`;
     }
 
-    // Conteúdo principal (Camada superior Z-10)
-    const contentWrapper = document.createElement("div");
-    contentWrapper.style.position = "relative";
-    contentWrapper.style.zIndex = "10";
-    contentWrapper.style.display = "flex";
-    contentWrapper.style.flexDirection = "column";
-    contentWrapper.style.gap = "12px";
-    contentWrapper.style.width = "100%";
-    contentWrapper.style.flex = "1";
-
-    // --- CABEÇALHO DA NOTA ---
-    const headerDiv = document.createElement("div");
-    headerDiv.style.display = "flex";
-    headerDiv.style.flexDirection = "column";
-    headerDiv.style.gap = "3px";
-    headerDiv.style.borderBottom = "1px solid #cbd5e1";
-    headerDiv.style.paddingBottom = "10px";
-
-    const titleEl = document.createElement("h1");
-    titleEl.style.fontSize = "16px";
-    titleEl.style.fontWeight = "800";
-    titleEl.style.color = "#0f172a";
-    titleEl.style.margin = "0";
-    titleEl.style.textTransform = "uppercase";
-    titleEl.style.letterSpacing = "0.5px";
-    titleEl.textContent = safeTitle;
-    headerDiv.appendChild(titleEl);
-
-    const metaRow = document.createElement("div");
-    metaRow.style.display = "flex";
-    metaRow.style.flexWrap = "wrap";
-    metaRow.style.gap = "14px";
-    metaRow.style.fontSize = "11px";
-    metaRow.style.color = "#475569";
-    metaRow.style.fontWeight = "600";
-    metaRow.style.marginTop = "2px";
-
-    metaRow.innerHTML = `
-      <span>Criado em: <strong style="color: #1e293b;">${dateStr}</strong></span>
-      ${deliveryStr ? `<span>Prazo de Entrega: <strong style="color: #1e293b;">${deliveryStr}</strong></span>` : ""}
-      ${note.responsible_name ? `<span>Responsável: <strong style="color: #1e293b;">${note.responsible_name}</strong></span>` : ""}
-      ${note.status ? `<span>Status: <strong style="color: #ea580c; text-transform: uppercase;">${note.status}</strong></span>` : ""}
-    `;
-    headerDiv.appendChild(metaRow);
-    contentWrapper.appendChild(headerDiv);
-
-    // --- SEÇÃO 1: DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO (LADO A LADO) ---
-    const descSection = document.createElement("div");
-    descSection.style.display = "flex";
-    descSection.style.flexDirection = "column";
-    descSection.style.gap = "8px";
-    descSection.style.width = "100%";
-    descSection.style.flex = "1";
-
-    const descTitle = document.createElement("div");
-    descTitle.style.fontSize = "11.5px";
-    descTitle.style.fontWeight = "800";
-    descTitle.style.color = "#0f172a";
-    descTitle.style.textTransform = "uppercase";
-    descTitle.style.letterSpacing = "0.5px";
-    descTitle.style.display = "flex";
-    descTitle.style.alignItems = "center";
-    descTitle.style.gap = "6px";
-    descTitle.innerHTML = `<span>DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO</span>`;
-    descSection.appendChild(descTitle);
-
-    // Container do texto da Nota estruturado em 2 COLUNAS LADO A LADO
-    const textColumnsContainer = document.createElement("div");
-    textColumnsContainer.style.width = "100%";
-    textColumnsContainer.style.columnCount = "2";
-    textColumnsContainer.style.columnGap = "24px";
-    textColumnsContainer.style.columnFill = "balance";
-    textColumnsContainer.style.fontSize = "12px";
-    textColumnsContainer.style.lineHeight = "1.55";
-    textColumnsContainer.style.color = "#1e293b";
-    textColumnsContainer.style.wordBreak = "break-word";
-    textColumnsContainer.style.textAlign = "justify";
-
-    // Aplicar CSS especial para preservar todos os destaques, negritos, emojis e tags
     const cleanContentHtml = note.content && note.content.trim() ? note.content : "<p>Nenhuma descrição informada.</p>";
-    textColumnsContainer.innerHTML = cleanContentHtml;
 
-    // Normalizar estilos dentro do container HTML
-    const allSpans = textColumnsContainer.querySelectorAll("span, mark, b, strong, i, em, u, s, p, div, li");
-    allSpans.forEach((el) => {
-      const htmlEl = el as HTMLElement;
-      // Garante que elementos de bloco não quebrem no meio
-      htmlEl.style.breakInside = "avoid";
-      htmlEl.style.pageBreakInside = "avoid";
-      // Se tem background-color (marcador), adicionar padding e border-radius elegante
-      if (htmlEl.style.backgroundColor && htmlEl.style.backgroundColor !== "transparent") {
-        htmlEl.style.padding = "1px 3px";
-        htmlEl.style.borderRadius = "3px";
+    // Estrutura CSS pura (HEX e RGB, 100% segura contra erros de oklab)
+    const baseCss = `
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
-    });
-
-    descSection.appendChild(textColumnsContainer);
-    contentWrapper.appendChild(descSection);
-
-    // --- SEÇÃO 2: MÍDIAS E LAYOUTS (SE HOUVER) ---
-    if (loadedLayoutDataUrls.length > 0) {
-      const layoutsSection = document.createElement("div");
-      layoutsSection.style.display = "flex";
-      layoutsSection.style.flexDirection = "column";
-      layoutsSection.style.gap = "8px";
-      layoutsSection.style.width = "100%";
-      layoutsSection.style.marginTop = "8px";
-      layoutsSection.style.borderTop = "1px solid #e2e8f0";
-      layoutsSection.style.paddingTop = "8px";
-
-      const layoutsTitle = document.createElement("div");
-      layoutsTitle.style.fontSize = "11.5px";
-      layoutsTitle.style.fontWeight = "800";
-      layoutsTitle.style.color = "#0f172a";
-      layoutsTitle.style.textTransform = "uppercase";
-      layoutsTitle.style.letterSpacing = "0.5px";
-      layoutsTitle.textContent = "MÍDIAS E LAYOUTS";
-      layoutsSection.appendChild(layoutsTitle);
-
-      const gridDiv = document.createElement("div");
-      gridDiv.style.display = "grid";
-      gridDiv.style.width = "100%";
-      gridDiv.style.gap = "10px";
-
-      const count = loadedLayoutDataUrls.length;
-      if (count === 1) {
-        gridDiv.style.gridTemplateColumns = "1fr";
-      } else if (count === 2 || count === 4) {
-        gridDiv.style.gridTemplateColumns = "1fr 1fr";
-      } else {
-        gridDiv.style.gridTemplateColumns = "1fr 1fr 1fr";
+      body, .page-wrapper {
+        background: #ffffff;
+        color: #1e293b;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .timbrado-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        z-index: 1;
+        pointer-events: none;
+      }
+      .page-content {
+        position: absolute;
+        top: 56px;
+        left: 50px;
+        right: 50px;
+        bottom: 0px;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+      .header-section {
+        border-bottom: 1px solid #cbd5e1;
+        padding-bottom: 8px;
+        margin-bottom: 10px;
+      }
+      .note-h1 {
+        font-size: 15px;
+        font-weight: 800;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        line-height: 1.3;
+      }
+      .meta-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 10.5px;
+        color: #475569;
+        font-weight: 600;
+        margin-top: 4px;
+      }
+      .meta-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .meta-status {
+        color: #ea580c;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 11px;
+      }
+      .section-heading {
+        font-size: 11px;
+        font-weight: 800;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+      .text-content-box {
+        font-size: 11px;
+        line-height: 1.5;
+        color: #1e293b;
+        word-break: break-word;
+        margin-bottom: 10px;
+      }
+      .text-content-box p { margin-bottom: 4px; }
+      .text-content-box ul, .text-content-box ol { padding-left: 18px; margin-bottom: 4px; }
+      .text-content-box li { margin-bottom: 2px; }
+      .text-content-box strong, .text-content-box b { font-weight: 700; color: #0f172a; }
+      .text-content-box em, .text-content-box i { font-style: italic; }
+      .text-content-box u { text-decoration: underline; }
+      .text-content-box s { text-decoration: line-through; }
+      .text-content-box mark { background-color: #fef08a; padding: 1px 3px; border-radius: 2px; }
+      
+      /* Grid de Mídias lado a lado na mesma ordem */
+      .media-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        width: 100%;
+        margin-top: 4px;
+        margin-bottom: 10px;
+      }
+      .media-card {
+        position: relative;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #f8fafc;
+        height: 145px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .media-card img {
+        max-width: 95%;
+        max-height: 95%;
+        object-fit: contain;
+      }
+      .media-badge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        background: #1e293b;
+        color: #ffffff;
+        font-size: 9.5px;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 4px;
+        z-index: 5;
+      }
+      .media-badge.first {
+        background: #ff6900;
       }
 
-      loadedLayoutDataUrls.forEach((imgSrc, idx) => {
-        const itemWrap = document.createElement("div");
-        itemWrap.style.position = "relative";
-        itemWrap.style.border = "1px solid #cbd5e1";
-        itemWrap.style.borderRadius = "6px";
-        itemWrap.style.overflow = "hidden";
-        itemWrap.style.backgroundColor = "#f8fafc";
-        itemWrap.style.display = "flex";
-        itemWrap.style.alignItems = "center";
-        itemWrap.style.justifyContent = "center";
-        itemWrap.style.maxHeight = count === 1 ? "240px" : count <= 4 ? "140px" : "110px";
-
-        const imgEl = document.createElement("img");
-        imgEl.src = imgSrc;
-        imgEl.crossOrigin = "anonymous";
-        imgEl.style.width = "100%";
-        imgEl.style.height = "100%";
-        imgEl.style.objectFit = "contain";
-        itemWrap.appendChild(imgEl);
-
-        const badge = document.createElement("div");
-        badge.style.position = "absolute";
-        badge.style.top = "4px";
-        badge.style.right = "4px";
-        badge.style.backgroundColor = idx === 0 ? "#ff6900" : "#1e293b";
-        badge.style.color = "#ffffff";
-        badge.style.fontSize = "9px";
-        badge.style.fontWeight = "800";
-        badge.style.padding = "1px 5px";
-        badge.style.borderRadius = "4px";
-        badge.textContent = `${idx + 1}`;
-        itemWrap.appendChild(badge);
-
-        gridDiv.appendChild(itemWrap);
-      });
-
-      layoutsSection.appendChild(gridDiv);
-      contentWrapper.appendChild(layoutsSection);
-    }
-
-    // --- SEÇÃO 3: ASSINATURAS NO RODAPÉ ---
-    const sigSection = document.createElement("div");
-    sigSection.style.position = "relative";
-    sigSection.style.zIndex = "10";
-    sigSection.style.width = "100%";
-    sigSection.style.display = "flex";
-    sigSection.style.justifyContent = "space-between";
-    sigSection.style.alignItems = "flex-end";
-    sigSection.style.gap = "40px";
-    sigSection.style.marginTop = "20px";
-    sigSection.style.paddingTop = "10px";
-
-    // Assinatura Recebedor
-    const sigRecebedor = document.createElement("div");
-    sigRecebedor.style.flex = "1";
-    sigRecebedor.style.display = "flex";
-    sigRecebedor.style.flexDirection = "column";
-    sigRecebedor.style.alignItems = "center";
-    sigRecebedor.style.gap = "4px";
-    sigRecebedor.innerHTML = `
-      <div style="width: 100%; border-top: 1px solid #64748b;"></div>
-      <span style="font-size: 10px; color: #475569; font-weight: 600;">Assinatura do Recebedor</span>
+      /* Linha de Assinaturas exatamente acima do Rodapé / QR Code */
+      .signatures-footer {
+        position: absolute;
+        bottom: 270px;
+        left: 50px;
+        right: 50px;
+        display: flex;
+        justify-content: space-between;
+        gap: 36px;
+        z-index: 20;
+      }
+      .sig-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .sig-line {
+        width: 100%;
+        border-top: 1px solid #475569;
+      }
+      .sig-label {
+        font-size: 9.5px;
+        color: #475569;
+        font-weight: 600;
+      }
     `;
 
-    // Assinatura Responsável
-    const sigResponsavel = document.createElement("div");
-    sigResponsavel.style.flex = "1";
-    sigResponsavel.style.display = "flex";
-    sigResponsavel.style.flexDirection = "column";
-    sigResponsavel.style.alignItems = "center";
-    sigResponsavel.style.gap = "4px";
-    sigResponsavel.innerHTML = `
-      <div style="width: 100%; border-top: 1px solid #64748b;"></div>
-      <span style="font-size: 10px; color: #475569; font-weight: 600;">Assinatura do Responsável</span>
+    // Montar as mídias em cards de 2 colunas lado a lado
+    const mediaCardsHtml = layoutDataUrls
+      .map(
+        (src, idx) => `
+        <div class="media-card">
+          <img src="${src}" />
+          <div class="media-badge ${idx === 0 ? "first" : ""}">${idx + 1}</div>
+        </div>
+      `
+      )
+      .join("");
+
+    // Montar cabeçalho completo
+    const headerHtml = `
+      <div class="header-section">
+        <h1 class="note-h1">NOTA: ${noteTitle}</h1>
+        <div class="meta-bar">
+          <div class="meta-items">
+            <span>Criado em: <strong>${dateStr}</strong></span>
+            ${deliveryStr ? `<span>Prazo: <strong>${deliveryStr}</strong></span>` : ""}
+            ${note.responsible_name ? `<span>Responsável: <strong>${note.responsible_name}</strong></span>` : ""}
+            ${note.category ? `<span>Categoria: <strong>${note.category}</strong></span>` : ""}
+          </div>
+          ${note.status ? `<div class="meta-status">STATUS: ${note.status.toUpperCase()}</div>` : ""}
+        </div>
+      </div>
     `;
 
-    sigSection.appendChild(sigRecebedor);
-    sigSection.appendChild(sigResponsavel);
+    // Montar bloco de assinaturas
+    const signaturesHtml = `
+      <div class="signatures-footer">
+        <div class="sig-col">
+          <div class="sig-line"></div>
+          <span class="sig-label">Assinatura do Recebedor</span>
+        </div>
+        <div class="sig-col">
+          <div class="sig-line"></div>
+          <span class="sig-label">Assinatura do Responsável</span>
+        </div>
+      </div>
+    `;
 
-    pageDiv.appendChild(contentWrapper);
-    pageDiv.appendChild(sigSection);
-    hiddenContainer.appendChild(pageDiv);
-    document.body.appendChild(hiddenContainer);
+    // Medição em elemento invisível temporário
+    const measureDiv = document.createElement("div");
+    measureDiv.style.position = "fixed";
+    measureDiv.style.left = "-9999px";
+    measureDiv.style.top = "-9999px";
+    measureDiv.style.width = "694px";
+    measureDiv.style.visibility = "hidden";
+    measureDiv.innerHTML = `
+      <style>${baseCss}</style>
+      ${headerHtml}
+      <div class="section-heading">DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO</div>
+      <div class="text-content-box">${cleanContentHtml}</div>
+      ${layoutDataUrls.length > 0 ? `<div class="section-heading" style="margin-top: 8px;">MÍDIAS E LAYOUTS</div><div class="media-grid">${mediaCardsHtml}</div>` : ""}
+    `;
+    document.body.appendChild(measureDiv);
+    const measureHeight = measureDiv.offsetHeight;
+    document.body.removeChild(measureDiv);
 
-    // 5. Aguardar carregamento de fontes e renderização DOM
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
+    const MAX_PAGE_CONTENT_H = 475; // Altura máxima permitida para o conteúdo antes da linha de assinatura
+    const pageHtmlSnippets: string[] = [];
+
+    if (measureHeight <= MAX_PAGE_CONTENT_H) {
+      // Coube em 1 única página
+      pageHtmlSnippets.push(`
+        <img class="timbrado-background" src="${timbradoDataUrl}" />
+        <div class="page-content">
+          ${headerHtml}
+          <div class="section-heading">DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO</div>
+          <div class="text-content-box">${cleanContentHtml}</div>
+          ${
+            layoutDataUrls.length > 0
+              ? `<div class="section-heading" style="margin-top: 8px;">MÍDIAS E LAYOUTS</div><div class="media-grid">${mediaCardsHtml}</div>`
+              : ""
+          }
+        </div>
+        ${signaturesHtml}
+      `);
+    } else {
+      // Divide em páginas
+      // Página 1: Cabeçalho + Texto formatado
+      pageHtmlSnippets.push(`
+        <img class="timbrado-background" src="${timbradoDataUrl}" />
+        <div class="page-content">
+          ${headerHtml}
+          <div class="section-heading">DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO</div>
+          <div class="text-content-box">${cleanContentHtml}</div>
+        </div>
+        ${signaturesHtml}
+      `);
+
+      // Páginas subsequentes: Mídias em pares lado a lado (até 4 por página)
+      if (layoutDataUrls.length > 0) {
+        const chunkSize = 4;
+        for (let i = 0; i < layoutDataUrls.length; i += chunkSize) {
+          const chunkUrls = layoutDataUrls.slice(i, i + chunkSize);
+          const chunkCardsHtml = chunkUrls
+            .map(
+              (src, idx) => `
+              <div class="media-card" style="height: 180px;">
+                <img src="${src}" />
+                <div class="media-badge ${i + idx === 0 ? "first" : ""}">${i + idx + 1}</div>
+              </div>
+            `
+            )
+            .join("");
+
+          pageHtmlSnippets.push(`
+            <img class="timbrado-background" src="${timbradoDataUrl}" />
+            <div class="page-content">
+              <div class="section-heading" style="margin-top: 6px;">MÍDIAS E LAYOUTS (CONTINUAÇÃO)</div>
+              <div class="media-grid">${chunkCardsHtml}</div>
+            </div>
+            ${signaturesHtml}
+          `);
+        }
+      }
     }
-    await new Promise((r) => setTimeout(r, 120));
 
-    // 6. Renderizar Canvas com alta fidelidade (scale: 2.5 para qualidade cristalina de impressão)
-    const canvas = await html2canvas(pageDiv, {
-      scale: 2.5,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-    });
+    // Criar um iframe isolado com folhas de estilo próprias (SEM Tailwind e SEM oklab)
+    iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.left = "-9999px";
+    iframe.style.top = "-9999px";
+    iframe.style.width = "794px";
+    iframe.style.height = "1123px";
+    iframe.style.border = "none";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    document.body.appendChild(iframe);
 
-    // Remover container temporário do DOM
-    document.body.removeChild(hiddenContainer);
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    const iframeWin = iframe.contentWindow;
+    if (!iframeDoc || !iframeWin) {
+      throw new Error("Não foi possível inicializar o motor de renderização da Nota.");
+    }
 
-    // 7. Gerar PDF com jsPDF no padrão A4
+    const fullIframeHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      ${baseCss}
+    </style>
+  </head>
+  <body style="margin: 0; padding: 0; background: #ffffff;">
+    <div id="pages-root">
+      ${pageHtmlSnippets
+        .map(
+          (snippet, idx) => `
+        <div class="page-wrapper" id="pdf-page-${idx}" style="position: relative; width: 794px; height: 1123px; background: #ffffff; overflow: hidden; margin-bottom: 20px;">
+          ${snippet}
+        </div>
+      `
+        )
+        .join("")}
+    </div>
+  </body>
+</html>`;
+
+    iframeDoc.open();
+    iframeDoc.write(fullIframeHtml);
+    iframeDoc.close();
+
+    // Aguardar imagens e renderização no iframe
+    await new Promise((res) => setTimeout(res, 120));
+
+    // Garantir que todas as imagens no iframe foram carregadas
+    const allImages = Array.from(iframeDoc.querySelectorAll("img"));
+    if (allImages.length > 0) {
+      await Promise.all(
+        allImages.map((img) => {
+          if (img.complete) return Promise.resolve(null);
+          return new Promise((resolve) => {
+            img.onload = () => resolve(null);
+            img.onerror = () => resolve(null);
+          });
+        })
+      );
+    }
+
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfW = 210;
     const pdfH = 297;
 
-    const imgData = canvas.toDataURL("image/jpeg", 0.98);
-    const canvasH = (canvas.height * pdfW) / canvas.width;
+    const pageElements = Array.from(iframeDoc.querySelectorAll(".page-wrapper")) as HTMLElement[];
+    for (let pIdx = 0; pIdx < pageElements.length; pIdx++) {
+      const pageEl = pageElements[pIdx];
+      const canvas = await (html2canvas as any)(pageEl, {
+        scale: 2.5,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
+        logging: false,
+        window: iframeWin,
+        document: iframeDoc,
+      });
 
-    if (canvasH <= pdfH + 2) {
-      pdf.addImage(imgData, "JPEG", 0, 0, pdfW, pdfH, undefined, "FAST");
-    } else {
-      // Caso o conteúdo seja extenso e necessite de páginas subsequentes
-      let heightLeft = canvasH;
-      let position = 0;
+      const imgData = canvas.toDataURL("image/jpeg", 0.98);
 
-      pdf.addImage(imgData, "JPEG", 0, position, pdfW, canvasH, undefined, "FAST");
-      heightLeft -= pdfH;
-
-      while (heightLeft > 0) {
-        position = heightLeft - canvasH;
+      if (pIdx > 0) {
         pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, position, pdfW, canvasH, undefined, "FAST");
-        heightLeft -= pdfH;
       }
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfW, pdfH, undefined, "FAST");
     }
 
-    // 8. Fazer download automático
+    // Download do arquivo PDF
     const cleanFileName = sanitizeFilename(note.title || "NOTA");
     pdf.save(`NOTA ${cleanFileName}.pdf`);
   } catch (err: any) {
     console.error("Erro gerando PDF da Nota", err);
     alert("Erro ao gerar PDF: " + (err?.message || "Verifique o timbrado nas configurações."));
+  } finally {
+    if (iframe && iframe.parentNode) {
+      iframe.parentNode.removeChild(iframe);
+    }
   }
 }
 

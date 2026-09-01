@@ -6017,7 +6017,7 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   }
 
   /* Responsive modal overlays allowing smooth vertical drag/scroll */
-  .fixed.inset-0:not(.pointer-events-none) {
+  .fixed.inset-0:not(.pointer-events-none):not(.gm-note-modal-overlay) {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
@@ -6031,11 +6031,22 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     justify-content: center !important;
   }
 
+  .gm-note-modal-overlay {
+    padding: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    z-index: 1000000 !important;
+  }
+
   /* Responsive modals on small screens - centralizados com respiro total em relação ao menu inferior */
-  .fixed.inset-0 > div:not(.absolute):not(.fixed):not(.pointer-events-none),
+  .fixed.inset-0 > div:not(.absolute):not(.fixed):not(.pointer-events-none):not(.gm-note-modal),
   .fixed.inset-0 > form,
   .gm-modal,
-  .gm-note-modal,
   [role="dialog"] {
     max-width: calc(100vw - 24px) !important;
     max-height: calc(100dvh - var(--smartphone-modal-respiro) - 32px) !important;
@@ -6051,12 +6062,24 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     scroll-padding-bottom: 24px !important;
   }
 
+  .gm-note-modal {
+    width: calc(100vw - 20px) !important;
+    max-width: 580px !important;
+    max-height: min(calc(100dvh - 32px), 90dvh) !important;
+    margin: auto !important;
+    border-radius: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    z-index: 1000001 !important;
+  }
+
   /* Smooth scrollable modal content and bottom action clearance */
   .fixed.inset-0 .overflow-y-auto,
   .gm-modal .overflow-y-auto,
   .gm-modal form,
   .gm-modal-body,
-  .gm-note-modal,
   [role="dialog"] .overflow-y-auto {
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
@@ -6858,3 +6881,59 @@ body::before {
 @media (prefers-reduced-transparency: reduce) {
   body::before { display: none !important; }
 }
+
+/* =========================================================
+   SISTEMA UNIVERSAL DE RESPIRO, FOLGA E ESPAÇAMENTO
+   (CONTAINERS DE PÁGINAS, BORDAS LATERAIS, TOP/BOTTOM E MODAIS)
+========================================================= */
+
+/* 1. Folga e Respiro dos Containers Principais de Páginas */
+.gm-container {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 1440px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: clamp(1.25rem, 3.2vw, 3.5rem) !important;
+  padding-right: clamp(1.25rem, 3.2vw, 3.5rem) !important;
+  padding-top: 5.5rem !important; /* Mobile com top bar */
+  padding-bottom: calc(var(--bottom-nav-safe-space, 96px) + 80px) !important;
+}
+
+@media (min-width: 768px) {
+  .gm-container {
+    padding-top: clamp(2rem, 3.5vh, 3.5rem) !important; /* Desktop com respiro superior equilibrado */
+    padding-bottom: clamp(10rem, 16vh, 18rem) !important; /* Respiro inferior amplo para tabelas e cards */
+  }
+}
+
+/* 2. Respiro dos Cabeçalhos e Títulos de Páginas */
+.gm-header {
+  margin-bottom: clamp(1.5rem, 2.5vh, 2.25rem) !important;
+  padding-bottom: 1rem !important;
+}
+
+/* 3. Respiro Universal de Modais e Popups */
+.gm-modal-overlay,
+div[class*="fixed inset-0"][class*="z-"],
+div[class*="fixed inset-0"][class*="backdrop-blur"] {
+  box-sizing: border-box !important;
+  padding: clamp(1rem, 3vw, 2.5rem) !important;
+}
+
+.gm-modal-container,
+.gm-modal,
+[role="dialog"],
+div[class*="fixed inset-0"] > div[class*="rounded-"] {
+  max-height: calc(100dvh - clamp(2rem, 6vh, 5rem)) !important;
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+}
+
+/* 4. Respiro e Margens Internas para Listas e Tabelas */
+.gm-table-container,
+.gm-expenses-table,
+.gm-budget-list {
+  margin-bottom: 2.5rem !important;
+}
+

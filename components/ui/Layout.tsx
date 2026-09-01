@@ -791,7 +791,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         ref={setMainRefs}
         className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden w-full p-0 scroll-smooth"
       >
-        <div className="gm-container w-full max-w-[1440px] mx-auto flex flex-col items-stretch px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 pt-20 md:pt-10 pb-[calc(var(--bottom-nav-safe-space)+80px)] md:pb-44 lg:pb-52 xl:pb-60">
+        <div className="gm-container w-full max-w-[1440px] mx-auto flex flex-col items-stretch px-5 sm:px-8 md:px-10 lg:px-12 xl:px-16 pt-20 md:pt-10 lg:pt-12 pb-[calc(var(--bottom-nav-safe-space)+90px)] md:pb-48 lg:pb-56 xl:pb-64">
           {children}
         </div>
       </main>

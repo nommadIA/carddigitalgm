@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../store/AuthContext";
@@ -52,6 +53,11 @@ import {
   Eye,
   EyeOff,
   Eraser,
+  FileText,
+  SlidersHorizontal,
+  User,
+  Sliders,
+  Sparkles,
 } from "lucide-react";
 import { Note } from "../types";
 import { generateNotePdf } from "../services/pdfService";
@@ -381,6 +387,9 @@ export default function Notes() {
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [highlighterPickerOpen, setHighlighterPickerOpen] = useState(false);
   const [fontSelectorOpen, setFontSelectorOpen] = useState(false);
+
+  // Aba ativa no editor de notas (organização otimizada para smartphones e telas maiores)
+  const [editorTab, setEditorTab] = useState<"note" | "layouts" | "settings">("note");
 
   // Exibidor sutil para a parte debaixo da nota (Data, Horários, Salvar Auto)
   const [bottomDetailsVisible, setBottomDetailsVisible] = useState(false);
@@ -1165,6 +1174,7 @@ export default function Notes() {
     setResponsibleName("");
     setLayoutUrls([]);
     setLayoutUrlInput("");
+    setEditorTab("note");
     setModalOpen(true);
   }
 
@@ -1184,6 +1194,7 @@ export default function Notes() {
     setResponsibleName(note.responsible_name || "");
     setLayoutUrls(parseLayoutUrls(note.layout_url));
     setLayoutUrlInput("");
+    setEditorTab("note");
 
     if (note.reminder_time && note.reminder_time.includes(" ")) {
       const parts = note.reminder_time.split(" ");
@@ -1903,601 +1914,659 @@ export default function Notes() {
       )}
 
       {/* Selection Modal */}
-      <AnimatePresence>
-        {newNoteModalOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setNewNoteModalOpen(false)}
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="gm-card p-6 w-full max-w-xl flex flex-col relative z-10 border-white/10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-white mb-1">
-                    Nova Nota
-                  </h2>
-                  <p className="text-sm text-white/60">
-                    Selecione o tipo de nota que deseja criar.
-                  </p>
-                </div>
-                <button
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {newNoteModalOpen && (
+              <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/75 backdrop-blur-md"
                   onClick={() => setNewNoteModalOpen(false)}
-                  className="p-2 text-white/50 hover:text-white transition-colors"
+                />
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="gm-card p-6 w-full max-w-xl flex flex-col relative z-10 border-white/10 shadow-2xl bg-[#0e1017] text-white"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <X size={24} />
-                </button>
-              </div>
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h2 className="text-xl font-bold text-white mb-1">
+                        Nova Nota
+                      </h2>
+                      <p className="text-sm text-white/60">
+                        Selecione o tipo de nota que deseja criar.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setNewNoteModalOpen(false)}
+                      className="p-2 text-white/50 hover:text-white transition-colors cursor-pointer"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button
-                  onClick={() => openNewNoteModal("note")}
-                  className="flex flex-col items-start gap-4 p-6 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group"
-                >
-                  <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
-                    <Edit2 size={24} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-white mb-1">Nota</h3>
-                    <p className="text-sm text-white/60">
-                      Anotações e lembretes com alarmes gerais.
-                    </p>
-                  </div>
-                </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                      onClick={() => openNewNoteModal("note")}
+                      className="flex flex-col items-start gap-4 p-6 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group cursor-pointer"
+                    >
+                      <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
+                        <Edit2 size={24} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-white mb-1">Nota</h3>
+                        <p className="text-sm text-white/60">
+                          Anotações e lembretes com alarmes gerais.
+                        </p>
+                      </div>
+                    </button>
 
-                <button
-                  onClick={() => openNewNoteModal("production")}
-                  className="flex flex-col items-start gap-4 p-6 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group"
-                >
-                  <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
-                    <Palette size={24} />
+                    <button
+                      onClick={() => openNewNoteModal("production")}
+                      className="flex flex-col items-start gap-4 p-6 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group cursor-pointer"
+                    >
+                      <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
+                        <Palette size={24} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-white mb-1">
+                          Produção
+                        </h3>
+                        <p className="text-sm text-white/60">
+                          Acompanhamento e prazos de produções.
+                        </p>
+                      </div>
+                    </button>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-white mb-1">
-                      Produção
-                    </h3>
-                    <p className="text-sm text-white/60">
-                      Acompanhamento e prazos de produções.
-                    </p>
-                  </div>
-                </button>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
 
       {/* Editor Modal */}
-      <AnimatePresence>
-        {modalOpen && (
-          <div className="fixed inset-0 z-[1000] pointer-events-none">
-            {/* Dark blur backdrop Apple Glass Style */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/75 md:bg-black/65 pointer-events-auto"
-              style={{
-                backdropFilter: "blur(28px) saturate(180%)",
-                WebkitBackdropFilter: "blur(28px) saturate(180%)",
-              }}
-              onClick={() => setModalOpen(false)}
-            />
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {modalOpen && (
+              <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-2.5 md:p-3 md:pl-[calc(var(--gm-sidebar-width,224px)+12px)] overflow-hidden gm-note-modal-overlay">
+                {/* Dark blur backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/80 md:bg-black/70 backdrop-blur-md z-0"
+                  onClick={() => setModalOpen(false)}
+                />
 
-            {/* Modal Centered Container relative to right edge of sidebar menu and right edge of app */}
-            <div className="fixed inset-0 left-0 md:left-[var(--gm-sidebar-width,224px)] flex items-center justify-center p-2 sm:p-3 md:p-4 pointer-events-none">
-              <motion.div
-                initial={{ y: "100%", opacity: 0, scale: 0.95 }}
-                animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: "100%", opacity: 0, scale: 0.95 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className={`relative w-full h-[100dvh] md:h-auto md:w-[94%] md:max-w-6xl md:rounded-2xl flex flex-col overflow-hidden gm-note-modal gm-modal barra fora pointer-events-auto shadow-[0_30px_70px_rgba(0,0,0,0.85)]`}
-                style={{
-                  width: window.innerWidth >= 768 && modalCustomSize.width ? `${modalCustomSize.width}px` : undefined,
-                  height: window.innerWidth >= 768 && modalCustomSize.height ? `${modalCustomSize.height}px` : undefined,
-                  maxWidth: "calc(100vw - var(--gm-sidebar-width, 224px) - 24px)",
-                  maxHeight: window.innerWidth < 768 ? "100dvh" : modalCustomSize.height ? `${modalCustomSize.height}px` : "92vh",
-                  backgroundColor: "rgba(14, 16, 20, 0.95)",
-                  backdropFilter: "blur(32px) saturate(190%)",
-                  WebkitBackdropFilter: "blur(32px) saturate(190%)",
-                  borderColor: "var(--gm-primary, #FF6900)",
-                  borderWidth: window.innerWidth < 768 ? "0px" : "1px",
-                  borderTopWidth: window.innerWidth < 768 ? "2px" : "1px",
-                  borderStyle: "solid",
-                  boxShadow: highlightedId && editingNote && highlightedId === editingNote.id ? "0 0 35px rgba(255, 105, 0, 0.6)" : "0 30px 70px rgba(0, 0, 0, 0.85)",
-                }}
-              >
-              {/* Toast Feedback Flutuante no CENTRO da Nota */}
-              <AnimatePresence>
-                {toastMessage && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.75, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.85, y: -10 }}
-                    transition={{ type: "spring", stiffness: 450, damping: 25 }}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] pointer-events-none"
-                  >
-                    <div 
-                      className="bg-[#0b1b11]/95 text-white font-black text-xs md:text-sm px-7 py-4 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-2xl border-2 border-green-500 flex items-center gap-3 text-center"
-                      style={{
-                        boxShadow: "0 0 45px rgba(34, 197, 94, 0.65), 0 25px 60px rgba(0, 0, 0, 0.95)"
-                      }}
-                    >
-                      <span className="relative flex h-3.5 w-3.5 shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-80" />
-                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-500" />
-                      </span>
-                      <span className="tracking-wide uppercase text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)] font-black text-sm">
-                        {toastMessage}
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                {/* Modal Main Window */}
+                <motion.div
+                  initial={{ y: "100%", opacity: 0, scale: 0.96 }}
+                  animate={{ y: 0, opacity: 1, scale: 1 }}
+                  exit={{ y: "100%", opacity: 0, scale: 0.96 }}
+                  transition={{ type: "spring", damping: 26, stiffness: 320 }}
+                  className={`relative w-full md:w-[94%] md:max-w-6xl rounded-2xl flex flex-col overflow-hidden gm-note-modal shadow-[0_30px_70px_rgba(0,0,0,0.9)] bg-[#0d1017] text-white z-10 m-auto`}
+                  style={{
+                    width: window.innerWidth >= 768 && modalCustomSize.width ? `${modalCustomSize.width}px` : undefined,
+                    height: window.innerWidth >= 768 && modalCustomSize.height ? `${modalCustomSize.height}px` : undefined,
+                    maxWidth: window.innerWidth >= 768 ? "calc(100vw - var(--gm-sidebar-width, 224px) - 24px)" : "calc(100vw - 20px)",
+                    maxHeight: window.innerWidth < 768 ? "min(calc(100dvh - 32px), 90dvh)" : modalCustomSize.height ? `${modalCustomSize.height}px` : "92vh",
+                    backgroundColor: "#0d1017",
+                    borderColor: "var(--gm-primary, #FF6900)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                    boxShadow: highlightedId && editingNote && highlightedId === editingNote.id ? "0 0 35px rgba(255, 105, 0, 0.6)" : "0 30px 70px rgba(0, 0, 0, 0.9)",
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Toast Feedback Flutuante no CENTRO da Nota */}
+                  <AnimatePresence>
+                    {toastMessage && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.75, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.85, y: -10 }}
+                        transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] pointer-events-none"
+                      >
+                        <div 
+                          className="bg-[#0b1b11]/95 text-white font-black text-xs md:text-sm px-7 py-4 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-2xl border-2 border-green-500 flex items-center gap-3 text-center"
+                          style={{
+                            boxShadow: "0 0 45px rgba(34, 197, 94, 0.65), 0 25px 60px rgba(0, 0, 0, 0.95)"
+                          }}
+                        >
+                          <span className="relative flex h-3.5 w-3.5 shrink-0">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-80" />
+                            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-500" />
+                          </span>
+                          <span className="tracking-wide uppercase text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)] font-black text-sm">
+                            {toastMessage}
+                          </span>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-              <div
-                className="p-4 md:px-6 flex items-center justify-between shrink-0 relative z-20"
-                style={{
-                  borderBottom: "1px solid var(--gm-primary, #FF6900)",
-                  backgroundColor: "rgba(255, 105, 0, 0.08)",
-                }}
-              >
-                <div className="flex items-center gap-3 w-full">
-                  <input
-                    type="text"
-                    className="bg-transparent border-none outline-none font-bold text-lg text-white w-full placeholder:text-white/30 pl-5"
-                    placeholder="Título da nota"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleSave(true);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 shrink-0 pl-2">
-                  <button
-                    onClick={() => setIsPinned(!isPinned)}
-                    className="w-10 h-10 flex items-center justify-center rounded-full transition-all"
+                  <div
+                    className="p-3 md:px-6 flex items-center justify-between shrink-0 relative z-20 bg-[#121620]"
                     style={{
-                      backgroundColor: isPinned ? `${color}30` : "transparent",
-                      color: isPinned ? color : "rgba(255, 255, 255, 0.4)",
+                      borderBottom: "1px solid var(--gm-primary, #FF6900)",
                     }}
                   >
-                    <Pin size={18} fill={isPinned ? color : "none"} />
-                  </button>
-                  <button
-                    onClick={() => setModalOpen(false)}
-                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 text-white/40"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Text Formatting Toolbar */}
-              <div
-                className="flex flex-col gap-3 px-4 md:px-6 py-3 bg-black/45 border-b border-white/5 select-none shrink-0"
-                style={{ borderColor: `${color}30` }}
-              >
-                {/* Core Formatting Controls Group */}
-                <div className="flex flex-wrap items-center justify-center gap-2 py-1 relative z-30">
-                  {/* Bold */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyBold();
-                    }}
-                    className="py-1.5 px-3 rounded-lg hover:bg-white/15 text-white font-extrabold text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Negrito"
-                  >
-                    B
-                  </button>
-
-                  {/* Italic */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyItalic();
-                    }}
-                    className="py-1.5 px-3 rounded-lg hover:bg-white/15 text-white italic font-serif text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Itálico"
-                  >
-                    I
-                  </button>
-
-                  {/* Underline */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyUnderline();
-                    }}
-                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Sublinhar"
-                  >
-                    <Underline size={15} />
-                  </button>
-
-                  {/* Strikethrough */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyStrikeThrough();
-                    }}
-                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Tachado"
-                  >
-                    <Strikethrough size={15} />
-                  </button>
-
-                  {/* Cores do Texto Dropdown com Seta de Expansão (10 Cores) */}
-                  <div className="relative shrink-0">
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setColorPickerOpen(!colorPickerOpen);
-                        setHighlighterPickerOpen(false);
-                        setFontSelectorOpen(false);
-                      }}
-                      className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px] cursor-pointer"
-                      title="Cor do Texto"
-                    >
-                      <Palette size={15} className="text-white/70" />
-                      <span
-                        className="w-3.5 h-3.5 rounded-full border border-white/30"
-                        style={{ backgroundColor: selectedTextColor }}
-                      />
-                      <ChevronDown size={11} className="text-white/40" />
-                    </button>
-
-                    {colorPickerOpen && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-[9990]"
-                          onMouseDown={(e) => {
+                    <div className="flex items-center gap-3 w-full">
+                      <input
+                        type="text"
+                        className="bg-transparent border-none outline-none font-bold text-base md:text-lg text-white w-full placeholder:text-white/40 pl-3 md:pl-5"
+                        placeholder="Título da nota"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
                             e.preventDefault();
-                            e.stopPropagation();
-                            setColorPickerOpen(false);
-                          }}
-                        />
-                        <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2.5 rounded-2xl flex flex-col gap-2 shadow-2xl z-[9995] backdrop-blur-md min-w-[210px]">
-                          <div className="flex items-center justify-between px-1 text-[9px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/5 pb-1">
-                            <span>Cor do Texto</span>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setSelectedTextColor("#ffffff");
-                                applyStyleToSelection({ color: "#ffffff" });
-                                setColorPickerOpen(false);
-                              }}
-                              className="text-[10px] font-bold text-white/50 hover:text-white flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded hover:bg-white/10 cursor-pointer"
-                              title="Redefinir para Branco"
-                            >
-                              <span>Padrão</span>
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-5 gap-2 p-1">
-                            {TEXT_COLORS.map((col) => {
-                              const isActive = selectedTextColor === col.hex;
-                              return (
-                                <button
-                                  key={col.hex}
-                                  type="button"
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setSelectedTextColor(col.hex);
-                                    applyStyleToSelection({ color: col.hex });
-                                    setColorPickerOpen(false);
-                                  }}
-                                  className={`w-7 h-7 rounded-full border transition-all duration-200 shrink-0 flex items-center justify-center cursor-pointer ${
-                                    isActive
-                                      ? "opacity-100 scale-110 shadow-lg ring-2 ring-white/60 border-white/90"
-                                      : "opacity-40 hover:opacity-100 hover:scale-105 border-white/10 hover:border-white/40"
-                                  }`}
-                                  style={{
-                                    backgroundColor: col.hex,
-                                  }}
-                                  title={col.label}
-                                >
-                                  {isActive && (
-                                    <Check
-                                      size={12}
-                                      className={col.hex === "#ffffff" ? "text-black stroke-[3]" : "text-white stroke-[3]"}
-                                    />
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </>
-                    )}
+                            handleSave(true);
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 pl-2">
+                      <button
+                        onClick={() => setIsPinned(!isPinned)}
+                        className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-all cursor-pointer"
+                        style={{
+                          backgroundColor: isPinned ? `${color}30` : "rgba(255, 255, 255, 0.06)",
+                          color: isPinned ? color : "rgba(255, 255, 255, 0.6)",
+                        }}
+                        title={isPinned ? "Desafixar nota" : "Fixar nota no topo"}
+                      >
+                        <Pin size={18} fill={isPinned ? color : "none"} />
+                      </button>
+                      <button
+                        onClick={() => setModalOpen(false)}
+                        className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+                        title="Fechar nota"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Font Gallery Dropdown */}
-                  <div className="relative shrink-0">
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setFontSelectorOpen(!fontSelectorOpen);
-                        setColorPickerOpen(false);
-                      }}
-                      className="py-1.5 px-3.5 rounded-lg hover:bg-white/15 text-white text-[12px] transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-bold flex items-center justify-center gap-1.5 min-h-[38px]"
-                      title="Galeria de Fontes"
-                    >
-                      <Type size={13} className="text-white/60" />
-                      <span>Fontes</span>
-                      <ChevronDown size={12} className="text-white/40" />
-                    </button>
+                  {/* Navegação Superior por Abas (Otimizado para Smartphone e Telas Maiores) */}
+                  <div className="flex items-center justify-between gap-1 p-2 md:px-5 bg-[#0a0d14] border-b border-white/10 select-none shrink-0 z-20">
+                    <div className="grid grid-cols-3 gap-1.5 w-full">
+                      {/* Aba 1: Nota & Texto */}
+                      <button
+                        type="button"
+                        onClick={() => setEditorTab("note")}
+                        className={`py-2 px-2 md:px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                          editorTab === "note"
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 scale-[1.01]"
+                            : "bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <FileText size={14} className="shrink-0" />
+                        <span className="truncate">Nota</span>
+                      </button>
 
-                    {fontSelectorOpen && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-[9990]"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setFontSelectorOpen(false);
-                          }}
-                        />
-                        <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-0.5 shadow-lg z-[9995] backdrop-blur-md min-w-[200px] max-h-[280px] overflow-y-auto scrollbar-hide">
-                          <div className="px-2.5 py-1.5 text-[9px] font-extrabold uppercase tracking-widest text-white/40 border-b border-white/5 mb-1.5">
-                            Selecione a Fonte
-                          </div>
-                          {[
-                            { name: "Inter", value: "Inter, sans-serif", label: "Inter (Padrão)" },
-                            { name: "Plus Jakarta Sans", value: "'Plus Jakarta Sans', sans-serif", label: "Plus Jakarta" },
-                            { name: "Montserrat", value: "Montserrat, sans-serif", label: "Montserrat" },
-                            { name: "Raleway", value: "Raleway, sans-serif", label: "Raleway" },
-                            { name: "Playfair Display", value: "'Playfair Display', serif", label: "Playfair (Serif)" },
-                            { name: "Hubot Sans", value: "'Hubot Sans', sans-serif", label: "Hubot Sans" },
-                            { name: "Funnel Display", value: "'Funnel Display', sans-serif", label: "Funnel Display" },
-                            { name: "Open Sans", value: "'Open Sans', sans-serif", label: "Open Sans" },
-                            { name: "Roboto", value: "Roboto, sans-serif", label: "Roboto" },
-                            { name: "Fira Code", value: "'Fira Code', monospace", label: "Fira Code (Mono)" },
-                          ].map((f) => (
-                            <button
-                              key={f.name}
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                applyStyleToSelection({ "font-family": f.value });
-                                setFontSelectorOpen(false);
-                              }}
-                              className="text-left w-full px-3 py-2 rounded-lg text-[13px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                              style={{ fontFamily: f.value }}
-                            >
-                              {f.label}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
+                      {/* Aba 2: Layouts & Fotos */}
+                      <button
+                        type="button"
+                        onClick={() => setEditorTab("layouts")}
+                        className={`py-2 px-2 md:px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                          editorTab === "layouts"
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 scale-[1.01]"
+                            : "bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <ImageIcon size={14} className="shrink-0" />
+                        <span className="truncate">Layouts</span>
+                        {layoutUrls.length > 0 && (
+                          <span
+                            className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
+                              editorTab === "layouts"
+                                ? "bg-black/40 text-white"
+                                : "bg-white/20 text-white"
+                            }`}
+                          >
+                            {layoutUrls.length}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* Aba 3: Configurações & Prazos */}
+                      <button
+                        type="button"
+                        onClick={() => setEditorTab("settings")}
+                        className={`py-2 px-2 md:px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                          editorTab === "settings"
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 scale-[1.01]"
+                            : "bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10"
+                        }`}
+                      >
+                        <Sliders size={14} className="shrink-0" />
+                        <span className="truncate">Configurações</span>
+                        {(deliveryDate || [reminderTime, reminderTime2, reminderTime3].some(Boolean)) && (
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Size Cycle */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      cycleFontSize();
-                    }}
-                    className="py-1.5 px-3.5 rounded-lg hover:bg-white/15 text-white text-[11px] transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold flex items-center justify-center gap-1.5 min-h-[38px]"
-                    title="Tamanho da Fonte"
-                  >
-                    <span className="text-white/60 text-[11px] font-bold">Aa</span>
-                    <span className="font-extrabold text-[10px] bg-white/10 px-1.5 py-0.5 rounded uppercase text-white">
-                      {fontSizeMode === "P"
-                        ? "Peq"
-                        : fontSizeMode === "M"
-                          ? "Méd"
-                          : "Grd"}
-                    </span>
-                  </button>
-
-                  <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
-
-                  {/* Align Left */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyAlign("left");
-                    }}
-                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Alinhar à Esquerda"
-                  >
-                    <AlignLeft size={15} />
-                  </button>
-
-                  {/* Align Center */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyAlign("center");
-                    }}
-                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Centralizar"
-                  >
-                    <AlignCenter size={15} />
-                  </button>
-
-                  {/* Align Right */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyAlign("right");
-                    }}
-                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Alinhar à Direita"
-                  >
-                    <AlignRight size={15} />
-                  </button>
-
-                  {/* Align Justify */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyAlign("justify");
-                    }}
-                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Justificar"
-                  >
-                    <AlignJustify size={15} />
-                  </button>
-
-                  <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
-
-                  {/* Bullet List */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyList("bullet");
-                    }}
-                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Lista de Marcadores"
-                  >
-                    <List size={15} />
-                  </button>
-
-                  {/* Numbered List */}
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      applyList("ordered");
-                    }}
-                    className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
-                    title="Lista Numerada"
-                  >
-                    <ListOrdered size={15} />
-                  </button>
-
-                  <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
-
-                  {/* Highlighter Text Option Dropdown com Seta de Expansão (10 Cores + Opção Inteligente de Remoção) */}
-                  <div className="relative shrink-0">
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setHighlighterPickerOpen(!highlighterPickerOpen);
-                        setColorPickerOpen(false);
-                        setFontSelectorOpen(false);
-                      }}
-                      className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px] cursor-pointer"
-                      title="Marcador de Texto"
+                  {/* Text Formatting Toolbar (Visível na aba de Nota) */}
+                  {editorTab === "note" && (
+                    <div
+                      className="flex flex-col gap-2 px-2 md:px-5 py-2 bg-[#090b10] border-b border-white/10 select-none shrink-0"
+                      style={{ borderColor: `${color}30` }}
                     >
-                      <Highlighter size={15} className="text-white/70" />
-                      <span
-                        className="w-3.5 h-3.5 rounded-full border border-white/30"
-                        style={{ backgroundColor: selectedHighlightColor || "transparent" }}
-                      />
-                      <ChevronDown size={11} className="text-white/40" />
-                    </button>
-
-                    {highlighterPickerOpen && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-[9990]"
+                      {/* Core Formatting Controls Group */}
+                      <div className="flex items-center overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap justify-start md:justify-center gap-1.5 md:gap-2 py-0.5 relative z-30 touch-pan-x">
+                        {/* Bold */}
+                        <button
+                          type="button"
                           onMouseDown={(e) => {
                             e.preventDefault();
-                            e.stopPropagation();
-                            setHighlighterPickerOpen(false);
+                            applyBold();
                           }}
-                        />
-                        <div className="absolute top-11 right-0 sm:left-0 sm:right-auto bg-[#141821]/95 border border-white/10 p-2.5 rounded-2xl flex flex-col gap-2 shadow-2xl z-[9995] backdrop-blur-md min-w-[210px]">
-                          <div className="flex items-center justify-between px-1 text-[9px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/5 pb-1">
-                            <span>Marcador de Texto</span>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setSelectedHighlightColor("");
-                                removeHighlight();
-                                setHighlighterPickerOpen(false);
-                              }}
-                              className="text-[10px] font-bold text-red-400/80 hover:text-red-300 flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded hover:bg-red-500/15 cursor-pointer"
-                              title="Remover marcação do texto selecionado"
-                            >
-                              <Eraser size={11} />
-                              <span>Limpar</span>
-                            </button>
-                          </div>
+                          className="py-1.5 px-3 rounded-lg hover:bg-white/15 text-white font-extrabold text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Negrito"
+                        >
+                          B
+                        </button>
 
-                          {/* Grid com as 10 Cores do Marcador */}
-                          <div className="grid grid-cols-5 gap-2 p-1">
-                            {HIGHLIGHT_COLORS.map((col) => {
-                              const isActive = selectedHighlightColor === col.hex;
-                              return (
-                                <button
-                                  key={col.hex}
-                                  type="button"
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (isActive) {
-                                      // Toggle inteligente: clicar na cor ativa remove o marcador
+                        {/* Italic */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyItalic();
+                          }}
+                          className="py-1.5 px-3 rounded-lg hover:bg-white/15 text-white italic font-serif text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Itálico"
+                        >
+                          I
+                        </button>
+
+                        {/* Underline */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyUnderline();
+                          }}
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Sublinhar"
+                        >
+                          <Underline size={15} />
+                        </button>
+
+                        {/* Strikethrough */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyStrikeThrough();
+                          }}
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Tachado"
+                        >
+                          <Strikethrough size={15} />
+                        </button>
+
+                        {/* Cores do Texto Dropdown (10 Cores) */}
+                        <div className="relative shrink-0">
+                          <button
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setColorPickerOpen(!colorPickerOpen);
+                              setHighlighterPickerOpen(false);
+                              setFontSelectorOpen(false);
+                            }}
+                            className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px] cursor-pointer"
+                            title="Cor do Texto"
+                          >
+                            <Palette size={15} className="text-white/70" />
+                            <span
+                              className="w-3.5 h-3.5 rounded-full border border-white/30"
+                              style={{ backgroundColor: selectedTextColor }}
+                            />
+                            <ChevronDown size={11} className="text-white/40" />
+                          </button>
+
+                          {colorPickerOpen && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-[9990]"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setColorPickerOpen(false);
+                                }}
+                              />
+                              <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2.5 rounded-2xl flex flex-col gap-2 shadow-2xl z-[9995] backdrop-blur-md min-w-[210px]">
+                                <div className="flex items-center justify-between px-1 text-[9px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/5 pb-1">
+                                  <span>Cor do Texto</span>
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setSelectedTextColor("#ffffff");
+                                      applyStyleToSelection({ color: "#ffffff" });
+                                      setColorPickerOpen(false);
+                                    }}
+                                    className="text-[10px] font-bold text-white/50 hover:text-white flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded hover:bg-white/10 cursor-pointer"
+                                    title="Redefinir para Branco"
+                                  >
+                                    <span>Padrão</span>
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-5 gap-2 p-1">
+                                  {TEXT_COLORS.map((col) => {
+                                    const isActive = selectedTextColor === col.hex;
+                                    return (
+                                      <button
+                                        key={col.hex}
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setSelectedTextColor(col.hex);
+                                          applyStyleToSelection({ color: col.hex });
+                                          setColorPickerOpen(false);
+                                        }}
+                                        className={`w-7 h-7 rounded-full border transition-all duration-200 shrink-0 flex items-center justify-center cursor-pointer ${
+                                          isActive
+                                            ? "opacity-100 scale-110 shadow-lg ring-2 ring-white/60 border-white/90"
+                                            : "opacity-40 hover:opacity-100 hover:scale-105 border-white/10 hover:border-white/40"
+                                        }`}
+                                        style={{
+                                          backgroundColor: col.hex,
+                                        }}
+                                        title={col.label}
+                                      >
+                                        {isActive && (
+                                          <Check
+                                            size={12}
+                                            className={col.hex === "#ffffff" ? "text-black stroke-[3]" : "text-white stroke-[3]"}
+                                          />
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Font Gallery Dropdown */}
+                        <div className="relative shrink-0">
+                          <button
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setFontSelectorOpen(!fontSelectorOpen);
+                              setColorPickerOpen(false);
+                            }}
+                            className="py-1.5 px-3.5 rounded-lg hover:bg-white/15 text-white text-[12px] transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-bold flex items-center justify-center gap-1.5 min-h-[38px]"
+                            title="Galeria de Fontes"
+                          >
+                            <Type size={13} className="text-white/60" />
+                            <span>Fontes</span>
+                            <ChevronDown size={12} className="text-white/40" />
+                          </button>
+
+                          {fontSelectorOpen && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-[9990]"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setFontSelectorOpen(false);
+                                }}
+                              />
+                              <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-0.5 shadow-lg z-[9995] backdrop-blur-md min-w-[200px] max-h-[280px] overflow-y-auto scrollbar-hide">
+                                <div className="px-2.5 py-1.5 text-[9px] font-extrabold uppercase tracking-widest text-white/40 border-b border-white/5 mb-1.5">
+                                  Selecione a Fonte
+                                </div>
+                                {[
+                                  { name: "Inter", value: "Inter, sans-serif", label: "Inter (Padrão)" },
+                                  { name: "Plus Jakarta Sans", value: "'Plus Jakarta Sans', sans-serif", label: "Plus Jakarta" },
+                                  { name: "Montserrat", value: "Montserrat, sans-serif", label: "Montserrat" },
+                                  { name: "Raleway", value: "Raleway, sans-serif", label: "Raleway" },
+                                  { name: "Playfair Display", value: "'Playfair Display', serif", label: "Playfair (Serif)" },
+                                  { name: "Hubot Sans", value: "'Hubot Sans', sans-serif", label: "Hubot Sans" },
+                                  { name: "Funnel Display", value: "'Funnel Display', sans-serif", label: "Funnel Display" },
+                                  { name: "Open Sans", value: "'Open Sans', sans-serif", label: "Open Sans" },
+                                  { name: "Roboto", value: "Roboto, sans-serif", label: "Roboto" },
+                                  { name: "Fira Code", value: "'Fira Code', monospace", label: "Fira Code (Mono)" },
+                                ].map((f) => (
+                                  <button
+                                    key={f.name}
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      applyStyleToSelection({ "font-family": f.value });
+                                      setFontSelectorOpen(false);
+                                    }}
+                                    className="text-left w-full px-3 py-2 rounded-lg text-[13px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                                    style={{ fontFamily: f.value }}
+                                  >
+                                    {f.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Size Cycle */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            cycleFontSize();
+                          }}
+                          className="py-1.5 px-3.5 rounded-lg hover:bg-white/15 text-white text-[11px] transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold flex items-center justify-center gap-1.5 min-h-[38px]"
+                          title="Tamanho da Fonte"
+                        >
+                          <span className="text-white/60 text-[11px] font-bold">Aa</span>
+                          <span className="font-extrabold text-[10px] bg-white/10 px-1.5 py-0.5 rounded uppercase text-white">
+                            {fontSizeMode === "P"
+                              ? "Peq"
+                              : fontSizeMode === "M"
+                                ? "Méd"
+                                : "Grd"}
+                          </span>
+                        </button>
+
+                        <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
+
+                        {/* Align Left */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyAlign("left");
+                          }}
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Alinhar à Esquerda"
+                        >
+                          <AlignLeft size={15} />
+                        </button>
+
+                        {/* Align Center */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyAlign("center");
+                          }}
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Centralizar"
+                        >
+                          <AlignCenter size={15} />
+                        </button>
+
+                        {/* Align Right */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyAlign("right");
+                          }}
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Alinhar à Direita"
+                        >
+                          <AlignRight size={15} />
+                        </button>
+
+                        {/* Align Justify */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyAlign("justify");
+                          }}
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Justificar"
+                        >
+                          <AlignJustify size={15} />
+                        </button>
+
+                        <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
+
+                        {/* Bullet List */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyList("bullet");
+                          }}
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Lista de Marcadores"
+                        >
+                          <List size={15} />
+                        </button>
+
+                        {/* Numbered List */}
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyList("ordered");
+                          }}
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          title="Lista Numerada"
+                        >
+                          <ListOrdered size={15} />
+                        </button>
+
+                        <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
+
+                        {/* Highlighter */}
+                        <div className="relative shrink-0">
+                          <button
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setHighlighterPickerOpen(!highlighterPickerOpen);
+                              setColorPickerOpen(false);
+                              setFontSelectorOpen(false);
+                            }}
+                            className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px] cursor-pointer"
+                            title="Marcador de Texto"
+                          >
+                            <Highlighter size={15} className="text-white/70" />
+                            <span
+                              className="w-3.5 h-3.5 rounded-full border border-white/30"
+                              style={{ backgroundColor: selectedHighlightColor || "transparent" }}
+                            />
+                            <ChevronDown size={11} className="text-white/40" />
+                          </button>
+
+                          {highlighterPickerOpen && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-[9990]"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setHighlighterPickerOpen(false);
+                                }}
+                              />
+                              <div className="absolute top-11 right-0 sm:left-0 sm:right-auto bg-[#141821]/95 border border-white/10 p-2.5 rounded-2xl flex flex-col gap-2 shadow-2xl z-[9995] backdrop-blur-md min-w-[210px]">
+                                <div className="flex items-center justify-between px-1 text-[9px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/5 pb-1">
+                                  <span>Marcador de Texto</span>
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
                                       setSelectedHighlightColor("");
                                       removeHighlight();
-                                    } else {
-                                      setSelectedHighlightColor(col.hex);
-                                      applyHighlight(col.hex);
-                                    }
-                                    setHighlighterPickerOpen(false);
-                                  }}
-                                  className={`w-7 h-7 rounded-full border transition-all duration-200 shrink-0 flex items-center justify-center cursor-pointer ${
-                                    isActive
-                                      ? "opacity-100 scale-110 shadow-lg ring-2 ring-white/60 border-white/90"
-                                      : "opacity-40 hover:opacity-100 hover:scale-105 border-white/10 hover:border-white/40"
-                                  }`}
-                                  style={{
-                                    backgroundColor: col.hex,
-                                  }}
-                                  title={col.label}
-                                >
-                                  {isActive && (
-                                    <Check size={12} className="text-black stroke-[3]" />
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
+                                      setHighlighterPickerOpen(false);
+                                    }}
+                                    className="text-[10px] font-bold text-red-400/80 hover:text-red-300 flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded hover:bg-red-500/15 cursor-pointer"
+                                    title="Remover marcação do texto selecionado"
+                                  >
+                                    <Eraser size={11} />
+                                    <span>Limpar</span>
+                                  </button>
+                                </div>
+
+                                {/* Grid com as 10 Cores do Marcador */}
+                                <div className="grid grid-cols-5 gap-2 p-1">
+                                  {HIGHLIGHT_COLORS.map((col) => {
+                                    const isActive = selectedHighlightColor === col.hex;
+                                    return (
+                                      <button
+                                        key={col.hex}
+                                        type="button"
+                                        onMouseDown={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          if (isActive) {
+                                            setSelectedHighlightColor("");
+                                            removeHighlight();
+                                          } else {
+                                            setSelectedHighlightColor(col.hex);
+                                            applyHighlight(col.hex);
+                                          }
+                                          setHighlighterPickerOpen(false);
+                                        }}
+                                        className={`w-7 h-7 rounded-full border transition-all duration-200 shrink-0 flex items-center justify-center cursor-pointer ${
+                                          isActive
+                                            ? "opacity-100 scale-110 shadow-lg ring-2 ring-white/60 border-white/90"
+                                            : "opacity-40 hover:opacity-100 hover:scale-105 border-white/10 hover:border-white/40"
+                                        }`}
+                                        style={{
+                                          backgroundColor: col.hex,
+                                        }}
+                                        title={col.label}
+                                      >
+                                        {isActive && (
+                                          <Check size={12} className="text-black stroke-[3]" />
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
-                      </>
-                    )}
-                  </div>
-
-
-                </div>
-
-                {/* Formatar Texto Opções Extra */}
-              </div>
+                      </div>
+                    </div>
+                  )}
 
               {/* Scrollable Area */}
               <div
@@ -3197,10 +3266,9 @@ export default function Notes() {
 
               {/* Action Bar com Exibidor Sutil de Detalhes Inferiores (DATA, HORÁRIOS, SALVAR AUTO) e Botões Fixos */}
               <div
-                className="p-3.5 pb-28 md:pb-4 md:p-4 flex flex-col gap-2.5 shrink-0 relative z-20"
+                className="p-3 md:p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2.5 shrink-0 relative z-20 bg-[#0d1017]"
                 style={{
                   borderTop: `1px solid ${color}40`,
-                  backgroundColor: "rgba(0,0,0,0.65)",
                 }}
               >
                 {/* Cabeçalho de Configurações de Data, Hora e Salvar Auto com Botão de Olho no Lado Direito */}
@@ -3311,13 +3379,13 @@ export default function Notes() {
                               {/* Modal de Horários / Alertas Apple Style - Renderizado fora do corte de overflow */}
                               <AnimatePresence>
                                 {clocksExpanded && (
-                                  <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 pointer-events-auto">
+                                  <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 overflow-hidden pointer-events-auto">
                                     {/* Backdrop transparente/desfocado para fechar ao clicar fora */}
                                     <motion.div
                                       initial={{ opacity: 0 }}
                                       animate={{ opacity: 1 }}
                                       exit={{ opacity: 0 }}
-                                      className="fixed inset-0 bg-black/70 backdrop-blur-md"
+                                      className="absolute inset-0 bg-black/70 backdrop-blur-md z-0"
                                       onClick={() => setClocksExpanded(false)}
                                     />
 
@@ -3669,338 +3737,355 @@ export default function Notes() {
               />
             </motion.div>
           </div>
-        </div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>,
+      document.body
+    )}
 
       {/* Lightbox / Visualizador de Imagem com Zoom e Detalhes estilo Apple */}
-      <AnimatePresence>
-        {zoomImage && (
-          <div
-            className="fixed inset-0 z-[3000] flex flex-col items-center justify-between p-4 md:p-6 select-none animate-fadeIn"
-            style={{
-              backgroundColor: "rgba(0, 0, 0, 0.85)",
-              backdropFilter: "blur(36px) saturate(200%)",
-              WebkitBackdropFilter: "blur(36px) saturate(200%)",
-            }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setZoomImage(null);
-                setZoomScale(1);
-              }
-            }}
-          >
-            {/* Barra Superior do Visualizador de Zoom */}
-            <div className="w-full max-w-4xl flex items-center justify-between gap-4 bg-zinc-900/90 border border-white/15 px-4 py-2.5 rounded-2xl backdrop-blur-md shadow-2xl z-20">
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] font-black tracking-widest uppercase px-3 py-1 rounded-lg bg-[var(--gm-primary,#FF6900)] text-white shadow-md">
-                  LAYOUT {zoomImage.index + 1} DE {layoutUrls.length}
-                </span>
-                <span className="text-xs font-bold text-white/70 hidden sm:inline-block">
-                  Zoom: {Math.round(zoomScale * 100)}%
-                </span>
-              </div>
-
-              {/* Controles de Zoom */}
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <button
-                  type="button"
-                  onClick={() => setZoomScale((s) => Math.max(0.5, +(s - 0.25).toFixed(2)))}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
-                  title="Diminuir Zoom (-)"
-                >
-                  <ZoomOut size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setZoomScale(1)}
-                  className="px-2.5 py-1 text-xs font-bold rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
-                  title="Ajustar ao tamanho padrão (100%)"
-                >
-                  100%
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setZoomScale((s) => Math.min(4, +(s + 0.25).toFixed(2)))}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
-                  title="Aumentar Zoom (+)"
-                >
-                  <ZoomIn size={16} />
-                </button>
-                <a
-                  href={zoomImage.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all ml-1"
-                  title="Abrir imagem original em nova aba"
-                >
-                  <Maximize2 size={16} />
-                </a>
-                <button
-                  type="button"
-                  onClick={() => {
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {zoomImage && (
+              <div
+                className="fixed inset-0 z-[9999999] flex flex-col items-center justify-between p-4 md:p-6 select-none animate-fadeIn"
+                style={{
+                  backgroundColor: "rgba(0, 0, 0, 0.88)",
+                  backdropFilter: "blur(36px) saturate(200%)",
+                  WebkitBackdropFilter: "blur(36px) saturate(200%)",
+                }}
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) {
                     setZoomImage(null);
                     setZoomScale(1);
-                  }}
-                  className="p-2 rounded-xl bg-red-600/90 hover:bg-red-500 text-white transition-all ml-2 cursor-pointer shadow-lg active:scale-95"
-                  title="Fechar visualizador (ESC)"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
+                  }
+                }}
+              >
+                {/* Barra Superior do Visualizador de Zoom */}
+                <div className="w-full max-w-4xl flex items-center justify-between gap-4 bg-zinc-900/90 border border-white/15 px-4 py-2.5 rounded-2xl backdrop-blur-md shadow-2xl z-20">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-black tracking-widest uppercase px-3 py-1 rounded-lg bg-[var(--gm-primary,#FF6900)] text-white shadow-md">
+                      LAYOUT {zoomImage.index + 1} DE {layoutUrls.length}
+                    </span>
+                    <span className="text-xs font-bold text-white/70 hidden sm:inline-block">
+                      Zoom: {Math.round(zoomScale * 100)}%
+                    </span>
+                  </div>
 
-            {/* Container Central com a Imagem em Alta Resolução */}
-            <div className="flex-1 w-full max-w-6xl flex items-center justify-center relative overflow-hidden py-4">
-              {/* Botão Anterior se houver múltiplos layouts */}
-              {layoutUrls.length > 1 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const prevIdx = (zoomImage.index - 1 + layoutUrls.length) % layoutUrls.length;
-                    setZoomImage({ url: layoutUrls[prevIdx], index: prevIdx });
-                    setZoomScale(1);
-                  }}
-                  className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
-                  title="Layout Anterior (Seta Esquerda ←)"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-              )}
-
-              {/* Imagem Ampliada com Transform Zoom */}
-              <div className="relative max-w-full max-h-full overflow-auto flex items-center justify-center p-2 custom-scroll">
-                <motion.img
-                  key={zoomImage.url}
-                  src={zoomImage.url}
-                  alt={`Layout Ampliado ${zoomImage.index + 1}`}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: zoomScale }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="max-w-[90vw] max-h-[75vh] object-contain rounded-xl shadow-2xl cursor-zoom-in transition-transform duration-200"
-                  onClick={() => setZoomScale((s) => (s >= 2 ? 1 : +(s + 0.5).toFixed(2)))}
-                />
-              </div>
-
-              {/* Botão Próximo se houver múltiplos layouts */}
-              {layoutUrls.length > 1 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const nextIdx = (zoomImage.index + 1) % layoutUrls.length;
-                    setZoomImage({ url: layoutUrls[nextIdx], index: nextIdx });
-                    setZoomScale(1);
-                  }}
-                  className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
-                  title="Próximo Layout (Seta Direita →)"
-                >
-                  <ChevronRight size={24} />
-                </button>
-              )}
-            </div>
-
-            {/* Rodapé do Visualizador com Dicas de Navegação */}
-            <div className="w-full max-w-md flex items-center justify-center text-center text-white/50 text-[11px] font-semibold py-1.5 px-4 bg-zinc-900/70 border border-white/10 rounded-full backdrop-blur-sm z-20">
-              <span>Navegue com <span className="text-white/80 font-bold">←</span> <span className="text-white/80 font-bold">→</span> • Zoom <span className="text-white/80 font-bold">+</span> / <span className="text-white/80 font-bold">-</span> • <span className="text-white/80 font-bold">ESC</span> para fechar</span>
-            </div>
-          </div>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {deleteConfirmId && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setDeleteConfirmId(null)}
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="gm-modal border border-red-500/20 rounded-lg p-6 relative w-full max-w-md shadow-lg"
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
-                  <AlertTriangle className="text-red-500" size={24} />
+                  {/* Controles de Zoom */}
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setZoomScale((s) => Math.max(0.5, +(s - 0.25).toFixed(2)))}
+                      className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
+                      title="Diminuir Zoom (-)"
+                    >
+                      <ZoomOut size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setZoomScale(1)}
+                      className="px-2.5 py-1 text-xs font-bold rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
+                      title="Ajustar ao tamanho padrão (100%)"
+                    >
+                      100%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setZoomScale((s) => Math.min(4, +(s + 0.25).toFixed(2)))}
+                      className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
+                      title="Aumentar Zoom (+)"
+                    >
+                      <ZoomIn size={16} />
+                    </button>
+                    <a
+                      href={zoomImage.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all ml-1"
+                      title="Abrir imagem original em nova aba"
+                    >
+                      <Maximize2 size={16} />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setZoomImage(null);
+                        setZoomScale(1);
+                      }}
+                      className="p-2 rounded-xl bg-red-600/90 hover:bg-red-500 text-white transition-all ml-2 cursor-pointer shadow-lg active:scale-95"
+                      title="Fechar visualizador (ESC)"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">
-                    Excluir Definitivamente?
-                  </h3>
-                  <p className="text-white/60 text-sm mt-1">
-                    Esta ação não pode ser desfeita. A nota será removida
-                    permanentemente do sistema.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => setDeleteConfirmId(null)}
-                  className="flex-1 px-4 py-3 rounded-xl font-medium text-white/70 hover:bg-white/5 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleHardDeleteConfirm}
-                  className="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
-                >
-                  Excluir
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {noteShareData && (
-          <div
-            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-            onClick={() => setNoteShareData(null)}
-          >
-            <div
-              className="gm-card w-full max-w-md rounded-lg overflow-hidden shadow-lg relative z-10 !border-white/10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
-                <h3 className="text-lg font-bold text-white">
-                  Compartilhar Nota
-                </h3>
-                <button
-                  onClick={() => setNoteShareData(null)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white"
-                >
-                  <X size={20} />
-                </button>
-              </div>
 
-              <div className="p-6 space-y-3">
-                <button
-                  onClick={() => {
-                    const cleanMessage = htmlToPlainFormatedText(
-                      noteShareData.message,
-                    );
-                    openWhatsapp("", cleanMessage);
-                    setNoteShareData(null);
-                  }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
-                >
-                  <div className="shrink-0">
-                    <WhatsAppIcon
-                      size={24}
-                      className="text-[var(--gm-primary)]"
+                {/* Container Central com a Imagem em Alta Resolução */}
+                <div className="flex-1 w-full max-w-6xl flex items-center justify-center relative overflow-hidden py-4">
+                  {/* Botão Anterior se houver múltiplos layouts */}
+                  {layoutUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const prevIdx = (zoomImage.index - 1 + layoutUrls.length) % layoutUrls.length;
+                        setZoomImage({ url: layoutUrls[prevIdx], index: prevIdx });
+                        setZoomScale(1);
+                      }}
+                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
+                      title="Layout Anterior (Seta Esquerda ←)"
+                    >
+                      <ChevronLeft size={24} />
+                    </button>
+                  )}
+
+                  {/* Imagem Ampliada com Transform Zoom */}
+                  <div className="relative max-w-full max-h-full overflow-auto flex items-center justify-center p-2 custom-scroll">
+                    <motion.img
+                      key={zoomImage.url}
+                      src={zoomImage.url}
+                      alt={`Layout Ampliado ${zoomImage.index + 1}`}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: zoomScale }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="max-w-[90vw] max-h-[75vh] object-contain rounded-xl shadow-2xl cursor-zoom-in transition-transform duration-200"
+                      onClick={() => setZoomScale((s) => (s >= 2 ? 1 : +(s + 0.5).toFixed(2)))}
                     />
                   </div>
-                  <div className="text-left">
-                    <p className="font-bold text-[var(--gm-primary)] leading-tight animate-pulse hover:animate-none">
-                      WhatsApp
-                    </p>
-                    <p className="text-[10px] text-white/60 leading-tight mt-0.5">
-                      Enviar diretamente para um contato
-                    </p>
-                  </div>
-                </button>
 
-                <button
-                  onClick={() => {
-                    const cleanMessage = htmlToPlainFormatedText(
-                      noteShareData.message,
-                    );
-                    const subject = encodeURIComponent(
-                      noteShareData.note.title || "Nota",
-                    );
-                    window.open(
-                      `mailto:?subject=${subject}&body=${encodeURIComponent(cleanMessage)}`,
-                      "_blank",
-                    );
-                    setNoteShareData(null);
-                  }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+                  {/* Botão Próximo se houver múltiplos layouts */}
+                  {layoutUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const nextIdx = (zoomImage.index + 1) % layoutUrls.length;
+                        setZoomImage({ url: layoutUrls[nextIdx], index: nextIdx });
+                        setZoomScale(1);
+                      }}
+                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
+                      title="Próximo Layout (Seta Direita →)"
+                    >
+                      <ChevronRight size={24} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Rodapé do Visualizador com Dicas de Navegação */}
+                <div className="w-full max-w-md flex items-center justify-center text-center text-white/50 text-[11px] font-semibold py-1.5 px-4 bg-zinc-900/70 border border-white/10 rounded-full backdrop-blur-sm z-20">
+                  <span>Navegue com <span className="text-white/80 font-bold">←</span> <span className="text-white/80 font-bold">→</span> • Zoom <span className="text-white/80 font-bold">+</span> / <span className="text-white/80 font-bold">-</span> • <span className="text-white/80 font-bold">ESC</span> para fechar</span>
+                </div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+
+      {/* Delete Confirmation Modal */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {deleteConfirmId && (
+              <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+                  onClick={() => setDeleteConfirmId(null)}
+                />
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="gm-modal border border-red-500/20 rounded-2xl p-6 relative w-full max-w-md shadow-2xl bg-[#0e1017] text-white"
                 >
-                  <div className="shrink-0">
-                    <Mail size={24} className="text-[var(--gm-primary)]" />
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="text-red-500" size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">
+                        Excluir Definitivamente?
+                      </h3>
+                      <p className="text-white/60 text-sm mt-1">
+                        Esta ação não pode ser desfeita. A nota será removida
+                        permanentemente do sistema.
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <p className="font-bold text-[var(--gm-primary)] leading-tight">
-                      E-mail
-                    </p>
-                    <p className="text-[10px] text-white/60 leading-tight mt-0.5">
-                      Enviar por correio eletrônico
-                    </p>
+                  <div className="flex gap-3 mt-6">
+                    <button
+                      onClick={() => setDeleteConfirmId(null)}
+                      className="flex-1 px-4 py-3 rounded-xl font-medium text-white/70 hover:bg-white/5 transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleHardDeleteConfirm}
+                      className="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20 cursor-pointer"
+                    >
+                      Excluir
+                    </button>
                   </div>
-                </button>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
-                <button
-                  onClick={async () => {
-                    try {
-                      const cleanMessage = htmlToPlainFormatedText(
-                        noteShareData.message,
-                      );
-                      await navigator.clipboard.writeText(cleanMessage);
-                      alert("Texto copiado para a área de transferência!");
-                      setNoteShareData(null);
-                    } catch (err) {
-                      alert("Erro ao copiar texto.");
-                    }
-                  }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+      {/* Share Modal */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {noteShareData && (
+              <div
+                className="fixed inset-0 z-[9999999] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+                onClick={() => setNoteShareData(null)}
+              >
+                <div
+                  className="gm-card w-full max-w-md rounded-2xl overflow-hidden shadow-2xl relative z-10 border border-white/10 bg-[#0e1017]"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="shrink-0">
-                    <Copy size={24} className="text-[var(--gm-primary)]" />
+                  <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+                    <h3 className="text-lg font-bold text-white">
+                      Compartilhar Nota
+                    </h3>
+                    <button
+                      onClick={() => setNoteShareData(null)}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white cursor-pointer"
+                    >
+                      <X size={20} />
+                    </button>
                   </div>
-                  <div className="text-left">
-                    <p className="font-bold text-[var(--gm-primary)] leading-tight">
-                      Copiar Texto
-                    </p>
-                    <p className="text-[10px] text-white/60 leading-tight mt-0.5">
-                      Copiar para colar em outro lugar
-                    </p>
-                  </div>
-                </button>
 
-                {navigator.share && (
-                  <button
-                    onClick={async () => {
-                      try {
+                  <div className="p-6 space-y-3">
+                    <button
+                      onClick={() => {
                         const cleanMessage = htmlToPlainFormatedText(
                           noteShareData.message,
                         );
-                        await navigator.share({
-                          title: noteShareData.note.title || "Nota",
-                          text: cleanMessage,
-                        });
+                        openWhatsapp("", cleanMessage);
                         setNoteShareData(null);
-                      } catch (err) {
-                        if ((err as Error).name !== "AbortError") {
-                          alert("Erro ao compartilhar.");
+                      }}
+                      className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+                    >
+                      <div className="shrink-0">
+                        <WhatsAppIcon
+                          size={24}
+                          className="text-[var(--gm-primary)]"
+                        />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-[var(--gm-primary)] leading-tight animate-pulse hover:animate-none">
+                          WhatsApp
+                        </p>
+                        <p className="text-[10px] text-white/60 leading-tight mt-0.5">
+                          Enviar diretamente para um contato
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const cleanMessage = htmlToPlainFormatedText(
+                          noteShareData.message,
+                        );
+                        const subject = encodeURIComponent(
+                          noteShareData.note.title || "Nota",
+                        );
+                        window.open(
+                          `mailto:?subject=${subject}&body=${encodeURIComponent(cleanMessage)}`,
+                          "_blank",
+                        );
+                        setNoteShareData(null);
+                      }}
+                      className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+                    >
+                      <div className="shrink-0">
+                        <Mail size={24} className="text-[var(--gm-primary)]" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-[var(--gm-primary)] leading-tight">
+                          E-mail
+                        </p>
+                        <p className="text-[10px] text-white/60 leading-tight mt-0.5">
+                          Enviar por correio eletrônico
+                        </p>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        try {
+                          const cleanMessage = htmlToPlainFormatedText(
+                            noteShareData.message,
+                          );
+                          await navigator.clipboard.writeText(cleanMessage);
+                          alert("Texto copiado para a área de transferência!");
+                          setNoteShareData(null);
+                        } catch (err) {
+                          alert("Erro ao copiar texto.");
                         }
-                      }
-                    }}
-                    className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
-                  >
-                    <div className="shrink-0">
-                      <Share2 size={24} className="text-[var(--gm-primary)]" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-bold text-[var(--gm-primary)] leading-tight">
-                        Mais Opções
-                      </p>
-                      <p className="text-[10px] text-white/60 leading-tight mt-0.5">
-                        Menu de compartilhamento do sistema
-                      </p>
-                    </div>
-                  </button>
-                )}
+                      }}
+                      className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+                    >
+                      <div className="shrink-0">
+                        <Copy size={24} className="text-[var(--gm-primary)]" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-[var(--gm-primary)] leading-tight">
+                          Copiar Texto
+                        </p>
+                        <p className="text-[10px] text-white/60 leading-tight mt-0.5">
+                          Copiar para colar em outro lugar
+                        </p>
+                      </div>
+                    </button>
+
+                    {navigator.share && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const cleanMessage = htmlToPlainFormatedText(
+                              noteShareData.message,
+                            );
+                            await navigator.share({
+                              title: noteShareData.note.title || "Nota",
+                              text: cleanMessage,
+                            });
+                            setNoteShareData(null);
+                          } catch (err) {
+                            if ((err as Error).name !== "AbortError") {
+                              alert("Erro ao compartilhar.");
+                            }
+                          }
+                        }}
+                        className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+                      >
+                        <div className="shrink-0">
+                          <Share2 size={24} className="text-[var(--gm-primary)]" />
+                        </div>
+                        <div className="text-left">
+                          <p className="font-bold text-[var(--gm-primary)] leading-tight">
+                            Mais Opções
+                          </p>
+                          <p className="text-[10px] text-white/60 leading-tight mt-0.5">
+                            Menu de compartilhamento do sistema
+                          </p>
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </Page>
   );
 }

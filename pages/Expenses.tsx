@@ -39,6 +39,21 @@ const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 
+const MONTHS_LIST = [
+  { value: "01", name: "Janeiro", short: "Jan" },
+  { value: "02", name: "Fevereiro", short: "Fev" },
+  { value: "03", name: "Março", short: "Mar" },
+  { value: "04", name: "Abril", short: "Abr" },
+  { value: "05", name: "Maio", short: "Mai" },
+  { value: "06", name: "Junho", short: "Jun" },
+  { value: "07", name: "Julho", short: "Jul" },
+  { value: "08", name: "Agosto", short: "Ago" },
+  { value: "09", name: "Setembro", short: "Set" },
+  { value: "10", name: "Outubro", short: "Out" },
+  { value: "11", name: "Novembro", short: "Nov" },
+  { value: "12", name: "Dezembro", short: "Dez" },
+];
+
 type ExpenseRow = {
   id: string;
   description: string;
@@ -94,6 +109,13 @@ export default function Expenses() {
   const [month, setMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  // Modal Seletor de Mês de Referência
+  const [showMonthModal, setShowMonthModal] = useState(false);
+  const [pickerYear, setPickerYear] = useState(() => {
+    const d = new Date();
+    return d.getFullYear();
   });
 
   const [tab, setTab] = useState<"active" | "recurring" | "trash">("active");
@@ -629,103 +651,131 @@ export default function Expenses() {
       </AnimatePresence>
 
       {/* TOP CONTROL CONTAINER: MÊS DE REFERÊNCIA / STATUS / ATUALIZAR / ABAS */}
-      <div className="gm-card fora p-4 sm:p-6 rounded-2xl border border-white/10 shadow-none mb-6">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+      <div 
+        id="expenses-top-controls"
+        className="w-full rounded-2xl md:rounded-3xl border border-white/15 bg-[#121216]/90 backdrop-blur-md shadow-2xl mb-8 p-6 sm:p-7 md:p-8 flex flex-col gap-6 !overflow-visible"
+        style={{ minHeight: "auto", height: "auto" }}
+      >
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5">
           {/* Mês Selector com Setas de Navegação - Alinhado, Centralizado e Legível */}
-          <div className="flex items-center gap-2 justify-center sm:justify-start w-full sm:w-auto">
+          <div className="flex items-center gap-2.5 sm:gap-3 justify-center sm:justify-start w-full sm:w-auto flex-wrap sm:flex-nowrap">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/40 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
+              className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl bg-black/60 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-md hover:border-orange-500/40"
               title="Mês anterior"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={22} />
             </button>
 
-            <div className="relative flex items-center justify-center gap-3 bg-black/40 border border-white/10 hover:border-orange-500/50 px-4 py-2.5 rounded-xl flex-1 sm:flex-initial min-w-[210px] transition-all cursor-pointer shadow-sm">
-              <Calendar size={20} className="text-orange-400 shrink-0" />
-              <div className="flex flex-col items-center sm:items-start text-center sm:text-left select-none">
-                <span className="text-[10px] uppercase tracking-widest text-white/50 font-black">Mês de Referência</span>
-                <span className="text-sm sm:text-base font-black text-white capitalize leading-tight">
-                  {monthFormatted}
-                </span>
+            {/* Botão Principal do Mês de Referência que abre o Modal Dedicado */}
+            <button
+              type="button"
+              onClick={() => {
+                const [yearStr] = month.split("-");
+                setPickerYear(Number(yearStr) || new Date().getFullYear());
+                setShowMonthModal(true);
+              }}
+              className="flex items-center justify-between gap-3 sm:gap-4 bg-black/70 hover:bg-black/90 border border-white/20 hover:border-orange-500/70 px-4 sm:px-5 py-3 rounded-2xl flex-1 sm:flex-initial min-w-[240px] sm:min-w-[270px] min-h-[52px] transition-all cursor-pointer shadow-lg group active:scale-98"
+              title="Clique para abrir o seletor de mês e ano"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400 group-hover:scale-105 group-hover:bg-orange-500/25 transition-all shrink-0 shadow-sm">
+                  <Calendar size={20} />
+                </div>
+                <div className="flex flex-col items-start text-left select-none">
+                  <span className="text-[11px] uppercase tracking-wider text-orange-400 font-extrabold flex items-center gap-1 leading-none mb-1">
+                    Mês de Referência
+                  </span>
+                  <span className="text-sm sm:text-base font-black text-white capitalize leading-tight">
+                    {monthFormatted}
+                  </span>
+                </div>
               </div>
-              <input
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                type="month"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                title="Clique para selecionar o mês"
-              />
-            </div>
+              <ChevronDown size={20} className="text-white/50 group-hover:text-orange-400 group-hover:translate-y-0.5 transition-all shrink-0 ml-1" />
+            </button>
 
             <button
               type="button"
               onClick={handleNextMonth}
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-black/40 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
+              className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl bg-black/60 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-md hover:border-orange-500/40"
               title="Próximo mês"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={22} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const d = new Date();
+                const currentMonthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                setMonth(currentMonthKey);
+                showToast("Mês atual selecionado!");
+              }}
+              className="hidden sm:flex h-13 min-h-[52px] px-4 sm:px-5 rounded-2xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 text-xs font-black uppercase tracking-wider transition-all items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-md active:scale-95"
+              title="Ir para o mês atual"
+            >
+              Hoje
             </button>
           </div>
 
           {/* Workflow Tabs: Todas do Mês / Recorrentes / Lixeira */}
-          <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 p-1.5 rounded-xl bg-black/40 border border-white/10 shadow-none w-full sm:w-auto">
+          <div className="grid grid-cols-3 sm:flex sm:items-center gap-2 p-1.5 sm:p-2 rounded-2xl bg-black/50 border border-white/15 shadow-md w-full sm:w-auto min-h-[52px]">
             <button
-              className={`h-11 px-3 sm:px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 tab === "active"
-                  ? "bg-white/15 text-white font-black border border-white/20 shadow-sm"
+                  ? "bg-white/15 text-white font-black border border-white/25 shadow-md"
                   : "text-slate-400 hover:text-white"
               }`}
               onClick={() => setTab("active")}
             >
-              <ListFilter size={14} className="shrink-0" />
+              <ListFilter size={16} className="shrink-0 text-orange-400" />
               <span className="truncate">Todas do Mês</span>
             </button>
             <button
-              className={`h-11 px-3 sm:px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 tab === "recurring"
-                  ? "bg-orange-500/20 text-orange-400 font-black border border-orange-500/30 shadow-sm"
+                  ? "bg-orange-500/20 text-orange-400 font-black border border-orange-500/40 shadow-md"
                   : "text-slate-400 hover:text-white"
               }`}
               onClick={() => setTab("recurring")}
             >
-              <Repeat size={14} className="shrink-0" />
+              <Repeat size={16} className="shrink-0 text-orange-400" />
               <span className="truncate">Recorrentes</span>
             </button>
             <button
-              className={`h-11 px-3 sm:px-4 rounded-lg text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${
+              className={`h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 cursor-pointer border ${
                 tab === "trash"
-                  ? "bg-red-500/20 border-red-500/40 text-red-400"
+                  ? "bg-red-500/20 border-red-500/40 text-red-400 shadow-md"
                   : "bg-transparent border-transparent text-slate-400 hover:text-red-400"
               }`}
               onClick={() => setTab("trash")}
             >
-              <Trash2 size={14} className="shrink-0" />
+              <Trash2 size={16} className="shrink-0" />
               <span className="truncate">Lixeira</span>
             </button>
           </div>
         </div>
 
         {/* Status Containers (Pago / Pendente / Total / Atualizar) */}
-        <div className="mt-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between border-t border-white/5 pt-4">
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 items-center">
+        <div className="flex flex-col sm:flex-row gap-3.5 items-stretch sm:items-center justify-between border-t border-white/10 pt-5">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 items-center">
             {/* PAGO Container */}
-            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-extrabold text-xs sm:text-sm shadow-sm justify-center sm:justify-start min-h-[44px]">
+            <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-extrabold text-xs sm:text-sm shadow-sm justify-center sm:justify-start min-h-[50px]">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <span>PAGO:</span>
               <span className="font-mono text-sm sm:text-base font-black">{CURRENCY_FORMATTER.format(totalPago)}</span>
             </div>
 
             {/* PENDENTE Container */}
-            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-extrabold text-xs sm:text-sm shadow-sm justify-center sm:justify-start min-h-[44px]">
+            <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 font-extrabold text-xs sm:text-sm shadow-sm justify-center sm:justify-start min-h-[50px]">
               <div className="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse shrink-0" />
               <span>PENDENTE:</span>
               <span className="font-mono text-sm sm:text-base font-black">{CURRENCY_FORMATTER.format(totalPendente)}</span>
             </div>
 
             {/* TOTAL GERAL */}
-            <div className="col-span-2 sm:col-span-1 flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/80 text-xs font-bold justify-center sm:justify-start min-h-[44px]">
+            <div className="col-span-2 sm:col-span-1 flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-2xl bg-white/5 border border-white/15 text-white/90 text-xs sm:text-sm font-bold justify-center sm:justify-start min-h-[50px]">
               <span className="font-black uppercase tracking-wider text-white/50">TOTAL:</span>
               <span className="font-mono text-white font-black text-sm sm:text-base">{CURRENCY_FORMATTER.format(totalGeral)}</span>
             </div>
@@ -733,11 +783,11 @@ export default function Expenses() {
 
           <button
             type="button"
-            className="h-11 px-5 rounded-xl bg-white/5 hover:bg-white/10 text-white/90 hover:text-white border border-white/10 text-xs font-black transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 cursor-pointer shrink-0"
+            className="h-12 sm:h-13 min-h-[50px] px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white/90 hover:text-white border border-white/15 text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 cursor-pointer shrink-0 hover:border-orange-500/40"
             onClick={() => loadExpenses()}
             title="Recarregar despesas"
           >
-            <RotateCcw size={15} className="text-orange-400" />
+            <RotateCcw size={16} className="text-orange-400" />
             <span>Atualizar</span>
           </button>
         </div>
@@ -1431,6 +1481,148 @@ export default function Expenses() {
                     className="gm-btn flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black bg-red-600 hover:bg-red-500 text-white shadow-none"
                   >
                     Excluir
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL SELETOR DE MÊS DE REFERÊNCIA */}
+      <AnimatePresence>
+        {showMonthModal && (
+          <div
+            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 backdrop-blur-md overflow-y-auto"
+            onClick={() => setShowMonthModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="w-full max-w-lg rounded-3xl border border-white/20 overflow-hidden shadow-2xl relative z-10 p-0 my-auto bg-[#14151a]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header do Modal */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#101114]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                    <Calendar size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white">Mês de Referência</h3>
+                    <p className="text-xs text-white/60 font-medium">
+                      Selecione o mês e o ano para filtrar suas despesas
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowMonthModal(false)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Fechar"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6 sm:p-7 space-y-6">
+                {/* Seletor de Ano */}
+                <div className="flex items-center justify-between bg-black/50 border border-white/15 rounded-2xl p-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setPickerYear((y) => y - 1)}
+                    className="w-11 h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
+                    title="Ano anterior"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl sm:text-3xl font-black text-white tracking-wider font-mono">
+                      {pickerYear}
+                    </span>
+                    {pickerYear === new Date().getFullYear() && (
+                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-orange-500/20 text-orange-400 border border-orange-500/40 tracking-wider">
+                        Ano Atual
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPickerYear((y) => y + 1)}
+                    className="w-11 h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
+                    title="Próximo ano"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+
+                {/* Grade de 12 Meses */}
+                <div className="grid grid-cols-3 gap-3">
+                  {MONTHS_LIST.map((mItem) => {
+                    const itemMonthKey = `${pickerYear}-${mItem.value}`;
+                    const isSelected = month === itemMonthKey;
+                    const todayDate = new Date();
+                    const realCurrentKey = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, "0")}`;
+                    const isCurrentRealMonth = realCurrentKey === itemMonthKey;
+
+                    return (
+                      <button
+                        key={mItem.value}
+                        type="button"
+                        onClick={() => {
+                          setMonth(itemMonthKey);
+                          setShowMonthModal(false);
+                          showToast(`Mês alterado para ${mItem.name} de ${pickerYear}`);
+                        }}
+                        className={`relative p-3.5 sm:p-4 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px] sm:min-h-[72px] active:scale-95 ${
+                          isSelected
+                            ? "bg-orange-500/25 border-orange-500 text-white font-black shadow-lg shadow-orange-500/20 scale-[1.02]"
+                            : "bg-black/40 border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 font-bold"
+                        }`}
+                      >
+                        <span className={`text-[11px] uppercase font-mono tracking-wider ${isSelected ? "text-orange-400 font-black" : "text-white/50"}`}>
+                          {mItem.value} • {mItem.short}
+                        </span>
+                        <span className="text-xs sm:text-sm font-black truncate max-w-full leading-tight">
+                          {mItem.name}
+                        </span>
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-orange-500 shadow-sm" />
+                        )}
+                        {isCurrentRealMonth && !isSelected && (
+                          <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400" title="Mês atual do calendário" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Botões Rápidos no Rodapé do Modal */}
+                <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const now = new Date();
+                      const currentM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+                      setPickerYear(now.getFullYear());
+                      setMonth(currentM);
+                      setShowMonthModal(false);
+                      showToast("Mês atual selecionado!");
+                    }}
+                    className="h-11 px-4 sm:px-5 rounded-xl bg-white/5 hover:bg-white/15 text-white/90 hover:text-white border border-white/15 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+                  >
+                    <Clock size={15} className="text-emerald-400" />
+                    <span>Ir para Mês Atual</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowMonthModal(false)}
+                    className="h-11 px-6 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white text-xs font-black transition-all cursor-pointer active:scale-95 shadow-md uppercase tracking-wider"
+                  >
+                    Fechar
                   </button>
                 </div>
               </div>
