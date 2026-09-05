@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../store/AuthContext";
 import { Client } from "../../types";
+import { X, User, Phone, Mail, FileText, MapPin } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -61,142 +62,6 @@ function formatWhatsappBR(v: string) {
 function formatPhoneBR(v: string) {
   return formatWhatsappBR(v);
 }
-const overlay: React.CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  zIndex: 9999,
-  background: "rgba(0, 0, 0, 0.6)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "12px",
-  backdropFilter: "blur(20px) saturate(180%)",
-  WebkitBackdropFilter: "blur(20px) saturate(180%)",
-};
-
-const modal: React.CSSProperties = {
-  width: 840,
-  maxWidth: "100%",
-  maxHeight: "92vh",
-  display: "flex",
-  flexDirection: "column",
-  borderRadius: 20,
-  background: "rgba(18, 18, 22, 0.6)",
-  backdropFilter: "blur(20px) saturate(180%)",
-  WebkitBackdropFilter: "blur(20px) saturate(180%)",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
-  boxShadow: "none",
-  overflow: "hidden",
-  color: "#FFFFFF",
-};
-
-const leftAccent: React.CSSProperties = {
-  width: 4,
-  background: "linear-gradient(180deg, #FF7A2A, #FF5B00)",
-  flexShrink: 0,
-};
-
-const header: React.CSSProperties = {
-  padding: "20px 24px 16px 24px",
-  display: "flex",
-  alignItems: "flex-start",
-  justifyContent: "space-between",
-  gap: 12,
-  borderBottom: "1px solid rgba(255, 255, 255, 0.10)",
-};
-
-const title: React.CSSProperties = {
-  fontWeight: 800,
-  fontSize: 22,
-  color: "#FFFFFF",
-  letterSpacing: "-0.02em",
-  lineHeight: 1.25,
-};
-
-const subtitle: React.CSSProperties = {
-  marginTop: 6,
-  fontSize: 15,
-  color: "#cbd5e1",
-  fontWeight: 500,
-  lineHeight: 1.4,
-};
-
-const closeBtn: React.CSSProperties = {
-  borderRadius: 10,
-  padding: "8px 14px",
-  background: "rgba(255, 255, 255, 0.06)",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
-  color: "#B6BCC7",
-  fontWeight: 600,
-  fontSize: 13,
-  cursor: "pointer",
-  boxShadow: "none",
-  transition: "all 0.15s ease",
-};
-
-const label: React.CSSProperties = {
-  color: "#B6BCC7",
-  fontSize: 11,
-  fontWeight: 700,
-  marginBottom: 6,
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-};
-
-const input: React.CSSProperties = {
-  width: "100%",
-  borderRadius: 12,
-  padding: "12px 16px",
-  background: "rgba(0, 0, 0, 0.35)",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
-  color: "#FFFFFF",
-  outline: "none",
-  fontSize: 14,
-  fontWeight: 400,
-  boxShadow: "none",
-  transition: "border-color 0.2s ease",
-};
-
-const hint: React.CSSProperties = {
-  marginTop: 6,
-  fontSize: 11,
-  color: "#7B8592",
-  fontWeight: 400,
-};
-
-const footer: React.CSSProperties = {
-  marginTop: 24,
-  display: "flex",
-  justifyContent: "flex-end",
-  alignItems: "center",
-  gap: 12,
-  paddingTop: 16,
-  borderTop: "1px solid rgba(255, 255, 255, 0.10)",
-};
-
-const btnGhost: React.CSSProperties = {
-  borderRadius: 12,
-  padding: "12px 20px",
-  fontWeight: 700,
-  background: "rgba(255, 255, 255, 0.06)",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
-  color: "#FFFFFF",
-  fontSize: 13,
-  cursor: "pointer",
-  boxShadow: "none",
-};
-
-const btnPrimary: React.CSSProperties = {
-  borderRadius: 12,
-  padding: "12px 24px",
-  fontWeight: 700,
-  background: "linear-gradient(180deg, #FF7A2A, #FF5B00)",
-  border: "none",
-  color: "#FFFFFF",
-  fontSize: 13,
-  cursor: "pointer",
-  boxShadow: "none",
-};
 
 export default function NewClientModal({ open, onClose, onSuccess, clientToEdit }: Props) {
   const { tenantId } = useAuth();
@@ -212,15 +77,14 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
 
   useEffect(() => {
     if (!open) return;
-    setSaving(false);
-    
+
     if (clientToEdit) {
       setName(clientToEdit.name || "");
       setWhatsapp(formatWhatsappBR(clientToEdit.whatsapp || ""));
       setPhone(formatPhoneBR(clientToEdit.phone || ""));
       setEmail(clientToEdit.email || "");
-      setCpfCnpj(clientToEdit.cpf_cnpj || "");
-      setAddress(clientToEdit.address || "");
+      setCpfCnpj((clientToEdit as any).cpf_cnpj || "");
+      setAddress((clientToEdit as any).address || "");
     } else {
       setName("");
       setWhatsapp("");
@@ -233,7 +97,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
 
   const canSave = useMemo(() => {
     const okName = name.trim().length >= 2;
-    const okWpp = onlyDigits(whatsapp).length >= 10; // 10 ou 11
+    const okWpp = onlyDigits(whatsapp).length >= 10;
     return !!tenantId && okName && okWpp && !saving;
   }, [tenantId, name, whatsapp, saving]);
 
@@ -244,7 +108,6 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
 
     setSaving(true);
     try {
-      // ✅ payload “seguro” + auto-strip se colunas não existirem
       const payload: any = {
         tenant_id: tenantId,
         name: name.trim(),
@@ -278,131 +141,156 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
   if (!open) return null;
 
   return createPortal(
-    <div style={overlay} onClick={onClose}>
-      <div style={{ display: "flex", width: "100%", maxWidth: modal.width as any }} onClick={(e) => e.stopPropagation()}>
-        <div style={leftAccent} />
-        <div className="gm-card fora" style={modal}>
-          <div className="barra" style={header}>
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-md p-4 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div 
+        className="fora w-full max-w-2xl lg:max-w-3xl rounded-2xl border border-white/15 overflow-hidden shadow-none relative z-10 p-0 my-auto bg-white/[0.02] backdrop-blur-md flex flex-col max-h-[92vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header com estilo frosted glass */}
+        <div className="barra px-6 py-5 border-b border-white/10 flex items-start justify-between gap-4 bg-white/[0.02] backdrop-blur-md shrink-0">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight flex items-center gap-2.5">
+              <User className="text-[var(--gm-primary)] shrink-0" size={22} />
+              {clientToEdit ? "Editar Cliente" : "Novo Cliente"}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1 leading-relaxed">
+              {clientToEdit ? "Atualize os dados do cliente abaixo" : "Cadastro rápido • WhatsApp obrigatório com DDD"}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="fora rounded-xl p-2.5 text-slate-400 hover:text-white border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md transition-all shrink-0 cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+            title="Fechar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Formulário com scroll inteligente e estilo glassmorphism nos campos */}
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <div style={title}>{clientToEdit ? "Editar Cliente" : "Novo Cliente"}</div>
-              <div style={subtitle}>
-                {clientToEdit ? "Atualize os dados abaixo" : "Cadastro rápido • WhatsApp obrigatório • Estilo “glass” premium"}
-              </div>
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <User size={13} className="text-[var(--gm-primary)]" />
+                Nome <span className="text-[var(--gm-primary)]">*</span>
+              </label>
+              <input
+                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: João Silva ou Empresa LTDA"
+              />
             </div>
 
+            <div>
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Phone size={13} className="text-[var(--gm-primary)]" />
+                WhatsApp (obrigatório) <span className="text-[var(--gm-primary)]">*</span>
+              </label>
+              <input
+                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(formatWhatsappBR(e.target.value))}
+                placeholder="(98) 9xxxx-xxxx"
+                inputMode="tel"
+              />
+              <div className="mt-1.5 text-[11px] text-slate-400 font-normal">DDD + número com 9 dígitos. Ex: (98) 98888-7777</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Phone size={13} className="text-slate-400" />
+                Telefone fixo / recado (opcional)
+              </label>
+              <input
+                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                value={phone}
+                onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+                placeholder="(98) xxxx-xxxx"
+                inputMode="tel"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Mail size={13} className="text-slate-400" />
+                E-mail (opcional)
+              </label>
+              <input
+                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="cliente@exemplo.com"
+                inputMode="email"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <FileText size={13} className="text-slate-400" />
+                CPF / CNPJ (opcional)
+              </label>
+              <input
+                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                value={cpfCnpj}
+                onChange={(e) => setCpfCnpj(e.target.value)}
+                placeholder="000.000.000-00 ou 00.000.000/0001-00"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <MapPin size={13} className="text-slate-400" />
+                Endereço completo (opcional)
+              </label>
+              <input
+                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Rua, número, bairro, cidade - UF"
+              />
+            </div>
+          </div>
+
+          {/* Rodapé do modal */}
+          <div className="barra pt-4 mt-6 border-t border-white/10 flex items-center justify-end gap-3 bg-transparent">
             <button
               type="button"
-              style={closeBtn}
+              className="fora rounded-xl px-5 py-2.5 text-xs font-bold text-slate-300 hover:text-white border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md transition-all cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onClose();
               }}
             >
-              Fechar
+              Cancelar
             </button>
-          </div>
 
-          <div className="p-4 sm:p-6 pb-32 sm:pb-6 overflow-y-auto flex-1 max-h-[calc(92vh-90px)]">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div style={label}>Nome</div>
-                <input
-                  style={input}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ex: João Silva / Empresa X"
-                />
-              </div>
-
-              <div>
-                <div style={label}>WhatsApp (obrigatório)</div>
-                <input
-                  style={input}
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(formatWhatsappBR(e.target.value))}
-                  placeholder="(98) 9xxxx-xxxx"
-                  inputMode="tel"
-                />
-                <div style={hint}>Dica: só números com DDD. (98) 9xxxx-xxxx</div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
-                <div style={label}>Telefone (opcional)</div>
-                <input
-                  style={input}
-                  value={phone}
-                  onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
-                  placeholder="(98) xxxx-xxxx"
-                  inputMode="tel"
-                />
-              </div>
-
-              <div>
-                <div style={label}>E-mail (opcional)</div>
-                <input
-                  style={input}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ex: atendimento@empresa.com"
-                  inputMode="email"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
-                <div style={label}>CPF/CNPJ (opcional)</div>
-                <input
-                  style={input}
-                  value={cpfCnpj}
-                  onChange={(e) => setCpfCnpj(e.target.value)}
-                  placeholder="Somente se quiser"
-                />
-              </div>
-
-              <div>
-                <div style={label}>Endereço (opcional)</div>
-                <input
-                  style={input}
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Rua, nº, bairro, cidade - UF"
-                />
-              </div>
-            </div>
-
-            <div style={footer}>
-              <button
-                type="button"
-                style={btnGhost}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onClose();
-                }}
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                style={{ ...btnPrimary, opacity: canSave ? 1 : 0.65, cursor: canSave ? "pointer" : "not-allowed" }}
-                disabled={!canSave}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleSave();
-                }}
-              >
-                {saving ? "Salvando..." : "Salvar"}
-              </button>
-            </div>
-
-            {/* Espaço vazio garantido no final para visualização limpa do background */}
-            <div className="w-full h-24 sm:h-8 pointer-events-none select-none" aria-hidden="true" />
+            <button
+              type="button"
+              className="rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white bg-[var(--gm-primary)] hover:opacity-90 transition-all shadow-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              disabled={!canSave}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSave();
+              }}
+            >
+              {saving ? "Salvando..." : (clientToEdit ? "Atualizar Cliente" : "Salvar Cliente")}
+            </button>
           </div>
         </div>
       </div>

@@ -15,16 +15,18 @@ firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
+const OFFICIAL_APP_FAVICON = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.png";
+
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   const title = payload.notification?.title || "CardDigital GM";
   const body = payload.notification?.body || "Nova notificação recebida";
-  const icon = payload.notification?.icon || "/logo.png";
+  const icon = payload.notification?.icon || OFFICIAL_APP_FAVICON;
 
   const notificationOptions = {
     body: body,
     icon: icon,
-    badge: icon,
+    badge: OFFICIAL_APP_FAVICON,
     data: payload.data,
     vibrate: [200, 100, 200]
   };

@@ -97,42 +97,60 @@ async function fetchBytesStrict(url: string) {
   return { bytes, contentType: (res.headers.get("content-type") || "").toLowerCase() };
 }
 
-/* ✅ OTIMIZADO: Extrai o path relativo do Storage */
-function tryExtractSupabaseStoragePath(url: string, bucket: string): string | null {
-  if (!url) return null;
-  // Exemplo: https://.../storage/v1/object/public/timbrados/tenant_id/file.png
-  const parts = url.split(`/public/${bucket}/`);
-  if (parts.length > 1) return parts[1];
-  
-  const signParts = url.split(`/authenticated/${bucket}/`);
-  if (signParts.length > 1) return signParts[1];
-  
+function parseSupabaseStorageUrl(url: string): { bucket: string; path: string } | null {
+  if (!url || typeof url !== "string") return null;
+  const match = url.match(/\/storage\/v1\/object\/(?:public|authenticated|sign)\/([^/?#]+)\/([^?#]+)/i);
+  if (match) {
+    return {
+      bucket: decodeURIComponent(match[1]),
+      path: decodeURIComponent(match[2]),
+    };
+  }
   return null;
 }
 
-/* ✅ OTIMIZADO: Retorna os bytes diretamente para evitar múltiplos fetches */
+/* ✅ OTIMIZADO: Extrai o path relativo do Storage para qualquer bucket */
+function tryExtractSupabaseStoragePath(url: string, bucket: string): string | null {
+  if (!url) return null;
+  const parsed = parseSupabaseStorageUrl(url);
+  if (parsed && parsed.bucket.toLowerCase() === bucket.toLowerCase()) return parsed.path;
+  const parts = url.split(new RegExp(`/public/${bucket}/`, "i"));
+  if (parts.length > 1) return parts[1].split("?")[0];
+  const signParts = url.split(new RegExp(`/authenticated/${bucket}/`, "i"));
+  if (signParts.length > 1) return signParts[1].split("?")[0];
+  return null;
+}
+
+/* ✅ OTIMIZADO: Retorna os bytes diretamente para evitar múltiplos fetches, suportando qualquer bucket do Supabase */
 async function resolveTimbradoBytesWithFallback(originalUrl: string) {
-  // 1) tenta direto
+  // 1) tenta download direto por fetch
   try {
     return await fetchBytesStrict(originalUrl);
   } catch (e: any) {
-    const msg = String(e?.message || "");
-    if (!msg.toLowerCase().includes("html")) throw e;
+    // 2) se for do Supabase, detecta bucket e caminho dinamicamente
+    const sb = parseSupabaseStorageUrl(originalUrl);
+    const bucket = sb?.bucket || "timbrados";
+    const path = sb?.path || tryExtractSupabaseStoragePath(originalUrl, bucket);
 
-    // 2) tenta assinar via Supabase (bucket "timbrados")
-    const path = tryExtractSupabaseStoragePath(originalUrl, "timbrados");
-    if (!path) {
-      throw new Error(
-        "Timbrado inacessível. Reenvie o timbrado nas Configurações (PNG/JPG) para gerar um link válido."
-      );
+    if (path) {
+      try {
+        const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(path);
+        if (!dlErr && blob && blob.size > 0) {
+          const ab = await blob.arrayBuffer();
+          const bytes = bytesFromArrayBuffer(ab);
+          return { bytes, contentType: blob.type || "image/png" };
+        }
+      } catch (err) {}
+
+      try {
+        const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 10);
+        if (!error && data?.signedUrl) {
+          return await fetchBytesStrict(data.signedUrl);
+        }
+      } catch (err) {}
     }
 
-    const { data, error } = await supabase.storage.from("timbrados").createSignedUrl(path, 60 * 10);
-    if (error || !data?.signedUrl) {
-      throw new Error("Não foi possível assinar o timbrado. Verifique permissões do Storage.");
-    }
-
-    return await fetchBytesStrict(data.signedUrl);
+    throw e;
   }
 }
 
@@ -1143,34 +1161,427 @@ function bytesToDataUrl(bytes: Uint8Array, contentType: string = "image/png"): s
   return `data:${contentType || "image/png"};base64,${base64}`;
 }
 
-async function convertImageUrlToDataUrl(url: string, bucketHint?: string): Promise<string> {
-  if (!url) return "";
-  if (url.startsWith("data:")) return url;
-  try {
-    const { bytes, contentType } = await resolveTimbradoBytesWithFallback(url);
-    if (bytes && bytes.length > 0) {
-      return bytesToDataUrl(bytes, contentType);
-    }
-  } catch (e) {
-    console.warn("Falha convertImageUrlToDataUrl:", url, e);
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("Falha ao ler blob como DataURL"));
+    };
+    reader.onerror = () => reject(new Error("Erro ao ler blob"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function imageElementToDataUrl(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    const timer = setTimeout(() => {
+      reject(new Error("Timeout carregamento imagem"));
+    }, 4500);
+    img.onload = () => {
+      clearTimeout(timer);
+      try {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth || img.width || 400;
+        c.height = img.naturalHeight || img.height || 300;
+        const ctx = c.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(c.toDataURL("image/png"));
+        } else {
+          reject(new Error("Sem contexto 2D"));
+        }
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error("Erro ao carregar imagem"));
+    };
+    img.src = url;
+  });
+}
+
+async function convertImageUrlToDataUrl(url: string, defaultBucket = "tenant-assets"): Promise<string> {
+  if (!url || typeof url !== "string") return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("data:")) return trimmed;
+
+  // 1. Tentar resolver via Supabase Storage
+  const sb = parseSupabaseStorageUrl(trimmed);
+  const bucket = sb?.bucket || defaultBucket;
+  const path = sb?.path || tryExtractSupabaseStoragePath(trimmed, bucket);
+
+  if (path) {
+    try {
+      const { data: blob, error } = await supabase.storage.from(bucket).download(path);
+      if (!error && blob && blob.size > 0) {
+        return await blobToDataUrl(blob);
+      }
+    } catch (e) {}
+
+    try {
+      const { data: signed, error: signErr } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(path, 600);
+      if (!signErr && signed?.signedUrl) {
+        const res = await fetch(signed.signedUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          if (blob && blob.size > 0) return await blobToDataUrl(blob);
+        }
+      }
+    } catch (e) {}
   }
-  return url;
+
+  // 2. Tentar fetch direto (com CORS)
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(trimmed, { mode: "cors", signal: controller.signal });
+    clearTimeout(timer);
+    if (res.ok) {
+      const blob = await res.blob();
+      if (blob && blob.size > 0) {
+        return await blobToDataUrl(blob);
+      }
+    }
+  } catch (e) {}
+
+  // 3. Tentar via HTMLImageElement canvas
+  try {
+    const dataUrl = await imageElementToDataUrl(trimmed);
+    if (dataUrl) return dataUrl;
+  } catch (e) {}
+
+  return trimmed;
+}
+
+function convertCssColorToHexOrRgb(colorStr: string): string {
+  if (!colorStr || typeof colorStr !== "string") return colorStr;
+  if (
+    !colorStr.includes("oklab") &&
+    !colorStr.includes("oklch") &&
+    !colorStr.includes("color-mix") &&
+    !colorStr.includes("color(")
+  ) {
+    return colorStr;
+  }
+  try {
+    if (typeof document !== "undefined") {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.fillStyle = "#1e293b";
+        ctx.fillStyle = colorStr;
+        const res = ctx.fillStyle;
+        if (
+          res &&
+          !res.includes("oklab") &&
+          !res.includes("oklch") &&
+          !res.includes("color-mix") &&
+          !res.includes("color(")
+        ) {
+          return res;
+        }
+      }
+    }
+  } catch (e) {}
+  return "#1e293b";
+}
+
+export async function generateNotePdfViaPdfLib(note: NotePdfItem, settings: AppSettings) {
+  const DEFAULT_TIMBRADO_URL =
+    "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/Modelo%20Timbrado/TIMBRADO%20GABARITO.png";
+  const timbradoUrl =
+    settings?.timbrado_url && settings.timbrado_url.trim() ? settings.timbrado_url : DEFAULT_TIMBRADO_URL;
+
+  const doc = await PDFDocument.create();
+  const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const W = 595.28;
+  const H = 841.89;
+  const PX_W = 2480;
+  const PX_H = 3508;
+  const CONTENT_X_PX = 167;
+  const CONTENT_TOP_PX = 167;
+  const CONTENT_W_PX = 2146;
+  const CONTENT_H_PX = 2146;
+
+  const CONTENT_X = (CONTENT_X_PX / PX_W) * W;
+  const CONTENT_W = (CONTENT_W_PX / PX_W) * W;
+  const CONTENT_RIGHT_X = CONTENT_X + CONTENT_W;
+  const CONTENT_TOP_Y = H - (CONTENT_TOP_PX / PX_H) * H;
+  const CONTENT_BOTTOM_Y = H - ((CONTENT_TOP_PX + CONTENT_H_PX) / PX_H) * H;
+
+  let bgImage: any = null;
+  if (timbradoUrl) {
+    try {
+      bgImage = await embedBackgroundImage(doc, timbradoUrl);
+    } catch (e) {
+      console.warn("Aviso ao carregar timbrado no fallback:", e);
+    }
+  }
+
+  const createPage = () => {
+    const p = doc.addPage([W, H]);
+    if (bgImage) {
+      p.drawImage(bgImage, { x: 0, y: 0, width: W, height: H });
+    }
+    return p;
+  };
+
+  let page = createPage();
+  let cursorY = CONTENT_TOP_Y;
+
+  const cText = rgb(0.06, 0.09, 0.16);
+  const cGray = rgb(0.28, 0.33, 0.41);
+  const cPrimary = rgb(0.92, 0.35, 0.05); // #EA580C
+  const cBorder = rgb(0.80, 0.83, 0.88);
+
+  const noteTitle = note.title && note.title.trim() ? note.title.toUpperCase() : "NOTA SEM TÍTULO";
+  const dateStr = note.created_at
+    ? new Date(note.created_at).toLocaleDateString("pt-BR")
+    : new Date().toLocaleDateString("pt-BR");
+
+  let deliveryStr = "";
+  if (note.delivery_date) {
+    const [y, m, d] = note.delivery_date.split("-");
+    const dFormatted = y && m && d ? `${d}/${m}/${y}` : note.delivery_date;
+    deliveryStr = `${dFormatted}${note.delivery_time ? ` às ${note.delivery_time}` : ""}`;
+  }
+
+  // Header Title
+  page.drawText(`NOTA: ${stripEmojis(noteTitle)}`, {
+    x: CONTENT_X,
+    y: cursorY,
+    size: 13,
+    font: fontBold,
+    color: cText,
+  });
+  cursorY -= 16;
+
+  // Meta bar
+  let metaLine = `Criado em: ${dateStr}`;
+  if (deliveryStr) metaLine += `  |  Prazo: ${stripEmojis(deliveryStr)}`;
+  if (note.responsible_name) metaLine += `  |  Resp: ${stripEmojis(note.responsible_name)}`;
+  if (note.category) metaLine += `  |  Cat: ${stripEmojis(note.category)}`;
+
+  page.drawText(metaLine, {
+    x: CONTENT_X,
+    y: cursorY,
+    size: 8.5,
+    font: fontRegular,
+    color: cGray,
+  });
+
+  if (note.status) {
+    const stText = `STATUS: ${stripEmojis(note.status.toUpperCase())}`;
+    const stW = fontBold.widthOfTextAtSize(stText, 8.5);
+    page.drawText(stText, {
+      x: CONTENT_RIGHT_X - stW,
+      y: cursorY,
+      size: 8.5,
+      font: fontBold,
+      color: cPrimary,
+    });
+  }
+
+  cursorY -= 8;
+  page.drawLine({
+    start: { x: CONTENT_X, y: cursorY },
+    end: { x: CONTENT_RIGHT_X, y: cursorY },
+    thickness: 1,
+    color: cBorder,
+  });
+  cursorY -= 14;
+
+  // 2 - PRIMEIRO OS LAYOUTS
+  let layoutUrls: string[] = [];
+  if (note.layout_url) {
+    const trimmed = note.layout_url.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        const arr = JSON.parse(trimmed);
+        if (Array.isArray(arr)) layoutUrls.push(...arr.map((s) => String(s).trim()).filter(Boolean));
+      } catch (e) {}
+    }
+    if (layoutUrls.length === 0) {
+      layoutUrls.push(...trimmed.split(",").map((s) => s.trim()).filter(Boolean));
+    }
+  }
+
+  const embeddedLayouts: any[] = [];
+  for (const lUrl of layoutUrls.slice(0, 4)) {
+    try {
+      const { bytes, contentType } = await resolveTimbradoBytesWithFallback(lUrl);
+      if (looksLikePNG(bytes) || contentType.includes("png")) {
+        const img = await doc.embedPng(bytes);
+        embeddedLayouts.push(img);
+      } else if (looksLikeJPG(bytes) || contentType.includes("jpeg") || contentType.includes("jpg")) {
+        const img = await doc.embedJpg(bytes);
+        embeddedLayouts.push(img);
+      }
+    } catch (err) {
+      console.warn("Aviso ao embutir layout no pdf-lib:", err);
+    }
+  }
+
+  if (embeddedLayouts.length > 0) {
+    page.drawText(`LAYOUTS / ANEXOS (${embeddedLayouts.length})`, {
+      x: CONTENT_X,
+      y: cursorY,
+      size: 9.5,
+      font: fontBold,
+      color: cText,
+    });
+    cursorY -= 12;
+
+    const count = embeddedLayouts.length;
+    if (count === 1) {
+      const img = embeddedLayouts[0];
+      const maxW = 260;
+      const maxH = 110;
+      const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+      const drawW = img.width * scale;
+      const drawH = img.height * scale;
+      const drawX = CONTENT_X + (CONTENT_W - drawW) / 2;
+      page.drawImage(img, { x: drawX, y: cursorY - drawH, width: drawW, height: drawH });
+      cursorY -= drawH + 12;
+    } else {
+      const cardW = (CONTENT_W - 12 * (count - 1)) / Math.min(count, 3);
+      const maxH = 95;
+      let curX = CONTENT_X;
+      let maxDrawnH = 0;
+      for (const img of embeddedLayouts.slice(0, 3)) {
+        const scale = Math.min(cardW / img.width, maxH / img.height, 1);
+        const drawW = img.width * scale;
+        const drawH = img.height * scale;
+        maxDrawnH = Math.max(maxDrawnH, drawH);
+        page.drawImage(img, { x: curX + (cardW - drawW) / 2, y: cursorY - drawH, width: drawW, height: drawH });
+        curX += cardW + 12;
+      }
+      cursorY -= maxDrawnH + 12;
+    }
+  }
+
+  // 3 - DEPOIS OS TEXTOS
+  page.drawText("DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO", {
+    x: CONTENT_X,
+    y: cursorY,
+    size: 9.5,
+    font: fontBold,
+    color: cText,
+  });
+  cursorY -= 14;
+
+  const rawHtml = note.content || "Nenhuma descrição informada.";
+  const textWithBreaks = rawHtml
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/div>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "• ")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<\/h[1-6]>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"');
+
+  const lines = wrapText(textWithBreaks, CONTENT_W, fontRegular, 9);
+  for (const line of lines) {
+    if (cursorY < CONTENT_BOTTOM_Y + 65) {
+      page = createPage();
+      cursorY = CONTENT_TOP_Y;
+      page.drawText(`NOTA: ${stripEmojis(noteTitle)} (Continuação)`, {
+        x: CONTENT_X,
+        y: cursorY,
+        size: 11,
+        font: fontBold,
+        color: cText,
+      });
+      cursorY -= 16;
+    }
+    if (line.trim() === "") {
+      cursorY -= 7;
+      continue;
+    }
+    page.drawText(line, {
+      x: CONTENT_X,
+      y: cursorY,
+      size: 9,
+      font: fontRegular,
+      color: cText,
+    });
+    cursorY -= 12.5;
+  }
+
+  // Assinaturas no Rodapé
+  const sigY = CONTENT_BOTTOM_Y + 25;
+  const colW = (CONTENT_W - 40) / 2;
+  page.drawLine({
+    start: { x: CONTENT_X, y: sigY + 12 },
+    end: { x: CONTENT_X + colW, y: sigY + 12 },
+    thickness: 1,
+    color: cGray,
+  });
+  const sig1 = "Assinatura do Recebedor";
+  const sig1W = fontRegular.widthOfTextAtSize(sig1, 8);
+  page.drawText(sig1, {
+    x: CONTENT_X + (colW - sig1W) / 2,
+    y: sigY,
+    size: 8,
+    font: fontRegular,
+    color: cGray,
+  });
+
+  const sig2X = CONTENT_RIGHT_X - colW;
+  page.drawLine({
+    start: { x: sig2X, y: sigY + 12 },
+    end: { x: sig2X + colW, y: sigY + 12 },
+    thickness: 1,
+    color: cGray,
+  });
+  const sig2 = "Assinatura do Responsável";
+  const sig2W = fontRegular.widthOfTextAtSize(sig2, 8);
+  page.drawText(sig2, {
+    x: sig2X + (colW - sig2W) / 2,
+    y: sigY,
+    size: 8,
+    font: fontRegular,
+    color: cGray,
+  });
+
+  const pdfBytes = await doc.save();
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  const cleanFileName = sanitizeFilename(note.title || "NOTA");
+  link.download = `NOTA ${cleanFileName}.pdf`;
+  link.click();
 }
 
 export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) {
   let iframe: HTMLIFrameElement | null = null;
   try {
-    const timbradoUrl = settings?.timbrado_url || "";
-    if (!timbradoUrl) {
-      throw new Error(
-        "Nenhum timbrado configurado. Vá em Configurações e envie o timbrado A4 (PNG/JPG)."
-      );
-    }
+    // 0. Fallback para gabarito oficial de timbrado caso nenhum esteja configurado
+    const DEFAULT_TIMBRADO_URL =
+      "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/Modelo%20Timbrado/TIMBRADO%20GABARITO.png";
+    const timbradoUrl = settings?.timbrado_url && settings.timbrado_url.trim() ? settings.timbrado_url : DEFAULT_TIMBRADO_URL;
 
     // 1. Converter timbrado para DataURL Base64 para garantir carregamento instantâneo sem CORS
     const timbradoDataUrl = await convertImageUrlToDataUrl(timbradoUrl, "timbrados");
 
-    // 2. Extrair mídias e layouts da nota na mesma ordem
+    // 2. Extrair mídias e layouts da nota
     let layoutUrls: string[] = [];
     if (note.layout_url) {
       const trimmed = note.layout_url.trim();
@@ -1185,10 +1596,10 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
       }
     }
 
-    if (typeof document !== "undefined") {
+    if (typeof document !== "undefined" && note.content) {
       try {
         const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = note.content || "";
+        tempDiv.innerHTML = note.content;
         const imgElements = tempDiv.getElementsByTagName("img");
         for (let i = 0; i < imgElements.length; i++) {
           const src = imgElements[i].getAttribute("src");
@@ -1199,12 +1610,11 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
       } catch (e) {}
     }
 
-    // Converter cada imagem de layout para DataURL Base64 na ordem original
-    const layoutDataUrls: string[] = [];
-    for (const url of layoutUrls) {
-      const dUrl = await convertImageUrlToDataUrl(url, "note_assets");
-      if (dUrl) layoutDataUrls.push(dUrl);
-    }
+    // Converter cada imagem de layout para DataURL Base64 em paralelo
+    const convertedLayouts = await Promise.all(
+      layoutUrls.map((url) => convertImageUrlToDataUrl(url, "tenant-assets"))
+    );
+    const layoutDataUrls = convertedLayouts.filter(Boolean);
 
     // 3. Preparar metadados da Nota
     const noteTitle = note.title && note.title.trim() ? note.title.toUpperCase() : "NOTA SEM TÍTULO";
@@ -1219,46 +1629,141 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
       deliveryStr = `${dFormatted}${note.delivery_time ? ` às ${note.delivery_time}` : ""}`;
     }
 
-    const cleanContentHtml = note.content && note.content.trim() ? note.content : "<p>Nenhuma descrição informada.</p>";
+    // Remover <img> do texto porque serão exibidas com prioridade nos LAYOUTS no topo
+    let cleanContentHtml = note.content && note.content.trim() ? note.content : "<p>Nenhuma descrição informada.</p>";
+    cleanContentHtml = cleanContentHtml.replace(/<img[^>]*>/gi, "");
+    cleanContentHtml = cleanContentHtml.replace(/(?:oklab|oklch|color-mix|color)\([^)]+\)/gi, (match) => {
+      return convertCssColorToHexOrRgb(match);
+    });
 
-    // Estrutura CSS pura (HEX e RGB, 100% segura contra erros de oklab)
+    // Helper para normalizar e aprimorar formatação de marcadores (highlighters) atrás do texto
+    if (typeof document !== "undefined") {
+      try {
+        const sanitizerDiv = document.createElement("div");
+        sanitizerDiv.innerHTML = cleanContentHtml;
+
+        // Estilizar marcadores e spans com background para ficarem perfeitamente centralizados atrás do texto
+        const marks = sanitizerDiv.querySelectorAll(
+          "mark, [style*='background-color'], [style*='background'], [data-highlight]"
+        );
+        marks.forEach((node) => {
+          const el = node as HTMLElement;
+          // Se for elemento vazio ou só espaços em branco (sem texto real e sem imagem)
+          const text = (el.textContent || "").replace(/[\s\u00A0\u200B]+/g, "").trim();
+          if (!text && !el.querySelector("img, svg")) {
+            // Remove o marcador vazio para não criar mancha amarela solta no documento
+            el.remove();
+            return;
+          }
+
+          // Ajustar espaçamento interno para abraçar o texto perfeitamente sem sobras
+          if (el.innerHTML.endsWith("&nbsp;")) {
+            el.innerHTML = el.innerHTML.replace(/(&nbsp;|\s)+$/, "");
+          }
+          if (el.innerHTML.startsWith("&nbsp;")) {
+            el.innerHTML = el.innerHTML.replace(/^(&nbsp;|\s)+/, "");
+          }
+
+          el.style.boxDecorationBreak = "clone";
+          (el.style as any).webkitBoxDecorationBreak = "clone";
+          el.style.display = "inline-block";
+          el.style.verticalAlign = "middle";
+          el.style.textAlign = "center";
+          el.style.lineHeight = "1.25";
+          el.style.position = "relative";
+          el.style.zIndex = "1";
+          el.style.padding = "2.5px 7px 2.5px 7px";
+          el.style.margin = "1px 2px";
+          el.style.borderRadius = "4px";
+          el.style.fontWeight = el.style.fontWeight || "600";
+          el.style.boxSizing = "border-box";
+
+          // Se a cor do texto for muito clara em fundo amarelo/verde/azul claro, garantir legibilidade
+          const bg = el.style.backgroundColor || "";
+          if (
+            bg.includes("254, 240") ||
+            bg.includes("253, 224") ||
+            bg.includes("fef08a") ||
+            bg.includes("fde047") ||
+            bg.includes("yellow") ||
+            bg.includes("#ff") ||
+            bg.includes("255, 255")
+          ) {
+            if (!el.style.color || el.style.color === "white" || el.style.color.includes("255, 255, 255")) {
+              el.style.color = "#0f172a";
+            }
+          }
+        });
+
+        cleanContentHtml = sanitizerDiv.innerHTML;
+      } catch (e) {
+        console.warn("Aviso ao normalizar estilos de marcadores:", e);
+      }
+    }
+
+    // Estrutura CSS pura (HEX e RGB, 100% segura contra erros de oklab, suporte a formatações e emojis)
     const baseCss = `
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
       }
-      body, .page-wrapper {
+      html, body {
+        width: 794px;
+        height: 1123px;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
         background: #ffffff;
-        color: #1e293b;
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+      }
+      .page-wrapper {
+        position: relative !important;
+        width: 794px !important;
+        height: 1123px !important;
+        max-width: 794px !important;
+        max-height: 1123px !important;
+        overflow: hidden !important;
+        background: #ffffff !important;
+        color: #0f172a;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
         -webkit-font-smoothing: antialiased;
       }
       .timbrado-background {
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        width: 794px;
+        height: 1123px;
         object-fit: fill;
         z-index: 1;
         pointer-events: none;
       }
+      /* Limite da área útil do timbrado: 56px do topo até 790px (altura útil máxima 734px) */
       .page-content {
         position: absolute;
         top: 56px;
         left: 50px;
         right: 50px;
-        bottom: 0px;
+        width: 694px;
+        height: 734px;
+        max-height: 734px;
+        overflow: hidden;
         z-index: 10;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
       }
       .header-section {
-        border-bottom: 1px solid #cbd5e1;
-        padding-bottom: 8px;
-        margin-bottom: 10px;
+        border-bottom: 1.5px solid #cbd5e1;
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+      }
+      .header-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
       }
       .note-h1 {
         font-size: 15px;
@@ -1266,102 +1771,280 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
         color: #0f172a;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        line-height: 1.3;
+        line-height: 1.25;
+        flex: 1;
+      }
+      .page-counter-pill {
+        background: #0f172a;
+        color: #ffffff;
+        font-size: 9px;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.2;
+        text-align: center;
       }
       .meta-bar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 10.5px;
+        font-size: 10px;
         color: #475569;
         font-weight: 600;
-        margin-top: 4px;
+        margin-top: 5px;
+        flex-wrap: wrap;
+        gap: 8px;
       }
       .meta-items {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         gap: 12px;
+      }
+      .meta-items span strong {
+        color: #0f172a;
+        font-weight: 700;
       }
       .meta-status {
         color: #ea580c;
         font-weight: 800;
         text-transform: uppercase;
-        font-size: 11px;
+        font-size: 10px;
+        background: #fff7ed;
+        border: 1px solid #ffedd5;
+        padding: 2.5px 8px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.2;
+        text-align: center;
       }
-      .section-heading {
-        font-size: 11px;
+
+      /* Cabeçalho compacto para páginas de continuação */
+      .continuation-header {
+        border-bottom: 1.5px solid #cbd5e1;
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      .continuation-title {
+        font-size: 13px;
         font-weight: 800;
         color: #0f172a;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 6px;
+        letter-spacing: 0.4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
-      .text-content-box {
-        font-size: 11px;
-        line-height: 1.5;
-        color: #1e293b;
-        word-break: break-word;
-        margin-bottom: 10px;
+      .continuation-tag {
+        font-size: 10px;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: none;
       }
-      .text-content-box p { margin-bottom: 4px; }
-      .text-content-box ul, .text-content-box ol { padding-left: 18px; margin-bottom: 4px; }
-      .text-content-box li { margin-bottom: 2px; }
-      .text-content-box strong, .text-content-box b { font-weight: 700; color: #0f172a; }
-      .text-content-box em, .text-content-box i { font-style: italic; }
-      .text-content-box u { text-decoration: underline; }
-      .text-content-box s { text-decoration: line-through; }
-      .text-content-box mark { background-color: #fef08a; padding: 1px 3px; border-radius: 2px; }
-      
-      /* Grid de Mídias lado a lado na mesma ordem */
-      .media-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-        width: 100%;
+
+      /* Títulos de Seção com indicador visual */
+      .section-heading {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10.5px;
+        font-weight: 800;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
         margin-top: 4px;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
+        flex-shrink: 0;
+        line-height: 1.2;
       }
-      .media-card {
+      .heading-bar {
+        display: inline-block;
+        width: 3.5px;
+        height: 12px;
+        background: #ea580c;
+        border-radius: 2px;
+        vertical-align: middle;
+      }
+
+      /* 2 - PRIMEIRO OS LAYOUTS */
+      .layouts-section {
+        margin-bottom: 8px;
+        flex-shrink: 0;
+      }
+      .layouts-grid {
+        display: grid;
+        gap: 8px;
+        width: 100%;
+      }
+      .layouts-grid-1 {
+        grid-template-columns: 1fr;
+        max-width: 440px;
+        margin: 0 auto;
+      }
+      .layouts-grid-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .layouts-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .layouts-grid-4 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .layout-card {
         position: relative;
         border: 1px solid #cbd5e1;
-        border-radius: 6px;
+        border-radius: 8px;
         background: #f8fafc;
-        height: 145px;
+        overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
+        padding: 6px;
       }
-      .media-card img {
-        max-width: 95%;
-        max-height: 95%;
+      .layout-card.size-single {
+        height: 165px;
+      }
+      .layout-card.size-double {
+        height: 135px;
+      }
+      .layout-card.size-multi {
+        height: 115px;
+      }
+      .layout-card img {
+        max-width: 100%;
+        max-height: 100%;
         object-fit: contain;
+        border-radius: 6px;
       }
-      .media-badge {
+      .layout-badge {
         position: absolute;
         top: 6px;
         right: 6px;
-        background: #1e293b;
+        background: #0f172a;
         color: #ffffff;
-        font-size: 9.5px;
+        font-size: 8.5px;
         font-weight: 800;
-        padding: 2px 7px;
+        padding: 2.5px 6px;
         border-radius: 4px;
         z-index: 5;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1.2;
+        text-align: center;
       }
-      .media-badge.first {
-        background: #ff6900;
+      .layout-badge.primary {
+        background: #ea580c;
       }
 
-      /* Linha de Assinaturas exatamente acima do Rodapé / QR Code */
+      /* 3 - DEPOIS OS TEXTOS COM FORMATAÇÃO DO EDITOR */
+      .text-content-box {
+        font-size: 11px;
+        line-height: 1.6;
+        color: #0f172a;
+        word-break: break-word;
+        letter-spacing: 0.1px;
+        flex: 1;
+        min-height: 0;
+      }
+      .content-item {
+        margin-bottom: 3.5px;
+        min-height: 16px;
+        line-height: 1.5;
+        vertical-align: middle;
+      }
+      .content-item img,
+      .content-item svg,
+      .content-item span {
+        vertical-align: middle;
+      }
+      .text-content-box p, .text-content-box div {
+        margin-bottom: 4px;
+        min-height: 16px;
+      }
+      .text-content-box strong, .text-content-box b {
+        font-weight: 700;
+        color: #0f172a;
+      }
+      .text-content-box em, .text-content-box i {
+        font-style: italic;
+      }
+      .text-content-box u {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .text-content-box s, .text-content-box strike {
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
+      .text-content-box ul, .text-content-box ol {
+        padding-left: 20px;
+        margin-top: 3px;
+        margin-bottom: 6px;
+      }
+      .text-content-box li {
+        margin-bottom: 2px;
+        line-height: 1.6;
+      }
+
+      /* Marcador / Barra de Destaque perfeitamente centralizado vertical e horizontalmente */
+      .text-content-box mark,
+      .text-content-box span[style*="background"],
+      .text-content-box span[style*="background-color"],
+      .text-content-box font[style*="background"],
+      .text-content-box [data-highlight],
+      mark {
+        display: inline-block !important;
+        vertical-align: middle !important;
+        text-align: center !important;
+        line-height: 1.25 !important;
+        padding: 2.5px 7px 2.5px 7px !important;
+        margin: 1px 2px !important;
+        border-radius: 4px !important;
+        font-weight: 600 !important;
+        position: relative !important;
+        z-index: 1 !important;
+        box-sizing: border-box !important;
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+      }
+
+      /* Demais Destaques (badges, chips, bordas de destaque) com texto centralizado */
+      .text-content-box span[style*="border"],
+      .text-content-box .badge,
+      .text-content-box .tag {
+        display: inline-block !important;
+        vertical-align: middle !important;
+        text-align: center !important;
+        line-height: 1.25 !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+        box-sizing: border-box !important;
+      }
+
+      /* Assinaturas no Rodapé: situadas exatamente entre 800px e 842px, acima do rodapé timbrado (855px+) */
       .signatures-footer {
         position: absolute;
-        bottom: 270px;
+        top: 800px;
         left: 50px;
         right: 50px;
+        width: 694px;
+        height: 42px;
         display: flex;
         justify-content: space-between;
-        gap: 36px;
+        gap: 60px;
         z-index: 20;
       }
       .sig-col {
@@ -1376,41 +2059,15 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
         border-top: 1px solid #475569;
       }
       .sig-label {
-        font-size: 9.5px;
+        font-size: 8.5px;
         color: #475569;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
     `;
 
-    // Montar as mídias em cards de 2 colunas lado a lado
-    const mediaCardsHtml = layoutDataUrls
-      .map(
-        (src, idx) => `
-        <div class="media-card">
-          <img src="${src}" />
-          <div class="media-badge ${idx === 0 ? "first" : ""}">${idx + 1}</div>
-        </div>
-      `
-      )
-      .join("");
-
-    // Montar cabeçalho completo
-    const headerHtml = `
-      <div class="header-section">
-        <h1 class="note-h1">NOTA: ${noteTitle}</h1>
-        <div class="meta-bar">
-          <div class="meta-items">
-            <span>Criado em: <strong>${dateStr}</strong></span>
-            ${deliveryStr ? `<span>Prazo: <strong>${deliveryStr}</strong></span>` : ""}
-            ${note.responsible_name ? `<span>Responsável: <strong>${note.responsible_name}</strong></span>` : ""}
-            ${note.category ? `<span>Categoria: <strong>${note.category}</strong></span>` : ""}
-          </div>
-          ${note.status ? `<div class="meta-status">STATUS: ${note.status.toUpperCase()}</div>` : ""}
-        </div>
-      </div>
-    `;
-
-    // Montar bloco de assinaturas
+    // Bloco padrão de assinaturas
     const signaturesHtml = `
       <div class="signatures-footer">
         <div class="sig-col">
@@ -1424,83 +2081,124 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
       </div>
     `;
 
-    // Medição em elemento invisível temporário
-    const measureDiv = document.createElement("div");
-    measureDiv.style.position = "fixed";
-    measureDiv.style.left = "-9999px";
-    measureDiv.style.top = "-9999px";
-    measureDiv.style.width = "694px";
-    measureDiv.style.visibility = "hidden";
-    measureDiv.innerHTML = `
-      <style>${baseCss}</style>
-      ${headerHtml}
-      <div class="section-heading">DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO</div>
-      <div class="text-content-box">${cleanContentHtml}</div>
-      ${layoutDataUrls.length > 0 ? `<div class="section-heading" style="margin-top: 8px;">MÍDIAS E LAYOUTS</div><div class="media-grid">${mediaCardsHtml}</div>` : ""}
-    `;
-    document.body.appendChild(measureDiv);
-    const measureHeight = measureDiv.offsetHeight;
-    document.body.removeChild(measureDiv);
+    // 4. Construir Galeria de Layouts (2 - PRIMEIRO OS LAYOUTS)
+    let layoutsSectionHtml = "";
+    let layoutsEstimatedH = 0;
 
-    const MAX_PAGE_CONTENT_H = 475; // Altura máxima permitida para o conteúdo antes da linha de assinatura
-    const pageHtmlSnippets: string[] = [];
+    if (layoutDataUrls.length > 0) {
+      const count = layoutDataUrls.length;
+      let gridClass = "layouts-grid-1";
+      let cardClass = "size-single";
 
-    if (measureHeight <= MAX_PAGE_CONTENT_H) {
-      // Coube em 1 única página
-      pageHtmlSnippets.push(`
-        <img class="timbrado-background" src="${timbradoDataUrl}" />
-        <div class="page-content">
-          ${headerHtml}
-          <div class="section-heading">DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO</div>
-          <div class="text-content-box">${cleanContentHtml}</div>
-          ${
-            layoutDataUrls.length > 0
-              ? `<div class="section-heading" style="margin-top: 8px;">MÍDIAS E LAYOUTS</div><div class="media-grid">${mediaCardsHtml}</div>`
-              : ""
-          }
-        </div>
-        ${signaturesHtml}
-      `);
-    } else {
-      // Divide em páginas
-      // Página 1: Cabeçalho + Texto formatado
-      pageHtmlSnippets.push(`
-        <img class="timbrado-background" src="${timbradoDataUrl}" />
-        <div class="page-content">
-          ${headerHtml}
-          <div class="section-heading">DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO</div>
-          <div class="text-content-box">${cleanContentHtml}</div>
-        </div>
-        ${signaturesHtml}
-      `);
-
-      // Páginas subsequentes: Mídias em pares lado a lado (até 4 por página)
-      if (layoutDataUrls.length > 0) {
-        const chunkSize = 4;
-        for (let i = 0; i < layoutDataUrls.length; i += chunkSize) {
-          const chunkUrls = layoutDataUrls.slice(i, i + chunkSize);
-          const chunkCardsHtml = chunkUrls
-            .map(
-              (src, idx) => `
-              <div class="media-card" style="height: 180px;">
-                <img src="${src}" />
-                <div class="media-badge ${i + idx === 0 ? "first" : ""}">${i + idx + 1}</div>
-              </div>
-            `
-            )
-            .join("");
-
-          pageHtmlSnippets.push(`
-            <img class="timbrado-background" src="${timbradoDataUrl}" />
-            <div class="page-content">
-              <div class="section-heading" style="margin-top: 6px;">MÍDIAS E LAYOUTS (CONTINUAÇÃO)</div>
-              <div class="media-grid">${chunkCardsHtml}</div>
-            </div>
-            ${signaturesHtml}
-          `);
-        }
+      if (count === 1) {
+        gridClass = "layouts-grid-1";
+        cardClass = "size-single";
+        layoutsEstimatedH = 145 + 24 + 10;
+      } else if (count === 2) {
+        gridClass = "layouts-grid-2";
+        cardClass = "size-double";
+        layoutsEstimatedH = 120 + 24 + 10;
+      } else if (count === 3) {
+        gridClass = "layouts-grid-3";
+        cardClass = "size-multi";
+        layoutsEstimatedH = 100 + 24 + 10;
+      } else {
+        gridClass = "layouts-grid-4";
+        cardClass = "size-multi";
+        layoutsEstimatedH = 200 + 24 + 10;
       }
+
+      const cardsHtml = layoutDataUrls
+        .slice(0, 4)
+        .map(
+          (src, i) => `
+          <div class="layout-card ${cardClass}">
+            <img src="${src}" />
+            <span class="layout-badge ${i === 0 ? "primary" : ""}">#${i + 1}</span>
+          </div>
+        `
+        )
+        .join("");
+
+      layoutsSectionHtml = `
+        <div class="layouts-section">
+          <div class="section-heading"><span class="heading-bar"></span>LAYOUTS / ANEXOS (${count})</div>
+          <div class="layouts-grid ${gridClass}">
+            ${cardsHtml}
+          </div>
+        </div>
+      `;
     }
+
+    // 5. Decomposição de blocos de texto respeitando formatações e quebras do editor
+    const splitNoteContentIntoBlocks = (html: string): string[] => {
+      if (typeof document === "undefined") return [html];
+
+      const temp = document.createElement("div");
+      temp.innerHTML = html;
+
+      const blocks: string[] = [];
+
+      const addBlock = (itemHtml: string) => {
+        const trimmed = itemHtml.trim();
+        if (!trimmed) {
+          blocks.push(`<div style="height: 6px;"></div>`);
+          return;
+        }
+        blocks.push(`<div class="content-item">${trimmed}</div>`);
+      };
+
+      const processNode = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const txt = (node.textContent || "").trim();
+          if (txt) {
+            addBlock(txt);
+          }
+          return;
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        const el = node as HTMLElement;
+        const tag = el.tagName.toLowerCase();
+
+        if (tag === "br") {
+          addBlock("");
+          return;
+        }
+
+        if (tag === "ul" || tag === "ol") {
+          const lis = Array.from(el.querySelectorAll(":scope > li"));
+          if (lis.length > 0) {
+            lis.forEach((li) => {
+              blocks.push(
+                `<${tag} style="margin: 2px 0; padding-left: 20px;"><li style="margin-bottom: 2px; line-height: 1.6;">${li.innerHTML}</li></${tag}>`
+              );
+            });
+            return;
+          }
+        }
+
+        if (tag === "table") {
+          blocks.push(el.outerHTML);
+          return;
+        }
+
+        if (el.innerHTML.includes("<br")) {
+          const parts = el.innerHTML.split(/<br\s*\/?>/gi);
+          parts.forEach((part) => {
+            addBlock(part);
+          });
+          return;
+        }
+
+        addBlock(el.outerHTML || el.innerHTML);
+      };
+
+      Array.from(temp.childNodes).forEach(processNode);
+      return blocks.length > 0 ? blocks : [html];
+    };
+
+    const textBlocks = splitNoteContentIntoBlocks(cleanContentHtml);
 
     // Criar um iframe isolado com folhas de estilo próprias (SEM Tailwind e SEM oklab)
     iframe = document.createElement("iframe");
@@ -1520,7 +2218,143 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
       throw new Error("Não foi possível inicializar o motor de renderização da Nota.");
     }
 
-    const fullIframeHtml = `<!DOCTYPE html>
+    // Interceptar getComputedStyle no iframe para neutralizar qualquer valor de cor com oklab/oklch
+    try {
+      const origGetComputedStyle = iframeWin.getComputedStyle;
+      (iframeWin as any).getComputedStyle = function (elt: Element, pseudoElt?: string | null) {
+        const style = origGetComputedStyle.call(iframeWin, elt, pseudoElt);
+        return new Proxy(style, {
+          get(target: any, prop: string | symbol, receiver: any) {
+            const val = Reflect.get(target, prop, receiver);
+            if (typeof val === "string") {
+              if (
+                val.includes("oklab") ||
+                val.includes("oklch") ||
+                val.includes("color-mix") ||
+                val.includes("color(")
+              ) {
+                return convertCssColorToHexOrRgb(val);
+              }
+            }
+            if (typeof val === "function" && prop === "getPropertyValue") {
+              return (propertyName: string) => {
+                const res = target.getPropertyValue(propertyName);
+                if (
+                  typeof res === "string" &&
+                  (res.includes("oklab") ||
+                    res.includes("oklch") ||
+                    res.includes("color-mix") ||
+                    res.includes("color("))
+                ) {
+                  return convertCssColorToHexOrRgb(res);
+                }
+                return res;
+              };
+            }
+            return val;
+          },
+        });
+      };
+    } catch (e) {
+      console.warn("Aviso ao proteger getComputedStyle:", e);
+    }
+
+    // Medição e paginação precisa diretamente dentro do ambiente isolado do iframe
+    iframeDoc.open();
+    iframeDoc.write(`<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>${baseCss}</style>
+  </head>
+  <body>
+    <div class="text-content-box" id="measure-box" style="width: 694px; visibility: hidden; position: absolute; top: 0; left: 0;"></div>
+  </body>
+</html>`);
+    iframeDoc.close();
+
+    const measureBox = iframeDoc.getElementById("measure-box") as HTMLElement;
+
+    // Alturas disponíveis:
+    // Altura útil total: 734px
+    // Página 1: Cabeçalho (~64px) + Separador + Layouts (se houver) + Título do texto (~24px) + margem de segurança (16px)
+    const MAX_PAGE1_TEXT_H = Math.max(734 - 64 - layoutsEstimatedH - 24 - 16, 100);
+    // Páginas de continuação: Cabeçalho continuação (~38px) + Título do texto (~24px) + margem de segurança (16px)
+    const MAX_CONT_TEXT_H = 734 - 38 - 24 - 16;
+
+    const contentPages: string[][] = [[]];
+    let currentPageIdx = 0;
+    let currentAccumulatedH = 0;
+    let currentLimit = MAX_PAGE1_TEXT_H;
+
+    for (const block of textBlocks) {
+      measureBox.innerHTML = block;
+      const bH = Math.max(measureBox.offsetHeight, 16);
+
+      if (currentAccumulatedH + bH > currentLimit && contentPages[currentPageIdx].length > 0) {
+        currentPageIdx++;
+        contentPages.push([]);
+        currentAccumulatedH = 0;
+        currentLimit = MAX_CONT_TEXT_H;
+      }
+
+      contentPages[currentPageIdx].push(block);
+      currentAccumulatedH += bH;
+    }
+
+    const totalPages = contentPages.length;
+
+    // Inicializar jsPDF
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfW = 210;
+    const pdfH = 297;
+
+    // RENDERIZAR CADA PÁGINA ISOLADAMENTE NO IFRAME (evita sobreposição, scroll bleed e múltiplos cabeçalhos)
+    for (let pIdx = 0; pIdx < totalPages; pIdx++) {
+      const pageBlocks = contentPages[pIdx];
+      const pageNum = pIdx + 1;
+      const isFirstPage = pIdx === 0;
+
+      let pageHeaderHtml = "";
+      if (isFirstPage) {
+        pageHeaderHtml = `
+          <div class="header-section">
+            <div class="header-top-row">
+              <h1 class="note-h1">NOTA: ${noteTitle}</h1>
+              ${totalPages > 1 ? `<span class="page-counter-pill">PÁGINA 1 DE ${totalPages}</span>` : ""}
+            </div>
+            <div class="meta-bar">
+              <div class="meta-items">
+                <span>Criado em: <strong>${dateStr}</strong></span>
+                ${deliveryStr ? `<span>Prazo: <strong>${deliveryStr}</strong></span>` : ""}
+                ${note.responsible_name ? `<span>Resp: <strong>${note.responsible_name}</strong></span>` : ""}
+                ${note.category ? `<span>Cat: <strong>${note.category}</strong></span>` : ""}
+              </div>
+              ${note.status ? `<div class="meta-status">STATUS: ${note.status.toUpperCase()}</div>` : ""}
+            </div>
+          </div>
+        `;
+      } else {
+        pageHeaderHtml = `
+          <div class="continuation-header">
+            <div class="continuation-title">
+              <span>NOTA: ${noteTitle}</span>
+              <span class="continuation-tag">(Continuação)</span>
+            </div>
+            <span class="page-counter-pill">PÁGINA ${pageNum} DE ${totalPages}</span>
+          </div>
+        `;
+      }
+
+      // 2 - PRIMEIRO OS LAYOUTS (apenas na página 1, logo abaixo do cabeçalho)
+      const pageLayoutsHtml = isFirstPage ? layoutsSectionHtml : "";
+
+      // 3 - DEPOIS OS TEXTOS
+      const textHeading = isFirstPage
+        ? `<div class="section-heading"><span class="heading-bar"></span>DESCRIÇÃO DOS SERVIÇOS / DETALHAMENTO</div>`
+        : `<div class="section-heading"><span class="heading-bar"></span>DESCRIÇÃO DOS SERVIÇOS (CONTINUAÇÃO)</div>`;
+
+      const singlePageHtml = `<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
@@ -1528,57 +2362,111 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
       ${baseCss}
     </style>
   </head>
-  <body style="margin: 0; padding: 0; background: #ffffff;">
-    <div id="pages-root">
-      ${pageHtmlSnippets
-        .map(
-          (snippet, idx) => `
-        <div class="page-wrapper" id="pdf-page-${idx}" style="position: relative; width: 794px; height: 1123px; background: #ffffff; overflow: hidden; margin-bottom: 20px;">
-          ${snippet}
+  <body style="margin: 0; padding: 0; background: #ffffff; width: 794px; height: 1123px; overflow: hidden;">
+    <div class="page-wrapper" id="pdf-single-page">
+      <img class="timbrado-background" src="${timbradoDataUrl}" />
+      <div class="page-content">
+        ${pageHeaderHtml}
+        ${pageLayoutsHtml}
+        ${textHeading}
+        <div class="text-content-box">
+          ${pageBlocks.join("")}
         </div>
-      `
-        )
-        .join("")}
+      </div>
+      ${signaturesHtml}
     </div>
   </body>
 </html>`;
 
-    iframeDoc.open();
-    iframeDoc.write(fullIframeHtml);
-    iframeDoc.close();
+      iframeDoc.open();
+      iframeDoc.write(singlePageHtml);
+      iframeDoc.close();
 
-    // Aguardar imagens e renderização no iframe
-    await new Promise((res) => setTimeout(res, 120));
+      // Aguardar renderização e carregamento de imagens desta página específica
+      const pageImages = Array.from(iframeDoc.querySelectorAll("img"));
+      if (pageImages.length > 0) {
+        await Promise.all(
+          pageImages.map((img) => {
+            if (img.complete) return Promise.resolve(null);
+            return new Promise((resolve) => {
+              img.onload = () => resolve(null);
+              img.onerror = () => resolve(null);
+            });
+          })
+        );
+      }
+      await new Promise((res) => setTimeout(res, 80));
 
-    // Garantir que todas as imagens no iframe foram carregadas
-    const allImages = Array.from(iframeDoc.querySelectorAll("img"));
-    if (allImages.length > 0) {
-      await Promise.all(
-        allImages.map((img) => {
-          if (img.complete) return Promise.resolve(null);
-          return new Promise((resolve) => {
-            img.onload = () => resolve(null);
-            img.onerror = () => resolve(null);
-          });
-        })
-      );
-    }
-
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfW = 210;
-    const pdfH = 297;
-
-    const pageElements = Array.from(iframeDoc.querySelectorAll(".page-wrapper")) as HTMLElement[];
-    for (let pIdx = 0; pIdx < pageElements.length; pIdx++) {
-      const pageEl = pageElements[pIdx];
+      const pageEl = iframeDoc.getElementById("pdf-single-page") || iframeDoc.body;
       const canvas = await (html2canvas as any)(pageEl, {
-        scale: 2.5,
+        scale: 2,
         useCORS: true,
         allowTaint: false,
         backgroundColor: "#ffffff",
         logging: false,
+        width: 794,
+        height: 1123,
+        windowWidth: 794,
+        windowHeight: 1123,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
         window: iframeWin,
         document: iframeDoc,
+        onclone: (clonedDoc: Document) => {
+          // Remover quaisquer tags de estilo com oklab e neutralizar propriedades de cor
+          const styles = Array.from(clonedDoc.querySelectorAll("style, link[rel='stylesheet']"));
+          styles.forEach((s) => {
+            if (s.textContent && (s.textContent.includes("oklab") || s.textContent.includes("oklch") || s.textContent.includes("color-mix"))) {
+              s.textContent = s.textContent.replace(/(?:oklab|oklch|color-mix|color)\([^)]+\)/gi, "#1e293b");
+            }
+          });
+          const allEls = Array.from(clonedDoc.querySelectorAll("*"));
+          allEls.forEach((el: any) => {
+            if (el.getAttribute) {
+              const st = el.getAttribute("style");
+              if (st && (st.includes("oklab") || st.includes("oklch") || st.includes("color-mix") || st.includes("color("))) {
+                el.setAttribute("style", st.replace(/(?:oklab|oklch|color-mix|color)\([^)]+\)/gi, "#1e293b"));
+              }
+            }
+          });
+
+          // Garantir centralização matemática exata de todos os marcadores e destaques no documento clonado
+          const allMarks = Array.from(
+            clonedDoc.querySelectorAll("mark, [style*='background-color'], [style*='background'], [data-highlight]")
+          );
+          allMarks.forEach((node: any) => {
+            const el = node as HTMLElement;
+            if (
+              el.tagName === "BODY" ||
+              el.classList.contains("page-wrapper") ||
+              el.classList.contains("page-content") ||
+              el.classList.contains("header-section") ||
+              el.classList.contains("continuation-header") ||
+              el.classList.contains("signatures-footer") ||
+              el.classList.contains("layouts-section") ||
+              el.classList.contains("layouts-grid")
+            ) {
+              return;
+            }
+
+            const txt = (el.textContent || "").replace(/[\s\u00A0\u200B]+/g, "").trim();
+            if (!txt && !el.querySelector("img, svg")) {
+              el.remove();
+              return;
+            }
+
+            el.style.display = "inline-block";
+            el.style.verticalAlign = "middle";
+            el.style.textAlign = "center";
+            el.style.lineHeight = "1.25";
+            el.style.padding = "2.5px 7px 2.5px 7px";
+            el.style.margin = "1px 2px";
+            el.style.borderRadius = "4px";
+            el.style.boxSizing = "border-box";
+          });
+        },
       });
 
       const imgData = canvas.toDataURL("image/jpeg", 0.98);
@@ -1593,8 +2481,14 @@ export async function generateNotePdf(note: NotePdfItem, settings: AppSettings) 
     const cleanFileName = sanitizeFilename(note.title || "NOTA");
     pdf.save(`NOTA ${cleanFileName}.pdf`);
   } catch (err: any) {
-    console.error("Erro gerando PDF da Nota", err);
-    alert("Erro ao gerar PDF: " + (err?.message || "Verifique o timbrado nas configurações."));
+    console.warn("Tentando fallback via pdf-lib para Nota devido ao erro:", err);
+    try {
+      // Fallback seguro 100% livre de DOM/Canvas com pdf-lib
+      await generateNotePdfViaPdfLib(note, settings);
+    } catch (fallbackErr: any) {
+      console.error("Erro gerando PDF da Nota", fallbackErr);
+      alert("Erro ao gerar PDF: " + (fallbackErr?.message || err?.message || "Verifique o timbrado nas configurações."));
+    }
   } finally {
     if (iframe && iframe.parentNode) {
       iframe.parentNode.removeChild(iframe);

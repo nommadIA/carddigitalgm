@@ -58,6 +58,8 @@ import {
   User,
   Sliders,
   Sparkles,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 import { Note } from "../types";
 import { generateNotePdf } from "../services/pdfService";
@@ -130,6 +132,11 @@ import { GlassDatePicker } from "../components/ui/GlassDatePicker";
 import { openWhatsapp } from "../services/whatsApp";
 
 import jsPDF from "jspdf";
+
+const cardBase =
+  "fora rounded-2xl transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+const inputBase =
+  "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
 
 function htmlToPlainFormatedText(html: string): string {
   if (!html) return "";
@@ -1117,8 +1124,17 @@ export default function Notes() {
     }
     applyStyleToSelection({
       "background-color": bgColor,
-      "border-radius": "3px",
-      padding: "1px 3px",
+      "border-radius": "4px",
+      padding: "2.5px 7px",
+      "box-decoration-break": "clone",
+      "-webkit-box-decoration-break": "clone",
+      display: "inline-block",
+      "vertical-align": "middle",
+      "text-align": "center",
+      "line-height": "1.25",
+      position: "relative",
+      "z-index": "1",
+      "box-sizing": "border-box",
     });
   };
 
@@ -1482,17 +1498,17 @@ export default function Notes() {
   ] as const;
 
   return (
-    <Page title="Notas" className="animate-fade-in relative min-h-full">
+    <Page title="Notas" className="relative min-h-full">
       <div className="flex flex-col gap-5 mb-8">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="relative w-full md:max-w-md gm-btn !p-0 !cursor-text hover:!scale-100 active:!scale-100 !transform-none !justify-start h-14 rounded-xl overflow-hidden shadow-lg border border-white/10 focus-within:border-[var(--gm-primary)] transition-colors">
+          <div className="relative w-full md:max-w-md">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10 pointer-events-none"
-              size={20}
+              size={18}
             />
             <input
               type="text"
-              className="pl-12 h-full w-full bg-transparent outline-none border-none text-white placeholder:text-white/40 text-base relative z-20 font-bold"
+              className="w-full gm-input barra rounded-xl pl-11 pr-4 py-3.5 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md font-medium"
               placeholder="Pesquisar notas em todas as contas..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -1501,52 +1517,57 @@ export default function Notes() {
 
           <button
             onClick={openNewNote}
-            className="flex items-center gap-2 gm-btn px-6 py-4 rounded-xl shrink-0 w-full md:w-auto shadow-lg bg-[var(--gm-primary)] text-white font-extrabold"
+            className="gm-btn group h-12 px-6 fora rounded-2xl border border-white/10 hover:border-[var(--gm-primary)] text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none shrink-0"
           >
-            <Plus size={20} />
+            <Plus size={18} className="text-[var(--gm-primary)] transition-transform duration-300 ease-in-out group-hover:rotate-180" />
             <span>Criar Nota</span>
           </button>
         </div>
 
-        {/* Primary Category Selector (Todas as Notas, Notas Gerais, Notas de Produção) */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-black/40 border border-white/10 p-2 rounded-2xl">
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+        {/* Primary Category & Status Tabs Bar (Vidro Fosco, Extremidades e Destaque Fluido) */}
+        <div className={`flex flex-col gap-2 p-2 sm:p-2.5 ${cardBase} w-full`}>
+          {/* Linha 1: Categorias Principais (Todas as Notas, Notas Gerais, Notas de Produção) */}
+          <div className="grid grid-cols-3 gap-1.5 w-full">
             {[
-              { id: "ALL", label: "Todas as Notas" },
-              { id: "NOTE", label: "Notas Gerais" },
-              { id: "PRODUCTION", label: "Notas de Produção" },
-            ].map((tabItem) => (
-              <button
-                key={tabItem.id}
-                onClick={() => setMainTab(tabItem.id as any)}
-                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-extrabold transition-all whitespace-nowrap ${
-                  mainTab === tabItem.id
-                    ? "bg-[var(--gm-primary)] text-white shadow-md shadow-orange-500/20"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {tabItem.label}
-              </button>
-            ))}
+              { id: "ALL", label: "TODAS AS NOTAS" },
+              { id: "NOTE", label: "NOTAS GERAIS" },
+              { id: "PRODUCTION", label: "NOTAS DE PRODUÇÃO" },
+            ].map((tabItem) => {
+              const isActive = mainTab === tabItem.id;
+              return (
+                <button
+                  key={tabItem.id}
+                  onClick={() => setMainTab(tabItem.id as any)}
+                  className={`w-full py-2.5 px-1 sm:px-2 text-center flex items-center justify-center font-black uppercase tracking-wider text-[10px] sm:text-xs leading-tight rounded-xl transition-all cursor-pointer select-none ${
+                    isActive
+                      ? "bg-[var(--gm-primary)] text-white shadow-none border border-[var(--gm-primary)]/40 backdrop-blur-md"
+                      : "barra border border-transparent hover:border-white/10 text-white/60 hover:text-white hover:bg-white/[0.05] backdrop-blur-md"
+                  }`}
+                >
+                  <span className="truncate">{tabItem.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Sub-Tabs de Status / Workflow */}
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide border-t sm:border-t-0 pt-2 sm:pt-0 border-white/5">
-            {WORKFLOW_STATUSES.map((t) => (
-              <button
-                key={t}
-                onClick={() => setNoteTab(t as any)}
-                className={`px-3.5 py-1.5 font-bold text-xs rounded-xl transition-all whitespace-nowrap ${
-                  noteTab === t
-                    ? t === "LIXEIRA"
-                      ? "bg-red-500/20 text-red-400 border border-red-500/40"
-                      : "bg-white/15 text-white border border-white/20"
-                    : "text-white/40 hover:text-white hover:bg-white/5 border border-transparent"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          {/* Linha 2: Sub-Tabs de Status / Workflow (A FAZER, PRODUÇÃO, CONCLUÍDOS, LIXEIRA) */}
+          <div className="grid grid-cols-4 gap-1.5 w-full pt-1.5 border-t border-white/10">
+            {WORKFLOW_STATUSES.map((t) => {
+              const isActive = noteTab === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setNoteTab(t as any)}
+                  className={`w-full py-2 px-1 text-center flex items-center justify-center font-black uppercase tracking-wider text-[10px] sm:text-xs rounded-xl transition-all cursor-pointer select-none ${
+                    isActive
+                      ? "bg-[var(--gm-primary)] text-white shadow-none border border-[var(--gm-primary)]/40 backdrop-blur-md"
+                      : "barra border border-transparent hover:border-white/10 text-white/50 hover:text-white hover:bg-white/[0.05] backdrop-blur-md"
+                  }`}
+                >
+                  <span className="truncate">{t}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1577,23 +1598,15 @@ export default function Notes() {
                 >
                   <div
                     id={`note-card-${note.id}`}
-                    className={`rounded-2xl p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.02] h-full gm-note-card ${
+                    className={`p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.01] h-full gm-note-card ${cardBase} hover:border-[var(--gm-primary)]/40 hover:bg-white/[0.05] ${
                       isExpanded
                         ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]"
                         : "overflow-hidden min-h-[280px]"
                     } ${
                       note.id === highlightedId
-                        ? "ring-2 ring-[var(--gm-primary,#FF6900)] ring-offset-2 ring-offset-black/60 shadow-[0_0_35px_rgba(255,105,0,0.85),inset_0_0_20px_rgba(255,105,0,0.3)] animate-pulse"
+                        ? "!border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)] ring-offset-2 ring-offset-black/60 shadow-[0_0_35px_rgba(255,105,0,0.85)] animate-pulse"
                         : ""
                     }`}
-                    style={{
-                      backgroundColor: "var(--gm-card, rgba(17, 19, 24, 0.8))",
-                      backdropFilter: "blur(12px)",
-                      borderColor: "var(--gm-primary, #FF6900)",
-                      borderWidth: "1px",
-                      borderStyle: "solid",
-                      boxShadow: note.id === highlightedId ? "0 0 35px rgba(255, 105, 0, 0.75)" : "0 4px 20px rgba(0, 0, 0, 0.08)",
-                    }}
                   >
                     {/* Transição Laranja Neon Esfumaçada: Canto Superior Esquerdo -> Canto Inferior Direito (Duração 2s) */}
                     {note.id === highlightedId && (
@@ -1619,16 +1632,16 @@ export default function Notes() {
                     {/* Visual Aprimorado de Pinar Nota (Pushpin Badge) */}
                     <button
                       onClick={(e) => togglePin(note, e)}
-                      className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all z-10 ${
+                      className={`absolute top-4 right-4 w-8 h-8 rounded-xl flex items-center justify-center transition-all z-10 cursor-pointer ${
                         note.is_pinned
-                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/50 scale-110 border border-orange-300/40"
-                          : "bg-white/10 text-white/40 hover:text-white hover:bg-white/20 hover:scale-105"
+                          ? "bg-orange-500/20 text-orange-400 border border-orange-500/40 backdrop-blur-md scale-105 shadow-none"
+                          : "barra border border-white/10 bg-white/[0.02] text-white/40 hover:text-white hover:bg-white/[0.08] backdrop-blur-md"
                       }`}
                       title={note.is_pinned ? "Desafixar nota" : "Fixar nota no topo"}
                     >
                       <Pin
                         size={14}
-                        className={note.is_pinned ? "fill-white rotate-[-30deg] transition-transform" : "rotate-0 transition-transform"}
+                        className={note.is_pinned ? "fill-orange-400 rotate-[-30deg] transition-transform" : "rotate-0 transition-transform"}
                       />
                     </button>
 
@@ -1827,11 +1840,11 @@ export default function Notes() {
                       </div>
 
                       {/* Action buttons on their own line with generous spacing */}
-                      <div className="flex items-center justify-between gap-2.5 w-full pt-2.5 border-t border-white/5">
+                      <div className="flex items-center justify-between gap-2.5 w-full pt-2.5 border-t border-white/10">
                         {/* Status label displayed next to action buttons */}
                         {note.status ? (
                           <div className="flex items-center">
-                            <span className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 select-none bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/20">
+                            <span className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 select-none bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 backdrop-blur-md">
                               {note.status.replace(/_/g, " ")}
                             </span>
                           </div>
@@ -1839,7 +1852,7 @@ export default function Notes() {
                           <div />
                         )}
 
-                        <div className="flex items-center gap-3 shrink-0 note-actions">
+                        <div className="flex items-center gap-2 shrink-0 note-actions">
                           {noteTab === "LIXEIRA" ? (
                             <>
                               <button
@@ -1847,22 +1860,20 @@ export default function Notes() {
                                   e.stopPropagation();
                                   handleRestore(note.id);
                                 }}
-                                className="note-action-icon text-emerald-400 hover:text-emerald-300 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
-                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-emerald-500/30 shadow-none bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
                                 title="Restaurar"
                               >
-                                <RefreshCcw size={17} />
+                                <RefreshCcw size={15} />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setDeleteConfirmId(note.id);
                                 }}
-                                className="note-action-icon text-red-400 hover:text-red-300 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
-                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-red-500/30 shadow-none bg-red-500/10 hover:bg-red-500/20 text-red-400 backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
                                 title="Excluir Definitivamente"
                               >
-                                <Trash2 size={17} />
+                                <Trash2 size={15} />
                               </button>
                             </>
                           ) : (
@@ -1872,33 +1883,30 @@ export default function Notes() {
                                   e.stopPropagation();
                                   handleShareClick(note);
                                 }}
-                                className="note-action-icon text-[var(--gm-primary)] hover:text-orange-400 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
-                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.08] hover:border-[var(--gm-primary)]/40 text-[var(--gm-primary)] backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
                                 title="Compartilhar Nota"
                               >
-                                <Share2 size={17} />
+                                <Share2 size={15} />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handlePdf(note);
                                 }}
-                                className="note-action-icon text-[var(--gm-primary)] hover:text-orange-400 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
-                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.08] hover:border-[var(--gm-primary)]/40 text-[var(--gm-primary)] backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
                                 title="Baixar / Exportar PDF"
                               >
-                                <Download size={17} />
+                                <Download size={15} />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleSoftDelete(note.id);
                                 }}
-                                className="note-action-icon text-[var(--gm-primary)] hover:text-orange-400 transition-all hover:scale-110 flex items-center justify-center shrink-0 z-20 relative pointer-events-auto cursor-pointer p-1"
-                                style={{ background: "transparent", backgroundColor: "transparent", border: "none", boxShadow: "none" }}
+                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.08] hover:border-red-500/40 text-white/50 hover:text-red-400 backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
                                 title="Mover para Lixeira"
                               >
-                                <Trash2 size={17} />
+                                <Trash2 size={15} />
                               </button>
                             </>
                           )}
@@ -1923,14 +1931,14 @@ export default function Notes() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/75 backdrop-blur-md"
+                  className="absolute inset-0 bg-black/60 backdrop-blur-md"
                   onClick={() => setNewNoteModalOpen(false)}
                 />
                 <motion.div
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.95, opacity: 0 }}
-                  className="gm-card p-6 w-full max-w-xl flex flex-col relative z-10 border-white/10 shadow-2xl bg-[#0e1017] text-white"
+                  className={`p-6 sm:p-8 w-full max-w-xl flex flex-col relative z-10 ${cardBase} text-white`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex justify-between items-center mb-6">
@@ -1944,18 +1952,18 @@ export default function Notes() {
                     </div>
                     <button
                       onClick={() => setNewNoteModalOpen(false)}
-                      className="p-2 text-white/50 hover:text-white transition-colors cursor-pointer"
+                      className="w-9 h-9 rounded-xl flex items-center justify-center text-white/50 hover:text-white barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md transition-colors cursor-pointer"
                     >
-                      <X size={24} />
+                      <X size={20} />
                     </button>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button
                       onClick={() => openNewNoteModal("note")}
-                      className="flex flex-col items-start gap-4 p-6 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group cursor-pointer"
+                      className="flex flex-col items-start gap-4 p-6 rounded-2xl barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-[var(--gm-primary)]/40 backdrop-blur-md transition-all text-left group cursor-pointer shadow-none"
                     >
-                      <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
+                      <div className="p-3 bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 backdrop-blur-md rounded-xl group-hover:scale-110 transition-transform">
                         <Edit2 size={24} />
                       </div>
                       <div>
@@ -1968,9 +1976,9 @@ export default function Notes() {
 
                     <button
                       onClick={() => openNewNoteModal("production")}
-                      className="flex flex-col items-start gap-4 p-6 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left group cursor-pointer"
+                      className="flex flex-col items-start gap-4 p-6 rounded-2xl barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-[var(--gm-primary)]/40 backdrop-blur-md transition-all text-left group cursor-pointer shadow-none"
                     >
-                      <div className="p-3 bg-[#ff6600]/20 text-[#ff6600] rounded-xl group-hover:scale-110 transition-transform">
+                      <div className="p-3 bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 backdrop-blur-md rounded-xl group-hover:scale-110 transition-transform">
                         <Palette size={24} />
                       </div>
                       <div>
@@ -1995,7 +2003,7 @@ export default function Notes() {
         createPortal(
           <AnimatePresence>
             {modalOpen && (
-              <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-2.5 md:p-3 md:pl-[calc(var(--gm-sidebar-width,224px)+12px)] overflow-hidden gm-note-modal-overlay">
+              <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-0 sm:p-3 md:p-4 md:pl-[calc(var(--gm-sidebar-width,224px)+16px)] overflow-hidden gm-note-modal-overlay">
                 {/* Dark blur backdrop */}
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -2011,20 +2019,20 @@ export default function Notes() {
                   animate={{ y: 0, opacity: 1, scale: 1 }}
                   exit={{ y: "100%", opacity: 0, scale: 0.96 }}
                   transition={{ type: "spring", damping: 26, stiffness: 320 }}
-                  className={`relative w-full md:w-[94%] md:max-w-6xl rounded-2xl flex flex-col overflow-hidden gm-note-modal shadow-[0_30px_70px_rgba(0,0,0,0.9)] bg-[#0d1017] text-white z-10 m-auto`}
+                  className="relative w-full sm:w-[94%] md:max-w-6xl rounded-none sm:rounded-3xl flex flex-col overflow-hidden fora border border-white/15 shadow-none bg-[#0c0f17]/90 backdrop-blur-2xl text-white z-10 m-auto h-[100dvh] sm:h-auto"
                   style={{
                     width: window.innerWidth >= 768 && modalCustomSize.width ? `${modalCustomSize.width}px` : undefined,
                     height: window.innerWidth >= 768 && modalCustomSize.height ? `${modalCustomSize.height}px` : undefined,
-                    maxWidth: window.innerWidth >= 768 ? "calc(100vw - var(--gm-sidebar-width, 224px) - 24px)" : "calc(100vw - 20px)",
-                    maxHeight: window.innerWidth < 768 ? "min(calc(100dvh - 32px), 90dvh)" : modalCustomSize.height ? `${modalCustomSize.height}px` : "92vh",
-                    backgroundColor: "#0d1017",
-                    borderColor: "var(--gm-primary, #FF6900)",
-                    borderWidth: "1px",
+                    maxWidth: window.innerWidth >= 768 ? "calc(100vw - var(--gm-sidebar-width, 224px) - 24px)" : "100vw",
+                    maxHeight: window.innerWidth < 768 ? "100dvh" : modalCustomSize.height ? `${modalCustomSize.height}px` : "92vh",
+                    borderWidth: window.innerWidth < 768 ? "0px" : "1px",
                     borderStyle: "solid",
-                    boxShadow: highlightedId && editingNote && highlightedId === editingNote.id ? "0 0 35px rgba(255, 105, 0, 0.6)" : "0 30px 70px rgba(0, 0, 0, 0.9)",
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
+                  {/* Indicador de puxar estilo iOS no Smartphone */}
+                  <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
+
                   {/* Toast Feedback Flutuante no CENTRO da Nota */}
                   <AnimatePresence>
                     {toastMessage && (
@@ -2053,16 +2061,17 @@ export default function Notes() {
                     )}
                   </AnimatePresence>
 
+                  {/* Header / Barra de Título Estilo Apple */}
                   <div
-                    className="p-3 md:px-6 flex items-center justify-between shrink-0 relative z-20 bg-[#121620]"
+                    className="px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between shrink-0 relative z-20 bg-[#121622]/90 backdrop-blur-xl border-b border-white/10"
                     style={{
-                      borderBottom: "1px solid var(--gm-primary, #FF6900)",
+                      borderBottomColor: `${color}40`,
                     }}
                   >
-                    <div className="flex items-center gap-3 w-full">
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
                       <input
                         type="text"
-                        className="bg-transparent border-none outline-none font-bold text-base md:text-lg text-white w-full placeholder:text-white/40 pl-3 md:pl-5"
+                        className="bg-transparent border-none outline-none font-bold text-base sm:text-lg text-white w-full placeholder:text-white/30 tracking-tight"
                         placeholder="Título da nota"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -2074,60 +2083,61 @@ export default function Notes() {
                         }}
                       />
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 pl-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                       <button
                         onClick={() => setIsPinned(!isPinned)}
-                        className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-all cursor-pointer"
+                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-all cursor-pointer border"
                         style={{
-                          backgroundColor: isPinned ? `${color}30` : "rgba(255, 255, 255, 0.06)",
-                          color: isPinned ? color : "rgba(255, 255, 255, 0.6)",
+                          backgroundColor: isPinned ? `${color}30` : "rgba(255, 255, 255, 0.05)",
+                          borderColor: isPinned ? `${color}60` : "rgba(255, 255, 255, 0.1)",
+                          color: isPinned ? color : "rgba(255, 255, 255, 0.7)",
                         }}
                         title={isPinned ? "Desafixar nota" : "Fixar nota no topo"}
                       >
-                        <Pin size={18} fill={isPinned ? color : "none"} />
+                        <Pin size={16} fill={isPinned ? color : "none"} />
                       </button>
                       <button
                         onClick={() => setModalOpen(false)}
-                        className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white active:scale-95 transition-all cursor-pointer"
                         title="Fechar nota"
                       >
-                        <X size={18} />
+                        <X size={17} />
                       </button>
                     </div>
                   </div>
 
-                  {/* Navegação Superior por Abas (Otimizado para Smartphone e Telas Maiores) */}
-                  <div className="flex items-center justify-between gap-1 p-2 md:px-5 bg-[#0a0d14] border-b border-white/10 select-none shrink-0 z-20">
-                    <div className="grid grid-cols-3 gap-1.5 w-full">
+                  {/* Navegação Superior por Abas (Segmented Control Estilo Apple) */}
+                  <div className="px-3 sm:px-6 py-2 bg-[#090c12]/95 backdrop-blur-md border-b border-white/10 select-none shrink-0 z-20">
+                    <div className="grid grid-cols-3 gap-1 w-full bg-black/40 p-1 rounded-xl border border-white/10">
                       {/* Aba 1: Nota & Texto */}
                       <button
                         type="button"
                         onClick={() => setEditorTab("note")}
-                        className={`py-2 px-2 md:px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                        className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
                           editorTab === "note"
-                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 scale-[1.01]"
-                            : "bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10"
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 border border-orange-400/50 ring-1 ring-orange-500/30"
+                            : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"
                         }`}
                       >
                         <FileText size={14} className="shrink-0" />
-                        <span className="truncate">Nota</span>
+                        <span className="truncate">NOTA</span>
                       </button>
 
                       {/* Aba 2: Layouts & Fotos */}
                       <button
                         type="button"
                         onClick={() => setEditorTab("layouts")}
-                        className={`py-2 px-2 md:px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                        className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
                           editorTab === "layouts"
-                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 scale-[1.01]"
-                            : "bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10"
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 border border-orange-400/50 ring-1 ring-orange-500/30"
+                            : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"
                         }`}
                       >
                         <ImageIcon size={14} className="shrink-0" />
-                        <span className="truncate">Layouts</span>
+                        <span className="truncate">LAYOUTS</span>
                         {layoutUrls.length > 0 && (
                           <span
-                            className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
+                            className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
                               editorTab === "layouts"
                                 ? "bg-black/40 text-white"
                                 : "bg-white/20 text-white"
@@ -2142,14 +2152,14 @@ export default function Notes() {
                       <button
                         type="button"
                         onClick={() => setEditorTab("settings")}
-                        className={`py-2 px-2 md:px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                        className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
                           editorTab === "settings"
-                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 scale-[1.01]"
-                            : "bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10"
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 border border-orange-400/50 ring-1 ring-orange-500/30"
+                            : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"
                         }`}
                       >
                         <Sliders size={14} className="shrink-0" />
-                        <span className="truncate">Configurações</span>
+                        <span className="truncate">CONFIGURAÇÕES</span>
                         {(deliveryDate || [reminderTime, reminderTime2, reminderTime3].some(Boolean)) && (
                           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                         )}
@@ -2160,7 +2170,7 @@ export default function Notes() {
                   {/* Text Formatting Toolbar (Visível na aba de Nota) */}
                   {editorTab === "note" && (
                     <div
-                      className="flex flex-col gap-2 px-2 md:px-5 py-2 bg-[#090b10] border-b border-white/10 select-none shrink-0"
+                      className="flex flex-col gap-2 px-2 md:px-5 py-2 bg-[#090b10] border-b border-white/10 select-none shrink-0 relative z-30"
                       style={{ borderColor: `${color}30` }}
                     >
                       {/* Core Formatting Controls Group */}
@@ -2217,155 +2227,55 @@ export default function Notes() {
                           <Strikethrough size={15} />
                         </button>
 
-                        {/* Cores do Texto Dropdown (10 Cores) */}
+                        {/* Cores do Texto Botão (Abre a caixinha de configurações de cores à frente de tudo) */}
                         <div className="relative shrink-0">
                           <button
                             type="button"
                             onMouseDown={(e) => {
                               e.preventDefault();
+                              saveCurrentSelection();
                               setColorPickerOpen(!colorPickerOpen);
                               setHighlighterPickerOpen(false);
                               setFontSelectorOpen(false);
                             }}
-                            className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px] cursor-pointer"
-                            title="Cor do Texto"
+                            className={`py-1.5 px-2.5 rounded-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 min-h-[38px] cursor-pointer ${
+                              colorPickerOpen
+                                ? "bg-[var(--gm-primary,#FE540B)]/25 text-white border border-[var(--gm-primary,#FE540B)]/60 shadow-lg shadow-orange-500/20"
+                                : "bg-white/5 hover:bg-white/15 text-white"
+                            }`}
+                            title="Cor do Texto (Abrir configurações de cores)"
                           >
-                            <Palette size={15} className="text-white/70" />
+                            <Palette size={15} className="text-white/80" />
                             <span
-                              className="w-3.5 h-3.5 rounded-full border border-white/30"
+                              className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-sm shrink-0"
                               style={{ backgroundColor: selectedTextColor }}
                             />
                             <ChevronDown size={11} className="text-white/40" />
                           </button>
-
-                          {colorPickerOpen && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-[9990]"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setColorPickerOpen(false);
-                                }}
-                              />
-                              <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2.5 rounded-2xl flex flex-col gap-2 shadow-2xl z-[9995] backdrop-blur-md min-w-[210px]">
-                                <div className="flex items-center justify-between px-1 text-[9px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/5 pb-1">
-                                  <span>Cor do Texto</span>
-                                  <button
-                                    type="button"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setSelectedTextColor("#ffffff");
-                                      applyStyleToSelection({ color: "#ffffff" });
-                                      setColorPickerOpen(false);
-                                    }}
-                                    className="text-[10px] font-bold text-white/50 hover:text-white flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded hover:bg-white/10 cursor-pointer"
-                                    title="Redefinir para Branco"
-                                  >
-                                    <span>Padrão</span>
-                                  </button>
-                                </div>
-                                <div className="grid grid-cols-5 gap-2 p-1">
-                                  {TEXT_COLORS.map((col) => {
-                                    const isActive = selectedTextColor === col.hex;
-                                    return (
-                                      <button
-                                        key={col.hex}
-                                        type="button"
-                                        onMouseDown={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setSelectedTextColor(col.hex);
-                                          applyStyleToSelection({ color: col.hex });
-                                          setColorPickerOpen(false);
-                                        }}
-                                        className={`w-7 h-7 rounded-full border transition-all duration-200 shrink-0 flex items-center justify-center cursor-pointer ${
-                                          isActive
-                                            ? "opacity-100 scale-110 shadow-lg ring-2 ring-white/60 border-white/90"
-                                            : "opacity-40 hover:opacity-100 hover:scale-105 border-white/10 hover:border-white/40"
-                                        }`}
-                                        style={{
-                                          backgroundColor: col.hex,
-                                        }}
-                                        title={col.label}
-                                      >
-                                        {isActive && (
-                                          <Check
-                                            size={12}
-                                            className={col.hex === "#ffffff" ? "text-black stroke-[3]" : "text-white stroke-[3]"}
-                                          />
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </>
-                          )}
                         </div>
 
-                        {/* Font Gallery Dropdown */}
+                        {/* Galeria de Fontes Botão */}
                         <div className="relative shrink-0">
                           <button
                             type="button"
                             onMouseDown={(e) => {
                               e.preventDefault();
+                              saveCurrentSelection();
                               setFontSelectorOpen(!fontSelectorOpen);
                               setColorPickerOpen(false);
+                              setHighlighterPickerOpen(false);
                             }}
-                            className="py-1.5 px-3.5 rounded-lg hover:bg-white/15 text-white text-[12px] transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-bold flex items-center justify-center gap-1.5 min-h-[38px]"
+                            className={`py-1.5 px-3 rounded-lg text-[12px] transition-all tracking-wide hover:scale-105 active:scale-95 font-bold flex items-center justify-center gap-1.5 min-h-[38px] cursor-pointer ${
+                              fontSelectorOpen
+                                ? "bg-[var(--gm-primary,#FE540B)]/25 text-white border border-[var(--gm-primary,#FE540B)]/60 shadow-lg shadow-orange-500/20"
+                                : "bg-white/5 hover:bg-white/15 text-white"
+                            }`}
                             title="Galeria de Fontes"
                           >
-                            <Type size={13} className="text-white/60" />
+                            <Type size={13} className="text-white/80" />
                             <span>Fontes</span>
                             <ChevronDown size={12} className="text-white/40" />
                           </button>
-
-                          {fontSelectorOpen && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-[9990]"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setFontSelectorOpen(false);
-                                }}
-                              />
-                              <div className="absolute top-11 left-0 bg-[#141821]/95 border border-white/10 p-2 rounded-xl flex flex-col gap-0.5 shadow-lg z-[9995] backdrop-blur-md min-w-[200px] max-h-[280px] overflow-y-auto scrollbar-hide">
-                                <div className="px-2.5 py-1.5 text-[9px] font-extrabold uppercase tracking-widest text-white/40 border-b border-white/5 mb-1.5">
-                                  Selecione a Fonte
-                                </div>
-                                {[
-                                  { name: "Inter", value: "Inter, sans-serif", label: "Inter (Padrão)" },
-                                  { name: "Plus Jakarta Sans", value: "'Plus Jakarta Sans', sans-serif", label: "Plus Jakarta" },
-                                  { name: "Montserrat", value: "Montserrat, sans-serif", label: "Montserrat" },
-                                  { name: "Raleway", value: "Raleway, sans-serif", label: "Raleway" },
-                                  { name: "Playfair Display", value: "'Playfair Display', serif", label: "Playfair (Serif)" },
-                                  { name: "Hubot Sans", value: "'Hubot Sans', sans-serif", label: "Hubot Sans" },
-                                  { name: "Funnel Display", value: "'Funnel Display', sans-serif", label: "Funnel Display" },
-                                  { name: "Open Sans", value: "'Open Sans', sans-serif", label: "Open Sans" },
-                                  { name: "Roboto", value: "Roboto, sans-serif", label: "Roboto" },
-                                  { name: "Fira Code", value: "'Fira Code', monospace", label: "Fira Code (Mono)" },
-                                ].map((f) => (
-                                  <button
-                                    key={f.name}
-                                    type="button"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      applyStyleToSelection({ "font-family": f.value });
-                                      setFontSelectorOpen(false);
-                                    }}
-                                    className="text-left w-full px-3 py-2 rounded-lg text-[13px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                                    style={{ fontFamily: f.value }}
-                                  >
-                                    {f.label}
-                                  </button>
-                                ))}
-                              </div>
-                            </>
-                          )}
                         </div>
 
                         {/* Size Cycle */}
@@ -2472,796 +2382,782 @@ export default function Notes() {
 
                         <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
 
-                        {/* Highlighter */}
+                        {/* Highlighter Botão */}
                         <div className="relative shrink-0">
                           <button
                             type="button"
                             onMouseDown={(e) => {
                               e.preventDefault();
+                              saveCurrentSelection();
                               setHighlighterPickerOpen(!highlighterPickerOpen);
                               setColorPickerOpen(false);
                               setFontSelectorOpen(false);
                             }}
-                            className="py-1.5 px-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center gap-1.5 min-h-[38px] cursor-pointer"
+                            className={`py-1.5 px-2.5 rounded-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 min-h-[38px] cursor-pointer ${
+                              highlighterPickerOpen
+                                ? "bg-[var(--gm-primary,#FE540B)]/25 text-white border border-[var(--gm-primary,#FE540B)]/60 shadow-lg shadow-orange-500/20"
+                                : "bg-white/5 hover:bg-white/15 text-white"
+                            }`}
                             title="Marcador de Texto"
                           >
-                            <Highlighter size={15} className="text-white/70" />
+                            <Highlighter size={15} className="text-white/80" />
                             <span
-                              className="w-3.5 h-3.5 rounded-full border border-white/30"
+                              className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-sm shrink-0"
                               style={{ backgroundColor: selectedHighlightColor || "transparent" }}
                             />
                             <ChevronDown size={11} className="text-white/40" />
                           </button>
-
-                          {highlighterPickerOpen && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-[9990]"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setHighlighterPickerOpen(false);
-                                }}
-                              />
-                              <div className="absolute top-11 right-0 sm:left-0 sm:right-auto bg-[#141821]/95 border border-white/10 p-2.5 rounded-2xl flex flex-col gap-2 shadow-2xl z-[9995] backdrop-blur-md min-w-[210px]">
-                                <div className="flex items-center justify-between px-1 text-[9px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/5 pb-1">
-                                  <span>Marcador de Texto</span>
-                                  <button
-                                    type="button"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setSelectedHighlightColor("");
-                                      removeHighlight();
-                                      setHighlighterPickerOpen(false);
-                                    }}
-                                    className="text-[10px] font-bold text-red-400/80 hover:text-red-300 flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded hover:bg-red-500/15 cursor-pointer"
-                                    title="Remover marcação do texto selecionado"
-                                  >
-                                    <Eraser size={11} />
-                                    <span>Limpar</span>
-                                  </button>
-                                </div>
-
-                                {/* Grid com as 10 Cores do Marcador */}
-                                <div className="grid grid-cols-5 gap-2 p-1">
-                                  {HIGHLIGHT_COLORS.map((col) => {
-                                    const isActive = selectedHighlightColor === col.hex;
-                                    return (
-                                      <button
-                                        key={col.hex}
-                                        type="button"
-                                        onMouseDown={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          if (isActive) {
-                                            setSelectedHighlightColor("");
-                                            removeHighlight();
-                                          } else {
-                                            setSelectedHighlightColor(col.hex);
-                                            applyHighlight(col.hex);
-                                          }
-                                          setHighlighterPickerOpen(false);
-                                        }}
-                                        className={`w-7 h-7 rounded-full border transition-all duration-200 shrink-0 flex items-center justify-center cursor-pointer ${
-                                          isActive
-                                            ? "opacity-100 scale-110 shadow-lg ring-2 ring-white/60 border-white/90"
-                                            : "opacity-40 hover:opacity-100 hover:scale-105 border-white/10 hover:border-white/40"
-                                        }`}
-                                        style={{
-                                          backgroundColor: col.hex,
-                                        }}
-                                        title={col.label}
-                                      >
-                                        {isActive && (
-                                          <Check size={12} className="text-black stroke-[3]" />
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </>
-                          )}
                         </div>
                       </div>
                     </div>
                   )}
 
-              {/* Scrollable Area */}
+              {/* Scrollable Area com visual Apple, espaçamento harmônico e containers limpos */}
               <div
-                className="flex-1 overflow-y-auto custom-scroll min-h-0 relative flex flex-col"
+                className="flex-1 overflow-y-auto custom-scroll min-h-0 relative flex flex-col p-3.5 sm:p-5 gap-4"
                 style={{
                   backgroundColor: "transparent",
-                  boxShadow: `inset 0 0 40px ${color}15`,
+                  boxShadow: `inset 0 0 50px ${color}10`,
                 }}
               >
-                {/* Metadata Fields com Expansor Superior Elegante (Tipo, Status, Prazo, Responsável, Horário) */}
-                <div className="border-b border-white/5 bg-black/25 shrink-0 w-full animate-fadeIn">
-                  {/* Cabeçalho da Seção com Botão de Olho no Lado Direito */}
-                  <div className="p-3 md:px-5 py-2.5 flex items-center justify-between w-full flex-wrap gap-2 bg-white/[0.02]">
-                    {/* Lado Esquerdo: Título e Badges */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => setTopDetailsVisible(!topDetailsVisible)}
-                        className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-white/70 hover:text-white font-bold font-sans transition-colors cursor-pointer group"
-                        title={topDetailsVisible ? "Ocultar configurações da nota" : "Exibir configurações da nota"}
-                      >
-                        <Palette size={13} className="text-[var(--gm-primary,#FF6900)]" />
-                        <Clock size={13} className={deliveryTime ? "text-orange-400" : "text-white/40"} />
-                        <span>CONFIGURAÇÕES DA NOTA (TIPO, STATUS, PRAZO, RESPONSÁVEL)</span>
-                        {topDetailsVisible ? (
-                          <ChevronUp size={13} className="text-white/40 group-hover:text-white transition-colors" />
-                        ) : (
-                          <ChevronDown size={13} className="text-white/40 group-hover:text-white transition-colors animate-pulse" />
+                {/* ========================================================================= */}
+                {/* ABA 1: NOTA & DIGITAÇÃO */}
+                {/* ========================================================================= */}
+                {editorTab === "note" && (
+                  <motion.div
+                    key="tab-note"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.18 }}
+                    className="flex flex-col gap-3.5 flex-1 min-h-0"
+                  >
+                    {/* Pílulas de Contexto Rápido Apple (Tipo, Status, Prazo, Alarme, Layouts) */}
+                    <div className="flex items-center justify-between flex-wrap gap-2 px-0.5 py-0.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* Tipo da Nota */}
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-white/[0.06] text-white/90 border border-white/10">
+                          {noteType === "production" ? "PRODUÇÃO" : "GERAL"}
+                        </span>
+
+                        {/* Status */}
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30">
+                          {noteStatus.replace(/_/g, " ")}
+                        </span>
+
+                        {/* Prazo */}
+                        {deliveryDate && (
+                          <span className="inline-flex text-[10px] font-bold text-orange-300 items-center gap-1 bg-orange-500/10 px-2.5 py-1 rounded-lg border border-orange-500/20">
+                            <Calendar size={11} />
+                            {deliveryDate.split("-").reverse().join("/")}
+                            {deliveryTime ? ` às ${deliveryTime}` : ""}
+                          </span>
                         )}
-                      </button>
 
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-white/10 text-white/90 border border-white/10">
-                        {noteType === "production" ? "PRODUÇÃO" : "GERAL"}
-                      </span>
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 truncate max-w-[110px]">
-                        {noteStatus.replace(/_/g, " ")}
-                      </span>
+                        {/* Alarmes */}
+                        {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 && (
+                          <span className="inline-flex text-[10px] font-bold text-emerald-400 items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                            <Clock size={11} />
+                            {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length} alarme(s)
+                          </span>
+                        )}
 
-                      {deliveryDate && (
-                        <span className="hidden sm:inline-flex text-[9px] font-bold text-orange-300 items-center gap-1 bg-orange-500/10 px-2 py-0.5 rounded-md border border-orange-500/20">
-                          <Calendar size={10} />
-                          {deliveryDate.split("-").reverse().join("/")}
-                        </span>
-                      )}
-                      {responsibleName && (
-                        <span className="hidden md:inline-flex text-[9px] font-bold text-white/70 items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/10 truncate max-w-[120px]">
-                          {responsibleName}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Lado Direito: Botão com Ícone de Olho */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setTopDetailsVisible(!topDetailsVisible)}
-                        className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
-                        title={topDetailsVisible ? "Ocultar configurações" : "Expandir configurações"}
-                      >
-                        {topDetailsVisible ? <EyeOff size={11} /> : <Eye size={11} />}
-                        <span>{topDetailsVisible ? "Ocultar" : "Expandir"}</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Campos Editáveis - Exibidos quando o expansor estiver aberto */}
-                  <AnimatePresence>
-                    {topDetailsVisible && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.22 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="p-4 md:px-6 py-4 border-t border-white/5 bg-black/30 flex flex-col gap-4 w-full animate-fadeIn">
-                          {/* Linha Superior: Tipo de Nota, Status e Prazo de Entrega */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {/* Tipo da Nota */}
-                            <div className="flex flex-col gap-1 w-full">
-                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                                Tipo da Nota
-                              </label>
-                              <div className="relative">
-                                <select
-                                  value={noteType}
-                                  onChange={(e) => {
-                                    setNoteType(e.target.value as any);
-                                    setNoteStatus(
-                                      e.target.value === "note"
-                                        ? "a fazer"
-                                        : "a fazer",
-                                    );
-                                  }}
-                                  className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-white/30 cursor-pointer font-bold transition-all"
-                                >
-                                  <option value="note">GERAL</option>
-                                  <option value="production">PRODUÇÃO</option>
-                                </select>
-                                <ChevronDown
-                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                                  size={16}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Status */}
-                            <div className="flex flex-col gap-1 w-full">
-                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                                Status
-                              </label>
-                              <div className="relative">
-                                <select
-                                  value={noteStatus}
-                                  onChange={(e) => setNoteStatus(e.target.value)}
-                                  className="w-full appearance-none bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-white/30 cursor-pointer font-bold transition-all"
-                                >
-                                  {noteType === "note"
-                                    ? NOTE_STATUSES.filter((s) => s !== "LIXEIRA").map(
-                                        (s) => (
-                                          <option key={s} value={s.toLowerCase()}>
-                                            {s}
-                                          </option>
-                                        ),
-                                      )
-                                    : PROD_STATUSES.filter((s) => s !== "LIXEIRA").map(
-                                        (s) => (
-                                          <option key={s} value={s.toLowerCase()}>
-                                            {s}
-                                          </option>
-                                        ),
-                                      )}
-                                </select>
-                                <ChevronDown
-                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                                  size={16}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Prazo de Entrega */}
-                            <div className="flex flex-col gap-1 w-full">
-                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                                Prazo de Entrega
-                              </label>
-                              <div className="relative">
-                                <GlassDatePicker
-                                  value={deliveryDate}
-                                  onChange={setDeliveryDate}
-                                  className="w-full bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-9 pr-3.5 h-[44px] flex items-center outline-none focus:border-white/30 select-none font-bold transition-all"
-                                  title="Prazo"
-                                  themeColor={color}
-                                />
-                                <Calendar
-                                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                                  size={14}
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Linha Inferior: Responsável e Horário de Entrega */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {/* Responsável */}
-                            <div className="flex flex-col gap-1 w-full md:col-span-2 animate-fadeIn">
-                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                                Responsável
-                              </label>
-                              <input
-                                type="text"
-                                placeholder="Nome do responsável"
-                                value={responsibleName}
-                                onChange={(e) => setResponsibleName(e.target.value)}
-                                className="bg-black/40 border border-white/10 rounded-lg text-[14px] text-white px-3.5 h-[44px] outline-none focus:border-white/30 w-full font-bold transition-all"
-                              />
-                            </div>
-
-                            {/* Horário de Entrega */}
-                            <div className="flex flex-col gap-1 w-full animate-fadeIn">
-                              <label className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
-                                Horário de Entrega
-                              </label>
-                              <div className="relative">
-                                <GlassTimePicker
-                                  value={deliveryTime}
-                                  onChange={setDeliveryTime}
-                                  className="w-full bg-black/40 border border-white/10 rounded-lg text-[14px] text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-white/30 font-bold transition-all"
-                                />
-                                <Clock
-                                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none"
-                                  size={14}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Stacked Layout Block: Layout Top (Large) & Typing Editor Bottom */}
-                <div className="p-4 md:p-6 flex flex-col gap-5 flex-1 touch-pan-y">
-                  {/* Row 1: Layout Preview Panel com Expansor/Ocultador, Campo de Inserção Embutido, Zoom, Arrastar para Reorganizar e Organização Apple */}
-                  <div className="flex flex-col gap-2.5 w-full bg-white/[0.015] border border-white/5 p-3 rounded-2xl">
-                    <div className="flex items-center justify-between w-full flex-wrap gap-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setLayoutPreviewsVisible(!layoutPreviewsVisible)}
-                          className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-white/70 hover:text-white font-bold font-sans transition-colors cursor-pointer group"
-                          title={layoutPreviewsVisible ? "Ocultar prévia dos layouts" : "Exibir prévia dos layouts"}
-                        >
-                          <ImageIcon size={13} className="text-[var(--gm-primary,#FF6900)]" />
-                          <span>PRÉVIA DO LAYOUT ({layoutUrls.length}/6)</span>
-                          {layoutPreviewsVisible ? (
-                            <ChevronUp size={13} className="text-white/40 group-hover:text-white transition-colors" />
-                          ) : (
-                            <ChevronDown size={13} className="text-white/40 group-hover:text-white transition-colors animate-pulse" />
-                          )}
-                        </button>
-                        {layoutUrls.length > 1 && layoutPreviewsVisible && (
-                          <span className="hidden sm:inline-flex items-center gap-1 text-[9px] text-white/40 font-bold uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded-md">
-                            <Move size={10} /> Arraste para reordenar
+                        {/* Responsável */}
+                        {responsibleName && (
+                          <span className="inline-flex text-[10px] font-bold text-white/70 items-center gap-1 bg-white/[0.04] px-2.5 py-1 rounded-lg border border-white/10 truncate max-w-[130px]">
+                            <User size={11} />
+                            {responsibleName}
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      {/* Botão Atalho para Configurações */}
+                      <button
+                        id="btn-note-adjust-settings"
+                        type="button"
+                        onClick={() => setEditorTab("settings")}
+                        className="shrink-0 ml-auto sm:ml-0 flex items-center justify-center gap-2 px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[var(--gm-primary,#FE540B)] to-orange-500 hover:from-orange-500 hover:to-[var(--gm-primary,#FE540B)] !text-white font-bold text-xs sm:text-[13px] tracking-wide shadow-[0_4px_16px_rgba(254,84,11,0.35)] border border-white/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer whitespace-nowrap min-w-[185px]"
+                        title="Ajustar configurações e prazos da nota"
+                      >
+                        <Sliders size={13} className="shrink-0 !text-white" strokeWidth={2.2} />
+                        <span className="whitespace-nowrap font-bold !text-white">Ajustar configurações</span>
+                      </button>
+                    </div>
+
+                    {/* Prévias compactas de layouts se houver (para visualização rápida no smartphone) */}
+                    {layoutUrls.length > 0 && (
+                      <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl bg-white/[0.025] border border-white/10 backdrop-blur-md">
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                          {layoutUrls.slice(0, 6).map((url, idx) => (
+                            <div
+                              key={idx}
+                              onClick={() => {
+                                setZoomImage({ url, index: idx });
+                                setZoomScale(1);
+                              }}
+                              className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-white/20 shrink-0 cursor-pointer group hover:scale-105 transition-all"
+                              title={`Ver layout ${idx + 1}`}
+                            >
+                              <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                              <span className="absolute bottom-0 right-0 bg-black/75 text-[9px] font-bold px-1 rounded-tl text-white">
+                                #{idx + 1}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                         <button
                           type="button"
-                          onClick={() => setLayoutPreviewsVisible(!layoutPreviewsVisible)}
-                          className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                          onClick={() => setEditorTab("layouts")}
+                          className="text-xs font-bold text-[var(--gm-primary,#FF6900)] hover:underline whitespace-nowrap shrink-0 px-2.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-all cursor-pointer"
                         >
-                          {layoutPreviewsVisible ? <EyeOff size={11} /> : <Eye size={11} />}
-                          <span>{layoutPreviewsVisible ? "Ocultar" : "Expandir"}</span>
+                          Ver Layouts ({layoutUrls.length}) →
                         </button>
+                      </div>
+                    )}
 
-                        {layoutUrls.length > 0 && (
+                    {/* Apple Notes Writing Card */}
+                    <div className="flex flex-col flex-1 w-full rounded-2xl bg-white/[0.025] border border-white/10 focus-within:border-[var(--gm-primary,#FF6900)]/60 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all p-3.5 sm:p-5 min-h-[280px] shadow-sm">
+                      {/* Barra superior de controle do editor: Desfazer / Refazer e contador */}
+                      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/5 flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-white/60">Texto da Nota</span>
+                          <span className="text-[10px] text-white/35 font-mono">
+                            {content ? content.replace(/<[^>]+>/g, "").trim().length : 0} carac.
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {/* Botão Desfazer (Undo) - Essencial para Smartphone */}
+                          <button
+                            type="button"
+                            onClick={performUndo}
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all active:scale-90 cursor-pointer"
+                            title="Desfazer (Undo)"
+                          >
+                            <Undo2 size={14} />
+                          </button>
+
+                          {/* Botão Refazer (Redo) - Essencial para Smartphone */}
+                          <button
+                            type="button"
+                            onClick={performRedo}
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all active:scale-90 cursor-pointer"
+                            title="Refazer (Redo)"
+                          >
+                            <Redo2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Editor ContentEditable */}
+                      <div
+                        ref={(el) => {
+                          contentRef.current = el;
+                          if (el && el.innerHTML !== content) {
+                            el.innerHTML = content;
+                          }
+                        }}
+                        key={editingNote ? editingNote.id : "new-note"}
+                        contentEditable
+                        onClick={(e) => {
+                          const target = e.target as HTMLElement;
+                          const deleteBtn = target.closest(".note-img-delete");
+                          if (deleteBtn) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const wrapper = deleteBtn.closest(".note-img-wrapper");
+                            if (wrapper) {
+                              wrapper.remove();
+                              if (contentRef.current) {
+                                const val = contentRef.current.innerHTML;
+                                setContent(val);
+                                pushToHistory(val, true);
+                              }
+                            }
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (
+                            (e.ctrlKey || e.metaKey) &&
+                            !e.shiftKey &&
+                            e.key.toLowerCase() === "z"
+                          ) {
+                            e.preventDefault();
+                            performUndo();
+                          } else if (
+                            ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") ||
+                            ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "z")
+                          ) {
+                            e.preventDefault();
+                            performRedo();
+                          }
+                        }}
+                        onKeyUp={() => {
+                          saveCurrentSelection();
+                          if (contentRef.current) {
+                            const val = contentRef.current.innerHTML;
+                            if (val !== content) {
+                              setContent(val);
+                            }
+                          }
+                        }}
+                        onMouseUp={() => saveCurrentSelection()}
+                        onPointerUp={() => saveCurrentSelection()}
+                        onTouchEnd={() => saveCurrentSelection()}
+                        onSelect={() => saveCurrentSelection()}
+                        onCut={() => {
+                          setTimeout(() => {
+                            if (contentRef.current) {
+                              const val = contentRef.current.innerHTML;
+                              setContent(val);
+                              pushToHistory(val, true);
+                              saveCurrentSelection();
+                            }
+                          }, 10);
+                        }}
+                        onInput={(e) => {
+                          const val = e.currentTarget.innerHTML;
+                          setContent(val);
+                          pushToHistory(val);
+                          saveCurrentSelection();
+                        }}
+                        className="w-full flex-1 min-h-[220px] bg-transparent outline-none text-white/95 focus:outline-none relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0 text-[15.5px] sm:text-[16.5px] font-normal leading-relaxed"
+                        {...{ placeholder: "Escreva seu texto aqui..." }}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ========================================================================= */}
+                {/* ABA 2: LAYOUTS & FOTOS */}
+                {/* ========================================================================= */}
+                {editorTab === "layouts" && (
+                  <motion.div
+                    key="tab-layouts"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.18 }}
+                    className="flex flex-col gap-4 flex-1 min-h-0"
+                  >
+                    {/* Card para Adicionar Layouts */}
+                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <ImageIcon size={16} className="text-[var(--gm-primary,#FF6900)]" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                            Layouts & Anexos
+                          </span>
+                        </div>
+                        <span
+                          className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${
+                            layoutUrls.length >= 6
+                              ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
+                              : "bg-white/5 text-white/60 border-white/10"
+                          }`}
+                        >
+                          {layoutUrls.length}/6 layouts
+                        </span>
+                      </div>
+
+                      {/* Input de URL e Botão de Adicionar */}
+                      <div className="flex flex-col sm:flex-row gap-2.5 items-stretch">
+                        <div className="relative flex-1 flex gap-2">
+                          <div className="relative flex-1">
+                            <input
+                              type="text"
+                              placeholder={
+                                layoutUrls.length >= 6
+                                  ? "Limite máximo de 6 layouts atingido"
+                                  : "Cole o link da imagem para o layout..."
+                              }
+                              disabled={layoutUrls.length >= 6}
+                              value={layoutUrlInput}
+                              onChange={(e) => setLayoutUrlInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && layoutUrlInput.trim()) {
+                                  e.preventDefault();
+                                  if (layoutUrls.length >= 6) {
+                                    showToast("Limite máximo de 6 layouts atingido!");
+                                    return;
+                                  }
+                                  const val = layoutUrlInput.trim();
+                                  setLayoutUrls((prev) =>
+                                    prev.includes(val) ? prev : [...prev, val].slice(0, 6)
+                                  );
+                                  setLayoutUrlInput("");
+                                  showToast("Layout adicionado!");
+                                }
+                              }}
+                              className="bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-3 py-2.5 outline-none focus:border-[var(--gm-primary,#FF6900)] w-full disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            />
+                            <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={14} />
+                          </div>
+
+                          {layoutUrlInput.trim() && (
+                            <button
+                              type="button"
+                              disabled={layoutUrls.length >= 6}
+                              onClick={() => {
+                                if (layoutUrls.length >= 6) {
+                                  showToast("Limite máximo de 6 layouts atingido!");
+                                  return;
+                                }
+                                const val = layoutUrlInput.trim();
+                                setLayoutUrls((prev) =>
+                                  prev.includes(val) ? prev : [...prev, val].slice(0, 6)
+                                );
+                                setLayoutUrlInput("");
+                                showToast("Layout adicionado!");
+                              }}
+                              className="bg-[var(--gm-primary,#FF6900)] hover:brightness-110 rounded-xl text-xs font-bold text-white px-4 py-2.5 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer shadow-md shadow-orange-500/20"
+                            >
+                              <Plus size={14} />
+                              <span>Adicionar</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Botão de Enviar Imagens do Smartphone */}
+                        <label
+                          className={`bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl text-xs font-bold text-white px-4 py-2.5 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 shadow-sm active:scale-95 ${
+                            uploadingLayout || layoutUrls.length >= 6 ? "opacity-50 pointer-events-none" : ""
+                          }`}
+                        >
+                          {uploadingLayout ? (
+                            <Loader2 size={15} className="animate-spin" />
+                          ) : (
+                            <Upload size={14} className="text-[var(--gm-primary,#FF6900)]" />
+                          )}
+                          <span>{uploadingLayout ? "Enviando fotos..." : "Enviar do Smartphone"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            multiple
+                            disabled={uploadingLayout || layoutUrls.length >= 6}
+                            onChange={async (e) => {
+                              const files = e.target.files;
+                              if (files && files.length > 0 && tenantId) {
+                                const availableSlots = 6 - layoutUrls.length;
+                                if (availableSlots <= 0) {
+                                  showToast("Limite máximo de 6 layouts atingido!");
+                                  return;
+                                }
+                                const filesToUpload = Array.from(files).slice(0, availableSlots);
+                                setUploadingLayout(true);
+                                try {
+                                  const options = {
+                                    maxSizeMB: 1,
+                                    maxWidthOrHeight: 1600,
+                                    useWebWorker: true,
+                                  };
+                                  const uploadedUrls: string[] = [];
+                                  for (const file of filesToUpload) {
+                                    const compressedFile = await imageCompression(file, options);
+                                    const url = await uploadNoteAsset(tenantId, compressedFile);
+                                    if (url) {
+                                      uploadedUrls.push(url);
+                                    }
+                                  }
+                                  setLayoutUrls((prev) => {
+                                    const uniqueNew = uploadedUrls.filter((u) => !prev.includes(u));
+                                    return [...prev, ...uniqueNew].slice(0, 6);
+                                  });
+                                  showToast(`${uploadedUrls.length} layout(s) enviado(s) com sucesso!`);
+                                } catch (err) {
+                                  alert("Erro ao enviar layout(s).");
+                                } finally {
+                                  setUploadingLayout(false);
+                                  e.target.value = "";
+                                }
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+
+                      {layoutUrls.length > 1 && (
+                        <div className="flex items-center justify-between pt-1 text-[11px] text-white/40">
+                          <span className="flex items-center gap-1">
+                            <Move size={12} /> Toque e arraste para reordenar
+                          </span>
                           <button
                             type="button"
                             onClick={() => {
                               setLayoutUrls([]);
                               setLayoutUrlInput("");
                             }}
-                            className="px-2.5 py-1 rounded-lg bg-red-600/90 hover:bg-red-500 text-white text-[10px] font-extrabold flex items-center gap-1 transition-all active:scale-95 shadow-md border border-red-500/25 cursor-pointer animate-fadeIn"
-                            title="Remover todos os layouts"
+                            className="text-red-400 hover:text-red-300 font-bold hover:underline cursor-pointer"
                           >
-                            <Trash2 size={11} />
-                            <span>{layoutUrls.length > 1 ? "REMOVER TODOS" : "REMOVER"}</span>
+                            Remover todos
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Conteúdo Expansível das Prévias de Layout + Campo de Inserção Embutido */}
-                    <AnimatePresence>
-                      {layoutPreviewsVisible && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.25 }}
-                          className="overflow-hidden flex flex-col gap-3"
-                        >
-                          {/* Campo para Inserção do Layout (Embutido dentro da seção oculta) */}
-                          <div className="p-3 md:p-3.5 rounded-xl border border-white/10 bg-black/40 flex flex-col gap-2.5">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold font-mono">
-                                Campo para Inserção do Layout (Até 6 Imagens Lado a Lado)
-                              </span>
-                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                                layoutUrls.length >= 6 
-                                  ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
-                                  : "bg-white/5 text-white/50 border-white/10"
-                              }`}>
-                                {layoutUrls.length}/6 layouts
-                              </span>
-                            </div>
+                    {/* Grid com Prévias dos Layouts */}
+                    {layoutUrls.length > 0 ? (
+                      <div
+                        className={`w-full py-1 grid gap-3.5 ${
+                          layoutUrls.length === 1
+                            ? "grid-cols-1"
+                            : layoutUrls.length === 2
+                              ? "grid-cols-1 sm:grid-cols-2"
+                              : "grid-cols-2 sm:grid-cols-3"
+                        }`}
+                      >
+                        {layoutUrls.map((url, idx) => {
+                          const isDragged = draggedLayoutIdx === idx;
+                          const isDragOver = dragOverLayoutIdx === idx;
 
-                            <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
-                              <div className="relative flex-1 flex gap-2">
-                                <div className="relative flex-1">
-                                  <input
-                                    type="text"
-                                    placeholder={
-                                      layoutUrls.length >= 6
-                                        ? "Limite máximo de 6 layouts atingido"
-                                        : "Cole aqui a URL/link da imagem para o layout..."
-                                    }
-                                    disabled={layoutUrls.length >= 6}
-                                    value={layoutUrlInput}
-                                    onChange={(e) => setLayoutUrlInput(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter" && layoutUrlInput.trim()) {
-                                        e.preventDefault();
-                                        if (layoutUrls.length >= 6) {
-                                          showToast("Limite máximo de 6 layouts atingido!");
-                                          return;
-                                        }
-                                        const val = layoutUrlInput.trim();
-                                        setLayoutUrls((prev) =>
-                                          prev.includes(val) ? prev : [...prev, val].slice(0, 6)
-                                        );
-                                        setLayoutUrlInput("");
-                                        showToast("Layout adicionado!");
-                                      }
-                                    }}
-                                    className="bg-black/50 border border-white/10 rounded-lg text-sm text-white pl-9 pr-3 py-2 outline-none focus:border-white/30 w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                                  />
-                                  <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={14} />
-                                </div>
+                          return (
+                            <div
+                              key={`${url}-${idx}`}
+                              draggable
+                              onDragStart={(e) => {
+                                setDraggedLayoutIdx(idx);
+                                e.dataTransfer.setData("text/plain", `${idx}`);
+                                e.dataTransfer.effectAllowed = "move";
+                              }}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = "move";
+                                if (dragOverLayoutIdx !== idx) setDragOverLayoutIdx(idx);
+                              }}
+                              onDragLeave={() => {
+                                if (dragOverLayoutIdx === idx) setDragOverLayoutIdx(null);
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                if (draggedLayoutIdx === null || draggedLayoutIdx === idx) {
+                                  setDraggedLayoutIdx(null);
+                                  setDragOverLayoutIdx(null);
+                                  return;
+                                }
+                                setLayoutUrls((prev) => {
+                                  const copy = [...prev];
+                                  const [item] = copy.splice(draggedLayoutIdx, 1);
+                                  copy.splice(idx, 0, item);
+                                  return copy;
+                                });
+                                setDraggedLayoutIdx(null);
+                                setDragOverLayoutIdx(null);
+                                showToast(`Layout reorganizado para a posição ${idx + 1}`);
+                              }}
+                              onDragEnd={() => {
+                                setDraggedLayoutIdx(null);
+                                setDragOverLayoutIdx(null);
+                              }}
+                              onClick={() => {
+                                setZoomImage({ url, index: idx });
+                                setZoomScale(1);
+                              }}
+                              className={`relative flex items-center justify-center rounded-2xl overflow-hidden group shadow-xl bg-black/40 border transition-all duration-300 cursor-pointer select-none aspect-video sm:aspect-auto ${
+                                isDragOver
+                                  ? "border-[var(--gm-primary,#FF6900)] scale-[1.02] ring-2 ring-orange-500/40"
+                                  : isDragged
+                                    ? "opacity-40 border-dashed border-white/40"
+                                    : "border-white/10 hover:border-white/30"
+                              }`}
+                              title="Toque para ampliar com Zoom ou arraste para reorganizar"
+                            >
+                              <img
+                                src={url}
+                                alt={`Layout ${idx + 1}`}
+                                className="w-full h-full object-cover rounded-2xl transition-transform duration-500 group-hover:scale-105 pointer-events-none max-h-[300px]"
+                              />
 
-                                {layoutUrlInput.trim() && (
-                                  <button
-                                    type="button"
-                                    disabled={layoutUrls.length >= 6}
-                                    onClick={() => {
-                                      if (layoutUrls.length >= 6) {
-                                        showToast("Limite máximo de 6 layouts atingido!");
-                                        return;
-                                      }
-                                      const val = layoutUrlInput.trim();
-                                      setLayoutUrls((prev) =>
-                                        prev.includes(val) ? prev : [...prev, val].slice(0, 6)
-                                      );
-                                      setLayoutUrlInput("");
-                                      showToast("Layout adicionado!");
-                                    }}
-                                    className="bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg text-xs font-bold text-white px-3.5 py-2 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
-                                    title="Adicionar layout"
-                                  >
-                                    <Plus size={14} />
-                                    <span>Adicionar</span>
-                                  </button>
+                              {/* Badge Canto Superior Esquerdo: Posição */}
+                              <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-20 pointer-events-none">
+                                <span className="w-6 h-6 rounded-lg bg-black/75 backdrop-blur-md text-white/90 text-[10px] font-black flex items-center justify-center border border-white/20 shadow-md">
+                                  #{idx + 1}
+                                </span>
+                                {idx === 0 && (
+                                  <span className="px-2 py-0.5 rounded-lg bg-[var(--gm-primary,#FF6900)] text-white text-[9px] font-black uppercase shadow-md">
+                                    Principal
+                                  </span>
                                 )}
                               </div>
 
-                              <label
-                                className={`bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 rounded-lg text-xs font-bold text-orange-300 px-3.5 py-2 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 ${
-                                  uploadingLayout || layoutUrls.length >= 6 ? "opacity-50 pointer-events-none" : ""
-                                }`}
-                              >
-                                {uploadingLayout ? (
-                                  <Loader2 size={15} className="animate-spin" />
-                                ) : (
-                                  <Upload size={14} />
-                                )}
-                                <span>{uploadingLayout ? "Enviando..." : "Enviar Layouts (Até 6)"}</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  multiple
-                                  disabled={uploadingLayout || layoutUrls.length >= 6}
-                                  onChange={async (e) => {
-                                    const files = e.target.files;
-                                    if (files && files.length > 0 && tenantId) {
-                                      const availableSlots = 6 - layoutUrls.length;
-                                      if (availableSlots <= 0) {
-                                        showToast("Limite máximo de 6 layouts atingido!");
-                                        return;
-                                      }
-                                      const filesToUpload = Array.from(files).slice(0, availableSlots);
-                                      setUploadingLayout(true);
-                                      try {
-                                        const options = {
-                                          maxSizeMB: 1,
-                                          maxWidthOrHeight: 1600,
-                                          useWebWorker: true,
-                                        };
-                                        const uploadedUrls: string[] = [];
-                                        for (const file of filesToUpload) {
-                                          const compressedFile = await imageCompression(file, options);
-                                          const url = await uploadNoteAsset(tenantId, compressedFile);
-                                          if (url) {
-                                            uploadedUrls.push(url);
-                                          }
-                                        }
-
-                                        setLayoutUrls((prev) => {
-                                          const uniqueNew = uploadedUrls.filter((u) => !prev.includes(u));
-                                          return [...prev, ...uniqueNew].slice(0, 6);
-                                        });
-                                        showToast(`${uploadedUrls.length} layout(s) enviado(s) com sucesso!`);
-                                      } catch (err) {
-                                        alert("Erro ao enviar layout(s).");
-                                      } finally {
-                                        setUploadingLayout(false);
-                                        e.target.value = "";
-                                      }
-                                    }
+                              {/* Botão de Excluir */}
+                              <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setLayoutUrls((prev) => prev.filter((_, i) => i !== idx));
+                                    showToast(`Layout ${idx + 1} removido`);
                                   }}
-                                />
-                              </label>
-                            </div>
-                          </div>
+                                  className="w-7 h-7 rounded-full bg-red-600/90 hover:bg-red-500 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg active:scale-90 backdrop-blur-md"
+                                  title={`Excluir layout ${idx + 1}`}
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
 
-                          {/* Grid com Prévias dos Layouts */}
-                          {layoutUrls.length > 0 ? (
-                            <div
-                              className={`w-full py-1 animate-fadeIn grid gap-3.5 ${
-                                layoutUrls.length === 1
-                                  ? "grid-cols-1"
-                                  : layoutUrls.length === 2
-                                    ? "grid-cols-1 sm:grid-cols-2"
-                                    : layoutUrls.length === 3
-                                      ? "grid-cols-1 sm:grid-cols-2"
-                                      : layoutUrls.length === 4
-                                        ? "grid-cols-1 sm:grid-cols-2"
-                                        : layoutUrls.length === 5
-                                          ? "grid-cols-1 sm:grid-cols-6"
-                                          : "grid-cols-1 sm:grid-cols-3"
-                              }`}
+                              {/* Overlay com Zoom Indicator */}
+                              <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                <span className="px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 shadow-xl">
+                                  <ZoomIn size={13} className="text-[var(--gm-primary,#FF6900)]" />
+                                  Ver com Zoom
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-center py-12 px-4 text-white/30 gap-3 bg-white/[0.02] rounded-2xl border border-white/10">
+                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40">
+                          <ImageIcon size={22} />
+                        </div>
+                        <div className="flex flex-col gap-1 max-w-sm">
+                          <span className="text-sm font-bold text-white/70">Nenhum layout adicionado</span>
+                          <span className="text-xs text-white/40">
+                            Adicione links de imagens ou envie fotos do smartphone para acompanhar referências visuais nesta nota.
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* ========================================================================= */}
+                {/* ABA 3: CONFIGURAÇÕES & PRAZOS */}
+                {/* ========================================================================= */}
+                {editorTab === "settings" && (
+                  <motion.div
+                    key="tab-settings"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.18 }}
+                    className="flex flex-col gap-4 flex-1 min-h-0"
+                  >
+                    {/* Card 1: Classificação e Responsável */}
+                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3.5">
+                      <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                        <Palette size={15} className="text-[var(--gm-primary,#FF6900)]" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                          Classificação & Responsável
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                        {/* Tipo da Nota */}
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label className="text-xs font-semibold text-white/60">
+                            Tipo da Nota
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={noteType}
+                              onChange={(e) => {
+                                setNoteType(e.target.value as any);
+                                setNoteStatus("a fazer");
+                              }}
+                              className="w-full appearance-none bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-all"
                             >
-                              {layoutUrls.map((url, idx) => {
-                                // Organização Apple estrita conforme solicitado pelo usuário:
-                                // - 1 layout: 1 coluna
-                                // - 2 layouts: 2 colunas lado a lado
-                                // - 3 layouts: 2 em cima (idx 0, 1), 1 embaixo (idx 2) centralizado ocupando 2 colunas
-                                // - 4 layouts: 2 em cima (idx 0, 1), 2 embaixo (idx 2, 3) em grid de 2 colunas
-                                // - 5 layouts: 3 em cima (idx 0, 1, 2 em 2 cols de 6), 2 embaixo (idx 3, 4 em 3 cols de 6)
-                                // - 6 layouts: 3 em cima (idx 0, 1, 2), 3 embaixo (idx 3, 4, 5) em grid de 3 colunas
-                                let spanClass = "col-span-1";
-                                if (layoutUrls.length === 3 && idx === 2) {
-                                  spanClass = "sm:col-span-2 sm:max-w-[65%] sm:mx-auto w-full";
-                                } else if (layoutUrls.length === 5) {
-                                  spanClass = idx < 3 ? "sm:col-span-2" : "sm:col-span-3";
-                                }
+                              <option value="note">GERAL</option>
+                              <option value="production">PRODUÇÃO</option>
+                            </select>
+                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                          </div>
+                        </div>
 
-                                const imgMaxHeight =
-                                  layoutUrls.length === 1
-                                    ? "480px"
-                                    : layoutUrls.length === 2
-                                      ? "360px"
-                                      : layoutUrls.length <= 4
-                                        ? "290px"
-                                        : "230px";
+                        {/* Status */}
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label className="text-xs font-semibold text-white/60">
+                            Status
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={noteStatus}
+                              onChange={(e) => setNoteStatus(e.target.value)}
+                              className="w-full appearance-none bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-all"
+                            >
+                              {noteType === "note"
+                                ? NOTE_STATUSES.filter((s) => s !== "LIXEIRA").map((s) => (
+                                    <option key={s} value={s.toLowerCase()}>
+                                      {s}
+                                    </option>
+                                  ))
+                                : PROD_STATUSES.filter((s) => s !== "LIXEIRA").map((s) => (
+                                    <option key={s} value={s.toLowerCase()}>
+                                      {s}
+                                    </option>
+                                  ))}
+                            </select>
+                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                          </div>
+                        </div>
 
-                                const isDragged = draggedLayoutIdx === idx;
-                                const isDragOver = dragOverLayoutIdx === idx;
-
-                                return (
-                                  <div
-                                    key={`${url}-${idx}`}
-                                    draggable
-                                    onDragStart={(e) => {
-                                      setDraggedLayoutIdx(idx);
-                                      e.dataTransfer.setData("text/plain", `${idx}`);
-                                      e.dataTransfer.effectAllowed = "move";
-                                    }}
-                                    onDragOver={(e) => {
-                                      e.preventDefault();
-                                      e.dataTransfer.dropEffect = "move";
-                                      if (dragOverLayoutIdx !== idx) setDragOverLayoutIdx(idx);
-                                    }}
-                                    onDragLeave={() => {
-                                      if (dragOverLayoutIdx === idx) setDragOverLayoutIdx(null);
-                                    }}
-                                    onDrop={(e) => {
-                                      e.preventDefault();
-                                      if (draggedLayoutIdx === null || draggedLayoutIdx === idx) {
-                                        setDraggedLayoutIdx(null);
-                                        setDragOverLayoutIdx(null);
-                                        return;
-                                      }
-                                      setLayoutUrls((prev) => {
-                                        const copy = [...prev];
-                                        const [item] = copy.splice(draggedLayoutIdx, 1);
-                                        copy.splice(idx, 0, item);
-                                        return copy;
-                                      });
-                                      setDraggedLayoutIdx(null);
-                                      setDragOverLayoutIdx(null);
-                                      showToast(`Layout reorganizado para a posição ${idx + 1}`);
-                                    }}
-                                    onDragEnd={() => {
-                                      setDraggedLayoutIdx(null);
-                                      setDragOverLayoutIdx(null);
-                                    }}
-                                    onClick={() => {
-                                      setZoomImage({ url, index: idx });
-                                      setZoomScale(1);
-                                    }}
-                                    className={`relative flex items-center justify-center rounded-2xl overflow-hidden group/item shadow-xl bg-black/40 border transition-all duration-300 cursor-grab active:cursor-grabbing select-none ${
-                                      isDragOver
-                                        ? "border-[var(--gm-primary,#FF6900)] scale-[1.03] ring-2 ring-orange-500/40 shadow-2xl"
-                                        : isDragged
-                                          ? "opacity-40 border-dashed border-white/40"
-                                          : "border-white/10 hover:border-white/30 hover:shadow-2xl"
-                                    } ${spanClass}`}
-                                    title="Clique para ampliar com Zoom e detalhes ou arraste para reorganizar"
-                                  >
-                                    {/* Layout Image com estilo Apple, transição suave de hover */}
-                                    <img
-                                      src={url}
-                                      alt={`Layout ${idx + 1}`}
-                                      className="w-full h-auto object-cover rounded-2xl transition-transform duration-500 ease-out group-hover/item:scale-[1.03] pointer-events-none"
-                                      style={{ maxHeight: imgMaxHeight }}
-                                    />
-
-                                    {/* Badge Canto Superior Esquerdo: Indicador de Drag & Drop e Posição */}
-                                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-20 pointer-events-none">
-                                      <span className="w-6 h-6 rounded-lg bg-black/70 backdrop-blur-md text-white/80 text-[10px] font-black flex items-center justify-center border border-white/15 shadow-md">
-                                        #{idx + 1}
-                                      </span>
-                                    </div>
-
-                                    {/* Overlay Central ao passar o mouse para abrir Zoom */}
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
-                                      <span className="px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-xl">
-                                        <ZoomIn size={14} className="text-[var(--gm-primary,#FF6900)]" />
-                                        Ver com Zoom
-                                      </span>
-                                    </div>
-
-                                    {/* Canto Superior Direito: Número 1 (para o 1º anexo) e Botão de Excluir */}
-                                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">
-                                      {idx === 0 && (
-                                        <span
-                                          className="w-7 h-7 rounded-full bg-[var(--gm-primary,#FF6900)] text-white text-[12px] font-black flex items-center justify-center shadow-lg border border-white/20 backdrop-blur-md ring-2 ring-orange-500/50"
-                                          title="1º Anexo / Primeiro Layout"
-                                        >
-                                          1
-                                        </span>
-                                      )}
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setLayoutUrls((prev) => prev.filter((_, i) => i !== idx));
-                                          showToast(`Layout ${idx + 1} removido`);
-                                        }}
-                                        className="w-8 h-8 rounded-full bg-red-600/90 hover:bg-red-500 text-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-lg hover:scale-110 active:scale-90 backdrop-blur-md"
-                                        title={`Excluir layout ${idx + 1}`}
-                                        aria-label={`Excluir layout ${idx + 1}`}
-                                      >
-                                        <Trash2 size={15} />
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center text-center py-5 px-4 text-white/20 gap-2 bg-black/20 rounded-xl border border-white/5">
-                              <ImageIcon size={18} className="text-white/25" />
-                              <span className="text-xs font-semibold text-white/40">
-                                Nenhum layout carregado. Adicione links ou envie até 6 imagens acima para visualizá-las lado a lado.
-                              </span>
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Row 2: Content Text Typing Panel com Expansor/Ocultador */}
-                  <div className="flex flex-col gap-2.5 w-full bg-white/[0.015] border border-white/5 p-3 rounded-2xl">
-                    <div className="flex items-center justify-between w-full">
-                      <button
-                        type="button"
-                        onClick={() => setTypingSectionVisible(!typingSectionVisible)}
-                        className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-white/70 hover:text-white font-bold font-sans transition-colors cursor-pointer group"
-                        title={typingSectionVisible ? "Ocultar caixa de digitação" : "Exibir caixa de digitação"}
-                      >
-                        <Type size={13} className="text-[var(--gm-primary,#FF6900)]" />
-                        <span>DIGITAÇÃO</span>
-                        {typingSectionVisible ? (
-                          <ChevronUp size={13} className="text-white/40 group-hover:text-white transition-colors" />
-                        ) : (
-                          <ChevronDown size={13} className="text-white/40 group-hover:text-white transition-colors animate-pulse" />
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setTypingSectionVisible(!typingSectionVisible)}
-                        className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
-                      >
-                        {typingSectionVisible ? <EyeOff size={11} /> : <Eye size={11} />}
-                        <span>{typingSectionVisible ? "Ocultar" : "Expandir"}</span>
-                      </button>
+                        {/* Responsável */}
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label className="text-xs font-semibold text-white/60">
+                            Responsável
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Nome do responsável"
+                              value={responsibleName}
+                              onChange={(e) => setResponsibleName(e.target.value)}
+                              className="bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] w-full font-semibold transition-all"
+                            />
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    <AnimatePresence>
-                      {typingSectionVisible ? (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.25 }}
-                          className="w-full rounded-xl border border-white/5 bg-black/15 p-4 focus-within:border-white/15 transition-all flex flex-col min-h-[200px] h-auto overflow-hidden"
-                        >
-                          <div
-                            ref={(el) => {
-                              contentRef.current = el;
-                              if (el && el.innerHTML !== content) {
-                                el.innerHTML = content;
-                              }
-                            }}
-                            key={editingNote ? editingNote.id : "new-note"}
-                            contentEditable
-                            onClick={(e) => {
-                              const target = e.target as HTMLElement;
-                              const deleteBtn = target.closest(".note-img-delete");
-                              if (deleteBtn) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                const wrapper = deleteBtn.closest(".note-img-wrapper");
-                                if (wrapper) {
-                                  wrapper.remove();
-                                  if (contentRef.current) {
-                                    const val = contentRef.current.innerHTML;
-                                    setContent(val);
-                                    pushToHistory(val, true);
-                                  }
-                                }
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (
-                                (e.ctrlKey || e.metaKey) &&
-                                !e.shiftKey &&
-                                e.key.toLowerCase() === "z"
-                              ) {
-                                e.preventDefault();
-                                performUndo();
-                              } else if (
-                                ((e.ctrlKey || e.metaKey) &&
-                                  e.key.toLowerCase() === "y") ||
-                                ((e.ctrlKey || e.metaKey) &&
-                                  e.shiftKey &&
-                                  e.key.toLowerCase() === "z")
-                              ) {
-                                e.preventDefault();
-                                performRedo();
-                              }
-                            }}
-                            onKeyUp={() => {
-                              saveCurrentSelection();
-                              if (contentRef.current) {
-                                const val = contentRef.current.innerHTML;
-                                if (val !== content) {
-                                  setContent(val);
-                                }
-                              }
-                            }}
-                            onMouseUp={() => {
-                              saveCurrentSelection();
-                            }}
-                            onPointerUp={() => {
-                              saveCurrentSelection();
-                            }}
-                            onTouchEnd={() => {
-                              saveCurrentSelection();
-                            }}
-                            onSelect={() => {
-                              saveCurrentSelection();
-                            }}
-                            onCut={() => {
-                              setTimeout(() => {
-                                if (contentRef.current) {
-                                  const val = contentRef.current.innerHTML;
-                                  setContent(val);
-                                  pushToHistory(val, true);
-                                  saveCurrentSelection();
-                                }
-                              }, 10);
-                            }}
-                            onInput={(e) => {
-                              const val = e.currentTarget.innerHTML;
-                              setContent(val);
-                              pushToHistory(val);
-                              saveCurrentSelection();
-                            }}
-                            className="w-full h-auto min-h-[170px] bg-transparent outline-none text-white/95 focus:outline-none relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0 text-[15.5px] md:text-[16.5px] font-medium leading-relaxed"
-                            {...{ placeholder: "Escreva seu texto aqui..." }}
-                            style={{ minHeight: "170px" }}
-                          />
-                        </motion.div>
-                      ) : (
-                        <div
-                          onClick={() => setTypingSectionVisible(true)}
-                          className="py-2.5 px-3 rounded-xl bg-black/20 hover:bg-black/30 border border-white/5 text-white/40 hover:text-white/70 text-xs flex items-center justify-between cursor-pointer transition-all"
-                        >
-                          <span className="truncate max-w-[80%]">
-                            {content ? content.replace(/<[^>]+>/g, " ").slice(0, 70) + "..." : "Texto digitado oculto"}
-                          </span>
-                          <span className="text-[10px] font-bold text-[var(--gm-primary,#FF6900)]">Clique para abrir</span>
+                    {/* Card 2: Prazos de Entrega */}
+                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3.5">
+                      <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                        <Calendar size={15} className="text-[var(--gm-primary,#FF6900)]" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                          Prazo & Horário de Entrega
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {/* Prazo de Entrega */}
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label className="text-xs font-semibold text-white/60">
+                            Data de Entrega
+                          </label>
+                          <div className="relative">
+                            <GlassDatePicker
+                              value={deliveryDate}
+                              onChange={setDeliveryDate}
+                              className="w-full bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-3.5 h-[44px] flex items-center outline-none focus:border-[var(--gm-primary,#FF6900)] select-none font-semibold transition-all"
+                              title="Prazo"
+                              themeColor={color}
+                            />
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                          </div>
                         </div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
+
+                        {/* Horário de Entrega */}
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label className="text-xs font-semibold text-white/60">
+                            Horário de Entrega
+                          </label>
+                          <div className="relative">
+                            <GlassTimePicker
+                              value={deliveryTime}
+                              onChange={setDeliveryTime}
+                              className="w-full bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-all"
+                            />
+                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 3: Lembretes & Alarmes */}
+                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3.5">
+                      <div className="flex items-center justify-between pb-2 border-b border-white/5 flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <Clock size={15} className="text-emerald-400" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                            Lembretes & Alarmes Diários
+                          </span>
+                        </div>
+                        {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 && (
+                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-md">
+                            {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length} ativo(s)
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {/* Data do Lembrete */}
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label className="text-xs font-semibold text-white/60">
+                            Data do Lembrete
+                          </label>
+                          <div className="relative">
+                            <GlassDatePicker
+                              className="w-full bg-black/50 border border-white/10 rounded-xl text-sm font-semibold text-white pl-9 pr-3.5 h-[44px] outline-none transition-all flex items-center select-none cursor-pointer"
+                              value={reminderDate}
+                              onChange={setReminderDate}
+                              title="Data do Lembrete"
+                              themeColor={color}
+                            />
+                            <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+                          </div>
+                        </div>
+
+                        {/* Botão de Horários */}
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <label className="text-xs font-semibold text-white/60">
+                            Horários de Alerta
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setClocksExpanded(true)}
+                            className="w-full bg-black/50 hover:bg-black/70 border border-white/10 hover:border-white/25 rounded-xl text-sm font-semibold text-white px-3.5 h-[44px] outline-none transition-all flex items-center justify-between cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Clock size={15} className={[reminderTime, reminderTime2, reminderTime3].some(Boolean) ? "text-emerald-400" : "text-white/40"} />
+                              <span>Configurar Horários (Até 3)</span>
+                            </div>
+                            {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 ? (
+                              <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black bg-emerald-500 text-black">
+                                {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length}
+                              </span>
+                            ) : (
+                              <ChevronDown size={15} className="text-white/40" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 4: Salvamento Automático */}
+                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Save size={15} className="text-[var(--gm-primary,#FF6900)]" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                            Salvamento Automático
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-white/40">
+                          {autoSaveInterval === "disabled" ? "Desativado" : `A cada ${autoSaveInterval} min`}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { val: "10", label: "10 min" },
+                          { val: "15", label: "15 min" },
+                          { val: "30", label: "30 min" },
+                          { val: "disabled", label: "Off" },
+                        ].map((item) => (
+                          <button
+                            key={item.val}
+                            type="button"
+                            onClick={() => {
+                              setAutoSaveInterval(item.val as any);
+                              localStorage.setItem("gm_note_autosave_interval_v1", item.val);
+                              showToast(`Salvamento automático: ${item.label}`);
+                            }}
+                            className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all text-center cursor-pointer ${
+                              autoSaveInterval === item.val
+                                ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-md shadow-orange-500/20 font-black"
+                                : "bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
               {/* Action Bar com Exibidor Sutil de Detalhes Inferiores (DATA, HORÁRIOS, SALVAR AUTO) e Botões Fixos */}
@@ -3271,49 +3167,25 @@ export default function Notes() {
                   borderTop: `1px solid ${color}40`,
                 }}
               >
-                {/* Cabeçalho de Configurações de Data, Hora e Salvar Auto com Botão de Olho no Lado Direito */}
-                <div className="w-full flex items-center justify-between flex-wrap gap-2 px-1 pb-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => setBottomDetailsVisible(!bottomDetailsVisible)}
-                      className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-white/70 hover:text-white font-bold font-sans transition-colors cursor-pointer group"
-                      title={bottomDetailsVisible ? "Ocultar configurações de data, hora e salvar auto" : "Exibir configurações de data, hora e salvar auto"}
-                    >
-                      <Calendar size={13} className={reminderDate ? "text-orange-400" : "text-[var(--gm-primary,#FF6900)]"} />
-                      <Clock size={13} className={[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 ? "text-green-400" : "text-white/40"} />
-                      <span>CONFIGURAÇÃO DE DATA, HORA E SALVAR AUTO</span>
-                      {bottomDetailsVisible ? (
-                        <ChevronUp size={13} className="text-white/40 group-hover:text-white transition-colors" />
-                      ) : (
-                        <ChevronDown size={13} className="text-white/40 group-hover:text-white transition-colors animate-pulse" />
-                      )}
-                    </button>
-
-                    {reminderDate && (
-                      <span className="hidden sm:inline-flex text-[9px] font-bold text-orange-300 items-center gap-1 bg-orange-500/10 px-2 py-0.5 rounded-md border border-orange-500/20">
-                        {reminderDate.split("-").reverse().join("/")}
-                      </span>
-                    )}
-                    {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 && (
-                      <span className="hidden sm:inline-flex text-[9px] font-bold text-green-400 items-center gap-1 bg-green-500/10 px-2 py-0.5 rounded-md border border-green-500/20">
-                        {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length} alarme(s)
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setBottomDetailsVisible(!bottomDetailsVisible)}
-                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
-                      title={bottomDetailsVisible ? "Ocultar configurações" : "Expandir configurações"}
-                    >
-                      {bottomDetailsVisible ? <EyeOff size={11} /> : <Eye size={11} />}
-                      <span>{bottomDetailsVisible ? "Ocultar" : "Expandir"}</span>
-                    </button>
-                  </div>
-                </div>
+                {/* Botão Ocultar / Expandir em Largura Total (Extremidades) */}
+                <button
+                  type="button"
+                  onClick={() => setBottomDetailsVisible(!bottomDetailsVisible)}
+                  className="w-full py-2.5 sm:py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/10 text-white/75 hover:text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/10 hover:border-white/20 active:scale-[0.99] min-h-[44px] shadow-sm"
+                  title={bottomDetailsVisible ? "Ocultar" : "Expandir"}
+                >
+                  {bottomDetailsVisible ? (
+                    <>
+                      <EyeOff size={15} className="text-white/60" />
+                      <span>Ocultar</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye size={15} className="text-white/60" />
+                      <span>Expandir</span>
+                    </>
+                  )}
+                </button>
 
                 {/* Detalhes Expansíveis Opcionais (DATA, HORÁRIOS e SALVAR AUTO) */}
                 <AnimatePresence>
@@ -3742,6 +3614,311 @@ export default function Notes() {
       document.body
     )}
 
+      {/* Modais de Configurações de Texto à Frente de Tudo (Cores, Fontes, Marcador) */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {/* 1. Caixinha de Configuração e Escolha de Cores do Texto */}
+            {colorPickerOpen && (
+              <div
+                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm select-none"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setColorPickerOpen(false);
+                }}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 15 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="relative w-full max-w-[340px] bg-[#111520] border border-white/20 rounded-3xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-4 text-white"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  {/* Cabeçalho */}
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-[var(--gm-primary,#FE540B)] shrink-0">
+                        <Palette size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black tracking-wide text-white">Cor do Texto</h4>
+                        <p className="text-[10px] text-white/50">Escolha a cor para o texto</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setColorPickerOpen(false);
+                      }}
+                      className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors cursor-pointer"
+                      title="Fechar"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Amostra da cor atual + Botão Redefinir para Padrão */}
+                  <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/5">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="w-5 h-5 rounded-full border-2 border-white/50 shadow-sm shrink-0"
+                        style={{ backgroundColor: selectedTextColor }}
+                      />
+                      <span className="text-xs font-bold text-white/90">
+                        {TEXT_COLORS.find((c) => c.hex.toLowerCase() === selectedTextColor.toLowerCase())?.label || "Personalizada"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedTextColor("#ffffff");
+                        applyStyleToSelection({ color: "#ffffff" });
+                        setColorPickerOpen(false);
+                      }}
+                      className="text-xs font-bold text-white/70 hover:text-white px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer"
+                      title="Redefinir para Branco"
+                    >
+                      Branco (Padrão)
+                    </button>
+                  </div>
+
+                  {/* Grid de Cores do Texto - Grandes e fáceis de tocar no Smartphone */}
+                  <div className="grid grid-cols-5 gap-3 py-1">
+                    {TEXT_COLORS.map((col) => {
+                      const isActive = selectedTextColor.toLowerCase() === col.hex.toLowerCase();
+                      return (
+                        <button
+                          key={col.hex}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedTextColor(col.hex);
+                            applyStyleToSelection({ color: col.hex });
+                            setColorPickerOpen(false);
+                          }}
+                          className={`w-12 h-12 rounded-2xl border-2 transition-all duration-150 flex items-center justify-center cursor-pointer shadow-md ${
+                            isActive
+                              ? "scale-105 ring-4 ring-[var(--gm-primary,#FE540B)]/60 border-white shadow-orange-500/40"
+                              : "hover:scale-105 border-white/20 hover:border-white/60 opacity-90 hover:opacity-100"
+                          }`}
+                          style={{ backgroundColor: col.hex }}
+                          title={col.label}
+                        >
+                          {isActive && (
+                            <Check
+                              size={18}
+                              className={col.hex === "#ffffff" || col.hex === "#cbd5e1" ? "text-black stroke-[3.5]" : "text-white stroke-[3.5]"}
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </div>
+            )}
+
+            {/* 2. Caixinha de Configuração do Marcador de Texto */}
+            {highlighterPickerOpen && (
+              <div
+                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm select-none"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setHighlighterPickerOpen(false);
+                }}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 15 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="relative w-full max-w-[340px] bg-[#111520] border border-white/20 rounded-3xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-4 text-white"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  {/* Cabeçalho */}
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-400 shrink-0">
+                        <Highlighter size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black tracking-wide text-white">Marcador de Texto</h4>
+                        <p className="text-[10px] text-white/50">Realce palavras com cores</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setHighlighterPickerOpen(false);
+                      }}
+                      className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors cursor-pointer"
+                      title="Fechar"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Amostra do marcador + Limpar */}
+                  <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/5">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="w-5 h-5 rounded-full border-2 border-white/50 shadow-sm shrink-0"
+                        style={{ backgroundColor: selectedHighlightColor || "transparent" }}
+                      />
+                      <span className="text-xs font-bold text-white/90">
+                        {HIGHLIGHT_COLORS.find((c) => c.hex.toLowerCase() === selectedHighlightColor.toLowerCase())?.label || "Sem marcação"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedHighlightColor("");
+                        removeHighlight();
+                        setHighlighterPickerOpen(false);
+                      }}
+                      className="text-xs font-bold text-red-400 hover:text-red-300 px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+                      title="Remover marcação do texto selecionado"
+                    >
+                      <Eraser size={12} />
+                      <span>Limpar</span>
+                    </button>
+                  </div>
+
+                  {/* Grid de 10 Cores de Marcação */}
+                  <div className="grid grid-cols-5 gap-3 py-1">
+                    {HIGHLIGHT_COLORS.map((col) => {
+                      const isActive = selectedHighlightColor.toLowerCase() === col.hex.toLowerCase();
+                      return (
+                        <button
+                          key={col.hex}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (isActive) {
+                              setSelectedHighlightColor("");
+                              removeHighlight();
+                            } else {
+                              setSelectedHighlightColor(col.hex);
+                              applyHighlight(col.hex);
+                            }
+                            setHighlighterPickerOpen(false);
+                          }}
+                          className={`w-12 h-12 rounded-2xl border-2 transition-all duration-150 flex items-center justify-center cursor-pointer shadow-md ${
+                            isActive
+                              ? "scale-105 ring-4 ring-yellow-400/60 border-white shadow-yellow-500/40"
+                              : "hover:scale-105 border-white/20 hover:border-white/60 opacity-90 hover:opacity-100"
+                          }`}
+                          style={{ backgroundColor: col.hex }}
+                          title={col.label}
+                        >
+                          {isActive && (
+                            <Check size={18} className="text-black stroke-[3.5]" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </div>
+            )}
+
+            {/* 3. Modal / Galeria de Fontes */}
+            {fontSelectorOpen && (
+              <div
+                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm select-none"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setFontSelectorOpen(false);
+                }}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 15 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="relative w-full max-w-[360px] max-h-[85vh] bg-[#111520] border border-white/20 rounded-3xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-3 text-white"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  {/* Cabeçalho */}
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                        <Type size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black tracking-wide text-white">Galeria de Fontes</h4>
+                        <p className="text-[10px] text-white/50">Tipografia para o texto</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFontSelectorOpen(false);
+                      }}
+                      className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors cursor-pointer"
+                      title="Fechar"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Lista de Fontes com Rolagem Suave */}
+                  <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[360px] custom-scroll pr-1">
+                    {[
+                      { name: "Inter", value: "Inter, sans-serif", label: "Inter (Padrão)" },
+                      { name: "Plus Jakarta Sans", value: "'Plus Jakarta Sans', sans-serif", label: "Plus Jakarta" },
+                      { name: "Montserrat", value: "Montserrat, sans-serif", label: "Montserrat" },
+                      { name: "Raleway", value: "Raleway, sans-serif", label: "Raleway" },
+                      { name: "Playfair Display", value: "'Playfair Display', serif", label: "Playfair (Serif)" },
+                      { name: "Hubot Sans", value: "'Hubot Sans', sans-serif", label: "Hubot Sans" },
+                      { name: "Funnel Display", value: "'Funnel Display', sans-serif", label: "Funnel Display" },
+                      { name: "Open Sans", value: "'Open Sans', sans-serif", label: "Open Sans" },
+                      { name: "Roboto", value: "Roboto, sans-serif", label: "Roboto" },
+                      { name: "Fira Code", value: "'Fira Code', monospace", label: "Fira Code (Mono)" },
+                    ].map((f) => (
+                      <button
+                        key={f.name}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          applyStyleToSelection({ "font-family": f.value });
+                          setFontSelectorOpen(false);
+                        }}
+                        className="text-left w-full px-3.5 py-2.5 rounded-xl text-sm text-white/90 hover:text-white hover:bg-white/10 active:bg-[var(--gm-primary,#FE540B)]/20 transition-all flex items-center justify-between border border-transparent hover:border-white/10 cursor-pointer"
+                        style={{ fontFamily: f.value }}
+                      >
+                        <span className="font-semibold">{f.label}</span>
+                        <span className="text-[11px] text-white/40 uppercase tracking-wider font-mono">Aa Bb Cc</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+
       {/* Lightbox / Visualizador de Imagem com Zoom e Detalhes estilo Apple */}
       {typeof document !== "undefined" &&
         createPortal(
@@ -3893,17 +4070,17 @@ export default function Notes() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+                  className="absolute inset-0 bg-black/60 backdrop-blur-md"
                   onClick={() => setDeleteConfirmId(null)}
                 />
                 <motion.div
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.95, opacity: 0 }}
-                  className="gm-modal border border-red-500/20 rounded-2xl p-6 relative w-full max-w-md shadow-2xl bg-[#0e1017] text-white"
+                  className={`p-6 relative w-full max-w-md ${cardBase} border-red-500/30 text-white`}
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 backdrop-blur-md flex items-center justify-center shrink-0">
                       <AlertTriangle className="text-red-500" size={24} />
                     </div>
                     <div>
@@ -3919,13 +4096,13 @@ export default function Notes() {
                   <div className="flex gap-3 mt-6">
                     <button
                       onClick={() => setDeleteConfirmId(null)}
-                      className="flex-1 px-4 py-3 rounded-xl font-medium text-white/70 hover:bg-white/5 transition-colors cursor-pointer"
+                      className="flex-1 px-4 py-3 rounded-xl font-medium text-white/70 hover:text-white barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md transition-colors cursor-pointer"
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={handleHardDeleteConfirm}
-                      className="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20 cursor-pointer"
+                      className="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500/80 hover:bg-red-500 text-white border border-red-400/40 backdrop-blur-md transition-all shadow-none cursor-pointer"
                     >
                       Excluir
                     </button>
@@ -3943,20 +4120,20 @@ export default function Notes() {
           <AnimatePresence>
             {noteShareData && (
               <div
-                className="fixed inset-0 z-[9999999] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+                className="fixed inset-0 z-[9999999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
                 onClick={() => setNoteShareData(null)}
               >
                 <div
-                  className="gm-card w-full max-w-md rounded-2xl overflow-hidden shadow-2xl relative z-10 border border-white/10 bg-[#0e1017]"
+                  className={`w-full max-w-md rounded-2xl overflow-hidden relative z-10 ${cardBase} text-white`}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+                  <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.03]">
                     <h3 className="text-lg font-bold text-white">
                       Compartilhar Nota
                     </h3>
                     <button
                       onClick={() => setNoteShareData(null)}
-                      className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white cursor-pointer"
+                      className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-xl transition-colors text-white/50 hover:text-white cursor-pointer"
                     >
                       <X size={20} />
                     </button>
@@ -3971,19 +4148,19 @@ export default function Notes() {
                         openWhatsapp("", cleanMessage);
                         setNoteShareData(null);
                       }}
-                      className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+                      className="w-full rounded-xl barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/40 backdrop-blur-md flex items-center gap-4 p-4 transition-all cursor-pointer group"
                     >
-                      <div className="shrink-0">
+                      <div className="shrink-0 w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
                         <WhatsAppIcon
-                          size={24}
-                          className="text-[var(--gm-primary)]"
+                          size={22}
+                          className="text-emerald-400"
                         />
                       </div>
                       <div className="text-left">
-                        <p className="font-bold text-[var(--gm-primary)] leading-tight animate-pulse hover:animate-none">
+                        <p className="font-bold text-white group-hover:text-[var(--gm-primary)] leading-tight transition-colors">
                           WhatsApp
                         </p>
-                        <p className="text-[10px] text-white/60 leading-tight mt-0.5">
+                        <p className="text-[11px] text-white/50 leading-tight mt-0.5">
                           Enviar diretamente para um contato
                         </p>
                       </div>
@@ -4003,16 +4180,16 @@ export default function Notes() {
                         );
                         setNoteShareData(null);
                       }}
-                      className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+                      className="w-full rounded-xl barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/40 backdrop-blur-md flex items-center gap-4 p-4 transition-all cursor-pointer group"
                     >
-                      <div className="shrink-0">
-                        <Mail size={24} className="text-[var(--gm-primary)]" />
+                      <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 flex items-center justify-center">
+                        <Mail size={20} className="text-[var(--gm-primary)]" />
                       </div>
                       <div className="text-left">
-                        <p className="font-bold text-[var(--gm-primary)] leading-tight">
+                        <p className="font-bold text-white group-hover:text-[var(--gm-primary)] leading-tight transition-colors">
                           E-mail
                         </p>
-                        <p className="text-[10px] text-white/60 leading-tight mt-0.5">
+                        <p className="text-[11px] text-white/50 leading-tight mt-0.5">
                           Enviar por correio eletrônico
                         </p>
                       </div>
@@ -4031,16 +4208,16 @@ export default function Notes() {
                           alert("Erro ao copiar texto.");
                         }
                       }}
-                      className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+                      className="w-full rounded-xl barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/40 backdrop-blur-md flex items-center gap-4 p-4 transition-all cursor-pointer group"
                     >
-                      <div className="shrink-0">
-                        <Copy size={24} className="text-[var(--gm-primary)]" />
+                      <div className="shrink-0 w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
+                        <Copy size={20} className="text-blue-400" />
                       </div>
                       <div className="text-left">
-                        <p className="font-bold text-[var(--gm-primary)] leading-tight">
+                        <p className="font-bold text-white group-hover:text-[var(--gm-primary)] leading-tight transition-colors">
                           Copiar Texto
                         </p>
-                        <p className="text-[10px] text-white/60 leading-tight mt-0.5">
+                        <p className="text-[11px] text-white/50 leading-tight mt-0.5">
                           Copiar para colar em outro lugar
                         </p>
                       </div>
@@ -4064,17 +4241,17 @@ export default function Notes() {
                             }
                           }
                         }}
-                        className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-4 py-4 hover:brightness-110 transition-all"
+                        className="w-full rounded-xl barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/40 backdrop-blur-md flex items-center gap-4 p-4 transition-all cursor-pointer group"
                       >
-                        <div className="shrink-0">
-                          <Share2 size={24} className="text-[var(--gm-primary)]" />
+                        <div className="shrink-0 w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
+                          <Share2 size={20} className="text-purple-400" />
                         </div>
                         <div className="text-left">
-                          <p className="font-bold text-[var(--gm-primary)] leading-tight">
+                          <p className="font-bold text-white group-hover:text-[var(--gm-primary)] leading-tight transition-colors">
                             Mais Opções
                           </p>
-                          <p className="text-[10px] text-white/60 leading-tight mt-0.5">
-                            Menu de compartilhamento do sistema
+                          <p className="text-[11px] text-white/50 leading-tight mt-0.5">
+                            Compartilhamento nativo do dispositivo
                           </p>
                         </div>
                       </button>

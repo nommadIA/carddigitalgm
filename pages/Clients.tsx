@@ -7,7 +7,7 @@ import { Card } from "../components/ui/Card";
 import NewClientPage from "./clients/NewClientPage";
 import EditClientPage from "./clients/EditClientPage";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
-import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User, Users, Zap } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User, Users, Zap, TrendingUp, BarChart3 } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
 import { openWhatsapp } from "../services/whatsApp";
@@ -15,6 +15,11 @@ import ExpandedClientRow from "../components/clients/ExpandedClientRow";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import SafeResponsive from "../components/ui/SafeResponsive";
+
+const cardBase =
+  "fora rounded-2xl transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+const inputBase =
+  "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
 
 type ClientRow = {
   id: string;
@@ -116,24 +121,24 @@ function VirtualizedClientList({
   softDelete: (id: string) => void;
 }) {
   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-    const base = "gm-btn w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 group";
-    if (tone === "orange") return `${base} btn-action-edit bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] text-[var(--gm-primary)] hover:text-white`;
-    if (tone === "green") return `${base} btn-whatsapp bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] text-[var(--gm-primary)] hover:text-white`;
-    if (tone === "red") return `${base} btn-action-delete bg-red-500/10 border border-red-500/20 hover:bg-red-500 text-red-500 hover:text-white`;
-    return `${base} btn-action-neutral bg-slate-500/10 border border-slate-500/20 hover:bg-slate-500 text-slate-400 hover:text-white`;
+    const base = "w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 group barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md cursor-pointer";
+    if (tone === "orange") return `${base} btn-action-edit text-[var(--gm-primary)] hover:border-[var(--gm-primary)] hover:text-white hover:bg-[var(--gm-primary)]`;
+    if (tone === "green") return `${base} btn-whatsapp text-emerald-400 hover:border-emerald-500 hover:text-white hover:bg-emerald-500`;
+    if (tone === "red") return `${base} btn-action-delete text-red-400 hover:border-red-500 hover:text-white hover:bg-red-500`;
+    return `${base} btn-action-neutral text-slate-400 hover:border-white/30 hover:text-white hover:bg-white/10`;
   };
 
   return (
-    <div className="gm-card fora !p-0 overflow-hidden rounded-2xl border border-white/10 shadow-none backdrop-blur-md">
+    <div className={`overflow-hidden ${cardBase}`}>
       <div className="overflow-x-auto">
         <div className="text-sm min-w-full">
-          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3.5 border-b border-white/10 font-bold opacity-70 uppercase tracking-wider text-xs barra">
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/10 font-bold text-xs text-[color:var(--gm-text-tertiary)] uppercase tracking-wider barra bg-transparent">
             <div>Avatar</div>
             <div>Cliente</div>
             <div className="text-right">Ações</div>
           </div>
 
-          <div className="w-full divide-y divide-white/5">
+          <div className="w-full divide-y divide-white/10">
             {items.map((c) => {
               const wppDigits = onlyDigits(c.whatsapp || c.phone || "");
               const prettyWpp = fmtPhoneBR(c.whatsapp || c.phone || "");
@@ -142,9 +147,9 @@ function VirtualizedClientList({
               return (
                 <div
                   key={c.id}
-                  className="hover:bg-white/5 transition-colors"
+                  className="hover:bg-white/[0.04] transition-colors"
                 >
-                  <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-4 py-3 sm:items-center">
+                  <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-6 py-4 sm:items-center">
                     <div className="flex justify-between sm:contents">
                       <div className="flex items-center gap-3">
                         <button
@@ -459,7 +464,9 @@ export default function Clients() {
     justifyContent: "center",
     fontWeight: 950,
     color: "rgba(255,255,255,0.9)",
-    background: "rgba(0,0,0,0.28)",
+    background: "rgba(255,255,255,0.04)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
     border: "1px solid rgba(255,255,255,0.12)",
     boxShadow: "none",
     flexShrink: 0,
@@ -476,36 +483,59 @@ export default function Clients() {
       <Page
         title="Clientes"
         actions={
-          <button className="gm-btn h-12 text-xs uppercase tracking-wider shadow-none" type="button" onClick={() => setOpenNewPage(true)}>
-            <Plus size={16} />
-            Novo Cliente
+          <button 
+            className="gm-btn group h-12 px-5 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none" 
+            type="button" 
+            onClick={() => setOpenNewPage(true)}
+          >
+            <Plus size={18} className="text-[color:var(--gm-primary)] transition-transform duration-300 ease-in-out group-hover:rotate-180" />
+            <span>NOVO CLIENTE</span>
           </button>
         }
       >
         <div className="mb-4 space-y-4">
           <SectionDivider label="Resumo" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="gm-dashboard-card fora rounded-2xl p-5 border border-white/10 shadow-none">
-              <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
-                Clientes ativos
-              </div>
-              <div className="text-2xl font-extrabold text-[color:var(--gm-text)] mt-1.5">
-                {clientSummary.totalAtivos}
-              </div>
-            </div>
-
-            <div className="gm-dashboard-card fora rounded-2xl p-5 border border-white/10 shadow-none">
-              <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
-                Novos nos últimos 30 dias
-              </div>
-              <div className="text-2xl font-extrabold text-emerald-400 mt-1.5">
-                {clientSummary.novos30d}
+            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
+                    Clientes ativos
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-[color:var(--gm-text)] mt-1.5 tracking-tight group-hover:text-[color:var(--gm-primary)] transition-colors">
+                    {clientSummary.totalAtivos}
+                  </div>
+                </div>
+                <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
+                  <Users size={20} />
+                </div>
               </div>
             </div>
 
-            <div className="gm-dashboard-card fora rounded-2xl p-5 border border-white/10 shadow-none">
-              <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider mb-2">
-                Cadastros por mês
+            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-emerald-500/40`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
+                    Novos nos últimos 30 dias
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1.5 tracking-tight">
+                    {clientSummary.novos30d}
+                  </div>
+                </div>
+                <div className="w-11 h-11 rounded-xl barra border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-none">
+                  <TrendingUp size={20} />
+                </div>
+              </div>
+            </div>
+
+            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-blue-500/40`}>
+              <div className="flex items-start justify-between mb-1">
+                <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
+                  Cadastros por mês
+                </span>
+                <div className="w-8 h-8 rounded-lg barra border border-blue-500/25 text-blue-400 flex items-center justify-center shrink-0 shadow-none">
+                  <BarChart3 size={16} />
+                </div>
               </div>
               <div className="h-20 relative overflow-hidden w-full">
                 <SafeResponsive height={80}>
@@ -515,7 +545,7 @@ export default function Clients() {
                     <YAxis hide allowDecimals={false} />
                     <Tooltip
                       cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                      contentStyle={{ backgroundColor: "rgba(18, 18, 22, 0.85)", backdropFilter: "blur(20px) saturate(180%)", WebkitBackdropFilter: "blur(20px) saturate(180%)", border: "1px solid rgba(255, 255, 255, 0.12)", borderRadius: "12px", color: "#fff", fontSize: 12, boxShadow: "none" }}
+                      contentStyle={{ backgroundColor: "rgba(18, 18, 24, 0.60)", backdropFilter: "blur(16px) saturate(180%)", WebkitBackdropFilter: "blur(16px) saturate(180%)", border: "1px solid rgba(255, 255, 255, 0.12)", borderRadius: "12px", color: "#fff", fontSize: 12, boxShadow: "none" }}
                     />
                     <Bar dataKey="value" name="Clientes" radius={[4, 4, 0, 0]} fill="var(--gm-primary)" />
                   </BarChart>
@@ -528,11 +558,11 @@ export default function Clients() {
         <div className="mb-3">
           <SectionDivider label="Filtros" />
         </div>
-        <div className="gm-card fora p-4 rounded-2xl border border-white/10 shadow-none mb-4">
+        <div className={`p-4 ${cardBase} mb-4`}>
           <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
             <div className="flex-1">
               <input
-                className="gm-input !bg-black/30 border-white/10"
+                className={inputBase}
                 placeholder="Pesquisar por nome, telefone ou e-mail"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -540,15 +570,23 @@ export default function Clients() {
             </div>
 
             <div className="flex gap-2">
-              <button type="button" className={`gm-tab shadow-none ${tab === "ATIVOS" ? "active" : ""}`} onClick={() => setTab("ATIVOS")}>
+              <button 
+                type="button" 
+                className={`flex-1 sm:flex-none h-11 px-6 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border cursor-pointer ${
+                  tab === "ATIVOS" 
+                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] backdrop-blur-md shadow-none" 
+                    : "barra border-white/10 text-slate-300 hover:text-[var(--gm-primary)] hover:border-[var(--gm-primary)]/40 bg-white/[0.02] backdrop-blur-md shadow-none"
+                }`} 
+                onClick={() => setTab("ATIVOS")}
+              >
                 Ativos
               </button>
               <button 
                 type="button" 
-                className={`flex-1 h-10 px-4 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border ${
+                className={`flex-1 sm:flex-none h-11 px-6 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border cursor-pointer ${
                   tab === "LIXEIRA"
-                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-none"
-                    : "barra border-white/10 text-slate-300 hover:text-[var(--gm-primary)] hover:border-[var(--gm-primary)]/40 shadow-none"
+                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] backdrop-blur-md shadow-none"
+                    : "barra border-white/10 text-slate-300 hover:text-[var(--gm-primary)] hover:border-[var(--gm-primary)]/40 bg-white/[0.02] backdrop-blur-md shadow-none"
                 }`}
                 onClick={() => setTab("LIXEIRA")}
               >
@@ -560,7 +598,7 @@ export default function Clients() {
 
         <div className="mb-2 flex items-center justify-between text-xs text-slate-400 px-1">
           <SectionDivider label="Lista de clientes" />
-          <span className="shrink-0 ml-4 px-2.5 py-1 rounded-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5 shadow-none">
+          <span className="shrink-0 ml-4 px-2.5 py-1 rounded-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5 shadow-none backdrop-blur-md">
             <Users size={13} /> Clientes ({filtered.length})
           </span>
         </div>
@@ -569,11 +607,11 @@ export default function Clients() {
         {loading ? (
           <div style={gridWrap}>
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="gm-card fora p-6 rounded-2xl border border-white/10 shadow-none">Carregando...</div>
+              <div key={i} className={`p-6 ${cardBase}`}>Carregando...</div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="gm-card fora p-10 text-center opacity-70 border border-dashed border-white/15 rounded-2xl shadow-none">Nenhum cliente encontrado.</div>
+          <div className={`p-10 text-center opacity-70 border border-dashed border-white/15 ${cardBase}`}>Nenhum cliente encontrado.</div>
         ) : (
           <div>
             <VirtualizedClientList
@@ -606,11 +644,11 @@ export default function Clients() {
             zIndex: 99999,
             padding: "10px 18px",
             borderRadius: 14,
-            background: "rgba(18, 18, 22, 0.75)",
+            background: "rgba(18, 18, 24, 0.50)",
             border: "1px solid rgba(255,255,255,0.12)",
             color: "rgba(255,255,255,0.92)",
-            backdropFilter: "blur(20px) saturate(180%)",
-            WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            backdropFilter: "blur(16px) saturate(180%)",
+            WebkitBackdropFilter: "blur(16px) saturate(180%)",
             boxShadow: "none",
             fontWeight: 800,
             fontSize: 13,
@@ -622,10 +660,10 @@ export default function Clients() {
 
       {/* Hard Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
-          <div className="gm-card fora w-full max-w-sm rounded-[24px] overflow-hidden border border-white/12 shadow-none relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[1000] bg-black/50 flex items-center justify-center p-4 backdrop-blur-md" onClick={() => setDeleteConfirmId(null)}>
+          <div className={`w-full max-w-sm rounded-[24px] overflow-hidden border border-white/12 shadow-none relative z-10 ${cardBase}`} onClick={e => e.stopPropagation()}>
             <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-none">
+              <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-none backdrop-blur-md">
                 <Trash2 size={30} className="text-[var(--gm-primary)]" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Excluir Definitivamente?</h3>
@@ -634,14 +672,16 @@ export default function Clients() {
               </p>
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => setDeleteConfirmId(null)}
-                  className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black border border-white/10 shadow-none"
+                  className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] text-white backdrop-blur-md cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
+                  type="button"
                   onClick={hardDelete}
-                  className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-none bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white"
+                  className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-none bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white backdrop-blur-md cursor-pointer"
                 >
                   Excluir
                 </button>

@@ -2756,10 +2756,10 @@ export default function Configuracoes() {
                       <button
                         type="button"
                         onClick={() => setShowPermissionModal(true)}
-                        className="w-full py-2.5 px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-300 hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        className="w-full py-2.5 px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-200 hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer"
                       >
                         <Sparkles size={14} className="text-[var(--gm-primary)]" />
-                        Ativar Todas as Permissões (Notificações em 2º Plano, Câmera e Microfone)
+                        Permissões do Sistema Estilo Apple (Notificações, Voz, Câmera e Áudio)
                       </button>
                     </div>
                   </div>

@@ -51,9 +51,9 @@ interface BudgetRow {
 
 /* ---------- Estilos reutilizáveis (tokens do tema em --gm-*) ---------- */
 const cardBase =
-  "fora rounded-2xl transition-all border border-white/10 shadow-none";
+  "fora rounded-2xl transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
 const inputBase =
-  "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none";
+  "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
 
 export default function Dashboard() {
   const { tenantId } = useAuth();
@@ -387,7 +387,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
         <Link
           to="/budgets?new=true"
-          className="gm-btn group h-14 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/5 hover:bg-white/10 text-white shadow-none"
+          className="gm-btn group h-14 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none"
         >
           <Plus size={18} className="transition-transform duration-300 ease-in-out group-hover:rotate-180 text-[color:var(--gm-primary)]" />
           <span>NOVO ORÇAMENTO</span>
@@ -397,7 +397,7 @@ export default function Dashboard() {
           type="button"
           onClick={handleExport}
           disabled={exporting}
-          className="gm-btn group h-14 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/5 hover:bg-white/10 text-white shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
+          className="gm-btn group h-14 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
           title="Exportar relatório consolidado (Orçamentos, Clientes, Notas, Financeiro e Mercado) no papel timbrado"
         >
           {exporting ? (

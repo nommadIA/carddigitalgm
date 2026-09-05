@@ -1,6 +1,7 @@
 // lib/realNotification.ts
 import { pushToast } from "../store/toast";
 import { playNotificationSound } from "./audio";
+import { readSettingsLocal } from "./settings";
 
 export interface SystemNotificationOptions {
   title?: string;
@@ -12,16 +13,45 @@ export interface SystemNotificationOptions {
   inAppToast?: boolean;
 }
 
-const DEFAULT_ICON = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
+// Logo oficial do CardDigital GM (Five Icon / Favicon / App Icon oficial em formato PNG para suporte total nos SOs)
+export const OFFICIAL_APP_FAVICON = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.png";
+export const OFFICIAL_APP_LOCAL_ICON = "/logo.png";
+
+/**
+ * Retorna o logo cadastrado pelo usuário (logo da empresa ou avatar).
+ * Se o usuário tiver cadastrado seu logo nas Configurações, este é priorizado na caixa de notificações.
+ */
+export function getUserRegisteredLogo(): string | null {
+  try {
+    const settings = readSettingsLocal();
+    if (settings?.company_logo_url && typeof settings.company_logo_url === "string" && settings.company_logo_url.trim()) {
+      return settings.company_logo_url.trim();
+    }
+    if (settings?.avatar_url && typeof settings.avatar_url === "string" && settings.avatar_url.trim()) {
+      return settings.avatar_url.trim();
+    }
+  } catch {}
+  return null;
+}
 
 /**
  * Dispara uma notificação REAL tanto DENTRO do aplicativo (toast visual e som)
  * quanto FORA do aplicativo (notificação nativa do sistema operacional / desktop / mobile / PWA).
+ * 
+ * 1. Badge / Five Icon: Sempre o logo oficial do app CardDigital GM no cabeçalho do sistema.
+ * 2. Icon / Caixa de Notificações: O logo cadastrado do usuário (ou oficial caso ainda não tenha cadastrado).
  */
 export async function triggerRealNotification(options: SystemNotificationOptions = {}): Promise<boolean> {
-  const title = options.title || "🔔 CardDigital GM · Notificação de Teste";
+  const title = options.title || "🔔 CardDigital GM · Notificação";
   const body = options.body || "Sua notificação em tempo real está funcionando perfeitamente dentro e fora do app!";
-  const icon = options.icon || DEFAULT_ICON;
+  
+  // 1. Five Icon do App Oficial CardDigital GM para o cabeçalho/badge
+  const badge = options.badge || OFFICIAL_APP_FAVICON;
+
+  // 2. Logo cadastrado do usuário para a caixa de notificações
+  const userRegisteredLogo = getUserRegisteredLogo();
+  const icon = options.icon || userRegisteredLogo || OFFICIAL_APP_FAVICON;
+  
   const url = options.url || (typeof window !== "undefined" ? window.location.href : "/");
 
   // 1. Tocar som ativo do sistema
@@ -73,7 +103,7 @@ export async function triggerRealNotification(options: SystemNotificationOptions
             const swOptions: any = {
               body,
               icon,
-              badge: icon,
+              badge,
               vibrate: [200, 100, 200, 100, 200],
               tag: "gm-real-notif-" + Date.now(),
               renotify: true,
@@ -90,6 +120,7 @@ export async function triggerRealNotification(options: SystemNotificationOptions
               title,
               body,
               icon,
+              badge,
               url,
             });
           }
@@ -104,7 +135,7 @@ export async function triggerRealNotification(options: SystemNotificationOptions
           const notif = new Notification(title, {
             body,
             icon,
-            badge: icon,
+            badge,
             tag: "gm-real-notif-" + Date.now(),
             requireInteraction: false,
             data: { url },

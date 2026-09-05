@@ -35,7 +35,9 @@ import {
   Clock,
   Check,
   CheckCircle2,
-  Smartphone
+  Smartphone,
+  ShieldCheck,
+  RefreshCw
 } from "lucide-react";
 import { playNotificationSound } from "../../lib/audio";
 import { useAuth } from "../../store/AuthContext";
@@ -579,66 +581,116 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     };
   }, []);
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncClick = () => {
+    setIsSyncing(true);
+    setTimeout(() => setIsSyncing(false), 900);
+    window.dispatchEvent(new CustomEvent("open-smartphone-permissions"));
+    window.dispatchEvent(new CustomEvent("trigger-app-sync"));
+  };
+
+  const renderSyncButton = (extraBtnClass = "") => (
+    <button
+      type="button"
+      onClick={handleSyncClick}
+      title="Sincronização do App"
+      aria-label="Sincronização do App"
+      className={`w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden ${extraBtnClass}`}
+      style={{
+        width: '36px',
+        height: '36px',
+        minWidth: '36px',
+        minHeight: '36px',
+        maxWidth: '36px',
+        maxHeight: '36px',
+        borderRadius: '10px',
+        aspectRatio: '1 / 1',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0',
+        margin: '0',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+      }}
+    >
+      <RefreshCw 
+        size={20} 
+        className={`text-current shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
+      />
+    </button>
+  );
+
+  const renderBellButton = (extraBtnClass = "") => (
+    <button
+      type="button"
+      onClick={handleBellClick}
+      title="Atualizações e Informações"
+      aria-label="Atualizações e Informações"
+      className={`w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden ${extraBtnClass}`}
+      style={{
+        width: '36px',
+        height: '36px',
+        minWidth: '36px',
+        minHeight: '36px',
+        maxWidth: '36px',
+        maxHeight: '36px',
+        borderRadius: '10px',
+        aspectRatio: '1 / 1',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0',
+        margin: '0',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+      }}
+    >
+      <Bell size={20} className="animate-swing text-current shrink-0" />
+      {unreadCount > 0 && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-transparent group-hover:border-white transition-colors" />
+      )}
+    </button>
+  );
+
+  const renderLogoutButton = (extraBtnClass = "") => (
+    <button 
+      type="button"
+      onClick={signOut}
+      title="Sair"
+      aria-label="Sair"
+      className={`w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden ${extraBtnClass}`}
+      style={{
+        width: '36px',
+        height: '36px',
+        minWidth: '36px',
+        minHeight: '36px',
+        maxWidth: '36px',
+        maxHeight: '36px',
+        borderRadius: '10px',
+        aspectRatio: '1 / 1',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0',
+        margin: '0',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+      }}
+    >
+      <LogOut size={20} className="text-current shrink-0 group-hover:scale-110 transition-transform" />
+    </button>
+  );
+
   const renderHeaderActionButtons = (extraClass = "") => (
     <div className={`flex items-center gap-2 shrink-0 ${extraClass}`}>
-      <button
-        type="button"
-        onClick={handleBellClick}
-        title="Atualizações e Informações"
-        aria-label="Atualizações e Informações"
-        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
-        style={{
-          width: '36px',
-          height: '36px',
-          minWidth: '36px',
-          minHeight: '36px',
-          maxWidth: '36px',
-          maxHeight: '36px',
-          borderRadius: '10px',
-          aspectRatio: '1 / 1',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0',
-          margin: '0',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-          color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
-        }}
-      >
-        <Bell size={20} className="animate-swing text-current shrink-0" />
-        {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-transparent group-hover:border-white transition-colors" />
-        )}
-      </button>
-
-      <button 
-        type="button"
-        onClick={signOut}
-        title="Sair"
-        aria-label="Sair"
-        className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden"
-        style={{
-          width: '36px',
-          height: '36px',
-          minWidth: '36px',
-          minHeight: '36px',
-          maxWidth: '36px',
-          maxHeight: '36px',
-          borderRadius: '10px',
-          aspectRatio: '1 / 1',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0',
-          margin: '0',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-          color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
-        }}
-      >
-        <LogOut size={20} className="text-current shrink-0" />
-      </button>
+      {renderSyncButton()}
+      {renderBellButton()}
+      {renderLogoutButton()}
     </div>
   );
 
@@ -769,13 +821,23 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           <div className="sidebar-footer p-2.5 border-t border-white/10 shrink-0 flex flex-col gap-2">
             {collapsed ? (
               <div className="flex flex-col items-center gap-2 w-full py-1">
-                {renderHeaderActionButtons("flex-col items-center")}
+                {renderSyncButton()}
+                {renderBellButton()}
+                {renderLogoutButton()}
               </div>
             ) : (
-              <div className="flex flex-col gap-1.5 w-full">
+              <div className="flex flex-col gap-2 w-full">
+                {/* Linha 1: Botão Ícone de Sincronização ao lado de Notificações */}
                 <div className="flex items-center justify-center gap-3">
-                  {renderHeaderActionButtons()}
+                  {renderSyncButton()}
+                  {renderBellButton()}
                 </div>
+
+                {/* Linha 2: Botão Sair abaixo de Notificações e Sincronização */}
+                <div className="flex items-center justify-center">
+                  {renderLogoutButton()}
+                </div>
+
                 <div className="mt-0.5 text-[10px] text-center pointer-events-none tracking-tight leading-none whitespace-nowrap flex items-center justify-center gap-1 text-slate-400">
                   <span className="text-[10px] text-slate-400 font-normal">Desenvolvido por</span>
                   <span className="text-[10px] font-bold text-[var(--gm-menu-title)]">CardDigital</span>
@@ -1012,9 +1074,19 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                           : "barra border-white/15 hover:border-[var(--gm-primary)]/40"
                       }`}
                     >
-                      {/* Badge Icon based on Type */}
+                      {/* Badge Icon / Logo cadastrado do usuário */}
                       <div className="shrink-0 mt-0.5">
-                        {noti.type === "direct" && (
+                        {noti.icon || appSettings?.company_logo_url ? (
+                          <div className={`w-8 h-8 rounded-lg overflow-hidden border flex items-center justify-center p-0.5 ${
+                            noti.read ? "border-white/10 opacity-70 bg-black/40" : "border-white/20 bg-black/60 shadow-sm"
+                          }`}>
+                            <img
+                              src={noti.icon || appSettings?.company_logo_url || ""}
+                              alt=""
+                              className="w-full h-full object-contain rounded-md"
+                            />
+                          </div>
+                        ) : noti.type === "direct" ? (
                           <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
                             noti.read 
                               ? "barra border-white/10 text-zinc-500" 
@@ -1022,8 +1094,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                           }`}>
                             <MessageSquare size={14} />
                           </div>
-                        )}
-                        {noti.type === "update" && (
+                        ) : noti.type === "update" ? (
                           <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
                             noti.read
                               ? "barra border-white/10 text-zinc-500"
@@ -1031,8 +1102,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                           }`}>
                             <Sparkles size={14} className={noti.read ? "" : "animate-pulse"} />
                           </div>
-                        )}
-                        {noti.type === "alert" && (
+                        ) : (
                           <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
                             noti.read
                               ? "barra border-white/10 text-zinc-500"

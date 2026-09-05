@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Page } from "../components/ui/Page";
 import { supabase } from "../lib/supabase";
@@ -79,6 +80,42 @@ type ExpenseUI = {
   reminderTime?: string;
   reminderDate?: string;
 };
+
+// Detecção universal de erro de coluna inexistente ou cache de schema do PostgREST
+function isMissingColumnError(error: any): boolean {
+  if (!error) return false;
+  const code = String(error.code || "").toUpperCase();
+  const msg = (String(error.message || "") + " " + String(error.details || "") + " " + String(error.hint || "")).toLowerCase();
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    code === "PGRST100" ||
+    msg.includes("could not find") ||
+    msg.includes("schema cache") ||
+    msg.includes("is_recurring") ||
+    msg.includes("reminder_time") ||
+    msg.includes("column")
+  );
+}
+
+const EXPENSE_LOCAL_META_KEY = "gm_expenses_local_meta_v1";
+
+function getExpenseLocalMeta(): Record<string, { isRecurring?: boolean; reminderTime?: string; reminderDate?: string }> {
+  try {
+    const raw = localStorage.getItem(EXPENSE_LOCAL_META_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveExpenseLocalMeta(id: string, meta: { isRecurring?: boolean; reminderTime?: string; reminderDate?: string }) {
+  try {
+    const current = getExpenseLocalMeta();
+    current[id] = { ...current[id], ...meta };
+    localStorage.setItem(EXPENSE_LOCAL_META_KEY, JSON.stringify(current));
+  } catch {}
+}
 
 function monthRange(monthYYYYMM: string) {
   const [yStr, mStr] = monthYYYYMM.split("-");
@@ -208,10 +245,42 @@ export default function Expenses() {
         q = q.is("deleted_at", null).eq("is_recurring", true);
       }
 
-      const { data, error } = await q;
-      if (error) throw error;
+      let data: any[] | null = null;
+      try {
+        const res = await q;
+        if (res.error) throw res.error;
+        data = res.data;
+      } catch (err: any) {
+        if (isMissingColumnError(err)) {
+          // Se a coluna is_recurring ou outra não existe, faz query sem o filtro de coluna
+          console.warn("[Expenses] Column missing in loadExpenses, applying fallback query:", err.message);
+          let fallbackQ = supabase
+            .from("expenses")
+            .select("*")
+            .order("due_date", { ascending: false });
+          if (tab === "active") {
+            fallbackQ = fallbackQ.is("deleted_at", null).gte("due_date", startISO).lt("due_date", nextISO);
+          } else if (tab === "trash") {
+            fallbackQ = fallbackQ.not("deleted_at", "is", null).gte("due_date", startISO).lt("due_date", nextISO);
+          } else if (tab === "recurring") {
+            fallbackQ = fallbackQ.is("deleted_at", null);
+          }
+          const fbRes = await fallbackQ;
+          if (fbRes.error) {
+            // Último recurso: busca tudo sem filtros restritivos
+            const plainRes = await supabase.from("expenses").select("*");
+            data = plainRes.data;
+          } else {
+            data = fbRes.data;
+          }
+        } else {
+          throw err;
+        }
+      }
 
-      const rows: ExpenseUI[] = ((data as ExpenseRow[]) || []).map((r) => {
+      const localMeta = getExpenseLocalMeta();
+
+      let rows: ExpenseUI[] = ((data as ExpenseRow[]) || []).map((r) => {
         let rDate = "";
         let rTime = "";
         if (r.reminder_time) {
@@ -223,6 +292,12 @@ export default function Expenses() {
             rTime = r.reminder_time;
           }
         }
+
+        const meta = localMeta[r.id];
+        const isRec = r.is_recurring !== undefined && r.is_recurring !== null 
+          ? !!r.is_recurring 
+          : (meta?.isRecurring ?? false);
+
         return {
           id: r.id,
           description: r.description,
@@ -230,11 +305,15 @@ export default function Expenses() {
           dueDate: r.due_date ? String(r.due_date) : "",
           paid: !!r.paid,
           deleted_at: r.deleted_at ?? null,
-          isRecurring: !!r.is_recurring,
-          reminderTime: rTime,
-          reminderDate: rDate,
+          isRecurring: isRec,
+          reminderTime: rTime || meta?.reminderTime || "",
+          reminderDate: rDate || meta?.reminderDate || "",
         };
       });
+
+      if (tab === "recurring") {
+        rows = rows.filter((r) => r.isRecurring);
+      }
 
       setExpenses(rows);
     } catch (e) {
@@ -358,7 +437,8 @@ export default function Expenses() {
 
     try {
       let { error } = await supabase.from("expenses").update(payload).eq("id", id);
-      if (error && error.code === "42703") {
+      if (error && isMissingColumnError(error)) {
+        console.warn("[Expenses] Missing column on update, retrying with fallbackPayload:", error.message);
         // Fallback without new columns if table not migrated yet
         const { is_recurring, reminder_time, ...fallbackPayload } = payload;
         const res = await supabase.from("expenses").update(fallbackPayload).eq("id", id);
@@ -366,6 +446,13 @@ export default function Expenses() {
       } else if (error) {
         throw error;
       }
+
+      // Guardar metadados de recorrência e lembrete localmente como garantia
+      saveExpenseLocalMeta(id, {
+        isRecurring: editIsRecurring,
+        reminderDate: editReminderDate,
+        reminderTime: editReminderTime,
+      });
 
       // Schedule or remove alarm
       if (editReminderEnabled && editReminderTime) {
@@ -422,20 +509,43 @@ export default function Expenses() {
       is_recurring: newIsRecurring,
       reminder_time: reminderStr,
     };
+    if (tenantId) {
+      payload.tenant_id = tenantId;
+    }
 
     try {
+      let createdRow: any = null;
       let { data, error } = await supabase.from("expenses").insert(payload).select().single();
-      if (error && error.code === "42703") {
+      
+      if (error && isMissingColumnError(error)) {
+        console.warn("[Expenses] Missing column on insert, retrying with fallbackPayload:", error.message);
         const { is_recurring, reminder_time, ...fallbackPayload } = payload;
         const res = await supabase.from("expenses").insert(fallbackPayload).select().single();
-        if (res.error) throw res.error;
-        data = res.data;
+        if (res.error) {
+          // Se select() falhar por RLS, tenta insert direto
+          const plainRes = await supabase.from("expenses").insert(fallbackPayload);
+          if (plainRes.error) throw plainRes.error;
+          createdRow = { id: "exp_" + Date.now(), ...fallbackPayload };
+        } else {
+          createdRow = res.data;
+        }
       } else if (error) {
         throw error;
+      } else {
+        createdRow = data;
       }
 
-      if (data && newReminderEnabled && newReminderTime) {
-        addAlarmsForBudget(data.id, newDesc.trim(), [newReminderTime], "EXPENSE", undefined, newReminderDate || newDueDate);
+      const createdId = createdRow?.id || ("exp_" + Date.now());
+
+      // Persistir preferência localmente para não perder status de recorrência/lembrete
+      saveExpenseLocalMeta(createdId, {
+        isRecurring: newIsRecurring,
+        reminderDate: newReminderDate,
+        reminderTime: newReminderTime,
+      });
+
+      if (createdId && newReminderEnabled && newReminderTime) {
+        addAlarmsForBudget(createdId, newDesc.trim(), [newReminderTime], "EXPENSE", undefined, newReminderDate || newDueDate);
       }
 
       // Notificação simultânea para Smartphone & Desktop
@@ -466,13 +576,24 @@ export default function Expenses() {
   const handleImportRecurring = async () => {
     try {
       setLoading(true);
-      const { data: recurringData, error } = await supabase
+      let recurringData: any[] = [];
+      const { data, error } = await supabase
         .from("expenses")
         .select("*")
         .is("deleted_at", null)
         .eq("is_recurring", true);
 
-      if (error) throw error;
+      if (error && isMissingColumnError(error)) {
+        console.warn("[Expenses] is_recurring missing in schema cache, using local metadata");
+        const fallbackRes = await supabase.from("expenses").select("*").is("deleted_at", null);
+        const localMeta = getExpenseLocalMeta();
+        recurringData = (fallbackRes.data || []).filter((e: any) => localMeta[e.id]?.isRecurring);
+      } else if (error) {
+        throw error;
+      } else {
+        recurringData = data || [];
+      }
+
       if (!recurringData || recurringData.length === 0) {
         alert("Nenhuma despesa marcada como recorrente foi encontrada.");
         return;
@@ -497,14 +618,35 @@ export default function Expenses() {
         );
 
         if (!exists) {
-          await supabase.from("expenses").insert({
+          const insertPayload: any = {
             description: rec.description,
             amount: rec.amount,
             due_date: targetDueDate,
             paid: false,
             is_recurring: true,
             reminder_time: rec.reminder_time,
-          });
+          };
+          if (tenantId) insertPayload.tenant_id = tenantId;
+
+          let insRes = await supabase.from("expenses").insert(insertPayload).select().single();
+          let newId = insRes.data?.id;
+
+          if (insRes.error && isMissingColumnError(insRes.error)) {
+            const { is_recurring, reminder_time, ...fallbackPayload } = insertPayload;
+            const plainRes = await supabase.from("expenses").insert(fallbackPayload).select().single();
+            if (plainRes.error) {
+              await supabase.from("expenses").insert(fallbackPayload);
+            } else {
+              newId = plainRes.data?.id;
+            }
+          }
+
+          if (newId) {
+            saveExpenseLocalMeta(newId, {
+              isRecurring: true,
+              reminderTime: rec.reminder_time,
+            });
+          }
           addedCount++;
         }
       }
@@ -512,7 +654,7 @@ export default function Expenses() {
       showToast(`${addedCount} despesa(s) recorrente(s) importada(s) para ${monthFormatted}!`);
       loadExpenses();
     } catch (err: any) {
-      alert("Erro ao importar: " + err.message);
+      alert("Erro ao importar: " + (err?.message || "Ocorreu um erro"));
     } finally {
       setLoading(false);
     }
@@ -653,16 +795,17 @@ export default function Expenses() {
       {/* TOP CONTROL CONTAINER: MÊS DE REFERÊNCIA / STATUS / ATUALIZAR / ABAS */}
       <div 
         id="expenses-top-controls"
-        className="w-full rounded-2xl md:rounded-3xl border border-white/15 bg-[#121216]/90 backdrop-blur-md shadow-2xl mb-8 p-6 sm:p-7 md:p-8 flex flex-col gap-6 !overflow-visible"
+        className="w-full fora rounded-2xl md:rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-none mb-8 p-4 sm:p-7 md:p-8 flex flex-col gap-5 sm:gap-6 !overflow-visible"
         style={{ minHeight: "auto", height: "auto" }}
       >
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5">
-          {/* Mês Selector com Setas de Navegação - Alinhado, Centralizado e Legível */}
-          <div className="flex items-center gap-2.5 sm:gap-3 justify-center sm:justify-start w-full sm:w-auto flex-wrap sm:flex-nowrap">
+          {/* Mês Selector com Setas de Navegação - Responsivo para Smartphone e Desktop */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+            {/* Desktop: Seta Anterior */}
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl bg-black/60 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-md hover:border-orange-500/40"
+              className="hidden sm:flex w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl bg-black/60 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-md hover:border-orange-500/40"
               title="Mês anterior"
             >
               <ChevronLeft size={22} />
@@ -676,7 +819,7 @@ export default function Expenses() {
                 setPickerYear(Number(yearStr) || new Date().getFullYear());
                 setShowMonthModal(true);
               }}
-              className="flex items-center justify-between gap-3 sm:gap-4 bg-black/70 hover:bg-black/90 border border-white/20 hover:border-orange-500/70 px-4 sm:px-5 py-3 rounded-2xl flex-1 sm:flex-initial min-w-[240px] sm:min-w-[270px] min-h-[52px] transition-all cursor-pointer shadow-lg group active:scale-98"
+              className="flex items-center justify-between gap-3 sm:gap-4 bg-black/70 hover:bg-black/90 border border-white/20 hover:border-orange-500/70 px-4 sm:px-5 py-3 rounded-2xl w-full sm:w-auto sm:min-w-[270px] min-h-[52px] transition-all cursor-pointer shadow-lg group active:scale-98"
               title="Clique para abrir o seletor de mês e ano"
             >
               <div className="flex items-center gap-3">
@@ -695,15 +838,17 @@ export default function Expenses() {
               <ChevronDown size={20} className="text-white/50 group-hover:text-orange-400 group-hover:translate-y-0.5 transition-all shrink-0 ml-1" />
             </button>
 
+            {/* Desktop: Seta Próximo */}
             <button
               type="button"
               onClick={handleNextMonth}
-              className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl bg-black/60 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-md hover:border-orange-500/40"
+              className="hidden sm:flex w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl bg-black/60 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-md hover:border-orange-500/40"
               title="Próximo mês"
             >
               <ChevronRight size={22} />
             </button>
 
+            {/* Desktop: Botão Hoje */}
             <button
               type="button"
               onClick={() => {
@@ -717,6 +862,27 @@ export default function Expenses() {
             >
               Hoje
             </button>
+
+            {/* Smartphone: As duas setas abaixo do MODAL MÊS DE REFERÊNCIA pegando as extremidades da tela */}
+            <div className="flex sm:hidden items-center justify-between gap-3 w-full">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className="flex-1 h-12 rounded-2xl bg-black/70 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-md hover:border-orange-500/40"
+                title="Mês anterior"
+              >
+                <ChevronLeft size={22} />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className="flex-1 h-12 rounded-2xl bg-black/70 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-md hover:border-orange-500/40"
+                title="Próximo mês"
+              >
+                <ChevronRight size={22} />
+              </button>
+            </div>
           </div>
 
           {/* Workflow Tabs: Todas do Mês / Recorrentes / Lixeira */}
@@ -794,9 +960,9 @@ export default function Expenses() {
       </div>
 
       {/* LISTA DE DESPESAS DIRETA COM EXPANSÃO INLINE ESTILO NOTION */}
-      <div className="w-full bg-[#121216]/60 backdrop-blur-md rounded-2xl border border-white/10 shadow-none mb-12 flex flex-col">
+      <div className="w-full fora bg-white/[0.02] backdrop-blur-md rounded-2xl border border-white/10 shadow-none mb-12 flex flex-col overflow-hidden">
         {/* Header fixo da tabela (visível no desktop) */}
-        <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-4 border-b border-white/10 font-black opacity-80 uppercase tracking-widest text-[11px] bg-[#121216]/95 text-slate-300">
+        <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-4 border-b border-white/10 font-black opacity-80 uppercase tracking-widest text-[11px] barra bg-black/20 text-slate-300">
           <div>Vencimento</div>
           <div>Descrição da Despesa</div>
           <div className="text-right">Valor (R$)</div>
@@ -1489,147 +1655,163 @@ export default function Expenses() {
         )}
       </AnimatePresence>
 
-      {/* MODAL SELETOR DE MÊS DE REFERÊNCIA */}
-      <AnimatePresence>
-        {showMonthModal && (
-          <div
-            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 backdrop-blur-md overflow-y-auto"
-            onClick={() => setShowMonthModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="w-full max-w-lg rounded-3xl border border-white/20 overflow-hidden shadow-2xl relative z-10 p-0 my-auto bg-[#14151a]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header do Modal */}
-              <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#101114]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
-                    <Calendar size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-white">Mês de Referência</h3>
-                    <p className="text-xs text-white/60 font-medium">
-                      Selecione o mês e o ano para filtrar suas despesas
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowMonthModal(false)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-                  title="Fechar"
+      {/* MODAL SELETOR DE MÊS DE REFERÊNCIA - RENDERIZADO VIA PORTAL E 100% CENTRALIZADO NO SMARTPHONE E DESKTOP */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {showMonthModal && (
+              <div
+                className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4"
+                style={{
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: "100vw",
+                  height: "100dvh",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onClick={() => setShowMonthModal(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.92, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.92, opacity: 0 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="w-full max-w-[360px] sm:max-w-md rounded-2xl sm:rounded-3xl border border-white/20 bg-[#14151a] shadow-2xl relative z-10 overflow-hidden flex flex-col"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="p-6 sm:p-7 space-y-6">
-                {/* Seletor de Ano */}
-                <div className="flex items-center justify-between bg-black/50 border border-white/15 rounded-2xl p-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setPickerYear((y) => y - 1)}
-                    className="w-11 h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
-                    title="Ano anterior"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-2xl sm:text-3xl font-black text-white tracking-wider font-mono">
-                      {pickerYear}
-                    </span>
-                    {pickerYear === new Date().getFullYear() && (
-                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-orange-500/20 text-orange-400 border border-orange-500/40 tracking-wider">
-                        Ano Atual
-                      </span>
-                    )}
+                  {/* Header do Modal */}
+                  <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-white/10 bg-[#101114] shrink-0">
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+                        <Calendar size={18} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-black text-white leading-tight">Mês de Referência</h3>
+                        <p className="text-[10px] sm:text-xs text-white/60 font-medium leading-none mt-0.5">
+                          Selecione o mês para filtrar despesas
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowMonthModal(false)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+                      title="Fechar"
+                    >
+                      <X size={18} />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setPickerYear((y) => y + 1)}
-                    className="w-11 h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
-                    title="Próximo ano"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                </div>
 
-                {/* Grade de 12 Meses */}
-                <div className="grid grid-cols-3 gap-3">
-                  {MONTHS_LIST.map((mItem) => {
-                    const itemMonthKey = `${pickerYear}-${mItem.value}`;
-                    const isSelected = month === itemMonthKey;
-                    const todayDate = new Date();
-                    const realCurrentKey = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, "0")}`;
-                    const isCurrentRealMonth = realCurrentKey === itemMonthKey;
-
-                    return (
+                  <div className="p-3.5 sm:p-5 space-y-3 sm:space-y-4">
+                    {/* Seletor de Ano */}
+                    <div className="flex items-center justify-between bg-black/50 border border-white/15 rounded-xl p-1.5 sm:p-2">
                       <button
-                        key={mItem.value}
+                        type="button"
+                        onClick={() => setPickerYear((y) => y - 1)}
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
+                        title="Ano anterior"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg sm:text-2xl font-black text-white tracking-wider font-mono">
+                          {pickerYear}
+                        </span>
+                        {pickerYear === new Date().getFullYear() && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-orange-500/20 text-orange-400 border border-orange-500/40 tracking-wider">
+                            Atual
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPickerYear((y) => y + 1)}
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
+                        title="Próximo ano"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+
+                    {/* Grade de 12 Meses */}
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                      {MONTHS_LIST.map((mItem) => {
+                        const itemMonthKey = `${pickerYear}-${mItem.value}`;
+                        const isSelected = month === itemMonthKey;
+                        const todayDate = new Date();
+                        const realCurrentKey = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, "0")}`;
+                        const isCurrentRealMonth = realCurrentKey === itemMonthKey;
+
+                        return (
+                          <button
+                            key={mItem.value}
+                            type="button"
+                            onClick={() => {
+                              setMonth(itemMonthKey);
+                              setShowMonthModal(false);
+                              showToast(`Mês alterado para ${mItem.name} de ${pickerYear}`);
+                            }}
+                            className={`relative p-1.5 sm:p-2.5 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer h-[48px] sm:h-[56px] active:scale-95 ${
+                              isSelected
+                                ? "bg-orange-500/25 border-orange-500 text-white font-black shadow-md shadow-orange-500/20 scale-[1.02]"
+                                : "bg-black/40 border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 font-bold"
+                            }`}
+                          >
+                            <span className={`text-[9px] sm:text-[10px] uppercase font-mono tracking-wider leading-none ${isSelected ? "text-orange-400 font-black" : "text-white/50"}`}>
+                              {mItem.value} • {mItem.short}
+                            </span>
+                            <span className="text-[11px] sm:text-xs font-black truncate max-w-full leading-tight">
+                              {mItem.name}
+                            </span>
+                            {isSelected && (
+                              <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-orange-500 shadow-sm" />
+                            )}
+                            {isCurrentRealMonth && !isSelected && (
+                              <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400" title="Mês atual" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Botões Rápidos no Rodapé do Modal */}
+                    <div className="flex items-center justify-between gap-2 pt-2.5 sm:pt-3 border-t border-white/10">
+                      <button
                         type="button"
                         onClick={() => {
-                          setMonth(itemMonthKey);
+                          const now = new Date();
+                          const currentM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+                          setPickerYear(now.getFullYear());
+                          setMonth(currentM);
                           setShowMonthModal(false);
-                          showToast(`Mês alterado para ${mItem.name} de ${pickerYear}`);
+                          showToast("Mês atual selecionado!");
                         }}
-                        className={`relative p-3.5 sm:p-4 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer min-h-[68px] sm:min-h-[72px] active:scale-95 ${
-                          isSelected
-                            ? "bg-orange-500/25 border-orange-500 text-white font-black shadow-lg shadow-orange-500/20 scale-[1.02]"
-                            : "bg-black/40 border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 font-bold"
-                        }`}
+                        className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg bg-white/5 hover:bg-white/15 text-white/90 hover:text-white border border-white/15 text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm"
                       >
-                        <span className={`text-[11px] uppercase font-mono tracking-wider ${isSelected ? "text-orange-400 font-black" : "text-white/50"}`}>
-                          {mItem.value} • {mItem.short}
-                        </span>
-                        <span className="text-xs sm:text-sm font-black truncate max-w-full leading-tight">
-                          {mItem.name}
-                        </span>
-                        {isSelected && (
-                          <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-orange-500 shadow-sm" />
-                        )}
-                        {isCurrentRealMonth && !isSelected && (
-                          <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400" title="Mês atual do calendário" />
-                        )}
+                        <Clock size={13} className="text-emerald-400 shrink-0" />
+                        <span>Mês Atual</span>
                       </button>
-                    );
-                  })}
-                </div>
 
-                {/* Botões Rápidos no Rodapé do Modal */}
-                <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const now = new Date();
-                      const currentM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-                      setPickerYear(now.getFullYear());
-                      setMonth(currentM);
-                      setShowMonthModal(false);
-                      showToast("Mês atual selecionado!");
-                    }}
-                    className="h-11 px-4 sm:px-5 rounded-xl bg-white/5 hover:bg-white/15 text-white/90 hover:text-white border border-white/15 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-sm"
-                  >
-                    <Clock size={15} className="text-emerald-400" />
-                    <span>Ir para Mês Atual</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowMonthModal(false)}
-                    className="h-11 px-6 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white text-xs font-black transition-all cursor-pointer active:scale-95 shadow-md uppercase tracking-wider"
-                  >
-                    Fechar
-                  </button>
-                </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowMonthModal(false)}
+                        className="h-8 sm:h-9 px-4 sm:px-5 rounded-lg bg-[var(--gm-primary)] hover:brightness-110 text-white text-[10px] sm:text-xs font-black transition-all cursor-pointer active:scale-95 shadow-md uppercase tracking-wider shrink-0"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </Page>
   );
 }

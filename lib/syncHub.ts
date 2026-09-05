@@ -1,7 +1,7 @@
 // lib/syncHub.ts
 import { supabase } from "./supabase";
 import { AppSettings, applySettingsToDOM, writeSettingsLocal, fetchSettingsSupabase } from "./settings";
-import { triggerRealNotification } from "./realNotification";
+import { triggerRealNotification, getUserRegisteredLogo } from "./realNotification";
 import { playNotificationSound } from "./audio";
 
 export interface SyncNotificationItem {
@@ -13,6 +13,7 @@ export interface SyncNotificationItem {
   read?: boolean;
   url?: string;
   amount?: number | string;
+  icon?: string;
   sourceDevice?: string;
 }
 
@@ -98,6 +99,7 @@ export function recordAndTriggerNotification(noti: SyncNotificationItem, notifyU
       title: noti.title,
       body: noti.message,
       url: noti.url || "/",
+      icon: noti.icon || getUserRegisteredLogo() || undefined,
       inAppToast: true,
     });
   }
@@ -110,6 +112,7 @@ export async function broadcastAppNotification(
   tenantId: string | null | undefined,
   notiData: Omit<SyncNotificationItem, "id" | "createdAt"> & { id?: string }
 ) {
+  const registeredUserLogo = getUserRegisteredLogo();
   const finalNotification: SyncNotificationItem = {
     id: notiData.id || "notif_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
     title: notiData.title,
@@ -119,6 +122,7 @@ export async function broadcastAppNotification(
     read: false,
     url: notiData.url || "/",
     amount: notiData.amount,
+    icon: notiData.icon || registeredUserLogo || undefined,
     sourceDevice: DEVICE_SESSION_ID,
   };
 

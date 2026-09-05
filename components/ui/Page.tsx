@@ -13,7 +13,7 @@ export function Page({ title, subtitle, actions, children, className }: PageProp
   const showHeader = title || subtitle || actions;
 
   return (
-    <div className={`animate-fade-in min-h-full flex flex-col w-full ${className || ""}`}>
+    <div className={`min-h-full flex flex-col w-full ${className || ""}`}>
       {showHeader && (
         <div className="gm-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7 pb-4 border-b border-slate-200/60 dark:border-white/10">
           <div className="gm-title min-w-0 flex-1">

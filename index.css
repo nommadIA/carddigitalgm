@@ -25,9 +25,9 @@
 ========================================================= */
 .barra,
 .fora {
-  background: rgba(18, 18, 22, 0.5);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(18, 18, 24, 0.40);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   box-shadow: none !important;
 }
 
@@ -35,9 +35,9 @@
 [data-theme="light"] .fora,
 .gm-light .barra,
 .gm-light .fora {
-  background: rgba(255, 255, 255, 0.6) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   box-shadow: none !important;
 }
@@ -48,9 +48,9 @@
 .gm-dark .fora,
 html:not([data-theme="light"]):not(.gm-light) .barra,
 html:not([data-theme="light"]):not(.gm-light) .fora {
-  background: rgba(18, 18, 22, 0.5) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(18, 18, 24, 0.40) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
 }
@@ -3640,6 +3640,31 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
   opacity: 0.6 !important;
 }
 
+/* Marcadores e Destaques atrás do texto no editor e visualizadores de notas */
+.gm-note-modal [contenteditable="true"] mark,
+.gm-note-modal [contenteditable="true"] span[style*="background"],
+.gm-note-modal [contenteditable="true"] span[style*="background-color"],
+.note-content-rendered mark,
+.note-content-rendered span[style*="background"],
+.note-content-rendered span[style*="background-color"],
+.markdown-body mark,
+.markdown-body span[style*="background"],
+.markdown-body span[style*="background-color"] {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: center;
+  line-height: 1.25;
+  padding: 2px 7px;
+  margin: 1px 1px;
+  border-radius: 4px;
+  position: relative;
+  z-index: 1;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
 /* Empty states */
 [data-theme="light"] .gm-note-modal .text-white\/20,
 .gm-light .gm-note-modal .text-white\/20 {
@@ -3804,12 +3829,13 @@ body{
   align-items:flex-start;
   justify-content:space-between;
   gap: 12px;
-  padding: 12px 12px;
-  border-radius: 18px;
-  border: 1px solid var(--gm-border);
-  background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(18px) saturate(1.25);
-  box-shadow: 0 18px 55px rgba(0,0,0,0.45);
+  padding: 13px 15px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(18, 20, 26, 0.50) 50%, rgba(10, 12, 16, 0.70) 100%);
+  backdrop-filter: blur(28px) saturate(190%) contrast(105%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(105%);
+  box-shadow: 0 24px 50px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.22);
 
   transform: translateY(6px);
   opacity: 0;
@@ -3833,17 +3859,20 @@ body{
 .toast-info{ color: rgba(59,130,246,0.95); }
 
 .toast-text{ min-width: 0; }
-.toast-title{ font-weight: 800; font-size: 13px; line-height: 1.2; }
-.toast-msg{ margin-top: 2px; font-size: 12px; opacity: 0.75; line-height: 1.35; }
+.toast-title{ font-weight: 800; font-size: 13px; line-height: 1.2; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+.toast-msg{ margin-top: 3px; font-size: 12px; opacity: 0.85; line-height: 1.4; }
 
 .toast-close{
-  border: 1px solid var(--gm-border);
-  background: rgba(255,255,255,0.06);
-  border-radius: 12px;
-  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255,255,255,0.08);
+  border-radius: 9999px;
+  padding: 5px;
   line-height: 0;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
 }
-.toast-close:hover{ background: rgba(255,255,255,0.12); }
+.toast-close:hover{ background: rgba(255,255,255,0.20); color: #fff; }
 
 /* =========================
    Budgets Tabs Counter Badge
@@ -4442,9 +4471,9 @@ html.gm-has-bg .gm-bottom-nav,
 html.gm-has-bg [role="dialog"],
 html.gm-has-bg .barra,
 html.gm-has-bg .fora {
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  background: rgba(18, 18, 22, 0.5) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  background: rgba(18, 18, 24, 0.40) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
   contain: none !important;
@@ -5373,7 +5402,7 @@ html.gm-light button.gm-floating-save-btn svg {
 .gm-dark .gm-card:hover,
 .gm-dark .card:hover {
   transform: none !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.50) !important;
+  box-shadow: none !important;
 }
 
 /* BUTTONS */
@@ -5497,7 +5526,7 @@ input, select, textarea, .gm-input {
 .gm-light [role="dialog"] {
   background-color: #FFFFFF !important;
   border: 1px solid #ECEEF3 !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25) !important;
 }
 
 [data-theme="dark"] .gm-modal,
@@ -5526,9 +5555,9 @@ table th, .gm-table th {
 
 [data-theme="light"] table th,
 .gm-light table th {
-  background-color: #F7F8FA !important;
+  background-color: #F8FAFC !important;
   color: #686D76 !important;
-  border-bottom: 1px solid #E8EAF0 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
 }
 
 [data-theme="dark"] table th,
@@ -5546,24 +5575,26 @@ table td, .gm-table td {
 
 [data-theme="light"] table td,
 .gm-light table td {
-  border-bottom: 1px solid #E8EAF0 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
   color: #18181B !important;
 }
 
 [data-theme="dark"] table td,
 .gm-dark table td {
-  border-bottom: 1px solid #313847 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   color: #FFFFFF !important;
 }
 
 [data-theme="light"] table tr:hover td,
 .gm-light table tr:hover td {
-  background-color: #F1F3F7 !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
 }
 
 [data-theme="dark"] table tr:hover td,
 .gm-dark table tr:hover td {
-  background-color: #262C39 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 /* =========================================================
@@ -6399,13 +6430,17 @@ aside.gm-sidebar::after,
 .gm-note-modal,
 .gm-summary-card,
 .gm-bottom-nav-btn,
+.gm-settings-card,
+.gm-settings-section,
+.gm-table-container,
+.gm-glass,
 [role="dialog"],
 .modal,
 .dialog {
   position: relative !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  background: rgba(18, 18, 22, 0.5) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  background: rgba(18, 18, 24, 0.40) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
   contain: none !important;

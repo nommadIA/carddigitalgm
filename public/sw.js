@@ -22,16 +22,18 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
+const OFFICIAL_APP_FAVICON = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.png";
+
 messaging.onBackgroundMessage((payload) => {
   console.log('[sw.js] Received background message ', payload);
   const title = payload.notification?.title || "CardDigital GM";
   const body = payload.notification?.body || "Nova notificação recebida";
-  const icon = payload.notification?.icon || "/icon-192.png";
+  const icon = payload.notification?.icon || OFFICIAL_APP_FAVICON;
 
   const notificationOptions = {
     body,
     icon,
-    badge: icon,
+    badge: OFFICIAL_APP_FAVICON,
     data: payload.data || { url: '/' },
     vibrate: [200, 100, 200, 100, 200]
   };
@@ -47,8 +49,8 @@ self.addEventListener('push', function(event) {
     if (data && data.type === 'custom-local-alarm') {
       const options = {
         body: data.body,
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
+        icon: data.icon || OFFICIAL_APP_FAVICON,
+        badge: OFFICIAL_APP_FAVICON,
         vibrate: [200, 100, 200],
         data: { url: typeof data.url === 'string' ? data.url : '/' }
       };
@@ -94,11 +96,12 @@ self.addEventListener('message', (event) => {
   if (event.data === 'TEST_NOTIFICATION' || event.data.type === 'TEST_NOTIFICATION') {
     const title = event.data.title || "🔔 CardDigital GM · Notificação de Teste";
     const body = event.data.body || "Sua notificação em tempo real está funcionando perfeitamente dentro e fora do app!";
-    const icon = event.data.icon || "/icon-192.png";
+    const icon = event.data.icon || OFFICIAL_APP_FAVICON;
+    const badge = event.data.badge || OFFICIAL_APP_FAVICON;
     const options = {
       body: body,
       icon: icon,
-      badge: icon,
+      badge: badge,
       vibrate: [200, 100, 200, 100, 200],
       tag: 'test-notification-' + Date.now(),
       renotify: true,
@@ -110,10 +113,12 @@ self.addEventListener('message', (event) => {
 
   if (event.data.type === 'SHOW_NOTIFICATION') {
     const title = event.data.title || "CardDigital GM";
+    const icon = event.data.icon || OFFICIAL_APP_FAVICON;
+    const badge = event.data.badge || OFFICIAL_APP_FAVICON;
     const options = {
       body: event.data.body || "",
-      icon: event.data.icon || '/icon-192.png',
-      badge: event.data.badge || '/icon-192.png',
+      icon: icon,
+      badge: badge,
       vibrate: event.data.vibrate || [200, 100, 200],
       tag: event.data.tag || 'gm-notif-' + Date.now(),
       renotify: true,

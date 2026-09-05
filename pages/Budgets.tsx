@@ -202,7 +202,7 @@ function VirtualizedBudgetList({
       <div className="overflow-x-auto w-full">
         <div className="text-sm min-w-full">
           {/* Header fixo com backdrop-blur */}
-          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-4 border-b border-white/10 font-bold opacity-85 uppercase tracking-wider text-xs bg-[#121216]/95 backdrop-blur-md shrink-0 shadow-sm">
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-4 border-b border-white/10 font-bold opacity-85 uppercase tracking-wider text-xs barra bg-black/20 backdrop-blur-md shrink-0 shadow-sm">
             <div>Data</div>
             <div>Descrição</div>
             <div className="text-right">Ações</div>
@@ -1138,12 +1138,12 @@ export default function Budgets() {
           </DraggableScroll>
         </div>
 
-        {/* ✅ Busca Inteligente */}
-        <div className="relative gm-dashboard-card barra !p-0 rounded-2xl overflow-hidden">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        {/* ✅ Busca Inteligente com Borda e Cantos de Alta Precisão (Sem Falhas) */}
+        <div className="relative group w-full flex items-center rounded-2xl bg-black/40 border border-white/15 backdrop-blur-xl transition-all duration-200 focus-within:border-[var(--gm-primary,#FF6900)] focus-within:ring-2 focus-within:ring-[var(--gm-primary,#FF6900)]/20 focus-within:shadow-[0_0_16px_rgba(254,84,11,0.18)] hover:border-white/25">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[var(--gm-primary,#FF6900)] transition-colors pointer-events-none" size={18} />
           <input
             type="text"
-            className="w-full !pl-12 pr-4 py-3.5 bg-transparent border-none text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--gm-primary)] transition-all rounded-2xl"
+            className="w-full !pl-12 !pr-11 py-3.5 bg-transparent !border-none text-white placeholder-slate-400 text-sm font-medium !outline-none !shadow-none !ring-0 focus:!outline-none focus:!border-none focus:!ring-0 focus:!shadow-none rounded-2xl"
             placeholder={
               tab === "CONCLUIDOS"
                 ? "Buscar orçamentos concluídos..."
@@ -1152,6 +1152,16 @@ export default function Budgets() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
+          {q && (
+            <button
+              type="button"
+              onClick={() => setQ("")}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              title="Limpar busca"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -1208,6 +1218,9 @@ export default function Budgets() {
           isMobile={isMobile}
         />
       )}
+
+      {/* ✅ Folga generosa no rodapé da página em relação aos containers finais */}
+      <div className="h-32 sm:h-40 w-full shrink-0 pointer-events-none" aria-hidden="true" />
 
       {/* Instance for creating new budget (persistent state) */}
       <NewBudgetModal 
