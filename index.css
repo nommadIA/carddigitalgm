@@ -801,14 +801,14 @@ button.handle,
   width: 8px;
 }
 .gm-main::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.15);
 }
 .gm-main::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.28);
   border-radius: 9999px;
 }
 .gm-main::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.48);
 }
 
 .gm-container {

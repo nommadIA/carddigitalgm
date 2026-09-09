@@ -160,6 +160,10 @@ export default function Expenses() {
   // Inline Notion-style expanded row ID
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
+  // Modal for editing expense (opened directly via pencil icon)
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+
   // Edit State for expanded row or new item
   const [editDesc, setEditDesc] = useState("");
   const [editAmount, setEditAmount] = useState("");
@@ -379,6 +383,21 @@ export default function Expenses() {
     } catch {}
   };
 
+  // Open dedicated modal to edit expense (triggered by pencil icon)
+  const handleOpenEditModal = (ex: ExpenseUI, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEditingExpenseId(ex.id);
+    setEditDesc(ex.description);
+    setEditAmount(String(ex.amount));
+    setEditDueDate(ex.dueDate);
+    setEditPaid(ex.paid);
+    setEditIsRecurring(!!ex.isRecurring);
+    setEditReminderEnabled(!!(ex.reminderTime || ex.reminderDate));
+    setEditReminderDate(ex.reminderDate || ex.dueDate || "");
+    setEditReminderTime(ex.reminderTime || "09:00");
+    setShowEditModal(true);
+  };
+
   // Open inline Notion-style editor
   const handleToggleExpand = (ex: ExpenseUI) => {
     if (expandedRowId === ex.id) {
@@ -411,7 +430,7 @@ export default function Expenses() {
     }
   };
 
-  // Save inline Notion-style edits
+  // Save edits (both inline and dedicated modal)
   const handleSaveInline = async (id: string) => {
     if (!editDesc.trim() || !editDueDate) {
       alert("Por favor, preencha a descrição e o vencimento.");
@@ -479,6 +498,8 @@ export default function Expenses() {
       );
 
       setExpandedRowId(null);
+      setShowEditModal(false);
+      setEditingExpenseId(null);
       showToast("Despesa atualizada com sucesso!");
     } catch (err: any) {
       alert("Erro ao salvar: " + (err?.message || "Ocorreu um erro."));
@@ -486,6 +507,8 @@ export default function Expenses() {
       setIsSavingInline(false);
     }
   };
+
+  const handleSaveExpense = handleSaveInline;
 
   // Create new expense
   const handleCreateNew = async (e: React.FormEvent) => {
@@ -795,7 +818,7 @@ export default function Expenses() {
       {/* TOP CONTROL CONTAINER: MÊS DE REFERÊNCIA / STATUS / ATUALIZAR / ABAS */}
       <div 
         id="expenses-top-controls"
-        className="w-full fora rounded-2xl md:rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-none mb-8 p-4 sm:p-7 md:p-8 flex flex-col gap-5 sm:gap-6 !overflow-visible"
+        className="w-full fora rounded-2xl md:rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-none mb-6 p-4 sm:p-5 md:p-6 flex flex-col gap-4 sm:gap-5 !overflow-visible"
         style={{ minHeight: "auto", height: "auto" }}
       >
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5">
@@ -960,9 +983,9 @@ export default function Expenses() {
       </div>
 
       {/* LISTA DE DESPESAS DIRETA COM EXPANSÃO INLINE ESTILO NOTION */}
-      <div className="w-full fora bg-white/[0.02] backdrop-blur-md rounded-2xl border border-white/10 shadow-none mb-12 flex flex-col overflow-hidden">
+      <div className="w-full fora bg-white/[0.02] backdrop-blur-md rounded-2xl border border-white/10 shadow-none mb-12 flex flex-col overflow-visible">
         {/* Header fixo da tabela (visível no desktop) */}
-        <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-4 border-b border-white/10 font-black opacity-80 uppercase tracking-widest text-[11px] barra bg-black/20 text-slate-300">
+        <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-4 border-b border-white/10 font-black opacity-80 uppercase tracking-widest text-[11px] barra bg-black/20 text-slate-300 rounded-t-2xl">
           <div>Vencimento</div>
           <div>Descrição da Despesa</div>
           <div className="text-right">Valor (R$)</div>
@@ -1069,17 +1092,13 @@ export default function Expenses() {
                             <Check size={18} />
                           </button>
 
-                          {/* Expandir / Editar Estilo Notion */}
+                          {/* Editar Despesa (Abre Modal com Botão Salvar Alterações) */}
                           <button
                             type="button"
-                            onClick={() => handleToggleExpand(e)}
+                            onClick={(ev) => handleOpenEditModal(e, ev)}
                             data-icon-btn="true"
-                            className={`w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-xl flex items-center justify-center shrink-0 transition-all border cursor-pointer active:scale-90 ${
-                              isExpanded
-                                ? "bg-orange-500/20 border-orange-500/40 text-orange-400 shadow-sm"
-                                : "bg-black/40 border-white/10 text-white/60 hover:text-white hover:border-white/25"
-                            }`}
-                            title="Editar detalhes (Modo Notion)"
+                            className="w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-xl flex items-center justify-center shrink-0 transition-all border cursor-pointer active:scale-90 bg-orange-500/15 border-orange-500/40 text-orange-400 hover:bg-orange-500 hover:text-white shadow-sm hover:scale-105"
+                            title="Editar despesa (Salvar Alterações)"
                           >
                             <Pencil size={16} />
                           </button>
@@ -1128,16 +1147,40 @@ export default function Expenses() {
                           transition={{ duration: 0.25, ease: "easeInOut" }}
                           className="overflow-hidden bg-[#111317] border-t border-b border-orange-500/30 px-6 py-5 shadow-inner"
                         >
-                          <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+                          <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10 flex-wrap gap-2">
                             <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse" />
                               <span className="text-xs font-black uppercase tracking-widest text-orange-400 font-mono">
-                                Propriedades da Despesa (Modo Notion)
+                                Propriedades da Despesa
                               </span>
                             </div>
-                            <span className="text-[11px] text-white/40">
-                              Altere os dados e salve sem sair da tela
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={(ev) => handleOpenEditModal(e, ev)}
+                                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 border border-white/10 cursor-pointer"
+                                title="Abrir em modal completo"
+                              >
+                                <Pencil size={12} className="text-orange-400" />
+                                <span>Abrir Modal</span>
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isSavingInline}
+                                onClick={() => handleSaveInline(e.id)}
+                                className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black transition-all flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer disabled:opacity-50"
+                                title="Salvar Alterações"
+                              >
+                                {isSavingInline ? (
+                                  <span>Salvando...</span>
+                                ) : (
+                                  <>
+                                    <Save size={13} />
+                                    <span>Salvar Alterações</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1313,6 +1356,249 @@ export default function Expenses() {
           )}
         </div>
       </div>
+
+      {/* MODAL EDITAR DESPESA COM BOTÃO SALVAR ALTERAÇÕES EM DESTAQUE */}
+      <AnimatePresence>
+        {showEditModal && (
+          <div
+            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
+            onClick={() => setShowEditModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="gm-card fora w-full max-w-2xl lg:max-w-3xl rounded-3xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0 my-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header do Modal */}
+              <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-[#121216]/95">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                    <Pencil size={20} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-black text-white leading-tight">
+                      Editar Despesa
+                    </h3>
+                    <p className="text-xs text-white/50 font-medium mt-0.5">
+                      Atualize os dados e confirme no botão Salvar Alterações
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Fechar"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Formulário com Grade Espaçosa */}
+              <form
+                onSubmit={(ev) => {
+                  ev.preventDefault();
+                  if (editingExpenseId) handleSaveExpense(editingExpenseId);
+                }}
+                className="p-6 sm:p-8 space-y-5"
+              >
+                {/* Descrição da Despesa */}
+                <div>
+                  <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                    Descrição da Despesa *
+                  </label>
+                  <input
+                    className="w-full bg-black/40 border border-white/10 focus:border-orange-500 rounded-2xl px-4 sm:px-5 py-3 text-sm sm:text-base text-white font-bold outline-none transition-all placeholder:text-white/30"
+                    value={editDesc}
+                    onChange={(e) => setEditDesc(e.target.value)}
+                    placeholder="Ex: Conta de Luz, Aluguel, Fornecedor..."
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                {/* Valor e Vencimento em 2 Colunas */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                      Valor da Conta (R$) *
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-4 text-xs font-bold text-white/40 font-mono">
+                        R$
+                      </span>
+                      <input
+                        className="w-full bg-black/40 border border-white/10 focus:border-emerald-500 rounded-2xl pl-11 pr-4 py-3 text-base sm:text-lg text-emerald-400 font-mono font-extrabold outline-none transition-all placeholder:text-emerald-400/30"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        placeholder="0,00"
+                        inputMode="decimal"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                      Data de Vencimento *
+                    </label>
+                    <GlassDatePicker
+                      className="w-full bg-black/40 border border-white/10 focus:border-orange-500 rounded-2xl px-4 sm:px-5 py-3 text-sm sm:text-base text-white font-bold outline-none transition-all flex items-center min-h-[48px]"
+                      value={editDueDate}
+                      onChange={setEditDueDate}
+                      title="Vencimento"
+                    />
+                  </div>
+                </div>
+
+                {/* Bloco de Lembrete / Notificação */}
+                <div className="bg-black/30 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-400">
+                        <Bell size={16} />
+                      </div>
+                      <div>
+                        <span className="text-xs sm:text-sm font-extrabold text-white block">
+                          Notificação / Lembrete de Pagamento
+                        </span>
+                        <span className="text-[11px] text-white/40 block">
+                          Receba aviso sonoro e visual no horário programado
+                        </span>
+                      </div>
+                    </div>
+
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editReminderEnabled}
+                        onChange={(e) => setEditReminderEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
+                    </label>
+                  </div>
+
+                  {editReminderEnabled && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/5">
+                      <div>
+                        <label className="text-[11px] font-bold text-white/60 block mb-1.5">
+                          Data do Alerta
+                        </label>
+                        <GlassDatePicker
+                          className="w-full bg-black/50 border border-white/10 focus:border-yellow-500 rounded-xl px-4 py-2.5 text-sm text-white font-bold"
+                          value={editReminderDate}
+                          onChange={setEditReminderDate}
+                          title="Data do Alerta"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-bold text-white/60 block mb-1.5">
+                          Horário do Alerta
+                        </label>
+                        <GlassTimePicker
+                          value={editReminderTime}
+                          onChange={setEditReminderTime}
+                          className="w-full bg-black/50 border border-white/10 focus:border-yellow-500 rounded-xl px-4 py-2.5 text-sm text-white font-bold"
+                          title="Horário do Alerta"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recorrência e Status Pago em Cards Interativos */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Despesa Recorrente */}
+                  <div
+                    onClick={() => setEditIsRecurring(!editIsRecurring)}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
+                      editIsRecurring
+                        ? "bg-orange-500/15 border-orange-500/40 text-orange-300"
+                        : "bg-black/30 border-white/10 text-white/60 hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Repeat size={18} className={editIsRecurring ? "text-orange-400" : "text-white/40"} />
+                      <div>
+                        <span className="text-xs sm:text-sm font-bold block">Despesa Recorrente</span>
+                        <span className="text-[10px] sm:text-[11px] opacity-70 block">
+                          Repete automaticamente todo mês
+                        </span>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={editIsRecurring}
+                      onChange={() => {}}
+                      className="w-5 h-5 accent-orange-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Status Pago */}
+                  <div
+                    onClick={() => setEditPaid(!editPaid)}
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
+                      editPaid
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                        : "bg-black/30 border-white/10 text-white/60 hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Check size={18} className={editPaid ? "text-emerald-400" : "text-white/40"} />
+                      <div>
+                        <span className="text-xs sm:text-sm font-bold block">Status do Pagamento</span>
+                        <span className="text-[10px] sm:text-[11px] opacity-70 block">
+                          {editPaid ? "Conta quitada (Pago)" : "Aguardando pagamento (Pendente)"}
+                        </span>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={editPaid}
+                      onChange={() => {}}
+                      className="w-5 h-5 accent-emerald-500 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Ações do Modal com BOTÃO DE SALVAR ALTERAÇÕES */}
+                <div className="flex items-center justify-end gap-3 pt-5 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="h-12 px-5 rounded-xl text-xs sm:text-sm font-bold text-white/70 hover:text-white bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingInline}
+                    className="h-12 px-8 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-black transition-all flex items-center gap-2.5 shadow-lg shadow-emerald-500/25 active:scale-95 cursor-pointer disabled:opacity-50"
+                  >
+                    {isSavingInline ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        <span>Salvando alterações...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Save size={18} className="stroke-[2.5]" />
+                        <span>Salvar Alterações</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* MODAL CRIAR NOVA DESPESA - PROPORCIONAL, ESPAÇOSO E ORGANIZADO */}
       <AnimatePresence>
@@ -1661,15 +1947,15 @@ export default function Expenses() {
           <AnimatePresence>
             {showMonthModal && (
               <div
-                className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3.5 sm:p-4 overflow-y-auto"
+                className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-hidden"
                 style={{
                   position: "fixed",
                   top: 0,
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  width: "100%",
-                  height: "100%",
+                  width: "100vw",
+                  height: "100dvh",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1682,7 +1968,7 @@ export default function Expenses() {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.94, opacity: 0 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="w-full max-w-[420px] sm:max-w-md rounded-3xl border border-white/20 bg-[#14151a] shadow-[0_25px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(246,90,26,0.12)] relative z-10 overflow-hidden flex flex-col my-auto max-h-[92dvh]"
+                  className="w-full max-w-[420px] sm:max-w-md rounded-3xl border border-white/20 bg-[#14151a] shadow-[0_25px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(246,90,26,0.12)] relative z-10 overflow-hidden flex flex-col m-auto h-[84dvh] min-h-[580px] max-h-[760px] sm:h-auto sm:min-h-0 sm:max-h-[90dvh]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Header do Modal */}
@@ -1708,13 +1994,13 @@ export default function Expenses() {
                     </button>
                   </div>
 
-                  <div className="p-4 sm:p-5 space-y-3.5 sm:space-y-4 overflow-y-auto">
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3 sm:gap-4 overflow-y-auto">
                     {/* Seletor de Ano */}
-                    <div className="flex items-center justify-between bg-black/50 border border-white/15 rounded-2xl p-2">
+                    <div className="flex items-center justify-between bg-black/50 border border-white/15 rounded-2xl p-2 sm:p-2.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => setPickerYear((y) => y - 1)}
-                        className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
+                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
                         title="Ano anterior"
                       >
                         <ChevronLeft size={18} />
@@ -1732,15 +2018,15 @@ export default function Expenses() {
                       <button
                         type="button"
                         onClick={() => setPickerYear((y) => y + 1)}
-                        className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
+                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
                         title="Próximo ano"
                       >
                         <ChevronRight size={18} />
                       </button>
                     </div>
 
-                    {/* Grade de 12 Meses - Tamanho ampliado e confortável para toque */}
-                    <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+                    {/* Grade de 12 Meses - Tamanho ampliado e expansão vertical confortável no smartphone */}
+                    <div className="grid grid-cols-3 gap-2 sm:gap-2.5 flex-1 items-stretch">
                       {MONTHS_LIST.map((mItem) => {
                         const itemMonthKey = `${pickerYear}-${mItem.value}`;
                         const isSelected = month === itemMonthKey;
@@ -1757,7 +2043,7 @@ export default function Expenses() {
                               setShowMonthModal(false);
                               showToast(`Mês alterado para ${mItem.name} de ${pickerYear}`);
                             }}
-                            className={`relative p-2 sm:p-2.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer h-[58px] sm:h-[64px] active:scale-95 ${
+                            className={`relative p-2 sm:p-2.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 sm:gap-1.5 cursor-pointer h-full min-h-[66px] sm:min-h-[60px] active:scale-95 ${
                               isSelected
                                 ? "bg-orange-500/25 border-orange-500 text-white font-black shadow-md shadow-orange-500/25 scale-[1.02]"
                                 : "bg-black/40 border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 font-bold"
@@ -1781,7 +2067,7 @@ export default function Expenses() {
                     </div>
 
                     {/* Botões Rápidos no Rodapé do Modal */}
-                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10">
+                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10 shrink-0">
                       <button
                         type="button"
                         onClick={() => {
@@ -1792,7 +2078,7 @@ export default function Expenses() {
                           setShowMonthModal(false);
                           showToast("Mês atual selecionado!");
                         }}
-                        className="h-10 sm:h-11 px-3.5 sm:px-4 rounded-xl bg-white/5 hover:bg-white/15 text-white/90 hover:text-white border border-white/15 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-sm"
+                        className="h-11 px-3.5 sm:px-4 rounded-xl bg-white/5 hover:bg-white/15 text-white/90 hover:text-white border border-white/15 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-sm"
                       >
                         <Clock size={15} className="text-emerald-400 shrink-0" />
                         <span>Mês Atual</span>
@@ -1801,7 +2087,7 @@ export default function Expenses() {
                       <button
                         type="button"
                         onClick={() => setShowMonthModal(false)}
-                        className="h-10 sm:h-11 px-5 sm:px-6 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white text-xs font-black transition-all cursor-pointer active:scale-95 shadow-md uppercase tracking-wider shrink-0"
+                        className="h-11 px-5 sm:px-6 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white text-xs font-black transition-all cursor-pointer active:scale-95 shadow-md uppercase tracking-wider shrink-0"
                       >
                         Fechar
                       </button>

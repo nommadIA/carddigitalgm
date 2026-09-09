@@ -1499,7 +1499,8 @@ export default function Notes() {
 
   return (
     <Page title="Notas" className="relative min-h-full">
-      <div className="flex flex-col gap-5 mb-8">
+      <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
+        <div className="flex flex-col gap-5">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:max-w-md">
             <Search
@@ -1920,6 +1921,7 @@ export default function Notes() {
           </AnimatePresence>
         </div>
       )}
+      </div>
 
       {/* Selection Modal */}
       {typeof document !== "undefined" &&

@@ -795,8 +795,48 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     </button>
   );
 
+  const renderSoundButton = (extraBtnClass = "") => (
+    <button
+      type="button"
+      onClick={toggleUiSounds}
+      title={uiSoundsActive ? "Sons do App: Ativados (toque para desativar)" : "Sons do App: Desativados (toque para ativar)"}
+      aria-label={uiSoundsActive ? "Sons do App Ativados" : "Sons do App Desativados"}
+      className={`w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden ${extraBtnClass}`}
+      style={{
+        width: '36px',
+        height: '36px',
+        minWidth: '36px',
+        minHeight: '36px',
+        maxWidth: '36px',
+        maxHeight: '36px',
+        borderRadius: '10px',
+        aspectRatio: '1 / 1',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0',
+        margin: '0',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        color: uiSoundsActive
+          ? "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))"
+          : "rgba(148, 163, 184, 0.65)",
+      }}
+    >
+      {uiSoundsActive ? (
+        <Volume2 size={20} className="text-current shrink-0 group-hover:scale-110 transition-transform" />
+      ) : (
+        <VolumeX size={20} className="text-current shrink-0 group-hover:scale-110 transition-transform" />
+      )}
+      {uiSoundsActive && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse border border-transparent group-hover:border-white transition-colors shadow-[0_0_6px_rgba(16,185,129,0.7)]" />
+      )}
+    </button>
+  );
+
   const renderHeaderActionButtons = (extraClass = "") => (
-    <div className={`flex items-center gap-2 shrink-0 ${extraClass}`}>
+    <div className={`flex items-center gap-1.5 sm:gap-2 shrink-0 ${extraClass}`}>
+      {renderSoundButton()}
       {renderSyncButton()}
       {renderBellButton()}
       {renderLogoutButton()}

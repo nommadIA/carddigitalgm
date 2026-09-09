@@ -418,8 +418,8 @@ export default function Financial() {
       {loading ? (
         <div className="p-10 text-center opacity-60">Carregando dados financeiros...</div>
       ) : (
-        <>
-          <div className="mb-4">
+        <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
+          <div className="mb-2">
             <SectionDivider label="Resumo do mês" />
           </div>
           <Grid cols={3} className="mb-8">
@@ -603,7 +603,7 @@ export default function Financial() {
             </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Modal Histórico */}

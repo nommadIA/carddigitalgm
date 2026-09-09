@@ -1018,8 +1018,8 @@ const Market = () => {
             </div>
         }
     >
-       
-       <Grid cols={1} className="mb-6">
+       <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
+       <Grid cols={1}>
            <div className="gm-card fora rounded-2xl border border-white/10 p-0 overflow-hidden shadow-none">
               <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                  <div>
@@ -1541,6 +1541,7 @@ const Market = () => {
                 </div>
            </Grid>
        )}
+       </div>
 
        <AnimatePresence>
         {topUpModalOpen && (

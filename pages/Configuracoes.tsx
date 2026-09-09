@@ -48,6 +48,7 @@ import {
   Smartphone,
   HelpCircle,
   Sparkles,
+  SlidersHorizontal,
   Sun,
   Moon,
   Volume2,
@@ -1680,7 +1681,7 @@ export default function Configuracoes() {
               <div className="gm-settings-card fora flex flex-col gap-3 p-4 sm:p-5 rounded-2xl border border-white/10 shadow-none backdrop-blur-md">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 px-1">
                   <span className="text-xs font-extrabold text-[var(--gm-primary)] uppercase tracking-wider flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[var(--gm-primary)] animate-pulse" />
+                    <SlidersHorizontal className="w-4 h-4 text-[var(--gm-primary)]" />
                     PAINEL DE CONFIGURAÇÕES
                   </span>
                   <span className="text-xs text-slate-400 font-medium">
@@ -1881,7 +1882,7 @@ export default function Configuracoes() {
               {!hasActiveSection && (
                 <div className="gm-settings-card fora flex flex-col items-center justify-center py-16 px-4 border border-white/10 rounded-[2.5rem] text-center shadow-none backdrop-blur-md animate-in fade-in duration-300">
                   <div className="w-16 h-16 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] flex items-center justify-center mb-4 border border-[var(--gm-primary)]/20 shadow-xs">
-                    <Sparkles className="w-8 h-8 animate-pulse text-[var(--gm-primary)]" />
+                    <SlidersHorizontal className="w-8 h-8 text-[var(--gm-primary)]" />
                   </div>
                   <h3 className="text-xl font-extrabold text-slate-800 dark:text-white mb-2">Painel de Configurações</h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md leading-relaxed font-medium">
