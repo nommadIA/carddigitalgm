@@ -37,9 +37,16 @@ import {
   CheckCircle2,
   Smartphone,
   ShieldCheck,
-  RefreshCw
+  RefreshCw,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
-import { playNotificationSound } from "../../lib/audio";
+import {
+  playNotificationSound,
+  isUiSoundMuted,
+  setUiSoundMuted,
+  playUiSound,
+} from "../../lib/audio";
 import { useAuth } from "../../store/AuthContext";
 import { fetchSettingsSupabase, applySettingsToDOM, readSettingsLocal } from "../../lib/settings";
 import { initSyncHub, getSavedNotifications, saveNotifications } from "../../lib/syncHub";
@@ -582,12 +589,114 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   }, []);
 
   const [isSyncing, setIsSyncing] = useState(false);
+  const [uiSoundsActive, setUiSoundsActive] = useState(() => !isUiSoundMuted());
+
+  useEffect(() => {
+    const handleSoundChange = (e: any) => {
+      if (e?.detail?.muted !== undefined) {
+        setUiSoundsActive(!e.detail.muted);
+      } else {
+        setUiSoundsActive(!isUiSoundMuted());
+      }
+    };
+    window.addEventListener("gm.uiSoundChanged", handleSoundChange);
+    return () => window.removeEventListener("gm.uiSoundChanged", handleSoundChange);
+  }, []);
+
+  const toggleUiSounds = () => {
+    const nextState = !uiSoundsActive;
+    if (nextState) {
+      setUiSoundMuted(false);
+      setUiSoundsActive(true);
+      playUiSound("toggle_on");
+    } else {
+      playUiSound("toggle_off");
+      setUiSoundMuted(true);
+      setUiSoundsActive(false);
+    }
+  };
 
   const handleSyncClick = () => {
     setIsSyncing(true);
     setTimeout(() => setIsSyncing(false), 900);
     window.dispatchEvent(new CustomEvent("open-smartphone-permissions"));
     window.dispatchEvent(new CustomEvent("trigger-app-sync"));
+  };
+
+  const renderSoundToggleButton = (isCollapsed = false) => {
+    if (isCollapsed) {
+      return (
+        <button
+          type="button"
+          onClick={toggleUiSounds}
+          title={`Sons dos Botões: ${uiSoundsActive ? "Ativado (ON)" : "Desativado (OFF)"}`}
+          aria-label={`Sons dos Botões: ${uiSoundsActive ? "Ativado (ON)" : "Desativado (OFF)"}`}
+          className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${
+            uiSoundsActive
+              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+              : "bg-white/5 text-slate-500 border-white/10 hover:bg-white/10 opacity-70"
+          }`}
+        >
+          {uiSoundsActive ? (
+            <Volume2 size={18} className="animate-pulse" />
+          ) : (
+            <VolumeX size={18} />
+          )}
+        </button>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={toggleUiSounds}
+        title={`Sons dos Botões: clique para ${uiSoundsActive ? "desligar (off)" : "ligar (on)"}`}
+        aria-label={`Sons dos Botões: clique para ${uiSoundsActive ? "desligar (off)" : "ligar (on)"}`}
+        className={`w-full py-2.5 px-3 rounded-xl border flex items-center justify-between transition-all duration-300 cursor-pointer select-none group active:scale-[0.98] ${
+          uiSoundsActive
+            ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-400 shadow-[0_0_16px_rgba(16,185,129,0.35)] hover:bg-emerald-500/25"
+            : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-300 opacity-60 hover:opacity-85"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          <div
+            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+              uiSoundsActive
+                ? "bg-emerald-500 text-slate-950 font-bold shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                : "bg-white/10 text-slate-400"
+            }`}
+          >
+            {uiSoundsActive ? (
+              <Volume2 size={15} className="stroke-[2.5]" />
+            ) : (
+              <VolumeX size={15} />
+            )}
+          </div>
+          <span
+            className={`text-xs tracking-wide uppercase transition-colors ${
+              uiSoundsActive ? "font-black text-emerald-300" : "font-semibold text-slate-400"
+            }`}
+          >
+            Sons dos Botões
+          </span>
+        </div>
+
+        <div
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase transition-all ${
+            uiSoundsActive
+              ? "bg-emerald-500 text-slate-950 shadow-[0_0_10px_rgba(16,185,129,0.7)]"
+              : "bg-black/40 text-slate-500 border border-white/10"
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              uiSoundsActive ? "bg-slate-950 animate-ping" : "bg-slate-600"
+            }`}
+          />
+          {uiSoundsActive ? "ON" : "OFF"}
+        </div>
+      </button>
+    );
   };
 
   const renderSyncButton = (extraBtnClass = "") => (
@@ -824,19 +933,61 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 {renderSyncButton()}
                 {renderBellButton()}
                 {renderLogoutButton()}
+                <div className="w-6 h-[1px] bg-white/10 my-0.5" />
+                {renderSoundToggleButton(true)}
               </div>
             ) : (
-              <div className="flex flex-col gap-2 w-full">
-                {/* Linha 1: Botão Ícone de Sincronização ao lado de Notificações */}
-                <div className="flex items-center justify-center gap-3">
-                  {renderSyncButton()}
-                  {renderBellButton()}
+              <div className="flex flex-col gap-2.5 w-full">
+                {/* Linha 1: Fileira com Sincronização do App, Notificações e Sair em 3 caixas proporcionais */}
+                <div className="grid grid-cols-3 gap-2 w-full">
+                  <button
+                    type="button"
+                    onClick={handleSyncClick}
+                    title="Sincronização do App"
+                    aria-label="Sincronização do App"
+                    className="h-10 w-full rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95 group"
+                    style={{
+                      color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+                    }}
+                  >
+                    <RefreshCw 
+                      size={18} 
+                      className={`text-current shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
+                    />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleBellClick}
+                    title="Atualizações e Informações"
+                    aria-label="Atualizações e Informações"
+                    className="h-10 w-full rounded-xl flex items-center justify-center transition-all duration-200 relative cursor-pointer border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95 group"
+                    style={{
+                      color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+                    }}
+                  >
+                    <Bell size={18} className="animate-swing text-current shrink-0" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-black/40" />
+                    )}
+                  </button>
+
+                  <button 
+                    type="button"
+                    onClick={signOut}
+                    title="Sair"
+                    aria-label="Sair"
+                    className="h-10 w-full rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95 group"
+                    style={{
+                      color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+                    }}
+                  >
+                    <LogOut size={18} className="text-current shrink-0 group-hover:scale-110 transition-transform" />
+                  </button>
                 </div>
 
-                {/* Linha 2: Botão Sair abaixo de Notificações e Sincronização */}
-                <div className="flex items-center justify-center">
-                  {renderLogoutButton()}
-                </div>
+                {/* Linha 2: Botão grande pegando as extremidades da caixa do menu (Sons dos Botões ON / OFF) */}
+                {renderSoundToggleButton(false)}
 
                 <div className="mt-0.5 text-[10px] text-center pointer-events-none tracking-tight leading-none whitespace-nowrap flex items-center justify-center gap-1 text-slate-400">
                   <span className="text-[10px] text-slate-400 font-normal">Desenvolvido por</span>

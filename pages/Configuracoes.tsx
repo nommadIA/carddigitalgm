@@ -56,11 +56,39 @@ import {
   ChevronDown,
   ChevronUp,
   Square,
+  MousePointerClick,
+  Keyboard,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSwipeNav } from "../hooks/useSwipeNav";
-import { playNotificationSound, NOTIFICATION_SOUNDS } from "../lib/audio";
+import {
+  playNotificationSound,
+  NOTIFICATION_SOUNDS,
+  playUiSound,
+  isUiSoundMuted,
+  setUiSoundMuted,
+  isHoverSoundMuted,
+  setHoverSoundMuted,
+  isTypingSoundMuted,
+  setTypingSoundMuted,
+  playTechHoverSound,
+  playOperaGxTypingSound,
+  getUiSoundVolume,
+  setUiSoundVolume,
+  getButtonSoundPreset,
+  setButtonSoundPreset,
+  previewButtonSoundPreset,
+  BUTTON_SOUND_PRESETS,
+  getHoverSoundPreset,
+  setHoverSoundPreset,
+  previewHoverSoundPreset,
+  HOVER_SOUND_PRESETS,
+  getTypingSoundPreset,
+  setTypingSoundPreset,
+  previewTypingSoundPreset,
+  TYPING_SOUND_PRESETS,
+} from "../lib/audio";
 import { triggerRealNotification } from "../lib/realNotification";
 import { broadcastBackgroundChange, broadcastAppNotification } from "../lib/syncHub";
 import SmartphonePermissionModal from "../components/ui/SmartphonePermissionModal";
@@ -80,6 +108,21 @@ export default function Configuracoes() {
   const [activeSound, setActiveSound] = useState(() => {
     return localStorage.getItem("gm.notificationSound") || "classic_chord";
   });
+
+  const [activeButtonSound, setActiveButtonSound] = useState(() => getButtonSoundPreset());
+  const [buttonCategoryFilter, setButtonCategoryFilter] = useState<"all" | "apple" | "xiaomi" | "gm">("all");
+
+  const [activeHoverSound, setActiveHoverSound] = useState(() => getHoverSoundPreset());
+  const [hoverCategoryFilter, setHoverCategoryFilter] = useState<"all" | "cyber" | "brands" | "clean">("all");
+
+  const [activeTypingSound, setActiveTypingSound] = useState(() => getTypingSoundPreset());
+  const [typingCategoryFilter, setTypingCategoryFilter] = useState<"all" | "gaming" | "mechanical" | "classic">("all");
+
+  const [uiSoundsEnabled, setUiSoundsEnabled] = useState(() => !isUiSoundMuted());
+  const [hoverSoundEnabled, setHoverSoundEnabled] = useState(() => !isHoverSoundMuted());
+  const [typingSoundEnabled, setTypingSoundEnabled] = useState(() => !isTypingSoundMuted());
+  const [testTypingText, setTestTypingText] = useState("");
+  const [uiSoundVol, setUiSoundVol] = useState(() => getUiSoundVolume());
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -106,8 +149,38 @@ export default function Configuracoes() {
     const handleResize = () => {
       setViewMode(window.innerWidth >= 1024 ? "desktop" : "smartphone");
     };
+    const handleSoundToggle = (e: any) => {
+      if (e?.detail?.muted !== undefined) {
+        setUiSoundsEnabled(!e.detail.muted);
+      } else {
+        setUiSoundsEnabled(!isUiSoundMuted());
+      }
+      if (e?.detail?.hoverMuted !== undefined) {
+        setHoverSoundEnabled(!e.detail.hoverMuted);
+      } else {
+        setHoverSoundEnabled(!isHoverSoundMuted());
+      }
+      if (e?.detail?.typingMuted !== undefined) {
+        setTypingSoundEnabled(!e.detail.typingMuted);
+      } else {
+        setTypingSoundEnabled(!isTypingSoundMuted());
+      }
+      if (e?.detail?.hoverPreset !== undefined) {
+        setActiveHoverSound(e.detail.hoverPreset);
+      }
+      if (e?.detail?.typingPreset !== undefined) {
+        setActiveTypingSound(e.detail.typingPreset);
+      }
+      if (e?.detail?.buttonPreset !== undefined) {
+        setActiveButtonSound(e.detail.buttonPreset);
+      }
+    };
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("gm.uiSoundChanged", handleSoundToggle);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("gm.uiSoundChanged", handleSoundToggle);
+    };
   }, []);
 
   const [currentScreen, setCurrentScreen] = useState(0);
@@ -2779,9 +2852,624 @@ export default function Configuracoes() {
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Escolha o toque de sua preferência para alarmes, notificações e confirmações no aplicativo. Clique para escutar uma demonstração instantânea.
-                  </p>
+                  {/* BLOCO: GALERIA DE EFEITOS SONOROS DE BOTÕES (IPHONE, XIAOMI & GM) */}
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Smartphone size={18} className="text-[var(--gm-primary)]" />
+                          <h4 className="text-sm sm:text-base font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                            Galeria de Efeitos Sonoros de Botões (iPhone & Xiaomi)
+                          </h4>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          Escolha o estilo tátil e acústico para cliques em botões, abas e interruptores do app. Sons autênticos de iPhone (iOS Apple), Xiaomi (MIUI / HyperOS) e CardDigital GM.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextState = !uiSoundsEnabled;
+                          setUiSoundsEnabled(nextState);
+                          setUiSoundMuted(!nextState);
+                          if (nextState) {
+                            playUiSound("toggle_on");
+                          } else {
+                            playUiSound("toggle_off");
+                          }
+                        }}
+                        className={`h-9 px-4 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shrink-0 border ${
+                          uiSoundsEnabled
+                            ? "bg-[var(--gm-primary)]/20 text-orange-400 border-[var(--gm-primary)]/40 shadow-sm"
+                            : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
+                        }`}
+                      >
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            uiSoundsEnabled ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
+                          }`}
+                        />
+                        {uiSoundsEnabled ? "Sons Ativados" : "Sons Silenciados"}
+                      </button>
+                    </div>
+
+                    {/* Filtros por Marca / Categoria */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {[
+                        { id: "all" as const, label: "Todos os Sons", count: BUTTON_SOUND_PRESETS.length },
+                        { id: "apple" as const, label: "iPhone (Apple iOS)", count: 4 },
+                        { id: "xiaomi" as const, label: "Xiaomi (MIUI / HyperOS)", count: 4 },
+                        { id: "gm" as const, label: "CardDigital GM & Minimal", count: 2 },
+                      ].map((tab) => {
+                        const isCurrent = buttonCategoryFilter === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => {
+                              setButtonCategoryFilter(tab.id);
+                              playUiSound("tab");
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                              isCurrent
+                                ? "bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] shadow-sm"
+                                : "bg-white/5 hover:bg-white/10 text-slate-400 border-white/10"
+                            }`}
+                          >
+                            <span>{tab.label}</span>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                                isCurrent ? "bg-black/30 text-white" : "bg-white/10 text-slate-400"
+                              }`}
+                            >
+                              {tab.count}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Grade de Efeitos de Botões (Estrutura idêntica à Galeria de Notificações) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {BUTTON_SOUND_PRESETS.filter((p) => {
+                        if (buttonCategoryFilter === "all") return true;
+                        if (buttonCategoryFilter === "gm") return p.brand === "gm" || p.brand === "minimal";
+                        return p.brand === buttonCategoryFilter;
+                      }).map((preset) => {
+                        const isSelected = activeButtonSound === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => {
+                              localStorage.setItem("gm.buttonSoundPreset", preset.id);
+                              setButtonSoundPreset(preset.id);
+                              setActiveButtonSound(preset.id);
+                              try {
+                                previewButtonSoundPreset(preset.id);
+                              } catch (e) {}
+                            }}
+                            className={
+                              "flex items-center justify-between p-4 rounded-xl border text-left transition-all cursor-pointer " +
+                              (isSelected
+                                ? "barra border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-none"
+                                : "fora border-white/10 text-slate-700 dark:text-slate-300 hover:border-white/30 shadow-none")
+                            }
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={
+                                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 " +
+                                  (isSelected
+                                    ? "bg-[var(--gm-primary)] text-white"
+                                    : "barra text-slate-400")
+                                }
+                              >
+                                {preset.brand === "apple" ? (
+                                  <Smartphone size={18} />
+                                ) : preset.brand === "xiaomi" ? (
+                                  <Sparkles size={18} />
+                                ) : (
+                                  <Volume2 size={18} />
+                                )}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-sm font-bold leading-tight text-slate-800 dark:text-white">
+                                    {preset.name}
+                                  </h4>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider uppercase bg-white/5 border border-white/10 text-slate-400">
+                                    {preset.brandLabel}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] opacity-75 leading-normal mt-0.5 max-w-[240px]">
+                                  {preset.description}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div
+                              className={
+                                "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 " +
+                                (isSelected
+                                  ? "border-[var(--gm-primary)]"
+                                  : "border-slate-400/40 dark:border-white/20")
+                              }
+                            >
+                              {isSelected && (
+                                <div className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)]" />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Faixa de Teste Rápido de Reações Adicionais */}
+                    <div className="p-3.5 rounded-xl border border-white/10 bg-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={15} className="text-[var(--gm-primary)] shrink-0" />
+                        <span className="text-xs font-bold text-slate-300">
+                          Testar Outras Reações do App:
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {[
+                          { id: "success" as const, label: "✨ Sucesso / Salvar" },
+                          { id: "toggle_on" as const, label: "⚡ Ligar Switch" },
+                          { id: "toggle_off" as const, label: "🌙 Desligar" },
+                          { id: "tab" as const, label: "📑 Troca de Aba" },
+                          { id: "delete" as const, label: "🗑️ Excluir" },
+                          { id: "alert" as const, label: "🔔 Aviso" },
+                        ].map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => playUiSound(item.id)}
+                            className="px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 active:scale-95 text-[11px] font-bold text-slate-300 transition-all cursor-pointer"
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* BLOCO: GALERIA DE SONS AO PASSAR O MOUSE (HOVER & ROLETA DESKTOP) */}
+                    <div className="pt-5 border-t border-white/10 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <MousePointerClick size={18} className="text-[var(--gm-primary)]" />
+                            <h4 className="text-sm sm:text-base font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                              Galeria de Sons ao Passar o Mouse (Hover & Roleta Desktop)
+                            </h4>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/20">
+                              Desktop Tech
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                            Escolha o estilo sonoro emitido ao passar o mouse sobre botões, abas, links e cards interativos no computador. Sons de roleta mecânica, micro-switch óptico, Xiaomi HyperOS, Apple Taptic e radar futurista.
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = !hoverSoundEnabled;
+                            setHoverSoundEnabled(next);
+                            setHoverSoundMuted(!next);
+                            if (next) {
+                              playTechHoverSound();
+                            }
+                          }}
+                          className={`h-9 px-4 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shrink-0 border ${
+                            hoverSoundEnabled
+                              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm"
+                              : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
+                          }`}
+                        >
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              hoverSoundEnabled ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
+                            }`}
+                          />
+                          {hoverSoundEnabled ? "Hover Ativo" : "Hover Silenciado"}
+                        </button>
+                      </div>
+
+                      {/* Filtros por Categoria de Hover */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {[
+                          { id: "all" as const, label: "Todos os Sons", count: HOVER_SOUND_PRESETS.length },
+                          { id: "cyber" as const, label: "Roleta & Cyberpunk", count: 2 },
+                          { id: "clean" as const, label: "Minimal & Óptico", count: 2 },
+                          { id: "brands" as const, label: "Marcas (Xiaomi & Apple)", count: 2 },
+                        ].map((tab) => {
+                          const isCurrent = hoverCategoryFilter === tab.id;
+                          return (
+                            <button
+                              key={tab.id}
+                              type="button"
+                              onClick={() => {
+                                setHoverCategoryFilter(tab.id);
+                                playUiSound("tab");
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                                isCurrent
+                                  ? "bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] shadow-sm"
+                                  : "bg-white/5 hover:bg-white/10 text-slate-400 border-white/10"
+                              }`}
+                            >
+                              <span>{tab.label}</span>
+                              <span
+                                className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                                  isCurrent ? "bg-black/30 text-white" : "bg-white/10 text-slate-400"
+                                }`}
+                              >
+                                {tab.count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Grade de Efeitos de Hover */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {HOVER_SOUND_PRESETS.filter((p) => {
+                          if (hoverCategoryFilter === "all") return true;
+                          if (hoverCategoryFilter === "cyber") return p.id === "roulette_cyber" || p.id === "radar_neon";
+                          if (hoverCategoryFilter === "clean") return p.id === "optic_tick" || p.id === "scifi_pip";
+                          if (hoverCategoryFilter === "brands") return p.id === "xiaomi_bubble_hover" || p.id === "apple_taptic_air";
+                          return true;
+                        }).map((preset) => {
+                          const isSelected = activeHoverSound === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => {
+                                localStorage.setItem("gm.hoverSoundPreset", preset.id);
+                                setHoverSoundPreset(preset.id);
+                                setActiveHoverSound(preset.id);
+                                try {
+                                  previewHoverSoundPreset(preset.id);
+                                } catch (e) {}
+                              }}
+                              className={
+                                "flex items-center justify-between p-4 rounded-xl border text-left transition-all cursor-pointer " +
+                                (isSelected
+                                  ? "barra border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-none"
+                                  : "fora border-white/10 text-slate-700 dark:text-slate-300 hover:border-white/30 shadow-none")
+                              }
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={
+                                    "w-10 h-10 rounded-full flex items-center justify-center shrink-0 " +
+                                    (isSelected
+                                      ? "bg-[var(--gm-primary)] text-white"
+                                      : "barra text-slate-400")
+                                  }
+                                >
+                                  {preset.id.includes("apple") ? (
+                                    <Smartphone size={18} />
+                                  ) : preset.id.includes("xiaomi") ? (
+                                    <Sparkles size={18} />
+                                  ) : preset.id.includes("radar") ? (
+                                    <Volume2 size={18} />
+                                  ) : (
+                                    <MousePointerClick size={18} />
+                                  )}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="text-sm font-bold leading-tight text-slate-800 dark:text-white">
+                                      {preset.name}
+                                    </h4>
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider uppercase bg-white/5 border border-white/10 text-slate-400">
+                                      {preset.brandLabel}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] opacity-75 leading-normal mt-0.5 max-w-[240px]">
+                                    {preset.description}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div
+                                className={
+                                  "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 " +
+                                  (isSelected
+                                    ? "border-[var(--gm-primary)]"
+                                    : "border-slate-400/40 dark:border-white/20")
+                                }
+                              >
+                                {isSelected && (
+                                  <div className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)]" />
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Demonstração Interativa do Som de Roleta Selecionado */}
+                      <div className="p-3.5 rounded-xl border border-white/10 bg-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <Sparkles size={15} className="text-cyan-400 shrink-0" />
+                          <span className="text-xs font-bold text-slate-300">
+                            Demonstração do Efeito de Hover Selecionado:
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // Sequência simulando uma roleta girando com o preset ativo
+                              [0, 35, 75, 120, 175, 240, 320].forEach((delay) => {
+                                setTimeout(() => previewHoverSoundPreset(activeHoverSound), delay);
+                              });
+                            }}
+                            className="px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-xs font-bold text-cyan-300 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                          >
+                            <span>🎡 Girar Roleta ({HOVER_SOUND_PRESETS.find(p => p.id === activeHoverSound)?.name || "Tech"})</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => previewHoverSoundPreset(activeHoverSound)}
+                            className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-300 transition-all cursor-pointer active:scale-95"
+                          >
+                            <span>Disparo Único</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* BLOCO: GALERIA DE SONS DE DIGITAÇÃO TECH FUTURISTA (OPERA GX & MECÂNICOS) */}
+                    <div className="pt-5 border-t border-white/10 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Keyboard size={18} className="text-[var(--gm-primary)]" />
+                            <h4 className="text-sm sm:text-base font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                              Galeria de Sons de Digitação Tech (Estilo Opera GX)
+                            </h4>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                              Cyberpunk FX
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                            Escolha o timbre acústico para digitação nos campos do sistema. Perfis como Opera GX original, switches Cherry MX Blue, Linear lubrificado (Thock), Máquina de Escrever mecânica, Terminal Matrix e Apple Magic Keyboard.
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = !typingSoundEnabled;
+                            setTypingSoundEnabled(next);
+                            setTypingSoundMuted(!next);
+                            if (next) {
+                              playOperaGxTypingSound("enter");
+                            }
+                          }}
+                          className={`h-9 px-4 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shrink-0 border ${
+                            typingSoundEnabled
+                              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm"
+                              : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
+                          }`}
+                        >
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              typingSoundEnabled ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
+                            }`}
+                          />
+                          {typingSoundEnabled ? "Digitação Ativa" : "Digitação Silenciada"}
+                        </button>
+                      </div>
+
+                      {/* Filtros por Categoria de Digitação */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {[
+                          { id: "all" as const, label: "Todos os Teclados", count: TYPING_SOUND_PRESETS.length },
+                          { id: "gaming" as const, label: "Opera GX & Cyber", count: 2 },
+                          { id: "mechanical" as const, label: "Mecânicos & Thock", count: 2 },
+                          { id: "classic" as const, label: "Máquina & Apple", count: 2 },
+                        ].map((tab) => {
+                          const isCurrent = typingCategoryFilter === tab.id;
+                          return (
+                            <button
+                              key={tab.id}
+                              type="button"
+                              onClick={() => {
+                                setTypingCategoryFilter(tab.id);
+                                playUiSound("tab");
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                                isCurrent
+                                  ? "bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] shadow-sm"
+                                  : "bg-white/5 hover:bg-white/10 text-slate-400 border-white/10"
+                              }`}
+                            >
+                              <span>{tab.label}</span>
+                              <span
+                                className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                                  isCurrent ? "bg-black/30 text-white" : "bg-white/10 text-slate-400"
+                                }`}
+                              >
+                                {tab.count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Grade de Efeitos de Digitação */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {TYPING_SOUND_PRESETS.filter((p) => {
+                          if (typingCategoryFilter === "all") return true;
+                          if (typingCategoryFilter === "gaming") return p.brand === "opera" || p.brand === "cyber";
+                          if (typingCategoryFilter === "mechanical") return p.brand === "mechanical";
+                          if (typingCategoryFilter === "classic") return p.brand === "vintage" || p.brand === "apple";
+                          return true;
+                        }).map((preset) => {
+                          const isSelected = activeTypingSound === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => {
+                                localStorage.setItem("gm.typingSoundPreset", preset.id);
+                                setTypingSoundPreset(preset.id);
+                                setActiveTypingSound(preset.id);
+                                try {
+                                  previewTypingSoundPreset(preset.id, "enter");
+                                } catch (e) {}
+                              }}
+                              className={
+                                "flex items-center justify-between p-4 rounded-xl border text-left transition-all cursor-pointer " +
+                                (isSelected
+                                  ? "barra border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-none"
+                                  : "fora border-white/10 text-slate-700 dark:text-slate-300 hover:border-white/30 shadow-none")
+                              }
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={
+                                    "w-10 h-10 rounded-full flex items-center justify-center shrink-0 " +
+                                    (isSelected
+                                      ? "bg-[var(--gm-primary)] text-white"
+                                      : "barra text-slate-400")
+                                  }
+                                >
+                                  {preset.id.includes("opera") ? (
+                                    <Sparkles size={18} />
+                                  ) : preset.id.includes("apple") ? (
+                                    <Smartphone size={18} />
+                                  ) : (
+                                    <Keyboard size={18} />
+                                  )}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="text-sm font-bold leading-tight text-slate-800 dark:text-white">
+                                      {preset.name}
+                                    </h4>
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider uppercase bg-white/5 border border-white/10 text-slate-400">
+                                      {preset.brandLabel}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] opacity-75 leading-normal mt-0.5 max-w-[240px]">
+                                    {preset.description}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div
+                                className={
+                                  "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 " +
+                                  (isSelected
+                                    ? "border-[var(--gm-primary)]"
+                                    : "border-slate-400/40 dark:border-white/20")
+                                }
+                              >
+                                {isSelected && (
+                                  <div className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)]" />
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Campo Interativo para Testar Digitação ao Vivo */}
+                      <div className="p-3.5 rounded-xl border border-white/10 bg-white/5 space-y-2.5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                            <span>⌨️ Teste ao Vivo: Digite no campo abaixo</span>
+                            <span className="text-[10px] font-normal text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded border border-orange-500/20">
+                              Perfil: {TYPING_SOUND_PRESETS.find(p => p.id === activeTypingSound)?.name || "Ativo"}
+                            </span>
+                          </label>
+                          <span className="text-[10px] text-slate-400">
+                            Pressione teclas, Espaço, Enter ou Backspace
+                          </span>
+                        </div>
+
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={testTypingText}
+                            onChange={(e) => setTestTypingText(e.target.value)}
+                            placeholder="Digite aqui para escutar o perfil sonoro de teclado ativo..."
+                            className="w-full h-11 px-3.5 rounded-xl border border-white/15 bg-black/30 text-sm font-medium text-white placeholder:text-slate-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all"
+                          />
+                          {testTypingText && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTestTypingText("");
+                                playOperaGxTypingSound("backspace");
+                              }}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-white px-2 py-1 rounded bg-white/10 cursor-pointer"
+                            >
+                              Limpar
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Botões Rápidos de Amostra das Teclas para o Perfil Ativo */}
+                        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                          <span className="text-[11px] font-bold text-slate-400 mr-1">
+                            Amostras:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => previewTypingSoundPreset(activeTypingSound, "key")}
+                            className="px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-[11px] font-bold text-slate-300 transition-all cursor-pointer active:scale-95"
+                          >
+                            Tecla Regular
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => previewTypingSoundPreset(activeTypingSound, "space")}
+                            className="px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-[11px] font-bold text-slate-300 transition-all cursor-pointer active:scale-95"
+                          >
+                            Barra de Espaço (Sub-Grave)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => previewTypingSoundPreset(activeTypingSound, "enter")}
+                            className="px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-[11px] font-bold text-slate-300 transition-all cursor-pointer active:scale-95"
+                          >
+                            Enter (Confirmação)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => previewTypingSoundPreset(activeTypingSound, "backspace")}
+                            className="px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-[11px] font-bold text-slate-300 transition-all cursor-pointer active:scale-95"
+                          >
+                            Backspace (Apagar)
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SEPARADOR E TÍTULO DA GALERIA DE NOTIFICAÇÕES */}
+                  <div className="pt-4 border-t border-white/10">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Music size={18} className="text-[var(--gm-primary)]" />
+                      <h4 className="text-sm sm:text-base font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                        Toques de Notificações & Alarmes
+                      </h4>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Escolha o toque de sua preferência para alarmes, notificações e confirmações no aplicativo. Clique para escutar uma demonstração instantânea.
+                    </p>
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {NOTIFICATION_SOUNDS.map((sound) => {

@@ -5,6 +5,7 @@ import Layout from './components/ui/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { fetchSettingsSupabase, applySettingsToDOM, AppSettings } from "./lib/settings";
+import { initGlobalUiSoundListener } from "./lib/audio";
 import ThemeSync from './components/ui/ThemeSync';
 import RouteBoundary from './RouteBoundary';
 
@@ -225,6 +226,11 @@ function BootReady() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const cleanup = initGlobalUiSoundListener();
+    return () => cleanup();
+  }, []);
+
   return (
     <AuthProvider>
       <BootReady />

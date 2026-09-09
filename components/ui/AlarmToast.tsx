@@ -109,7 +109,8 @@ const AlarmToast = () => {
 
   const settings = readSettingsLocal();
   const companyName = settings?.company_name || "GM Edificação";
-  const companyLogo = settings?.company_logo_url;
+  const userRegisteredLogo = settings?.company_logo_url || settings?.avatar_url || null;
+  const officialAppLogo = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
 
   return (
     <div className="fixed inset-0 sm:inset-auto sm:bottom-20 sm:right-4 z-[9999] flex flex-col items-center justify-center sm:items-end p-4 sm:p-0 gap-3 pointer-events-none">
@@ -124,41 +125,48 @@ const AlarmToast = () => {
               WebkitBackdropFilter: "blur(28px) saturate(190%) contrast(105%)",
               background: "linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(20, 22, 28, 0.45) 40%, rgba(10, 12, 16, 0.65) 100%)",
             }}
-            className="pointer-events-auto w-[370px] max-w-[94vw] rounded-[24px] border border-white/20 shadow-[0_25px_60px_rgba(0,0,0,0.65),0_1px_1px_rgba(255,255,255,0.25)_inset,0_0_25px_rgba(255,255,255,0.03)_inset] p-4.5 sm:p-5 animate-scale-up sm:animate-slide-up transition-all relative overflow-hidden group"
+            className="pointer-events-auto w-[380px] max-w-[94vw] rounded-[24px] border border-white/20 shadow-[0_25px_60px_rgba(0,0,0,0.65),0_1px_1px_rgba(255,255,255,0.25)_inset,0_0_25px_rgba(255,255,255,0.03)_inset] p-4.5 sm:p-5 animate-scale-up sm:animate-slide-up transition-all relative overflow-hidden group"
           >
             {/* Apple Glass specular reflection overlay */}
             <div className="absolute inset-0 rounded-[24px] pointer-events-none bg-gradient-to-b from-white/[0.14] via-white/[0.02] to-transparent" />
 
-            {/* Header: Company Logo + Company Name */}
+            {/* Header: FIVE ICON (Logo Oficial do App CardDigital GM) + Identificação do Sistema */}
             <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-white/[0.12] relative z-10">
-              <div className="flex items-center gap-2 min-w-0">
-                {companyLogo ? (
-                  <img src={companyLogo} alt={companyName} className="w-5 h-5 object-contain rounded-md bg-white/10 p-0.5 border border-white/20 shadow-xs shrink-0" />
-                ) : (
-                  <div className="w-5 h-5 rounded-md bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 flex items-center justify-center text-[9px] font-black uppercase shrink-0">
-                    {companyName.substring(0, 2)}
-                  </div>
-                )}
-                <span className="text-[11px] font-extrabold text-white/95 uppercase tracking-wider truncate drop-shadow-xs">
-                  {companyName}
-                </span>
+              <div className="flex items-center gap-2.5 min-w-0">
+                {/* FIVE ICON oficial do App CardDigital GM com tamanho ampliado exatamente como no anexo 2 */}
+                <div className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-[9px] border border-white/20 flex items-center justify-center overflow-hidden shadow-sm bg-black/50 shrink-0 !p-0">
+                  <img
+                    src={officialAppLogo}
+                    alt="CardDigital GM Oficial"
+                    className="w-full h-full object-cover scale-[1.3] transform"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "/logo.png";
+                    }}
+                  />
+                </div>
+                {/* Texto CardDigital GM exatamente com a tipografia, cores e formato do anexo 2 */}
+                <div className="flex items-center leading-none">
+                  <span className="text-[14px] sm:text-[15px] font-bold text-white tracking-tight flex items-center drop-shadow-xs">
+                    CardDigital<span className="text-[#FE540B] font-black ml-1.5">GM</span>
+                  </span>
+                </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/[0.08] border border-white/15 text-[9.5px] font-bold uppercase tracking-wider text-[var(--gm-primary)] backdrop-blur-md">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--gm-primary)] animate-pulse" />
-                  Agora
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.08] border border-white/15 text-[10px] font-bold uppercase tracking-wider text-orange-400 backdrop-blur-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                  AGORA
                 </span>
               </div>
             </div>
 
             <div className="flex items-start gap-3.5 relative z-10">
-              {/* Apple Squircle Icon Box: Logo cadastrado do usuário */}
-              <div className="w-12 h-12 rounded-[16px] bg-white/[0.08] border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0 relative overflow-hidden backdrop-blur-xl p-1.5">
-                {companyLogo ? (
+              {/* Apple Squircle Icon Box: LOGO CADASTRADO PELA CONTA DO USUÁRIO */}
+              <div className="w-12 h-12 rounded-[16px] bg-white/[0.08] border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0 relative overflow-hidden backdrop-blur-xl p-1">
+                {userRegisteredLogo ? (
                   <img
-                    src={companyLogo}
+                    src={userRegisteredLogo}
                     alt={companyName}
-                    className="w-full h-full object-contain rounded-[11px]"
+                    className="w-full h-full object-contain rounded-[12px]"
                   />
                 ) : (
                   <>

@@ -1,5 +1,5 @@
 
-import { playNotificationSound } from '../lib/audio';
+import { playNotificationSound, playUiSound } from '../lib/audio';
 
 export type ToastType = "success" | "error" | "info";
 
@@ -33,8 +33,14 @@ export function pushToast(input: Omit<ToastItem, "id">) {
   toasts = [item, ...toasts].slice(0, 4);
   emit();
   
-  // Play the notification sound
-  playNotificationSound();
+  // Play the interaction reaction sound
+  if (item.type === "success") {
+    playUiSound("success");
+  } else if (item.type === "error") {
+    playUiSound("alert");
+  } else {
+    playNotificationSound();
+  }
 
   window.setTimeout(() => {
     toasts = toasts.filter(t => t.id !== id);

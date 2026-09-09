@@ -676,3 +676,38 @@ export function playNotificationSound(soundId?: string) {
     console.error('Audio play failed:', error);
   }
 }
+
+// Re-exporta as funções de efeitos sonoros táteis e reações da interface
+export {
+  playUiSound,
+  isUiSoundMuted,
+  setUiSoundMuted,
+  isHoverSoundMuted,
+  setHoverSoundMuted,
+  isTypingSoundMuted,
+  setTypingSoundMuted,
+  playTechHoverSound,
+  playOperaGxTypingSound,
+  getUiSoundVolume,
+  setUiSoundVolume,
+  initGlobalUiSoundListener,
+  getButtonSoundPreset,
+  setButtonSoundPreset,
+  previewButtonSoundPreset,
+  BUTTON_SOUND_PRESETS,
+  getHoverSoundPreset,
+  setHoverSoundPreset,
+  previewHoverSoundPreset,
+  HOVER_SOUND_PRESETS,
+  getTypingSoundPreset,
+  setTypingSoundPreset,
+  previewTypingSoundPreset,
+  TYPING_SOUND_PRESETS,
+} from "./uiSound";
+export type {
+  UiSoundType,
+  ButtonSoundPreset,
+  HoverSoundPreset,
+  TypingSoundPreset,
+  OperaGxKeyType,
+} from "./uiSound";
