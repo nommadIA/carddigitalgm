@@ -183,7 +183,7 @@ export const syncAlarmsWithBudgets = (budgets: any[]) => {
   saveAlarms([...nonBudgetAlarms, ...newAlarms]);
 };
 
-// ✅ NOVO: Sincroniza alarmes com a lista real de notas do banco de dados
+// ✅ Sincroniza alarmes com a lista real de notas do banco de dados (exclui notas CONCLUÍDAS ou na LIXEIRA)
 export const syncAlarmsWithNotes = (notes: any[]) => {
   const currentAlarms = getAlarms();
   const nonNoteAlarms = currentAlarms.filter(a => a.type !== "NOTE");
@@ -196,7 +196,11 @@ export const syncAlarmsWithNotes = (notes: any[]) => {
   });
 
   notes.forEach(note => {
-    if (!note.deleted_at && note.reminder_time) {
+    const rawStatus = (note.status || "").toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const isCompleted = rawStatus.includes("CONCLU");
+
+    // Se a nota estiver na lixeira ou CONCLUÍDA, seus alarmes/lembretes param de funcionar e zeram
+    if (!note.deleted_at && !isCompleted && note.reminder_time) {
       const hasDate = note.reminder_time.includes(" ");
       let rDate: string | null = null;
       let rTimeStr = note.reminder_time;

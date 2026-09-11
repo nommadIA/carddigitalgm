@@ -16,6 +16,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import NewBudgetModal from "./budgets/NewBudgetModal";
 import ReminderConfigModal from "../components/budgets/ReminderConfigModal";
 import ExpandedBudgetRow from "../components/budgets/ExpandedBudgetRow";
+import { SignalBottomGradient } from "../components/ui/SignalBottomGradient";
 import {
   Plus,
   Search,
@@ -35,6 +36,9 @@ import {
   ChevronUp,
   Zap,
   FileText,
+  LayoutGrid,
+  List,
+  CheckCircle2,
 } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { SectionDivider } from "../components/ui/SectionDivider";
@@ -174,6 +178,9 @@ function VirtualizedBudgetList({
   softDelete,
   restore,
   confirmHardDelete,
+  setReminderConfigOpen,
+  stopSignal,
+  handlePdf,
 }: {
   items: BudgetRow[];
   highlightedId: string | null;
@@ -188,137 +195,377 @@ function VirtualizedBudgetList({
   softDelete: (id: string) => void;
   restore: (id: string) => void;
   confirmHardDelete: (id: string) => void;
+  setReminderConfigOpen?: (open: boolean) => void;
+  stopSignal?: (id: string) => void;
+  handlePdf?: (id: string, tenant_id: string) => void;
 }) {
-  const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-    const base = "gm-btn gm-budget-action-btn fora w-10 h-10 flex items-center justify-center shrink-0";
-    if (tone === "orange") return `${base} gm-btn-soft text-[var(--gm-primary)]`;
-    if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
-    if (tone === "red") return `${base} gm-btn-soft text-red-500`;
-    return `${base} gm-btn-soft`;
+  const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "orange") => {
+    const base = "gm-budget-action-btn fora w-7.5 h-7.5 sm:w-8 sm:h-8 !p-0 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 cursor-pointer border";
+    if (tone === "orange") return `${base} border-[var(--gm-primary)]/40 text-[var(--gm-primary)] bg-white/[0.02] hover:bg-[var(--gm-primary)] hover:text-white hover:border-[var(--gm-primary)] shadow-none hover:scale-105 active:scale-95`;
+    if (tone === "green") return `${base} border-emerald-500/40 text-emerald-400 bg-white/[0.02] hover:bg-emerald-500 hover:text-white hover:border-emerald-500 shadow-none hover:scale-105 active:scale-95`;
+    if (tone === "red") return `${base} border-red-500/40 text-red-400 bg-white/[0.02] hover:bg-red-500 hover:text-white hover:border-red-500 shadow-none hover:scale-105 active:scale-95`;
+    return `${base} border-[var(--gm-primary)]/40 text-[var(--gm-primary)] bg-white/[0.02] hover:bg-white/15 hover:text-white hover:border-white/30 shadow-none hover:scale-105 active:scale-95`;
   };
 
+  if (!items || items.length === 0) {
+    return (
+      <div className="w-full fora rounded-2xl border border-white/10 p-10 sm:p-14 md:p-16 min-h-[220px] sm:min-h-[260px] flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02] backdrop-blur-md shadow-none select-none">
+        <p className="text-sm sm:text-base text-slate-200 font-semibold leading-relaxed">
+          Nenhum orçamento para exibir nesta lista.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <Card className="gm-card barra !p-0 overflow-hidden min-h-[300px] flex flex-col transition-all duration-300">
-      <div className="overflow-x-auto w-full">
-        <div className="text-sm min-w-full">
-          {/* Header fixo com backdrop-blur */}
-          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-4 border-b border-white/10 font-bold opacity-85 uppercase tracking-wider text-xs barra bg-black/20 backdrop-blur-md shrink-0 shadow-sm">
-            <div>Data</div>
-            <div>Descrição</div>
-            <div className="text-right">Ações</div>
+    <div className="flex flex-col gap-2 w-full pb-10">
+      {/* CABEÇALHO DO MODO LISTA NO DESKTOP */}
+      <div className="hidden lg:block w-full overflow-x-auto no-scrollbar">
+        <div className="flex items-center justify-between gap-4 min-w-[940px] xl:min-w-0 w-full px-4 py-2 text-xs font-black uppercase tracking-wider select-none bg-white/[0.02] border border-white/5 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="w-7 text-center text-slate-400">EXP.</span>
+            <span className="w-28 text-left text-[var(--gm-primary)] font-black">EMISSÃO</span>
+            <span className="text-left text-[var(--gm-primary)] font-black">CLIENTE</span>
           </div>
-
-          {/* Lista fluida sem corte de altura */}
-          <div className="w-full divide-y divide-white/5">
-            {items.map((r) => {
-              const created = r.created_at ? new Date(r.created_at) : null;
-              const isHighlighted = r.id === highlightedId;
-
-              return (
-                <div
-                  key={r.id}
-                  id={`budget-row-${r.id}`}
-                  className={`hover:bg-white/5 transition-colors ${
-                    isHighlighted ? "gm-highlighted-row-glass" : ""
-                  }`}
-                >
-                  <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-5 py-4 sm:py-4.5 sm:items-center">
-                    <div className="flex justify-between sm:contents">
-                      <div className="flex items-center gap-2 text-slate-400 font-mono text-xs sm:text-sm">
-                        <button
-                          onClick={() => toggleRow(r.id)}
-                          className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
-                        >
-                          <ChevronDown
-                            size={18}
-                            className={`transition-transform duration-300 ${expandedRows.has(r.id) ? "rotate-180" : ""}`}
-                          />
-                        </button>
-                        {created ? created.toLocaleDateString("pt-BR") : "-"}
-                      </div>
-                      <div className="sm:hidden text-right font-bold text-[var(--gm-primary)]">
-                        {CURRENCY.format(Number(r.total_amount || 0))}
-                      </div>
-                    </div>
-                    <div className="font-medium truncate">
-                      <span className="font-extrabold text-white mr-2">{(r.client_name || "CLIENTE").toUpperCase()}</span>
-                      <span className="text-slate-300">{r.title || "Orçamento"}</span>
-                    </div>
-                    <div className="flex items-center gap-2 justify-between sm:justify-end mt-2 sm:mt-0">
-                      <div className="hidden sm:block text-right font-bold text-[var(--gm-primary)] mr-4">
-                        {CURRENCY.format(Number(r.total_amount || 0))}
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap justify-end">
-                        {tab !== "LIXEIRA" ? (
-                          <>
-                            {tab === "CONCLUIDOS" && setDuplicateId && (
-                              <button
-                                className="gm-btn gm-budget-action-btn fora h-10 px-3 sm:px-3.5 flex items-center justify-center gap-2 shrink-0 gm-btn-soft text-[var(--gm-primary)]"
-                                title="Usar este orçamento como modelo para criar um novo"
-                                onClick={() => setDuplicateId(r.id)}
-                                type="button"
-                              >
-                                <Copy size={16} />
-                                <span className="hidden sm:inline font-bold text-xs uppercase tracking-wider">Usar Modelo</span>
-                              </button>
-                            )}
-                            {tab === "CANCELADOS" && (
-                              <button
-                                className="gm-btn gm-budget-action-btn bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400 text-xs py-1 px-3 flex items-center gap-1.5 h-10"
-                                title="Restaurar Orçamento (Voltar para Aguardando)"
-                                onClick={() => updateStatusInstant(r.id, "AGUARDANDO")}
-                                type="button"
-                              >
-                                <RotateCcw size={15} />
-                                <span className="font-bold">Restaurar</span>
-                              </button>
-                            )}
-                            <button className={listBtnClass("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
-                              <Pencil size={16} />
-                            </button>
-                            <button
-                              className={listBtnClass("orange")}
-                              title="Enviar via WhatsApp / Compartilhar"
-                              onClick={() => handleShare(r)}
-                              type="button"
-                              disabled={sharing === r.id}
-                            >
-                              {sharing === r.id ? (
-                                <div className="w-4 h-4 border-2 border-[var(--gm-primary)] border-t-transparent rounded-full animate-spin" />
-                              ) : (
-                                <WhatsAppIcon size={16} />
-                              )}
-                            </button>
-                            <button className={listBtnClass("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
-                              <Trash2 size={16} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button className={listBtnClass("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
-                              <RotateCcw size={16} />
-                            </button>
-                            <button
-                              className="gm-btn gm-budget-action-btn h-10 w-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(255,123,0,0.1)]"
-                              title="Excluir Definitivamente"
-                              onClick={() => confirmHardDelete(r.id)}
-                              type="button"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {expandedRows.has(r.id) && <ExpandedBudgetRow budgetId={r.id} />}
-                </div>
-              );
-            })}
+          <div className="text-center flex-1">
+            <span className="text-[var(--gm-primary)] font-black">STATUS DO ORÇAMENTO</span>
+          </div>
+          <div className="text-center shrink-0 w-36">
+            <span className="text-[var(--gm-primary)] font-black">VALOR TOTAL</span>
+          </div>
+          <div className="text-right shrink-0 pr-1 min-w-[170px]">
+            <span className="text-[var(--gm-primary)] font-black">AÇÕES</span>
           </div>
         </div>
       </div>
-    </Card>
+
+      {items.map((r) => {
+        if (!r || !r.id) return null;
+        const created = r.created_at ? new Date(r.created_at) : null;
+        const isValidDate = created && !isNaN(created.getTime());
+        const formattedDate = isValidDate ? created.toLocaleDateString("pt-BR") : "-";
+
+        const isHighlighted = r.id === highlightedId;
+        const isExpanded = Boolean(expandedRows && typeof expandedRows.has === "function" && expandedRows.has(r.id));
+
+        const clientDisplayName = typeof r.client_name === "string" && r.client_name.trim()
+          ? r.client_name.trim()
+          : (r.client_name && typeof r.client_name === "object" ? ((r.client_name as any).name || "CLIENTE") : String(r.client_name || "CLIENTE"));
+
+        const budgetTitle = r.title || "Orçamento";
+        const totalFormatted = CURRENCY.format(Number(r.total_amount || 0));
+
+        const currentStatus = normalizeStatus(r.status);
+        const isConcluido = currentStatus === "CONCLUIDO";
+        const isAprovado = currentStatus === "APROVADO";
+        const isCancelado = currentStatus === "CANCELADO";
+
+        return (
+          <div
+            key={r.id}
+            id={`budget-row-${r.id}`}
+            onMouseEnter={() => stopSignal?.(r.id)}
+            onTouchStart={() => stopSignal?.(r.id)}
+            onClick={() => stopSignal?.(r.id)}
+            className={`gm-budget-row barra rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 transition-all duration-200 relative border border-white/10 hover:border-white/20 hover:bg-white/[0.03] !min-h-0 min-h-0 h-auto !h-auto ${
+              isHighlighted ? "gm-signal-bottom-container" : ""
+            }`}
+          >
+            <SignalBottomGradient
+              active={isHighlighted}
+              onDismiss={() => stopSignal?.(r.id)}
+            />
+
+            {/* LINHA PRINCIPAL DA BARRA EM UMA LINHA SÓ */}
+            <div className="w-full overflow-x-auto no-scrollbar">
+              <div className="flex items-center justify-between gap-3 sm:gap-4 min-w-[940px] xl:min-w-0 w-full min-h-0 py-0.5">
+                {/* IDENTIFICAÇÃO: EXPANSÃO + EMISSÃO + CLIENTE (EM UMA LINHA SÓ) */}
+                <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 min-w-0">
+                  {/* SETA DE EXPANSÃO DESTACADA */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleRow(r.id);
+                    }}
+                    className={`w-7 h-7 !w-7 !h-7 !p-0 p-0 rounded-lg flex items-center justify-center transition-all duration-200 border cursor-pointer shrink-0 backdrop-blur-md ${
+                      isExpanded
+                        ? "bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] shadow-[0_0_12px_rgba(246,90,26,0.6)] scale-105"
+                        : "bg-white/[0.06] text-[var(--gm-primary)] border-white/15 hover:border-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/15 hover:text-white"
+                    } active:scale-95`}
+                    title={isExpanded ? "Recolher informações do orçamento" : `Expandir detalhes: ${clientDisplayName} • ${budgetTitle}`}
+                    aria-expanded={isExpanded}
+                  >
+                    <ChevronDown
+                      size={15}
+                      className={`transition-transform duration-300 stroke-[2.5] ${isExpanded ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {/* EMISSÃO 24/08/2026 */}
+                  <div
+                    onClick={() => toggleRow(r.id)}
+                    className="flex items-center gap-1.5 shrink-0 cursor-pointer select-none whitespace-nowrap"
+                    title={`Data de Emissão: ${formattedDate}`}
+                  >
+                    <span className="text-[10px] sm:text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
+                      EMISSÃO
+                    </span>
+                    <span className="text-xs font-mono font-bold text-white">
+                      {formattedDate}
+                    </span>
+                  </div>
+
+                  <span className="text-white/20 text-xs select-none">•</span>
+
+                  {/* CLIENTE: DRA. VANESSA CARLA */}
+                  <div
+                    onClick={() => toggleRow(r.id)}
+                    className="flex items-center gap-1.5 min-w-0 max-w-[190px] sm:max-w-[240px] xl:max-w-[300px] cursor-pointer select-none"
+                    title={`Cliente: ${clientDisplayName}`}
+                  >
+                    <span className="text-[10px] sm:text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider shrink-0">
+                      CLIENTE:
+                    </span>
+                    <span className="text-xs font-black text-white uppercase tracking-tight truncate">
+                      {clientDisplayName}
+                    </span>
+                  </div>
+                </div>
+
+                {/* CÁPSULAS DE STATUS */}
+                <div className="flex items-center justify-center gap-1.5 shrink-0 px-1">
+                  {STATUS_OPTIONS.map((opt) => {
+                    const isActive = currentStatus === opt.value;
+                    const activeCls = pillClass(opt.value);
+                    const inactiveCls = "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateStatusInstant(r.id, opt.value);
+                        }}
+                        className={`gm-status-capsule fora h-6.5 sm:h-7 px-2 sm:px-2.5 rounded-full text-[9.5px] sm:text-[10px] font-extrabold tracking-tight transition-all flex items-center justify-center border cursor-pointer shrink-0 text-center whitespace-nowrap ${
+                          isActive ? activeCls : inactiveCls
+                        }`}
+                        title={`Alterar status para ${opt.label}`}
+                      >
+                        <span>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* VALOR: R$ 450,00 TOTAL */}
+                <div
+                  onClick={() => toggleRow(r.id)}
+                  className="flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer select-none"
+                  title="Valor Total"
+                >
+                  <span className="text-[10px] sm:text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
+                    VALOR:
+                  </span>
+                  <span className="text-sm sm:text-base font-black text-white leading-none">
+                    {totalFormatted}
+                  </span>
+                  <span className="text-[9.5px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
+                    TOTAL
+                  </span>
+                </div>
+
+                {/* BOTÕES DE AÇÃO DISTRIBUÍDOS HORIZONTALMENTE EM UMA LINHA SÓ */}
+                <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap justify-end shrink-0">
+                  {tab !== "LIXEIRA" ? (
+                    <>
+                      {(isConcluido || tab === "CONCLUIDOS") ? (
+                        /* ORÇAMENTOS CONCLUÍDOS: 4 BOTÕES (USAR MODELO, GERAR PDF, WHATSAPP, LIXEIRA) */
+                        <>
+                          {setDuplicateId && (
+                            <button
+                              className={listBtnClass("orange")}
+                              title="Usar como modelo para novo orçamento"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDuplicateId(r.id);
+                              }}
+                              type="button"
+                            >
+                              <Copy size={15} />
+                            </button>
+                          )}
+
+                          {handlePdf && (
+                            <button
+                              className={listBtnClass("orange")}
+                              title="Baixar PDF"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePdf(r.id, r.tenant_id);
+                              }}
+                              type="button"
+                            >
+                              <FileDown size={15} />
+                            </button>
+                          )}
+
+                          <button
+                            className={listBtnClass("green")}
+                            title="Enviar via WhatsApp / Compartilhar"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShare(r);
+                            }}
+                            type="button"
+                            disabled={sharing === r.id}
+                          >
+                            {sharing === r.id ? (
+                              <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <WhatsAppIcon size={15} />
+                            )}
+                          </button>
+
+                          <button
+                            className={listBtnClass("red")}
+                            title="Mover para Lixeira"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              softDelete(r.id);
+                            }}
+                            type="button"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </>
+                      ) : (
+                        /* DEMAIS STATUS: EDITAR, WHATSAPP, PDF, LEMBRETES, LIXEIRA */
+                        <>
+                          <button
+                            className={listBtnClass("orange")}
+                            title="Editar Orçamento"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditId(r.id);
+                            }}
+                            type="button"
+                          >
+                            <Pencil size={15} />
+                          </button>
+
+                          <button
+                            className={listBtnClass("green")}
+                            title="Enviar via WhatsApp / Compartilhar"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShare(r);
+                            }}
+                            type="button"
+                            disabled={sharing === r.id}
+                          >
+                            {sharing === r.id ? (
+                              <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <WhatsAppIcon size={15} />
+                            )}
+                          </button>
+
+                          {handlePdf && (
+                            <button
+                              className={listBtnClass("orange")}
+                              title="Baixar PDF"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePdf(r.id, r.tenant_id);
+                              }}
+                              type="button"
+                            >
+                              <FileDown size={15} />
+                            </button>
+                          )}
+
+                          {setReminderConfigOpen && (
+                            <button
+                              className={listBtnClass("orange")}
+                              title="Lembretes / Programar"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReminderConfigOpen(true);
+                              }}
+                              type="button"
+                            >
+                              <Bell size={15} />
+                            </button>
+                          )}
+
+                          <button
+                            className={listBtnClass("red")}
+                            title="Mover para Lixeira"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              softDelete(r.id);
+                            }}
+                            type="button"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        className={listBtnClass("green")}
+                        title="Restaurar Orçamento"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          restore(r.id);
+                        }}
+                        type="button"
+                      >
+                        <RotateCcw size={15} />
+                      </button>
+
+                      <button
+                        className={listBtnClass("red")}
+                        title="Excluir Definitivamente"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmHardDelete(r.id);
+                        }}
+                        type="button"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* PAINEL DE EXPANSÃO DETALHADO */}
+            {isExpanded && (
+              <div className="mt-3 pt-3 border-t border-white/10 animate-in fade-in duration-200">
+                <ExpandedBudgetRow
+                  budgetId={r.id}
+                  initialRow={r}
+                  tab={tab}
+                  onEdit={() => setEditId(r.id)}
+                  onShare={() => handleShare(r)}
+                  onPdf={handlePdf ? () => handlePdf(r.id, r.tenant_id) : undefined}
+                  onDuplicate={setDuplicateId ? () => setDuplicateId(r.id) : undefined}
+                  onReminder={setReminderConfigOpen ? () => setReminderConfigOpen(true) : undefined}
+                  onDelete={() => softDelete(r.id)}
+                  onRestore={() => restore(r.id)}
+                  onConfirmHardDelete={() => confirmHardDelete(r.id)}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -328,6 +575,7 @@ function VirtualizedBudgetGrid({
   tab,
   updateStatusInstant,
   setEditId,
+  setDuplicateId,
   handleShare,
   sharing,
   handlePdf,
@@ -336,12 +584,14 @@ function VirtualizedBudgetGrid({
   restore,
   confirmHardDelete,
   isMobile,
+  stopSignal,
 }: {
   items: BudgetRow[];
   highlightedId: string | null;
   tab: TabKey;
   updateStatusInstant: (id: string, status: string) => void;
   setEditId: (id: string) => void;
+  setDuplicateId?: (id: string) => void;
   handleShare: (r: BudgetRow) => void;
   sharing: string | null;
   handlePdf: (id: string, tenant_id: string) => void;
@@ -350,15 +600,8 @@ function VirtualizedBudgetGrid({
   restore: (id: string) => void;
   confirmHardDelete: (id: string) => void;
   isMobile: boolean;
+  stopSignal?: (id: string) => void;
 }) {
-  const iconBtn = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-    const base = "gm-btn gm-budget-action-btn fora flex-1 h-10 flex items-center justify-center gap-2";
-    if (tone === "orange") return `${base} gm-btn-soft text-[var(--gm-primary)]`;
-    if (tone === "green") return `${base} gm-btn-soft text-emerald-500`;
-    if (tone === "red") return `${base} gm-btn-soft text-red-500`;
-    return `${base} gm-btn-soft`;
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8 sm:pb-4">
       {items.map((r) => {
@@ -376,44 +619,53 @@ function VirtualizedBudgetGrid({
           <Card
             key={r.id}
             id={`budget-card-${r.id}`}
-            className={`gm-budget-card barra flex flex-col justify-between !p-4 transition-all duration-300 ${
-              isHighlighted ? "gm-highlighted-budget-glass" : ""
+            onMouseEnter={() => stopSignal?.(r.id)}
+            onTouchStart={() => stopSignal?.(r.id)}
+            onClick={() => stopSignal?.(r.id)}
+            className={`gm-budget-card barra flex flex-col justify-between !p-4 transition-all duration-300 relative ${
+              isHighlighted ? "gm-signal-bottom-container" : ""
             }`}
           >
-            {/* HEADER compacto */}
+            <SignalBottomGradient
+              active={isHighlighted}
+              onDismiss={() => stopSignal?.(r.id)}
+            />
+            {/* HEADER estruturado e equilibrado */}
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="font-extrabold truncate text-white text-[15px]">
+              <div className="min-w-0 flex-1">
+                <div className="font-black truncate text-white text-[15px] sm:text-base tracking-tight uppercase">
                   {(r.client_name || "CLIENTE").toUpperCase()}
                 </div>
-                <div className="gm-muted text-sm truncate mt-1 font-medium text-slate-300">
+                <div className="text-xs sm:text-sm truncate mt-0.5 font-medium text-slate-300">
                   {r.title || "Orçamento"}
                 </div>
 
-                <div className="flex items-center gap-4 mt-2 gm-muted text-xs">
-                  <div className="flex items-center gap-1">
-                    <Calendar size={14} />
+                <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-white/[0.04] border border-white/10 text-slate-300 text-[11px] sm:text-xs font-semibold">
+                    <Calendar size={13} className="text-[var(--gm-primary)] shrink-0" />
                     <span>{created ? created.toLocaleDateString("pt-BR") : "-"}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Clock size={14} />
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-white/[0.04] border border-white/10 text-slate-300 text-[11px] sm:text-xs font-semibold">
+                    <Clock size={13} className="text-[var(--gm-primary)] shrink-0" />
                     <span>{r.delivery_days ?? 5} dias úteis</span>
                   </div>
                 </div>
               </div>
 
-              <div className="text-right shrink-0">
-                <div className="font-extrabold text-[18px] text-[var(--gm-primary)]">
+              <div className="text-right shrink-0 pl-1">
+                <div className="font-black text-[17px] sm:text-[19px] text-[var(--gm-primary)] leading-tight">
                   {CURRENCY.format(Number(r.total_amount || 0))}
                 </div>
-                <div className="gm-muted text-xs">Total</div>
+                <div className="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">
+                  Total
+                </div>
               </div>
             </div>
 
-            {/* FOOTER em 2 linhas (caps + ações) */}
-            <div className="mt-5 pt-4 border-t border-white/5 flex flex-col gap-3">
-              {/* cápsulas de status uniformes e expandidas até o final */}
-              <div className="grid grid-cols-4 gap-2 w-full">
+            {/* FOOTER: cápsulas + 6 botões organizados */}
+            <div className="mt-4 pt-3.5 border-t border-white/10 flex flex-col gap-2.5">
+              {/* Cápsulas de status uniformes */}
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-2 w-full">
                 {sortedOptions.map((opt) => {
                   const isActive = currentStatus === opt.value;
                   const activeCls = pillClass(opt.value);
@@ -428,7 +680,7 @@ function VirtualizedBudgetGrid({
                         e.stopPropagation();
                         updateStatusInstant(r.id, opt.value);
                       }}
-                      className={`gm-status-capsule fora w-full h-8 px-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-tight transition-all truncate flex items-center justify-center border ${
+                      className={`gm-status-capsule fora w-full h-7 sm:h-7.5 px-1 rounded-full text-[9.5px] sm:text-[10.5px] font-extrabold tracking-tight transition-all truncate flex items-center justify-center border ${
                         isActive ? activeCls : inactiveCls
                       }`}
                     >
@@ -438,67 +690,132 @@ function VirtualizedBudgetGrid({
                 })}
               </div>
 
-              {/* ações compactas */}
-              <div className="flex items-center gap-2">
-                {(tab as any) !== "LIXEIRA" ? (
-                  <>
-                    <button className={iconBtn("orange")} title="Editar" onClick={() => setEditId(r.id)} type="button">
-                      <Pencil size={16} />
-                    </button>
+              {/* 6 BOTÕES DE AÇÃO: ÍCONES EM REPOUSO (LARANJA), TROCA PELO NOME COM COR EXCLUSIVA NO HOVER */}
+              {(tab as any) !== "LIXEIRA" ? (
+                <div className="grid grid-cols-6 gap-1 sm:gap-1.5 w-full mt-1">
+                  {/* 1. USAR MODELO - Hover: Laranja vívido (text-orange-400) */}
+                  <button
+                    type="button"
+                    onClick={() => setDuplicateId?.(r.id)}
+                    className="gm-grid-action-btn btn-modelo active:scale-95"
+                    title="Modelo"
+                  >
+                    <span className="gm-grid-icon-wrap">
+                      <Copy size={17} className="shrink-0" />
+                    </span>
+                    <span className="gm-grid-label-wrap">
+                      <span className="sm:hidden">Mod</span>
+                      <span className="hidden sm:inline">Modelo</span>
+                    </span>
+                  </button>
 
-                    <button
-                      className={iconBtn("orange")}
-                      title="Enviar via WhatsApp / Compartilhar"
-                      onClick={() => handleShare(r)}
-                      type="button"
-                      disabled={sharing === r.id}
-                    >
+                  {/* 2. EDITAR - Hover: Âmbar / Amarelo ouro (text-amber-400) */}
+                  <button
+                    type="button"
+                    onClick={() => setEditId(r.id)}
+                    className="gm-grid-action-btn btn-editar active:scale-95"
+                    title="Editar"
+                  >
+                    <span className="gm-grid-icon-wrap">
+                      <Pencil size={17} className="shrink-0" />
+                    </span>
+                    <span className="gm-grid-label-wrap">
+                      <span className="sm:hidden">Edit</span>
+                      <span className="hidden sm:inline">Editar</span>
+                    </span>
+                  </button>
+
+                  {/* 3. WHATSAPP - Hover: Verde esmeralda (text-emerald-400) */}
+                  <button
+                    type="button"
+                    onClick={() => handleShare(r)}
+                    disabled={sharing === r.id}
+                    className="gm-grid-action-btn btn-whatsapp active:scale-95 disabled:opacity-50"
+                    title="WhatsApp"
+                  >
+                    <span className="gm-grid-icon-wrap">
                       {sharing === r.id ? (
-                        <div className="w-4 h-4 border-2 border-[var(--gm-primary)] border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <WhatsAppIcon size={16} />
+                        <WhatsAppIcon size={17} className="shrink-0" />
                       )}
-                    </button>
+                    </span>
+                    <span className="gm-grid-label-wrap">
+                      <span className="sm:hidden">Zap</span>
+                      <span className="hidden sm:inline">WhatsApp</span>
+                    </span>
+                  </button>
 
-                    <button
-                      className={iconBtn("neutral")}
-                      title="PDF"
-                      onClick={() => handlePdf(r.id, r.tenant_id)}
-                      type="button"
-                    >
-                      <FileDown size={16} />
-                    </button>
+                  {/* 4. BAIXAR PDF - Hover: Azul celeste (text-sky-400) */}
+                  <button
+                    type="button"
+                    onClick={() => handlePdf(r.id, r.tenant_id)}
+                    className="gm-grid-action-btn btn-baixar active:scale-95"
+                    title="Baixar PDF"
+                  >
+                    <span className="gm-grid-icon-wrap">
+                      <FileDown size={17} className="shrink-0" />
+                    </span>
+                    <span className="gm-grid-label-wrap">
+                      <span className="sm:hidden">PDF</span>
+                      <span className="hidden sm:inline">Baixar</span>
+                    </span>
+                  </button>
 
-                    <button
-                      className={iconBtn("neutral")}
-                      title="Lembretes"
-                      onClick={() => setReminderConfigOpen(true)}
-                      type="button"
-                    >
-                      <Bell size={16} />
-                    </button>
+                  {/* 5. PROGRAMAR LEMBRETES - Hover: Roxo / Violeta neon (text-purple-400) */}
+                  <button
+                    type="button"
+                    onClick={() => setReminderConfigOpen(true)}
+                    className="gm-grid-action-btn btn-programar active:scale-95"
+                    title="Programar"
+                  >
+                    <span className="gm-grid-icon-wrap">
+                      <Bell size={17} className="shrink-0" />
+                    </span>
+                    <span className="gm-grid-label-wrap">
+                      <span className="sm:hidden">Prog</span>
+                      <span className="hidden sm:inline">Programar</span>
+                    </span>
+                  </button>
 
-                    <button className={iconBtn("red")} title="Lixeira" onClick={() => softDelete(r.id)} type="button">
-                      <Trash2 size={16} />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button className={iconBtn("green")} title="Restaurar" onClick={() => restore(r.id)} type="button">
-                      <RotateCcw size={16} /> Restaurar
-                    </button>
-
-                    <button
-                      className="gm-btn gm-budget-action-btn h-10 w-12 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 hover:bg-[var(--gm-primary)] hover:text-white text-[var(--gm-primary)] transition-all flex items-center justify-center shadow-[0_0_10px_rgba(255,123,0,0.1)]"
-                      title="Excluir Definitivo"
-                      onClick={() => confirmHardDelete(r.id)}
-                      type="button"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </>
-                )}
-              </div>
+                  {/* 6. LIXEIRA - Hover: Vermelho coral (text-red-400) */}
+                  <button
+                    type="button"
+                    onClick={() => softDelete(r.id)}
+                    className="gm-grid-action-btn btn-lixeira active:scale-95"
+                    title="Lixeira"
+                  >
+                    <span className="gm-grid-icon-wrap">
+                      <Trash2 size={17} className="shrink-0" />
+                    </span>
+                    <span className="gm-grid-label-wrap">
+                      <span className="sm:hidden">Lixo</span>
+                      <span className="hidden sm:inline">Lixeira</span>
+                    </span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 w-full mt-1">
+                  <button
+                    type="button"
+                    onClick={() => restore(r.id)}
+                    className="h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer active:scale-95"
+                    title="Restaurar orçamento"
+                  >
+                    <RotateCcw size={16} />
+                    <span>Restaurar</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => confirmHardDelete(r.id)}
+                    className="h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all cursor-pointer active:scale-95"
+                    title="Excluir definitivamente"
+                  >
+                    <Trash2 size={16} />
+                    <span>Excluir Definitivo</span>
+                  </button>
+                </div>
+              )}
             </div>
           </Card>
         );
@@ -556,6 +873,22 @@ export default function Budgets() {
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
+  // Modo de visualização (Grade ou Lista)
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    try {
+      const saved = localStorage.getItem("gm_budgets_view_mode");
+      if (saved === "grid" || saved === "list") return saved;
+    } catch {}
+    return "grid";
+  });
+
+  const handleSetViewMode = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem("gm_budgets_view_mode", mode);
+    } catch {}
+  };
+
   const toggleRow = (id: string) => {
     setExpandedRows(prev => {
       const next = new Set(prev);
@@ -571,77 +904,115 @@ export default function Budgets() {
     if (params.get("new") === "true") {
       setNewOpen(true);
     }
+    const viewParam = (params.get("view") || params.get("mode") || "").toLowerCase();
+    if (viewParam === "list" || viewParam === "lista" || viewParam === "listas") {
+      handleSetViewMode("list");
+    } else if (viewParam === "grid" || viewParam === "grade") {
+      handleSetViewMode("grid");
+    }
   }, [location.search]);
 
-  // Listen for query parameter 'id' to highlight a budget from notification clicks
+  // Interrompe a sinalização quando o usuário passa o mouse ou clica no orçamento
+  const stopSignal = (budgetId: string) => {
+    if (highlightedId === budgetId) {
+      setHighlightedId(null);
+      try {
+        sessionStorage.removeItem("gm_signal_item_id");
+        sessionStorage.removeItem("gm_signal_item_type");
+      } catch {}
+      const currentHash = window.location.hash;
+      if (currentHash.includes('?')) {
+        const [base, query] = currentHash.split('?');
+        const p = new URLSearchParams(query);
+        if (p.has("id")) {
+          p.delete("id");
+          const remaining = p.toString();
+          window.location.hash = remaining ? `${base}?${remaining}` : base;
+        }
+      }
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("id")) {
+        urlParams.delete("id");
+        const remaining = urlParams.toString();
+        navigate(
+          {
+            pathname: location.pathname,
+            search: remaining ? `?${remaining}` : "",
+          },
+          { replace: true }
+        );
+      }
+    }
+  };
+
+  // Leva o usuário até o orçamento e ativa a sinalização de degradê inferior contínua
+  const processHighlight = (id: string) => {
+    if (!id || rows.length === 0) return;
+    const budget = rows.find(r => r.id === id);
+    if (budget) {
+      if (budget.deleted_at) {
+        setTab("LIXEIRA");
+      } else {
+        const norm = normalizeStatus(budget.status);
+        if (norm === "AGUARDANDO") {
+          setTab("AGUARDANDO");
+        } else if (norm === "APROVADO") {
+          setTab("APROVADO");
+        } else if (norm === "CONCLUIDO") {
+          setTab("CONCLUIDOS");
+        } else if (norm === "CANCELADO") {
+          setTab("CANCELADOS");
+        } else {
+          setTab("AGUARDANDO");
+        }
+      }
+      
+      // Ativa a sinalização (permanece até clique ou hover do mouse)
+      setHighlightedId(id);
+
+      // Leva o usuário suavemente até o container do orçamento centralizado no visor
+      const scrollToBudget = () => {
+        const element = document.getElementById(`budget-card-${id}`) || document.getElementById(`budget-row-${id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      };
+
+      setTimeout(scrollToBudget, 100);
+      setTimeout(scrollToBudget, 300);
+      setTimeout(scrollToBudget, 650);
+    }
+  };
+
+  // Escuta evento imediato disparado pelo botão 'Visualizar' na notificação
+  useEffect(() => {
+    const handleSignal = (e: any) => {
+      const detail = e.detail;
+      if (detail && detail.id && (detail.type === 'BUDGET' || !detail.type)) {
+        processHighlight(detail.id);
+      }
+    };
+    window.addEventListener("gm-signal-item", handleSignal);
+    return () => window.removeEventListener("gm-signal-item", handleSignal);
+  }, [rows]);
+
+  // Escuta query parameter 'id' e sessionStorage ao entrar ou mudar rota
   useEffect(() => {
     const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
     const params = new URLSearchParams(location.search || window.location.search || hashQuery);
-    const id = params.get("id");
-    if (id && rows.length > 0) {
-      const budget = rows.find(r => r.id === id);
-      if (budget) {
-        if (budget.deleted_at) {
-          setTab("LIXEIRA");
-        } else {
-          const norm = normalizeStatus(budget.status);
-          if (norm === "AGUARDANDO") {
-            setTab("AGUARDANDO");
-          } else if (norm === "APROVADO") {
-            setTab("APROVADO");
-          } else if (norm === "CONCLUIDO") {
-            setTab("CONCLUIDOS");
-          } else if (norm === "CANCELADO") {
-            setTab("CANCELADOS");
-          } else {
-            setTab("AGUARDANDO");
-          }
-        }
-        
-        // Highlight the selected budget card without opening the editor modal
-        setHighlightedId(id);
-
-        // Wait a brief moment for React to change tabs and render the DOM elements, then scroll smoothly
-        setTimeout(() => {
-          const element = document.getElementById(`budget-card-${id}`) || document.getElementById(`budget-row-${id}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 150);
-
-        // Keep highlighted for 2.5 seconds, then clear state and cleanup query param from the URL
-        const timer = setTimeout(() => {
-          setHighlightedId(null);
-          
-          const currentHash = window.location.hash;
-          if (currentHash.includes('?')) {
-            const [base, query] = currentHash.split('?');
-            const p = new URLSearchParams(query);
-            if (p.has("id")) {
-              p.delete("id");
-              const remaining = p.toString();
-              window.location.hash = remaining ? `${base}?${remaining}` : base;
-            }
-          }
-          
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.has("id")) {
-            urlParams.delete("id");
-            const remaining = urlParams.toString();
-            navigate(
-              {
-                pathname: location.pathname,
-                search: remaining ? `?${remaining}` : "",
-              },
-              { replace: true }
-            );
-          }
-        }, 2500);
-
-        return () => clearTimeout(timer);
-      }
+    let id = params.get("id");
+    if (!id) {
+      try {
+        const stored = sessionStorage.getItem("gm_signal_item_id");
+        const type = sessionStorage.getItem("gm_signal_item_type");
+        if (stored && (type === "BUDGET" || !type)) id = stored;
+      } catch {}
     }
-  }, [location, rows]);
+    if (id && rows.length > 0) {
+      processHighlight(id);
+    }
+  }, [location.search, location.state, rows]);
 
   const handleCloseEdit = () => {
     setEditId(null);
@@ -741,6 +1112,18 @@ export default function Budgets() {
       return blob.includes(needle);
     });
   }, [rows, tab, q, selectedMonth]);
+
+  // Total geral de orçamentos na aba ativa (sem filtro de mês)
+  const totalInCurrentTab = useMemo(() => {
+    const isTrash = tab === "LIXEIRA";
+    const base = rows.filter((r) => (isTrash ? !!r.deleted_at : !r.deleted_at));
+    if (isTrash) return base.length;
+    if (tab === "AGUARDANDO") return base.filter((r) => normalizeStatus(r.status) === "AGUARDANDO").length;
+    if (tab === "APROVADO") return base.filter((r) => normalizeStatus(r.status) === "APROVADO").length;
+    if (tab === "CONCLUIDOS") return base.filter((r) => normalizeStatus(r.status) === "CONCLUIDO").length;
+    if (tab === "CANCELADOS") return base.filter((r) => normalizeStatus(r.status) === "CANCELADO").length;
+    return base.length;
+  }, [rows, tab]);
 
   // Resumo por status (todos os orçamentos não excluídos) — usado no gráfico do topo
   const statusSummary = useMemo(() => {
@@ -973,10 +1356,42 @@ export default function Budgets() {
     <Page
       title="Orçamentos"
       actions={
-        <button className="gm-btn fora h-12 text-xs uppercase tracking-wider" type="button" onClick={() => setNewOpen(true)}>
-          <Plus size={16} />
-          Novo Orçamento
-        </button>
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          {/* SELETOR DE MODO NO CABEÇALHO DO TOPO (SEM CONTAINER MODAL POR TRÁS) */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleSetViewMode("grid")}
+              className={`h-11 sm:h-12 px-4 sm:px-5 rounded-2xl text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                viewMode === "grid"
+                  ? "gm-viewmode-btn-active"
+                  : "gm-viewmode-btn-inactive"
+              } active:scale-95`}
+              title="Visualização em Grade de Cards"
+            >
+              <LayoutGrid size={16} className={viewMode === "grid" ? "text-white" : "text-[var(--gm-primary)]"} />
+              <span className="text-white">Grade</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSetViewMode("list")}
+              className={`h-11 sm:h-12 px-4 sm:px-5 rounded-2xl text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                viewMode === "list"
+                  ? "gm-viewmode-btn-active"
+                  : "gm-viewmode-btn-inactive"
+              } active:scale-95`}
+              title="Visualização em Listas com Linhas e Setas de Expansão"
+            >
+              <List size={16} className={viewMode === "list" ? "text-white" : "text-[var(--gm-primary)]"} />
+              <span className="text-white">Listas</span>
+            </button>
+          </div>
+
+          <button className="gm-btn fora h-11 sm:h-12 text-xs uppercase tracking-wider font-extrabold" type="button" onClick={() => setNewOpen(true)}>
+            <Plus size={16} />
+            Novo Orçamento
+          </button>
+        </div>
       }
     >
       {/* ✅ Resumo geral (dado real, calculado a partir de todos os orçamentos ativos) */}
@@ -984,7 +1399,11 @@ export default function Budgets() {
         <SectionDivider label="Resumo" />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="gm-dashboard-card barra rounded-2xl p-5">
+          <div 
+            onClick={() => setTab("AGUARDANDO")}
+            className="gm-dashboard-card barra rounded-2xl p-5 cursor-pointer hover:border-[var(--gm-primary)]/40 transition-all active:scale-[0.99]"
+            title="Clique para ver os orçamentos em aberto"
+          >
             <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
               Em aberto (aguardando + aprovado)
             </div>
@@ -994,7 +1413,11 @@ export default function Budgets() {
             <div className="text-xs text-[color:var(--gm-text-tertiary)] mt-1">{statusSummary.countAtivo} orçamento(s)</div>
           </div>
 
-          <div className="gm-dashboard-card barra rounded-2xl p-5">
+          <div 
+            onClick={() => { setTab("CONCLUIDOS"); setSelectedMonth("TODOS"); }}
+            className="gm-dashboard-card barra rounded-2xl p-5 cursor-pointer hover:border-emerald-500/40 transition-all active:scale-[0.99]"
+            title="Clique para ver todos os orçamentos concluídos"
+          >
             <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
               Concluídos
             </div>
@@ -1138,12 +1561,11 @@ export default function Budgets() {
           </DraggableScroll>
         </div>
 
-        {/* ✅ Busca Inteligente com Borda e Cantos de Alta Precisão (Sem Falhas) */}
-        <div className="relative group w-full flex items-center rounded-2xl bg-black/40 border border-white/15 backdrop-blur-xl transition-all duration-200 focus-within:border-[var(--gm-primary,#FF6900)] focus-within:ring-2 focus-within:ring-[var(--gm-primary,#FF6900)]/20 focus-within:shadow-[0_0_16px_rgba(254,84,11,0.18)] hover:border-white/25">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[var(--gm-primary,#FF6900)] transition-colors pointer-events-none" size={18} />
+        {/* ✅ Busca com Visual Padrão Glass Desfocado Apple */}
+        <div className="gm-search-apple-glass">
+          <Search className="gm-search-icon" size={18} />
           <input
             type="text"
-            className="w-full !pl-12 !pr-11 py-3.5 bg-transparent !border-none text-white placeholder-slate-400 text-sm font-medium !outline-none !shadow-none !ring-0 focus:!outline-none focus:!border-none focus:!ring-0 focus:!shadow-none rounded-2xl"
             placeholder={
               tab === "CONCLUIDOS"
                 ? "Buscar orçamentos concluídos..."
@@ -1156,20 +1578,96 @@ export default function Budgets() {
             <button
               type="button"
               onClick={() => setQ("")}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="gm-search-clear gm-search-apple-glass-clear"
               title="Limpar busca"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           )}
         </div>
       </div>
 
-      <div className="mb-2 flex items-center justify-between text-xs text-slate-400 px-1">
-        <SectionDivider label="Lista de orçamentos" />
-        <span className="shrink-0 ml-4 px-2.5 py-1 rounded-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5">
-          <FileText size={13} /> Orçamentos ({filtered.length})
-        </span>
+      {/* ✅ Divisor de Seção dos Orçamentos */}
+      <SectionDivider label="Orçamentos Cadastrados" />
+
+      {/* ✅ 3 CÁPSULAS VERTICAIS PEGANDO A EXTREMIDADE DA TELA DO APP */}
+      <div className="mb-4 flex flex-col gap-2.5 w-full text-xs text-slate-400">
+        {/* CÁPSULA 1: ORÇAMENTOS (X) - 100% LARGURA PEGANDO AS EXTREMIDADES DA TELA */}
+        <div className="w-full px-4 py-3 rounded-2xl gm-search-glass text-white font-extrabold flex items-center justify-between shadow-lg select-none">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)] animate-pulse shadow-[0_0_8px_var(--gm-primary)]" />
+            <FileText size={18} className="text-[var(--gm-primary)]" />
+            <span className="text-sm font-black text-white tracking-tight uppercase">Orçamentos</span>
+          </div>
+          <span className="px-3 py-1 rounded-xl bg-[var(--gm-primary)]/20 border border-[var(--gm-primary)]/40 text-[var(--gm-primary)] font-black text-xs sm:text-sm">
+            ({filtered.length})
+          </span>
+        </div>
+
+        {/* CÁPSULA 2: MÊS SET (VER TODOS OS 55) - 100% LARGURA PEGANDO AS EXTREMIDADES DA TELA */}
+        <div
+          onClick={() => {
+            if (selectedMonth !== "TODOS") {
+              setSelectedMonth("TODOS");
+            }
+          }}
+          className={`w-full px-4 py-3 rounded-2xl gm-search-glass flex items-center justify-between shadow-lg select-none ${
+            selectedMonth !== "TODOS"
+              ? "cursor-pointer hover:border-[var(--gm-primary)]/50 active:scale-[0.99]"
+              : ""
+          }`}
+          title={selectedMonth !== "TODOS" ? "Clique para exibir todos os orçamentos" : "Filtrado por mês"}
+        >
+          <div className="flex items-center gap-2.5">
+            <Calendar size={18} className="text-[var(--gm-primary)]" />
+            <span className="text-xs sm:text-sm font-bold text-slate-200">
+              Mês:{" "}
+              <strong className="text-[var(--gm-primary)] font-black uppercase text-sm">
+                {selectedMonth === "TODOS" ? "TODOS" : (MONTHS.find((m) => m.key === selectedMonth)?.label || "SET")}
+              </strong>
+            </span>
+          </div>
+
+          {selectedMonth !== "TODOS" ? (
+            <span className="text-xs font-black text-[var(--gm-primary)] px-3 py-1 rounded-xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 hover:bg-[var(--gm-primary)]/25 transition-colors">
+              (Ver todos os {totalInCurrentTab})
+            </span>
+          ) : (
+            <span className="text-xs font-extrabold text-slate-400 px-3 py-1 rounded-xl bg-white/5 border border-white/10">
+              ({totalInCurrentTab} orçamentos)
+            </span>
+          )}
+        </div>
+
+        {/* CÁPSULA 3: GRADE E LISTA - SEM CONTAINER MODAL POR TRÁS */}
+        <div className="w-full grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => handleSetViewMode("grid")}
+            className={`w-full py-3.5 rounded-2xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+              viewMode === "grid"
+                ? "gm-viewmode-btn-active scale-100"
+                : "gm-viewmode-btn-inactive"
+            } active:scale-95`}
+            title="Visualização em Grade de Cards"
+          >
+            <LayoutGrid size={18} className={viewMode === "grid" ? "text-white" : "text-[var(--gm-primary)]"} />
+            <span className="text-white">Grade</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSetViewMode("list")}
+            className={`w-full py-3.5 rounded-2xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+              viewMode === "list"
+                ? "gm-viewmode-btn-active scale-100"
+                : "gm-viewmode-btn-inactive"
+            } active:scale-95`}
+            title="Visualização em Listas com Linhas e Setas de Expansão"
+          >
+            <List size={18} className={viewMode === "list" ? "text-white" : "text-[var(--gm-primary)]"} />
+            <span className="text-white">Listas</span>
+          </button>
+        </div>
       </div>
       <div style={{ height: 8 }} />
 
@@ -1182,10 +1680,25 @@ export default function Budgets() {
           ))}
         </Grid>
       ) : filtered.length === 0 ? (
-        <Card className="gm-dashboard-card text-center p-12 opacity-90 rounded-2xl">
-          Nenhum orçamento encontrado {selectedMonth !== "TODOS" ? `para ${MONTHS.find(m => m.key === selectedMonth)?.full}.` : "."}
-        </Card>
-      ) : tab === "CONCLUIDOS" || tab === "CANCELADOS" || tab === "LIXEIRA" ? (
+        <div className="w-full fora rounded-2xl border border-white/10 p-10 sm:p-14 md:p-16 min-h-[240px] sm:min-h-[280px] flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02] backdrop-blur-md shadow-none select-none">
+          <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--gm-primary)] shadow-none">
+            <Calendar size={22} />
+          </div>
+          <p className="text-sm sm:text-base text-slate-200 font-semibold leading-relaxed max-w-lg px-4">
+            Nenhum orçamento encontrado {selectedMonth !== "TODOS" ? `para ${MONTHS.find(m => m.key === selectedMonth)?.full}.` : "."}
+          </p>
+          {selectedMonth !== "TODOS" && totalInCurrentTab > 0 && (
+            <button
+              type="button"
+              onClick={() => setSelectedMonth("TODOS")}
+              className="gm-btn bg-[var(--gm-primary)] text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2 hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer mt-1"
+            >
+              <Calendar size={15} />
+              <span>Ver todos os meses ({totalInCurrentTab} no total)</span>
+            </button>
+          )}
+        </div>
+      ) : viewMode === "list" ? (
         <VirtualizedBudgetList
           items={filtered}
           highlightedId={highlightedId}
@@ -1200,6 +1713,9 @@ export default function Budgets() {
           softDelete={softDelete}
           restore={restore}
           confirmHardDelete={confirmHardDelete}
+          setReminderConfigOpen={setReminderConfigOpen}
+          stopSignal={stopSignal}
+          handlePdf={handlePdf}
         />
       ) : (
         <VirtualizedBudgetGrid
@@ -1208,6 +1724,7 @@ export default function Budgets() {
           tab={tab}
           updateStatusInstant={updateStatusInstant}
           setEditId={setEditId}
+          setDuplicateId={setDuplicateId}
           handleShare={handleShare}
           sharing={sharing}
           handlePdf={handlePdf}
@@ -1216,6 +1733,7 @@ export default function Budgets() {
           restore={restore}
           confirmHardDelete={confirmHardDelete}
           isMobile={isMobile}
+          stopSignal={stopSignal}
         />
       )}
 

@@ -1,17 +1,17 @@
 import React from "react";
 
-export interface CardProps {
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   right?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
-  onClick?: () => void;
+  onClick?: (e?: any) => void;
   style?: React.CSSProperties;
   key?: React.Key | null | undefined;
   id?: string;
 }
 
-export const Card = ({ title, right, children, className = "", style, onClick, id }: CardProps) => {
+export const Card = ({ title, right, children, className = "", style, onClick, id, ...rest }: CardProps) => {
   return (
     <div
       id={id}
@@ -22,6 +22,7 @@ export const Card = ({ title, right, children, className = "", style, onClick, i
         minWidth: 0,
         ...style
       }}
+      {...rest}
     >
       {(title || right) && (
         <div className="gm-card-header">

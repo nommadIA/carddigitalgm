@@ -34,6 +34,7 @@ import { addAlarmsForBudget, removeAlarmsForBudget } from "../lib/alarmSystem";
 import { useAuth } from "../store/AuthContext";
 import { broadcastAppNotification } from "../lib/syncHub";
 import { motion, AnimatePresence } from "motion/react";
+import { SectionDivider } from "../components/ui/SectionDivider";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -771,30 +772,30 @@ export default function Expenses() {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95"
+            className="fora h-11 sm:h-12 px-4 rounded-2xl border border-white/10 text-xs uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none active:scale-95"
             onClick={handleImportRecurring}
             title="Importar despesas recorrentes para este mês"
           >
-            <Repeat size={14} className="text-orange-400" />
+            <Repeat size={15} className="text-[color:var(--gm-primary)]" />
             <span>Importar Recorrentes</span>
           </button>
 
           <button
             type="button"
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95"
+            className="fora h-11 sm:h-12 px-4 rounded-2xl border border-white/10 text-xs uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none active:scale-95"
             onClick={() => setShowShareModal(true)}
             title="Compartilhar Relatório de Despesas"
           >
-            <Share2 size={14} className="text-green-400" />
+            <Share2 size={15} className="text-emerald-400" />
             <span>Compartilhar Relatório</span>
           </button>
 
           <button
-            className="px-5 py-2 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white text-xs font-extrabold transition-all flex items-center gap-2 shadow-lg shadow-orange-500/20 active:scale-95"
+            className="fora h-11 sm:h-12 px-5 rounded-2xl border border-white/10 text-xs uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none active:scale-95"
             type="button"
             onClick={() => setShowNewModal(true)}
           >
-            <Plus size={16} />
+            <Plus size={16} className="text-[color:var(--gm-primary)]" />
             <span>Nova Despesa</span>
           </button>
         </div>
@@ -816,6 +817,7 @@ export default function Expenses() {
       </AnimatePresence>
 
       {/* TOP CONTROL CONTAINER: MÊS DE REFERÊNCIA / STATUS / ATUALIZAR / ABAS */}
+      <SectionDivider label="Filtros e Período" />
       <div 
         id="expenses-top-controls"
         className="w-full fora rounded-2xl md:rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-none mb-6 p-4 sm:p-5 md:p-6 flex flex-col gap-4 sm:gap-5 !overflow-visible"
@@ -828,7 +830,7 @@ export default function Expenses() {
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="hidden sm:flex w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl bg-black/60 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-md hover:border-orange-500/40"
+              className="hidden sm:flex w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl fora border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md text-white/80 hover:text-white items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-none hover:border-[color:var(--gm-primary)]"
               title="Mês anterior"
             >
               <ChevronLeft size={22} />
@@ -842,15 +844,15 @@ export default function Expenses() {
                 setPickerYear(Number(yearStr) || new Date().getFullYear());
                 setShowMonthModal(true);
               }}
-              className="flex items-center justify-between gap-3 sm:gap-4 bg-black/70 hover:bg-black/90 border border-white/20 hover:border-orange-500/70 px-4 sm:px-5 py-3 rounded-2xl w-full sm:w-auto sm:min-w-[270px] min-h-[52px] transition-all cursor-pointer shadow-lg group active:scale-98"
+              className="flex items-center justify-between gap-3 sm:gap-4 fora bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md border border-white/10 hover:border-[color:var(--gm-primary)] px-4 sm:px-5 py-3 rounded-2xl w-full sm:w-auto sm:min-w-[270px] min-h-[52px] transition-all cursor-pointer shadow-none group active:scale-98"
               title="Clique para abrir o seletor de mês e ano"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400 group-hover:scale-105 group-hover:bg-orange-500/25 transition-all shrink-0 shadow-sm">
+                <div className="w-10 h-10 rounded-xl barra border border-[color:var(--gm-primary)]/30 bg-[color:var(--gm-primary)]/10 flex items-center justify-center text-[color:var(--gm-primary)] group-hover:scale-105 transition-all shrink-0 shadow-none">
                   <Calendar size={20} />
                 </div>
                 <div className="flex flex-col items-start text-left select-none">
-                  <span className="text-[11px] uppercase tracking-wider text-orange-400 font-extrabold flex items-center gap-1 leading-none mb-1">
+                  <span className="text-[11px] uppercase tracking-wider text-[color:var(--gm-primary)] font-extrabold flex items-center gap-1 leading-none mb-1">
                     Mês de Referência
                   </span>
                   <span className="text-sm sm:text-base font-black text-white capitalize leading-tight">
@@ -858,14 +860,14 @@ export default function Expenses() {
                   </span>
                 </div>
               </div>
-              <ChevronDown size={20} className="text-white/50 group-hover:text-orange-400 group-hover:translate-y-0.5 transition-all shrink-0 ml-1" />
+              <ChevronDown size={20} className="text-white/50 group-hover:text-[color:var(--gm-primary)] group-hover:translate-y-0.5 transition-all shrink-0 ml-1" />
             </button>
 
             {/* Desktop: Seta Próximo */}
             <button
               type="button"
               onClick={handleNextMonth}
-              className="hidden sm:flex w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl bg-black/60 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-md hover:border-orange-500/40"
+              className="hidden sm:flex w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl fora border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md text-white/80 hover:text-white items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-none hover:border-[color:var(--gm-primary)]"
               title="Próximo mês"
             >
               <ChevronRight size={22} />
@@ -880,7 +882,7 @@ export default function Expenses() {
                 setMonth(currentMonthKey);
                 showToast("Mês atual selecionado!");
               }}
-              className="hidden sm:flex h-13 min-h-[52px] px-4 sm:px-5 rounded-2xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/15 text-xs font-black uppercase tracking-wider transition-all items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-md active:scale-95"
+              className="hidden sm:flex h-13 min-h-[52px] px-4 sm:px-5 rounded-2xl fora border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md text-white/80 hover:text-white hover:border-[color:var(--gm-primary)] text-xs font-black uppercase tracking-wider transition-all items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-none active:scale-95"
               title="Ir para o mês atual"
             >
               Hoje
@@ -891,7 +893,7 @@ export default function Expenses() {
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="flex-1 h-12 rounded-2xl bg-black/70 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-md hover:border-orange-500/40"
+                className="flex-1 h-12 rounded-2xl fora border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md text-white/80 hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-none hover:border-[color:var(--gm-primary)]"
                 title="Mês anterior"
               >
                 <ChevronLeft size={22} />
@@ -900,7 +902,7 @@ export default function Expenses() {
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="flex-1 h-12 rounded-2xl bg-black/70 hover:bg-white/15 text-white/80 hover:text-white border border-white/15 flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-md hover:border-orange-500/40"
+                className="flex-1 h-12 rounded-2xl fora border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md text-white/80 hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-none hover:border-[color:var(--gm-primary)]"
                 title="Próximo mês"
               >
                 <ChevronRight size={22} />
@@ -909,34 +911,34 @@ export default function Expenses() {
           </div>
 
           {/* Workflow Tabs: Todas do Mês / Recorrentes / Lixeira */}
-          <div className="grid grid-cols-3 sm:flex sm:items-center gap-2 p-1.5 sm:p-2 rounded-2xl bg-black/50 border border-white/15 shadow-md w-full sm:w-auto min-h-[52px]">
+          <div className="grid grid-cols-3 sm:flex sm:items-center gap-2 p-1.5 sm:p-2 rounded-2xl fora border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-none w-full sm:w-auto min-h-[52px]">
             <button
               className={`h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 tab === "active"
-                  ? "bg-white/15 text-white font-black border border-white/25 shadow-md"
-                  : "text-slate-400 hover:text-white"
+                  ? "barra bg-white/[0.08] text-white font-black border border-white/20 shadow-none"
+                  : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
               }`}
               onClick={() => setTab("active")}
             >
-              <ListFilter size={16} className="shrink-0 text-orange-400" />
+              <ListFilter size={16} className="shrink-0 text-[color:var(--gm-primary)]" />
               <span className="truncate">Todas do Mês</span>
             </button>
             <button
               className={`h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 tab === "recurring"
-                  ? "bg-orange-500/20 text-orange-400 font-black border border-orange-500/40 shadow-md"
-                  : "text-slate-400 hover:text-white"
+                  ? "barra bg-[color:var(--gm-primary)]/15 text-[color:var(--gm-primary)] font-black border border-[color:var(--gm-primary)]/30 shadow-none"
+                  : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
               }`}
               onClick={() => setTab("recurring")}
             >
-              <Repeat size={16} className="shrink-0 text-orange-400" />
+              <Repeat size={16} className="shrink-0 text-[color:var(--gm-primary)]" />
               <span className="truncate">Recorrentes</span>
             </button>
             <button
               className={`h-11 sm:h-12 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 cursor-pointer border ${
                 tab === "trash"
-                  ? "bg-red-500/20 border-red-500/40 text-red-400 shadow-md"
-                  : "bg-transparent border-transparent text-slate-400 hover:text-red-400"
+                  ? "barra bg-red-500/15 border-red-500/30 text-red-400 shadow-none"
+                  : "bg-transparent border-transparent text-slate-400 hover:text-red-400 hover:bg-white/[0.04]"
               }`}
               onClick={() => setTab("trash")}
             >
@@ -950,21 +952,21 @@ export default function Expenses() {
         <div className="flex flex-col sm:flex-row gap-3.5 items-stretch sm:items-center justify-between border-t border-white/10 pt-5">
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 items-center">
             {/* PAGO Container */}
-            <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-extrabold text-xs sm:text-sm shadow-sm justify-center sm:justify-start min-h-[50px]">
+            <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-2xl barra border border-emerald-500/25 bg-emerald-500/10 backdrop-blur-md text-emerald-400 font-extrabold text-xs sm:text-sm shadow-none justify-center sm:justify-start min-h-[50px]">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <span>PAGO:</span>
               <span className="font-mono text-sm sm:text-base font-black">{CURRENCY_FORMATTER.format(totalPago)}</span>
             </div>
 
             {/* PENDENTE Container */}
-            <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 font-extrabold text-xs sm:text-sm shadow-sm justify-center sm:justify-start min-h-[50px]">
+            <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-2xl barra border border-red-500/25 bg-red-500/10 backdrop-blur-md text-red-400 font-extrabold text-xs sm:text-sm shadow-none justify-center sm:justify-start min-h-[50px]">
               <div className="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse shrink-0" />
               <span>PENDENTE:</span>
               <span className="font-mono text-sm sm:text-base font-black">{CURRENCY_FORMATTER.format(totalPendente)}</span>
             </div>
 
             {/* TOTAL GERAL */}
-            <div className="col-span-2 sm:col-span-1 flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-2xl bg-white/5 border border-white/15 text-white/90 text-xs sm:text-sm font-bold justify-center sm:justify-start min-h-[50px]">
+            <div className="col-span-2 sm:col-span-1 flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-2xl barra border border-white/15 bg-white/[0.03] backdrop-blur-md text-white/90 text-xs sm:text-sm font-bold justify-center sm:justify-start min-h-[50px]">
               <span className="font-black uppercase tracking-wider text-white/50">TOTAL:</span>
               <span className="font-mono text-white font-black text-sm sm:text-base">{CURRENCY_FORMATTER.format(totalGeral)}</span>
             </div>
@@ -972,17 +974,18 @@ export default function Expenses() {
 
           <button
             type="button"
-            className="h-12 sm:h-13 min-h-[50px] px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white/90 hover:text-white border border-white/15 text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 cursor-pointer shrink-0 hover:border-orange-500/40"
+            className="h-12 sm:h-13 min-h-[50px] px-6 rounded-2xl fora border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md text-white/90 hover:text-white hover:border-[color:var(--gm-primary)] text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 shadow-none active:scale-95 cursor-pointer shrink-0"
             onClick={() => loadExpenses()}
             title="Recarregar despesas"
           >
-            <RotateCcw size={16} className="text-orange-400" />
+            <RotateCcw size={16} className="text-[color:var(--gm-primary)]" />
             <span>Atualizar</span>
           </button>
         </div>
       </div>
 
       {/* LISTA DE DESPESAS DIRETA COM EXPANSÃO INLINE ESTILO NOTION */}
+      <SectionDivider label="Despesas Cadastradas" />
       <div className="w-full fora bg-white/[0.02] backdrop-blur-md rounded-2xl border border-white/10 shadow-none mb-12 flex flex-col overflow-visible">
         {/* Header fixo da tabela (visível no desktop) */}
         <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-4 border-b border-white/10 font-black opacity-80 uppercase tracking-widest text-[11px] barra bg-black/20 text-slate-300 rounded-t-2xl">
@@ -1361,7 +1364,7 @@ export default function Expenses() {
       <AnimatePresence>
         {showEditModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
             onClick={() => setShowEditModal(false)}
           >
             <motion.div
@@ -1369,14 +1372,14 @@ export default function Expenses() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="gm-card fora w-full max-w-2xl lg:max-w-3xl rounded-3xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0 my-auto"
+              className="fora w-full max-w-2xl lg:max-w-3xl rounded-2xl border border-white/15 overflow-hidden shadow-none relative z-10 p-0 my-auto bg-white/[0.02] backdrop-blur-md"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header do Modal */}
-              <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-[#121216]/95">
+              <div className="barra flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-white/[0.02] backdrop-blur-md">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
-                    <Pencil size={20} className="stroke-[2.5]" />
+                  <div className="w-10 h-10 rounded-xl barra border border-[color:var(--gm-primary)]/30 bg-[color:var(--gm-primary)]/10 flex items-center justify-center text-[color:var(--gm-primary)] shadow-none">
+                    <Pencil size={18} className="stroke-[2.5]" />
                   </div>
                   <div>
                     <h3 className="text-lg sm:text-xl font-black text-white leading-tight">
@@ -1391,10 +1394,10 @@ export default function Expenses() {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  className="fora w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer shadow-none"
                   title="Fechar"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
 
@@ -1604,7 +1607,7 @@ export default function Expenses() {
       <AnimatePresence>
         {showNewModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
             onClick={() => setShowNewModal(false)}
           >
             <motion.div
@@ -1612,14 +1615,14 @@ export default function Expenses() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="gm-card fora w-full max-w-2xl lg:max-w-3xl rounded-3xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0 my-auto"
+              className="fora w-full max-w-2xl lg:max-w-3xl rounded-2xl border border-white/15 overflow-hidden shadow-none relative z-10 p-0 my-auto bg-white/[0.02] backdrop-blur-md"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header do Modal */}
-              <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-[#121216]/95">
+              <div className="barra flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-white/[0.02] backdrop-blur-md">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
-                    <Plus size={22} className="stroke-[2.5]" />
+                  <div className="w-10 h-10 rounded-xl barra border border-[color:var(--gm-primary)]/30 bg-[color:var(--gm-primary)]/10 flex items-center justify-center text-[color:var(--gm-primary)] shadow-none">
+                    <Plus size={20} className="stroke-[2.5]" />
                   </div>
                   <div>
                     <h3 className="text-lg sm:text-xl font-black text-white leading-tight">
@@ -1634,10 +1637,10 @@ export default function Expenses() {
                 <button
                   type="button"
                   onClick={() => setShowNewModal(false)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  className="fora w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer shadow-none"
                   title="Fechar"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
 
@@ -1835,13 +1838,13 @@ export default function Expenses() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="gm-card fora w-full max-w-2xl rounded-3xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0 my-auto"
+              className="fora w-full max-w-2xl rounded-2xl border border-white/15 overflow-hidden shadow-none relative z-10 p-0 my-auto bg-white/[0.02] backdrop-blur-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-[#121216]/95">
+              <div className="barra flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-white/[0.02] backdrop-blur-md">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                    <Share2 size={20} />
+                  <div className="w-10 h-10 rounded-xl barra border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center text-emerald-400 shadow-none">
+                    <Share2 size={18} />
                   </div>
                   <div>
                     <h3 className="text-lg sm:text-xl font-black text-white">Relatório Mensal de Despesas</h3>
@@ -1853,10 +1856,10 @@ export default function Expenses() {
                 <button
                   type="button"
                   onClick={() => setShowShareModal(false)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  className="fora w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer shadow-none"
                   title="Fechar"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
 
@@ -1968,14 +1971,14 @@ export default function Expenses() {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.94, opacity: 0 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="w-full max-w-[420px] sm:max-w-md rounded-3xl border border-white/20 bg-[#14151a] shadow-[0_25px_60px_rgba(0,0,0,0.85),0_0_40px_rgba(246,90,26,0.12)] relative z-10 overflow-hidden flex flex-col m-auto h-[84dvh] min-h-[580px] max-h-[760px] sm:h-auto sm:min-h-0 sm:max-h-[90dvh]"
+                  className="fora w-full max-w-[420px] sm:max-w-md rounded-2xl border border-white/15 bg-white/[0.02] backdrop-blur-md shadow-none relative z-10 overflow-hidden flex flex-col m-auto h-[84dvh] min-h-[580px] max-h-[760px] sm:h-auto sm:min-h-0 sm:max-h-[90dvh]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Header do Modal */}
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#101114] shrink-0">
+                  <div className="barra flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/[0.02] backdrop-blur-md shrink-0">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0 shadow-sm">
-                        <Calendar size={20} />
+                      <div className="w-10 h-10 rounded-xl barra border border-[color:var(--gm-primary)]/30 bg-[color:var(--gm-primary)]/10 flex items-center justify-center text-[color:var(--gm-primary)] shrink-0 shadow-none">
+                        <Calendar size={18} />
                       </div>
                       <div>
                         <h3 className="text-base sm:text-lg font-black text-white leading-tight">Mês de Referência</h3>
@@ -1987,7 +1990,7 @@ export default function Expenses() {
                     <button
                       type="button"
                       onClick={() => setShowMonthModal(false)}
-                      className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer shrink-0 border border-white/10"
+                      className="fora w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0 border border-white/10 shadow-none"
                       title="Fechar"
                     >
                       <X size={18} />
@@ -1996,11 +1999,11 @@ export default function Expenses() {
 
                   <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3 sm:gap-4 overflow-y-auto">
                     {/* Seletor de Ano */}
-                    <div className="flex items-center justify-between bg-black/50 border border-white/15 rounded-2xl p-2 sm:p-2.5 shrink-0">
+                    <div className="barra flex items-center justify-between bg-white/[0.03] border border-white/10 rounded-2xl p-2 sm:p-2.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => setPickerYear((y) => y - 1)}
-                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
+                        className="fora w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-none"
                         title="Ano anterior"
                       >
                         <ChevronLeft size={18} />

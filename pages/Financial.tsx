@@ -7,7 +7,7 @@ import { Page } from "../components/ui/Page";
 import { CURRENCY_FORMATTER } from "../constants";
 import SafeResponsive from "../components/ui/SafeResponsive";
 import { pushToast } from "../store/toast";
-import { FileText, Save, History, X, Download, Trash2, ChevronLeft, ChevronRight, Calendar, Share2, Copy, Mail } from "lucide-react";
+import { FileText, Save, History, X, Download, Trash2, ChevronLeft, ChevronRight, Calendar, Share2, Copy, Mail, TrendingUp, TrendingDown, Wallet, BarChart3 } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { useAuth } from "../store/AuthContext";
@@ -20,6 +20,18 @@ import {
   deleteFinanceReportForever,
   FinanceReport,
 } from "../lib/financeReports";
+
+const cardBase =
+  "fora rounded-2xl transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+
+const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
+  const base =
+    "w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 group barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md cursor-pointer";
+  if (tone === "orange") return `${base} text-[var(--gm-primary)] hover:border-[var(--gm-primary)] hover:text-white hover:bg-[var(--gm-primary)]`;
+  if (tone === "green") return `${base} text-emerald-400 hover:border-emerald-500 hover:text-white hover:bg-emerald-500`;
+  if (tone === "red") return `${base} text-red-400 hover:border-red-500 hover:text-white hover:bg-red-500`;
+  return `${base} text-slate-400 hover:border-white/30 hover:text-white hover:bg-white/10`;
+};
 
 // Recharts
 import {
@@ -357,7 +369,7 @@ export default function Financial() {
       title="Relatórios Financeiros"
       actions={
         <div className="flex flex-col xl:flex-row gap-3 w-full items-stretch xl:items-center mt-4">
-          <div className="flex items-center gm-btn fora rounded-xl p-1.5 w-full xl:w-auto justify-between xl:justify-start shadow-none border border-white/10 h-[42px] !cursor-default">
+          <div className="flex items-center fora rounded-2xl p-1.5 w-full xl:w-auto justify-between xl:justify-start h-[42px] border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md">
             <button 
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
               className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white flex items-center justify-center cursor-pointer"
@@ -365,7 +377,7 @@ export default function Financial() {
               <ChevronLeft size={16} />
             </button>
             <div className="px-3 flex items-center gap-2 font-bold text-sm min-w-[140px] justify-center text-white">
-              <Calendar size={14} />
+              <Calendar size={14} className="text-[var(--gm-primary)]" />
               <span className="capitalize">{selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
             </div>
             <button 
@@ -376,37 +388,37 @@ export default function Financial() {
             </button>
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="ml-1 px-3 py-1 text-[10px] uppercase font-bold bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors h-full flex items-center justify-center cursor-pointer shadow-none"
+              className="ml-1 px-3 py-1 text-[10px] uppercase font-bold bg-white/10 hover:bg-[var(--gm-primary)] text-white hover:text-white rounded-lg transition-all h-[28px] flex items-center justify-center cursor-pointer shadow-none"
             >
               Hoje
             </button>
           </div>
           
-          <div className="flex flex-row gap-2 w-full xl:w-auto justify-between xl:justify-start">
+          <div className="flex flex-row gap-2.5 w-full xl:w-auto justify-between xl:justify-start">
             <button
               onClick={() => handleShare(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }), transactions)}
-              className="gm-btn rounded-xl shadow-none justify-center h-10 w-10 p-0 flex-1 xl:flex-none border border-white/10"
+              className={listBtnClass("orange")}
               title="Compartilhar Relatório"
             >
               <Share2 size={18} />
             </button>
             <button 
               onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} 
-              className="gm-btn rounded-xl shadow-none justify-center h-10 w-10 p-0 flex-1 xl:flex-none border border-white/10" 
+              className={listBtnClass("orange")} 
               title="Gerar PDF"
             >
               <FileText size={18} />
             </button>
             <button 
               onClick={handleSave} 
-              className="gm-btn rounded-xl shadow-none justify-center h-10 w-10 p-0 flex-1 xl:flex-none border border-white/10" 
+              className={listBtnClass("orange")} 
               title="Fechar e Salvar Mês"
             >
               <Save size={18} />
             </button>
             <button 
               onClick={openHistory} 
-              className="gm-btn rounded-xl shadow-none justify-center h-10 w-10 p-0 flex-1 xl:flex-none border border-white/10" 
+              className={listBtnClass("orange")} 
               title="Histórico"
             >
               <History size={18} />
@@ -422,30 +434,75 @@ export default function Financial() {
           <div className="mb-2">
             <SectionDivider label="Resumo do mês" />
           </div>
-          <Grid cols={3} className="mb-8">
-            <div className="gm-card fora p-6 rounded-2xl border border-white/10 border-l-4 border-l-[var(--gm-accent)] shadow-none">
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Entradas</p>
-              <h2 className="text-3xl font-bold text-[var(--gm-accent)]">{CURRENCY_FORMATTER.format(resumo.entradas)}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-emerald-500/40`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                    Entradas
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1.5 tracking-tight">
+                    {CURRENCY_FORMATTER.format(resumo.entradas)}
+                  </div>
+                </div>
+                <div className="w-11 h-11 rounded-xl barra border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-none">
+                  <TrendingUp size={20} />
+                </div>
+              </div>
             </div>
-            <div className="gm-card fora p-6 rounded-2xl border border-white/10 border-l-4 border-l-red-500 shadow-none">
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Saídas</p>
-              <h2 className="text-3xl font-bold text-red-500">{CURRENCY_FORMATTER.format(resumo.saidas)}</h2>
+
+            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-red-500/40`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                    Saídas
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-red-400 mt-1.5 tracking-tight">
+                    {CURRENCY_FORMATTER.format(resumo.saidas)}
+                  </div>
+                </div>
+                <div className="w-11 h-11 rounded-xl barra border border-red-500/25 text-red-400 flex items-center justify-center shrink-0 shadow-none">
+                  <TrendingDown size={20} />
+                </div>
+              </div>
             </div>
-            <div className={`gm-card fora p-6 rounded-2xl border border-white/10 border-l-4 ${resumo.acumulado >= 0 ? "border-l-[var(--gm-accent)]" : "border-l-[var(--gm-primary)]"} shadow-none`}>
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Saldo Acumulado</p>
-              <h2 className={`text-3xl font-bold ${resumo.acumulado >= 0 ? "text-[var(--gm-accent)]" : "text-[var(--gm-primary)]"}`}>
-                {CURRENCY_FORMATTER.format(resumo.acumulado)}
-              </h2>
+
+            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                    Saldo Acumulado
+                  </span>
+                  <div className={`text-2xl sm:text-3xl font-extrabold mt-1.5 tracking-tight ${
+                    resumo.acumulado >= 0 ? "text-[color:var(--gm-primary)]" : "text-red-400"
+                  }`}>
+                    {CURRENCY_FORMATTER.format(resumo.acumulado)}
+                  </div>
+                </div>
+                <div className={`w-11 h-11 rounded-xl barra border ${
+                  resumo.acumulado >= 0 ? "border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)]" : "border-red-500/25 text-red-400"
+                } flex items-center justify-center shrink-0 shadow-none`}>
+                  <Wallet size={20} />
+                </div>
+              </div>
             </div>
-          </Grid>
+          </div>
 
           <div className="mb-4">
             <SectionDivider label="Gráficos" />
           </div>
-          <Grid cols={2} className="gap-8">
-            <div className="gm-card fora p-6 rounded-2xl border border-white/10 shadow-none">
-              <div className="text-base font-bold text-white mb-2">Fluxo Diário (Entradas x Saídas)</div>
-              <div className="mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase}`}>
+              <div className="flex items-start justify-between mb-1">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Fluxo Diário</span>
+                  <h3 className="text-base font-bold text-white mt-1">Entradas x Saídas</h3>
+                </div>
+                <div className="w-8 h-8 rounded-lg barra border border-white/15 text-slate-400 flex items-center justify-center shrink-0 shadow-none">
+                  <BarChart3 size={16} />
+                </div>
+              </div>
+              <div className="mt-2">
                 <ChartBox height={300}>
                   <SafeResponsive height={300}>
                     <BarChart data={rows}>
@@ -474,9 +531,17 @@ export default function Financial() {
               </div>
             </div>
 
-            <div className="gm-card fora p-6 rounded-2xl border border-white/10 shadow-none">
-              <div className="text-base font-bold text-white mb-2">Evolução do Saldo</div>
-              <div className="mt-4">
+            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase}`}>
+              <div className="flex items-start justify-between mb-1">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Evolução</span>
+                  <h3 className="text-base font-bold text-white mt-1">Saldo Acumulado</h3>
+                </div>
+                <div className="w-8 h-8 rounded-lg barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
+                  <TrendingUp size={16} />
+                </div>
+              </div>
+              <div className="mt-2">
                 <ChartBox height={300}>
                   <SafeResponsive height={300}>
                     <LineChart data={rows}>
@@ -502,105 +567,111 @@ export default function Financial() {
                 </ChartBox>
               </div>
             </div>
-          </Grid>
+          </div>
 
           {/* Detailed Report */}
           <div className="mt-8">
             <SectionDivider label="Extrato detalhado" />
             <div className="mt-4">
-            <div className="gm-card fora rounded-2xl border border-white/10 overflow-hidden shadow-none p-0">
-              <div className="barra p-5 border-b border-white/10">
-                <div className="gm-card-title">
-                  <h3 className="text-lg font-bold text-white">Relatório Detalhado</h3>
-                  <span className="text-xs text-slate-400">Movimentações de {selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                {transactions.length === 0 ? (
-                  <div className="text-center p-8 opacity-50">Sem movimentações no período.</div>
-                ) : (
-                  <div className="text-sm">
-                    <div className="grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3.5 border-b border-white/10 font-bold opacity-70 uppercase tracking-wider text-xs barra">
-                      <div>Data</div>
-                      <div>Descrição</div>
-                      <div className="text-right">Valor</div>
-                    </div>
-                    <div className="pb-12">
-                      {/* RECEITAS */}
-                      {transactions.filter(t => t.type === "receita").length > 0 && (
-                        <>
-                          <div className="px-4 py-2 bg-[var(--gm-accent)]/10 text-[var(--gm-accent)] text-[10px] font-bold uppercase tracking-widest border-y border-white/10">
-                            Ganhos / Receitas
-                          </div>
-                          {transactions.filter(t => t.type === "receita").map((t) => (
-                            <div
-                              key={t.id}
-                              className="grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3.5 border-b border-white/5 hover:bg-white/5 transition-colors items-center"
-                            >
-                              <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
-                              <div className="font-medium text-slate-100">{t.desc}</div>
-                              <div className="text-right font-bold text-[var(--gm-accent)]">
-                                + {CURRENCY_FORMATTER.format(t.amount)}
-                              </div>
-                            </div>
-                          ))}
-                        </>
-                      )}
-
-                      {/* DESPESAS */}
-                      {transactions.filter(t => t.type === "despesa").length > 0 && (
-                        <>
-                          <div className="px-4 py-2 bg-red-500/10 text-red-400 text-[10px] font-bold uppercase tracking-widest border-y border-white/10 mt-4">
-                            Despesas / Saídas
-                          </div>
-                          {transactions.filter(t => t.type === "despesa").map((t) => (
-                            <div
-                              key={t.id}
-                              className="grid grid-cols-[auto_1fr_auto] gap-4 px-4 py-3.5 border-b border-white/5 hover:bg-white/5 transition-colors items-center"
-                            >
-                              <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
-                              <div className="font-medium text-slate-100">{t.desc}</div>
-                              <div className="text-right font-bold text-red-400">
-                                - {CURRENCY_FORMATTER.format(t.amount)}
-                              </div>
-                            </div>
-                          ))}
-                        </>
-                      )}
-                    </div>
+              <div className={`overflow-hidden ${cardBase}`}>
+                <div className="p-5 border-b border-white/10 flex items-center justify-between barra">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Relatório Detalhado</h3>
+                    <span className="text-xs text-slate-400">Movimentações de {selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
                   </div>
-                )}
-              </div>
-
-              {/* ✅ Totais detalhados */}
-              <div className="mt-4 pt-4 border-t border-white/10 px-5 pb-5 barra">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="font-bold text-slate-300 text-sm">Total de Ganhos (Período)</span>
-                      <span className="text-lg font-extrabold text-[var(--gm-accent)]">
-                        {CURRENCY_FORMATTER.format(resumo.entradas)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="font-bold text-slate-300 text-sm">Total de Despesas (Período)</span>
-                      <span className="text-lg font-extrabold text-red-400">
-                        {CURRENCY_FORMATTER.format(resumo.saidas)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4 sm:min-w-[260px] bg-black/20 p-3 rounded-xl border border-white/5">
-                    <span className="font-bold text-slate-300 text-sm">Total Líquido (Período)</span>
-                    <span className={`text-xl font-extrabold ${resumo.acumulado >= 0 ? "text-[var(--gm-primary)]" : "text-[var(--gm-accent)]"}`}>
-                      {CURRENCY_FORMATTER.format(resumo.acumulado)}
-                    </span>
+                  <div className="px-3.5 py-1.5 rounded-full border border-[var(--gm-primary)]/25 text-[var(--gm-primary)] text-xs font-bold bg-[var(--gm-primary)]/10 flex items-center gap-1.5">
+                    <FileText size={14} />
+                    <span>{transactions.length} {transactions.length === 1 ? "registro" : "registros"}</span>
                   </div>
                 </div>
+
+                <div className="overflow-x-auto">
+                  {transactions.length === 0 ? (
+                    <div className="text-center p-8 opacity-50">Sem movimentações no período.</div>
+                  ) : (
+                    <div className="text-sm">
+                      <div className="grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/10 font-bold text-xs text-slate-400 uppercase tracking-wider barra bg-transparent">
+                        <div>Data</div>
+                        <div>Descrição</div>
+                        <div className="text-right">Valor</div>
+                      </div>
+                      <div className="pb-8">
+                        {/* RECEITAS */}
+                        {transactions.filter(t => t.type === "receita").length > 0 && (
+                          <>
+                            <div className="px-6 py-2.5 flex items-center gap-2 border-y border-white/10 bg-emerald-500/10 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+                              Ganhos / Receitas
+                            </div>
+                            {transactions.filter(t => t.type === "receita").map((t) => (
+                              <div
+                                key={t.id}
+                                className="grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/[0.04] transition-colors items-center"
+                              >
+                                <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
+                                <div className="font-medium text-slate-100">{t.desc}</div>
+                                <div className="text-right font-bold text-emerald-400">
+                                  + {CURRENCY_FORMATTER.format(t.amount)}
+                                </div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+
+                        {/* DESPESAS */}
+                        {transactions.filter(t => t.type === "despesa").length > 0 && (
+                          <>
+                            <div className="px-6 py-2.5 flex items-center gap-2 border-y border-white/10 bg-red-500/10 text-red-400 font-bold text-xs uppercase tracking-wider mt-4">
+                              <span className="w-2 h-2 rounded-full bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.8)]" />
+                              Despesas / Saídas
+                            </div>
+                            {transactions.filter(t => t.type === "despesa").map((t) => (
+                              <div
+                                key={t.id}
+                                className="grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/[0.04] transition-colors items-center"
+                              >
+                                <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
+                                <div className="font-medium text-slate-100">{t.desc}</div>
+                                <div className="text-right font-bold text-red-400">
+                                  - {CURRENCY_FORMATTER.format(t.amount)}
+                                </div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ✅ Totais detalhados */}
+                <div className="mt-4 pt-4 border-t border-white/10 px-6 pb-6 barra">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-bold text-slate-400 text-sm">Total de Ganhos:</span>
+                        <span className="text-base font-extrabold text-emerald-400">
+                          {CURRENCY_FORMATTER.format(resumo.entradas)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-bold text-slate-400 text-sm">Total de Despesas:</span>
+                        <span className="text-base font-extrabold text-red-400">
+                          {CURRENCY_FORMATTER.format(resumo.saidas)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 sm:min-w-[280px] barra p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                      <span className="font-bold text-slate-300 text-sm">Total Líquido:</span>
+                      <span className={`text-xl font-extrabold ${resumo.acumulado >= 0 ? "text-[var(--gm-primary)]" : "text-red-400"}`}>
+                        {CURRENCY_FORMATTER.format(resumo.acumulado)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
             </div>
           </div>
         </div>
@@ -609,10 +680,10 @@ export default function Financial() {
       {/* Modal Histórico */}
       {showHistory && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={() => setShowHistory(false)}>
-          <div className="gm-modal fora border border-white/12 rounded-2xl w-full max-w-2xl flex flex-col max-h-[90vh] shadow-none overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className={`gm-modal ${cardBase} rounded-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden`} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-white/10 barra">
               <h2 className="text-2xl font-extrabold text-white">Histórico de Relatórios</h2>
-              <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white">
+              <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white cursor-pointer">
                 <X size={20} />
               </button>
             </div>
@@ -627,7 +698,7 @@ export default function Financial() {
                   {historyReports.map((rep) => (
                     <div
                       key={rep.id}
-                      className="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-none"
+                      className={`p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${cardBase}`}
                     >
                       <div>
                         <h4 className="font-bold text-lg text-white">{rep.title}</h4>
@@ -636,9 +707,9 @@ export default function Financial() {
                           {new Date(rep.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                         </p>
                         <div className="flex gap-4 mt-2 text-sm font-medium">
-                          <span className="text-[var(--gm-accent)]">Entradas: {CURRENCY_FORMATTER.format(rep.totals?.entradas || 0)}</span>
+                          <span className="text-emerald-400">Entradas: {CURRENCY_FORMATTER.format(rep.totals?.entradas || 0)}</span>
                           <span className="text-red-400">Saídas: {CURRENCY_FORMATTER.format(rep.totals?.saidas || 0)}</span>
-                          <span className={rep.totals?.acumulado >= 0 ? "text-[var(--gm-primary)]" : "text-[var(--gm-accent)]"}>
+                          <span className={rep.totals?.acumulado >= 0 ? "text-[var(--gm-primary)]" : "text-emerald-400"}>
                             Saldo: {CURRENCY_FORMATTER.format(rep.totals?.acumulado || 0)}
                           </span>
                         </div>
@@ -647,32 +718,31 @@ export default function Financial() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleShare(rep.totals, rep.title, rep.items)}
-                          className="p-2.5 bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20 rounded-xl border border-[var(--gm-primary)]/20 transition-colors shadow-none"
+                          className={listBtnClass("orange")}
                           title="Compartilhar Relatório"
                         >
-                          <Share2 size={18} />
+                          <Share2 size={16} />
                         </button>
                         <button
                           onClick={() => handlePDF(rep.items, rep.title)}
-                          className="p-2.5 bg-[var(--gm-accent)]/10 text-[var(--gm-accent)] hover:bg-[var(--gm-accent)]/20 rounded-xl border border-[var(--gm-accent)]/20 transition-colors shadow-none"
+                          className={listBtnClass("orange")}
                           title="Abrir PDF"
                         >
-                          <Download size={18} />
+                          <Download size={16} />
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteReport(rep.id);
                           }}
-                          className={`p-2.5 rounded-xl transition-all flex items-center gap-2 shadow-none ${
-                            confirmDeleteId === rep.id 
-                              ? "bg-[var(--gm-primary)] text-white animate-pulse px-4" 
-                              : "bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20 border border-[var(--gm-primary)]/20"
-                          }`}
+                          className={confirmDeleteId === rep.id 
+                            ? "h-10 px-4 rounded-xl bg-red-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer animate-pulse"
+                            : listBtnClass("red")
+                          }
                           title={confirmDeleteId === rep.id ? "Clique novamente para confirmar" : "Excluir Relatório"}
                         >
-                          <Trash2 size={18} />
-                          {confirmDeleteId === rep.id && <span className="text-xs font-bold uppercase tracking-widest">Confirmar?</span>}
+                          <Trash2 size={16} />
+                          {confirmDeleteId === rep.id && <span>Confirmar?</span>}
                         </button>
                       </div>
                     </div>
@@ -683,13 +753,14 @@ export default function Financial() {
           </div>
         </div>
       )}
+
       {/* Modal de Compartilhamento */}
       {shareData && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={() => setShareData(null)}>
-          <div className="gm-modal fora border border-white/12 rounded-2xl w-full max-w-md overflow-hidden shadow-none" onClick={e => e.stopPropagation()}>
+          <div className={`gm-modal ${cardBase} rounded-2xl w-full max-w-md overflow-hidden`} onClick={e => e.stopPropagation()}>
             <div className="p-5 border-b border-white/10 flex justify-between items-center barra">
               <h3 className="text-xl font-extrabold text-white">Compartilhar Relatório</h3>
-              <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white">
+              <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white cursor-pointer">
                 <X size={20} />
               </button>
             </div>
@@ -699,14 +770,14 @@ export default function Financial() {
                   openWhatsapp("", shareData.message);
                   setShareData(null);
                 }}
-                className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40"
+                className={`w-full p-3.5 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-emerald-500/50`}
               >
                 <div className="shrink-0">
-                  <WhatsAppIcon size={22} className="text-[var(--gm-primary)]" />
+                  <WhatsAppIcon size={22} className="text-emerald-400" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-sm text-[var(--gm-primary)] leading-tight">WhatsApp</p>
-                  <p className="text-xs text-slate-300 leading-tight mt-0.5">Enviar diretamente para um contato</p>
+                  <p className="font-bold text-sm text-emerald-400 leading-tight">WhatsApp</p>
+                  <p className="text-xs text-slate-400 leading-tight mt-0.5">Enviar diretamente para um contato</p>
                 </div>
               </button>
 
@@ -715,14 +786,14 @@ export default function Financial() {
                   window.open(`mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                   setShareData(null);
                 }}
-                className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40"
+                className={`w-full p-3.5 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-[var(--gm-primary)]/50`}
               >
                 <div className="shrink-0">
                   <Mail size={22} className="text-[var(--gm-primary)]" />
                 </div>
                 <div className="text-left">
                   <p className="font-bold text-sm text-[var(--gm-primary)] leading-tight">E-mail</p>
-                  <p className="text-xs text-slate-300 leading-tight mt-0.5">Enviar por correio eletrônico</p>
+                  <p className="text-xs text-slate-400 leading-tight mt-0.5">Enviar por correio eletrônico</p>
                 </div>
               </button>
 
@@ -732,14 +803,14 @@ export default function Financial() {
                   pushToast({ type: "success", title: "Copiado", message: "Texto copiado para a área de transferência!" });
                   setShareData(null);
                 }}
-                className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40"
+                className={`w-full p-3.5 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-white/30`}
               >
                 <div className="shrink-0">
-                  <Copy size={22} className="text-[var(--gm-primary)]" />
+                  <Copy size={22} className="text-slate-300" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-sm text-[var(--gm-primary)] leading-tight">Copiar Texto</p>
-                  <p className="text-xs text-slate-300 leading-tight mt-0.5">Copiar para a área de transferência</p>
+                  <p className="font-bold text-sm text-white leading-tight">Copiar Texto</p>
+                  <p className="text-xs text-slate-400 leading-tight mt-0.5">Copiar para a área de transferência</p>
                 </div>
               </button>
 
@@ -756,14 +827,14 @@ export default function Financial() {
                       console.warn("Share failed", e);
                     }
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40"
+                  className={`w-full p-3.5 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-[var(--gm-primary)]/50`}
                 >
                   <div className="shrink-0">
                     <Share2 size={22} className="text-[var(--gm-primary)]" />
                   </div>
                   <div className="text-left">
                     <p className="font-bold text-[var(--gm-primary)] leading-tight">Mais Opções</p>
-                    <p className="text-[10px] text-white/70 leading-tight">Menu de compartilhamento do sistema</p>
+                    <p className="text-[10px] text-slate-400 leading-tight">Menu de compartilhamento do sistema</p>
                   </div>
                 </button>
               )}

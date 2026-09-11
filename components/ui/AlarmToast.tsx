@@ -212,15 +212,29 @@ const AlarmToast = () => {
                 className="flex-1 h-9 rounded-xl bg-[var(--gm-primary)]/90 hover:bg-[var(--gm-primary)] hover:brightness-110 active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center border border-white/30 backdrop-blur-xl shadow-[0_4px_16px_rgba(var(--gm-primary-rgb),0.35)] cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
+                  const targetId = alarm.budgetId;
+                  const targetType = alarm.type;
                   let targetPath = '';
-                  if (alarm.type === 'NOTE') {
-                     targetPath = `/notes?id=${alarm.budgetId}`;
-                  } else if (alarm.type === 'EXPENSE') {
-                     targetPath = `/expenses?id=${alarm.budgetId}`;
+                  if (targetType === 'NOTE') {
+                     targetPath = `/notes?id=${targetId}`;
+                  } else if (targetType === 'EXPENSE') {
+                     targetPath = `/expenses?id=${targetId}`;
                   } else {
-                     targetPath = `/budgets?id=${alarm.budgetId}`;
+                     targetPath = `/budgets?id=${targetId}`;
                   }
-                  navigate(targetPath);
+
+                  // Grava para detecção mesmo em caso de transição de rota ou recarregamento
+                  try {
+                    sessionStorage.setItem('gm_signal_item_id', targetId);
+                    sessionStorage.setItem('gm_signal_item_type', targetType);
+                  } catch (err) {}
+
+                  // Dispara evento imediato para componentes já montados na tela
+                  window.dispatchEvent(new CustomEvent('gm-signal-item', {
+                    detail: { id: targetId, type: targetType }
+                  }));
+
+                  navigate(targetPath, { state: { signalId: targetId, timestamp: Date.now() } });
                   dismiss(alarm.id);
                 }}
                 type="button"

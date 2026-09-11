@@ -7,7 +7,7 @@ import { Card } from "../components/ui/Card";
 import NewClientPage from "./clients/NewClientPage";
 import EditClientPage from "./clients/EditClientPage";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
-import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User, Users, Zap, TrendingUp, BarChart3 } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, ShieldAlert, Mail, RotateCcw, ChevronDown, ChevronUp, User, Users, Zap, TrendingUp, BarChart3, Search, X } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { useAuth } from "../store/AuthContext";
 import { openWhatsapp } from "../services/whatsApp";
@@ -555,44 +555,53 @@ export default function Clients() {
           </div>
         </div>
 
-        <div className="mb-3">
+        {/* Tabs + Busca Padrão Orçamentos */}
+        <div className="mb-6 space-y-4">
           <SectionDivider label="Filtros" />
-        </div>
-        <div className={`p-4 ${cardBase} mb-4`}>
-          <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-            <div className="flex-1">
-              <input
-                className={inputBase}
-                placeholder="Pesquisar por nome, telefone ou e-mail"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
-            </div>
+          
+          {/* Tabs Ativos / Lixeira - Padrão Cápsulas Orçamentos */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {[
+              { key: "ATIVOS", label: "ATIVOS" },
+              { key: "LIXEIRA", label: "LIXEIRA" },
+            ].map((item) => {
+              const active = tab === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setTab(item.key as any)}
+                  className={`gm-filter-tab fora snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border cursor-pointer ${
+                    active
+                      ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none"
+                      : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
 
-            <div className="flex gap-2">
-              <button 
-                type="button" 
-                className={`flex-1 sm:flex-none h-11 px-6 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border cursor-pointer ${
-                  tab === "ATIVOS" 
-                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] backdrop-blur-md shadow-none" 
-                    : "barra border-white/10 text-slate-300 hover:text-[var(--gm-primary)] hover:border-[var(--gm-primary)]/40 bg-white/[0.02] backdrop-blur-md shadow-none"
-                }`} 
-                onClick={() => setTab("ATIVOS")}
+          {/* Busca com Visual Padrão Glass Desfocado Apple - Idêntica a Orçamentos */}
+          <div className="gm-search-apple-glass">
+            <Search className="gm-search-icon" size={18} />
+            <input
+              type="text"
+              placeholder="Buscar por nome, telefone ou e-mail..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            {q && (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="gm-search-clear gm-search-apple-glass-clear"
+                title="Limpar busca"
               >
-                Ativos
+                <X size={14} />
               </button>
-              <button 
-                type="button" 
-                className={`flex-1 sm:flex-none h-11 px-6 rounded-xl text-xs font-black tracking-widest uppercase transition-all duration-300 whitespace-nowrap border cursor-pointer ${
-                  tab === "LIXEIRA"
-                    ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)] text-[var(--gm-primary)] backdrop-blur-md shadow-none"
-                    : "barra border-white/10 text-slate-300 hover:text-[var(--gm-primary)] hover:border-[var(--gm-primary)]/40 bg-white/[0.02] backdrop-blur-md shadow-none"
-                }`}
-                onClick={() => setTab("LIXEIRA")}
-              >
-                Lixeira
-              </button>
-            </div>
+            )}
           </div>
         </div>
 
@@ -611,7 +620,14 @@ export default function Clients() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className={`p-10 text-center opacity-70 border border-dashed border-white/15 ${cardBase}`}>Nenhum cliente encontrado.</div>
+          <div className="w-full fora rounded-2xl border border-white/10 p-10 sm:p-14 md:p-16 min-h-[220px] sm:min-h-[260px] flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02] backdrop-blur-md shadow-none select-none">
+            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--gm-primary)] shadow-none">
+              <Users size={22} />
+            </div>
+            <p className="text-sm sm:text-base text-slate-200 font-semibold leading-relaxed">
+              Nenhum cliente encontrado.
+            </p>
+          </div>
         ) : (
           <div>
             <VirtualizedClientList

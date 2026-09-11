@@ -10,6 +10,7 @@ import { openWhatsapp } from '../services/whatsApp';
 import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
+import { SectionDivider } from "../components/ui/SectionDivider";
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from '@google/genai';
 
@@ -1019,6 +1020,7 @@ const Market = () => {
         }
     >
        <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
+       <SectionDivider label="Resumo Financeiro" />
        <Grid cols={1}>
            <div className="gm-card fora rounded-2xl border border-white/10 p-0 overflow-hidden shadow-none">
               <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -1051,6 +1053,8 @@ const Market = () => {
               </div>
            </div>
        </Grid>
+
+       <SectionDivider label={showHistory ? "Histórico de Gastos" : "Lista de Compras"} />
 
        {showHistory ? (
            <Grid cols={1}>

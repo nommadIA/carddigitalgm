@@ -1139,6 +1139,720 @@ html:not([data-theme="light"]):not(.gm-light) .gm-card:hover {
   min-height: 220px; 
 }
 
+/* Budget row: modo lista em formato de barra compacta, com melhor distribuição e ergonomia no smartphone */
+.gm-budget-row {
+  display: block !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+}
+@media (min-width: 1024px) {
+  .gm-budget-row {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+}
+
+/* Botões de ação em formato de barra compacta na lista (sem padding de botão de texto, tamanho estritamente quadrado e alinhados) */
+.gm-budget-row .gm-budget-action-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 0 0 32px !important;
+  box-sizing: border-box !important;
+  border-radius: 10px !important;
+}
+
+/* Botões de ação dos cards de orçamento no modo Grade: distribuídos uniformemente em 6 colunas, sem cortes no smartphone */
+.gm-budget-card .gm-budget-action-btn,
+.gm-budget-card .gm-grid-action-btn {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border-radius: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* =========================================================
+   6 BOTÕES DE AÇÃO DO MODO GRADE (ORÇAMENTOS)
+   - Em repouso: SOMENTE ÍCONES na COR LARANJA do aplicativo
+   - Ao passar o mouse: Ícone sai e entra o NOME com cor exclusiva
+   - Ao retirar o mouse: Ícone laranja volta imediatamente
+========================================================= */
+.gm-grid-action-btn {
+  height: 42px !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+[data-theme="light"] .gm-grid-action-btn,
+.gm-light .gm-grid-action-btn {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 1. EM REPOUSO: TODOS OS ÍCONES NA COR LARANJA */
+.gm-grid-action-btn .gm-grid-icon-wrap {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: opacity 0.15s ease, transform 0.15s ease !important;
+}
+
+.gm-grid-action-btn .gm-grid-icon-wrap svg,
+.gm-grid-action-btn .gm-grid-icon-wrap svg.lucide {
+  color: var(--gm-primary, #FE540B) !important;
+  stroke: var(--gm-primary, #FE540B) !important;
+}
+
+.gm-grid-action-btn .gm-grid-icon-wrap .whatsapp-icon,
+.gm-grid-action-btn .gm-grid-icon-wrap svg.whatsapp-icon,
+.gm-grid-action-btn .gm-grid-icon-wrap svg[data-icon="whatsapp"],
+.gm-grid-action-btn .gm-grid-icon-wrap svg.whatsapp-icon path,
+.gm-grid-action-btn .gm-grid-icon-wrap svg[data-icon="whatsapp"] path {
+  color: var(--gm-primary, #FE540B) !important;
+  fill: var(--gm-primary, #FE540B) !important;
+  stroke: none !important;
+}
+
+/* O NOME FICA ESCONDIDO EM REPOUSO */
+.gm-grid-action-btn .gm-grid-label-wrap {
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  width: 100% !important;
+  padding: 0 1px !important;
+  font-size: 8.5px !important;
+  animation: gmFadeIn 0.15s ease-out forwards;
+}
+
+@media (min-width: 640px) {
+  .gm-grid-action-btn .gm-grid-label-wrap {
+    font-size: 9.5px !important;
+  }
+}
+
+/* 2. AO PASSAR O MOUSE: TROCA DO ÍCONE PELO NOME */
+.gm-grid-action-btn:hover .gm-grid-icon-wrap {
+  display: none !important;
+}
+
+.gm-grid-action-btn:hover .gm-grid-label-wrap {
+  display: flex !important;
+}
+
+/* 3. CORES EXCLUSIVAS E DIFERENCIADAS PARA CADA NOME NO HOVER */
+
+/* 1. MODELO: Laranja vívido (text-orange-400 / #fb923c) */
+.gm-grid-action-btn.btn-modelo:hover,
+.gm-grid-action-btn.btn-modelo:active {
+  background-color: rgba(251, 146, 60, 0.16) !important;
+  background: rgba(251, 146, 60, 0.16) !important;
+  border-color: rgba(251, 146, 60, 0.6) !important;
+  box-shadow: 0 0 14px rgba(251, 146, 60, 0.25) !important;
+}
+.gm-grid-action-btn.btn-modelo .gm-grid-label-wrap,
+.gm-grid-action-btn.btn-modelo:hover .gm-grid-label-wrap {
+  color: #fb923c !important;
+}
+
+/* 2. EDITAR: Âmbar / Amarelo ouro (text-amber-400 / #fbbf24) */
+.gm-grid-action-btn.btn-editar:hover,
+.gm-grid-action-btn.btn-editar:active {
+  background-color: rgba(251, 191, 36, 0.16) !important;
+  background: rgba(251, 191, 36, 0.16) !important;
+  border-color: rgba(251, 191, 36, 0.6) !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.25) !important;
+}
+.gm-grid-action-btn.btn-editar .gm-grid-label-wrap,
+.gm-grid-action-btn.btn-editar:hover .gm-grid-label-wrap {
+  color: #fbbf24 !important;
+}
+
+/* 3. WHATSAPP: Verde esmeralda (text-emerald-400 / #34d399) */
+.gm-grid-action-btn.btn-whatsapp:hover,
+.gm-grid-action-btn.btn-whatsapp:active {
+  background-color: rgba(52, 211, 153, 0.16) !important;
+  background: rgba(52, 211, 153, 0.16) !important;
+  border-color: rgba(52, 211, 153, 0.6) !important;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.25) !important;
+}
+.gm-grid-action-btn.btn-whatsapp .gm-grid-label-wrap,
+.gm-grid-action-btn.btn-whatsapp:hover .gm-grid-label-wrap {
+  color: #34d399 !important;
+}
+
+/* 4. BAIXAR: Azul celeste (text-sky-400 / #38bdf8) */
+.gm-grid-action-btn.btn-baixar:hover,
+.gm-grid-action-btn.btn-baixar:active {
+  background-color: rgba(56, 189, 248, 0.16) !important;
+  background: rgba(56, 189, 248, 0.16) !important;
+  border-color: rgba(56, 189, 248, 0.6) !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.25) !important;
+}
+.gm-grid-action-btn.btn-baixar .gm-grid-label-wrap,
+.gm-grid-action-btn.btn-baixar:hover .gm-grid-label-wrap {
+  color: #38bdf8 !important;
+}
+
+/* 5. PROGRAMAR: Roxo / Violeta neon (text-purple-400 / #c084fc) */
+.gm-grid-action-btn.btn-programar:hover,
+.gm-grid-action-btn.btn-programar:active {
+  background-color: rgba(192, 132, 252, 0.16) !important;
+  background: rgba(192, 132, 252, 0.16) !important;
+  border-color: rgba(192, 132, 252, 0.6) !important;
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.25) !important;
+}
+.gm-grid-action-btn.btn-programar .gm-grid-label-wrap,
+.gm-grid-action-btn.btn-programar:hover .gm-grid-label-wrap {
+  color: #c084fc !important;
+}
+
+/* 6. LIXEIRA: Vermelho coral (text-red-400 / #f87171) */
+.gm-grid-action-btn.btn-lixeira:hover,
+.gm-grid-action-btn.btn-lixeira:active {
+  background-color: rgba(248, 113, 113, 0.16) !important;
+  background: rgba(248, 113, 113, 0.16) !important;
+  border-color: rgba(248, 113, 113, 0.6) !important;
+  box-shadow: 0 0 14px rgba(248, 113, 113, 0.25) !important;
+}
+.gm-grid-action-btn.btn-lixeira .gm-grid-label-wrap,
+.gm-grid-action-btn.btn-lixeira:hover .gm-grid-label-wrap {
+  color: #f87171 !important;
+}
+
+/* Ícone de Pinagem das Notas: sempre no canto superior direito, circular */
+.gm-note-pin-btn {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 9999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 20 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Quando FIXADO: cor sólida laranja predefinida no app com ícone branco */
+.gm-note-pin-btn.pinned,
+.gm-note-modal-pin-btn.pinned {
+  background-color: var(--gm-primary, #FE540B) !important;
+  background: var(--gm-primary, #FE540B) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 2px 10px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.45) !important;
+  color: #ffffff !important;
+}
+
+.gm-note-pin-btn.pinned svg,
+.gm-note-pin-btn.pinned svg path,
+.gm-note-modal-pin-btn.pinned svg,
+.gm-note-modal-pin-btn.pinned svg path {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Quando NÃO FIXADO: neutro/sem cor, colorido SOMENTE ao fixar */
+.gm-note-pin-btn:not(.pinned),
+.gm-note-modal-pin-btn:not(.pinned) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: none !important;
+}
+
+.gm-note-pin-btn:not(.pinned) svg,
+.gm-note-pin-btn:not(.pinned) svg path,
+.gm-note-modal-pin-btn:not(.pinned) svg,
+.gm-note-modal-pin-btn:not(.pinned) svg path {
+  color: rgba(255, 255, 255, 0.5) !important;
+  stroke: rgba(255, 255, 255, 0.5) !important;
+  fill: none !important;
+}
+
+.gm-note-pin-btn:not(.pinned):hover,
+.gm-note-modal-pin-btn:not(.pinned):hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.gm-note-pin-btn:not(.pinned):hover svg,
+.gm-note-pin-btn:not(.pinned):hover svg path,
+.gm-note-modal-pin-btn:not(.pinned):hover svg,
+.gm-note-modal-pin-btn:not(.pinned):hover svg path {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Modo Claro: estado neutro */
+[data-theme="light"] .gm-note-pin-btn:not(.pinned),
+.gm-light .gm-note-pin-btn:not(.pinned),
+[data-theme="light"] .gm-note-modal-pin-btn:not(.pinned),
+.gm-light .gm-note-modal-pin-btn:not(.pinned) {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  color: #64748b !important;
+}
+
+[data-theme="light"] .gm-note-pin-btn:not(.pinned) svg,
+.gm-light .gm-note-pin-btn:not(.pinned) svg,
+[data-theme="light"] .gm-note-pin-btn:not(.pinned) svg path,
+.gm-light .gm-note-pin-btn:not(.pinned) svg path,
+[data-theme="light"] .gm-note-modal-pin-btn:not(.pinned) svg,
+.gm-light .gm-note-modal-pin-btn:not(.pinned) svg,
+[data-theme="light"] .gm-note-modal-pin-btn:not(.pinned) svg path,
+.gm-light .gm-note-modal-pin-btn:not(.pinned) svg path {
+  color: #64748b !important;
+  stroke: #64748b !important;
+  fill: none !important;
+}
+
+[data-theme="light"] .gm-note-pin-btn:not(.pinned):hover,
+.gm-light .gm-note-pin-btn:not(.pinned):hover,
+[data-theme="light"] .gm-note-modal-pin-btn:not(.pinned):hover,
+.gm-light .gm-note-modal-pin-btn:not(.pinned):hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .gm-note-pin-btn:not(.pinned):hover svg,
+.gm-light .gm-note-pin-btn:not(.pinned):hover svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+/* Cápsulas de status no modo lista: todas visíveis sem quebra ou barra de rolagem */
+.gm-budget-row .gm-status-capsule {
+  white-space: nowrap !important;
+  max-width: 100% !important;
+}
+
+/* Efeito Glass Desfocado para Campo de Busca e Cápsulas dos Orçamentos */
+.gm-search-glass {
+  background: rgba(18, 18, 22, 0.52) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
+}
+.gm-search-glass:hover {
+  background: rgba(24, 24, 30, 0.62) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+.gm-search-glass:focus-within {
+  background: rgba(20, 20, 26, 0.72) !important;
+  border-color: var(--gm-primary, #FF6900) !important;
+  box-shadow: 0 0 24px rgba(246, 90, 26, 0.35) !important;
+}
+[data-theme="light"] .gm-search-glass,
+.gm-light .gm-search-glass {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+/* =========================================================
+   BARRA DE BUSCA COM VISUAL PADRÃO GLASS DESFOCADO APPLE
+   (Estilo Spotlight / iOS Liquid Glass Frosted)
+========================================================= */
+.gm-search-apple-glass {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 48px !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  overflow: hidden !important;
+}
+
+.gm-search-apple-glass:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 
+    0 12px 36px 0 rgba(0, 0, 0, 0.35),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.28) !important;
+}
+
+.gm-search-apple-glass:focus-within {
+  background: rgba(255, 255, 255, 0.11) !important;
+  border-color: rgba(255, 255, 255, 0.38) !important;
+  box-shadow: 
+    0 14px 40px 0 rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.25),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme="light"] .gm-search-apple-glass,
+.gm-light .gm-search-apple-glass {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.09) !important;
+  box-shadow: 
+    0 8px 24px 0 rgba(0, 0, 0, 0.06),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="light"] .gm-search-apple-glass:hover,
+.gm-light .gm-search-apple-glass:hover {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(0, 0, 0, 0.16) !important;
+}
+
+[data-theme="light"] .gm-search-apple-glass:focus-within,
+.gm-light .gm-search-apple-glass:focus-within {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(0, 0, 0, 0.22) !important;
+  box-shadow: 
+    0 12px 28px 0 rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* O input interno NUNCA herda bordas, fundos ou estilos genéricos de input */
+.gm-search-apple-glass input,
+.gm-search-apple-glass input[type="text"],
+[data-theme="dark"] .gm-search-apple-glass input,
+.gm-dark .gm-search-apple-glass input,
+[data-theme="light"] .gm-search-apple-glass input,
+.gm-light .gm-search-apple-glass input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  height: 100% !important;
+  min-height: 48px !important;
+  width: 100% !important;
+  padding-left: 48px !important;
+  padding-right: 46px !important;
+  margin: 0 !important;
+}
+
+[data-theme="light"] .gm-search-apple-glass input,
+.gm-light .gm-search-apple-glass input {
+  color: #18181b !important;
+}
+
+.gm-search-apple-glass input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-weight: 450 !important;
+}
+
+[data-theme="light"] .gm-search-apple-glass input::placeholder,
+.gm-light .gm-search-apple-glass input::placeholder {
+  color: rgba(0, 0, 0, 0.42) !important;
+}
+
+.gm-search-apple-glass .gm-search-icon {
+  position: absolute !important;
+  left: 16px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  pointer-events: none !important;
+  transition: color 0.2s ease, transform 0.2s ease !important;
+}
+
+.gm-search-apple-glass:focus-within .gm-search-icon {
+  color: rgba(255, 255, 255, 0.95) !important;
+  transform: translateY(-50%) scale(1.05) !important;
+}
+
+[data-theme="light"] .gm-search-apple-glass .gm-search-icon {
+  color: rgba(0, 0, 0, 0.42) !important;
+}
+
+[data-theme="light"] .gm-search-apple-glass:focus-within .gm-search-icon {
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Botão de limpar busca estilo Apple iOS */
+.gm-search-apple-glass .gm-search-clear,
+button.gm-search-apple-glass-clear {
+  position: absolute !important;
+  right: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: all 0.15s ease !important;
+}
+
+.gm-search-apple-glass .gm-search-clear:hover,
+button.gm-search-apple-glass-clear:hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+  background-color: rgba(255, 255, 255, 0.24) !important;
+  color: #ffffff !important;
+  transform: translateY(-50%) scale(1.08) !important;
+}
+
+[data-theme="light"] .gm-search-apple-glass .gm-search-clear,
+[data-theme="light"] button.gm-search-apple-glass-clear {
+  background: rgba(0, 0, 0, 0.08) !important;
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="light"] .gm-search-apple-glass .gm-search-clear:hover,
+[data-theme="light"] button.gm-search-apple-glass-clear:hover {
+  background: rgba(0, 0, 0, 0.16) !important;
+  background-color: rgba(0, 0, 0, 0.16) !important;
+  color: #000000 !important;
+}
+
+/* =========================================================
+   CÁPSULA DE STATUS COM PADRÃO APPLE GLASS DESFOCADO VIDRO
+   (Estilo Frosted Liquid Glass com desfoque e reflexo superior)
+========================================================= */
+.gm-status-apple-glass {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 
+    0 4px 16px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+}
+
+.gm-status-apple-glass:hover {
+  background: var(--gm-primary, #FF6900) !important;
+  border-color: var(--gm-primary, #FF6900) !important;
+  box-shadow: 
+    0 6px 22px 0 rgba(var(--gm-primary-rgb, 246, 90, 26), 0.55),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+.gm-status-apple-glass:hover .gm-status-text {
+  color: #ffffff !important;
+}
+
+.gm-status-apple-glass:hover svg {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.gm-status-apple-glass:hover .gm-status-dot {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 8px #ffffff !important;
+}
+
+.gm-status-apple-glass:active {
+  transform: scale(0.97) !important;
+}
+
+[data-theme="light"] .gm-status-apple-glass,
+.gm-light .gm-status-apple-glass {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 
+    0 4px 14px 0 rgba(0, 0, 0, 0.06),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="light"] .gm-status-apple-glass:hover,
+.gm-light .gm-status-apple-glass:hover {
+  background: var(--gm-primary, #FF6900) !important;
+  border-color: var(--gm-primary, #FF6900) !important;
+  box-shadow: 
+    0 6px 20px 0 rgba(var(--gm-primary-rgb, 246, 90, 26), 0.35),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-theme="light"] .gm-status-apple-glass:hover .gm-status-text,
+.gm-light .gm-status-apple-glass:hover .gm-status-text {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .gm-status-apple-glass:hover svg,
+.gm-light .gm-status-apple-glass:hover svg {
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .gm-status-apple-glass:hover .gm-status-dot,
+.gm-light .gm-status-apple-glass:hover .gm-status-dot {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 8px #ffffff !important;
+}
+
+[data-theme="light"] .gm-status-apple-glass .gm-status-text,
+.gm-light .gm-status-apple-glass .gm-status-text {
+  color: #18181b !important;
+}
+
+[data-theme="light"] .gm-status-apple-glass svg,
+.gm-light .gm-status-apple-glass svg {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Botões Redondos com Padrão Apple Glass */
+.gm-action-apple-glass {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border-radius: 9999px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 
+    0 4px 16px 0 rgba(0, 0, 0, 0.2),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.28) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+}
+
+.gm-action-apple-glass:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  transform: scale(1.08) !important;
+}
+
+.gm-action-apple-glass:active {
+  transform: scale(0.94) !important;
+}
+
+[data-theme="light"] .gm-action-apple-glass,
+.gm-light .gm-action-apple-glass {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 
+    0 4px 12px 0 rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* =========================================================
+   DIVISOR DE SESSÕES: NOME E LINHA COM EFEITO GLASS BRANCO (SEM SOMBRAS)
+========================================================= */
+.gm-section-divider {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+  width: 100% !important;
+}
+
+.gm-section-title {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #ffffff !important;
+  opacity: 0.95 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  user-select: none !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+}
+
+.gm-section-line {
+  height: 1.5px !important;
+  flex: 1 !important;
+  border-radius: 9999px !important;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.18) 50%, rgba(255, 255, 255, 0.04) 100%) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  border: none !important;
+}
+
+/* Modo Claro / Light Theme */
+[data-theme="light"] .gm-section-title,
+.gm-light .gm-section-title {
+  color: #0f172a !important;
+  opacity: 0.85 !important;
+  text-shadow: none !important;
+}
+
+[data-theme="light"] .gm-section-line,
+.gm-light .gm-section-line {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
 /* Badge dos tabs */
 .gm-tab-badge{
   margin-left: 8px;
@@ -4550,7 +5264,190 @@ body {
 
 /* =========================================================
    Glassmorphism Aurora & Fluid Light for Active Budgets & Notes
+   Sinalizador de Notificação: Névoa/Fumaça Difusa (Sem Barra) & Sino Flutuante
    ========================================================= */
+.gm-signal-bottom-container {
+  position: relative !important;
+  border: 1.5px solid var(--gm-primary, #FE540B) !important;
+  box-shadow: 
+    0 0 0 1px rgba(254, 84, 11, 0.4),
+    0 0 24px rgba(254, 84, 11, 0.55),
+    0 0 60px rgba(254, 84, 11, 0.22),
+    0 12px 36px rgba(0, 0, 0, 0.7),
+    inset 0 0 18px rgba(254, 84, 11, 0.16) !important;
+  animation: gm-signal-card-entry 0.55s cubic-bezier(0.16, 1, 0.3, 1), gm-signal-card-pulse 2.4s ease-in-out infinite 0.55s !important;
+  z-index: 25 !important;
+}
+
+@keyframes gm-signal-card-entry {
+  0% {
+    transform: scale(0.985);
+    box-shadow: 
+      0 0 0 2px rgba(254, 84, 11, 0.8),
+      0 0 45px rgba(254, 84, 11, 0.85),
+      0 0 80px rgba(254, 84, 11, 0.45),
+      0 16px 40px rgba(0, 0, 0, 0.8),
+      inset 0 0 28px rgba(254, 84, 11, 0.3);
+  }
+  50% {
+    transform: scale(1.012);
+    box-shadow: 
+      0 0 0 2px rgba(254, 84, 11, 0.95),
+      0 0 50px rgba(254, 84, 11, 0.9),
+      0 0 90px rgba(254, 84, 11, 0.5),
+      0 20px 48px rgba(0, 0, 0, 0.85),
+      inset 0 0 32px rgba(254, 84, 11, 0.35);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 0 1px rgba(254, 84, 11, 0.4),
+      0 0 24px rgba(254, 84, 11, 0.55),
+      0 0 60px rgba(254, 84, 11, 0.22),
+      0 12px 36px rgba(0, 0, 0, 0.7),
+      inset 0 0 18px rgba(254, 84, 11, 0.16);
+  }
+}
+
+@keyframes gm-signal-card-pulse {
+  0%, 100% {
+    border-color: rgba(254, 84, 11, 0.75);
+    box-shadow: 
+      0 0 0 1px rgba(254, 84, 11, 0.35),
+      0 0 20px rgba(254, 84, 11, 0.45),
+      0 0 45px rgba(254, 84, 11, 0.18),
+      0 10px 30px rgba(0, 0, 0, 0.65),
+      inset 0 0 14px rgba(254, 84, 11, 0.12);
+  }
+  50% {
+    border-color: rgba(254, 84, 11, 1);
+    box-shadow: 
+      0 0 0 1.5px rgba(254, 84, 11, 0.85),
+      0 0 38px rgba(254, 84, 11, 0.8),
+      0 0 70px rgba(254, 84, 11, 0.38),
+      0 14px 40px rgba(0, 0, 0, 0.75),
+      inset 0 0 24px rgba(254, 84, 11, 0.25);
+  }
+}
+
+/* =========================================================
+   Sinalizador de Notificação: Círculo Grande Expansivo (Escala 0 a 100)
+   Inicia em escala zerada, cresce até 100 cobrindo o modal todo e finaliza zerado em loop
+   ========================================================= */
+.gm-circle-pulse-container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+  z-index: 26;
+}
+
+.gm-big-circle-wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(180%, 640px);
+  height: max(180%, 640px);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+/* Onda Primária do Círculo Grande */
+.gm-big-circle-wave-1 {
+  border: 3px solid rgba(254, 84, 11, 0.95);
+  background: radial-gradient(
+    circle at center,
+    rgba(254, 84, 11, 0.45) 0%,
+    rgba(254, 84, 11, 0.26) 35%,
+    rgba(254, 84, 11, 0.1) 65%,
+    rgba(254, 84, 11, 0.02) 85%,
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 35px rgba(254, 84, 11, 0.95),
+    0 0 75px rgba(254, 84, 11, 0.5),
+    inset 0 0 35px rgba(254, 84, 11, 0.35);
+  animation: gm-big-circle-expand 2.4s cubic-bezier(0.16, 0.84, 0.32, 1) infinite;
+}
+
+/* Onda Secundária do Círculo Grande (Eco Suave em Descompasso) */
+.gm-big-circle-wave-2 {
+  border: 2px solid rgba(255, 185, 60, 0.85);
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 175, 35, 0.3) 0%,
+    rgba(254, 84, 11, 0.14) 45%,
+    transparent 75%
+  );
+  box-shadow: 
+    0 0 25px rgba(254, 84, 11, 0.75),
+    inset 0 0 25px rgba(254, 84, 11, 0.25);
+  animation: gm-big-circle-expand 2.4s cubic-bezier(0.16, 0.84, 0.32, 1) infinite 1.1s;
+}
+
+/* Núcleo Central de Pulsação de Luz */
+.gm-big-circle-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at center,
+    rgba(254, 84, 11, 0.95) 0%,
+    rgba(254, 84, 11, 0.65) 45%,
+    rgba(254, 84, 11, 0.15) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 25px rgba(254, 84, 11, 0.95);
+  animation: gm-big-circle-core-pulse 2.4s ease-in-out infinite;
+  will-change: transform, opacity;
+  z-index: 29;
+}
+
+@keyframes gm-big-circle-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0.85;
+  }
+  88% {
+    opacity: 0.25;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes gm-big-circle-core-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0.55;
+  }
+  25%, 75% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+  }
+}
+
 .gm-highlighted-budget-glass,
 .gm-highlighted-row-glass,
 .gm-highlighted-orange-sweep {
@@ -6593,9 +7490,9 @@ a.btn,
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):hover,
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):active,
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):focus-visible,
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):hover,
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):active,
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):focus-visible,
 .btn-action-edit:hover,
 .btn-action-edit:active,
 .btn-action-neutral:hover,
@@ -6604,8 +7501,8 @@ button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):n
 .btn-action-icon:active,
 .gm-btn-icon:hover,
 .gm-btn-icon:active,
-.gm-budget-action-btn:hover,
-.gm-budget-action-btn:active {
+.gm-budget-action-btn:not(.gm-grid-action-btn):hover,
+.gm-budget-action-btn:not(.gm-grid-action-btn):active {
   background-color: var(--gm-primary, #FE540B) !important;
   background: linear-gradient(135deg, var(--gm-accent, var(--gm-primary, #FE540B)) 0%, var(--gm-primary, #FE540B) 100%) !important;
   color: #FFFFFF !important;
@@ -6642,8 +7539,8 @@ button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):n
   background-color: var(--gm-primary-hover, var(--gm-accent, #FF7A38)) !important;
 }
 
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .btn-action-edit:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .btn-action-edit:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .btn-action-neutral:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
@@ -6652,7 +7549,7 @@ button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):n
 .btn-action-icon:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .gm-btn-icon:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .gm-btn-icon:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.gm-budget-action-btn:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]) {
+.gm-budget-action-btn:not(.gm-grid-action-btn):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]) {
   color: #FFFFFF !important;
   stroke: #FFFFFF !important;
   fill: none;
@@ -6720,11 +7617,18 @@ svg:not(.whatsapp-icon):not([data-icon="whatsapp"]) {
 }
 
 .note-action-icon,
-.note-actions button {
+.note-actions button,
+.gm-note-card .note-actions button,
+.gm-note-card:hover .note-actions button,
+[data-theme="light"] .note-actions button,
+.gm-light .note-actions button {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
+  border-width: 0 !important;
   box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   outline: none !important;
 }
 
@@ -6970,5 +7874,41 @@ div[class*="fixed inset-0"] > div[class*="rounded-"] {
 .gm-expenses-table,
 .gm-budget-list {
   margin-bottom: 2.5rem !important;
+}
+
+/* 5. Estilos das Cápsulas Grade e Listas (Padrão Apple Glass Blur) */
+.gm-viewmode-btn-active {
+  background: linear-gradient(135deg, rgba(246, 90, 26, 0.88) 0%, rgba(230, 75, 15, 0.82) 100%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 160, 100, 0.45) !important;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.35), 0 8px 24px -4px rgba(246, 90, 26, 0.38) !important;
+}
+.gm-viewmode-btn-active svg,
+.gm-viewmode-btn-active span {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.gm-viewmode-btn-inactive {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+.gm-viewmode-btn-inactive:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+.gm-viewmode-btn-inactive svg {
+  color: var(--gm-primary, #f65a1a) !important;
+  stroke: var(--gm-primary, #f65a1a) !important;
+}
+.gm-viewmode-btn-inactive span {
+  color: #ffffff !important;
 }
 

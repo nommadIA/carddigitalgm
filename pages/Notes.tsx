@@ -7,6 +7,8 @@ import { broadcastAppNotification } from "../lib/syncHub";
 import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
+import { SignalBottomGradient } from "../components/ui/SignalBottomGradient";
+import { SectionDivider } from "../components/ui/SectionDivider";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Plus,
@@ -250,64 +252,100 @@ export default function Notes() {
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
-  // Listen for query parameter 'id' to open note
+  // Interrompe a sinalização quando o usuário passa o mouse ou clica na nota
+  const stopSignal = (noteId: string) => {
+    if (highlightedId === noteId) {
+      setHighlightedId(null);
+      try {
+        sessionStorage.removeItem("gm_signal_item_id");
+        sessionStorage.removeItem("gm_signal_item_type");
+      } catch {}
+      const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+      const params = new URLSearchParams(location.search || window.location.search || hashQuery);
+      if (params.has("id")) {
+        params.delete("id");
+        const newSearch = params.toString();
+        const baseHash = window.location.hash.split('?')[0];
+        if (window.location.hash.includes('?id=')) {
+          window.location.hash = newSearch ? `${baseHash}?${newSearch}` : baseHash;
+        } else {
+          window.history.replaceState({}, '', window.location.pathname + (newSearch ? `?${newSearch}` : ''));
+        }
+      }
+    }
+  };
+
+  // Leva o usuário até a nota e ativa a sinalização contínua de degradê inferior
+  const processHighlight = (id: string) => {
+    if (!id || notes.length === 0) return;
+    const noteToOpen = notes.find((n) => n.id === id);
+    if (noteToOpen) {
+      // Ajusta abas para que a nota esteja visível
+      const typeStr = (noteToOpen.type || "note").toUpperCase();
+      if (typeStr === "PRODUCTION" || typeStr === "PRODUÇÃO") {
+        setMainTab("PRODUCTION");
+      } else {
+        setMainTab("NOTE");
+      }
+
+      if (noteToOpen.deleted_at) {
+        setNoteTab("LIXEIRA");
+      } else {
+        const normStatus = normalizeStatus(noteToOpen.status || "a fazer");
+        if (normStatus === "PRODUCAO" || normStatus === "EM PRODUCAO") {
+          setNoteTab("PRODUÇÃO");
+        } else if (normStatus === "CONCLUIDOS" || normStatus === "CONCLUIDO") {
+          setNoteTab("CONCLUÍDOS");
+        } else {
+          setNoteTab("A FAZER");
+        }
+      }
+
+      // Ativa o sinalizador da nota (permanece até clique ou hover do mouse)
+      setHighlightedId(id);
+
+      // Leva o usuário suavemente até a nota centralizada no visor
+      const scrollToTarget = () => {
+        const element = document.getElementById(`note-card-${id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      };
+
+      setTimeout(scrollToTarget, 100);
+      setTimeout(scrollToTarget, 300);
+      setTimeout(scrollToTarget, 650);
+    }
+  };
+
+  // Escuta evento imediato disparado pelo botão 'Visualizar' na notificação
+  useEffect(() => {
+    const handleSignal = (e: any) => {
+      const detail = e.detail;
+      if (detail && detail.id && (detail.type === 'NOTE' || !detail.type)) {
+        processHighlight(detail.id);
+      }
+    };
+    window.addEventListener("gm-signal-item", handleSignal);
+    return () => window.removeEventListener("gm-signal-item", handleSignal);
+  }, [notes]);
+
+  // Escuta URL e sessionStorage para sinalizar nota
   useEffect(() => {
     const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
     const params = new URLSearchParams(location.search || window.location.search || hashQuery);
-    const id = params.get("id");
-    if (id && notes.length > 0) {
-      const noteToOpen = notes.find((n) => n.id === id);
-      if (noteToOpen) {
-        // Automatically switch main tabs and category tabs to show note context smoothly
-        const typeStr = (noteToOpen.type || "note").toUpperCase();
-        if (typeStr === "PRODUCTION" || typeStr === "PRODUÇÃO") {
-          setMainTab("PRODUCTION");
-        } else {
-          setMainTab("NOTE");
-        }
-
-        if (noteToOpen.deleted_at) {
-          setNoteTab("LIXEIRA");
-        } else {
-          const normStatus = normalizeStatus(noteToOpen.status || "a fazer");
-          if (normStatus === "PRODUCAO" || normStatus === "EM PRODUCAO") {
-            setNoteTab("PRODUÇÃO");
-          } else if (normStatus === "CONCLUIDOS" || normStatus === "CONCLUIDO") {
-            setNoteTab("CONCLUÍDOS");
-          } else {
-            setNoteTab("A FAZER");
-          }
-        }
-
-        // Highlight the selected note
-        setHighlightedId(id);
-
-        // Wait a brief moment for React to change tabs and render the DOM elements, then scroll smoothly
-        const scrollTimer = setTimeout(() => {
-          const element = document.getElementById(`note-card-${id}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 150);
-
-        // Open the editor after the 2-second diagonal neon transition completes so the user sees the effect
-        const openTimer = setTimeout(() => {
-          openEdit(noteToOpen);
-        }, 2000);
-
-        // Keep highlighted for 6 seconds, then clear state
-        const clearHighlightTimer = setTimeout(() => {
-          setHighlightedId(null);
-        }, 6000);
-
-        return () => {
-          clearTimeout(scrollTimer);
-          clearTimeout(openTimer);
-          clearTimeout(clearHighlightTimer);
-        };
-      }
+    let id = params.get("id");
+    if (!id) {
+      try {
+        const stored = sessionStorage.getItem("gm_signal_item_id");
+        const type = sessionStorage.getItem("gm_signal_item_type");
+        if (stored && (type === "NOTE" || !type)) id = stored;
+      } catch {}
     }
-  }, [location, notes]);
+    if (id && notes.length > 0) {
+      processHighlight(id);
+    }
+  }, [location.search, location.state, notes]);
 
   // Clean up URL parameter when the editor modal is closed
   useEffect(() => {
@@ -762,11 +800,16 @@ export default function Notes() {
       } else if (data) {
         const mappedData = data.map(n => {
           const st = normalizeStatus(n.status);
+          const isCompleted = st === "CONCLUIDOS" || st === "CONCLUIDO" || st.includes("CONCLU");
           if (st === "APROVADO") {
             return { ...n, type: "production" as any, status: "PRODUÇÃO" };
           }
           if (st === "AGUARDANDO") {
             return { ...n, status: "A FAZER" };
+          }
+          // Se a nota já está concluída, zera o lembrete para não exibir nem soar alarme
+          if (isCompleted && n.reminder_time) {
+            return { ...n, reminder_time: null };
           }
           return n;
         });
@@ -780,6 +823,16 @@ export default function Notes() {
             ? { type: "production", status: "PRODUÇÃO" }
             : { status: "A FAZER" };
           supabase.from("notes").update(updates).eq("id", note.id).then();
+        }
+
+        // Zera no banco e remove alarmes de notas concluídas que ainda tinham reminder_time salvo
+        const completedWithReminders = data.filter(n => {
+          const st = normalizeStatus(n.status);
+          return (st === "CONCLUIDOS" || st === "CONCLUIDO" || st.includes("CONCLU")) && n.reminder_time;
+        });
+        for (const note of completedWithReminders) {
+          removeAlarmsForBudget(note.id);
+          supabase.from("notes").update({ reminder_time: null }).eq("id", note.id).then();
         }
       }
     } catch (e) {
@@ -1212,7 +1265,13 @@ export default function Notes() {
     setLayoutUrlInput("");
     setEditorTab("note");
 
-    if (note.reminder_time && note.reminder_time.includes(" ")) {
+    const isCompleted = normalizeStatus(note.status).includes("CONCLU");
+    if (isCompleted) {
+      setReminderDate("");
+      setReminderTime("");
+      setReminderTime2("");
+      setReminderTime3("");
+    } else if (note.reminder_time && note.reminder_time.includes(" ")) {
       const parts = note.reminder_time.split(" ");
       const rDate = parts[0] || "";
       const rTime = parts.slice(1).join(" ") || "";
@@ -1233,13 +1292,15 @@ export default function Notes() {
   }
 
   async function handleSave(keepOpen = false) {
-    const activeTimes = [reminderTime, reminderTime2, reminderTime3].filter(Boolean);
+    const isCompleted = normalizeStatus(noteStatus).includes("CONCLU");
+
+    const activeTimes = isCompleted ? [] : [reminderTime, reminderTime2, reminderTime3].filter(Boolean);
     const timeStr = activeTimes.join(",");
 
     const savedReminder =
-      reminderDate && timeStr
+      !isCompleted && reminderDate && timeStr
         ? `${reminderDate} ${timeStr}`
-        : timeStr || null;
+        : (!isCompleted && timeStr ? timeStr : null);
 
     // Garante que o conteúdo salvo seja exatamente o DOM atual do editor (sem imagens excluídas)
     const currentEditorContent = contentRef.current ? contentRef.current.innerHTML : content;
@@ -1306,7 +1367,7 @@ export default function Notes() {
 
       // Update Alarm Schedule if reminder format is valid
       if (savedNote) {
-        if (savedNote.reminder_time) {
+        if (!isCompleted && savedNote.reminder_time) {
           const hasDate = savedNote.reminder_time.includes(" ");
           let rDate: string | null = null;
           let rTimeStr = savedNote.reminder_time;
@@ -1331,6 +1392,13 @@ export default function Notes() {
         } else {
           removeAlarmsForBudget(savedNote.id);
         }
+      }
+
+      if (isCompleted) {
+        setReminderDate("");
+        setReminderTime("");
+        setReminderTime2("");
+        setReminderTime3("");
       }
 
       const nowStr = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -1405,6 +1473,38 @@ export default function Notes() {
     try {
       await supabase.from("notes").update({ deleted_at: null }).eq("id", id);
     } catch (e) {}
+  }
+
+  async function handleQuickStatusChange(note: Note, newStatus: string, e: React.SyntheticEvent) {
+    e.stopPropagation();
+    const isCompleted = normalizeStatus(newStatus).includes("CONCLU");
+    const updates: any = {
+      status: newStatus,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isCompleted) {
+      updates.reminder_time = null;
+      removeAlarmsForBudget(note.id);
+    }
+
+    const updatedNotes = notes.map((n) =>
+      n.id === note.id ? { ...n, ...updates } : n
+    );
+    setNotes(updatedNotes);
+    syncAlarmsWithNotes(updatedNotes);
+
+    try {
+      await supabase.from("notes").update(updates).eq("id", note.id);
+      showToast(
+        isCompleted
+          ? "Nota marcada como Concluído: lembrete e alarme zerados!"
+          : `Status alterado para ${newStatus.replace(/_/g, " ").toUpperCase()}`
+      );
+    } catch (err) {
+      console.error(err);
+      showToast("Erro ao atualizar status da nota");
+    }
   }
 
   function handleShareClick(note: Note) {
@@ -1498,37 +1598,26 @@ export default function Notes() {
   ] as const;
 
   return (
-    <Page title="Notas" className="relative min-h-full">
+    <Page
+      title="Notas"
+      className="relative min-h-full"
+      actions={
+        <button
+          onClick={openNewNote}
+          className="gm-btn group h-12 px-5 fora rounded-2xl border border-white/10 hover:border-[var(--gm-primary)] text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none shrink-0"
+        >
+          <Plus size={18} className="text-[var(--gm-primary)] transition-transform duration-300 ease-in-out group-hover:rotate-180" />
+          <span>Criar Nota</span>
+        </button>
+      }
+    >
       <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
-        <div className="flex flex-col gap-5">
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="relative w-full md:max-w-md">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10 pointer-events-none"
-              size={18}
-            />
-            <input
-              type="text"
-              className="w-full gm-input barra rounded-xl pl-11 pr-4 py-3.5 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md font-medium"
-              placeholder="Pesquisar notas em todas as contas..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+        {/* Tabs + Busca Padrão Orçamentos */}
+        <div className="mb-6 space-y-3">
+          <SectionDivider label="Filtros e Categorias" />
 
-          <button
-            onClick={openNewNote}
-            className="gm-btn group h-12 px-6 fora rounded-2xl border border-white/10 hover:border-[var(--gm-primary)] text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none shrink-0"
-          >
-            <Plus size={18} className="text-[var(--gm-primary)] transition-transform duration-300 ease-in-out group-hover:rotate-180" />
-            <span>Criar Nota</span>
-          </button>
-        </div>
-
-        {/* Primary Category & Status Tabs Bar (Vidro Fosco, Extremidades e Destaque Fluido) */}
-        <div className={`flex flex-col gap-2 p-2 sm:p-2.5 ${cardBase} w-full`}>
-          {/* Linha 1: Categorias Principais (Todas as Notas, Notas Gerais, Notas de Produção) */}
-          <div className="grid grid-cols-3 gap-1.5 w-full">
+          {/* Linha 1: Categorias Principais */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
             {[
               { id: "ALL", label: "TODAS AS NOTAS" },
               { id: "NOTE", label: "NOTAS GERAIS" },
@@ -1538,48 +1627,82 @@ export default function Notes() {
               return (
                 <button
                   key={tabItem.id}
+                  type="button"
                   onClick={() => setMainTab(tabItem.id as any)}
-                  className={`w-full py-2.5 px-1 sm:px-2 text-center flex items-center justify-center font-black uppercase tracking-wider text-[10px] sm:text-xs leading-tight rounded-xl transition-all cursor-pointer select-none ${
+                  className={`gm-filter-tab fora snap-start shrink-0 px-4 h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border cursor-pointer ${
                     isActive
-                      ? "bg-[var(--gm-primary)] text-white shadow-none border border-[var(--gm-primary)]/40 backdrop-blur-md"
-                      : "barra border border-transparent hover:border-white/10 text-white/60 hover:text-white hover:bg-white/[0.05] backdrop-blur-md"
+                      ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none"
+                      : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
                   }`}
                 >
-                  <span className="truncate">{tabItem.label}</span>
+                  {tabItem.label}
                 </button>
               );
             })}
           </div>
 
-          {/* Linha 2: Sub-Tabs de Status / Workflow (A FAZER, PRODUÇÃO, CONCLUÍDOS, LIXEIRA) */}
-          <div className="grid grid-cols-4 gap-1.5 w-full pt-1.5 border-t border-white/10">
+          {/* Linha 2: Sub-Tabs de Status / Workflow */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
             {WORKFLOW_STATUSES.map((t) => {
               const isActive = noteTab === t;
               return (
                 <button
                   key={t}
+                  type="button"
                   onClick={() => setNoteTab(t as any)}
-                  className={`w-full py-2 px-1 text-center flex items-center justify-center font-black uppercase tracking-wider text-[10px] sm:text-xs rounded-xl transition-all cursor-pointer select-none ${
+                  className={`gm-filter-tab fora snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border cursor-pointer ${
                     isActive
-                      ? "bg-[var(--gm-primary)] text-white shadow-none border border-[var(--gm-primary)]/40 backdrop-blur-md"
-                      : "barra border border-transparent hover:border-white/10 text-white/50 hover:text-white hover:bg-white/[0.05] backdrop-blur-md"
+                      ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none"
+                      : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
                   }`}
                 >
-                  <span className="truncate">{t}</span>
+                  {t}
                 </button>
               );
             })}
           </div>
+
+          {/* Busca com Visual Padrão Glass Desfocado Apple - Idêntica a Orçamentos */}
+          <div className="gm-search-apple-glass">
+            <Search className="gm-search-icon" size={18} />
+            <input
+              type="text"
+              placeholder="Buscar notas por título, conteúdo ou responsável..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="gm-search-clear gm-search-apple-glass-clear"
+                title="Limpar busca"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
       {loading ? (
         <div className="flex justify-center p-12">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[var(--gm-primary)]" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <AnimatePresence>
+        <>
+          <SectionDivider label="Minhas Anotações" />
+          {filteredNotes.length === 0 ? (
+            <div className="w-full fora rounded-2xl border border-white/10 p-10 sm:p-14 md:p-16 min-h-[220px] sm:min-h-[260px] flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02] backdrop-blur-md shadow-none select-none">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--gm-primary)] shadow-none">
+                <FileText size={22} />
+              </div>
+              <p className="text-sm sm:text-base text-slate-200 font-semibold leading-relaxed">
+                Nenhuma nota encontrada.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <AnimatePresence>
             {filteredNotes.map((note) => {
               const isExpanded = expandedNotes.has(note.id);
               const isLong =
@@ -1595,59 +1718,51 @@ export default function Notes() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   layout
                   className="col-span-1 h-full"
-                  onClick={() => openEdit(note)}
+                  onMouseEnter={() => stopSignal(note.id)}
+                  onTouchStart={() => stopSignal(note.id)}
+                  onClick={() => {
+                    stopSignal(note.id);
+                    openEdit(note);
+                  }}
                 >
                   <div
                     id={`note-card-${note.id}`}
+                    onMouseEnter={() => stopSignal(note.id)}
+                    onTouchStart={() => stopSignal(note.id)}
                     className={`p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.01] h-full gm-note-card ${cardBase} hover:border-[var(--gm-primary)]/40 hover:bg-white/[0.05] ${
                       isExpanded
                         ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]"
                         : "overflow-hidden min-h-[280px]"
                     } ${
                       note.id === highlightedId
-                        ? "!border-[var(--gm-primary)] ring-2 ring-[var(--gm-primary)] ring-offset-2 ring-offset-black/60 shadow-[0_0_35px_rgba(255,105,0,0.85)] animate-pulse"
+                        ? "gm-signal-bottom-container"
                         : ""
                     }`}
                   >
-                    {/* Transição Laranja Neon Esfumaçada: Canto Superior Esquerdo -> Canto Inferior Direito (Duração 2s) */}
-                    {note.id === highlightedId && (
-                      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-30">
-                        {/* Esfumaçado Laranja Neon que viaja diagonalmente */}
-                        <div 
-                          className="absolute -inset-10 animate-smoky-neon-sweep rounded-full"
-                          style={{
-                            background: "radial-gradient(circle at center, rgba(255, 105, 0, 0.95) 0%, rgba(255, 140, 0, 0.6) 35%, rgba(255, 75, 0, 0.25) 60%, transparent 80%)",
-                            filter: "blur(26px)"
-                          }}
-                        />
-                        {/* Feixe Laser / Reflexo Diagonal Laranja Neon */}
-                        <div 
-                          className="absolute -inset-full animate-smoky-laser-beam"
-                          style={{
-                            background: "linear-gradient(135deg, transparent 35%, rgba(255, 120, 0, 0.3) 44%, rgba(255, 200, 80, 0.9) 49%, rgba(255, 105, 0, 1) 50%, rgba(255, 80, 0, 0.9) 51%, rgba(255, 120, 0, 0.3) 56%, transparent 65%)",
-                            boxShadow: "0 0 35px rgba(255, 105, 0, 0.85)"
-                          }}
-                        />
-                      </div>
-                    )}
-                    {/* Visual Aprimorado de Pinar Nota (Pushpin Badge) */}
+                    {/* Efeito de Sinalização de Degradê: Canto Inferior Esquerdo -> Canto Inferior Direito (só para com clique ou mouse por cima) */}
+                    <SignalBottomGradient
+                      active={note.id === highlightedId}
+                      onDismiss={() => stopSignal(note.id)}
+                    />
+                    {/* Visual de Pinar Nota: sempre no canto superior direito, cor sólida laranja do app somente quando fixada */}
                     <button
+                      type="button"
                       onClick={(e) => togglePin(note, e)}
-                      className={`absolute top-4 right-4 w-8 h-8 rounded-xl flex items-center justify-center transition-all z-10 cursor-pointer ${
-                        note.is_pinned
-                          ? "bg-orange-500/20 text-orange-400 border border-orange-500/40 backdrop-blur-md scale-105 shadow-none"
-                          : "barra border border-white/10 bg-white/[0.02] text-white/40 hover:text-white hover:bg-white/[0.08] backdrop-blur-md"
-                      }`}
+                      className={`gm-note-pin-btn group/pin ${note.is_pinned ? "pinned" : ""}`}
                       title={note.is_pinned ? "Desafixar nota" : "Fixar nota no topo"}
                     >
                       <Pin
-                        size={14}
-                        className={note.is_pinned ? "fill-orange-400 rotate-[-30deg] transition-transform" : "rotate-0 transition-transform"}
+                        size={15}
+                        className={
+                          note.is_pinned
+                            ? "rotate-[-30deg] transition-transform"
+                            : "rotate-0 transition-transform"
+                        }
                       />
                     </button>
 
                     {/* Title */}
-                    <div className="flex flex-col gap-1 pr-8">
+                    <div className="flex flex-col gap-1 pr-11">
                       <h3 className="font-bold text-lg text-white leading-tight mt-1">
                         {note.title || "Sem título"}
                       </h3>
@@ -1786,7 +1901,7 @@ export default function Notes() {
                             {new Date(note.created_at).toLocaleDateString("pt-BR")}
                           </span>
                         </div>
-                        {note.reminder_time &&
+                        {!normalizeStatus(note.status).includes("CONCLU") && note.reminder_time &&
                           (() => {
                             const hasSpace = note.reminder_time.includes(" ");
                             return (
@@ -1842,18 +1957,52 @@ export default function Notes() {
 
                       {/* Action buttons on their own line with generous spacing */}
                       <div className="flex items-center justify-between gap-2.5 w-full pt-2.5 border-t border-white/10">
-                        {/* Status label displayed next to action buttons */}
+                        {/* Status label / Seletor rápido de status em cápsula Apple Glass Vidro Desfocado */}
                         {note.status ? (
-                          <div className="flex items-center">
-                            <span className="text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 select-none bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 backdrop-blur-md">
+                          <div
+                            className="gm-status-apple-glass group shrink-0 select-none"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Alterar status (ao marcar como Concluído, o alarme e lembrete zeram)"
+                          >
+                            {/* Ponto indicador luminoso de status */}
+                            <span
+                              className={`gm-status-dot w-2 h-2 rounded-full shrink-0 mr-2 transition-all ${
+                                normalizeStatus(note.status).includes("CONCLU")
+                                  ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                                  : normalizeStatus(note.status).includes("PROD")
+                                  ? "bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]"
+                                  : "bg-[var(--gm-primary)] shadow-[0_0_8px_rgba(255,105,0,0.8)]"
+                              }`}
+                            />
+
+                            {/* Texto em destaque Apple Glass branco puro */}
+                            <span className="gm-status-text text-[10px] sm:text-[10.5px] font-extrabold uppercase tracking-wider text-white whitespace-nowrap">
                               {note.status.replace(/_/g, " ")}
                             </span>
+
+                            {/* Chevron elegante Apple */}
+                            <ChevronDown
+                              size={12}
+                              className="text-white/70 group-hover:text-white transition-colors ml-2 shrink-0 pointer-events-none"
+                            />
+
+                            {/* Select invisível cobrindo a cápsula para acionamento nativo perfeito */}
+                            <select
+                              value={note.status.toLowerCase()}
+                              onChange={(e) => handleQuickStatusChange(note, e.target.value, e)}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                              title="Alterar status"
+                            >
+                              <option value="a fazer" className="bg-zinc-900 text-white font-bold py-1">A FAZER</option>
+                              <option value="produção" className="bg-zinc-900 text-white font-bold py-1">PRODUÇÃO</option>
+                              <option value="concluídos" className="bg-zinc-900 text-white font-bold py-1">CONCLUÍDOS</option>
+                            </select>
                           </div>
                         ) : (
                           <div />
                         )}
 
-                        <div className="flex items-center gap-2 shrink-0 note-actions">
+                        <div className="flex items-center gap-3 shrink-0 note-actions">
                           {noteTab === "LIXEIRA" ? (
                             <>
                               <button
@@ -1861,20 +2010,20 @@ export default function Notes() {
                                   e.stopPropagation();
                                   handleRestore(note.id);
                                 }}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-emerald-500/30 shadow-none bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
+                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-emerald-400 hover:text-emerald-300 hover:scale-115 active:scale-95 transition-all outline-none"
                                 title="Restaurar"
                               >
-                                <RefreshCcw size={15} />
+                                <RefreshCcw size={16} />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setDeleteConfirmId(note.id);
                                 }}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-red-500/30 shadow-none bg-red-500/10 hover:bg-red-500/20 text-red-400 backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
+                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-red-400 hover:text-red-300 hover:scale-115 active:scale-95 transition-all outline-none"
                                 title="Excluir Definitivamente"
                               >
-                                <Trash2 size={15} />
+                                <Trash2 size={16} />
                               </button>
                             </>
                           ) : (
@@ -1884,30 +2033,30 @@ export default function Notes() {
                                   e.stopPropagation();
                                   handleShareClick(note);
                                 }}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.08] hover:border-[var(--gm-primary)]/40 text-[var(--gm-primary)] backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
+                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-[var(--gm-primary)] hover:opacity-100 hover:scale-115 active:scale-95 transition-all outline-none"
                                 title="Compartilhar Nota"
                               >
-                                <Share2 size={15} />
+                                <Share2 size={16} />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handlePdf(note);
                                 }}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.08] hover:border-[var(--gm-primary)]/40 text-[var(--gm-primary)] backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
+                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-[var(--gm-primary)] hover:opacity-100 hover:scale-115 active:scale-95 transition-all outline-none"
                                 title="Baixar / Exportar PDF"
                               >
-                                <Download size={15} />
+                                <Download size={16} />
                               </button>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleSoftDelete(note.id);
                                 }}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.08] hover:border-red-500/40 text-white/50 hover:text-red-400 backdrop-blur-md cursor-pointer hover:scale-105 active:scale-95"
+                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-white/50 hover:text-red-400 hover:scale-115 active:scale-95 transition-all outline-none"
                                 title="Mover para Lixeira"
                               >
-                                <Trash2 size={15} />
+                                <Trash2 size={16} />
                               </button>
                             </>
                           )}
@@ -1920,6 +2069,8 @@ export default function Notes() {
             })}
           </AnimatePresence>
         </div>
+        )}
+        </>
       )}
       </div>
 
@@ -2087,18 +2238,24 @@ export default function Notes() {
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                       <button
+                        type="button"
                         onClick={() => setIsPinned(!isPinned)}
-                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-all cursor-pointer border"
-                        style={{
-                          backgroundColor: isPinned ? `${color}30` : "rgba(255, 255, 255, 0.05)",
-                          borderColor: isPinned ? `${color}60` : "rgba(255, 255, 255, 0.1)",
-                          color: isPinned ? color : "rgba(255, 255, 255, 0.7)",
-                        }}
+                        className={`gm-note-modal-pin-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-all cursor-pointer border ${
+                          isPinned ? "pinned" : ""
+                        }`}
                         title={isPinned ? "Desafixar nota" : "Fixar nota no topo"}
                       >
-                        <Pin size={16} fill={isPinned ? color : "none"} />
+                        <Pin
+                          size={16}
+                          className={
+                            isPinned
+                              ? "rotate-[-30deg] transition-transform"
+                              : "rotate-0 transition-transform"
+                          }
+                        />
                       </button>
                       <button
+                        type="button"
                         onClick={() => setModalOpen(false)}
                         className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white active:scale-95 transition-all cursor-pointer"
                         title="Fechar nota"
@@ -2976,7 +3133,21 @@ export default function Notes() {
                           <div className="relative">
                             <select
                               value={noteStatus}
-                              onChange={(e) => setNoteStatus(e.target.value)}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setNoteStatus(val);
+                                const isComp = normalizeStatus(val).includes("CONCLU");
+                                if (isComp) {
+                                  setReminderTime("");
+                                  setReminderTime2("");
+                                  setReminderTime3("");
+                                  setReminderDate("");
+                                  if (editingNote) {
+                                    removeAlarmsForBudget(editingNote.id);
+                                  }
+                                  showToast("Status Concluído: lembrete e alarme zerados!");
+                                }
+                              }}
                               className="w-full appearance-none bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-all"
                             >
                               {noteType === "note"
