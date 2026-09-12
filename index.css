@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&display=swap');
 @import "./css/system.css";
 @import "tailwindcss";
 
@@ -53,6 +54,26 @@ html:not([data-theme="light"]):not(.gm-light) .fora {
   -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
+}
+
+/* =========================================================
+   TopBar & Social Icons Hover - Cor Laranja #FE540B
+========================================================= */
+.topbar-social-link {
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.topbar-social-link:hover,
+.topbar-social-link:hover svg,
+.topbar-social-link:hover path,
+.topbar-social-link:hover rect,
+.topbar-social-link:hover circle,
+.topbar-social-link:hover line {
+  color: #FE540B !important;
+  stroke: #FE540B !important;
+}
+.topbar-social-link:hover svg[fill="currentColor"],
+.topbar-social-link:hover path[fill="currentColor"] {
+  fill: #FE540B !important;
 }
 
 /* =========================================================
@@ -6666,7 +6687,7 @@ button:active, .gm-btn:active {
 }
 
 body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
-:focus-visible{ outline: 2px solid var(--gm-primary); outline-offset: 2px; }
+:focus-visible:not([contenteditable]):not(.gm-note-editor-content):not(.gm-note-title-input){ outline: 2px solid var(--gm-primary); outline-offset: 2px; }
 
 /* =========================================================================
    COMPREHENSIVE LIGHT MODE OVERRIDES FOR ALL SECTIONS & MODALS
@@ -7295,9 +7316,55 @@ aside.gm-sidebar::after,
    ========================================================= */
 
 /* Acessibilidade de Foco via Teclado */
-:focus-visible {
+:focus-visible:not([contenteditable]):not(.gm-note-editor-content):not(.gm-note-title-input) {
   outline: 2px solid var(--gm-primary, #FF6900) !important;
   outline-offset: 2px !important;
+}
+
+/* Remover linha/contorno duplo ao focar ou clicar no título da nota */
+input.gm-note-title-input,
+.gm-note-title-input,
+.gm-note-title-input:focus,
+.gm-note-title-input:focus-visible,
+[data-theme="dark"] input.gm-note-title-input,
+[data-theme="dark"] input.gm-note-title-input:focus,
+[data-theme="dark"] input.gm-note-title-input:focus-visible,
+[data-theme="light"] input.gm-note-title-input,
+[data-theme="light"] input.gm-note-title-input:focus,
+[data-theme="light"] input.gm-note-title-input:focus-visible {
+  outline: none !important;
+  outline-width: 0 !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
+.gm-note-title-input:focus,
+.gm-note-title-input:focus-visible,
+[data-theme="dark"] input.gm-note-title-input:focus,
+[data-theme="dark"] input.gm-note-title-input:focus-visible {
+  border-color: var(--gm-primary, #FF6900) !important;
+}
+
+/* Remover linha/contorno interno laranja ao focar ou clicar na caixa de texto da nota */
+[contenteditable],
+[contenteditable]:focus,
+[contenteditable]:focus-visible,
+.gm-note-editor-content,
+.gm-note-editor-content:focus,
+.gm-note-editor-content:focus-visible {
+  outline: none !important;
+  outline-width: 0 !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.gm-note-editor-card,
+.gm-note-editor-card:focus-within,
+.gm-note-editor-card:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Dashboard Cards Glassmorphism - VIDRO FOSCO NO LUGAR DE SOMBRA PESADA (.barra e .fora) */
@@ -7490,9 +7557,9 @@ a.btn,
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):hover,
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):active,
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):focus-visible,
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):hover,
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):active,
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):focus-visible,
 .btn-action-edit:hover,
 .btn-action-edit:active,
 .btn-action-neutral:hover,
@@ -7539,8 +7606,8 @@ button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):n
   background-color: var(--gm-primary-hover, var(--gm-accent, #FF7A38)) !important;
 }
 
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .btn-action-edit:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .btn-action-edit:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .btn-action-neutral:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
@@ -7553,6 +7620,64 @@ button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):n
   color: #FFFFFF !important;
   stroke: #FFFFFF !important;
   fill: none;
+}
+
+/* =========================================================
+   BARRA SUPERIOR DO SITE: LINKS CLICÁVEIS SEM CAIXA (CLEAN TEXT)
+   Remove totalmente caixas, fundos, bordas e sombras dos textos
+   clicáveis da barra superior ("Início", "Contato", etc.)
+========================================================= */
+.topbar-nav-link,
+button.topbar-nav-link,
+.website-nav-btn,
+button.website-nav-btn,
+.mobile-nav-link,
+button.mobile-nav-link {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  transform: none !important;
+  border-radius: 0 !important;
+}
+
+.topbar-nav-link:hover,
+button.topbar-nav-link:hover,
+.topbar-nav-link:active,
+button.topbar-nav-link:active,
+.topbar-nav-link:focus,
+button.topbar-nav-link:focus,
+.topbar-nav-link:focus-visible,
+button.topbar-nav-link:focus-visible,
+.website-nav-btn:hover,
+button.website-nav-btn:hover,
+.website-nav-btn:active,
+button.website-nav-btn:active,
+.website-nav-btn:focus,
+button.website-nav-btn:focus,
+.website-nav-btn:focus-visible,
+button.website-nav-btn:focus-visible {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  transform: none !important;
+  color: #FE540B !important;
+}
+
+.topbar-nav-link:hover *,
+button.topbar-nav-link:hover *,
+.topbar-nav-link:active *,
+button.topbar-nav-link:active *,
+.website-nav-btn:hover *,
+button.website-nav-btn:hover *,
+.website-nav-btn:active *,
+button.website-nav-btn:active * {
+  color: inherit !important;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* =========================================================
@@ -7911,4 +8036,20 @@ div[class*="fixed inset-0"] > div[class*="rounded-"] {
 .gm-viewmode-btn-inactive span {
   color: #ffffff !important;
 }
+
+/* =========================================================
+   BARRINHA NEON MULTICOR (Rainbow / Neon Loop)
+   ========================================================= */
+@keyframes color-loop {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.neon-rainbow-bar {
+  background: linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B);
+  background-size: 300% 300%;
+  animation: color-loop 5s ease infinite;
+}
+
 

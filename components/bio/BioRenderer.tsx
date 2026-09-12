@@ -45,6 +45,24 @@ export const BrandInstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const BrandPinterestIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345-.09.375-.291 1.199-.334 1.357-.053.224-.174.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.229 7.462-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
+  </svg>
+);
+
+export const BrandXIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
+
+export const BrandThreadsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M12.186 24C5.466 24 0 18.534 0 11.814 0 5.094 5.466 0 12.186 0c6.687 0 12.128 5.378 12.186 12.062v.27c-.035 3.32-1.365 6.471-3.743 8.87a12.098 12.098 0 0 1-8.443 3.522v-2.073c2.72 0 5.342-1.045 7.337-2.923 1.996-1.878 3.11-4.453 3.14-7.224a10.114 10.114 0 0 0-10.134-10.37C6.61 2.134 2.134 6.61 2.134 12.186c0 5.576 4.476 10.052 10.052 10.052 2.68 0 5.234-1.047 7.189-2.948l1.458 1.472C18.498 22.956 15.42 24 12.186 24z"/>
+  </svg>
+);
+
 export const getPlatformIcon = (platform: string) => {
   switch (platform?.toLowerCase()) {
     case 'whatsapp': return BrandWhatsAppIcon;
@@ -190,7 +208,8 @@ function InteractiveSocialIcon({
   sizeClass = "w-5.5 h-5.5 sm:w-6 sm:h-6",
   fallbackIcon: FallbackIcon,
   disableScale = false,
-  instant = false
+  instant = false,
+  forceBlack = false
 }: {
   itemKey: string;
   label: string;
@@ -199,9 +218,10 @@ function InteractiveSocialIcon({
   fallbackIcon: React.ComponentType<any>;
   disableScale?: boolean;
   instant?: boolean;
+  forceBlack?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
-  const isDark = theme === 'dark' || theme === 'glass';
+  const isDark = forceBlack ? false : (theme === 'dark' || theme === 'glass');
   const hasCustom = !!customSocialIcons[itemKey];
 
   const handleMouseEnter = () => setHovered(true);
@@ -209,7 +229,7 @@ function InteractiveSocialIcon({
 
   if (hasCustom) {
     const urls = customSocialIcons[itemKey];
-    const srcUrl = hovered ? urls.orange : (isDark ? urls.white : urls.black);
+    const srcUrl = hovered ? urls.orange : (forceBlack ? urls.black : (isDark ? urls.white : urls.black));
 
     return (
       <div 
@@ -228,7 +248,7 @@ function InteractiveSocialIcon({
 
   const colorClass = hovered
     ? "text-[#FE540B]"
-    : (isDark ? "text-white" : "text-slate-900");
+    : (forceBlack ? "text-black" : (isDark ? "text-white" : "text-black"));
 
   return (
     <div
@@ -238,6 +258,43 @@ function InteractiveSocialIcon({
     >
       <FallbackIcon className={`${sizeClass} ${instant ? 'transition-none duration-0' : 'transition-colors duration-300'} ${colorClass}`} />
     </div>
+  );
+}
+
+function TopBarSocialIcon({ 
+  item,
+  asPreview = false
+}: { 
+  item: { id: string; title: string; href: string; icon: any };
+  asPreview?: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const IconComp = item.icon;
+
+  return (
+    <a 
+      href={asPreview ? undefined : item.href} 
+      target="_blank" 
+      rel="noreferrer" 
+      title={item.title} 
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={(e) => { if (asPreview) e.preventDefault(); }}
+      className="topbar-social-link group flex items-center justify-center p-1.5 rounded-md transition-all duration-200 hover:scale-115 cursor-pointer text-black hover:!text-[#FE540B]"
+      style={{
+        color: hovered ? '#FE540B' : '#000000',
+      }}
+    >
+      <IconComp 
+        className="w-5.5 h-5.5 sm:w-6 sm:h-6 transition-colors duration-200 text-black group-hover:!text-[#FE540B] group-hover:!stroke-[#FE540B]" 
+        strokeWidth={2.4}
+        style={{ 
+          color: hovered ? '#FE540B' : '#000000',
+          stroke: item.id === 'whatsapp' ? undefined : (hovered ? '#FE540B' : '#000000'),
+          fill: item.id === 'whatsapp' ? (hovered ? '#FE540B' : '#000000') : undefined
+        }} 
+      />
+    </a>
   );
 }
 
@@ -282,6 +339,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
   const [activeView, setActiveView] = useState<"bio" | "contact" | "portfolio">("bio");
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
   const [isChatIconVisible, setIsChatIconVisible] = useState(false);
@@ -767,7 +825,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const brandSubtitle = bio.subtitle_color || data?.brand_subtitle;
   const brandIcon = bio.icon_color || data?.brand_icon || brandColor;
   const brandAccent = bio.accent_color || bio.button_color || data?.brand_accent || data?.brand_button || brandColor;
-  const theme = bio.theme || "dark";
+  const theme = bio.theme || "gorila";
   const buttonStyle = data?.button_style || "solid";
 
   const generatePixPayload = (key: string, name: string = "GM Edificacao", city: string = "SAO LUIS") => {
@@ -1024,6 +1082,19 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       cardTitle: "text-white font-extrabold",
       cardSub: "text-slate-300",
       pixSubtitle: "text-slate-300"
+    },
+    gorila: {
+      bg: "bg-[#050505]",
+      textTitle: "text-white",
+      textDesc: "text-zinc-300",
+      iconBg: "bg-zinc-900",
+      cardBg: "bg-zinc-950/80 backdrop-blur-md",
+      cardBgHover: "hover:bg-zinc-900/90",
+      cardBorder: "border-zinc-800/80",
+      cardBorderHover: "hover:border-[#FE540B]/50",
+      cardTitle: "text-white font-extrabold",
+      cardSub: "text-zinc-400",
+      pixSubtitle: "text-zinc-300"
     }
   };
 
@@ -1413,6 +1484,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         .bio-desc-font-classic {
           font-family: 'Montserrat', sans-serif !important;
         }
+        .bio-desc-font-space {
+          font-family: 'Space Grotesk', sans-serif !important;
+        }
+        .bio-desc-font-syne {
+          font-family: 'Syne', sans-serif !important;
+        }
         [class*="bio-desc-font-"] * {
           background: transparent !important;
           background-color: transparent !important;
@@ -1503,10 +1580,86 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           {/* Header & Banner Wrapper to overlay profile on top of the banner when enabled */}
           <div className="flex flex-col w-full">
             {(() => {
-              const desktopBanner = bio.banner_img_url_1;
-              const mobileBanner = bio.mobile_banner_img_url_1;
+              // Logo cadastrado pelo usuário/conta (GM Edificação) com fallback para o logo oficial cadastrado da GM Edificação
+              const gmDefaultLogo = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.webp?t=1787112280980";
+              const userLogo = data?.company_logo_url || data?.avatar_url || (bio as any).logo_url;
+              const effectiveLogo = userLogo || gmDefaultLogo;
+
+              // Banner padrão profissional de arquitetura/engenharia caso o usuário ainda não tenha configurado banners no BIO Editor
+              const defaultArchitectureBanner = data?.app_background_url || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80";
+
+              const desktopBanner = bio.banner_img_url_1 || defaultArchitectureBanner;
+              const mobileBanner = bio.mobile_banner_img_url_1 || bio.banner_img_url_1 || data?.mobile_app_background_url || desktopBanner;
               const finalDesktop = desktopBanner || mobileBanner;
               const finalMobile = mobileBanner || desktopBanner;
+
+              const isWebsiteLayout = theme === "gorila" || theme === "website" || !bio.theme || theme === "dark" || (companyName && companyName.toLowerCase().includes("gm"));
+
+              // Extrai redes sociais reais configuradas pelo usuário
+              const userSocialLinks: { id: string; title: string; href: string; icon: any }[] = [];
+              if (bio.whatsapp) {
+                const cleanPhone = bio.whatsapp.replace(/\D/g, "");
+                userSocialLinks.push({
+                  id: "whatsapp",
+                  title: "WhatsApp",
+                  href: `https://wa.me/${cleanPhone.startsWith("55") ? cleanPhone : "55" + cleanPhone}`,
+                  icon: MessageCircle
+                });
+              }
+              if (bio.instagram) {
+                const igHandle = bio.instagram.replace(/^@/, "").trim();
+                const igUrl = igHandle.startsWith("http") ? igHandle : `https://instagram.com/${igHandle}`;
+                userSocialLinks.push({
+                  id: "instagram",
+                  title: "Instagram",
+                  href: igUrl,
+                  icon: BrandInstagramIcon
+                });
+              }
+              if (bio.facebook) {
+                const fbUrl = bio.facebook.startsWith("http") ? bio.facebook : `https://facebook.com/${bio.facebook}`;
+                userSocialLinks.push({
+                  id: "facebook",
+                  title: "Facebook",
+                  href: fbUrl,
+                  icon: Facebook
+                });
+              }
+              if (bio.website) {
+                const siteUrl = bio.website.startsWith("http") ? bio.website : `https://${bio.website}`;
+                userSocialLinks.push({
+                  id: "website",
+                  title: "Website",
+                  href: siteUrl,
+                  icon: Globe
+                });
+              }
+              if (bio.email || (data?.pix_key && data.pix_key.includes("@"))) {
+                const emailAddr = bio.email || data?.pix_key;
+                userSocialLinks.push({
+                  id: "email",
+                  title: "E-mail",
+                  href: `mailto:${emailAddr}`,
+                  icon: Mail
+                });
+              }
+              if (bio.linkedin) {
+                const liUrl = bio.linkedin.startsWith("http") ? bio.linkedin : `https://linkedin.com/in/${bio.linkedin}`;
+                userSocialLinks.push({
+                  id: "linkedin",
+                  title: "LinkedIn",
+                  href: liUrl,
+                  icon: Linkedin
+                });
+              }
+              if (bio.phone) {
+                userSocialLinks.push({
+                  id: "phone",
+                  title: "Telefone",
+                  href: `tel:${bio.phone.replace(/\D/g, "")}`,
+                  icon: Phone
+                });
+              }
 
               const currentPortfolioItem = activePortfolioId ? (bio.portfolio_items || []).find((p: any) => p.id === activePortfolioId) : null;
               const hasDesktopLayersForBanner = !!currentPortfolioItem?.layers && currentPortfolioItem.layers.length > 0;
@@ -1517,7 +1670,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               const portfolioDesktopBanner = currentPortfolioItem?.main_banner_url || firstDesktopLayerUrl || firstMobileLayerUrl || currentPortfolioItem?.image_url;
               const portfolioMobileBanner = currentPortfolioItem?.main_banner_mobile_url || currentPortfolioItem?.main_banner_url || firstMobileLayerUrl || firstDesktopLayerUrl || currentPortfolioItem?.image_url;
 
-              const hasBanners = (bio.show_banners && (desktopBanner || mobileBanner)) || (activeView === "portfolio");
+              const hasBanners = (bio.show_banners && (desktopBanner || mobileBanner)) || (activeView === "portfolio") || isWebsiteLayout;
 
               // Helper to render the Profile Header with optional over-banner styles
               const renderProfileHeader = (isOverBanner: boolean) => {
@@ -1665,11 +1818,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               setActiveView("bio");
                               setActivePortfolioId(null);
                             }} 
-                            className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
+                            className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
                               (activeView as string) === "bio" 
                                 ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
                                 : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
                             } hover:text-[#FE540B]`}
+                            style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
                           >
                             Início
                             <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'bio' ? 'scaleX(1)' : undefined }} />
@@ -1677,11 +1831,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                           <button 
                             onClick={() => setActiveView("contact")} 
-                            className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
+                            className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
                               (activeView as string) === "contact" 
                                 ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
                                 : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
                             } hover:text-[#FE540B]`}
+                            style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
                           >
                             Contato
                             <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'contact' ? 'scaleX(1)' : undefined }} />
@@ -1825,173 +1980,380 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   {finalDesktop && (
                     <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full flex flex-col`}>
                       {/* Desktop Top Navbar */}
-                      <div className="w-full h-36 sm:h-40 md:h-[140px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30">
-                        <div className="flex items-center gap-4 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
-                          {logo ? (
-                            <img src={logo} alt={companyName} className="h-16 sm:h-20 w-auto object-contain rounded-md shadow-sm transition-all" />
+                      <div className={`w-full ${isWebsiteLayout ? 'h-20 sm:h-24 bg-white text-zinc-900' : 'h-36 sm:h-40 md:h-[140px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5'} flex items-center justify-between px-6 md:px-12 relative z-30`}>
+                        <div className="flex items-center gap-4 cursor-pointer hover:opacity-90 transition-opacity" onClick={handleLogoClick}>
+                          {effectiveLogo ? (
+                            <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-10 sm:h-12 md:h-14 w-auto object-contain transition-all" />
                           ) : (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center font-bold text-2xl sm:text-3xl text-white shadow-sm" style={{ backgroundColor: brandColor }}>
-                              {companyName.charAt(0).toUpperCase()}
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg flex items-center justify-center font-bold text-2xl text-white shadow-sm" style={{ backgroundColor: brandColor || "#FE540B" }}>
+                              {(companyName || "GM").charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <span className={`font-extrabold text-2xl sm:text-3xl tracking-tight ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
                         </div>
+
                         <div className="flex items-center">
-                          {/* Navigation Links Group */}
-                          <div className="flex items-center gap-7 sm:gap-8 md:gap-9">
-                            {/* Início */}
-                            <button 
-                              onClick={() => {
-                                setActiveView("bio");
-                                setActivePortfolioId(null);
-                              }} 
-                              className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
-                                (activeView as string) === "bio" 
-                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
-                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
-                              } hover:text-[#FE540B]`}
+                          {isWebsiteLayout ? (
+                            <div 
+                              className="flex items-center gap-8 sm:gap-10"
+                              onMouseLeave={() => setHoveredNav(null)}
                             >
-                              Início
-                              <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'bio' ? 'scaleX(1)' : undefined }} />
-                            </button>
-
-                            {/* Contato */}
-                            <button 
-                              onClick={() => setActiveView("contact")} 
-                              className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
-                                (activeView as string) === "contact" 
-                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
-                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
-                              } hover:text-[#FE540B]`}
-                            >
-                              Contato
-                              <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'contact' ? 'scaleX(1)' : undefined }} />
-                            </button>
-
-                            {/* Vitrine */}
-                            <button 
-                              onClick={() => {
-                                const el = document.getElementById("portfolio-section");
-                                if (el) {
-                                  el.scrollIntoView({ behavior: 'smooth' });
-                                } else {
+                              {/* Início */}
+                              <button 
+                                onClick={() => {
                                   setActiveView("bio");
-                                  setTimeout(() => {
-                                    const el2 = document.getElementById("portfolio-section");
-                                    if (el2) el2.scrollIntoView({ behavior: 'smooth' });
-                                  }, 120);
-                                }
-                              }} 
-                              className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
-                                (activeView as string) === "portfolio" 
-                                  ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
-                                  : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
-                              } hover:text-[#FE540B]`}
-                            >
-                              Vitrine
-                              <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'portfolio' ? 'scaleX(1)' : undefined }} />
-                            </button>
-                          </div>
-
-                          {/* Beautiful Distancing Spacer matches the second screenshot */}
-                          <div className="w-12 sm:w-16 md:w-20 lg:w-24" />
-
-                          {/* Social Icons Group */}
-                          <div className="flex items-center gap-5 sm:gap-6 md:gap-7">
-                            {socialIcons.length > 0 && socialIcons.map((item) => {
-                              return (
-                                <a 
-                                  key={item.key} 
-                                  href={asPreview ? undefined : formatExternalUrl(item.href)} 
-                                  target="_blank" 
-                                  rel="noreferrer" 
-                                  title={item.label} 
-                                  className="flex items-center justify-center cursor-pointer transition-none" 
-                                  onClick={(e) => { if (asPreview) e.preventDefault(); }}
-                                 >
-                                  <InteractiveSocialIcon 
-                                    itemKey={item.key} 
-                                    label={item.label} 
-                                    theme={theme} 
-                                    sizeClass="w-5.5 h-5.5 sm:w-6 sm:h-6"
-                                    fallbackIcon={item.icon} 
-                                    instant={true}
+                                  setActivePortfolioId(null);
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }} 
+                                onMouseEnter={() => setHoveredNav("bio")}
+                                className={`topbar-nav-link website-nav-btn relative py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none ${
+                                  hoveredNav === "bio"
+                                    ? "!text-[#FE540B]"
+                                    : (hoveredNav === "contact"
+                                        ? "!text-[#71717a]"
+                                        : ((activeView as string) === "bio" ? "!text-black" : "!text-[#71717a]"))
+                                }`}
+                                style={{
+                                  background: 'transparent',
+                                  backgroundColor: 'transparent',
+                                  boxShadow: 'none',
+                                  border: 'none',
+                                  outline: 'none',
+                                  color: hoveredNav === "bio" 
+                                    ? "#FE540B" 
+                                    : (hoveredNav === "contact" 
+                                        ? "#71717a" 
+                                        : ((activeView as string) === "bio" ? "#000000" : "#71717a"))
+                                }}
+                              >
+                                Início
+                                {(hoveredNav === "bio" || (!hoveredNav && (activeView as string) === "bio")) && (
+                                  <motion.span 
+                                    layoutId="website-nav-underline"
+                                    className="absolute bottom-[-6px] left-0 right-0 h-[2px] bg-black pointer-events-none"
+                                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
                                   />
-                                </a>
-                              )
-                            })}
-                          </div>
+                                )}
+                              </button>
+
+                              {/* Contato */}
+                              <button 
+                                onClick={() => {
+                                  setActiveView("contact");
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }} 
+                                onMouseEnter={() => setHoveredNav("contact")}
+                                className={`topbar-nav-link website-nav-btn relative py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none ${
+                                  hoveredNav === "contact"
+                                    ? "!text-[#FE540B]"
+                                    : (hoveredNav === "bio"
+                                        ? "!text-[#71717a]"
+                                        : ((activeView as string) === "contact" ? "!text-black" : "!text-[#71717a]"))
+                                }`}
+                                style={{
+                                  background: 'transparent',
+                                  backgroundColor: 'transparent',
+                                  boxShadow: 'none',
+                                  border: 'none',
+                                  outline: 'none',
+                                  color: hoveredNav === "contact" 
+                                    ? "#FE540B" 
+                                    : (hoveredNav === "bio" 
+                                        ? "#71717a" 
+                                        : ((activeView as string) === "contact" ? "#000000" : "#71717a"))
+                                }}
+                              >
+                                Contato
+                                {(hoveredNav === "contact" || (!hoveredNav && (activeView as string) === "contact")) && (
+                                  <motion.span 
+                                    layoutId="website-nav-underline"
+                                    className="absolute bottom-[-6px] left-0 right-0 h-[2px] bg-black pointer-events-none"
+                                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                                  />
+                                )}
+                              </button>
+
+                              {/* Social Icons na barra superior na cor preta */}
+                              {userSocialLinks.length > 0 && (
+                                <>
+                                  <div className="w-2 sm:w-3" />
+                                  <div className="flex items-center gap-3 sm:gap-4">
+                                    {userSocialLinks.map((item) => (
+                                      <TopBarSocialIcon key={item.id} item={item} asPreview={asPreview} />
+                                    ))}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-6 sm:gap-7 md:gap-8">
+                              {/* Início */}
+                              <button 
+                                onClick={() => {
+                                  setActiveView("bio");
+                                  setActivePortfolioId(null);
+                                }} 
+                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
+                                  (activeView as string) === "bio" 
+                                    ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
+                                    : `opacity-80 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
+                                } hover:text-[#FE540B]`}
+                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
+                              >
+                                Início
+                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'bio' ? 'scaleX(1)' : undefined }} />
+                              </button>
+
+                              {/* Sobre */}
+                              <button 
+                                onClick={() => {
+                                  const el = document.getElementById("about-company-section");
+                                  if (el) {
+                                    el.scrollIntoView({ behavior: 'smooth' });
+                                  } else {
+                                    setActiveView("bio");
+                                    setTimeout(() => {
+                                      const el2 = document.getElementById("about-company-section");
+                                      if (el2) el2.scrollIntoView({ behavior: 'smooth' });
+                                    }, 120);
+                                  }
+                                }} 
+                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
+                                  theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'
+                                } hover:text-[#FE540B]`}
+                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
+                              >
+                                Sobre
+                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" />
+                              </button>
+
+                              {/* Serviços */}
+                              <button 
+                                onClick={() => {
+                                  const el = document.getElementById("catalog-section");
+                                  if (el) {
+                                    el.scrollIntoView({ behavior: 'smooth' });
+                                  } else {
+                                    setActiveView("bio");
+                                    setTimeout(() => {
+                                      const el2 = document.getElementById("catalog-section");
+                                      if (el2) el2.scrollIntoView({ behavior: 'smooth' });
+                                    }, 120);
+                                  }
+                                }} 
+                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
+                                  theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'
+                                } hover:text-[#FE540B]`}
+                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
+                              >
+                                Serviços
+                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" />
+                              </button>
+
+                              {/* Portfólio */}
+                              <button 
+                                onClick={() => {
+                                  const el = document.getElementById("portfolio-section");
+                                  if (el) {
+                                    el.scrollIntoView({ behavior: 'smooth' });
+                                  } else {
+                                    setActiveView("bio");
+                                    setTimeout(() => {
+                                      const el2 = document.getElementById("portfolio-section");
+                                      if (el2) el2.scrollIntoView({ behavior: 'smooth' });
+                                    }, 120);
+                                  }
+                                }} 
+                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
+                                  (activeView as string) === "portfolio" 
+                                    ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
+                                    : `opacity-80 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
+                                } hover:text-[#FE540B]`}
+                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
+                              >
+                                Portfólio
+                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'portfolio' ? 'scaleX(1)' : undefined }} />
+                              </button>
+
+                              {/* Contato */}
+                              <button 
+                                onClick={() => setActiveView("contact")} 
+                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
+                                  (activeView as string) === "contact" 
+                                    ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
+                                    : `opacity-80 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
+                                } hover:text-[#FE540B]`}
+                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
+                              >
+                                Contato
+                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'contact' ? 'scaleX(1)' : undefined }} />
+                              </button>
+
+                              {/* Distancing Spacer */}
+                              <div className="w-8 sm:w-12 md:w-14 lg:w-16" />
+
+                              {/* Social Icons Group */}
+                              <div className="flex items-center gap-4 sm:gap-5 md:gap-6">
+                                {socialIcons.length > 0 && socialIcons.map((item) => {
+                                  return (
+                                    <a 
+                                      key={item.key} 
+                                      href={asPreview ? undefined : formatExternalUrl(item.href)} 
+                                      target="_blank" 
+                                      rel="noreferrer" 
+                                      title={item.label} 
+                                      className="flex items-center justify-center cursor-pointer transition-none text-black" 
+                                      onClick={(e) => { if (asPreview) e.preventDefault(); }}
+                                    >
+                                      <InteractiveSocialIcon 
+                                        itemKey={item.key} 
+                                        label={item.label} 
+                                        theme={theme} 
+                                        forceBlack={true}
+                                        sizeClass="w-5 sm:w-5.5"
+                                        fallbackIcon={item.icon} 
+                                        instant={true}
+                                      />
+                                    </a>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         
-                        {/* Thin animated bar */}
+                        {/* Barrinha fina neon multicolorida encostada no final da barra branca superior de uma extremidade a outra */}
                         <div 
-                          className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50"
+                          className="w-full h-[3.5px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
                           style={{
-                            background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                            background: `linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B)`,
                             backgroundSize: '300% 300%',
                             animation: 'color-loop 5s ease infinite',
+                            boxShadow: '0 1px 8px rgba(254, 84, 11, 0.45), 0 2px 14px rgba(139, 92, 246, 0.35)'
                           }}
                         />
                       </div>
 
-                      {/* Desktop Hero Section */}
-                      <div className={`w-full relative group bg-black/10 transition-all duration-1000 ease-in-out ${
-                        activeView === "contact" 
-                          ? "md:h-[35vh] md:min-h-[250px]" 
-                          : activeView === "portfolio"
-                            ? "md:h-screen md:min-h-[600px]"
-                            : "md:h-[calc(105.3vh-140px)] md:min-h-[500px]"
-                      }`} style={{}}>
-                        <div className="w-full h-full relative">
+                      {/* Desktop Hero Section - BANNER OCUPANDO TODA A ÁREA MARCADA COM X POR DETRÁS DO TEXTO */}
+                      {isWebsiteLayout && activeView !== "contact" && activeView !== "portfolio" ? (
+                        <div className="w-full bg-black relative overflow-hidden flex items-center min-h-[580px] lg:h-[calc(100vh-96px)] max-h-[840px]">
+                          {/* Banner Principal ocupando toda a área marcada (100% de ponta a ponta, de um lado ao outro por de trás do texto) */}
                           <img 
-                            src={activeView === "contact" ? (bio.contact_banner_img_url || finalDesktop) : (activeView === "portfolio" ? (portfolioDesktopBanner || finalDesktop) : finalDesktop)} 
-                            alt="Banner Desktop" 
-                            className="w-full h-full object-cover absolute inset-0" 
+                            src={bio.banner_img_url_1 || bio.desktop_banner_img_url || bio.banner_url || data?.app_background_url || defaultArchitectureBanner} 
+                            alt={companyName || "GM Edificação"} 
+                            className="w-full h-full object-cover object-center select-none absolute inset-0 z-0" 
                             referrerPolicy="no-referrer" 
                           />
-                          
-                          {(() => {
-                            const heroAlign = asPreview
-                              ? (previewMode === "smartphone" ? (bio.description_align_mobile || "center") : (bio.description_align || "center"))
-                              : (bio.description_align || "center");
 
-                            const heroBold = asPreview
-                              ? (previewMode === "smartphone" ? bio.description_bold_mobile : bio.description_bold)
-                              : bio.description_bold;
+                          {/* Degradê esfumaçado preto sobre o banner e atrás do texto (área indicada no print em vermelho, opacidade de 30%, sem efeito blur) */}
+                          <div 
+                            className="hidden md:block absolute inset-0 z-10 pointer-events-none"
+                            style={{
+                              background: 'linear-gradient(108deg, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.30) 22%, rgba(0, 0, 0, 0.18) 36%, rgba(0, 0, 0, 0.05) 46%, transparent 52%)',
+                            }}
+                          />
 
-                            const heroItalic = asPreview
-                              ? (previewMode === "smartphone" ? bio.description_italic_mobile : bio.description_italic)
-                              : bio.description_italic;
+                          {/* Degradê horizontal suave complementar (30% de opacidade) atrás do texto */}
+                          <div 
+                            className="hidden md:block absolute inset-0 z-10 pointer-events-none"
+                            style={{
+                              background: 'linear-gradient(to right, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.20) 25%, rgba(0, 0, 0, 0.08) 40%, transparent 50%)',
+                            }}
+                          />
 
-                            return (
-                              <>
-                                {/* Gradient overlay for text readability */}
-                                {activeView !== "contact" && activeView !== "portfolio" && (
-                                  <div className={`absolute inset-0 z-10 ${heroAlign === 'center' ? 'bg-black/40' : heroAlign === 'right' ? 'bg-gradient-to-l from-black/80 via-black/40 to-transparent' : 'bg-gradient-to-r from-black/80 via-black/40 to-transparent'}`} />
-                                )}
-                                
-                                {/* Overlaid Profile Content (Hero Text) */}
-                                {activeView !== "contact" && activeView !== "portfolio" && (
-                                  <div className="absolute inset-0 z-20 flex flex-col justify-center py-6">
-                                    <div className={`w-full max-w-[1150px] mx-auto px-4 md:px-8 lg:px-12 flex flex-col ${heroAlign === 'center' ? 'items-center text-center' : heroAlign === 'right' ? 'items-end text-right' : 'items-start text-left'}`}>
-                                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight !text-white drop-shadow-md max-w-2xl leading-tight">
-                                         {companyName}
-                                       </h1>
-                                       {desc && (
-                                         <div 
-                                           className={`mt-4 text-base md:text-lg lg:text-xl !text-white [&_*]:!text-white drop-shadow-sm max-w-2xl leading-relaxed whitespace-pre-wrap ${heroBold ? 'font-bold' : 'font-medium'} ${heroItalic ? 'italic' : ''}`}
-                                           dangerouslySetInnerHTML={{ __html: desc }}
-                                         />
-                                       )}
-                                       
-                                       {bio.portfolio_items && bio.portfolio_items.length > 0 && (
+                          {/* Esfumaçado degradê para telas menores / mobile (opacidade de 30%, sem blur) */}
+                          <div 
+                            className="md:hidden absolute inset-0 z-10 pointer-events-none"
+                            style={{
+                              background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.20) 50%, transparent 100%)',
+                            }}
+                          />
+
+                          {/* Conteúdo de Texto sobreposto na frente do esfumaçado e do banner */}
+                          <div className="w-full md:w-3/5 lg:w-[50%] flex flex-col justify-center py-14 md:py-20 px-6 sm:px-12 md:px-16 lg:px-24 z-20 relative">
+                            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[62px] font-black tracking-tight text-white leading-[1.08] select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
+                              {bio.hero_title || bio.title || companyName || "GM edificação"}
+                            </h1>
+                            <p className="mt-4 text-base sm:text-lg text-zinc-200 leading-relaxed font-normal max-w-xl drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]">
+                              {desc ? (
+                                <span dangerouslySetInnerHTML={{ __html: desc }} />
+                              ) : (
+                                `GM edificação, Design Feroz`
+                              )}
+                            </p>
+                            <div className="mt-8 flex gap-4">
+                              <button 
+                                onClick={() => {
+                                  const el = document.getElementById("portfolio-section") || document.getElementById("catalog-section");
+                                  if (el) {
+                                    el.scrollIntoView({ behavior: 'smooth' });
+                                  } else {
+                                    setActiveView("contact");
+                                  }
+                                }}
+                                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-base font-bold text-white border border-[#FE540B] bg-black/40 hover:bg-[#FE540B] transition-all duration-300 shadow-[0_0_15px_rgba(254,84,11,0.25)] hover:shadow-[0_0_20px_rgba(254,84,11,0.5)] cursor-pointer"
+                              >
+                                {bio.hero_button_label || "Conheça nossos Serviços"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={`w-full relative group ${isWebsiteLayout ? 'bg-black overflow-hidden' : 'bg-black/10'} transition-all duration-1000 ease-in-out ${
+                          activeView === "contact" 
+                            ? "md:h-[35vh] md:min-h-[250px]" 
+                            : activeView === "portfolio"
+                              ? "md:h-screen md:min-h-[600px]"
+                              : "md:h-[calc(105.3vh-140px)] md:min-h-[500px]"
+                        }`}>
+                          <div className="w-full h-full relative">
+                            <img 
+                              src={activeView === "contact" ? (bio.contact_banner_img_url || finalDesktop) : (activeView === "portfolio" ? (portfolioDesktopBanner || finalDesktop) : finalDesktop)} 
+                              alt="Banner Desktop" 
+                              className="w-full h-full object-cover absolute inset-0" 
+                              referrerPolicy="no-referrer" 
+                            />
+                            
+                            {(() => {
+                              const heroAlign = asPreview
+                                ? (previewMode === "smartphone" ? (bio.description_align_mobile || "center") : (bio.description_align || "center"))
+                                : (bio.description_align || "center");
+
+                              const heroBold = asPreview
+                                ? (previewMode === "smartphone" ? bio.description_bold_mobile : bio.description_bold)
+                                : bio.description_bold;
+
+                              const heroItalic = asPreview
+                                ? (previewMode === "smartphone" ? bio.description_italic_mobile : bio.description_italic)
+                                : bio.description_italic;
+
+                              return (
+                                <>
+                                  {/* Gradient overlay for text readability */}
+                                  {activeView !== "contact" && activeView !== "portfolio" && (
+                                    <div className={`absolute inset-0 z-10 ${heroAlign === 'center' ? 'bg-black/40' : heroAlign === 'right' ? 'bg-gradient-to-l from-black/80 via-black/40 to-transparent' : 'bg-gradient-to-r from-black/80 via-black/40 to-transparent'}`} />
+                                  )}
+                                  
+                                  {/* Overlaid Profile Content (Hero Text) */}
+                                  {activeView !== "contact" && activeView !== "portfolio" && (
+                                    <div className="absolute inset-0 z-20 flex flex-col justify-center py-6">
+                                      <div className={`w-full max-w-[1240px] mx-auto px-6 md:px-12 flex flex-col ${heroAlign === 'center' ? 'items-center text-center' : heroAlign === 'right' ? 'items-end text-right' : 'items-start text-left'}`}>
+                                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight !text-white leading-tight drop-shadow-md max-w-2xl">
+                                           {bio.title || companyName}
+                                         </h1>
+                                         {desc && (
+                                           <div 
+                                             className={`mt-5 text-base md:text-lg lg:text-xl text-zinc-300 drop-shadow-sm max-w-2xl leading-relaxed whitespace-pre-wrap ${heroBold ? 'font-bold' : 'font-normal'} ${heroItalic ? 'italic' : ''}`}
+                                             dangerouslySetInnerHTML={{ __html: desc }}
+                                           />
+                                         )}
+                                         
                                          <div className="mt-8 flex">
                                            <button 
                                              onClick={() => {
-                                               const el = document.getElementById("portfolio-section");
+                                               const el = document.getElementById("portfolio-section") || document.getElementById("catalog-section");
                                                if (el) el.scrollIntoView({ behavior: 'smooth' });
                                              }}
-                                             className="flex items-center px-8 py-3.5 rounded-full text-lg font-extrabold shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 !text-white [&_*]:!text-white bg-gradient-to-r"
+                                             className="flex items-center px-8 py-4 rounded-full text-base sm:text-lg font-extrabold shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 !text-white bg-gradient-to-r"
                                              style={{ 
                                                backgroundImage: `linear-gradient(to right, ${brandColor}, ${brandColor}dd)`,
                                                color: '#ffffff',
@@ -2000,15 +2362,15 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                              <span className="!text-white">Veja nosso Portfólio</span>
                                            </button>
                                          </div>
-                                       )}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
-                              </>
-                            );
-                          })()}
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
 
@@ -2018,22 +2380,21 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'} w-full relative group transition-all duration-300 flex flex-col`}
                     >
                       {/* Mobile Top Navbar with Desktop Glass/Blur Effect */}
-                      <div className="w-full h-[88px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-5 relative z-40">
+                      <div className={`w-full h-[88px] ${isWebsiteLayout ? 'bg-white text-zinc-900' : 'bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5'} flex items-center justify-between px-5 relative z-40`}>
                         <div className="flex items-center gap-2 cursor-pointer" onClick={handleLogoClick}>
-                          {logo ? (
-                            <img src={logo} alt={companyName} className="h-7 w-auto object-contain rounded" />
+                          {effectiveLogo ? (
+                            <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-9 w-auto object-contain rounded" />
                           ) : (
-                            <svg className={`w-5.5 h-6.5 shrink-0 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-[#FE540B]'}`} viewBox="0 0 22 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M4 6C4 3.79086 5.79086 2 8 2H14C16.2091 2 18 3.79086 18 6V20C18 22.2091 16.2091 24 14 24H8C5.79086 24 4 22.2091 4 20V12H11V16H8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white shadow-sm" style={{ backgroundColor: brandColor || "#FE540B" }}>
+                              {(companyName || "GM").charAt(0).toUpperCase()}
+                            </div>
                           )}
-                          <span className={`font-extrabold text-[15px] sm:text-base tracking-tight truncate ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
                         </div>
                         
                         <div className="flex items-center">
                           <button 
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-                            className={`p-2 -mr-2 hover:opacity-75 transition-opacity focus:outline-none cursor-pointer z-40 relative ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}
+                            className={`p-2 -mr-2 hover:opacity-75 transition-opacity focus:outline-none cursor-pointer z-40 relative ${isWebsiteLayout ? 'text-zinc-900' : (theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900')}`}
                           >
                             {isMobileMenuOpen ? (
                               <X className="w-6 h-6 stroke-[2.5]" />
@@ -2045,74 +2406,130 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                         {/* Hamburger Slide Down Dropdown Menu */}
                         {isMobileMenuOpen && (
-                          <div className={`absolute top-[88px] inset-x-0 z-50 flex flex-col p-6 space-y-4 shadow-xl animate-in slide-in-from-top-4 duration-300 border-b ${theme === 'dark' || theme === 'glass' ? 'bg-zinc-950/95 backdrop-blur-md border-white/10' : 'bg-white border-zinc-100'}`}>
-                            <button 
-                              onClick={() => {
-                                setActiveView("bio");
-                                setIsMobileMenuOpen(false);
-                                setActivePortfolioId(null);
-                              }}
-                              className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'bio' ? 'text-[#FE540B] dark:text-[#FE540B]' : ''}`}
-                            >
-                              Início
-                            </button>
-                            <button 
-                              onClick={() => {
-                                setActiveView("contact");
-                                setIsMobileMenuOpen(false);
-                              }}
-                              className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'contact' ? 'text-[#FE540B] dark:text-[#FE540B]' : ''}`}
-                            >
-                              Contato
-                            </button>
-                            {bio.portfolio_items && bio.portfolio_items.length > 0 && (
-                              <button 
-                                onClick={() => {
-                                  setIsMobileMenuOpen(false);
-                                  const el = document.getElementById("portfolio-section");
-                                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                }}
-                                className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'}`}
-                              >
-                                Portfólio
-                              </button>
-                            )}
-                            
-                            {socialIcons.length > 0 && (
-                              <div className="flex items-center gap-3 pt-2.5">
-                                {socialIcons.map((item) => {
-                                  return (
-                                    <a 
-                                      key={item.key} 
-                                      href={asPreview ? undefined : formatExternalUrl(item.href)} 
-                                      target="_blank" 
-                                      rel="noreferrer" 
-                                      title={item.label} 
-                                      className={`w-8.5 h-8.5 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer border ${theme === 'dark' || theme === 'glass' ? 'bg-zinc-900 border-white/10' : 'bg-zinc-50 border-zinc-100'}`} 
-                                      onClick={(e) => { if (asPreview) e.preventDefault(); }}
-                                    >
-                                      <InteractiveSocialIcon 
-                                        itemKey={item.key} 
-                                        label={item.label} 
-                                        theme={theme} 
-                                        sizeClass="w-4.5 h-4.5"
-                                        fallbackIcon={item.icon} 
-                                      />
-                                    </a>
-                                  );
-                                })}
-                              </div>
+                          <div className={`absolute top-[88px] inset-x-0 z-50 flex flex-col p-6 space-y-4 shadow-xl animate-in slide-in-from-top-4 duration-300 border-b ${isWebsiteLayout ? 'bg-white border-zinc-200 text-zinc-900' : (theme === 'dark' || theme === 'glass' ? 'bg-zinc-950/95 backdrop-blur-md border-white/10' : 'bg-white border-zinc-100')}`}>
+                            {isWebsiteLayout ? (
+                              <>
+                                <button 
+                                  onClick={() => {
+                                    setActiveView("bio");
+                                    setIsMobileMenuOpen(false);
+                                    setActivePortfolioId(null);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className={`topbar-nav-link mobile-nav-link text-left text-base font-bold uppercase tracking-wider py-3 border-b border-zinc-100 text-zinc-900 hover:text-[#FE540B] !bg-transparent !shadow-none !rounded-none ${activeView === 'bio' ? 'text-[#FE540B]' : ''}`}
+                                  style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
+                                >
+                                  Início
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    setActiveView("contact");
+                                    setIsMobileMenuOpen(false);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className={`topbar-nav-link mobile-nav-link text-left text-base font-bold uppercase tracking-wider py-3 border-b border-zinc-100 text-zinc-900 hover:text-[#FE540B] !bg-transparent !shadow-none !rounded-none ${activeView === 'contact' ? 'text-[#FE540B]' : ''}`}
+                                  style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
+                                >
+                                  Contato
+                                </button>
+                                {userSocialLinks.length > 0 && (
+                                  <div className="flex items-center gap-4 pt-3 text-black">
+                                    {userSocialLinks.map((item) => (
+                                      <TopBarSocialIcon key={item.id} item={item} asPreview={asPreview} />
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <button 
+                                  onClick={() => {
+                                    setActiveView("bio");
+                                    setIsMobileMenuOpen(false);
+                                    setActivePortfolioId(null);
+                                  }}
+                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'bio' ? 'text-[#FE540B] font-bold' : ''}`}
+                                >
+                                  Início
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    const el = document.getElementById("about-company-section");
+                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                  }}
+                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'}`}
+                                >
+                                  Sobre
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    const el = document.getElementById("catalog-section");
+                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                  }}
+                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'}`}
+                                >
+                                  Serviços
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    const el = document.getElementById("portfolio-section");
+                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                  }}
+                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'}`}
+                                >
+                                  Portfólio
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    setActiveView("contact");
+                                    setIsMobileMenuOpen(false);
+                                  }}
+                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'contact' ? 'text-[#FE540B] font-bold' : ''}`}
+                                >
+                                  Contato
+                                </button>
+                                
+                                {socialIcons.length > 0 && (
+                                  <div className="flex items-center gap-3 pt-2.5">
+                                    {socialIcons.map((item) => {
+                                      return (
+                                        <a 
+                                          key={item.key} 
+                                          href={asPreview ? undefined : formatExternalUrl(item.href)} 
+                                          target="_blank" 
+                                          rel="noreferrer" 
+                                          title={item.label} 
+                                          className={`w-8.5 h-8.5 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer border ${theme === 'dark' || theme === 'glass' ? 'bg-zinc-900 border-white/10' : 'bg-zinc-50 border-zinc-100'}`} 
+                                          onClick={(e) => { if (asPreview) e.preventDefault(); }}
+                                        >
+                                          <InteractiveSocialIcon 
+                                            itemKey={item.key} 
+                                            label={item.label} 
+                                            theme={theme} 
+                                            sizeClass="w-4.5 h-4.5"
+                                            fallbackIcon={item.icon} 
+                                          />
+                                        </a>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </>
                             )}
                           </div>
                         )}
                         
-                        {/* Thin animated bar */}
+                        {/* Barrinha fina neon multicolorida de uma extremidade a outra (abaixo da barra do topo mobile) */}
                         <div 
-                          className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50"
+                          className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
                           style={{
-                            background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                            background: `linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B)`,
                             backgroundSize: '300% 300%',
                             animation: 'color-loop 5s ease infinite',
+                            boxShadow: '0 1px 8px rgba(254, 84, 11, 0.45), 0 2px 14px rgba(139, 92, 246, 0.35)'
                           }}
                         />
                       </div>
@@ -2123,18 +2540,20 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           ? "h-screen w-full py-0 px-0"
                           : activeView === "contact"
                             ? (isMobileView ? "aspect-[16/10] min-h-[320px] py-10 px-6 flex flex-col items-center justify-center text-center" : "aspect-[21/9] sm:aspect-auto min-h-[220px] sm:min-h-[260px] py-6 px-6 flex flex-col items-center justify-center text-center")
-                            : (isMobileView ? "h-screen w-full py-20 px-6 flex flex-col items-center justify-center text-center" : "aspect-[6/5] sm:aspect-auto min-h-[320px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center")
+                            : (isMobileView ? (isWebsiteLayout ? "min-h-[620px] h-[90vh] w-full py-20 px-6 flex flex-col items-center justify-center text-center bg-black" : "h-screen w-full py-20 px-6 flex flex-col items-center justify-center text-center") : "aspect-[6/5] sm:aspect-auto min-h-[320px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center")
                       }`}>
                         <img 
-                          src={activeView === "contact" ? (bio.contact_banner_img_url || finalMobile) : (activeView === "portfolio" ? (portfolioMobileBanner || finalMobile) : finalMobile)} 
+                          src={activeView === "contact" ? (bio.contact_banner_img_url || finalMobile) : (activeView === "portfolio" ? (portfolioMobileBanner || finalMobile) : (bio.mobile_banner_img_url_1 || bio.banner_img_url_1 || defaultArchitectureBanner))} 
                           alt="Banner Mobile" 
-                          className="w-full h-full object-cover absolute inset-0 z-0" 
+                          className={`w-full h-full ${isWebsiteLayout ? 'object-cover object-center absolute inset-0 z-0' : 'object-cover absolute inset-0 z-0'}`} 
                           referrerPolicy="no-referrer" 
                         />
                         
-                        {/* High-Contrast Progressive Black Gradient Overlay for Impeccable Readability */}
+                        {/* Degradê esfumaçado mobile com opacidade de 30%, sem blur */}
                         {activeView !== "portfolio" && (
-                          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/85 z-10" />
+                          <div 
+                            className={`absolute inset-0 z-10 ${isWebsiteLayout ? 'bg-gradient-to-b from-black/30 via-black/20 to-transparent' : 'bg-gradient-to-b from-black/40 via-black/55 to-black/85'}`} 
+                          />
                         )}
                         
                         {/* Overlaid Hero Content - Centered with title, about section, and button on top of the banner */}
@@ -2149,34 +2568,31 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           return (
                             <div className={`relative z-20 w-full flex flex-col justify-center ${mobAlignClass} space-y-6 px-4`}>
                               <h1 className="text-[34px] sm:text-[38px] font-black tracking-tight !text-white leading-[1.1] select-none max-w-[95%] drop-shadow-md">
-                                {bio.title_mobile || bio.title || companyName || "Criando marcas que conectam"}
+                                {bio.title_mobile || bio.title || (companyName ? `${companyName}` : "GM Edificação")}
                               </h1>
                               
-                              {desc && (
-                                <div className={`w-full flex flex-col ${mobAlignClass} space-y-3.5 pt-6 max-w-sm border-t border-white/10 mt-6`}>
-                                  <h2 className="hidden sm:block text-xl sm:text-2xl font-black tracking-tight !text-white font-sans uppercase">
-                                    Sobre a
-                                  </h2>
-                                  <div 
-                                    className={`leading-relaxed !text-white [&_*]:!text-white whitespace-pre-wrap font-sans drop-shadow-sm px-2 ${mobSize} ${mobBold} ${mobItalic} ${mobFont}`}
-                                    dangerouslySetInnerHTML={{ __html: desc }}
-                                  />
-                                </div>
-                              )}
+                              <div className={`w-full flex flex-col ${mobAlignClass} space-y-3.5 pt-6 max-w-sm border-t border-white/10 mt-6`}>
+                                <div 
+                                  className={`leading-relaxed !text-white [&_*]:!text-white whitespace-pre-wrap font-sans drop-shadow-sm px-2 ${mobSize} ${mobBold} ${mobItalic} ${mobFont}`}
+                                  dangerouslySetInnerHTML={{ 
+                                    __html: desc || `Especialistas em construção civil, reformas residenciais e comerciais, gerenciamento de obras e projetos personalizados. Qualidade, pontualidade e excelência.` 
+                                  }}
+                                />
+                              </div>
 
                               <button 
                                 onClick={() => {
-                                  const el = document.getElementById("portfolio-section");
+                                  const el = document.getElementById("portfolio-section") || document.getElementById("catalog-section");
                                   if (el) {
                                     el.scrollIntoView({ behavior: 'smooth' });
                                   } else {
-                                    setActiveView("bio");
+                                    setActiveView("contact");
                                   }
                                 }}
                                 className="px-8 py-3.5 bg-[#FE540B] hover:bg-[#ff3d00] !text-white [&_*]:!text-white rounded-full text-base font-extrabold shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer mt-4"
                                 style={{ color: '#ffffff' }}
                               >
-                                <span className="!text-white">Veja nosso Portfólio</span>
+                                <span className="!text-white">{bio.hero_button_label || "Conheça nossos Serviços"}</span>
                               </button>
                             </div>
                           );
@@ -2996,10 +3412,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           {/* 6. Admin Area / Login Footer Trigger */}
           <div className="pt-8 pb-8 text-center space-y-6">
             <div className="text-sm sm:text-base font-bold tracking-wider opacity-90">
-              <span className="text-white">GM</span>{' '}
-              <span style={{ color: "#FE540B" }}>edificação®</span>{' '}
-              <span className="text-zinc-400">2026</span>
-              <span className="text-zinc-500">.</span>
+              <span className={theme === 'dark' || theme === 'glass' ? "text-white font-extrabold" : "text-zinc-900 font-extrabold"}>
+                {companyName ? companyName.toUpperCase() : "GM EDIFICAÇÃO"}®
+              </span>{' '}
+              <span style={{ color: brandColor || "#FE540B" }} className="font-extrabold">2026</span>
             </div>
             <div>
               <button 

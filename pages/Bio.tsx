@@ -1983,15 +1983,17 @@ export default function Bio() {
               <div>
                 <label className="gm-label">Tema Visual</label>
                 <select className="gm-input w-full" value={bioConfig.theme} onChange={e => handleChange("theme", e.target.value)}>
-                  <option value="dark">Escuro (Padrão)</option>
+                  <option value="gorila">Gorila Design (Oficial / goriladesign.com.br)</option>
+                  <option value="dark">Escuro</option>
                   <option value="light">Claro</option>
                 </select>
               </div>
               <div>
                 <label className="gm-label flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5 text-zinc-400" /> Fonte do Site (Computador)</label>
                 <select className="gm-input w-full" value={bioConfig.site_font || "inter"} onChange={e => handleChange("site_font", e.target.value)}>
+                  <option value="space">Space Grotesk (Gorila Design)</option>
+                  <option value="syne">Syne (Display / Moderno)</option>
                   <option value="inter">Inter (Padrão)</option>
-                  <option value="space">Space Grotesk (Tech/Moderno)</option>
                   <option value="serif">Playfair Display (Serif/Editorial)</option>
                   <option value="mono">JetBrains Mono (Código/Técnico)</option>
                   <option value="montserrat">Montserrat (Clean/Moderno)</option>
@@ -2010,8 +2012,9 @@ export default function Bio() {
               <div>
                 <label className="gm-label flex items-center gap-1.5 text-[var(--primary-color)]"><Smartphone className="w-3.5 h-3.5" /> Fonte do Site (Celular)</label>
                 <select className="gm-input w-full border-[var(--primary-color-40)] focus:border-[var(--primary-color)]" value={bioConfig.site_font_mobile || bioConfig.site_font || "inter"} onChange={e => handleChange("site_font_mobile", e.target.value)}>
+                  <option value="space">Space Grotesk (Gorila Design)</option>
+                  <option value="syne">Syne (Display / Moderno)</option>
                   <option value="inter">Inter (Padrão)</option>
-                  <option value="space">Space Grotesk (Tech/Moderno)</option>
                   <option value="serif">Playfair Display (Serif/Editorial)</option>
                   <option value="mono">JetBrains Mono (Código/Técnico)</option>
                   <option value="montserrat">Montserrat (Clean/Moderno)</option>

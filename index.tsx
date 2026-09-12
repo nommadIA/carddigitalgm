@@ -26,7 +26,8 @@ async function bootReal() {
 
   // 2) Tenta carregar dados mínimos na splash
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const res = await supabase.auth.getSession().catch(() => null);
+    const session = res?.data?.session;
     const user = session?.user;
 
     if (user) {

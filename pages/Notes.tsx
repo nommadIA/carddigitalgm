@@ -437,7 +437,13 @@ export default function Notes() {
   const [editorTab, setEditorTab] = useState<"note" | "layouts" | "settings">("note");
 
   // Exibidor sutil para a parte debaixo da nota (Data, Horários, Salvar Auto)
-  const [bottomDetailsVisible, setBottomDetailsVisible] = useState(false);
+  const [bottomDetailsVisible, setBottomDetailsVisible] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("gm_note_bottom_details_visible_v1");
+      if (saved !== null) return saved === "true";
+    } catch (e) {}
+    return true; // Padrão visível para acesso rápido aos controles de data, horários e autosave
+  });
 
   // Exibidor sutil para configurações superiores da nota (Tipo, Status, Prazo, Responsável, Horário)
   const [topDetailsVisible, setTopDetailsVisible] = useState(false);
@@ -454,7 +460,8 @@ export default function Notes() {
   const [draggedLayoutIdx, setDraggedLayoutIdx] = useState<number | null>(null);
   const [dragOverLayoutIdx, setDragOverLayoutIdx] = useState<number | null>(null);
 
-  // Redimensionador do Modal de Notas (largura e altura livre com 4 guias idênticas nos 4 cantos)
+  // Redimensionador do Modal de Notas (largura e altura livre com 4 guias nos 4 cantos e 4 bordas)
+  const modalRef = useRef<HTMLDivElement>(null);
   const [modalCustomSize, setModalCustomSize] = useState<{ width?: number; height?: number }>(() => {
     try {
       const saved = localStorage.getItem("gm_note_modal_custom_size_v1");
@@ -473,7 +480,7 @@ export default function Notes() {
     e.stopPropagation();
     isResizingModalRef.current = true;
 
-    const modalEl = document.querySelector(".gm-note-modal") as HTMLElement;
+    const modalEl = modalRef.current || (document.querySelector(".gm-note-modal") as HTMLElement);
     if (!modalEl) return;
 
     // Trava ponteiro se suportado para rastreio contínuo mesmo fora da janela
@@ -483,8 +490,9 @@ export default function Notes() {
       }
     } catch (err) {}
 
-    const startW = modalEl.offsetWidth;
-    const startH = modalEl.offsetHeight;
+    const rect = modalEl.getBoundingClientRect();
+    const startW = rect.width;
+    const startH = rect.height;
     const startX = e.clientX;
     const startY = e.clientY;
 
@@ -512,6 +520,7 @@ export default function Notes() {
 
     const onPointerMove = (moveEv: PointerEvent) => {
       if (!isResizingModalRef.current) return;
+      moveEv.preventDefault();
       const deltaX = moveEv.clientX - startX;
       const deltaY = moveEv.clientY - startY;
 
@@ -543,11 +552,11 @@ export default function Notes() {
 
       // Limites: Tamanho mínimo aceitável até as extremidades máximas da área útil (entre menu e borda direita)
       const sidebarW = window.innerWidth >= 768 ? (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--gm-sidebar-width")) || 224) : 0;
-      const workspaceW = Math.max(320, window.innerWidth - sidebarW);
-      const minW = Math.min(380, workspaceW * 0.90);
-      const maxW = Math.max(minW, workspaceW * 0.985);
-      const minH = Math.min(320, window.innerHeight * 0.85);
-      const maxH = Math.max(minH, window.innerHeight * 0.975);
+      const workspaceW = Math.max(340, window.innerWidth - sidebarW);
+      const minW = 400;
+      const maxW = Math.max(minW, workspaceW - 24);
+      const minH = 340;
+      const maxH = Math.max(minH, window.innerHeight - 24);
 
       const clampedW = Math.round(Math.max(minW, Math.min(maxW, newW)));
       const clampedH = Math.round(Math.max(minH, Math.min(maxH, newH)));
@@ -600,9 +609,24 @@ export default function Notes() {
       } catch (err) {}
     };
 
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
+  };
+
+  // Restaura o tamanho do modal para as dimensões padrões
+  const handleResetModalSize = () => {
+    setModalCustomSize({});
+    try {
+      localStorage.removeItem("gm_note_modal_custom_size_v1");
+    } catch (e) {}
+    const modalEl = modalRef.current || (document.querySelector(".gm-note-modal") as HTMLElement);
+    if (modalEl) {
+      modalEl.style.width = "";
+      modalEl.style.height = "";
+      modalEl.style.maxHeight = "";
+    }
+    showToast("Tamanho do editor restaurado ao padrão");
   };
 
   // Keyboard shortcut listener for Lightbox Zoom modal
@@ -1280,12 +1304,21 @@ export default function Notes() {
       setReminderTime(times[0] || "");
       setReminderTime2(times[1] || "");
       setReminderTime3(times[2] || "");
+      setBottomDetailsVisible(true);
+    } else if (note.reminder_time && note.reminder_time.includes("-") && !note.reminder_time.includes(":")) {
+      // Data ISO pura (YYYY-MM-DD)
+      setReminderDate(note.reminder_time);
+      setReminderTime("");
+      setReminderTime2("");
+      setReminderTime3("");
+      setBottomDetailsVisible(true);
     } else {
       setReminderDate("");
       const times = note.reminder_time ? note.reminder_time.split(",") : [];
       setReminderTime(times[0] || "");
       setReminderTime2(times[1] || "");
       setReminderTime3(times[2] || "");
+      if (times.length > 0) setBottomDetailsVisible(true);
     }
     setClocksExpanded(false);
     setModalOpen(true);
@@ -1298,8 +1331,8 @@ export default function Notes() {
     const timeStr = activeTimes.join(",");
 
     const savedReminder =
-      !isCompleted && reminderDate && timeStr
-        ? `${reminderDate} ${timeStr}`
+      !isCompleted && reminderDate
+        ? (timeStr ? `${reminderDate} ${timeStr}` : reminderDate)
         : (!isCompleted && timeStr ? timeStr : null);
 
     // Garante que o conteúdo salvo seja exatamente o DOM atual do editor (sem imagens excluídas)
@@ -2168,14 +2201,15 @@ export default function Notes() {
 
                 {/* Modal Main Window */}
                 <motion.div
+                  ref={modalRef}
                   initial={{ y: "100%", opacity: 0, scale: 0.96 }}
                   animate={{ y: 0, opacity: 1, scale: 1 }}
                   exit={{ y: "100%", opacity: 0, scale: 0.96 }}
                   transition={{ type: "spring", damping: 26, stiffness: 320 }}
-                  className="relative w-full sm:w-[94%] md:max-w-6xl rounded-none sm:rounded-3xl flex flex-col overflow-hidden fora border border-white/15 shadow-none bg-[#0c0f17]/90 backdrop-blur-2xl text-white z-10 m-auto h-[100dvh] sm:h-auto"
+                  className="gm-note-modal relative w-full sm:w-[94%] rounded-none sm:rounded-3xl flex flex-col overflow-hidden border border-white/15 shadow-2xl bg-[#0c0f17]/95 backdrop-blur-2xl text-white z-10 m-auto h-[100dvh] sm:h-auto"
                   style={{
-                    width: window.innerWidth >= 768 && modalCustomSize.width ? `${modalCustomSize.width}px` : undefined,
-                    height: window.innerWidth >= 768 && modalCustomSize.height ? `${modalCustomSize.height}px` : undefined,
+                    width: window.innerWidth >= 768 ? (modalCustomSize.width ? `${modalCustomSize.width}px` : "min(1152px, 94vw)") : "100vw",
+                    height: window.innerWidth >= 768 ? (modalCustomSize.height ? `${modalCustomSize.height}px` : undefined) : "100dvh",
                     maxWidth: window.innerWidth >= 768 ? "calc(100vw - var(--gm-sidebar-width, 224px) - 24px)" : "100vw",
                     maxHeight: window.innerWidth < 768 ? "100dvh" : modalCustomSize.height ? `${modalCustomSize.height}px` : "92vh",
                     borderWidth: window.innerWidth < 768 ? "0px" : "1px",
@@ -2224,7 +2258,8 @@ export default function Notes() {
                     <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
                       <input
                         type="text"
-                        className="bg-transparent border-none outline-none font-bold text-base sm:text-lg text-white w-full placeholder:text-white/30 tracking-tight"
+                        className="gm-note-title-input bg-black/35 hover:bg-black/55 focus:bg-black/70 border border-white/10 hover:border-white/20 focus:border-[var(--gm-primary,#FF6900)] rounded-xl outline-none pl-5 sm:pl-6 pr-4 py-2 sm:py-2.5 font-bold text-base sm:text-lg text-white w-full placeholder:text-white/30 tracking-tight transition-all focus:ring-0 focus:outline-none"
+                        style={{ outline: "none", boxShadow: "none" }}
                         placeholder="Título da nota"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -2319,7 +2354,7 @@ export default function Notes() {
                       >
                         <Sliders size={14} className="shrink-0" />
                         <span className="truncate">CONFIGURAÇÕES</span>
-                        {(deliveryDate || [reminderTime, reminderTime2, reminderTime3].some(Boolean)) && (
+                        {(deliveryDate || deliveryTime) && (
                           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                         )}
                       </button>
@@ -2613,14 +2648,6 @@ export default function Notes() {
                           </span>
                         )}
 
-                        {/* Alarmes */}
-                        {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 && (
-                          <span className="inline-flex text-[10px] font-bold text-emerald-400 items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                            <Clock size={11} />
-                            {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length} alarme(s)
-                          </span>
-                        )}
-
                         {/* Responsável */}
                         {responsibleName && (
                           <span className="inline-flex text-[10px] font-bold text-white/70 items-center gap-1 bg-white/[0.04] px-2.5 py-1 rounded-lg border border-white/10 truncate max-w-[130px]">
@@ -2674,8 +2701,8 @@ export default function Notes() {
                       </div>
                     )}
 
-                    {/* Apple Notes Writing Card */}
-                    <div className="flex flex-col flex-1 w-full rounded-2xl bg-white/[0.025] border border-white/10 focus-within:border-[var(--gm-primary,#FF6900)]/60 focus-within:ring-1 focus-within:ring-orange-500/20 transition-all p-3.5 sm:p-5 min-h-[280px] shadow-sm">
+                    {/* Apple Notes Writing Card - Sem contorno laranja duplicado ao focar/clicar */}
+                    <div className="gm-note-editor-card flex flex-col flex-1 w-full rounded-2xl bg-white/[0.025] border border-white/10 transition-all p-3.5 sm:p-5 min-h-[280px] shadow-sm">
                       {/* Barra superior de controle do editor: Desfazer / Refazer e contador */}
                       <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/5 flex-wrap gap-2">
                         <div className="flex items-center gap-2">
@@ -2780,7 +2807,8 @@ export default function Notes() {
                           pushToHistory(val);
                           saveCurrentSelection();
                         }}
-                        className="w-full flex-1 min-h-[220px] bg-transparent outline-none text-white/95 focus:outline-none relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0 text-[15.5px] sm:text-[16.5px] font-normal leading-relaxed"
+                        className="gm-note-editor-content w-full flex-1 min-h-[220px] bg-transparent !outline-none text-white/95 focus:!outline-none focus-visible:!outline-none border-none focus:border-none ring-0 focus:ring-0 relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0 text-[15.5px] sm:text-[16.5px] font-normal leading-relaxed"
+                        style={{ outline: "none", boxShadow: "none" }}
                         {...{ placeholder: "Escreva seu texto aqui..." }}
                       />
                     </div>
@@ -3204,9 +3232,10 @@ export default function Notes() {
                             <GlassDatePicker
                               value={deliveryDate}
                               onChange={setDeliveryDate}
-                              className="w-full bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-3.5 h-[44px] flex items-center outline-none focus:border-[var(--gm-primary,#FF6900)] select-none font-semibold transition-all"
-                              title="Prazo"
+                              className="w-full bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-14 h-[44px] flex items-center outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-all"
+                              title="Prazo de Entrega"
                               themeColor={color}
+                              placeholder="DD/MM/AAAA"
                             />
                             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
                           </div>
@@ -3228,107 +3257,6 @@ export default function Notes() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Card 3: Lembretes & Alarmes */}
-                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3.5">
-                      <div className="flex items-center justify-between pb-2 border-b border-white/5 flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <Clock size={15} className="text-emerald-400" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-white/90">
-                            Lembretes & Alarmes Diários
-                          </span>
-                        </div>
-                        {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 && (
-                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-md">
-                            {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length} ativo(s)
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        {/* Data do Lembrete */}
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-white/60">
-                            Data do Lembrete
-                          </label>
-                          <div className="relative">
-                            <GlassDatePicker
-                              className="w-full bg-black/50 border border-white/10 rounded-xl text-sm font-semibold text-white pl-9 pr-3.5 h-[44px] outline-none transition-all flex items-center select-none cursor-pointer"
-                              value={reminderDate}
-                              onChange={setReminderDate}
-                              title="Data do Lembrete"
-                              themeColor={color}
-                            />
-                            <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
-                          </div>
-                        </div>
-
-                        {/* Botão de Horários */}
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-white/60">
-                            Horários de Alerta
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => setClocksExpanded(true)}
-                            className="w-full bg-black/50 hover:bg-black/70 border border-white/10 hover:border-white/25 rounded-xl text-sm font-semibold text-white px-3.5 h-[44px] outline-none transition-all flex items-center justify-between cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Clock size={15} className={[reminderTime, reminderTime2, reminderTime3].some(Boolean) ? "text-emerald-400" : "text-white/40"} />
-                              <span>Configurar Horários (Até 3)</span>
-                            </div>
-                            {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length > 0 ? (
-                              <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black bg-emerald-500 text-black">
-                                {[reminderTime, reminderTime2, reminderTime3].filter(Boolean).length}
-                              </span>
-                            ) : (
-                              <ChevronDown size={15} className="text-white/40" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Card 4: Salvamento Automático */}
-                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Save size={15} className="text-[var(--gm-primary,#FF6900)]" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-white/90">
-                            Salvamento Automático
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-white/40">
-                          {autoSaveInterval === "disabled" ? "Desativado" : `A cada ${autoSaveInterval} min`}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-2">
-                        {[
-                          { val: "10", label: "10 min" },
-                          { val: "15", label: "15 min" },
-                          { val: "30", label: "30 min" },
-                          { val: "disabled", label: "Off" },
-                        ].map((item) => (
-                          <button
-                            key={item.val}
-                            type="button"
-                            onClick={() => {
-                              setAutoSaveInterval(item.val as any);
-                              localStorage.setItem("gm_note_autosave_interval_v1", item.val);
-                              showToast(`Salvamento automático: ${item.label}`);
-                            }}
-                            className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all text-center cursor-pointer ${
-                              autoSaveInterval === item.val
-                                ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-md shadow-orange-500/20 font-black"
-                                : "bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10"
-                            }`}
-                          >
-                            {item.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
                   </motion.div>
                 )}
               </div>
@@ -3343,21 +3271,78 @@ export default function Notes() {
                 {/* Botão Ocultar / Expandir em Largura Total (Extremidades) */}
                 <button
                   type="button"
-                  onClick={() => setBottomDetailsVisible(!bottomDetailsVisible)}
-                  className="w-full py-2.5 sm:py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/10 text-white/75 hover:text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/10 hover:border-white/20 active:scale-[0.99] min-h-[44px] shadow-sm"
-                  title={bottomDetailsVisible ? "Ocultar" : "Expandir"}
+                  onClick={() => {
+                    const next = !bottomDetailsVisible;
+                    setBottomDetailsVisible(next);
+                    try {
+                      localStorage.setItem("gm_note_bottom_details_visible_v1", String(next));
+                    } catch (e) {}
+                  }}
+                  className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/10 text-white/80 hover:text-white text-xs font-black uppercase tracking-wider flex items-center justify-between gap-2 transition-all cursor-pointer border border-white/10 hover:border-white/20 active:scale-[0.99] min-h-[44px] shadow-sm"
+                  title={bottomDetailsVisible ? "Ocultar Informações Extras" : "Expandir Informações Extras (Data, Horários e Salvar Auto)"}
                 >
-                  {bottomDetailsVisible ? (
-                    <>
-                      <EyeOff size={15} className="text-white/60" />
-                      <span>Ocultar</span>
-                    </>
-                  ) : (
-                    <>
-                      <Eye size={15} className="text-white/60" />
-                      <span>Expandir</span>
-                    </>
-                  )}
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {bottomDetailsVisible ? (
+                      <Eye size={18} className="text-[#FF6900] shrink-0 drop-shadow-[0_0_10px_rgba(255,105,0,0.85)]" strokeWidth={2.4} />
+                    ) : (
+                      <EyeOff size={18} className="text-zinc-500 shrink-0" strokeWidth={2} />
+                    )}
+                    <span className="font-extrabold tracking-wider truncate text-xs">
+                      DATA, HORÁRIOS PROGRAMADOS E SALVAR AUTO
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                    {/* Badge da Data Programada */}
+                    {reminderDate ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] bg-orange-500/20 text-orange-400 border border-orange-500/35 px-2.5 py-1 rounded-lg font-mono font-bold whitespace-nowrap shadow-sm shadow-orange-500/10">
+                        <Calendar size={12} className="shrink-0 text-orange-400" />
+                        {reminderDate.split("-").reverse().join("/")}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 font-mono px-1.5 py-0.5 rounded bg-white/[0.02]">
+                        Sem data
+                      </span>
+                    )}
+
+                    {/* Badge dos Horários Programados */}
+                    {(() => {
+                      const activeTimes = [reminderTime, reminderTime2, reminderTime3].filter(Boolean);
+                      if (activeTimes.length > 0) {
+                        return (
+                          <span className="inline-flex items-center gap-1 text-[11px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 px-2.5 py-1 rounded-lg font-mono font-bold whitespace-nowrap shadow-sm shadow-green-500/10">
+                            <Clock size={12} className="shrink-0 text-emerald-400" />
+                            {activeTimes.join(" • ")}
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 font-mono px-1.5 py-0.5 rounded bg-white/[0.02]">
+                          Sem horário
+                        </span>
+                      );
+                    })()}
+
+                    {/* Badge do Salvamento Automático */}
+                    {(() => {
+                      const isOff = autoSaveInterval === "disabled";
+                      return (
+                        <span
+                          className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg font-mono font-bold whitespace-nowrap border ${
+                            isOff
+                              ? "bg-white/[0.04] text-zinc-500 border-white/10"
+                              : "bg-blue-500/20 text-blue-400 border-blue-500/35 shadow-sm shadow-blue-500/10"
+                          }`}
+                        >
+                          Auto: {isOff ? "Off" : `${autoSaveInterval}min`}
+                        </span>
+                      );
+                    })()}
+
+                    <span className="text-white/50 text-[11px] font-bold ml-0.5">
+                      {bottomDetailsVisible ? "▲" : "▼"}
+                    </span>
+                  </div>
                 </button>
 
                 {/* Detalhes Expansíveis Opcionais (DATA, HORÁRIOS e SALVAR AUTO) */}
@@ -3375,12 +3360,13 @@ export default function Notes() {
                         {/* Lembrete Data */}
                         <div className="relative flex-1 w-full">
                           <GlassDatePicker
-                            className="w-full bg-black/60 hover:bg-black/80 border border-white/15 hover:border-white/30 rounded-xl text-[14px] font-black uppercase text-white pl-10 pr-3.5 py-3 outline-none transition-all flex items-center min-h-[46px] select-none cursor-pointer shadow-sm"
+                            className="w-full bg-black/60 hover:bg-black/80 border border-white/15 hover:border-white/30 rounded-xl text-[13px] font-bold text-white pl-10 pr-16 py-3 outline-none transition-all flex items-center min-h-[46px] shadow-sm"
                             value={reminderDate}
                             onChange={setReminderDate}
                             title="Data do Lembrete"
                             style={{ borderColor: "rgba(255,255,255,0.15)" }}
                             themeColor={color}
+                            placeholder="DD/MM/AAAA"
                           />
                           <Calendar
                             size={16}
@@ -3397,7 +3383,7 @@ export default function Notes() {
                               <button
                                 type="button"
                                 onClick={() => setClocksExpanded(!clocksExpanded)}
-                                className="w-full bg-black/60 hover:bg-black/80 border border-white/15 hover:border-white/30 rounded-xl text-[14px] font-black uppercase text-white px-4 py-3 outline-none transition-all flex items-center justify-between min-h-[46px] shadow-sm cursor-pointer"
+                                className="w-full bg-black/60 hover:bg-black/80 border border-white/15 hover:border-white/30 rounded-xl text-[13px] font-black uppercase text-white px-4 py-3 outline-none transition-all flex items-center justify-between min-h-[46px] shadow-sm cursor-pointer"
                               >
                                 <div className="flex items-center gap-2 overflow-hidden">
                                   <Clock
@@ -3405,7 +3391,9 @@ export default function Notes() {
                                     className={`shrink-0 ${hasActiveClocks ? "text-green-400 animate-pulse" : "text-white/70"}`}
                                   />
                                   <span className="truncate text-white font-black tracking-wide uppercase">
-                                    Horários
+                                    {hasActiveClocks
+                                      ? [reminderTime, reminderTime2, reminderTime3].filter(Boolean).join(" • ")
+                                      : "Horários Programados"}
                                   </span>
                                 </div>
 
@@ -3417,168 +3405,172 @@ export default function Notes() {
                                       {activeClocksCount}
                                     </span>
                                   )}
-                                  <ChevronUp size={16} className="text-white/70" />
+                                  <ChevronUp size={16} className={`text-white/70 transition-transform ${clocksExpanded ? "rotate-180" : ""}`} />
                                 </div>
                               </button>
 
-                              {/* Modal de Horários / Alertas Apple Style - Renderizado fora do corte de overflow */}
-                              <AnimatePresence>
-                                {clocksExpanded && (
-                                  <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4 overflow-hidden pointer-events-auto">
-                                    {/* Backdrop transparente/desfocado para fechar ao clicar fora */}
-                                    <motion.div
-                                      initial={{ opacity: 0 }}
-                                      animate={{ opacity: 1 }}
-                                      exit={{ opacity: 0 }}
-                                      className="absolute inset-0 bg-black/70 backdrop-blur-md z-0"
-                                      onClick={() => setClocksExpanded(false)}
-                                    />
-
-                                    <motion.div
-                                      initial={{ opacity: 0, scale: 0.92, y: 15 }}
-                                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                                      exit={{ opacity: 0, scale: 0.92, y: 15 }}
-                                      transition={{ type: "spring", stiffness: 450, damping: 28 }}
-                                      className="relative w-84 max-w-[92vw] bg-[#121418]/98 border border-white/20 rounded-2xl p-5 space-y-4 shadow-[0_30px_70px_rgba(0,0,0,0.95)] text-left z-10"
-                                      style={{
-                                        borderTopWidth: "3px",
-                                        borderTopColor: "var(--gm-primary, #FF6900)",
-                                        backdropFilter: "blur(24px) saturate(190%)",
-                                        WebkitBackdropFilter: "blur(24px) saturate(190%)",
-                                      }}
-                                    >
-                                      <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                                        <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-[var(--gm-primary,#FF6900)]">
-                                          <Clock size={15} className={hasActiveClocks ? "animate-pulse text-[var(--gm-primary,#FF6900)]" : "text-[var(--gm-primary,#FF6900)]"} />
-                                          Configurar Horários
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-[10px] bg-white/10 border border-white/10 text-white/80 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
-                                            Diário
-                                          </span>
-                                          <button
-                                            type="button"
-                                            onClick={() => setClocksExpanded(false)}
-                                            className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-                                            title="Fechar"
-                                          >
-                                            <X size={15} />
-                                          </button>
-                                        </div>
-                                      </div>
-
-                                      <div className="space-y-3.5 text-xs text-white">
-                                        {/* SLOT 1 */}
-                                        <div className="flex flex-col gap-1.5">
-                                          <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
-                                            <span className="flex items-center gap-1.5">
-                                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
-                                              Horário 1
-                                            </span>
-                                            {reminderTime && (
-                                              <button
-                                                type="button"
-                                                onClick={() => setReminderTime("")}
-                                                className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
-                                              >
-                                                Limpar
-                                              </button>
-                                            )}
-                                          </div>
-                                          <div className="relative">
-                                            <GlassTimePicker
-                                              value={reminderTime}
-                                              onChange={setReminderTime}
-                                              className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
-                                              title="Definir Horário 1"
-                                            />
-                                            <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
-                                          </div>
-                                        </div>
-
-                                        {/* SLOT 2 */}
-                                        <div className="flex flex-col gap-1.5">
-                                          <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
-                                            <span className="flex items-center gap-1.5">
-                                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime2 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
-                                              Horário 2
-                                            </span>
-                                            {reminderTime2 && (
-                                              <button
-                                                type="button"
-                                                onClick={() => setReminderTime2("")}
-                                                className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
-                                              >
-                                                Limpar
-                                              </button>
-                                            )}
-                                          </div>
-                                          <div className="relative">
-                                            <GlassTimePicker
-                                              value={reminderTime2}
-                                              onChange={setReminderTime2}
-                                              className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
-                                              title="Definir Horário 2"
-                                            />
-                                            <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime2 ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
-                                          </div>
-                                        </div>
-
-                                        {/* SLOT 3 */}
-                                        <div className="flex flex-col gap-1.5">
-                                          <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
-                                            <span className="flex items-center gap-1.5">
-                                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime3 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
-                                              Horário 3
-                                            </span>
-                                            {reminderTime3 && (
-                                              <button
-                                                type="button"
-                                                onClick={() => setReminderTime3("")}
-                                                className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
-                                              >
-                                                Limpar
-                                              </button>
-                                            )}
-                                          </div>
-                                          <div className="relative">
-                                            <GlassTimePicker
-                                              value={reminderTime3}
-                                              onChange={setReminderTime3}
-                                              className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
-                                              title="Definir Horário 3"
-                                            />
-                                            <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime3 ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      {/* Botão Confirmar Limpo */}
-                                      <div className="pt-3 border-t border-white/10 flex items-center gap-2">
-                                        <button
-                                          type="button"
+                              {/* Modal de Horários / Alertas Apple Style - Renderizado via Portal para nunca ser cortado */}
+                              {typeof document !== "undefined" &&
+                                createPortal(
+                                  <AnimatePresence>
+                                    {clocksExpanded && (
+                                      <div className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 overflow-hidden pointer-events-auto">
+                                        {/* Backdrop transparente/desfocado para fechar ao clicar fora */}
+                                        <motion.div
+                                          initial={{ opacity: 0 }}
+                                          animate={{ opacity: 1 }}
+                                          exit={{ opacity: 0 }}
+                                          className="absolute inset-0 bg-black/75 backdrop-blur-md z-0"
                                           onClick={() => setClocksExpanded(false)}
-                                          className="flex-1 px-3 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-white transition-all uppercase tracking-wider cursor-pointer"
-                                        >
-                                          Fechar
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            handleSave(true);
-                                            setClocksExpanded(false);
-                                            showToast("Horários configurados com sucesso!");
+                                        />
+
+                                        <motion.div
+                                          initial={{ opacity: 0, scale: 0.92, y: 15 }}
+                                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                                          exit={{ opacity: 0, scale: 0.92, y: 15 }}
+                                          transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                                          className="relative w-84 max-w-[92vw] bg-[#121418]/98 border border-white/20 rounded-2xl p-5 space-y-4 shadow-[0_30px_70px_rgba(0,0,0,0.95)] text-left z-10"
+                                          style={{
+                                            borderTopWidth: "3px",
+                                            borderTopColor: "var(--gm-primary, #FF6900)",
+                                            backdropFilter: "blur(24px) saturate(190%)",
+                                            WebkitBackdropFilter: "blur(24px) saturate(190%)",
                                           }}
-                                          className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-500 border border-green-500/30 active:scale-95 rounded-xl text-xs font-black text-white transition-all uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-green-600/30 cursor-pointer"
                                         >
-                                          <Check size={14} />
-                                          Confirmar
-                                        </button>
+                                          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                                            <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-[var(--gm-primary,#FF6900)]">
+                                              <Clock size={15} className={hasActiveClocks ? "animate-pulse text-[var(--gm-primary,#FF6900)]" : "text-[var(--gm-primary,#FF6900)]"} />
+                                              Configurar Horários
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-[10px] bg-white/10 border border-white/10 text-white/80 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
+                                                Diário
+                                              </span>
+                                              <button
+                                                type="button"
+                                                onClick={() => setClocksExpanded(false)}
+                                                className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                                                title="Fechar"
+                                              >
+                                                <X size={15} />
+                                              </button>
+                                            </div>
+                                          </div>
+
+                                          <div className="space-y-3.5 text-xs text-white">
+                                            {/* SLOT 1 */}
+                                            <div className="flex flex-col gap-1.5">
+                                              <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                                <span className="flex items-center gap-1.5">
+                                                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
+                                                  Horário 1
+                                                </span>
+                                                {reminderTime && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => setReminderTime("")}
+                                                    className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
+                                                  >
+                                                    Limpar
+                                                  </button>
+                                                )}
+                                              </div>
+                                              <div className="relative">
+                                                <GlassTimePicker
+                                                  value={reminderTime}
+                                                  onChange={setReminderTime}
+                                                  className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
+                                                  title="Definir Horário 1"
+                                                />
+                                                <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
+                                              </div>
+                                            </div>
+
+                                            {/* SLOT 2 */}
+                                            <div className="flex flex-col gap-1.5">
+                                              <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                                <span className="flex items-center gap-1.5">
+                                                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime2 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
+                                                  Horário 2
+                                                </span>
+                                                {reminderTime2 && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => setReminderTime2("")}
+                                                    className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
+                                                  >
+                                                    Limpar
+                                                  </button>
+                                                )}
+                                              </div>
+                                              <div className="relative">
+                                                <GlassTimePicker
+                                                  value={reminderTime2}
+                                                  onChange={setReminderTime2}
+                                                  className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
+                                                  title="Definir Horário 2"
+                                                />
+                                                <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime2 ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
+                                              </div>
+                                            </div>
+
+                                            {/* SLOT 3 */}
+                                            <div className="flex flex-col gap-1.5">
+                                              <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
+                                                <span className="flex items-center gap-1.5">
+                                                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime3 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
+                                                  Horário 3
+                                                </span>
+                                                {reminderTime3 && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => setReminderTime3("")}
+                                                    className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
+                                                  >
+                                                    Limpar
+                                                  </button>
+                                                )}
+                                              </div>
+                                              <div className="relative">
+                                                <GlassTimePicker
+                                                  value={reminderTime3}
+                                                  onChange={setReminderTime3}
+                                                  className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
+                                                  title="Definir Horário 3"
+                                                />
+                                                <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime3 ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          {/* Botão Confirmar Limpo */}
+                                          <div className="pt-3 border-t border-white/10 flex items-center gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => setClocksExpanded(false)}
+                                              className="flex-1 px-3 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-white transition-all uppercase tracking-wider cursor-pointer"
+                                            >
+                                              Fechar
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                handleSave(true);
+                                                setClocksExpanded(false);
+                                                showToast("Horários configurados com sucesso!");
+                                              }}
+                                              className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-500 border border-green-500/30 active:scale-95 rounded-xl text-xs font-black text-white transition-all uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-green-600/30 cursor-pointer"
+                                            >
+                                              <Check size={14} />
+                                              Confirmar
+                                            </button>
+                                          </div>
+                                        </motion.div>
                                       </div>
-                                    </motion.div>
-                                  </div>
+                                    )}
+                                  </AnimatePresence>,
+                                  document.body
                                 )}
-                              </AnimatePresence>
                             </div>
                           );
                         })()}
@@ -3663,8 +3655,9 @@ export default function Notes() {
               {/* Canto 1: Superior Esquerdo (NW) */}
               <div
                 onPointerDown={(e) => handleModalResizeStart(e, "nw")}
+                onDoubleClick={handleResetModalSize}
                 className="hidden md:flex absolute top-0 left-0 w-8 h-8 items-start justify-start p-1.5 cursor-nwse-resize select-none z-40 group touch-none"
-                title="Clique, segure e arraste para redimensionar a nota (Canto Superior Esquerdo)"
+                title="Clique e arraste para redimensionar (Duplo clique para restaurar tamanho)"
               >
                 <div className="w-5 h-5 flex items-center justify-center rounded-tl-md transition-all duration-200 group-hover:scale-110">
                   <svg
@@ -3686,8 +3679,9 @@ export default function Notes() {
               {/* Canto 2: Superior Direito (NE) */}
               <div
                 onPointerDown={(e) => handleModalResizeStart(e, "ne")}
+                onDoubleClick={handleResetModalSize}
                 className="hidden md:flex absolute top-0 right-0 w-8 h-8 items-start justify-end p-1.5 cursor-nesw-resize select-none z-40 group touch-none"
-                title="Clique, segure e arraste para redimensionar a nota (Canto Superior Direito)"
+                title="Clique e arraste para redimensionar (Duplo clique para restaurar tamanho)"
               >
                 <div className="w-5 h-5 flex items-center justify-center rounded-tr-md transition-all duration-200 group-hover:scale-110">
                   <svg
@@ -3709,8 +3703,9 @@ export default function Notes() {
               {/* Canto 3: Inferior Esquerdo (SW) */}
               <div
                 onPointerDown={(e) => handleModalResizeStart(e, "sw")}
+                onDoubleClick={handleResetModalSize}
                 className="hidden md:flex absolute bottom-0 left-0 w-8 h-8 items-end justify-start p-1.5 cursor-nesw-resize select-none z-40 group touch-none"
-                title="Clique, segure e arraste para redimensionar a nota (Canto Inferior Esquerdo)"
+                title="Clique e arraste para redimensionar (Duplo clique para restaurar tamanho)"
               >
                 <div className="w-5 h-5 flex items-center justify-center rounded-bl-md transition-all duration-200 group-hover:scale-110">
                   <svg
@@ -3732,8 +3727,9 @@ export default function Notes() {
               {/* Canto 4: Inferior Direito (SE) */}
               <div
                 onPointerDown={(e) => handleModalResizeStart(e, "se")}
+                onDoubleClick={handleResetModalSize}
                 className="hidden md:flex absolute bottom-0 right-0 w-8 h-8 items-end justify-end p-1.5 cursor-nwse-resize select-none z-40 group touch-none"
-                title="Clique, segure e arraste para redimensionar a nota (Canto Inferior Direito)"
+                title="Clique e arraste para redimensionar (Duplo clique para restaurar tamanho)"
               >
                 <div className="w-5 h-5 flex items-center justify-center rounded-br-md transition-all duration-200 group-hover:scale-110">
                   <svg
@@ -3756,29 +3752,33 @@ export default function Notes() {
               {/* Borda Superior (N) */}
               <div
                 onPointerDown={(e) => handleModalResizeStart(e, "n")}
+                onDoubleClick={handleResetModalSize}
                 className="hidden md:block absolute top-0 left-10 right-10 h-2 cursor-ns-resize select-none z-30 hover:bg-[var(--gm-primary,#FF6900)]/25 transition-colors touch-none"
-                title="Redimensionar altura da nota (topo)"
+                title="Redimensionar altura (topo) - Duplo clique para restaurar"
               />
 
               {/* Borda Inferior (S) */}
               <div
                 onPointerDown={(e) => handleModalResizeStart(e, "s")}
+                onDoubleClick={handleResetModalSize}
                 className="hidden md:block absolute bottom-0 left-10 right-10 h-2 cursor-ns-resize select-none z-30 hover:bg-[var(--gm-primary,#FF6900)]/25 transition-colors touch-none"
-                title="Redimensionar altura da nota (base)"
+                title="Redimensionar altura (base) - Duplo clique para restaurar"
               />
 
               {/* Borda Esquerda (W) */}
               <div
                 onPointerDown={(e) => handleModalResizeStart(e, "w")}
+                onDoubleClick={handleResetModalSize}
                 className="hidden md:block absolute top-10 bottom-10 left-0 w-2 cursor-ew-resize select-none z-30 hover:bg-[var(--gm-primary,#FF6900)]/25 transition-colors touch-none"
-                title="Redimensionar largura da nota (esquerda)"
+                title="Redimensionar largura (esquerda) - Duplo clique para restaurar"
               />
 
               {/* Borda Direita (E) */}
               <div
                 onPointerDown={(e) => handleModalResizeStart(e, "e")}
+                onDoubleClick={handleResetModalSize}
                 className="hidden md:block absolute top-10 bottom-10 right-0 w-2 cursor-ew-resize select-none z-30 hover:bg-[var(--gm-primary,#FF6900)]/25 transition-colors touch-none"
-                title="Redimensionar largura da nota (direita)"
+                title="Redimensionar largura (direita) - Duplo clique para restaurar"
               />
             </motion.div>
           </div>

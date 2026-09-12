@@ -91,7 +91,7 @@ export default function PublicBio() {
         if (isUUID) {
           const { data, error } = await supabase
             .from("app_settings")
-            .select("company_name, company_logo_url, pix_key, pix_type, bio_config, brand_primary, tenant_id, button_style")
+            .select("company_name, company_logo_url, avatar_url, pix_key, pix_type, bio_config, brand_primary, tenant_id, button_style")
             .eq("tenant_id", tenantId)
             .maybeSingle();
 
@@ -107,23 +107,28 @@ export default function PublicBio() {
 
           const { data: allSettings, error } = await supabase
             .from("app_settings")
-            .select("company_name, company_logo_url, pix_key, pix_type, bio_config, brand_primary, tenant_id, button_style");
+            .select("company_name, company_logo_url, avatar_url, pix_key, pix_type, bio_config, brand_primary, tenant_id, button_style");
 
           if (error) {
             console.error("Erro RLS/Supabase ao listar:", error);
             setErrorDetails(error.message);
           } else if (allSettings) {
-            // Sort to prioritize settings with real tenant_id first, and with richer bio_config
+            // Sort to prioritize settings with registered logo/avatar first, non-null tenant_id, and with richer bio_config
             const sortedSettings = [...allSettings].sort((a, b) => {
-              // Row with non-null tenant_id is better
-              const aHasTenant = a.tenant_id ? 1 : 0;
-              const bHasTenant = b.tenant_id ? 1 : 0;
-              if (aHasTenant !== bHasTenant) return bHasTenant - aHasTenant;
+              // Row with registered logo or avatar is highest priority
+              const aHasLogo = (a.company_logo_url || a.avatar_url) ? 1 : 0;
+              const bHasLogo = (b.company_logo_url || b.avatar_url) ? 1 : 0;
+              if (aHasLogo !== bHasLogo) return bHasLogo - aHasLogo;
 
-              // Row with bio_config is better
+              // Row with bio_config is next
               const aHasBio = (a.bio_config && Object.keys(a.bio_config).length > 0) ? 1 : 0;
               const bHasBio = (b.bio_config && Object.keys(b.bio_config).length > 0) ? 1 : 0;
               if (aHasBio !== bHasBio) return bHasBio - aHasBio;
+
+              // Row with non-null tenant_id is next
+              const aHasTenant = a.tenant_id ? 1 : 0;
+              const bHasTenant = b.tenant_id ? 1 : 0;
+              if (aHasTenant !== bHasTenant) return bHasTenant - aHasTenant;
 
               return 0;
             });
@@ -138,6 +143,13 @@ export default function PublicBio() {
         }
 
         if (fetchedData) {
+          if (!fetchedData.company_logo_url && fetchedData.avatar_url) {
+            fetchedData.company_logo_url = fetchedData.avatar_url;
+          }
+          const isGM = (fetchedData.company_name || "").toLowerCase().includes("gm");
+          if (isGM && !fetchedData.company_logo_url) {
+            fetchedData.company_logo_url = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.webp?t=1787112280980";
+          }
           fetchedDataResult = fetchedData;
           if (fetchedData.brand_primary) {
             document.documentElement.style.setProperty("--primary", fetchedData.brand_primary);

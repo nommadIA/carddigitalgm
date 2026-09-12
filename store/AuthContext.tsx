@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, PropsWithChildren } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, purgeSupabaseAuthStorage } from '../lib/supabase';
 import { UserProfile } from '../types';
 import { ADMIN_EMAIL } from '../constants';
 import { fetchSettingsSupabase, applySettingsToDOM, DEFAULT_SETTINGS } from '../lib/settings';
@@ -136,6 +136,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       if (event === 'PASSWORD_RECOVERY') {
         window.location.replace(`${window.location.origin}/update-password`);
       }
+      if (event === 'SIGNED_OUT') {
+        if (mounted) initializeUser(null);
+        return;
+      }
       if (mounted) initializeUser(session?.user);
     });
 
@@ -178,6 +182,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     try {
       await supabase.auth.signOut();
     } catch {}
+    purgeSupabaseAuthStorage();
     setUser(null);
     setTenantId(null);
     setIsAdmin(false);
