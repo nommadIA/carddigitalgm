@@ -6687,7 +6687,7 @@ button:active, .gm-btn:active {
 }
 
 body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
-:focus-visible:not([contenteditable]):not(.gm-note-editor-content):not(.gm-note-title-input){ outline: 2px solid var(--gm-primary); outline-offset: 2px; }
+:focus-visible:not([contenteditable]):not(.gm-note-editor-content):not(.gm-note-title-input):not(input):not(textarea):not(select):not(.gm-input){ outline: 2px solid var(--gm-primary); outline-offset: 2px; }
 
 /* =========================================================================
    COMPREHENSIVE LIGHT MODE OVERRIDES FOR ALL SECTIONS & MODALS
@@ -7316,9 +7316,42 @@ aside.gm-sidebar::after,
    ========================================================= */
 
 /* Acessibilidade de Foco via Teclado */
-:focus-visible:not([contenteditable]):not(.gm-note-editor-content):not(.gm-note-title-input) {
+:focus-visible:not([contenteditable]):not(.gm-note-editor-content):not(.gm-note-title-input):not(input):not(textarea):not(select):not(.gm-input) {
   outline: 2px solid var(--gm-primary, #FF6900) !important;
   outline-offset: 2px !important;
+}
+
+/* =========================================================
+   REMOÇÃO DE LINHA DUPLICADA / CONTORNO LARANJA DUPLO NOS INPUTS
+   (Caixas de inserção de Login, Senha e formulários)
+   ========================================================= */
+.gm-input,
+.gm-input:focus,
+.gm-input:focus-visible,
+input.gm-input,
+input.gm-input:focus,
+input.gm-input:focus-visible,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus-visible,
+input[type="email"]:focus-visible,
+input[type="password"]:focus-visible,
+input:focus,
+input:focus-visible {
+  outline: none !important;
+  outline-width: 0 !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
+.gm-input:focus,
+input.gm-input:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border: 1px solid var(--gm-primary, #FE540B) !important;
+  border-color: var(--gm-primary, #FE540B) !important;
+  box-shadow: none !important;
 }
 
 /* Remover linha/contorno duplo ao focar ou clicar no título da nota */
@@ -7664,7 +7697,6 @@ button.website-nav-btn:focus-visible {
   border: none !important;
   outline: none !important;
   transform: none !important;
-  color: #FE540B !important;
 }
 
 .topbar-nav-link:hover *,
@@ -7675,7 +7707,6 @@ button.topbar-nav-link:active *,
 button.website-nav-btn:hover *,
 .website-nav-btn:active *,
 button.website-nav-btn:active * {
-  color: inherit !important;
   background: transparent !important;
   background-color: transparent !important;
 }
@@ -8050,6 +8081,44 @@ div[class*="fixed inset-0"] > div[class*="rounded-"] {
   background: linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B);
   background-size: 300% 300%;
   animation: color-loop 5s ease infinite;
+}
+
+/* =========================================================
+   APPLE GLASS BLUR (Fale com a gente - Website)
+   ========================================================= */
+.apple-glass-card {
+  background: rgba(20, 20, 26, 0.42) !important;
+  backdrop-filter: blur(32px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+.apple-glass-input {
+  background: rgba(255, 255, 255, 0.07) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.18), 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  color: #FFFFFF !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.apple-glass-input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.apple-glass-input:hover {
+  background: rgba(255, 255, 255, 0.11) !important;
+  border-color: rgba(255, 255, 255, 0.30) !important;
+}
+
+.apple-glass-input:focus {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: var(--gm-primary, #FE540B) !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.25), 0 0 0 2px rgba(254, 84, 11, 0.30), 0 8px 24px rgba(0, 0, 0, 0.25) !important;
 }
 
 

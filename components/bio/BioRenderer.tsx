@@ -827,6 +827,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const brandAccent = bio.accent_color || bio.button_color || data?.brand_accent || data?.brand_button || brandColor;
   const theme = bio.theme || "gorila";
   const buttonStyle = data?.button_style || "solid";
+  const isWebsiteLayout = theme === "gorila" || theme === "website" || !bio.theme || theme === "dark" || (companyName && companyName.toLowerCase().includes("gm"));
 
   const generatePixPayload = (key: string, name: string = "GM Edificacao", city: string = "SAO LUIS") => {
     if (!key) return "";
@@ -1981,96 +1982,91 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full flex flex-col`}>
                       {/* Desktop Top Navbar */}
                       <div className={`w-full ${isWebsiteLayout ? 'h-20 sm:h-24 bg-white text-zinc-900' : 'h-36 sm:h-40 md:h-[140px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5'} flex items-center justify-between px-6 md:px-12 relative z-30`}>
-                        <div className="flex items-center gap-4 cursor-pointer hover:opacity-90 transition-opacity" onClick={handleLogoClick}>
+                        <div className="flex items-center gap-3.5 sm:gap-4 cursor-pointer hover:opacity-90 transition-opacity" onClick={handleLogoClick}>
                           {effectiveLogo ? (
-                            <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-10 sm:h-12 md:h-14 w-auto object-contain transition-all" />
+                            <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-10 sm:h-12 md:h-14 w-auto object-contain transition-all shrink-0" />
                           ) : (
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg flex items-center justify-center font-bold text-2xl text-white shadow-sm" style={{ backgroundColor: brandColor || "#FE540B" }}>
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center font-bold text-xl sm:text-2xl text-white shadow-sm shrink-0" style={{ backgroundColor: brandColor || "#FE540B" }}>
                               {(companyName || "GM").charAt(0).toUpperCase()}
                             </div>
                           )}
+                          <span className={`font-black text-lg sm:text-xl md:text-2xl tracking-tight select-none ${isWebsiteLayout ? 'text-zinc-900' : (theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900')}`}>
+                            {bio.title || companyName || "GM Edificação"}
+                          </span>
                         </div>
 
                         <div className="flex items-center">
                           {isWebsiteLayout ? (
                             <div 
-                              className="flex items-center gap-8 sm:gap-10"
+                              className="flex items-center gap-8 sm:gap-10 relative"
                               onMouseLeave={() => setHoveredNav(null)}
+                              onPointerLeave={() => setHoveredNav(null)}
                             >
-                              {/* Início */}
-                              <button 
-                                onClick={() => {
-                                  setActiveView("bio");
-                                  setActivePortfolioId(null);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }} 
-                                onMouseEnter={() => setHoveredNav("bio")}
-                                className={`topbar-nav-link website-nav-btn relative py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none ${
-                                  hoveredNav === "bio"
-                                    ? "!text-[#FE540B]"
-                                    : (hoveredNav === "contact"
-                                        ? "!text-[#71717a]"
-                                        : ((activeView as string) === "bio" ? "!text-black" : "!text-[#71717a]"))
-                                }`}
-                                style={{
-                                  background: 'transparent',
-                                  backgroundColor: 'transparent',
-                                  boxShadow: 'none',
-                                  border: 'none',
-                                  outline: 'none',
-                                  color: hoveredNav === "bio" 
-                                    ? "#FE540B" 
-                                    : (hoveredNav === "contact" 
-                                        ? "#71717a" 
-                                        : ((activeView as string) === "bio" ? "#000000" : "#71717a"))
-                                }}
-                              >
-                                Início
-                                {(hoveredNav === "bio" || (!hoveredNav && (activeView as string) === "bio")) && (
-                                  <motion.span 
-                                    layoutId="website-nav-underline"
-                                    className="absolute bottom-[-6px] left-0 right-0 h-[2px] bg-black pointer-events-none"
-                                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                                  />
-                                )}
-                              </button>
+                              {(() => {
+                                const currentNavIndicator = hoveredNav || ((activeView as string) === "contact" ? "contact" : "bio");
+                                return (
+                                  <>
+                                    {/* Início */}
+                                    <button 
+                                      onClick={() => {
+                                        setActiveView("bio");
+                                        setActivePortfolioId(null);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                      }} 
+                                      onMouseEnter={() => setHoveredNav("bio")}
+                                      onMouseMove={() => setHoveredNav("bio")}
+                                      onPointerEnter={() => setHoveredNav("bio")}
+                                      className="topbar-nav-link website-nav-btn relative py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none select-none"
+                                      style={{
+                                        background: 'transparent',
+                                        backgroundColor: 'transparent',
+                                        boxShadow: 'none',
+                                        border: 'none',
+                                        outline: 'none',
+                                        color: currentNavIndicator === "bio" ? "#000000" : "#71717a"
+                                      }}
+                                    >
+                                      Início
+                                      {currentNavIndicator === "bio" && (
+                                        <motion.span 
+                                          layoutId="website-nav-underline"
+                                          className="absolute bottom-[-6px] left-0 right-0 h-[2.5px] bg-black rounded-full pointer-events-none"
+                                          transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                                        />
+                                      )}
+                                    </button>
 
-                              {/* Contato */}
-                              <button 
-                                onClick={() => {
-                                  setActiveView("contact");
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }} 
-                                onMouseEnter={() => setHoveredNav("contact")}
-                                className={`topbar-nav-link website-nav-btn relative py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none ${
-                                  hoveredNav === "contact"
-                                    ? "!text-[#FE540B]"
-                                    : (hoveredNav === "bio"
-                                        ? "!text-[#71717a]"
-                                        : ((activeView as string) === "contact" ? "!text-black" : "!text-[#71717a]"))
-                                }`}
-                                style={{
-                                  background: 'transparent',
-                                  backgroundColor: 'transparent',
-                                  boxShadow: 'none',
-                                  border: 'none',
-                                  outline: 'none',
-                                  color: hoveredNav === "contact" 
-                                    ? "#FE540B" 
-                                    : (hoveredNav === "bio" 
-                                        ? "#71717a" 
-                                        : ((activeView as string) === "contact" ? "#000000" : "#71717a"))
-                                }}
-                              >
-                                Contato
-                                {(hoveredNav === "contact" || (!hoveredNav && (activeView as string) === "contact")) && (
-                                  <motion.span 
-                                    layoutId="website-nav-underline"
-                                    className="absolute bottom-[-6px] left-0 right-0 h-[2px] bg-black pointer-events-none"
-                                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                                  />
-                                )}
-                              </button>
+                                    {/* Contato */}
+                                    <button 
+                                      onClick={() => {
+                                        setActiveView("contact");
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                      }} 
+                                      onMouseEnter={() => setHoveredNav("contact")}
+                                      onMouseMove={() => setHoveredNav("contact")}
+                                      onPointerEnter={() => setHoveredNav("contact")}
+                                      className="topbar-nav-link website-nav-btn relative py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none select-none"
+                                      style={{
+                                        background: 'transparent',
+                                        backgroundColor: 'transparent',
+                                        boxShadow: 'none',
+                                        border: 'none',
+                                        outline: 'none',
+                                        color: currentNavIndicator === "contact" ? "#000000" : "#71717a"
+                                      }}
+                                    >
+                                      Contato
+                                      {currentNavIndicator === "contact" && (
+                                        <motion.span 
+                                          layoutId="website-nav-underline"
+                                          className="absolute bottom-[-6px] left-0 right-0 h-[2.5px] bg-black rounded-full pointer-events-none"
+                                          transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                                        />
+                                      )}
+                                    </button>
+                                  </>
+                                );
+                              })()}
 
                               {/* Social Icons na barra superior na cor preta */}
                               {userSocialLinks.length > 0 && (
@@ -2221,14 +2217,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           )}
                         </div>
                         
-                        {/* Barrinha fina neon multicolorida encostada no final da barra branca superior de uma extremidade a outra */}
+                        {/* Barrinha fina neon multicolorida encostada no final da barra branca superior de uma extremidade a outra - sem esfumaçado */}
                         <div 
-                          className="w-full h-[3.5px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
+                          className="w-full h-[2.5px] sm:h-[3px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
                           style={{
                             background: `linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B)`,
                             backgroundSize: '300% 300%',
                             animation: 'color-loop 5s ease infinite',
-                            boxShadow: '0 1px 8px rgba(254, 84, 11, 0.45), 0 2px 14px rgba(139, 92, 246, 0.35)'
+                            boxShadow: 'none'
                           }}
                         />
                       </div>
@@ -2381,14 +2377,17 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     >
                       {/* Mobile Top Navbar with Desktop Glass/Blur Effect */}
                       <div className={`w-full h-[88px] ${isWebsiteLayout ? 'bg-white text-zinc-900' : 'bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5'} flex items-center justify-between px-5 relative z-40`}>
-                        <div className="flex items-center gap-2 cursor-pointer" onClick={handleLogoClick}>
+                        <div className="flex items-center gap-2.5 sm:gap-3 cursor-pointer" onClick={handleLogoClick}>
                           {effectiveLogo ? (
-                            <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-9 w-auto object-contain rounded" />
+                            <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-9 w-auto object-contain rounded shrink-0" />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white shadow-sm" style={{ backgroundColor: brandColor || "#FE540B" }}>
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white shadow-sm shrink-0" style={{ backgroundColor: brandColor || "#FE540B" }}>
                               {(companyName || "GM").charAt(0).toUpperCase()}
                             </div>
                           )}
+                          <span className={`font-black text-base sm:text-lg tracking-tight select-none truncate max-w-[170px] ${isWebsiteLayout ? 'text-zinc-900' : (theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900')}`}>
+                            {bio.title_mobile || bio.title || companyName || "GM Edificação"}
+                          </span>
                         </div>
                         
                         <div className="flex items-center">
@@ -2522,14 +2521,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           </div>
                         )}
                         
-                        {/* Barrinha fina neon multicolorida de uma extremidade a outra (abaixo da barra do topo mobile) */}
+                        {/* Barrinha fina neon multicolorida de uma extremidade a outra (abaixo da barra do topo mobile) - sem esfumaçado */}
                         <div 
-                          className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
+                          className="w-full h-[2.5px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
                           style={{
                             background: `linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B)`,
                             backgroundSize: '300% 300%',
                             animation: 'color-loop 5s ease infinite',
-                            boxShadow: '0 1px 8px rgba(254, 84, 11, 0.45), 0 2px 14px rgba(139, 92, 246, 0.35)'
+                            boxShadow: 'none'
                           }}
                         />
                       </div>
@@ -2925,23 +2924,21 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 
                 {/* Title & Text */}
                 <div className="w-full flex flex-col items-center text-center space-y-6 overflow-hidden">
-                  <h2 className={`text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-sans font-black tracking-tight leading-none whitespace-nowrap select-none ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
+                  <h2 className={`text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-sans font-black tracking-tight leading-none whitespace-nowrap select-none ${isWebsiteLayout || theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
                     {bio.contact_title || "Fale com a gente"}
                   </h2>
                   {bio.contact_desc && (
-                    <p className={`text-base sm:text-lg lg:text-xl font-medium leading-relaxed opacity-85 max-w-2xl ${theme === 'dark' || theme === 'glass' ? 'text-zinc-300' : 'text-slate-600'}`}>
+                    <p className={`text-base sm:text-lg lg:text-xl font-medium leading-relaxed opacity-85 max-w-2xl ${isWebsiteLayout || theme === 'dark' || theme === 'glass' ? 'text-zinc-300' : 'text-slate-600'}`}>
                       {bio.contact_desc}
                     </p>
                   )}
                 </div>
 
                 {/* Right column: Form */}
-                <div className={`w-full max-w-5xl ${
-                  theme === 'glass'
-                    ? 'p-6 sm:p-10 rounded-[2.5rem] border bg-[#0a0b10]/45 backdrop-blur-2xl border-white/10 shadow-xl'
-                    : theme === 'dark'
-                      ? 'p-6 sm:p-10 rounded-[2.5rem] border bg-zinc-950/80 border-zinc-800 shadow-xl'
-                      : 'p-0 bg-transparent border-0 shadow-none'
+                <div className={`w-full max-w-5xl transition-all duration-300 ${
+                  isWebsiteLayout || theme === 'glass' || theme === 'dark'
+                    ? 'apple-glass-card p-6 sm:p-10 rounded-[2.5rem]'
+                    : 'p-6 sm:p-10 rounded-[2.5rem] border border-zinc-200/80 bg-white/70 backdrop-blur-xl shadow-lg'
                 }`}>
                   <form onSubmit={handleContactSubmit} className="space-y-6">
                     {contactSuccess ? (
@@ -2952,11 +2949,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         
                         {needsActivation ? (
                           <div className="space-y-4 max-w-xl mx-auto">
-                            <h4 className={`text-xl sm:text-2xl font-black text-center ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
+                            <h4 className={`text-xl sm:text-2xl font-black text-center ${isWebsiteLayout || theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
                               Atenção: Ative seu e-mail!
                             </h4>
                             <div className={`p-5 rounded-lg border text-sm text-left leading-relaxed ${
-                              theme === 'glass' || theme === 'dark'
+                              isWebsiteLayout || theme === 'glass' || theme === 'dark'
                                 ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
                                 : 'bg-amber-50 border-amber-200 text-amber-900'
                             }`}>
@@ -2971,10 +2968,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           </div>
                         ) : (
                           <div className="space-y-2 max-w-xl mx-auto">
-                            <h4 className={`text-xl sm:text-2xl font-black text-center ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
+                            <h4 className={`text-xl sm:text-2xl font-black text-center ${isWebsiteLayout || theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
                               Mensagem Enviada!
                             </h4>
-                            <p className={`text-sm text-center ${theme === 'dark' || theme === 'glass' ? 'text-slate-400' : 'text-slate-600'}`}>
+                            <p className={`text-sm text-center ${isWebsiteLayout || theme === 'dark' || theme === 'glass' ? 'text-slate-400' : 'text-slate-600'}`}>
                               Obrigado pelo contato. Recebemos seus dados e responderemos o mais rápido possível no e-mail cadastrado (<strong className="break-all">{submittedEmail}</strong>).
                             </p>
                           </div>
@@ -3000,7 +2997,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         )}
 
                         <div className="space-y-6">
-                                                  {/* Name Field */}
+                          {/* Name Field */}
                           <div>
                             <input 
                               type="text"
@@ -3009,14 +3006,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               placeholder="Nome"
                               value={contactName}
                               onChange={(e) => setContactName(e.target.value)}
-                              className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all focus:ring-0 ${
-                                theme === 'glass'
-                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-lg'
-                                  : theme === 'dark' 
-                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-lg' 
-                                    : 'bg-transparent border-zinc-300 text-slate-900 placeholder-zinc-400 focus:border-[#FE540B] rounded-none'
+                              className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all duration-300 ${
+                                isWebsiteLayout || theme === 'glass' || theme === 'dark'
+                                  ? 'apple-glass-input rounded-2xl'
+                                  : 'backdrop-blur-xl bg-white/60 hover:bg-white/75 focus:bg-white/90 border-black/10 focus:border-black/30 text-slate-900 placeholder-zinc-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_4px_16px_rgba(0,0,0,0.05)] rounded-2xl focus:ring-2 focus:ring-black/10'
                               }`}
-                              style={{ borderColor: (theme === 'glass' || theme === 'dark') ? undefined : undefined }}
                             />
                           </div>
 
@@ -3029,12 +3023,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               placeholder="Email"
                               value={contactEmail}
                               onChange={(e) => setContactEmail(e.target.value)}
-                              className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all focus:ring-0 ${
-                                theme === 'glass'
-                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-lg'
-                                  : theme === 'dark' 
-                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-lg' 
-                                    : 'bg-transparent border-zinc-300 text-slate-900 placeholder-zinc-400 focus:border-[#FE540B] rounded-none'
+                              className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all duration-300 ${
+                                isWebsiteLayout || theme === 'glass' || theme === 'dark'
+                                  ? 'apple-glass-input rounded-2xl'
+                                  : 'backdrop-blur-xl bg-white/60 hover:bg-white/75 focus:bg-white/90 border-black/10 focus:border-black/30 text-slate-900 placeholder-zinc-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_4px_16px_rgba(0,0,0,0.05)] rounded-2xl focus:ring-2 focus:ring-black/10'
                               }`}
                             />
                           </div>
@@ -3048,12 +3040,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               placeholder="Mensagem"
                               value={contactMessage}
                               onChange={(e) => setContactMessage(e.target.value)}
-                              className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all focus:ring-0 resize-none ${
-                                theme === 'glass'
-                                  ? 'bg-white/5 border-white/10 text-white placeholder-white/30 focus:border-white/30 rounded-lg'
-                                  : theme === 'dark' 
-                                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-zinc-700 rounded-lg' 
-                                    : 'bg-transparent border-zinc-300 text-slate-900 placeholder-zinc-400 focus:border-[#FE540B] rounded-none'
+                              className={`w-full px-6 py-5 text-base sm:text-lg border focus:outline-none transition-all duration-300 resize-none ${
+                                isWebsiteLayout || theme === 'glass' || theme === 'dark'
+                                  ? 'apple-glass-input rounded-2xl'
+                                  : 'backdrop-blur-xl bg-white/60 hover:bg-white/75 focus:bg-white/90 border-black/10 focus:border-black/30 text-slate-900 placeholder-zinc-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_4px_16px_rgba(0,0,0,0.05)] rounded-2xl focus:ring-2 focus:ring-black/10'
                               }`}
                             />
                           </div>

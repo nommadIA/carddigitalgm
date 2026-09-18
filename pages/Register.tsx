@@ -99,7 +99,7 @@ export default function Register() {
                   <User size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
+                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-lg w-full text-white"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -114,7 +114,7 @@ export default function Register() {
                   <Mail size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
+                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-lg w-full text-white"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -130,7 +130,7 @@ export default function Register() {
                   <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 !pr-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
+                  className="gm-input !pl-12 !pr-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-lg w-full text-white"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -154,7 +154,7 @@ export default function Register() {
                   <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
+                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-lg w-full text-white"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -166,7 +166,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={isLoading}
-              className="gm-btn w-full h-14"
+              className="gm-btn !bg-gradient-to-r !from-[#FF7A2A] !to-[#FE540B] !text-white !border-none font-bold w-full h-14 shadow-lg shadow-orange-500/20 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center rounded-lg text-base"
             >
               {isLoading ? (
                 <span className="inline-flex items-center gap-2">

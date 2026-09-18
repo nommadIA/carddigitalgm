@@ -59,7 +59,9 @@ import {
   Square,
   MousePointerClick,
   Keyboard,
+  ShieldCheck,
 } from "lucide-react";
+import SecurityPinSettings from "../components/ui/SecurityPinSettings";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSwipeNav } from "../hooks/useSwipeNav";
@@ -277,6 +279,7 @@ export default function Configuracoes() {
     push: false,
     sounds: false,
     tutorial: false,
+    security: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -291,6 +294,7 @@ export default function Configuracoes() {
         push: false,
         sounds: false,
         tutorial: false,
+        security: false,
       };
       next[section] = isOpen;
       return next;
@@ -1872,6 +1876,29 @@ export default function Configuracoes() {
                           <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
                         )}
                         <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.tutorial ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* 9. Segurança & PIN */}
+                  {(!hasActiveSection || openSections.security) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('security')}
+                      className={getSectionBtnClass(openSections.security)}
+                    >
+                      {openSections.security && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <ShieldCheck className={"w-4 h-4 transition-transform duration-200 " + (openSections.security ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        SEGURANÇA & PIN
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.security && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.security ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
                       </div>
                     </button>
                   )}
@@ -3548,6 +3575,13 @@ export default function Configuracoes() {
                       Iniciar Tutorial do App
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* SEÇÃO 9: SEGURANÇA & PIN */}
+              {openSections.security && (
+                <div className="w-full flex flex-col gap-6 animate-fade-in">
+                  <SecurityPinSettings />
                 </div>
               )}
             </div>

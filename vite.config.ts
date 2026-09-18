@@ -10,7 +10,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: "/",
-    server: { host: true },
+    server: {
+      host: true,
+      port: 3000,
+      allowedHosts: true,
+    },
     plugins: [react(), tailwindcss()],
     define: {
       "process.env.API_KEY": JSON.stringify(geminiKey),

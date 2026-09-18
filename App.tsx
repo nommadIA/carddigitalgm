@@ -25,6 +25,8 @@ import AuthCallback from './pages/AuthCallback';
 import UpdatePassword from './pages/UpdatePassword';
 import PixCopy from './pages/PixCopy';
 
+import DevicePinGate from './components/auth/DevicePinGate';
+
 const PageLoader = () => null;
 
 const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
@@ -35,7 +37,7 @@ const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  return <>{children}</>;
+  return <DevicePinGate>{children}</DevicePinGate>;
 };
 
 const PrivateRoutes = () => {

@@ -2,11 +2,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
 import { Card } from "../components/ui/Card";
-import { Lock, Mail, Loader2, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, Loader2, Eye, EyeOff, ShieldCheck, Check } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { supabase } from "../lib/supabase";
 import { readSettingsLocal } from "../lib/settings";
+import SecurityVerifier from "../components/auth/SecurityVerifier";
+import { isPinSecurityActive, setSessionUnlocked } from "../lib/securityPin";
+import PinLockModal from "../components/auth/PinLockModal";
 
 export default function Login() {
   const { signInWithPassword, checked, user } = useAuth();
@@ -16,31 +19,67 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
 
+  // Estados da proteção por PIN
+  const [protectWithPin, setProtectWithPin] = useState(false);
+  const [showPinVerifyModal, setShowPinVerifyModal] = useState(false);
+  const [showPinSetupModal, setShowPinSetupModal] = useState(false);
+
   const settings = useMemo(() => readSettingsLocal(), []);
 
+  const isPinActiveForUser = useMemo(() => {
+    return isPinSecurityActive(email.trim());
+  }, [email]);
+
   useEffect(() => {
-    if (checked && user) navigate("/", { replace: true });
-  }, [checked, user, navigate]);
+    if (checked && user && !showPinSetupModal) navigate("/", { replace: true });
+  }, [checked, user, showPinSetupModal, navigate]);
 
   const canSubmit = useMemo(
     () => {
-      if (isForgotPassword) return email.trim().length > 3;
-      return email.trim().length > 3 && password.length >= 3;
+      if (isForgotPassword) return email.trim().length > 3 && isVerified;
+      return email.trim().length > 3 && password.length >= 3 && isVerified;
     },
-    [email, password, isForgotPassword]
+    [email, password, isForgotPassword, isVerified]
   );
+
+  async function executeActualLogin() {
+    setIsLoading(true);
+    try {
+      await signInWithPassword(email.trim(), password);
+      setSessionUnlocked(true);
+
+      // Se o usuário solicitou proteger com PIN e ainda não tem
+      if (protectWithPin && !isPinActiveForUser) {
+        setShowPinSetupModal(true);
+        return;
+      }
+    } catch (err: any) {
+      let msg = err?.message || "Erro ao conectar.";
+      
+      if (msg.includes("Invalid login credentials")) {
+        msg = "E-mail ou senha incorretos.";
+      } else if (msg.includes("Email not confirmed")) {
+        msg = "Por favor, confirme seu e-mail antes de fazer login.";
+      }
+      
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
-    setIsLoading(true);
 
     if (isForgotPassword) {
+      setIsLoading(true);
       try {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: `${window.location.origin}/`,
@@ -55,21 +94,25 @@ export default function Login() {
       return;
     }
 
-    try {
-      await signInWithPassword(email.trim(), password);
-    } catch (err: any) {
-      let msg = err?.message || "Erro ao conectar.";
-      
-      if (msg.includes("Invalid login credentials")) {
-        msg = "E-mail ou senha incorretos.";
-      } else if (msg.includes("Email not confirmed")) {
-        msg = "Por favor, confirme seu e-mail antes de fazer login.";
-      }
-      
-      setErrorMessage(msg);
-      setIsLoading(false);
+    // Se este dispositivo já possui um PIN ativo para este usuário, exige o PIN primeiro
+    if (isPinActiveForUser) {
+      setShowPinVerifyModal(true);
+      return;
     }
+
+    await executeActualLogin();
   }
+
+  const handlePinVerifySuccess = async () => {
+    setShowPinVerifyModal(false);
+    await executeActualLogin();
+  };
+
+  const handlePinSetupSuccess = () => {
+    setShowPinSetupModal(false);
+    setSessionUnlocked(true);
+    navigate("/", { replace: true });
+  };
 
   if (!checked) {
     return (
@@ -86,17 +129,22 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 py-8 bg-[#0a0a0a] relative overflow-y-auto">
+      {/* Luzes de refração e profundidade para o Apple Glass Blur */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[540px] h-[540px] bg-gradient-to-br from-[var(--gm-primary)]/15 via-orange-600/10 to-transparent rounded-full blur-3xl opacity-75" />
+        <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/4 w-[500px] h-[400px] bg-gradient-to-tr from-white/[0.04] to-transparent rounded-full blur-3xl" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
         className="w-full max-w-[560px] relative z-10"
       >
-        <Card
-          className="p-8 md:p-12 relative overflow-hidden"
-          style={{ borderRadius: 8 }}
+        <div
+          className="apple-glass-card p-8 md:p-12 relative overflow-hidden rounded-2xl md:rounded-[2rem] border border-white/15 shadow-2xl"
         >
-          {/* CABEÇALHO COMO ANTES */}
+          {/* CABEÇALHO COM LOGO - EFEITO ORIGINAL PRESERVADO INTACTO */}
           <div className="flex flex-col items-center mb-10">
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
@@ -149,7 +197,7 @@ export default function Login() {
                   <Mail size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
+                  className="apple-glass-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-xl w-full text-white"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -180,7 +228,7 @@ export default function Login() {
                     <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
                   </div>
                   <input
-                    className="gm-input !pl-12 !pr-12 h-14 text-base focus:border-[var(--gm-primary)] transition-all rounded-lg w-full text-white"
+                    className="apple-glass-input !pl-12 !pr-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-xl w-full text-white"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -198,9 +246,85 @@ export default function Login() {
               </div>
             )}
 
+            {!isForgotPassword && (
+              <div className="pt-1">
+                <div
+                  onClick={() => {
+                    if (!isPinActiveForUser) {
+                      setProtectWithPin(!protectWithPin);
+                    }
+                  }}
+                  className={`w-full rounded-2xl px-4 py-3 flex items-center justify-between select-none transition-all duration-300 relative group ${
+                    !isPinActiveForUser ? "cursor-pointer" : ""
+                  } ${
+                    isPinActiveForUser || protectWithPin
+                      ? "bg-gradient-to-r from-[var(--gm-primary,#FE540B)]/[0.12] via-orange-500/[0.06] to-transparent border border-[var(--gm-primary,#FE540B)]/50 shadow-[0_0_24px_-4px_rgba(254,84,11,0.25)]"
+                      : "bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-white/20"
+                  }`}
+                >
+                  {/* LADO ESQUERDO: Ícone e Título com visual de segurança do dispositivo */}
+                  <div className="flex items-center gap-3.5 min-w-0 pr-3">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        isPinActiveForUser || protectWithPin
+                          ? "bg-[var(--gm-primary,#FE540B)] text-white shadow-md shadow-orange-500/40 scale-105"
+                          : "bg-white/[0.06] text-zinc-400 group-hover:text-zinc-200 border border-white/10"
+                      }`}
+                    >
+                      <Lock size={19} className="transition-transform duration-200" />
+                    </div>
+
+                    <div className="flex flex-col text-left justify-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white text-sm sm:text-[15px] font-semibold tracking-tight">
+                          Proteger este computador com PIN
+                        </span>
+                        {(isPinActiveForUser || protectWithPin) && (
+                          <span className="hidden sm:inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/30">
+                            Ativo
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-zinc-400">
+                        {isPinActiveForUser
+                          ? "Bloqueio ativado para credenciais salvas"
+                          : "Exigir 4 dígitos ao ligar o computador"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* LADO DIREITO: Switch Toggle Estilo Apple / Hardware */}
+                  <div className="shrink-0 flex items-center">
+                    <div
+                      className={`w-12 h-7 rounded-full p-0.5 transition-all duration-300 flex items-center ${
+                        isPinActiveForUser || protectWithPin
+                          ? "bg-[var(--gm-primary,#FE540B)] shadow-[0_0_14px_rgba(254,84,11,0.5)] justify-end"
+                          : "bg-zinc-800 border border-white/15 justify-start"
+                      }`}
+                    >
+                      <motion.div
+                        layout
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        className="w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center"
+                      >
+                        {(isPinActiveForUser || protectWithPin) && (
+                          <div className="w-2 h-2 rounded-full bg-[var(--gm-primary,#FE540B)]" />
+                        )}
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Verificador de Segurança de Login (Estilo Google reCAPTCHA) */}
+            <div className="pt-1">
+              <SecurityVerifier onVerifyChange={setIsVerified} />
+            </div>
+
             <button
               type="submit"
-              className="gm-btn w-full h-14"
+              className="gm-btn !bg-gradient-to-r !from-[#FF7A2A] !to-[#FE540B] !text-white !border-none font-bold w-full h-14 shadow-lg shadow-orange-500/25 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center rounded-xl text-base"
               disabled={!canSubmit || isLoading}
             >
               {isLoading ? (
@@ -232,15 +356,42 @@ export default function Login() {
                 <div className="text-xs opacity-60 mb-3">Ainda não tem uma conta?</div>
                 <Link
                   to="/register"
-                  className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition font-semibold"
+                  className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition-all font-semibold text-white/90 hover:text-white backdrop-blur-md shadow-sm active:scale-[0.99]"
                 >
                   Criar nova conta
                 </Link>
               </div>
             )}
           </form>
-        </Card>
+        </div>
       </motion.div>
+
+      {showPinVerifyModal && (
+        <PinLockModal
+          open={showPinVerifyModal}
+          mode="verify"
+          email={email.trim()}
+          title="PIN de Segurança"
+          description="Digite seu PIN de 4 dígitos para autorizar o acesso com as credenciais salvas."
+          onSuccess={handlePinVerifySuccess}
+          onCancel={() => setShowPinVerifyModal(false)}
+        />
+      )}
+
+      {showPinSetupModal && (
+        <PinLockModal
+          open={showPinSetupModal}
+          mode="setup"
+          email={email.trim()}
+          title="Criar PIN deste Computador"
+          description="Crie um PIN de 4 dígitos para proteger suas credenciais salvas sempre que ligar este computador."
+          onSuccess={handlePinSetupSuccess}
+          onCancel={() => {
+            setShowPinSetupModal(false);
+            navigate("/", { replace: true });
+          }}
+        />
+      )}
     </div>
   );
 }
