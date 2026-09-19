@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, BellOff, Clock, Save, X } from "lucide-react";
 import { GlassTimePicker } from "../ui/GlassTimePicker";
+import { BorderBeam } from "../ui/BorderBeam";
 import {
   getBudgetReminderTimes,
   setBudgetReminderTimes,
@@ -129,7 +130,9 @@ export default function ReminderConfigModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="bg-[#151619] border border-white/5 rounded-lg w-full max-w-md shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-slide-up">
+      <div className="relative bg-[#151619] border border-white/10 rounded-2xl w-full max-w-md shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-slide-up">
+        {/* Efeito de Feixe de Luz Apple Glass na borda */}
+        <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black/30">
           <div className="flex items-center gap-3">

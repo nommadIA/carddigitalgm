@@ -1,5 +1,6 @@
 // lib/settings.ts
 import { supabase } from "./supabase";
+import { applyBgEffectToRoot, saveBgEffectConfig, readBgEffectConfig, BgEffectConfig } from "./backgroundEffects";
 
 export type ThemePreset = {
   name: string;
@@ -73,6 +74,15 @@ export type AppSettings = {
   // Alarm Settings
   budget_approved_reminder_enabled?: boolean | null;
   budget_approved_reminder_times?: string[] | null;
+
+  // Background Dynamic Effects Gallery
+  bg_effect_enabled?: boolean | null;
+  bg_effect_type?: string | null;
+  bg_effect_scope?: string | null;
+  bg_effect_desktop_enabled?: boolean | null;
+  bg_effect_desktop_type?: string | null;
+  bg_effect_lockscreen_enabled?: boolean | null;
+  bg_effect_lockscreen_type?: string | null;
 
   // Bio Info
   bio_config?: Record<string, any> | null;
@@ -392,6 +402,27 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
 
   root.style.setProperty("--gm-app-scale", String(scale));
   root.style.setProperty("--gm-mobile-scale", String(mobileScale));
+
+  // Aplica e sincroniza os efeitos dinâmicos de plano de fundo se definidos
+  if (
+    (s.bg_effect_desktop_enabled !== undefined && s.bg_effect_desktop_enabled !== null) ||
+    (s.bg_effect_lockscreen_enabled !== undefined && s.bg_effect_lockscreen_enabled !== null)
+  ) {
+    saveBgEffectConfig({
+      desktopEnabled: s.bg_effect_desktop_enabled !== undefined && s.bg_effect_desktop_enabled !== null ? Boolean(s.bg_effect_desktop_enabled) : undefined,
+      desktopEffect: (s.bg_effect_desktop_type as any) || undefined,
+      lockscreenEnabled: s.bg_effect_lockscreen_enabled !== undefined && s.bg_effect_lockscreen_enabled !== null ? Boolean(s.bg_effect_lockscreen_enabled) : undefined,
+      lockscreenEffect: (s.bg_effect_lockscreen_type as any) || undefined,
+    });
+  } else if (s.bg_effect_enabled !== undefined && s.bg_effect_enabled !== null) {
+    saveBgEffectConfig({
+      enabled: Boolean(s.bg_effect_enabled),
+      type: (s.bg_effect_type as any) || undefined,
+      scope: (s.bg_effect_scope as any) || undefined,
+    });
+  } else {
+    applyBgEffectToRoot();
+  }
 
   if (persist) {
     try {

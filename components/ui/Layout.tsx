@@ -47,6 +47,14 @@ import {
   setUiSoundMuted,
   playUiSound,
 } from "../../lib/audio";
+import {
+  isEffectActiveFor,
+  getEffectFor,
+  getEffectStrength,
+  readBgEffectConfig,
+  applyBgEffectToRoot,
+  BgEffectConfig,
+} from "../../lib/backgroundEffects";
 import { useAuth } from "../../store/AuthContext";
 import { fetchSettingsSupabase, applySettingsToDOM, readSettingsLocal } from "../../lib/settings";
 import { initSyncHub, getSavedNotifications, saveNotifications } from "../../lib/syncHub";
@@ -550,13 +558,30 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       // Ignora eventos de toque no mobile para não interferir na rolagem
       if ("pointerType" in e && e.pointerType === "touch") return;
 
+      // Verifica se o efeito do mouse está habilitado para a Área de Trabalho
+      const currentCfg = bgEffectRef.current;
+      const isMouseActive = isEffectActiveFor("desktop", currentCfg) && getEffectFor("desktop", currentCfg) === "mouse";
+      if (!isMouseActive) {
+        if (targetMouseX !== 0 || targetMouseY !== 0) {
+          targetMouseX = 0;
+          targetMouseY = 0;
+          startAnimation();
+        }
+        return;
+      }
+
       // Coordenadas normalizadas [-1, 1]
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
       const ny = (e.clientY / window.innerHeight) * 2 - 1;
 
+      // Nível de força configurado para o Parallax do Mouse
+      const strength = (getEffectStrength("desktop", "mouse", currentCfg) || 100) / 100;
+      const effectiveMaxX = MOUSE_MAX_X * strength;
+      const effectiveMaxY = MOUSE_MAX_Y * strength;
+
       // Movimento suave proporcional e orgânico
-      targetMouseX = clamp(nx * MOUSE_MAX_X, -MOUSE_MAX_X, MOUSE_MAX_X);
-      targetMouseY = clamp(-ny * MOUSE_MAX_Y, -MOUSE_MAX_Y, MOUSE_MAX_Y);
+      targetMouseX = clamp(nx * effectiveMaxX, -effectiveMaxX, effectiveMaxX);
+      targetMouseY = clamp(-ny * effectiveMaxY, -effectiveMaxY, effectiveMaxY);
 
       startAnimation();
     };
@@ -586,6 +611,29 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       document.documentElement.style.setProperty("--gm-app-bg-parallax-y-mouse", "0px");
       document.documentElement.style.setProperty("--gm-app-bg-depth-scale", `${BASE_DEPTH}`);
     };
+  }, []);
+
+  // Estado e sincronização em tempo real dos Efeitos Dinâmicos de Fundo
+  const [bgEffect, setBgEffect] = useState<BgEffectConfig>(() => readBgEffectConfig());
+  const bgEffectRef = useRef<BgEffectConfig>(bgEffect);
+  bgEffectRef.current = bgEffect;
+
+  useEffect(() => {
+    applyBgEffectToRoot(bgEffect);
+
+    const handleBgEffect = (e: any) => {
+      if (e?.detail) {
+        setBgEffect(e.detail);
+        applyBgEffectToRoot(e.detail);
+      } else {
+        const next = readBgEffectConfig();
+        setBgEffect(next);
+        applyBgEffectToRoot(next);
+      }
+    };
+
+    window.addEventListener("gm-bg-effect-changed", handleBgEffect);
+    return () => window.removeEventListener("gm-bg-effect-changed", handleBgEffect);
   }, []);
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -845,6 +893,16 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   return (
     <div className="gm-layout">
+      {/* CAMADA DINÂMICA AURORA BEAM GLOW (Quando efeito Aurora ativo na Área de Trabalho) */}
+      {isEffectActiveFor("desktop", bgEffect) && getEffectFor("desktop", bgEffect) === "aurora" && (
+        <div className="gm-bg-aurora-layer" />
+      )}
+
+      {/* CAMADA DINÂMICA PRISMA GLOW (Quando efeito Prisma ativo na Área de Trabalho) */}
+      {isEffectActiveFor("desktop", bgEffect) && getEffectFor("desktop", bgEffect) === "prism" && (
+        <div className="gm-bg-prism-layer" />
+      )}
+
       {/* Novo componente de alarmes para orçamentos aprovados */}
       <AlarmToast />
 

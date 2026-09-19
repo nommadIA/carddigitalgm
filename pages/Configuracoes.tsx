@@ -62,6 +62,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import SecurityPinSettings from "../components/ui/SecurityPinSettings";
+import { BackgroundEffectsGallery } from "../components/settings/BackgroundEffectsGallery";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSwipeNav } from "../hooks/useSwipeNav";
@@ -2529,6 +2530,29 @@ export default function Configuracoes() {
                         </label>
                       </div>
                     </div>
+
+                    {/* SEPARADOR SUTIL */}
+                    <div className="border-t border-white/10" />
+
+                    {/* GALERIA DE EFEITOS DINÂMICOS DO PLANO DE FUNDO */}
+                    <BackgroundEffectsGallery
+                      tenantId={tenantId}
+                      onSaveToBackend={async (effectCfg) => {
+                        if (tenantId) {
+                          try {
+                            await upsertSettingsSupabase(tenantId, {
+                              bg_effect_desktop_enabled: effectCfg.desktopEnabled,
+                              bg_effect_desktop_type: effectCfg.desktopEffect,
+                              bg_effect_lockscreen_enabled: effectCfg.lockscreenEnabled,
+                              bg_effect_lockscreen_type: effectCfg.lockscreenEffect,
+                              bg_effect_enabled: effectCfg.desktopEnabled || effectCfg.lockscreenEnabled,
+                              bg_effect_type: effectCfg.desktopEffect,
+                              bg_effect_scope: "both",
+                            });
+                          } catch (e) {}
+                        }
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -3580,7 +3604,17 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 9: SEGURANÇA & PIN */}
               {openSections.security && (
-                <div className="w-full flex flex-col gap-6 animate-fade-in">
+                <div className="gm-settings-card fora border border-white/10 p-5 sm:p-7 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300 mt-5 sm:mt-6">
+                  <div className="barra py-3.5 sm:py-4 border-b border-white/10 flex items-center justify-between mb-4 rounded-xl px-4 mt-1">
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                      <ShieldCheck className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
+                      <span>SEGURANÇA & PIN DO DISPOSITIVO</span>
+                    </span>
+                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                      Proteção Local
+                    </span>
+                  </div>
+
                   <SecurityPinSettings />
                 </div>
               )}

@@ -19,6 +19,7 @@ import { pushToast } from "../store/toast";
 import { fetchSettingsSupabase, readSettingsLocal, AppSettings } from "../lib/settings";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { generateFullAppSummaryPdf } from "../services/pdfService";
+import { BorderBeam } from "../components/ui/BorderBeam";
 
 function formatPhoneBR(value: string) {
   const digits = (value || "").replace(/\D/g, "").slice(0, 11);
@@ -371,14 +372,18 @@ export default function Dashboard() {
       </div>
 
       {/* 2. CARD DO RELÓGIO DIGITAL CENTRALIZADO (COMO NO PRINT DO USUÁRIO) */}
-      <div className={`p-6 sm:p-8 flex flex-col items-center justify-center text-center ${cardBase} bg-white/[0.02] backdrop-blur-md`}>
-        <div className="flex items-center justify-center gap-3 sm:gap-4 text-white">
+      <div className="relative rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden shadow-none">
+        {/* Efeito de Feixe de Luz Apple Glass na borda (curvatura perfeita nos cantos, acelera nas horizontais) */}
+        <BorderBeam duration={9} borderWidth={1.4} color="#ffffff" size={240} />
+
+        {/* Conteúdo interno do container */}
+        <div className="relative z-10 flex items-center justify-center gap-3 sm:gap-4 text-white">
           <Clock size={28} className="text-slate-400 shrink-0" />
           <span className="text-4xl sm:text-5xl md:text-6xl font-black font-mono tracking-widest text-white drop-shadow-md">
             {now.toLocaleTimeString("pt-BR", { hour12: false })}
           </span>
         </div>
-        <div className="mt-2 text-sm sm:text-base font-semibold text-slate-400 tracking-wide">
+        <div className="relative z-10 mt-2 text-sm sm:text-base font-semibold text-slate-400 tracking-wide">
           {formatDashboardDate(now)}
         </div>
       </div>
