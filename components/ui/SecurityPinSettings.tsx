@@ -121,7 +121,7 @@ export default function SecurityPinSettings() {
               </div>
 
               <p className="text-xs sm:text-sm text-zinc-300/80 leading-relaxed max-w-2xl">
-                Proteja seu acesso caso suas credenciais fiquem salvas no navegador deste computador.
+                Proteja seu acesso caso suas credenciais fiquem salvas no navegador deste dispositivo (smartphone ou computador).
               </p>
             </div>
           </div>
@@ -227,7 +227,7 @@ export default function SecurityPinSettings() {
               <div>
                 <p className="font-bold text-white mb-0.5">PIN de 4 Dígitos</p>
                 <p className="text-zinc-400 text-[11px] leading-snug">
-                  Apenas você conhece a chave de 4 números necessária para autorizar o acesso neste computador.
+                  Apenas você conhece a chave de 4 números necessária para autorizar o acesso neste dispositivo.
                 </p>
               </div>
             </div>
@@ -237,7 +237,7 @@ export default function SecurityPinSettings() {
               <div>
                 <p className="font-bold text-white mb-0.5">Bloqueio Automático</p>
                 <p className="text-zinc-400 text-[11px] leading-snug">
-                  Sempre que o navegador ou este computador for reiniciado, a chave de 4 dígitos será solicitada.
+                  Sempre que o navegador ou o dispositivo for reiniciado, a chave de 4 dígitos será solicitada.
                 </p>
               </div>
             </div>

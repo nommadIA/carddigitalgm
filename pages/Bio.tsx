@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Page } from "../components/ui/Page";
 import { Link } from "react-router-dom";
-import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, ChevronLeft, Save, Smartphone, Monitor, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard, List, PlusCircle, Trash2, RotateCcw, Edit3, AlignLeft, AlignCenter, AlignRight, Bold, Italic, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, ChevronLeft, Save, Smartphone, Monitor, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard, List, PlusCircle, Trash2, RotateCcw, Edit3, AlignLeft, AlignCenter, AlignRight, Bold, Italic, ArrowLeft, CheckCircle2, Loader2, Image as ImageIcon } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
 import { fetchSettingsSupabase, upsertSettingsSupabase, readSettingsLocal, AppSettings } from "../lib/settings";
 import { pushToast } from "../store/toast";
@@ -259,6 +259,11 @@ export default function Bio() {
     about_highlight_italic: false,
     about_highlight_font: "ui",
     about_highlight_size: "16 pt",
+    website_logo_url: "",
+    hero_button_label: "Conheça nossos Serviços",
+    hero_button_action: "portfolio",
+    hero_button_url: "",
+    hero_button_style: "glow",
   });
 
   const editorRef = useRef<HTMLDivElement>(null);
@@ -1027,6 +1032,7 @@ export default function Bio() {
         company_name: bioConfig.title || settings?.company_name, 
         pix_key: bioConfig.pix_key,
         pix_type: bioConfig.pix_type,
+        website_logo_url: (bioConfig as any)?.website_logo_url || (bioConfig as any)?.logo_url || null,
         bio_config: bioConfig,
       };
 
@@ -1407,9 +1413,9 @@ export default function Bio() {
               </span>
               <span className="text-zinc-400 dark:text-zinc-600 text-2xl font-light mx-0.5">|</span>
               <div className="w-8 h-8 rounded-lg barra border border-white/10 flex items-center justify-center overflow-hidden shadow-none">
-                {settings?.company_logo_url || (bioConfig as any).logo_url ? (
+                {(bioConfig as any).website_logo_url || (bioConfig as any).logo_url || settings?.company_logo_url ? (
                   <img 
-                    src={settings?.company_logo_url || (bioConfig as any).logo_url} 
+                    src={(bioConfig as any).website_logo_url || (bioConfig as any).logo_url || settings?.company_logo_url} 
                     alt="Logo da Empresa" 
                     className="w-full h-full object-contain"
                   />
@@ -1824,6 +1830,70 @@ export default function Bio() {
                 
                 <div className="flex flex-col gap-5">
 
+                {/* Logomarca Exclusiva do Website */}
+                <div className="p-5 sm:p-6 rounded-2xl border border-white/10 fora flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-none">
+                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl barra border-2 border-dashed border-white/20 overflow-hidden flex items-center justify-center shrink-0 group">
+                    {(bioConfig as any).website_logo_url || (bioConfig as any).logo_url ? (
+                      <img 
+                        src={(bioConfig as any).website_logo_url || (bioConfig as any).logo_url} 
+                        alt="Logo Website" 
+                        className="w-full h-full object-contain p-2" 
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1.5 text-zinc-500">
+                        <ImageIcon size={28} className="opacity-60 text-[var(--primary-color)]" />
+                        <span className="text-[10px] font-bold">Sem Imagem</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 flex flex-col items-start gap-2.5 text-left w-full">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--primary-color)] flex items-center gap-1.5">
+                      <Sparkles size={14} /> Logomarca Exclusiva do Website
+                    </span>
+                    <p className="text-xs sm:text-sm text-zinc-400 font-medium leading-relaxed">
+                      Esta imagem será exibida exclusivamente no cabeçalho e rodapé do seu site público. Ela é independente da logomarca do aplicativo interno.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2.5 pt-1 w-full">
+                      <label className="gm-btn py-2 px-4 text-xs font-bold flex items-center gap-2 cursor-pointer rounded-xl border border-[var(--primary-color)]/40 bg-[var(--primary-color)]/10 text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition-all shadow-none">
+                        <Upload size={14} />
+                        <span>Carregar Logo do Website</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={async (e) => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            try {
+                              pushToast({ type: "info", title: "Upload", message: "Enviando logo do website..." });
+                              const url = await uploadImage(f);
+                              handleChange("logo_url", url);
+                              handleChange("website_logo_url", url);
+                              pushToast({ type: "success", title: "Sucesso", message: "Logo do website atualizado!" });
+                            } catch (err: any) {
+                              pushToast({ type: "error", title: "Erro", message: err.message || "Erro no upload" });
+                            }
+                          }}
+                        />
+                      </label>
+                      {((bioConfig as any).website_logo_url || (bioConfig as any).logo_url) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleChange("logo_url", "");
+                            handleChange("website_logo_url", "");
+                            pushToast({ type: "info", title: "Removido", message: "Logo do website removido." });
+                          }}
+                          className="px-3 py-2 text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl border border-red-500/20 transition-all cursor-pointer"
+                        >
+                          Remover
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                <div>
                  <label className="gm-label">
                    {basicInfoTab === "desktop" ? "Título / Nome da Empresa (Desktop)" : "Título / Nome da Empresa (Smartphone)"}
@@ -1954,6 +2024,49 @@ export default function Bio() {
                      </div>
                   </div>
                 </div>
+
+                {/* Botão de Ação Principal (Conheça nossos Serviços) */}
+                <div className="space-y-3 pt-4 border-t border-white/10">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--primary-color)]" /> Botão de Ação Principal (Conheça nossos Serviços)
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="gm-label font-semibold text-[11px]">Texto do Botão</label>
+                      <input 
+                        type="text" 
+                        className="gm-input font-medium !py-2" 
+                        value={bioConfig.hero_button_label !== undefined ? bioConfig.hero_button_label : "Conheça nossos Serviços"} 
+                        onChange={e => handleChange("hero_button_label", e.target.value)} 
+                        placeholder="Conheça nossos Serviços" 
+                      />
+                    </div>
+                    <div>
+                      <label className="gm-label font-semibold text-[11px]">Ação ao Clicar</label>
+                      <select 
+                        className="gm-input font-medium !py-2"
+                        value={bioConfig.hero_button_action || "portfolio"}
+                        onChange={e => handleChange("hero_button_action", e.target.value)}
+                      >
+                        <option value="portfolio">Rolar até Portfólio / Catálogo</option>
+                        <option value="contact">Ir para Seção de Contato</option>
+                        <option value="url">Abrir Link Externo</option>
+                      </select>
+                    </div>
+                  </div>
+                  {bioConfig.hero_button_action === "url" && (
+                    <div>
+                      <label className="gm-label font-semibold text-[11px]">Link de Destino (URL)</label>
+                      <input 
+                        type="text" 
+                        className="gm-input font-medium !py-2" 
+                        value={bioConfig.hero_button_url || ""} 
+                        onChange={e => handleChange("hero_button_url", e.target.value)} 
+                        placeholder="https://..." 
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1982,8 +2095,11 @@ export default function Bio() {
               </div>
               <div>
                 <label className="gm-label">Tema Visual</label>
-                <select className="gm-input w-full" value={bioConfig.theme} onChange={e => handleChange("theme", e.target.value)}>
-                  <option value="gorila">Gorila Design (Oficial / goriladesign.com.br)</option>
+                <select 
+                  className="gm-input w-full font-medium" 
+                  value={bioConfig.theme === "light" ? "light" : "dark"} 
+                  onChange={e => handleChange("theme", e.target.value)}
+                >
                   <option value="dark">Escuro</option>
                   <option value="light">Claro</option>
                 </select>
@@ -1991,7 +2107,7 @@ export default function Bio() {
               <div>
                 <label className="gm-label flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5 text-zinc-400" /> Fonte do Site (Computador)</label>
                 <select className="gm-input w-full" value={bioConfig.site_font || "inter"} onChange={e => handleChange("site_font", e.target.value)}>
-                  <option value="space">Space Grotesk (Gorila Design)</option>
+                  <option value="space">Space Grotesk (Moderno / Tech)</option>
                   <option value="syne">Syne (Display / Moderno)</option>
                   <option value="inter">Inter (Padrão)</option>
                   <option value="serif">Playfair Display (Serif/Editorial)</option>
@@ -2012,7 +2128,7 @@ export default function Bio() {
               <div>
                 <label className="gm-label flex items-center gap-1.5 text-[var(--primary-color)]"><Smartphone className="w-3.5 h-3.5" /> Fonte do Site (Celular)</label>
                 <select className="gm-input w-full border-[var(--primary-color-40)] focus:border-[var(--primary-color)]" value={bioConfig.site_font_mobile || bioConfig.site_font || "inter"} onChange={e => handleChange("site_font_mobile", e.target.value)}>
-                  <option value="space">Space Grotesk (Gorila Design)</option>
+                  <option value="space">Space Grotesk (Moderno / Tech)</option>
                   <option value="syne">Syne (Display / Moderno)</option>
                   <option value="inter">Inter (Padrão)</option>
                   <option value="serif">Playfair Display (Serif/Editorial)</option>
@@ -4203,103 +4319,75 @@ export default function Bio() {
       {previewOpen && (
         <div 
           onClick={() => setPreviewOpen(false)}
-          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+          className="fixed inset-0 z-[100] bg-black flex items-center justify-center cursor-pointer overflow-hidden animate-in fade-in duration-200"
         >
           {/* Top Center Device Switcher */}
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="fixed top-4 left-1/2 -tranzinc-x-1/2 z-[120] bg-zinc-950/90 backdrop-blur-xl border border-zinc-800/80 p-1.5 rounded-full flex items-center gap-1.5 shadow-lg pointer-events-auto"
+            className="fixed top-3 left-1/2 -translate-x-1/2 z-[130] bg-zinc-950/95 backdrop-blur-xl border border-white/15 p-1 rounded-full flex items-center gap-1 shadow-2xl pointer-events-auto"
           >
             <button
               onClick={() => setPreviewMode("smartphone")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
                 previewMode === "smartphone"
                   ? "bg-[var(--primary-color)] text-white shadow-md"
                   : "text-zinc-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Smartphone className="w-4 h-4" />
-              SMARTPHONE
+              <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span>SMARTPHONE</span>
             </button>
             <button
               onClick={() => setPreviewMode("pc")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
                 previewMode === "pc"
                   ? "bg-[var(--primary-color)] text-white shadow-md"
                   : "text-zinc-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Layout className="w-4 h-4" />
-              DESKTOP PC
+              <Layout className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span>DESKTOP PC</span>
             </button>
           </div>
 
-          {/* Viewport Floating Close Button - Highly visible and guaranteed to display inside developer/user iframe/tab */}
+          {/* Viewport Floating Close Button */}
           <button 
             onClick={(e) => {
               e.stopPropagation();
               setPreviewOpen(false);
             }}
-            className="fixed top-4 right-4 z-[120] bg-zinc-800/90 hover:bg-red-600 text-white font-bold px-4 py-2.5 rounded-full flex items-center justify-center gap-2 shadow-lg transition-all duration-300 pointer-events-auto border border-white/10"
+            className="fixed top-3 right-3 sm:right-5 z-[130] bg-zinc-900/90 hover:bg-red-600 text-white font-bold px-3 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center justify-center gap-1.5 shadow-2xl transition-all duration-300 pointer-events-auto border border-white/15 cursor-pointer text-xs sm:text-sm"
           >
-            <X className="w-5 h-5" />
-            <span className="text-sm">Fechar</span>
+            <X className="w-4 h-4" />
+            <span>Fechar</span>
           </button>
 
           {previewMode === "smartphone" ? (
             <div 
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-[360px] h-[85vh] max-h-[800px] animate-in zoom-in-95 duration-300 cursor-default"
+              className="w-full h-full max-w-full sm:max-w-[440px] mx-auto bg-black relative flex flex-col overflow-hidden sm:border-x sm:border-white/10 shadow-2xl cursor-default animate-in zoom-in-95 duration-200"
             >
-              {/* Close Button above phone - fallback copy */}
-              <button 
-                onClick={() => setPreviewOpen(false)}
-                className="absolute -top-12 right-0 w-10 h-10 bg-zinc-800 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors shadow-xl border border-white/10"
-                title="Fechar"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Smartphone frame */}
-              <div className="w-full h-full p-2 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[3rem] shadow-lg relative">
-                {/* Quick internal close button directly inside the smartphone bezel */}
-                <button 
-                  onClick={() => setPreviewOpen(false)}
-                  className="absolute top-4 right-4 z-35 w-8 h-8 bg-black/70 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all border border-white/10"
-                  title="Fechar"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                <div className="w-full h-full overflow-hidden rounded-[2.6rem] bg-[#0a0a0c] relative no-scrollbar">
-                    {/* Notch Minimalista */}
-                    <div className="absolute top-0 w-full h-6 z-20 flex justify-center items-start">
-                       <div className="w-24 h-5 bg-black rounded-b-xl flex items-center justify-center">
-                          <div className="w-2 h-2 rounded-full bg-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]" />
-                       </div>
-                    </div>
-                    
-                    <div className="w-full h-full overflow-hidden no-scrollbar">
-                       <BioRenderer 
-                         asPreview={true}
-                         previewMode="smartphone"
-                         data={{
-                           company_name: settings?.company_name,
-                           company_logo_url: settings?.company_logo_url,
-                           pix_key: bioConfig.pix_key || settings?.pix_key,
-                           pix_type: bioConfig.pix_type || settings?.pix_type,
-                           brand_primary: settings?.brand_primary,
-                           bio_config: bioConfig
-                         }} 
-                       />
-                    </div>
-                </div>
+              {/* Mobile Viewport - Edge to Edge without phone frame bezel or notch */}
+              <div className="w-full h-full overflow-hidden relative flex-1 flex flex-col bg-black">
+                <BioRenderer 
+                  asPreview={true}
+                  previewMode="smartphone"
+                  data={{
+                    company_name: settings?.company_name,
+                    company_logo_url: settings?.company_logo_url,
+                    website_logo_url: (bioConfig as any)?.website_logo_url || (bioConfig as any)?.logo_url,
+                    pix_key: bioConfig.pix_key || settings?.pix_key,
+                    pix_type: bioConfig.pix_type || settings?.pix_type,
+                    brand_primary: settings?.brand_primary,
+                    bio_config: bioConfig
+                  }} 
+                />
               </div>
             </div>
           ) : (
             <div 
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-5xl h-[85vh] max-h-[850px] animate-in zoom-in-95 duration-300 cursor-default bg-[#0a0a0c] border border-white/15 rounded-lg shadow-lg flex flex-col overflow-hidden"
+              className="relative w-[96vw] max-w-[1680px] h-[92vh] max-h-[960px] animate-in zoom-in-95 duration-300 cursor-default bg-[#0a0a0c] border border-white/15 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
             >
               {/* Browser Top Window Controls */}
               <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800 shrink-0">
@@ -4308,19 +4396,31 @@ export default function Bio() {
                   <span className="w-3 h-3 rounded-full bg-yellow-500/80 block"></span>
                   <span className="w-3 h-3 rounded-full bg-green-500/80 block"></span>
                   
-                  <div className="ml-4 px-3 py-1 bg-zinc-950/80 rounded-md text-[10px] font-mono text-zinc-400 select-all flex items-center gap-1.5 border border-zinc-800">
-                    <Globe className="w-3 h-3 text-zinc-500" />
+                  <div className="ml-4 px-3 py-1 bg-zinc-950/80 rounded-md text-[11px] font-mono text-zinc-400 select-all flex items-center gap-1.5 border border-zinc-800">
+                    <Globe className="w-3.5 h-3.5 text-zinc-500" />
                     <span>{window.location.origin}/{getCustomSlug()}</span>
                   </div>
                 </div>
                 
-                <button 
-                  onClick={() => setPreviewOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-red-600/10 hover:text-red-500 transition-colors cursor-pointer text-zinc-400"
-                  title="Fechar"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`/${getCustomSlug()}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white text-xs font-semibold border border-white/10 transition-colors"
+                    title="Abrir site em nova aba"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-[#FE540B]" />
+                    <span>Abrir em Nova Aba</span>
+                  </a>
+                  <button 
+                    onClick={() => setPreviewOpen(false)}
+                    className="p-1.5 rounded-lg hover:bg-red-600/10 hover:text-red-500 transition-colors cursor-pointer text-zinc-400"
+                    title="Fechar"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* PC Content frame */}
@@ -4331,6 +4431,7 @@ export default function Bio() {
                    data={{
                      company_name: settings?.company_name,
                      company_logo_url: settings?.company_logo_url,
+                     website_logo_url: (bioConfig as any)?.website_logo_url || (bioConfig as any)?.logo_url,
                      pix_key: bioConfig.pix_key || settings?.pix_key,
                      pix_type: bioConfig.pix_type || settings?.pix_type,
                      brand_primary: settings?.brand_primary,

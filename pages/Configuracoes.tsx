@@ -1999,11 +1999,11 @@ export default function Configuracoes() {
                       {/* LADO DIREITO: TODAS AS INFORMAÇÕES DE TEXTO E ORIENTAÇÕES */}
                       <div className="flex-1 flex flex-col items-start text-left gap-3">
                         <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-1.5">
-                          <FileImage size={15} /> Logo da Empresa / Imagem de Perfil
+                          <FileImage size={15} /> Logo do Aplicativo (Painel do Sistema)
                         </span>
 
                         <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium leading-relaxed">
-                          Cadastre a imagem oficial da sua marca para exibição no sistema e perfis. Recomendamos imagens em formato quadrado ou PNG com fundo transparente.
+                          Cadastre a imagem oficial da sua marca para exibição no aplicativo, menus internos, cabeçalhos e relatórios. O website público possui um logotipo próprio e independente configurável na página BiO.
                         </p>
 
                         <AnimatePresence>

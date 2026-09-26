@@ -152,8 +152,10 @@ export interface AppSettings {
 
   avatar_url?: string | null;
   company_logo_url?: string | null;
+  website_logo_url?: string | null;
   company_logo_scale?: number;
   timbrado_url?: string | null;
+  bio_config?: any;
 
   theme_presets?: any[] | null;
 

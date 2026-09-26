@@ -48,3 +48,24 @@ export async function uploadTimbradoA4(userId: string, file: File) {
   const { data } = supabase.storage.from("timbrados").getPublicUrl(path);
   return data.publicUrl;
 }
+
+export async function uploadBioAsset(tenantId: string | null, file: File, prefix: string = "bio"): Promise<string> {
+  const isVideo = file.type.startsWith("video/");
+  let fileToUpload: File = file;
+  if (!isVideo && file.type.startsWith("image/")) {
+    fileToUpload = await compressImage(file, { quality: 0.88 });
+  }
+  const ext = (fileToUpload.name.split(".").pop() || (isVideo ? "mp4" : "png")).toLowerCase();
+  const filename = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+  const targetTenant = tenantId || "global";
+  const path = `${targetTenant}/bio/${filename}`;
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, fileToUpload, { upsert: true, contentType: fileToUpload.type || (isVideo ? "video/mp4" : `image/${ext}`) });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}

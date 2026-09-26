@@ -2,8 +2,31 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../store/AuthContext";
-import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, Eye, EyeOff, ZoomIn , Layout, ExternalLink, Menu, Home, Maximize2, Minimize2 } from "lucide-react";
+import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, CheckCircle2, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, ShieldCheck, Eye, EyeOff, ZoomIn , Layout, ExternalLink, Menu, Home, Maximize2, Minimize2, Edit3, Sparkles, Palette } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { WhatsAppIcon } from "../ui/WhatsAppIcon";
+import { upsertSettingsSupabase, AppSettings } from "../../lib/settings";
+import { pushToast } from "../../store/toast";
+import LiveAdminBar from "./LiveAdminBar";
+import { 
+  HeroEditModal, 
+  LogoModal, 
+  ThemeColorsModal, 
+  ContactsModal, 
+  ProductModal, 
+  PortfolioModal, 
+  PixEditModal 
+} from "./LiveEditModals";
+import { QuickTextEditorModal, ElementType, TextEditorFormatting } from "./QuickTextEditorModal";
+import { EditableItem } from "./EditableItem";
+import { SitePillButton } from "./SitePillButton";
+import { CustomerAuthModal } from "./CustomerAuthModal";
+import { CustomerDashboardModal } from "./CustomerDashboardModal";
+import { OrderPaymentModal } from "./OrderPaymentModal";
+import { AdminOrdersModal } from "./AdminOrdersModal";
+import { AdminHubModal } from "./AdminHubModal";
+import { Customer, getCachedCustomer, setCachedCustomer, saveCustomerOrder, CustomerOrder } from "../../lib/customerService";
+import { createOrderPayment } from "../../lib/paymentService";
 
 export const formatExternalUrl = (url: string | undefined): string | undefined => {
   if (!url) return undefined;
@@ -263,13 +286,24 @@ function InteractiveSocialIcon({
 
 function TopBarSocialIcon({ 
   item,
+  theme = "dark",
   asPreview = false
 }: { 
   item: { id: string; title: string; href: string; icon: any };
+  theme?: string;
   asPreview?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
-  const IconComp = item.icon;
+  const [imgError, setImgError] = useState(false);
+  const isLight = theme === "light";
+  const customUrls = customSocialIcons[item.id];
+  const IconComp = item.icon || (item.id === 'whatsapp' ? BrandWhatsAppIcon : MessageCircle);
+  const isWhatsapp = item.id === 'whatsapp';
+
+  // Tema escuro: barra branca, ícones pretos por padrão (#000000), hover laranja (#FE540B)
+  // Tema branco: barra preta (inversão), ícones brancos por padrão (#ffffff), hover laranja (#FE540B)
+  const defaultColor = isLight ? "#ffffff" : "#000000";
+  const currentColor = hovered ? "#FE540B" : defaultColor;
 
   return (
     <a 
@@ -280,29 +314,558 @@ function TopBarSocialIcon({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={(e) => { if (asPreview) e.preventDefault(); }}
-      className="topbar-social-link group flex items-center justify-center p-1.5 rounded-md transition-all duration-200 hover:scale-115 cursor-pointer text-black hover:!text-[#FE540B]"
+      className={`topbar-social-link group flex items-center justify-center p-1 rounded-md transition-all duration-200 hover:scale-115 cursor-pointer ${isLight ? 'text-white' : 'text-black'} hover:!text-[#FE540B]`}
       style={{
-        color: hovered ? '#FE540B' : '#000000',
+        color: currentColor,
       }}
     >
-      <IconComp 
-        className="w-5.5 h-5.5 sm:w-6 sm:h-6 transition-colors duration-200 text-black group-hover:!text-[#FE540B] group-hover:!stroke-[#FE540B]" 
-        strokeWidth={2.4}
-        style={{ 
-          color: hovered ? '#FE540B' : '#000000',
-          stroke: item.id === 'whatsapp' ? undefined : (hovered ? '#FE540B' : '#000000'),
-          fill: item.id === 'whatsapp' ? (hovered ? '#FE540B' : '#000000') : undefined
-        }} 
-      />
+      {customUrls && !imgError ? (
+        <img 
+          src={hovered ? customUrls.orange : (isLight ? customUrls.white : customUrls.black)}
+          alt={item.title}
+          className="w-5.5 h-5.5 sm:w-6 sm:h-6 object-contain transition-transform duration-200 pointer-events-none"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <IconComp 
+          className={`w-5.5 h-5.5 sm:w-6 sm:h-6 transition-colors duration-200 ${isLight ? 'text-white' : 'text-black'} group-hover:!text-[#FE540B]`} 
+          size={24}
+          strokeWidth={isWhatsapp ? undefined : 2.2}
+          style={{ 
+            color: currentColor,
+            stroke: isWhatsapp || item.id === 'facebook' ? 'none' : currentColor,
+            fill: isWhatsapp || item.id === 'facebook' ? currentColor : undefined
+          }} 
+        />
+      )}
     </a>
+  );
+}
+
+type DesktopNavKey = "inicio" | "sobre" | "produtos" | "portfolio" | "contato";
+
+function WebsiteDesktopNav({
+  activeView,
+  setActiveView,
+  setActivePortfolioId,
+  theme = "dark",
+  orangeColor = "#FE540B",
+  userSocialLinks = [],
+  asPreview = false,
+  hasCatalog = true,
+  hasPortfolio = true,
+  hasAbout = true,
+  currentActiveSection = "inicio",
+  onNavigateSection,
+  currentCustomer = null,
+  onOpenCustomerArea,
+  onOpenAdminHub,
+  isAdminLoggedIn = false,
+}: {
+  activeView: string;
+  setActiveView: (view: "bio" | "contact" | "portfolio") => void;
+  setActivePortfolioId: (id: string | null) => void;
+  theme?: string;
+  orangeColor?: string;
+  userSocialLinks?: any[];
+  asPreview?: boolean;
+  hasCatalog?: boolean;
+  hasPortfolio?: boolean;
+  hasAbout?: boolean;
+  currentActiveSection?: DesktopNavKey;
+  onNavigateSection?: (section: DesktopNavKey) => void;
+  currentCustomer?: Customer | null;
+  onOpenCustomerArea?: () => void;
+  onOpenAdminHub?: () => void;
+  isAdminLoggedIn?: boolean;
+}) {
+  const [hoveredNav, setHoveredNav] = useState<DesktopNavKey | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRefs = useRef<Record<string, HTMLSpanElement | null>>({});
+
+  const navItems: { key: DesktopNavKey; label: string; show: boolean }[] = ([
+    { key: "inicio" as DesktopNavKey, label: "Início", show: true },
+    { key: "sobre" as DesktopNavKey, label: "Sobre", show: hasAbout !== false },
+    { key: "produtos" as DesktopNavKey, label: "Produtos", show: hasCatalog !== false },
+    { key: "portfolio" as DesktopNavKey, label: "Portfólio", show: hasPortfolio !== false },
+    { key: "contato" as DesktopNavKey, label: "Contato", show: true },
+  ] as { key: DesktopNavKey; label: string; show: boolean }[]).filter(i => i.show);
+
+  const activeTarget: DesktopNavKey = activeView === "contact" 
+    ? "contato" 
+    : activeView === "portfolio" 
+      ? "portfolio" 
+      : (currentActiveSection || "inicio");
+
+  const currentIndicator: DesktopNavKey = hoveredNav || activeTarget;
+
+  const isLight = theme === "light";
+  const navDefaultColor = isLight ? "#ffffff" : "#000000";
+
+  const [coords, setCoords] = useState<{ x: number; y: number; width: number; ready: boolean }>({
+    x: 0,
+    y: 0,
+    width: 0,
+    ready: false
+  });
+
+  useEffect(() => {
+    const updatePosition = () => {
+      const container = containerRef.current;
+      const targetText = textRefs.current[currentIndicator] || textRefs.current["inicio"];
+      if (container && targetText) {
+        const containerRect = container.getBoundingClientRect();
+        const textRect = targetText.getBoundingClientRect();
+        if (textRect.width > 0) {
+          setCoords({
+            x: textRect.left - containerRect.left,
+            y: textRect.bottom - containerRect.top + 4,
+            width: textRect.width,
+            ready: true
+          });
+        }
+      }
+    };
+
+    updatePosition();
+    const raf = requestAnimationFrame(updatePosition);
+    const timer1 = setTimeout(updatePosition, 50);
+    const timer2 = setTimeout(updatePosition, 150);
+    const timer3 = setTimeout(updatePosition, 400);
+    window.addEventListener("resize", updatePosition);
+
+    if (typeof document !== "undefined" && document.fonts) {
+      document.fonts.ready.then(updatePosition);
+    }
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        updatePosition();
+      });
+      if (containerRef.current) ro.observe(containerRef.current);
+      Object.values(textRefs.current).forEach((el) => {
+        if (el) ro?.observe(el);
+      });
+    }
+
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      window.removeEventListener("resize", updatePosition);
+      if (ro) ro.disconnect();
+    };
+  }, [currentIndicator, activeTarget, navItems.length]);
+
+  return (
+    <div 
+      ref={containerRef}
+      className="flex items-center gap-6 sm:gap-8 lg:gap-10 relative"
+      onMouseLeave={() => setHoveredNav(null)}
+      onPointerLeave={() => setHoveredNav(null)}
+    >
+      {navItems.map((item) => {
+        const isCurrentActive = activeTarget === item.key;
+        const isHovered = hoveredNav === item.key;
+        const isHighlighted = isHovered || (!hoveredNav && isCurrentActive);
+
+        return (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => {
+              if (onNavigateSection) {
+                onNavigateSection(item.key);
+              } else {
+                if (item.key === "contato") {
+                  setActiveView("contact");
+                } else if (item.key === "portfolio") {
+                  setActiveView("portfolio");
+                } else {
+                  setActiveView("bio");
+                  setActivePortfolioId(null);
+                }
+              }
+            }}
+            onMouseEnter={() => setHoveredNav(item.key)}
+            onMouseMove={() => setHoveredNav(item.key)}
+            onPointerEnter={() => setHoveredNav(item.key)}
+            className="topbar-nav-link website-nav-btn relative !p-0 !px-0 py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none select-none hover:!text-[#FE540B] inline-flex items-center justify-center"
+            style={{
+              background: 'transparent',
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              border: 'none',
+              outline: 'none',
+              padding: 0,
+              color: isHighlighted ? orangeColor : navDefaultColor
+            }}
+          >
+            <span 
+              ref={(el) => { textRefs.current[item.key] = el; }} 
+              className="inline-block relative"
+            >
+              {item.label}
+            </span>
+          </button>
+        );
+      })}
+
+      {/* Barra laranja que pega EXATAMENTE a área e largura do item ativo */}
+      {coords.ready && (
+        <motion.span 
+          className="absolute h-[2.5px] rounded-full pointer-events-none"
+          initial={false}
+          animate={{
+            x: coords.x,
+            y: coords.y,
+            width: coords.width,
+            backgroundColor: orangeColor
+          }}
+          transition={{ type: "spring", stiffness: 450, damping: 32 }}
+          style={{ left: 0, top: 0 }}
+        />
+      )}
+
+      {/* Social Icons na barra superior com adaptação e inversão de cores por tema */}
+      {userSocialLinks.length > 0 && (
+        <>
+          <div className="w-1.5 sm:w-2" />
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            {userSocialLinks.map((item) => (
+              <TopBarSocialIcon key={item.id} item={item} theme={theme} asPreview={asPreview} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Botão Área do Cliente no Topbar Desktop */}
+      {onOpenCustomerArea && (
+        <div className="flex items-center ml-2 sm:ml-3">
+          <button
+            type="button"
+            onClick={onOpenCustomerArea}
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-black transition-all shadow-sm cursor-pointer select-none border ${
+              currentCustomer
+                ? 'bg-orange-500/15 text-orange-400 border-orange-500/30 hover:bg-orange-500/25'
+                : isLight
+                  ? 'bg-black text-white hover:bg-zinc-800 border-black'
+                  : 'bg-white/10 text-white hover:bg-white/20 border-white/15'
+            }`}
+            title={currentCustomer ? `Área do Cliente: ${currentCustomer.full_name}` : "Entrar ou cadastrar"}
+          >
+            <User className="w-3.5 h-3.5" style={{ color: currentCustomer ? orangeColor : undefined }} />
+            <span className="truncate max-w-[120px]">
+              {currentCustomer ? currentCustomer.full_name.split(' ')[0] : 'Área do Cliente'}
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Botão Painel Admin no Topbar Desktop */}
+      {onOpenAdminHub && (
+        <div className="flex items-center ml-1 sm:ml-2">
+          <button
+            type="button"
+            onClick={onOpenAdminHub}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition-all shadow-sm cursor-pointer select-none border ${
+              isAdminLoggedIn
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                : isLight
+                  ? 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200 border-zinc-300'
+                  : 'bg-white/5 text-zinc-300 hover:bg-white/15 hover:text-white border-white/15'
+            }`}
+            title="Acesso Administrativo (Gerenciar Pedidos, Clientes e Site)"
+          >
+            <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden xl:inline">Painel Admin</span>
+            <span className="xl:hidden">Admin</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
 export default function BioRenderer({ data, asPreview = false, previewMode }: { data: any, asPreview?: boolean, previewMode?: "smartphone" | "pc" }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const bio = data?.bio_config || {};
+  const { user, tenantId: userTenantId } = useAuth();
+
+  // Real-time live editing state
+  const [currentData, setCurrentData] = useState(data);
+  const [isLiveEditMode, setIsLiveEditMode] = useState(false);
+  const [previewAsVisitor, setPreviewAsVisitor] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSavingLive, setIsSavingLive] = useState(false);
+
+  // Edit Modals state
+  const [isHeroModalOpen, setIsHeroModalOpen] = useState(false);
+  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+  const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
+  const [productModalState, setProductModalState] = useState<{ isOpen: boolean; product: any | null }>({ isOpen: false, product: null });
+  const [portfolioModalState, setPortfolioModalState] = useState<{ isOpen: boolean; project: any | null }>({ isOpen: false, project: null });
+  const [isPixModalOpen, setIsPixModalOpen] = useState(false);
+
+  // Customer Area State
+  const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(() => getCachedCustomer());
+  const [isCustomerAuthModalOpen, setIsCustomerAuthModalOpen] = useState(false);
+  const [isCustomerDashboardOpen, setIsCustomerDashboardOpen] = useState(false);
+  const [activePaymentOrder, setActivePaymentOrder] = useState<CustomerOrder | null>(null);
+  const [isAdminOrdersModalOpen, setIsAdminOrdersModalOpen] = useState(false);
+  const [isAdminHubOpen, setIsAdminHubOpen] = useState(false);
+
+  // Auto-fill checkout fields when customer is logged in
+  useEffect(() => {
+    if (currentCustomer) {
+      if (currentCustomer.full_name) setOrderName(prev => prev || currentCustomer.full_name);
+      if (currentCustomer.phone) setOrderPhone(prev => prev || currentCustomer.phone || "");
+      if (currentCustomer.cpf_cnpj) setOrderCpfCnpj(prev => prev || currentCustomer.cpf_cnpj || "");
+      const addr = [
+        currentCustomer.street,
+        currentCustomer.number ? `Nº ${currentCustomer.number}` : "",
+        currentCustomer.complement,
+        currentCustomer.neighborhood,
+        currentCustomer.city,
+        currentCustomer.state,
+      ].filter(Boolean).join(", ");
+      if (addr) setDeliveryAddress(prev => prev || addr);
+    }
+  }, [currentCustomer]);
+
+  const handleOpenCustomerArea = () => {
+    if (currentCustomer) {
+      setIsCustomerDashboardOpen(true);
+    } else {
+      setIsCustomerAuthModalOpen(true);
+    }
+  };
+
+  // Quick Text/Element Editor Modal state
+  const [quickEditorState, setQuickEditorState] = useState<{
+    isOpen: boolean;
+    title: string;
+    subtitle?: string;
+    elementType: ElementType;
+    initialText: string;
+    initialFormatting?: TextEditorFormatting;
+    targetField: string;
+  }>({
+    isOpen: false,
+    title: "",
+    elementType: "title",
+    initialText: "",
+    targetField: "",
+  });
+
+  const handleQuickEditorSave = (newText: string, formatting: TextEditorFormatting) => {
+    const field = quickEditorState.targetField;
+    if (field === "hero_title") {
+      handleUpdateBioConfig({
+        hero_title: newText,
+        title: newText,
+        title_font: formatting.font,
+        title_size: formatting.size,
+        title_color: formatting.color,
+      });
+      setCurrentData((prev: any) => ({
+        ...prev,
+        company_name: newText,
+      }));
+    } else if (field === "description") {
+      handleUpdateBioConfig({
+        description: newText,
+        description_mobile: newText,
+        description_bold: formatting.bold,
+        description_italic: formatting.italic,
+        description_size: formatting.size,
+        description_size_mobile: formatting.size,
+        description_font: formatting.font,
+        description_font_mobile: formatting.font,
+        description_align: formatting.align,
+        description_align_mobile: formatting.align,
+        description_color: formatting.color,
+      });
+    } else if (field === "hero_button") {
+      handleUpdateBioConfig({
+        hero_button_label: newText,
+        hero_button_action: formatting.buttonAction,
+        hero_button_url: formatting.buttonUrl,
+        hero_button_style: formatting.buttonStyle,
+      });
+    } else if (field === "catalog_title") {
+      handleUpdateBioConfig({
+        catalog_title: newText,
+      });
+    } else if (field === "portfolio_title") {
+      handleUpdateBioConfig({
+        portfolio_title: newText,
+      });
+    } else if (field === "about_title") {
+      handleUpdateBioConfig({
+        about_title: newText,
+        about_title_size: formatting.size,
+        about_title_font: formatting.font,
+        about_title_align: formatting.align,
+        about_title_bold: formatting.bold,
+      });
+    } else if (field === "about_description") {
+      handleUpdateBioConfig({
+        about_description: newText,
+        about_desc_size: formatting.size,
+        about_desc_font: formatting.font,
+        about_desc_align: formatting.align,
+        about_desc_bold: formatting.bold,
+        about_desc_italic: formatting.italic,
+      });
+    } else if (field === "about_highlight") {
+      handleUpdateBioConfig({
+        about_highlight: newText,
+        about_highlight_size: formatting.size,
+        about_highlight_font: formatting.font,
+        about_highlight_align: formatting.align,
+        about_highlight_bold: formatting.bold,
+      });
+    } else if (field === "footer") {
+      handleUpdateBioConfig({
+        footer_text: newText,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (data) {
+      setCurrentData(data);
+    }
+  }, [data]);
+
+  const bio = currentData?.bio_config || {};
   const bgAnimation = bio.bg_animation || "parallax";
+
+  // Handlers for Live Editing
+  const handleUpdateBioConfig = (bioUpdates: Record<string, any>) => {
+    setCurrentData((prev: any) => {
+      const updatedBio = { ...(prev?.bio_config || {}), ...bioUpdates };
+      return {
+        ...prev,
+        bio_config: updatedBio,
+        company_name: bioUpdates.title !== undefined ? bioUpdates.title : prev?.company_name,
+        brand_primary: bioUpdates.color !== undefined ? bioUpdates.color : prev?.brand_primary,
+      };
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleUpdateHero = (updates: any) => {
+    handleUpdateBioConfig(updates);
+  };
+
+  const handleUpdateLogoAndName = (updates: { company_name?: string; company_logo_url?: string; website_logo_url?: string; logo_url?: string }) => {
+    const newWebsiteLogo = updates.website_logo_url || updates.logo_url || updates.company_logo_url;
+    setCurrentData((prev: any) => {
+      const updatedBio = { 
+        ...(prev?.bio_config || {}), 
+        title: updates.company_name !== undefined ? updates.company_name : prev?.bio_config?.title,
+        logo_url: newWebsiteLogo !== undefined ? newWebsiteLogo : prev?.bio_config?.logo_url,
+        website_logo_url: newWebsiteLogo !== undefined ? newWebsiteLogo : (prev?.bio_config?.website_logo_url || prev?.bio_config?.logo_url),
+      };
+      return {
+        ...prev,
+        // Preserva o logo interno do aplicativo (company_logo_url). O logo do site fica em bio_config!
+        company_name: updates.company_name !== undefined ? updates.company_name : prev?.company_name,
+        bio_config: updatedBio,
+      };
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleUpdateThemeColors = (updates: { brand_primary?: string; theme?: string; button_style?: string }) => {
+    setCurrentData((prev: any) => {
+      const updatedBio = { 
+        ...(prev?.bio_config || {}),
+        color: updates.brand_primary !== undefined ? updates.brand_primary : prev?.bio_config?.color,
+        theme: updates.theme !== undefined ? updates.theme : prev?.bio_config?.theme,
+        button_style: updates.button_style !== undefined ? updates.button_style : prev?.bio_config?.button_style,
+      };
+      return {
+        ...prev,
+        brand_primary: updates.brand_primary !== undefined ? updates.brand_primary : prev?.brand_primary,
+        button_style: updates.button_style !== undefined ? updates.button_style : prev?.button_style,
+        bio_config: updatedBio,
+      };
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleUpdateContacts = (updates: any) => {
+    handleUpdateBioConfig(updates);
+  };
+
+  const handleSaveProductList = (newCatalogItems: any[]) => {
+    handleUpdateBioConfig({ catalog_items: newCatalogItems });
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    const currentItems = bio.catalog_items || [];
+    const newItems = currentItems.filter((i: any) => i.id !== productId);
+    handleUpdateBioConfig({ catalog_items: newItems });
+    pushToast({ type: "info", title: "Produto removido" });
+  };
+
+  const handleSavePortfolioList = (newPortfolioItems: any[]) => {
+    handleUpdateBioConfig({ portfolio_items: newPortfolioItems });
+  };
+
+  const handleDeletePortfolioProject = (projectId: string) => {
+    const currentItems = bio.portfolio_items || [];
+    const newItems = currentItems.filter((i: any) => i.id !== projectId);
+    handleUpdateBioConfig({ portfolio_items: newItems });
+    pushToast({ type: "info", title: "Projeto removido" });
+  };
+
+  const handleSaveLiveChanges = async () => {
+    setIsSavingLive(true);
+    try {
+      const targetTenant = currentData?.tenant_id || userTenantId || "global";
+      const bioConfig = currentData?.bio_config || {};
+      const payload: Partial<AppSettings> = {
+        company_name: currentData?.company_name,
+        brand_primary: currentData?.brand_primary || bioConfig?.color,
+        button_style: currentData?.button_style || bioConfig?.button_style,
+        pix_key: bioConfig?.pix_key || currentData?.pix_key,
+        pix_type: bioConfig?.pix_type || currentData?.pix_type,
+        bio_config: bioConfig,
+      };
+      await upsertSettingsSupabase(targetTenant, payload);
+      setHasUnsavedChanges(false);
+      pushToast({
+        type: "success",
+        title: "Site Salvo com Sucesso!",
+        message: "Todas as alterações foram salvas e publicadas em tempo real."
+      });
+    } catch (err: any) {
+      console.error("Erro ao salvar live bio:", err);
+      pushToast({
+        type: "error",
+        title: "Erro ao Salvar",
+        message: err.message || "Não foi possível salvar as alterações no banco de dados."
+      });
+    } finally {
+      setIsSavingLive(false);
+    }
+  };
+
+  const handleRevertLiveChanges = () => {
+    setCurrentData(data);
+    setHasUnsavedChanges(false);
+    pushToast({
+      type: "info",
+      title: "Alterações Descartadas",
+      message: "O site voltou ao estado original salvo anteriormente."
+    });
+  };
 
   const [copiedPix, setCopiedPix] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
@@ -397,6 +960,25 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   useEffect(() => {
     setCatalogIndex(0);
   }, [bio.catalog_items?.length, isMobileView]);
+
+  const [catalogTouchStartX, setCatalogTouchStartX] = useState<number | null>(null);
+
+  const handleCatalogTouchStart = (e: React.TouchEvent) => {
+    setCatalogTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleCatalogTouchEnd = (e: React.TouchEvent) => {
+    if (catalogTouchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const deltaX = catalogTouchStartX - touchEndX;
+    if (deltaX > 40 && maxCatalogIndex > 0) {
+      setCatalogIndex((prev) => (prev >= maxCatalogIndex ? 0 : prev + 1));
+    } else if (deltaX < -40 && maxCatalogIndex > 0) {
+      setCatalogIndex((prev) => (prev <= 0 ? maxCatalogIndex : prev - 1));
+    }
+    setCatalogTouchStartX(null);
+  };
+
   const [contactEmail, setContactEmail] = useState("");
   const [contactMessage, setContactMessage] = useState("");
   const [contactSubmitting, setContactSubmitting] = useState(false);
@@ -516,6 +1098,55 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     return `text-[${mobileVal}] sm:text-[${desktopVal}]`;
   };
 
+  const getFontSizePt = (size?: string) => {
+    const resolved = size ? (size === "sm" ? "12 pt" : size === "base" ? "14 pt" : size === "lg" ? "16 pt" : size === "xl" ? "24 pt" : size) : "16 pt";
+    switch (resolved) {
+      case "10 pt": return "10pt";
+      case "12 pt": return "12pt";
+      case "14 pt": return "14pt";
+      case "16 pt": return "16pt";
+      case "18 pt": return "18pt";
+      case "20 pt": return "20pt";
+      case "24 pt": return "24pt";
+      case "30 pt": return "30pt";
+      case "36 pt": return "36pt";
+      case "48 pt": return "48pt";
+      default: return "16pt";
+    }
+  };
+
+  const getMobileFontSizePt = (size?: string) => {
+    const resolved = size ? (size === "sm" ? "12 pt" : size === "base" ? "14 pt" : size === "lg" ? "16 pt" : size === "xl" ? "24 pt" : size) : "16 pt";
+    switch (resolved) {
+      case "10 pt": return "10pt";
+      case "12 pt": return "11pt";
+      case "14 pt": return "12pt";
+      case "16 pt": return "14pt";
+      case "18 pt": return "15pt";
+      case "20 pt": return "16pt";
+      case "24 pt": return "18pt";
+      case "30 pt": return "22pt";
+      case "36 pt": return "26pt";
+      case "48 pt": return "32pt";
+      default: return "14pt";
+    }
+  };
+
+  const getFontFamilyStyle = (font?: string) => {
+    switch (font) {
+      case "tech": return "'JetBrains Mono', monospace";
+      case "modern": return "'Plus Jakarta Sans', sans-serif";
+      case "elegant": return "'Raleway', sans-serif";
+      case "funnel": return "'Funnel Display', sans-serif";
+      case "classic": return "'Montserrat', sans-serif";
+      case "space": return "'Space Grotesk', sans-serif";
+      case "syne": return "'Syne', sans-serif";
+      case "ui":
+      default:
+        return "'Inter', sans-serif";
+    }
+  };
+
   // Shopping Cart state
   const [cart, setCart] = useState<{ product: any, quantity: number, selectedOption?: any }[]>(() => {
     try {
@@ -536,6 +1167,20 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const [productQuantity, setProductQuantity] = useState(1);
   const [isPixExpanded, setIsPixExpanded] = useState(false);
   const [isCardExpanded, setIsCardExpanded] = useState(false);
+
+  // Auto-fill checkout fields when customer is logged in
+  useEffect(() => {
+    if (currentCustomer) {
+      if (currentCustomer.full_name && !orderName) setOrderName(currentCustomer.full_name);
+      if (currentCustomer.phone && !orderPhone) setOrderPhone(currentCustomer.phone);
+      if (currentCustomer.cpf_cnpj && !orderCpfCnpj) setOrderCpfCnpj(currentCustomer.cpf_cnpj);
+      if (currentCustomer.street && !deliveryAddress) {
+        const fullAddr = `${currentCustomer.street}${currentCustomer.number ? `, Nº ${currentCustomer.number}` : ''}${currentCustomer.complement ? ` (${currentCustomer.complement})` : ''}${currentCustomer.neighborhood ? ` - ${currentCustomer.neighborhood}` : ''}${currentCustomer.city ? ` - ${currentCustomer.city}/${currentCustomer.state || ''}` : ''}${currentCustomer.cep ? ` - CEP: ${currentCustomer.cep}` : ''}`;
+        setDeliveryAddress(fullAddr);
+        setDeliveryOption("delivery");
+      }
+    }
+  }, [currentCustomer]);
 
   // Login Section State
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -753,7 +1398,116 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     const whatsappNumber = whatsappClean.startsWith('55') || whatsappClean.length > 11 ? whatsappClean : `55${whatsappClean}`;
     const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encoded}`;
     
+    // Salvar o pedido no banco de dados Supabase para a Área do Cliente
+    saveCustomerOrder({
+      tenant_id: currentData?.tenant_id || userTenantId || "global",
+      customer_id: currentCustomer?.id || null,
+      customer_name: orderName.trim(),
+      customer_email: currentCustomer?.email || (bio.email || "cliente@website.com"),
+      customer_phone: orderPhone.trim() || null,
+      customer_cpf_cnpj: orderCpfCnpj.trim() || null,
+      shipping_address: deliveryOption === "delivery" ? { address: deliveryAddress.trim() } : { pickup: true },
+      items: cart.map(item => ({
+        id: item.product.id || Date.now().toString(),
+        name: item.product.name,
+        price: item.selectedOption ? parsePrice(item.selectedOption.price) : parsePrice(item.product.price),
+        quantity: item.quantity,
+        image_url: item.product.image_url,
+        selectedOption: item.selectedOption,
+      })),
+      subtotal: cartTotalPrice,
+      total: cartTotalPrice,
+      payment_method: pixKey ? "pix" : cardUrl ? "credit_card" : "whatsapp",
+      notes: deliveryOption === "delivery" ? `Entrega em casa: ${deliveryAddress.trim()}` : "Retirada no local",
+    }).then(res => {
+      if (res.success && res.order) {
+        createOrderPayment({
+          order_id: res.order.id,
+          customer_id: currentCustomer?.id || null,
+          tenant_id: currentData?.tenant_id || userTenantId || "global",
+          payment_method: pixKey ? "pix" : cardUrl ? "credit_card" : "whatsapp",
+          amount: cartTotalPrice,
+          pix_code: pixKey || undefined,
+        }).catch(() => {});
+      }
+    }).catch(err => console.warn("Erro ao salvar pedido no Supabase:", err));
+
     window.open(whatsappUrl, "_blank");
+  };
+
+  const handleCheckoutDirectPayment = async () => {
+    if (!orderName.trim()) {
+      setCustomAlert({
+        title: companyName,
+        message: "Por favor, informe seu nome completo para o pedido."
+      });
+      return;
+    }
+    if (deliveryOption === "delivery" && !deliveryAddress.trim()) {
+      setCustomAlert({
+        title: companyName,
+        message: "Por favor, preencha o endereço de entrega."
+      });
+      return;
+    }
+
+    try {
+      const res = await saveCustomerOrder({
+        tenant_id: currentData?.tenant_id || userTenantId || "global",
+        customer_id: currentCustomer?.id || null,
+        customer_name: orderName.trim(),
+        customer_email: currentCustomer?.email || (bio.email || "cliente@website.com"),
+        customer_phone: orderPhone.trim() || null,
+        customer_cpf_cnpj: orderCpfCnpj.trim() || null,
+        shipping_address: deliveryOption === "delivery" ? { address: deliveryAddress.trim() } : { pickup: true },
+        items: cart.map(item => ({
+          id: item.product.id || Date.now().toString(),
+          name: item.product.name,
+          price: item.selectedOption ? parsePrice(item.selectedOption.price) : parsePrice(item.product.price),
+          quantity: item.quantity,
+          image_url: item.product.image_url,
+          selectedOption: item.selectedOption,
+        })),
+        subtotal: cartTotalPrice,
+        total: cartTotalPrice,
+        payment_method: pixKey ? "pix" : "credit_card",
+        notes: deliveryOption === "delivery" ? `Entrega em casa: ${deliveryAddress.trim()}` : "Retirada no local",
+      });
+
+      if (res.success && res.order) {
+        // Registra pagamento seguro na tabela order_payments
+        await createOrderPayment({
+          order_id: res.order.id,
+          customer_id: currentCustomer?.id || null,
+          tenant_id: currentData?.tenant_id || userTenantId || "global",
+          payment_method: pixKey ? "pix" : "credit_card",
+          amount: cartTotalPrice,
+          pix_code: pixKey || undefined,
+        });
+
+        // Limpa o carrinho e abre tela de pagamento seguro
+        setCart([]);
+        setIsCartOpen(false);
+        setActivePaymentOrder(res.order);
+        pushToast({
+          type: "success",
+          title: "Pedido Criado!",
+          message: `Pedido #${res.order.order_number} criado com sucesso! Escolha sua forma de pagamento abaixo.`
+        });
+      } else {
+        pushToast({
+          type: "error",
+          title: "Erro ao gerar pedido",
+          message: res.error || "Não foi possível registrar seu pedido."
+        });
+      }
+    } catch (err: any) {
+      pushToast({
+        type: "error",
+        title: "Erro",
+        message: err?.message || "Falha ao processar pedido."
+      });
+    }
   };
 
   const handleContactSubmit = async (e: React.FormEvent) => {
@@ -812,22 +1566,25 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     }
   };
 
-  const logo = data?.company_logo_url;
+  // Website logo has priority for the website. If not set, fallback to app logo/avatar
+  const websiteLogo = (bio as any)?.website_logo_url || (bio as any)?.logo_url || (currentData?.bio_config as any)?.website_logo_url || (currentData?.bio_config as any)?.logo_url || (currentData as any)?.website_logo_url;
+  const logo = websiteLogo || currentData?.company_logo_url || currentData?.avatar_url;
   const companyName = (isMobileView && bio.title_mobile) 
     ? bio.title_mobile 
-    : (bio.title || data?.company_name || "Perfil");
+    : (bio.title || currentData?.company_name || "Perfil");
   const desc = (isMobileView && bio.description_mobile) 
     ? bio.description_mobile 
     : (bio.description || "");
-  const brandColor = bio.color || data?.brand_primary || "#32BCAD";
-  const brandBg = bio.bg_color || data?.brand_bg;
-  const brandTitle = bio.title_color || data?.brand_title;
-  const brandSubtitle = bio.subtitle_color || data?.brand_subtitle;
-  const brandIcon = bio.icon_color || data?.brand_icon || brandColor;
-  const brandAccent = bio.accent_color || bio.button_color || data?.brand_accent || data?.brand_button || brandColor;
-  const theme = bio.theme || "gorila";
-  const buttonStyle = data?.button_style || "solid";
-  const isWebsiteLayout = theme === "gorila" || theme === "website" || !bio.theme || theme === "dark" || (companyName && companyName.toLowerCase().includes("gm"));
+  const brandColor = bio.color || currentData?.brand_primary || "#FE540B";
+  const brandBg = bio.bg_color || currentData?.brand_bg;
+  const brandTitle = bio.title_color || currentData?.brand_title;
+  const brandSubtitle = bio.subtitle_color || currentData?.brand_subtitle;
+  const brandIcon = bio.icon_color || currentData?.brand_icon || brandColor;
+  const brandAccent = bio.accent_color || bio.button_color || currentData?.brand_accent || currentData?.brand_button || brandColor;
+  const rawTheme = (bio.theme || "dark").toLowerCase();
+  const theme: string = rawTheme === "light" ? "light" : "dark";
+  const buttonStyle = currentData?.button_style || bio.button_style || "solid";
+  const isWebsiteLayout = true;
 
   const generatePixPayload = (key: string, name: string = "GM Edificacao", city: string = "SAO LUIS") => {
     if (!key) return "";
@@ -982,19 +1739,19 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         password: loginPassword,
       });
       if (error) throw error;
-      setLoginSuccess("Login realizado com sucesso! Redirecionando...");
+      setLoginSuccess("Login de Administrador aprovado!");
       
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
-
       setTimeout(() => {
         setIsLoginOpen(false);
-        if (isMobileDevice && !isStandalone) {
-          setShowAppRedirectScreen(true);
-        } else {
-          // No app instalado ou desktop, vai direto para a home
-          navigate("/");
-        }
-      }, 1200);
+        setIsLiveEditMode(true);
+        setPreviewAsVisitor(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        pushToast({
+          type: "success",
+          title: "Modo Administrador Ativado!",
+          message: "Você agora pode alterar qualquer informação do seu site em tempo real!"
+        });
+      }, 700);
     } catch (err: any) {
       console.error("Login error:", err);
       let msg = err?.message || "Credenciais inválidas.";
@@ -1046,47 +1803,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
   const themeClasses = {
     dark: {
-      bg: "bg-[#0a0a0c]",
-      textTitle: "text-white",
-      textDesc: "text-slate-400",
-      iconBg: "bg-slate-900",
-      cardBg: "bg-white/5",
-      cardBgHover: "hover:bg-white/10",
-      cardBorder: "border-white/5",
-      cardBorderHover: "hover:border-white/20",
-      cardTitle: "text-slate-100",
-      cardSub: "text-slate-400",
-      pixSubtitle: "text-slate-300"
-    },
-    light: {
-      bg: "bg-slate-50",
-      textTitle: "text-slate-900",
-      textDesc: "text-slate-600",
-      iconBg: "bg-white",
-      cardBg: "bg-white",
-      cardBgHover: "hover:bg-slate-50",
-      cardBorder: "border-slate-200 shadow-sm",
-      cardBorderHover: "hover:border-slate-300 hover:shadow-md",
-      cardTitle: "text-slate-800",
-      cardSub: "text-slate-500",
-      pixSubtitle: "text-slate-600"
-    },
-    glass: {
-      bg: "bg-gradient-to-br from-slate-950 via-[#0a0d14] to-slate-900",
-      textTitle: "text-white",
-      textDesc: "text-slate-300",
-      iconBg: "bg-white/8 backdrop-blur-2xl border border-white/8 shadow-md",
-      cardBg: "bg-white/[0.04] backdrop-blur-2xl border border-white/8 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]",
-      cardBgHover: "hover:bg-white/[0.08] hover:border-white/15",
-      cardBorder: "border-white/8",
-      cardBorderHover: "hover:border-white/20",
-      cardTitle: "text-white font-extrabold",
-      cardSub: "text-slate-300",
-      pixSubtitle: "text-slate-300"
-    },
-    gorila: {
       bg: "bg-[#050505]",
-      textTitle: "text-white",
+      textTitle: "text-white font-extrabold",
       textDesc: "text-zinc-300",
       iconBg: "bg-zinc-900",
       cardBg: "bg-zinc-950/80 backdrop-blur-md",
@@ -1096,10 +1814,23 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       cardTitle: "text-white font-extrabold",
       cardSub: "text-zinc-400",
       pixSubtitle: "text-zinc-300"
+    },
+    light: {
+      bg: "bg-slate-50",
+      textTitle: "text-slate-900 font-extrabold",
+      textDesc: "text-slate-600",
+      iconBg: "bg-white shadow-sm",
+      cardBg: "bg-white shadow-sm",
+      cardBgHover: "hover:bg-slate-50 hover:shadow-md",
+      cardBorder: "border-slate-200 shadow-sm",
+      cardBorderHover: "hover:border-[#FE540B]/50 hover:shadow-md",
+      cardTitle: "text-slate-800 font-extrabold",
+      cardSub: "text-slate-500",
+      pixSubtitle: "text-slate-600"
     }
   };
 
-  const t = themeClasses[theme as keyof typeof themeClasses] || themeClasses.dark;
+  const t = theme === "light" ? themeClasses.light : themeClasses.dark;
 
   
 
@@ -1188,34 +1919,127 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const mainScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
+  const [currentActiveSection, setCurrentActiveSection] = useState<DesktopNavKey>("inicio");
+
+  const smoothScrollToTarget = (target: number | HTMLElement) => {
+    if (typeof target === 'number') {
+      if (mainScrollRef.current) {
+        mainScrollRef.current.scrollTo({ top: target, behavior: 'smooth' });
+      }
+      window.scrollTo({ top: target, behavior: 'smooth' });
+      document.documentElement.scrollTo({ top: target, behavior: 'smooth' });
+      document.body.scrollTo({ top: target, behavior: 'smooth' });
+    } else if (target) {
+      if (mainScrollRef.current) {
+        const navOffset = 110;
+        const targetRect = target.getBoundingClientRect();
+        const containerRect = mainScrollRef.current.getBoundingClientRect();
+        const relativeTop = targetRect.top - containerRect.top + mainScrollRef.current.scrollTop - navOffset;
+        mainScrollRef.current.scrollTo({ top: Math.max(0, relativeTop), behavior: 'smooth' });
+      }
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleDesktopNavClick = (section: DesktopNavKey) => {
+    setCurrentActiveSection(section);
+    if (section === 'inicio') {
+      if (activeView !== 'bio') {
+        setActiveView('bio');
+        setActivePortfolioId(null);
+      }
+      setTimeout(() => {
+        smoothScrollToTarget(0);
+      }, 50);
+    } else if (section === 'sobre') {
+      if (activeView !== 'bio') {
+        setActiveView('bio');
+        setActivePortfolioId(null);
+      }
+      setTimeout(() => {
+        const el = document.getElementById('about-company-section');
+        if (el) smoothScrollToTarget(el);
+      }, 50);
+    } else if (section === 'produtos') {
+      if (activeView !== 'bio') {
+        setActiveView('bio');
+        setActivePortfolioId(null);
+      }
+      setTimeout(() => {
+        const el = document.getElementById('catalog-section');
+        if (el) smoothScrollToTarget(el);
+      }, 50);
+    } else if (section === 'portfolio') {
+      if (activeView !== 'bio') {
+        setActiveView('bio');
+        setActivePortfolioId(null);
+      }
+      setTimeout(() => {
+        const el = document.getElementById('portfolio-section');
+        if (el) smoothScrollToTarget(el);
+      }, 50);
+    } else if (section === 'contato') {
+      setActiveView('contact');
+      setTimeout(() => {
+        const el = document.getElementById('contact-section');
+        if (el) {
+          smoothScrollToTarget(el);
+        } else {
+          smoothScrollToTarget(0);
+        }
+      }, 50);
+    }
+  };
 
   const handleScroll = () => {
     const el = mainScrollRef.current;
     if (el) {
-      setCanScrollUp(el.scrollTop > 10);
-      setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 10);
+      setCanScrollUp(el.scrollTop > 50);
+      setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 50);
       setScrollTop(el.scrollTop);
+
+      if (activeView === 'contact') {
+        setCurrentActiveSection('contato');
+        return;
+      }
+      if (activeView === 'portfolio') {
+        setCurrentActiveSection('portfolio');
+        return;
+      }
+
+      const scrollPos = el.scrollTop + 220;
+      const portfolioEl = document.getElementById('portfolio-section');
+      const catalogEl = document.getElementById('catalog-section');
+      const aboutEl = document.getElementById('about-company-section');
+
+      if (portfolioEl && scrollPos >= portfolioEl.offsetTop) {
+        setCurrentActiveSection('portfolio');
+      } else if (catalogEl && scrollPos >= catalogEl.offsetTop) {
+        setCurrentActiveSection('produtos');
+      } else if (aboutEl && scrollPos >= aboutEl.offsetTop) {
+        setCurrentActiveSection('sobre');
+      } else {
+        setCurrentActiveSection('inicio');
+      }
     }
   };
 
   const handleLogoClick = () => {
     setActiveView("bio");
-    if (mainScrollRef.current) {
-      mainScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    smoothScrollToTarget(0);
   };
 
   useEffect(() => {
     const el = mainScrollRef.current;
     if (el) {
       const timer = setTimeout(() => {
-        setCanScrollUp(el.scrollTop > 10);
-        setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 10);
+        setCanScrollUp(el.scrollTop > 50);
+        setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 50);
       }, 500);
 
       const resizeObserver = new ResizeObserver(() => {
-        setCanScrollUp(el.scrollTop > 10);
-        setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 10);
+        setCanScrollUp(el.scrollTop > 50);
+        setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 50);
       });
       resizeObserver.observe(el);
 
@@ -1229,12 +2053,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   useEffect(() => {
     if (activeView === "portfolio" && activePortfolioId) {
       const timer = setTimeout(() => {
-        if (mainScrollRef.current) {
-          mainScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
-        }
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
-        document.body.scrollTo({ top: 0, behavior: "smooth" });
+        smoothScrollToTarget(0);
       }, 150);
       return () => clearTimeout(timer);
     }
@@ -1251,9 +2070,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         const scrollAmount = clientWidth * 0.8;
         
         if (!isReversing && scrollLeft >= maxScroll - 10) {
-           isReversing = true;
+          isReversing = true;
         } else if (isReversing && scrollLeft <= 10) {
-           isReversing = false;
+          isReversing = false;
         }
 
         if (isReversing) {
@@ -1262,7 +2081,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
            scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
       }
-    }, 4000);
+    }, 4500);
 
     return () => clearInterval(interval);
   }, [bio.catalog_items]);
@@ -1292,17 +2111,15 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         <button
           type="button"
           onClick={() => {
-            if (mainScrollRef.current) {
-              mainScrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
-            }
+            smoothScrollToTarget(0);
           }}
-          className={`transition-all duration-300 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/75 border border-zinc-800/80 shadow-lg pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
-            canScrollUp ? "opacity-100 translate-y-0 animate-bounce" : "opacity-0 translate-y-4 pointer-events-none"
+          className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-black/85 hover:bg-black border border-white/15 text-white shadow-xl pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
+            canScrollUp ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
           }`}
           style={{ color: brandColor }}
           title="Rolar para o topo"
         >
-          <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
+          <ChevronUp className="w-5 h-5" />
         </button>
 
         {/* Seta para Baixo */}
@@ -1310,16 +2127,17 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           type="button"
           onClick={() => {
             if (mainScrollRef.current) {
-              mainScrollRef.current.scrollBy({ top: mainScrollRef.current.clientHeight * 0.7, behavior: "smooth" });
+              mainScrollRef.current.scrollBy({ top: mainScrollRef.current.clientHeight * 0.75, behavior: "smooth" });
             }
+            window.scrollBy({ top: window.innerHeight * 0.75, behavior: "smooth" });
           }}
-          className={`transition-all duration-300 flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/75 border border-zinc-800/80 shadow-lg pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
-            canScrollDown ? "opacity-100 translate-y-0 animate-bounce" : "opacity-0 -translate-y-4 pointer-events-none"
+          className={`transition-all duration-300 flex items-center justify-center w-10 h-10 rounded-full bg-black/85 hover:bg-black border border-white/15 text-white shadow-xl pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${
+            canScrollDown ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
           }`}
           style={{ color: brandColor }}
           title="Rolar para baixo"
         >
-          <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
+          <ChevronDown className="w-5 h-5" />
         </button>
       </div>
     );
@@ -1328,8 +2146,31 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   return (
     <div 
       className={`w-full ${!asPreview ? "fixed inset-0" : "relative h-full"} overflow-hidden ${t.bg} selection-brand site-font-${siteFont} site-size-${siteFontSize}`}
-      style={{ zoom: '0.95' }}
     >
+      {/* Real-time Live Admin Toolbar */}
+      {isLiveEditMode && (
+        <LiveAdminBar
+          companyName={companyName || "Site"}
+          hasUnsavedChanges={hasUnsavedChanges}
+          isSaving={isSavingLive}
+          previewAsVisitor={previewAsVisitor}
+          onTogglePreviewAsVisitor={() => setPreviewAsVisitor(!previewAsVisitor)}
+          onSave={handleSaveLiveChanges}
+          onRevert={handleRevertLiveChanges}
+          onOpenThemeModal={() => setIsThemeModalOpen(true)}
+          onOpenAddModal={(type) => {
+            if (type === "product") setProductModalState({ isOpen: true, product: null });
+            else if (type === "portfolio") setPortfolioModalState({ isOpen: true, project: null });
+            else if (type === "link") setIsContactsModalOpen(true);
+          }}
+          onExitEditMode={() => {
+            setIsLiveEditMode(false);
+            setPreviewAsVisitor(false);
+          }}
+          onOpenFullDashboard={() => navigate("/")}
+          onOpenOrdersModal={() => setIsAdminHubOpen(true)}
+        />
+      )}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&family=Montserrat:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
@@ -1467,29 +2308,37 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         .hover-text-brand:hover {
           color: ${brandColor} !important;
         }
-        .bio-desc-font-ui {
+        .bio-desc-font-ui, .bio-desc-font-ui * {
           font-family: 'Inter', sans-serif !important;
         }
-        .bio-desc-font-tech {
+        .bio-desc-font-tech, .bio-desc-font-tech * {
           font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
         }
-        .bio-desc-font-modern {
+        .bio-desc-font-modern, .bio-desc-font-modern * {
           font-family: 'Plus Jakarta Sans', sans-serif !important;
         }
-        .bio-desc-font-elegant {
+        .bio-desc-font-elegant, .bio-desc-font-elegant * {
           font-family: 'Raleway', sans-serif !important;
         }
-        .bio-desc-font-funnel {
+        .bio-desc-font-funnel, .bio-desc-font-funnel * {
           font-family: 'Funnel Display', sans-serif !important;
         }
-        .bio-desc-font-classic {
+        .bio-desc-font-classic, .bio-desc-font-classic * {
           font-family: 'Montserrat', sans-serif !important;
         }
-        .bio-desc-font-space {
+        .bio-desc-font-space, .bio-desc-font-space * {
           font-family: 'Space Grotesk', sans-serif !important;
         }
-        .bio-desc-font-syne {
+        .bio-desc-font-syne, .bio-desc-font-syne * {
           font-family: 'Syne', sans-serif !important;
+        }
+        .site-hero-description, .site-hero-description * {
+          font-size: var(--desc-fs-mobile, 14pt) !important;
+        }
+        @media (min-width: 768px) {
+          .site-hero-description, .site-hero-description * {
+            font-size: var(--desc-fs-desktop, 16pt) !important;
+          }
         }
         [class*="bio-desc-font-"] * {
           background: transparent !important;
@@ -1524,6 +2373,31 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         .no-scrollbar {
           -ms-overflow-style: none !important;
           scrollbar-width: none !important;
+        }
+
+        /* Desktop Modern Custom Scrollbar */
+        .desktop-scroll {
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(254, 84, 11, 0.45) rgba(0, 0, 0, 0.15);
+        }
+        .desktop-scroll::-webkit-scrollbar {
+          width: 10px;
+          height: 10px;
+        }
+        .desktop-scroll::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.25);
+        }
+        .desktop-scroll::-webkit-scrollbar-thumb {
+          background: rgba(254, 84, 11, 0.45);
+          border-radius: 9999px;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+        .desktop-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(254, 84, 11, 0.85);
+          background-clip: padding-box;
         }
       `}</style>
       
@@ -1573,28 +2447,28 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       <div 
         ref={mainScrollRef}
         onScroll={handleScroll}
-        className={`w-full h-full relative z-10 overflow-y-auto overflow-x-hidden ${!asPreview ? "no-scrollbar md:custom-scroll" : "no-scrollbar"}`}
+        className={`w-full h-full relative z-10 overflow-y-auto overflow-x-hidden ${isMobileView ? "no-scrollbar" : "desktop-scroll"} ${isLiveEditMode ? "pt-12 sm:pt-14" : ""}`}
       >
-        <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10 w-full">
-          <div className="w-full">
+        <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-0 w-full flex flex-col min-h-full">
+          <div className="w-full flex-1 flex flex-col">
           
           {/* Header & Banner Wrapper to overlay profile on top of the banner when enabled */}
           <div className="flex flex-col w-full">
             {(() => {
               // Logo cadastrado pelo usuário/conta (GM Edificação) com fallback para o logo oficial cadastrado da GM Edificação
               const gmDefaultLogo = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.webp?t=1787112280980";
-              const userLogo = data?.company_logo_url || data?.avatar_url || (bio as any).logo_url;
+              const userLogo = websiteLogo || currentData?.company_logo_url || currentData?.avatar_url;
               const effectiveLogo = userLogo || gmDefaultLogo;
 
               // Banner padrão profissional de arquitetura/engenharia caso o usuário ainda não tenha configurado banners no BIO Editor
-              const defaultArchitectureBanner = data?.app_background_url || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80";
+              const defaultArchitectureBanner = currentData?.app_background_url || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80";
 
               const desktopBanner = bio.banner_img_url_1 || defaultArchitectureBanner;
-              const mobileBanner = bio.mobile_banner_img_url_1 || bio.banner_img_url_1 || data?.mobile_app_background_url || desktopBanner;
+              const mobileBanner = bio.mobile_banner_img_url_1 || bio.banner_img_url_1 || currentData?.mobile_app_background_url || desktopBanner;
               const finalDesktop = desktopBanner || mobileBanner;
               const finalMobile = mobileBanner || desktopBanner;
 
-              const isWebsiteLayout = theme === "gorila" || theme === "website" || !bio.theme || theme === "dark" || (companyName && companyName.toLowerCase().includes("gm"));
+              const isWebsiteLayout = true;
 
               // Extrai redes sociais reais configuradas pelo usuário
               const userSocialLinks: { id: string; title: string; href: string; icon: any }[] = [];
@@ -1604,7 +2478,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   id: "whatsapp",
                   title: "WhatsApp",
                   href: `https://wa.me/${cleanPhone.startsWith("55") ? cleanPhone : "55" + cleanPhone}`,
-                  icon: MessageCircle
+                  icon: WhatsAppIcon
                 });
               }
               if (bio.instagram) {
@@ -1725,7 +2599,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       <h1 className={`text-2xl sm:text-3xl md:text-5xl font-black tracking-tight ${isOverBanner ? "!text-white drop-shadow-md" : t.textTitle}`}>{companyName}</h1>
                       {desc && (
                         <div 
-                          className={`mt-1.5 ${getResponsiveFontSizeClass(bio.description_size, bio.description_size_mobile)} max-w-4xl leading-relaxed whitespace-pre-wrap tracking-wide ${descMarginClass} ${descAlignClass} ${descBoldClass} ${descItalicClass} ${descFontClass} ${isOverBanner ? "!text-white [&_*]:!text-white drop-shadow-sm" : `${t.textDesc}`}`}
+                          className={`mt-1.5 site-hero-description ${getResponsiveFontSizeClass(bio.description_size, bio.description_size_mobile)} max-w-4xl leading-relaxed whitespace-pre-wrap tracking-wide ${descMarginClass} ${descAlignClass} ${descBoldClass} ${descItalicClass} ${descFontClass} ${isOverBanner ? "!text-white [&_*]:!text-white drop-shadow-sm" : `${t.textDesc}`}`}
+                          style={{
+                            '--desc-fs-desktop': getFontSizePt(bio.description_size || "16 pt"),
+                            '--desc-fs-mobile': getMobileFontSizePt(bio.description_size_mobile || bio.description_size || "16 pt"),
+                            fontSize: isMobileView ? getMobileFontSizePt(bio.description_size_mobile || bio.description_size || "16 pt") : getFontSizePt(bio.description_size || "16 pt"),
+                            fontFamily: getFontFamilyStyle((asPreview && previewMode === 'smartphone') ? (bio.description_font_mobile || bio.description_font || "ui") : (bio.description_font || "ui")),
+                          } as React.CSSProperties}
                           dangerouslySetInnerHTML={{ __html: desc }}
                         />
                       )}
@@ -1739,13 +2619,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             const el = document.getElementById("portfolio-section");
                             if (el) el.scrollIntoView({ behavior: 'smooth' });
                           }}
-                          className={`flex items-center justify-center px-6 py-2.5 rounded-full text-xs sm:text-sm font-extrabold shadow-[0_6px_20px_0_rgba(0,0,0,0.15)] cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 !text-white [&_*]:!text-white bg-gradient-to-r w-full sm:w-auto`}
-                          style={{ 
-                            backgroundImage: `linear-gradient(to right, ${brandColor}, ${brandColor}dd)`,
-                            color: '#ffffff',
-                          }}
+                          className="site-btn-pill px-6 py-2.5 text-xs sm:text-sm shadow-md w-full sm:w-auto"
                         >
-                          <span className="!text-white">Veja nosso Portfólio</span>
+                          <span>Veja nosso Portfólio</span>
                         </button>
                       )}
 
@@ -1801,171 +2677,116 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 return (
                   <div className="w-full flex flex-col space-y-6">
                     {/* Minimal Desktop Top Navbar */}
-                    <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full h-32 sm:h-36 bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-6 md:px-12 relative z-30`}>
-                      <div className="flex items-center gap-4 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
+                    <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full h-24 sm:h-28 md:h-32 ${theme === 'light' ? 'bg-[#050505] text-white' : 'bg-white text-black'} flex items-center justify-between px-6 md:px-12 relative z-30 transition-all`}>
+                      <div className="flex items-center gap-3.5 sm:gap-4.5 cursor-pointer hover:opacity-90 transition-opacity" onClick={handleLogoClick}>
                         {logo ? (
-                          <img src={logo} alt={companyName} className="h-16 sm:h-[72px] w-auto object-contain rounded-md shadow-sm" />
+                          <img src={logo} alt={companyName || "GM Edificação"} className="h-12 sm:h-14 md:h-16 w-auto object-contain transition-all shrink-0" />
                         ) : (
-                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-lg flex items-center justify-center font-bold text-2xl sm:text-3xl text-white" style={{ backgroundColor: brandColor }}>
-                            {companyName.charAt(0).toUpperCase()}
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center font-black text-2xl sm:text-3xl text-white shadow-sm shrink-0" style={{ backgroundColor: brandColor || "#FE540B" }}>
+                            {(companyName || "GM").charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span className={`font-extrabold text-2xl sm:text-3xl tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
+                        <span className={`font-black text-xl sm:text-2xl md:text-3xl tracking-tight select-none ${theme === 'light' ? '!text-white' : '!text-black'}`}>
+                          {bio.title || companyName || "GM Edificação"}
+                        </span>
                       </div>
                       <div className="flex items-center">
-                        <div className="flex items-center gap-7 sm:gap-8 md:gap-9">
-                          <button 
-                            onClick={() => {
-                              setActiveView("bio");
-                              setActivePortfolioId(null);
-                            }} 
-                            className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
-                              (activeView as string) === "bio" 
-                                ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
-                                : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
-                            } hover:text-[#FE540B]`}
-                            style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
-                          >
-                            Início
-                            <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'bio' ? 'scaleX(1)' : undefined }} />
-                          </button>
-
-                          <button 
-                            onClick={() => setActiveView("contact")} 
-                            className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
-                              (activeView as string) === "contact" 
-                                ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
-                                : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
-                            } hover:text-[#FE540B]`}
-                            style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
-                          >
-                            Contato
-                            <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'contact' ? 'scaleX(1)' : undefined }} />
-                          </button>
-
-                          <button 
-                            onClick={() => {
-                              const el = document.getElementById("portfolio-section");
-                              if (el) {
-                                el.scrollIntoView({ behavior: 'smooth' });
-                              } else {
-                                setActiveView("bio");
-                                setTimeout(() => {
-                                  const el2 = document.getElementById("portfolio-section");
-                                  if (el2) el2.scrollIntoView({ behavior: 'smooth' });
-                                }, 120);
-                              }
-                            }} 
-                            className={`relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group ${
-                              (activeView as string) === "portfolio" 
-                                ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}` 
-                                : `opacity-60 hover:opacity-100 ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`
-                            } hover:text-[#FE540B]`}
-                          >
-                            Vitrine
-                            <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'portfolio' ? 'scaleX(1)' : undefined }} />
-                          </button>
-
-                          <button 
-                            onClick={handleShareBio} 
-                            className={`text-base sm:text-lg font-medium transition-colors flex items-center gap-3.5 cursor-pointer duration-300 ${
-                              theme === 'dark' || theme === 'glass' 
-                                ? 'text-white opacity-70 hover:opacity-100 hover:text-[#FE540B]' 
-                                : 'text-slate-900 opacity-70 hover:opacity-100 hover:text-[#FE540B]'
-                            }`}
-                          >
-                            <Share2 className="w-5 h-5 transition-colors duration-300" style={{ color: "inherit" }} /> 
-                            <span>Compartilhar</span>
-                          </button>
-                        </div>
-
-                        {socialIcons.filter(item => item.value && item.href).length > 0 && (
-                          <div className="w-10 sm:w-12 md:w-14 lg:w-16" />
-                        )}
-
-                        {(() => {
-                          const activeSocials = socialIcons.filter(item => item.value && item.href);
-                          if (activeSocials.length === 0) return null;
-                          return (
-                            <div className="flex items-center gap-5 sm:gap-6 md:gap-7">
-                              {activeSocials.map((item) => (
-                                <a 
-                                  key={item.key} 
-                                  href={asPreview ? undefined : formatExternalUrl(item.href)} 
-                                  target="_blank" 
-                                  rel="noreferrer" 
-                                  title={item.label} 
-                                  className="flex items-center justify-center cursor-pointer transition-none" 
-                                  onClick={(e) => { if (asPreview) e.preventDefault(); }}
-                                >
-                                  <InteractiveSocialIcon 
-                                    itemKey={item.key} 
-                                    label={item.label} 
-                                    theme={theme} 
-                                    sizeClass="w-5.5 h-5.5 sm:w-6 sm:h-6"
-                                    fallbackIcon={item.icon} 
-                                    instant={true}
-                                  />
-                                </a>
-                              ))}
-                            </div>
-                          );
-                        })()}
+                        <WebsiteDesktopNav 
+                          activeView={activeView as string}
+                          setActiveView={setActiveView}
+                          setActivePortfolioId={setActivePortfolioId}
+                          theme={theme}
+                          orangeColor={brandColor || "#FE540B"}
+                          userSocialLinks={userSocialLinks}
+                          asPreview={asPreview}
+                          hasCatalog={!!(bio.catalog_items && bio.catalog_items.length > 0) || isLiveEditMode}
+                          hasPortfolio={!!(bio.portfolio_items && bio.portfolio_items.length > 0) || isLiveEditMode}
+                          hasAbout={bio.show_about !== false}
+                          currentActiveSection={currentActiveSection}
+                          onNavigateSection={handleDesktopNavClick}
+                          currentCustomer={currentCustomer}
+                          onOpenCustomerArea={handleOpenCustomerArea}
+                          onOpenAdminHub={() => setIsAdminHubOpen(true)}
+                          isAdminLoggedIn={!!user}
+                        />
                       </div>
                       
                       {/* Thin animated bar */}
                       <div 
-                        className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50"
+                        className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
                         style={{
-                          background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                          background: `linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B)`,
                           backgroundSize: '300% 300%',
                           animation: 'color-loop 5s ease infinite',
+                          boxShadow: 'none',
+                          bottom: 0
                         }}
                       />
                     </div>
 
                     {/* Minimal Mobile Top Navbar */}
-                    <div className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'} w-full h-[96px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5 flex items-center justify-between px-4 relative z-30`}>
-                      <div className="flex items-center gap-2 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
+                    <div className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'} w-full h-[80px] bg-white text-black flex items-center justify-between px-4 relative z-30`}>
+                      <div className="flex items-center gap-2.5 cursor-pointer hover:opacity-85 transition-opacity" onClick={handleLogoClick}>
                         {logo ? (
-                          <img src={logo} alt={companyName} className="h-12 w-auto object-contain rounded-md" />
+                          <img src={logo} alt={companyName} className="h-10 w-auto object-contain rounded-md" />
                         ) : (
-                          <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-base text-white" style={{ backgroundColor: brandColor }}>
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-base text-white" style={{ backgroundColor: brandColor || "#FE540B" }}>
                             {companyName.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span className={`font-extrabold text-base tracking-tight ${theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>{companyName}</span>
+                        <span className="font-bold text-base tracking-tight text-black">{companyName}</span>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <button 
                           onClick={() => setActiveView("bio")} 
-                          className={`text-sm font-medium transition-all hover:opacity-100 cursor-pointer ${
+                          className={`text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${
                             (activeView as string) === "bio" 
-                              ? "opacity-100 border-b-2 font-semibold border-slate-900 dark:border-white text-slate-900 dark:text-white" 
-                              : "opacity-60 text-slate-500 dark:text-slate-400"
+                              ? "text-[#FE540B] border-b-2 border-[#FE540B]" 
+                              : "text-black hover:text-[#FE540B]"
                           }`}
                         >
                           Início
                         </button>
                         <button 
                           onClick={() => setActiveView("contact")} 
-                          className={`text-sm font-medium transition-all hover:opacity-100 cursor-pointer ${
+                          className={`text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${
                             (activeView as string) === "contact" 
-                              ? "opacity-100 border-b-2 font-semibold border-slate-900 dark:border-white text-slate-900 dark:text-white" 
-                              : "opacity-60 text-slate-500 dark:text-slate-400"
+                              ? "text-[#FE540B] border-b-2 border-[#FE540B]" 
+                              : "text-black hover:text-[#FE540B]"
                           }`}
                         >
                           Contato
+                        </button>
+                        {/* Área do Cliente (Mobile) */}
+                        <button
+                          type="button"
+                          onClick={handleOpenCustomerArea}
+                          className="p-1 px-2 rounded-full bg-black/5 hover:bg-black/10 text-slate-800 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                          title="Área do Cliente"
+                        >
+                          <User className="w-3.5 h-3.5 text-[#FE540B]" />
+                        </button>
+                        {/* Painel do Administrador (Mobile) */}
+                        <button
+                          type="button"
+                          onClick={() => setIsAdminHubOpen(true)}
+                          className="p-1 px-2.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 text-xs font-black transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                          title="Acesso ao Painel do Administrador"
+                        >
+                          <Lock className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Admin</span>
                         </button>
                       </div>
                       
                       {/* Thin animated bar */}
                       <div 
-                        className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50"
+                        className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
                         style={{
-                          background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
+                          background: `linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B)`,
                           backgroundSize: '300% 300%',
                           animation: 'color-loop 5s ease infinite',
+                          boxShadow: 'none',
+                          bottom: 0
                         }}
                       />
                     </div>
@@ -1979,305 +2800,267 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 <>
                   {/* Desktop Banner overlay */}
                   {finalDesktop && (
-                    <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'block' : 'hidden md:block'} w-full flex flex-col`}>
+                    <div className={`${asPreview && previewMode === 'smartphone' ? 'hidden' : asPreview && previewMode === 'pc' ? 'flex' : 'hidden md:flex'} w-full min-h-screen md:h-screen md:h-[100dvh] flex-col overflow-hidden`}>
                       {/* Desktop Top Navbar */}
-                      <div className={`w-full ${isWebsiteLayout ? 'h-20 sm:h-24 bg-white text-zinc-900' : 'h-36 sm:h-40 md:h-[140px] bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5'} flex items-center justify-between px-6 md:px-12 relative z-30`}>
-                        <div className="flex items-center gap-3.5 sm:gap-4 cursor-pointer hover:opacity-90 transition-opacity" onClick={handleLogoClick}>
-                          {effectiveLogo ? (
-                            <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-10 sm:h-12 md:h-14 w-auto object-contain transition-all shrink-0" />
-                          ) : (
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center font-bold text-xl sm:text-2xl text-white shadow-sm shrink-0" style={{ backgroundColor: brandColor || "#FE540B" }}>
-                              {(companyName || "GM").charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <span className={`font-black text-lg sm:text-xl md:text-2xl tracking-tight select-none ${isWebsiteLayout ? 'text-zinc-900' : (theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900')}`}>
-                            {bio.title || companyName || "GM Edificação"}
-                          </span>
-                        </div>
+                      <div className={`w-full shrink-0 ${isWebsiteLayout ? (theme === 'light' ? 'h-24 sm:h-28 md:h-32 bg-[#050505] text-white' : 'h-24 sm:h-28 md:h-32 bg-white text-black') : 'h-36 sm:h-40 md:h-[140px] bg-white/10 dark:bg-black/20 backdrop-blur-md'} flex items-center justify-between px-6 md:px-12 relative z-30 transition-all`}>
+                        <EditableItem
+                          isEditMode={isLiveEditMode && !previewAsVisitor}
+                          label="Editar Logo & Nome"
+                          onClick={() => setIsLogoModalOpen(true)}
+                          className="p-1 -ml-1 inline-block"
+                        >
+                          <div className="flex items-center gap-3.5 sm:gap-4.5 cursor-pointer hover:opacity-90 transition-opacity" onClick={(e) => {
+                            if (isLiveEditMode && !previewAsVisitor) {
+                              e.stopPropagation();
+                              setIsLogoModalOpen(true);
+                              return;
+                            }
+                            handleLogoClick();
+                          }}>
+                            {effectiveLogo ? (
+                              <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-12 sm:h-14 md:h-16 w-auto object-contain transition-all shrink-0" />
+                            ) : (
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center font-black text-2xl sm:text-3xl text-white shadow-sm shrink-0" style={{ backgroundColor: brandColor || "#FE540B" }}>
+                                {(companyName || "GM").charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className={`font-black text-xl sm:text-2xl md:text-3xl tracking-tight select-none ${isWebsiteLayout ? (theme === 'light' ? '!text-white' : '!text-black') : (theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900')}`}>
+                              {bio.title || companyName || "GM Edificação"}
+                            </span>
+                            {isLiveEditMode && !previewAsVisitor && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsLogoModalOpen(true);
+                                  }}
+                                className="ml-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FE540B] text-white text-xs font-black shadow-lg hover:scale-105 transition-all cursor-pointer z-50"
+                                title="Editar Logo e Nome da Empresa"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Editar Logo</span>
+                              </button>
+                            )}
+                          </div>
+                        </EditableItem>
 
                         <div className="flex items-center">
-                          {isWebsiteLayout ? (
-                            <div 
-                              className="flex items-center gap-8 sm:gap-10 relative"
-                              onMouseLeave={() => setHoveredNav(null)}
-                              onPointerLeave={() => setHoveredNav(null)}
-                            >
-                              {(() => {
-                                const currentNavIndicator = hoveredNav || ((activeView as string) === "contact" ? "contact" : "bio");
-                                return (
-                                  <>
-                                    {/* Início */}
-                                    <button 
-                                      onClick={() => {
-                                        setActiveView("bio");
-                                        setActivePortfolioId(null);
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                                      }} 
-                                      onMouseEnter={() => setHoveredNav("bio")}
-                                      onMouseMove={() => setHoveredNav("bio")}
-                                      onPointerEnter={() => setHoveredNav("bio")}
-                                      className="topbar-nav-link website-nav-btn relative py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none select-none"
-                                      style={{
-                                        background: 'transparent',
-                                        backgroundColor: 'transparent',
-                                        boxShadow: 'none',
-                                        border: 'none',
-                                        outline: 'none',
-                                        color: currentNavIndicator === "bio" ? "#000000" : "#71717a"
-                                      }}
-                                    >
-                                      Início
-                                      {currentNavIndicator === "bio" && (
-                                        <motion.span 
-                                          layoutId="website-nav-underline"
-                                          className="absolute bottom-[-6px] left-0 right-0 h-[2.5px] bg-black rounded-full pointer-events-none"
-                                          transition={{ type: "spring", stiffness: 450, damping: 32 }}
-                                        />
-                                      )}
-                                    </button>
-
-                                    {/* Contato */}
-                                    <button 
-                                      onClick={() => {
-                                        setActiveView("contact");
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                                      }} 
-                                      onMouseEnter={() => setHoveredNav("contact")}
-                                      onMouseMove={() => setHoveredNav("contact")}
-                                      onPointerEnter={() => setHoveredNav("contact")}
-                                      className="topbar-nav-link website-nav-btn relative py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none select-none"
-                                      style={{
-                                        background: 'transparent',
-                                        backgroundColor: 'transparent',
-                                        boxShadow: 'none',
-                                        border: 'none',
-                                        outline: 'none',
-                                        color: currentNavIndicator === "contact" ? "#000000" : "#71717a"
-                                      }}
-                                    >
-                                      Contato
-                                      {currentNavIndicator === "contact" && (
-                                        <motion.span 
-                                          layoutId="website-nav-underline"
-                                          className="absolute bottom-[-6px] left-0 right-0 h-[2.5px] bg-black rounded-full pointer-events-none"
-                                          transition={{ type: "spring", stiffness: 450, damping: 32 }}
-                                        />
-                                      )}
-                                    </button>
-                                  </>
-                                );
-                              })()}
-
-                              {/* Social Icons na barra superior na cor preta */}
-                              {userSocialLinks.length > 0 && (
-                                <>
-                                  <div className="w-2 sm:w-3" />
-                                  <div className="flex items-center gap-3 sm:gap-4">
-                                    {userSocialLinks.map((item) => (
-                                      <TopBarSocialIcon key={item.id} item={item} asPreview={asPreview} />
-                                    ))}
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-6 sm:gap-7 md:gap-8">
-                              {/* Início */}
-                              <button 
-                                onClick={() => {
-                                  setActiveView("bio");
-                                  setActivePortfolioId(null);
-                                }} 
-                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
-                                  (activeView as string) === "bio" 
-                                    ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
-                                    : `opacity-80 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
-                                } hover:text-[#FE540B]`}
-                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
-                              >
-                                Início
-                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'bio' ? 'scaleX(1)' : undefined }} />
-                              </button>
-
-                              {/* Sobre */}
-                              <button 
-                                onClick={() => {
-                                  const el = document.getElementById("about-company-section");
-                                  if (el) {
-                                    el.scrollIntoView({ behavior: 'smooth' });
-                                  } else {
-                                    setActiveView("bio");
-                                    setTimeout(() => {
-                                      const el2 = document.getElementById("about-company-section");
-                                      if (el2) el2.scrollIntoView({ behavior: 'smooth' });
-                                    }, 120);
-                                  }
-                                }} 
-                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
-                                  theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'
-                                } hover:text-[#FE540B]`}
-                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
-                              >
-                                Sobre
-                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" />
-                              </button>
-
-                              {/* Serviços */}
-                              <button 
-                                onClick={() => {
-                                  const el = document.getElementById("catalog-section");
-                                  if (el) {
-                                    el.scrollIntoView({ behavior: 'smooth' });
-                                  } else {
-                                    setActiveView("bio");
-                                    setTimeout(() => {
-                                      const el2 = document.getElementById("catalog-section");
-                                      if (el2) el2.scrollIntoView({ behavior: 'smooth' });
-                                    }, 120);
-                                  }
-                                }} 
-                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
-                                  theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'
-                                } hover:text-[#FE540B]`}
-                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
-                              >
-                                Serviços
-                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" />
-                              </button>
-
-                              {/* Portfólio */}
-                              <button 
-                                onClick={() => {
-                                  const el = document.getElementById("portfolio-section");
-                                  if (el) {
-                                    el.scrollIntoView({ behavior: 'smooth' });
-                                  } else {
-                                    setActiveView("bio");
-                                    setTimeout(() => {
-                                      const el2 = document.getElementById("portfolio-section");
-                                      if (el2) el2.scrollIntoView({ behavior: 'smooth' });
-                                    }, 120);
-                                  }
-                                }} 
-                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
-                                  (activeView as string) === "portfolio" 
-                                    ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
-                                    : `opacity-80 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
-                                } hover:text-[#FE540B]`}
-                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
-                              >
-                                Portfólio
-                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'portfolio' ? 'scaleX(1)' : undefined }} />
-                              </button>
-
-                              {/* Contato */}
-                              <button 
-                                onClick={() => setActiveView("contact")} 
-                                className={`topbar-nav-link relative py-1 text-base sm:text-lg font-medium transition-all duration-300 cursor-pointer group !bg-transparent !shadow-none !border-none ${
-                                  (activeView as string) === "contact" 
-                                    ? `opacity-100 font-semibold ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}` 
-                                    : `opacity-80 hover:opacity-100 ${theme === 'dark' || theme === 'glass' || hasBanners ? 'text-white' : 'text-slate-900'}`
-                                } hover:text-[#FE540B]`}
-                                style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
-                              >
-                                Contato
-                                <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-[#FE540B] transition-transform duration-300 origin-left scale-x-0 group-hover:scale-x-100" style={{ transform: (activeView as string) === 'contact' ? 'scaleX(1)' : undefined }} />
-                              </button>
-
-                              {/* Distancing Spacer */}
-                              <div className="w-8 sm:w-12 md:w-14 lg:w-16" />
-
-                              {/* Social Icons Group */}
-                              <div className="flex items-center gap-4 sm:gap-5 md:gap-6">
-                                {socialIcons.length > 0 && socialIcons.map((item) => {
-                                  return (
-                                    <a 
-                                      key={item.key} 
-                                      href={asPreview ? undefined : formatExternalUrl(item.href)} 
-                                      target="_blank" 
-                                      rel="noreferrer" 
-                                      title={item.label} 
-                                      className="flex items-center justify-center cursor-pointer transition-none text-black" 
-                                      onClick={(e) => { if (asPreview) e.preventDefault(); }}
-                                    >
-                                      <InteractiveSocialIcon 
-                                        itemKey={item.key} 
-                                        label={item.label} 
-                                        theme={theme} 
-                                        forceBlack={true}
-                                        sizeClass="w-5 sm:w-5.5"
-                                        fallbackIcon={item.icon} 
-                                        instant={true}
-                                      />
-                                    </a>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                          )}
+                          <WebsiteDesktopNav 
+                            activeView={activeView as string}
+                            setActiveView={setActiveView}
+                            setActivePortfolioId={setActivePortfolioId}
+                            theme={theme}
+                            orangeColor={brandColor || "#FE540B"}
+                            userSocialLinks={userSocialLinks}
+                            asPreview={asPreview}
+                            hasCatalog={!!(bio.catalog_items && bio.catalog_items.length > 0) || isLiveEditMode}
+                            hasPortfolio={!!(bio.portfolio_items && bio.portfolio_items.length > 0) || isLiveEditMode}
+                            hasAbout={bio.show_about !== false}
+                            currentActiveSection={currentActiveSection}
+                            onNavigateSection={handleDesktopNavClick}
+                            currentCustomer={currentCustomer}
+                            onOpenCustomerArea={handleOpenCustomerArea}
+                            onOpenAdminHub={() => setIsAdminHubOpen(true)}
+                            isAdminLoggedIn={!!user}
+                          />
                         </div>
                         
-                        {/* Barrinha fina neon multicolorida encostada no final da barra branca superior de uma extremidade a outra - sem esfumaçado */}
+                        {/* Barrinha fina neon multicolorida encostada na parte inferior da barra superior de uma extremidade a outra - perfeitamente rente, sem vazado */}
                         <div 
-                          className="w-full h-[2.5px] sm:h-[3px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
+                          className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
                           style={{
                             background: `linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B)`,
                             backgroundSize: '300% 300%',
                             animation: 'color-loop 5s ease infinite',
-                            boxShadow: 'none'
+                            boxShadow: 'none',
+                            bottom: 0
                           }}
                         />
                       </div>
 
-                      {/* Desktop Hero Section - BANNER OCUPANDO TODA A ÁREA MARCADA COM X POR DETRÁS DO TEXTO */}
+                      {/* Desktop Hero Section - BANNER OCUPANDO TODA A VISÃO DA TELA DO NAVEGADOR DESKTOP */}
                       {isWebsiteLayout && activeView !== "contact" && activeView !== "portfolio" ? (
-                        <div className="w-full bg-black relative overflow-hidden flex items-center min-h-[580px] lg:h-[calc(100vh-96px)] max-h-[840px]">
+                        <div className="w-full flex-1 min-h-0 bg-black relative overflow-hidden flex items-center group/hero">
                           {/* Banner Principal ocupando toda a área marcada (100% de ponta a ponta, de um lado ao outro por de trás do texto) */}
                           <img 
-                            src={bio.banner_img_url_1 || bio.desktop_banner_img_url || bio.banner_url || data?.app_background_url || defaultArchitectureBanner} 
+                            src={bio.banner_img_url_1 || bio.desktop_banner_img_url || bio.banner_url || currentData?.app_background_url || defaultArchitectureBanner} 
                             alt={companyName || "GM Edificação"} 
                             className="w-full h-full object-cover object-center select-none absolute inset-0 z-0" 
                             referrerPolicy="no-referrer" 
                           />
 
-                          {/* Degradê esfumaçado preto sobre o banner e atrás do texto (área indicada no print em vermelho, opacidade de 30%, sem efeito blur) */}
+                          {/* Live Edit Floating Control for Banner */}
+                          {isLiveEditMode && !previewAsVisitor && (
+                            <div className="absolute top-6 right-8 z-30 flex items-center gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() => setIsHeroModalOpen(true)}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-black/80 hover:bg-black border border-[#FE540B] text-white text-xs font-black shadow-2xl backdrop-blur-md hover:scale-105 transition-all cursor-pointer"
+                              >
+                                <Edit3 className="w-4 h-4 text-[#FE540B]" />
+                                <span>Editar Banner & Textos</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Leve sombreado suave da esquerda para a direita destacando o texto sobreposto */}
                           <div 
                             className="hidden md:block absolute inset-0 z-10 pointer-events-none"
                             style={{
-                              background: 'linear-gradient(108deg, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.30) 22%, rgba(0, 0, 0, 0.18) 36%, rgba(0, 0, 0, 0.05) 46%, transparent 52%)',
+                              background: 'linear-gradient(90deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.58) 26%, rgba(0, 0, 0, 0.38) 46%, rgba(0, 0, 0, 0.18) 64%, rgba(0, 0, 0, 0.04) 80%, transparent 92%)',
                             }}
                           />
 
-                          {/* Degradê horizontal suave complementar (30% de opacidade) atrás do texto */}
-                          <div 
-                            className="hidden md:block absolute inset-0 z-10 pointer-events-none"
-                            style={{
-                              background: 'linear-gradient(to right, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.20) 25%, rgba(0, 0, 0, 0.08) 40%, transparent 50%)',
-                            }}
-                          />
-
-                          {/* Esfumaçado degradê para telas menores / mobile (opacidade de 30%, sem blur) */}
+                          {/* Leve sombreado suave para telas menores / mobile */}
                           <div 
                             className="md:hidden absolute inset-0 z-10 pointer-events-none"
                             style={{
-                              background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.30) 0%, rgba(0, 0, 0, 0.20) 50%, transparent 100%)',
+                              background: 'linear-gradient(to right, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.50) 48%, rgba(0, 0, 0, 0.18) 82%, transparent 100%)',
                             }}
                           />
 
-                          {/* Conteúdo de Texto sobreposto na frente do esfumaçado e do banner */}
-                          <div className="w-full md:w-3/5 lg:w-[50%] flex flex-col justify-center py-14 md:py-20 px-6 sm:px-12 md:px-16 lg:px-24 z-20 relative">
-                            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[62px] font-black tracking-tight text-white leading-[1.08] select-none drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]">
-                              {bio.hero_title || bio.title || companyName || "GM edificação"}
-                            </h1>
-                            <p className="mt-4 text-base sm:text-lg text-zinc-200 leading-relaxed font-normal max-w-xl drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]">
-                              {desc ? (
-                                <span dangerouslySetInnerHTML={{ __html: desc }} />
-                              ) : (
-                                `GM edificação, Design Feroz`
-                              )}
-                            </p>
-                            <div className="mt-8 flex gap-4">
-                              <button 
+                          {/* Conteúdo de Texto sobreposto na frente do esfumaçado e do banner - afastado para a direita conforme marcação com linha vermelha */}
+                          <div className="w-full md:w-[65%] lg:w-[58%] xl:w-[52%] 2xl:w-[48%] flex flex-col justify-center py-14 md:py-20 px-6 sm:px-10 md:pl-[12vw] lg:pl-[15vw] xl:pl-[16vw] 2xl:pl-[17vw] md:pr-8 z-20 relative">
+                            {isLiveEditMode && !previewAsVisitor && (
+                              <div className="mb-3">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsHeroModalOpen(true)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FE540B] text-white text-xs font-black shadow-md hover:scale-105 transition-all cursor-pointer"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  <span>Editar Título & Descrição</span>
+                                </button>
+                              </div>
+                            )}
+                            <EditableItem
+                              isEditMode={isLiveEditMode && !previewAsVisitor}
+                              label="Editar Título"
+                              onClick={() => {
+                                setQuickEditorState({
+                                  isOpen: true,
+                                  title: "Editar Título Principal",
+                                  subtitle: "Altere o título de destaque na tela inicial do site",
+                                  elementType: "title",
+                                  initialText: bio.hero_title || bio.title || companyName || "GM edificação",
+                                  initialFormatting: {
+                                    font: bio.title_font || bio.hero_title_font || "syne",
+                                    size: bio.title_size || "36 pt",
+                                    color: bio.title_color || "#FFFFFF",
+                                    align: "left",
+                                    bold: true
+                                  },
+                                  targetField: "hero_title",
+                                });
+                              }}
+                              className="inline-block p-1.5 -ml-1.5"
+                            >
+                              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[62px] font-black tracking-tight text-white leading-[1.08] select-none drop-shadow-md">
+                                {bio.hero_title || bio.title || companyName || "GM edificação"}
+                              </h1>
+                            </EditableItem>
+
+                            <EditableItem
+                              isEditMode={isLiveEditMode && !previewAsVisitor}
+                              label="Editar Apresentação & Formatação"
+                              onClick={() => {
+                                const isMobileHero = (asPreview && previewMode === 'smartphone') || isMobileView;
+                                const heroDescAlign = isMobileHero
+                                  ? (bio.description_align_mobile || bio.description_align || "left")
+                                  : (bio.description_align || "left");
+                                const isDescBold = isMobileHero
+                                  ? (bio.description_bold_mobile !== undefined ? bio.description_bold_mobile : !!bio.description_bold)
+                                  : !!bio.description_bold;
+                                const isDescItalic = isMobileHero
+                                  ? (bio.description_italic_mobile !== undefined ? bio.description_italic_mobile : !!bio.description_italic)
+                                  : !!bio.description_italic;
+                                const activeDescFont = isMobileHero
+                                  ? (bio.description_font_mobile || bio.description_font || "syne")
+                                  : (bio.description_font || "syne");
+
+                                setQuickEditorState({
+                                  isOpen: true,
+                                  title: "Editar Apresentação & Formatação",
+                                  subtitle: "Altere o texto, selecione trechos para negritar ou colorir e ajuste o tamanho",
+                                  elementType: "description",
+                                  initialText: bio.description || desc || "",
+                                  initialFormatting: {
+                                    font: activeDescFont,
+                                    size: bio.description_size || "16 pt",
+                                    align: (heroDescAlign as any) || "left",
+                                    bold: isDescBold,
+                                    italic: isDescItalic,
+                                    color: bio.description_color || "#E4E4E7",
+                                  },
+                                  targetField: "description",
+                                });
+                              }}
+                              className="p-2 -ml-2 block mt-2"
+                            >
+                              {(() => {
+                                const isMobileHero = (asPreview && previewMode === 'smartphone') || isMobileView;
+                                const heroDescAlign = isMobileHero
+                                  ? (bio.description_align_mobile || bio.description_align || "left")
+                                  : (bio.description_align || "left");
+                                const heroDescAlignClass = heroDescAlign === "left" ? "text-left" : heroDescAlign === "right" ? "text-right" : "text-center";
+
+                                const isDescBold = isMobileHero
+                                  ? (bio.description_bold_mobile !== undefined ? bio.description_bold_mobile : !!bio.description_bold)
+                                  : !!bio.description_bold;
+                                const heroDescBoldClass = isDescBold ? "font-bold" : "font-normal";
+
+                                const isDescItalic = isMobileHero
+                                  ? (bio.description_italic_mobile !== undefined ? bio.description_italic_mobile : !!bio.description_italic)
+                                  : !!bio.description_italic;
+                                const heroDescItalicClass = isDescItalic ? "italic" : "not-italic";
+
+                                const activeDescFont = isMobileHero
+                                  ? (bio.description_font_mobile || bio.description_font || "ui")
+                                  : (bio.description_font || "ui");
+                                const heroDescFontClass = `bio-desc-font-${activeDescFont}`;
+
+                                const deskPt = getFontSizePt(bio.description_size || "16 pt");
+                                const mobPt = getMobileFontSizePt(bio.description_size_mobile || bio.description_size || "16 pt");
+                                const heroSizeClass = getFontSizeClass(bio.description_size || "16 pt");
+
+                                return (
+                                  <div 
+                                    className={`mt-4 site-hero-description leading-relaxed max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl text-zinc-100 drop-shadow-sm whitespace-pre-wrap ${heroSizeClass} ${heroDescFontClass} ${heroDescBoldClass} ${heroDescItalicClass} ${heroDescAlignClass}`}
+                                    style={{
+                                      '--desc-fs-desktop': deskPt,
+                                      '--desc-fs-mobile': mobPt,
+                                      fontSize: isMobileView ? mobPt : deskPt,
+                                      fontFamily: getFontFamilyStyle(activeDescFont),
+                                    } as React.CSSProperties}
+                                    dangerouslySetInnerHTML={{ 
+                                      __html: desc || `GM edificação, Design Feroz` 
+                                    }}
+                                  />
+                                );
+                              })()}
+                            </EditableItem>
+                            
+                            <div className="mt-8 sm:mt-10 flex gap-4">
+                              <SitePillButton
+                                label={bio.hero_button_label || "Conheça nossos Serviços"}
+                                isEditMode={isLiveEditMode && !previewAsVisitor}
+                                editLabel="Editar Botão"
+                                onEdit={() => {
+                                  setQuickEditorState({
+                                    isOpen: true,
+                                    title: "Editar Botão de Ação",
+                                    subtitle: "Altere o texto do botão e a ação ao clicar",
+                                    elementType: "button",
+                                    initialText: bio.hero_button_label || "Conheça nossos Serviços",
+                                    initialFormatting: {
+                                      buttonAction: bio.hero_button_action || "portfolio",
+                                      buttonUrl: bio.hero_button_url || "",
+                                      buttonStyle: bio.hero_button_style || "glow",
+                                      color: brandColor,
+                                    },
+                                    targetField: "hero_button",
+                                  });
+                                }}
                                 onClick={() => {
                                   const el = document.getElementById("portfolio-section") || document.getElementById("catalog-section");
                                   if (el) {
@@ -2286,10 +3069,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     setActiveView("contact");
                                   }
                                 }}
-                                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-base font-bold text-white border border-[#FE540B] bg-black/40 hover:bg-[#FE540B] transition-all duration-300 shadow-[0_0_15px_rgba(254,84,11,0.25)] hover:shadow-[0_0_20px_rgba(254,84,11,0.5)] cursor-pointer"
-                              >
-                                {bio.hero_button_label || "Conheça nossos Serviços"}
-                              </button>
+                              />
                             </div>
                           </div>
                         </div>
@@ -2336,27 +3116,55 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight !text-white leading-tight drop-shadow-md max-w-2xl">
                                            {bio.title || companyName}
                                          </h1>
-                                         {desc && (
-                                           <div 
-                                             className={`mt-5 text-base md:text-lg lg:text-xl text-zinc-300 drop-shadow-sm max-w-2xl leading-relaxed whitespace-pre-wrap ${heroBold ? 'font-bold' : 'font-normal'} ${heroItalic ? 'italic' : ''}`}
-                                             dangerouslySetInnerHTML={{ __html: desc }}
-                                           />
-                                         )}
+                                         {desc && (() => {
+                                           const activeDescFont = bio.description_font || "ui";
+                                           const deskPt = getFontSizePt(bio.description_size || "16 pt");
+                                           const mobPt = getMobileFontSizePt(bio.description_size_mobile || bio.description_size || "16 pt");
+                                           const heroSizeClass = getFontSizeClass(bio.description_size || "16 pt");
+                                           return (
+                                             <div 
+                                               className={`mt-5 text-zinc-300 drop-shadow-sm max-w-2xl leading-relaxed whitespace-pre-wrap ${heroSizeClass} bio-desc-font-${activeDescFont} ${heroBold ? 'font-bold' : 'font-normal'} ${heroItalic ? 'italic' : ''}`}
+                                               style={{
+                                                 '--desc-fs-desktop': deskPt,
+                                                 '--desc-fs-mobile': mobPt,
+                                                 fontSize: isMobileView ? mobPt : deskPt,
+                                                 fontFamily: getFontFamilyStyle(activeDescFont),
+                                               } as React.CSSProperties}
+                                               dangerouslySetInnerHTML={{ __html: desc }}
+                                             />
+                                           );
+                                         })()}
                                          
                                          <div className="mt-8 flex">
-                                           <button 
+                                           <SitePillButton
+                                             label={bio.hero_button_label || "Conheça nossos Serviços"}
+                                             isEditMode={isLiveEditMode && !previewAsVisitor}
+                                             editLabel="Editar Botão"
+                                             onEdit={() => {
+                                               setQuickEditorState({
+                                                 isOpen: true,
+                                                 title: "Editar Botão de Ação",
+                                                 subtitle: "Altere o texto do botão e a ação ao clicar",
+                                                 elementType: "button",
+                                                 initialText: bio.hero_button_label || "Conheça nossos Serviços",
+                                                 initialFormatting: {
+                                                   buttonAction: bio.hero_button_action || "portfolio",
+                                                   buttonUrl: bio.hero_button_url || "",
+                                                   buttonStyle: bio.hero_button_style || "glow",
+                                                   color: brandColor,
+                                                 },
+                                                 targetField: "hero_button",
+                                               });
+                                             }}
                                              onClick={() => {
                                                const el = document.getElementById("portfolio-section") || document.getElementById("catalog-section");
-                                               if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                               if (el) {
+                                                 smoothScrollToTarget(el);
+                                               } else {
+                                                 handleDesktopNavClick("contato");
+                                               }
                                              }}
-                                             className="flex items-center px-8 py-4 rounded-full text-base sm:text-lg font-extrabold shadow-lg cursor-pointer transition-all duration-300 transform hover:scale-105 active:scale-95 !text-white bg-gradient-to-r"
-                                             style={{ 
-                                               backgroundImage: `linear-gradient(to right, ${brandColor}, ${brandColor}dd)`,
-                                               color: '#ffffff',
-                                             }}
-                                           >
-                                             <span className="!text-white">Veja nosso Portfólio</span>
-                                           </button>
+                                           />
                                          </div>
                                       </div>
                                     </div>
@@ -2373,27 +3181,41 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   {/* Mobile Banner overlay */}
                   {finalMobile && (
                     <div 
-                      className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'block' : 'block md:hidden'} w-full relative group transition-all duration-300 flex flex-col`}
+                      className={`${asPreview && previewMode === 'pc' ? 'hidden' : asPreview && previewMode === 'smartphone' ? 'flex' : 'flex md:hidden'} w-full ${activeView === "contact" ? "min-h-0" : "min-h-screen md:min-h-0 h-[100dvh]"} flex-col overflow-hidden relative group transition-all duration-300`}
                     >
-                      {/* Mobile Top Navbar with Desktop Glass/Blur Effect */}
-                      <div className={`w-full h-[88px] ${isWebsiteLayout ? 'bg-white text-zinc-900' : 'bg-white/10 dark:bg-black/20 backdrop-blur-md border-b border-black/5 dark:border-white/5'} flex items-center justify-between px-5 relative z-40`}>
-                        <div className="flex items-center gap-2.5 sm:gap-3 cursor-pointer" onClick={handleLogoClick}>
+                      {/* Mobile Top Navbar with Desktop Elegance & Blur */}
+                      <div className={`w-full shrink-0 h-20 sm:h-24 ${isWebsiteLayout ? (theme === 'light' ? 'bg-[#050505] text-white' : 'bg-white text-black') : 'bg-white/10 dark:bg-black/20 backdrop-blur-md'} flex items-center justify-between px-4 sm:px-6 relative z-40`}>
+                        <div className="flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0" onClick={handleLogoClick}>
                           {effectiveLogo ? (
-                            <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-9 w-auto object-contain rounded shrink-0" />
+                            <img src={effectiveLogo} alt={companyName || "GM Edificação"} className="h-10 sm:h-12 w-auto object-contain rounded shrink-0" />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white shadow-sm shrink-0" style={{ backgroundColor: brandColor || "#FE540B" }}>
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg flex items-center justify-center font-bold text-lg text-white shadow-sm shrink-0" style={{ backgroundColor: brandColor || "#FE540B" }}>
                               {(companyName || "GM").charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <span className={`font-black text-base sm:text-lg tracking-tight select-none truncate max-w-[170px] ${isWebsiteLayout ? 'text-zinc-900' : (theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900')}`}>
-                            {bio.title_mobile || bio.title || companyName || "GM Edificação"}
+                          <span className={`font-black text-lg sm:text-xl tracking-tight select-none truncate max-w-[200px] sm:max-w-[280px] ${isWebsiteLayout ? (theme === 'light' ? '!text-white' : '!text-black') : (theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900')}`}>
+                            {bio.hero_title || bio.title_mobile || bio.title || companyName || "GM Edificação"}
                           </span>
+                          {isLiveEditMode && !previewAsVisitor && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsLogoModalOpen(true);
+                              }}
+                              className="ml-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FE540B] text-white text-[11px] font-bold shadow-md cursor-pointer shrink-0 z-50"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                              <span>Logo</span>
+                            </button>
+                          )}
                         </div>
                         
                         <div className="flex items-center">
                           <button 
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-                            className={`p-2 -mr-2 hover:opacity-75 transition-opacity focus:outline-none cursor-pointer z-40 relative ${isWebsiteLayout ? 'text-zinc-900' : (theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900')}`}
+                            className={`min-w-[44px] min-h-[44px] flex items-center justify-center p-2 -mr-2 hover:opacity-75 transition-opacity focus:outline-none cursor-pointer z-40 relative ${isWebsiteLayout ? (theme === 'light' ? 'text-white' : 'text-zinc-900') : (theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900')}`}
+                            aria-label="Abrir menu de navegação"
                           >
                             {isMobileMenuOpen ? (
                               <X className="w-6 h-6 stroke-[2.5]" />
@@ -2405,197 +3227,228 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                         {/* Hamburger Slide Down Dropdown Menu */}
                         {isMobileMenuOpen && (
-                          <div className={`absolute top-[88px] inset-x-0 z-50 flex flex-col p-6 space-y-4 shadow-xl animate-in slide-in-from-top-4 duration-300 border-b ${isWebsiteLayout ? 'bg-white border-zinc-200 text-zinc-900' : (theme === 'dark' || theme === 'glass' ? 'bg-zinc-950/95 backdrop-blur-md border-white/10' : 'bg-white border-zinc-100')}`}>
-                            {isWebsiteLayout ? (
-                              <>
-                                <button 
-                                  onClick={() => {
-                                    setActiveView("bio");
-                                    setIsMobileMenuOpen(false);
-                                    setActivePortfolioId(null);
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                  }}
-                                  className={`topbar-nav-link mobile-nav-link text-left text-base font-bold uppercase tracking-wider py-3 border-b border-zinc-100 text-zinc-900 hover:text-[#FE540B] !bg-transparent !shadow-none !rounded-none ${activeView === 'bio' ? 'text-[#FE540B]' : ''}`}
-                                  style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
-                                >
-                                  Início
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    setActiveView("contact");
-                                    setIsMobileMenuOpen(false);
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                  }}
-                                  className={`topbar-nav-link mobile-nav-link text-left text-base font-bold uppercase tracking-wider py-3 border-b border-zinc-100 text-zinc-900 hover:text-[#FE540B] !bg-transparent !shadow-none !rounded-none ${activeView === 'contact' ? 'text-[#FE540B]' : ''}`}
-                                  style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
-                                >
-                                  Contato
-                                </button>
-                                {userSocialLinks.length > 0 && (
-                                  <div className="flex items-center gap-4 pt-3 text-black">
-                                    {userSocialLinks.map((item) => (
-                                      <TopBarSocialIcon key={item.id} item={item} asPreview={asPreview} />
-                                    ))}
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                <button 
-                                  onClick={() => {
-                                    setActiveView("bio");
-                                    setIsMobileMenuOpen(false);
-                                    setActivePortfolioId(null);
-                                  }}
-                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'bio' ? 'text-[#FE540B] font-bold' : ''}`}
-                                >
-                                  Início
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    setIsMobileMenuOpen(false);
-                                    const el = document.getElementById("about-company-section");
-                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                  }}
-                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'}`}
-                                >
-                                  Sobre
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    setIsMobileMenuOpen(false);
-                                    const el = document.getElementById("catalog-section");
-                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                  }}
-                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'}`}
-                                >
-                                  Serviços
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    setIsMobileMenuOpen(false);
-                                    const el = document.getElementById("portfolio-section");
-                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                  }}
-                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'}`}
-                                >
-                                  Portfólio
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    setActiveView("contact");
-                                    setIsMobileMenuOpen(false);
-                                  }}
-                                  className={`text-left text-sm font-medium uppercase tracking-wider py-3 border-b ${theme === 'dark' || theme === 'glass' ? 'border-white/10 text-white hover:text-white/85' : 'border-zinc-100 text-zinc-800'} ${activeView === 'contact' ? 'text-[#FE540B] font-bold' : ''}`}
-                                >
-                                  Contato
-                                </button>
-                                
-                                {socialIcons.length > 0 && (
-                                  <div className="flex items-center gap-3 pt-2.5">
-                                    {socialIcons.map((item) => {
-                                      return (
-                                        <a 
-                                          key={item.key} 
-                                          href={asPreview ? undefined : formatExternalUrl(item.href)} 
-                                          target="_blank" 
-                                          rel="noreferrer" 
-                                          title={item.label} 
-                                          className={`w-8.5 h-8.5 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer border ${theme === 'dark' || theme === 'glass' ? 'bg-zinc-900 border-white/10' : 'bg-zinc-50 border-zinc-100'}`} 
-                                          onClick={(e) => { if (asPreview) e.preventDefault(); }}
-                                        >
-                                          <InteractiveSocialIcon 
-                                            itemKey={item.key} 
-                                            label={item.label} 
-                                            theme={theme} 
-                                            sizeClass="w-4.5 h-4.5"
-                                            fallbackIcon={item.icon} 
-                                          />
-                                        </a>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </>
+                          <div className={`absolute top-full inset-x-0 z-50 flex flex-col p-6 space-y-2 shadow-2xl animate-in slide-in-from-top-4 duration-300 border-b ${isWebsiteLayout ? (theme === 'light' ? 'bg-[#0a0a0c]/98 backdrop-blur-2xl border-white/10 text-white' : 'bg-white/98 backdrop-blur-2xl border-zinc-200 text-zinc-900') : (theme === 'dark' || theme === 'glass' ? 'bg-zinc-950/98 backdrop-blur-2xl border-white/10 text-white' : 'bg-white border-zinc-100')}`}>
+                            <button 
+                              onClick={() => {
+                                handleDesktopNavClick("inicio");
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className={`text-left text-base font-bold uppercase tracking-wider py-3 border-b ${theme === 'light' ? 'border-white/10 text-white hover:text-[#FE540B]' : 'border-zinc-100 text-zinc-900 hover:text-[#FE540B]'} !bg-transparent !shadow-none !rounded-none ${activeView === 'bio' && currentActiveSection === 'inicio' ? 'text-[#FE540B]' : ''} transition-colors`}
+                            >
+                              Início
+                            </button>
+
+                            <button 
+                              onClick={() => {
+                                handleDesktopNavClick("sobre");
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className={`text-left text-base font-bold uppercase tracking-wider py-3 border-b ${theme === 'light' ? 'border-white/10 text-white hover:text-[#FE540B]' : 'border-zinc-100 text-zinc-900 hover:text-[#FE540B]'} !bg-transparent !shadow-none !rounded-none ${currentActiveSection === 'sobre' ? 'text-[#FE540B]' : ''} transition-colors`}
+                            >
+                              Sobre a Empresa
+                            </button>
+
+                            {((bio.catalog_items && bio.catalog_items.length > 0) || isLiveEditMode) && (
+                              <button 
+                                onClick={() => {
+                                  handleDesktopNavClick("produtos");
+                                  setIsMobileMenuOpen(false);
+                                }}
+                                className={`text-left text-base font-bold uppercase tracking-wider py-3 border-b ${theme === 'light' ? 'border-white/10 text-white hover:text-[#FE540B]' : 'border-zinc-100 text-zinc-900 hover:text-[#FE540B]'} !bg-transparent !shadow-none !rounded-none ${currentActiveSection === 'produtos' ? 'text-[#FE540B]' : ''} transition-colors`}
+                              >
+                                Nossos Produtos
+                              </button>
+                            )}
+
+                            {((bio.portfolio_items && bio.portfolio_items.length > 0) || isLiveEditMode) && (
+                              <button 
+                                onClick={() => {
+                                  handleDesktopNavClick("portfolio");
+                                  setIsMobileMenuOpen(false);
+                                }}
+                                className={`text-left text-base font-bold uppercase tracking-wider py-3 border-b ${theme === 'light' ? 'border-white/10 text-white hover:text-[#FE540B]' : 'border-zinc-100 text-zinc-900 hover:text-[#FE540B]'} !bg-transparent !shadow-none !rounded-none ${currentActiveSection === 'portfolio' ? 'text-[#FE540B]' : ''} transition-colors`}
+                              >
+                                Portfólio
+                              </button>
+                            )}
+
+                            <button 
+                              onClick={() => {
+                                handleDesktopNavClick("contato");
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className={`text-left text-base font-bold uppercase tracking-wider py-3 border-b ${theme === 'light' ? 'border-white/10 text-white hover:text-[#FE540B]' : 'border-zinc-100 text-zinc-900 hover:text-[#FE540B]'} !bg-transparent !shadow-none !rounded-none ${activeView === 'contact' ? 'text-[#FE540B]' : ''} transition-colors`}
+                            >
+                              Contato
+                            </button>
+
+                            <button 
+                              onClick={() => {
+                                handleOpenCustomerArea();
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className={`flex items-center gap-2.5 text-left text-base font-bold uppercase tracking-wider py-3 border-b ${theme === 'light' ? 'border-white/10 text-orange-400' : 'border-zinc-100 text-[#FE540B]'} !bg-transparent !shadow-none !rounded-none transition-colors`}
+                            >
+                              <User className="w-5 h-5 text-[#FE540B]" />
+                              <span>{currentCustomer ? `Minha Conta (${currentCustomer.full_name.split(' ')[0]})` : 'Área do Cliente (Entrar / Cadastrar)'}</span>
+                            </button>
+                            
+                            {userSocialLinks.length > 0 && (
+                              <div className={`flex items-center gap-4 pt-4 ${theme === 'light' ? 'text-white' : 'text-black'}`}>
+                                {userSocialLinks.map((item) => (
+                                  <TopBarSocialIcon key={item.id} item={item} theme={theme} asPreview={asPreview} />
+                                ))}
+                              </div>
                             )}
                           </div>
                         )}
                         
-                        {/* Barrinha fina neon multicolorida de uma extremidade a outra (abaixo da barra do topo mobile) - sem esfumaçado */}
+                        {/* Barrinha fina neon multicolorida encostada na parte inferior da barra superior de uma extremidade a outra - perfeitamente rente, sem vazado */}
                         <div 
-                          className="w-full h-[2.5px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
+                          className="w-full h-[3px] absolute bottom-0 left-0 right-0 z-50 pointer-events-none"
                           style={{
                             background: `linear-gradient(90deg, #FE540B, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, #FE540B)`,
                             backgroundSize: '300% 300%',
                             animation: 'color-loop 5s ease infinite',
-                            boxShadow: 'none'
+                            boxShadow: 'none',
+                            bottom: 0
                           }}
                         />
                       </div>
 
-                      {/* Main Banner Hero Area */}
-                      <div className={`w-full relative overflow-hidden transition-all duration-1000 ease-in-out ${
+                      {/* Main Banner Hero Area - Adapted to fill viewport on mobile */}
+                      <div className={`w-full relative overflow-hidden transition-all duration-700 ease-in-out ${
                         activeView === "portfolio" 
                           ? "h-screen w-full py-0 px-0"
                           : activeView === "contact"
-                            ? (isMobileView ? "aspect-[16/10] min-h-[320px] py-10 px-6 flex flex-col items-center justify-center text-center" : "aspect-[21/9] sm:aspect-auto min-h-[220px] sm:min-h-[260px] py-6 px-6 flex flex-col items-center justify-center text-center")
-                            : (isMobileView ? (isWebsiteLayout ? "min-h-[620px] h-[90vh] w-full py-20 px-6 flex flex-col items-center justify-center text-center bg-black" : "h-screen w-full py-20 px-6 flex flex-col items-center justify-center text-center") : "aspect-[6/5] sm:aspect-auto min-h-[320px] sm:min-h-[500px] py-14 px-6 flex flex-col items-center justify-center text-center")
+                            ? "aspect-[16/9] min-h-[220px] sm:min-h-[280px] w-full flex flex-col items-center justify-center text-center px-4"
+                            : "flex-1 min-h-0 w-full py-12 px-5 sm:px-8 flex flex-col items-center justify-center text-center bg-black"
                       }`}>
                         <img 
-                          src={activeView === "contact" ? (bio.contact_banner_img_url || finalMobile) : (activeView === "portfolio" ? (portfolioMobileBanner || finalMobile) : (bio.mobile_banner_img_url_1 || bio.banner_img_url_1 || defaultArchitectureBanner))} 
-                          alt="Banner Mobile" 
-                          className={`w-full h-full ${isWebsiteLayout ? 'object-cover object-center absolute inset-0 z-0' : 'object-cover absolute inset-0 z-0'}`} 
+                          src={activeView === "contact" ? (bio.contact_banner_img_url || finalMobile) : (activeView === "portfolio" ? (portfolioMobileBanner || finalMobile) : (bio.mobile_banner_img_url_1 || bio.banner_img_url_1 || bio.desktop_banner_img_url || defaultArchitectureBanner))} 
+                          alt={companyName || "GM Edificação"} 
+                          className="w-full h-full object-cover object-center select-none absolute inset-0 z-0" 
                           referrerPolicy="no-referrer" 
                         />
                         
-                        {/* Degradê esfumaçado mobile com opacidade de 30%, sem blur */}
+                        {/* Leve sombreado suave para destacar o texto */}
                         {activeView !== "portfolio" && (
                           <div 
-                            className={`absolute inset-0 z-10 ${isWebsiteLayout ? 'bg-gradient-to-b from-black/30 via-black/20 to-transparent' : 'bg-gradient-to-b from-black/40 via-black/55 to-black/85'}`} 
+                            className="absolute inset-0 z-10 pointer-events-none" 
+                            style={{
+                              background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.65) 45%, rgba(0, 0, 0, 0.88) 100%)'
+                            }}
                           />
                         )}
+
+                        {/* Live Edit Button for Mobile Banner */}
+                        {isLiveEditMode && !previewAsVisitor && (
+                          <div className="absolute top-4 right-4 z-30">
+                            <button
+                              type="button"
+                              onClick={() => setIsHeroModalOpen(true)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/85 border border-[#FE540B] text-white text-xs font-bold shadow-xl backdrop-blur-md cursor-pointer"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 text-[#FE540B]" />
+                              <span>Editar Banner</span>
+                            </button>
+                          </div>
+                        )}
                         
-                        {/* Overlaid Hero Content - Centered with title, about section, and button on top of the banner */}
-                        {activeView !== "contact" && activeView !== "portfolio" && (() => {
-                          const mobAlign = bio.description_align_mobile || "center";
-                          const mobAlignClass = mobAlign === "left" ? "text-left items-start" : mobAlign === "right" ? "text-right items-end" : "text-center items-center";
-                          const mobBold = bio.description_bold_mobile ? "font-bold" : "font-medium";
-                          const mobItalic = bio.description_italic_mobile ? "italic" : "not-italic";
-                          const mobFont = `bio-desc-font-${bio.description_font_mobile || "ui"}`;
-                          const mobSize = getResponsiveFontSizeClass(bio.description_size, bio.description_size_mobile);
-
-                          return (
-                            <div className={`relative z-20 w-full flex flex-col justify-center ${mobAlignClass} space-y-6 px-4`}>
-                              <h1 className="text-[34px] sm:text-[38px] font-black tracking-tight !text-white leading-[1.1] select-none max-w-[95%] drop-shadow-md">
-                                {bio.title_mobile || bio.title || (companyName ? `${companyName}` : "GM Edificação")}
+                        {/* Overlaid Hero Content - Fully adapted to match desktop brand & typography */}
+                        {activeView !== "contact" && activeView !== "portfolio" && (
+                          <div className="relative z-20 w-full flex flex-col justify-center items-center text-center space-y-4 sm:space-y-5 px-3 sm:px-6 max-w-lg mx-auto">
+                            <EditableItem
+                              isEditMode={isLiveEditMode && !previewAsVisitor}
+                              label="Editar Título"
+                              onClick={() => {
+                                setQuickEditorState({
+                                  isOpen: true,
+                                  title: "Editar Título Principal",
+                                  subtitle: "Altere o título de destaque na tela inicial do site",
+                                  elementType: "title",
+                                  initialText: bio.hero_title_mobile || bio.hero_title || bio.title_mobile || bio.title || companyName || "GM edificação",
+                                  initialFormatting: {
+                                    font: bio.title_font || "syne",
+                                    size: "28 pt",
+                                    color: "#FFFFFF",
+                                    align: "center",
+                                    bold: true
+                                  },
+                                  targetField: "hero_title",
+                                });
+                              }}
+                              className="inline-block p-1"
+                            >
+                              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight !text-white leading-[1.12] select-none max-w-full drop-shadow-md">
+                                {bio.hero_title_mobile || bio.hero_title || bio.title_mobile || bio.title || companyName || "GM edificação"}
                               </h1>
-                              
-                              <div className={`w-full flex flex-col ${mobAlignClass} space-y-3.5 pt-6 max-w-sm border-t border-white/10 mt-6`}>
-                                <div 
-                                  className={`leading-relaxed !text-white [&_*]:!text-white whitespace-pre-wrap font-sans drop-shadow-sm px-2 ${mobSize} ${mobBold} ${mobItalic} ${mobFont}`}
-                                  dangerouslySetInnerHTML={{ 
-                                    __html: desc || `Especialistas em construção civil, reformas residenciais e comerciais, gerenciamento de obras e projetos personalizados. Qualidade, pontualidade e excelência.` 
-                                  }}
-                                />
-                              </div>
+                            </EditableItem>
+                            
+                            <EditableItem
+                              isEditMode={isLiveEditMode && !previewAsVisitor}
+                              label="Editar Apresentação & Formatação"
+                              onClick={() => {
+                                setQuickEditorState({
+                                  isOpen: true,
+                                  title: "Editar Apresentação & Formatação",
+                                  subtitle: "Altere o texto, selecione trechos para negritar ou colorir e ajuste o tamanho",
+                                  elementType: "description",
+                                  initialText: bio.description_mobile || bio.description || desc || "GM edificação, Design Feroz",
+                                  initialFormatting: {
+                                    font: bio.description_font_mobile || bio.description_font || "syne",
+                                    size: bio.description_size_mobile || bio.description_size || "16 pt",
+                                    align: "center",
+                                    bold: false,
+                                    italic: false,
+                                    color: "#FFFFFF",
+                                  },
+                                  targetField: "description",
+                                });
+                              }}
+                              className="w-full inline-block p-1"
+                            >
+                              <div 
+                                className="text-sm sm:text-base leading-relaxed !text-zinc-100/90 whitespace-pre-wrap drop-shadow-sm px-2 max-w-md mx-auto"
+                                dangerouslySetInnerHTML={{ 
+                                  __html: bio.description_mobile || bio.description || desc || "GM edificação, Design Feroz" 
+                                }}
+                              />
+                            </EditableItem>
 
-                              <button 
+                            <div className="pt-2 sm:pt-3 flex justify-center">
+                              <SitePillButton
+                                label={bio.hero_button_label || "Conheça nossos Serviços"}
+                                isEditMode={isLiveEditMode && !previewAsVisitor}
+                                editLabel="Editar Botão"
+                                onEdit={() => {
+                                  setQuickEditorState({
+                                    isOpen: true,
+                                    title: "Editar Botão de Ação",
+                                    subtitle: "Altere o texto do botão e a ação ao clicar",
+                                    elementType: "button",
+                                    initialText: bio.hero_button_label || "Conheça nossos Serviços",
+                                    initialFormatting: {
+                                      buttonAction: bio.hero_button_action || "portfolio",
+                                      buttonUrl: bio.hero_button_url || "",
+                                      buttonStyle: bio.hero_button_style || "glow",
+                                      color: brandColor,
+                                    },
+                                    targetField: "hero_button",
+                                  });
+                                }}
                                 onClick={() => {
                                   const el = document.getElementById("portfolio-section") || document.getElementById("catalog-section");
                                   if (el) {
-                                    el.scrollIntoView({ behavior: 'smooth' });
+                                    smoothScrollToTarget(el);
                                   } else {
-                                    setActiveView("contact");
+                                    handleDesktopNavClick("contato");
                                   }
                                 }}
-                                className="px-8 py-3.5 bg-[#FE540B] hover:bg-[#ff3d00] !text-white [&_*]:!text-white rounded-full text-base font-extrabold shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer mt-4"
-                                style={{ color: '#ffffff' }}
-                              >
-                                <span className="!text-white">{bio.hero_button_label || "Conheça nossos Serviços"}</span>
-                              </button>
+                              />
                             </div>
-                          );
-                        })()}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -2604,10 +3457,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             })()}
           </div>
 
-          <div className={activeView === "portfolio" 
-            ? "w-full px-0 mx-0 mt-0 space-y-0" 
-            : `${isMobileView ? "space-y-6" : "max-w-[1150px] mx-auto px-4 md:px-8 lg:px-12 mt-6 sm:mt-10 space-y-6 sm:space-y-8"} w-full`
-          }>
+          <div className="w-full px-0 mx-0 mt-0 space-y-0 flex flex-col">
 
           <AnimatePresence mode="wait">
           {activeView === "portfolio" ? (
@@ -2684,21 +3534,21 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                      mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                                    }
                                  }} 
-                                 className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-lg overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
+                                 className="relative flex-1 aspect-[2.2/1] sm:aspect-[3/1] md:aspect-[3.8/1] min-h-[120px] sm:min-h-[150px] rounded-lg overflow-hidden border portfolio-card-upscale cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
                                  style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                                >
                                  {prevCoverImg ? (
                                    <OptimizedMedia 
                                      src={prevCoverImg} 
                                      alt={prevPortfolio.title || ""} 
-                                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                     className="absolute inset-0 w-full h-full object-cover portfolio-media-upscale" 
                                      isCover={true}
                                    />
                                  ) : (
                                    <div className="absolute inset-0 w-full h-full bg-black/40" />
                                  )}
                                  <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent flex flex-row items-center gap-4 p-4 sm:p-6 md:p-8 lg:p-10 text-white">
-                                       <ChevronLeft className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 text-white/95 transition-transform duration-300 group-hover:-translate-x-2 shrink-0" />
+                                       <ChevronLeft className="w-6 h-6 sm:w-10 sm:h-10 md:w-14 md:h-14 lg:w-18 lg:h-18 text-white/95 transition-transform duration-300 group-hover:-translate-x-2 shrink-0" />
                                        <div className="flex flex-col justify-center min-w-0">
                                          <div className="text-base sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-black tracking-tight line-clamp-1">
                                            {prevPortfolio.title}
@@ -2728,14 +3578,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                      mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                                    }
                                  }} 
-                                 className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-lg overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
+                                 className="relative flex-1 aspect-[2.2/1] sm:aspect-[3/1] md:aspect-[3.8/1] min-h-[120px] sm:min-h-[150px] rounded-lg overflow-hidden border portfolio-card-upscale cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
                                  style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                                >
                                  {nextCoverImg ? (
                                    <OptimizedMedia 
                                      src={nextCoverImg} 
                                      alt={nextPortfolio.title || ""} 
-                                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                     className="absolute inset-0 w-full h-full object-cover portfolio-media-upscale" 
                                      isCover={true}
                                    />
                                  ) : (
@@ -2747,7 +3597,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                            {nextPortfolio.title}
                                          </div>
                                        </div>
-                                       <ChevronRight className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 text-white/95 transition-transform duration-300 group-hover:translate-x-2 shrink-0" />
+                                       <ChevronRight className="w-6 h-6 sm:w-10 sm:h-10 md:w-14 md:h-14 lg:w-18 lg:h-18 text-white/95 transition-transform duration-300 group-hover:translate-x-2 shrink-0" />
                                      </div>
                                </div>
                              );
@@ -2837,14 +3687,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                        mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                                      }
                                    }} 
-                                   className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-lg overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
+                                   className="relative flex-1 aspect-[2.2/1] sm:aspect-[3/1] md:aspect-[3.8/1] min-h-[120px] sm:min-h-[150px] rounded-lg overflow-hidden border portfolio-card-upscale cursor-pointer bg-zinc-950/20 group flex items-center justify-start"
                                    style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                                  >
                                    {prevCoverImg ? (
                                      <OptimizedMedia 
                                        src={prevCoverImg} 
                                        alt={prevPortfolio.title || ""} 
-                                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                       className="absolute inset-0 w-full h-full object-cover portfolio-media-upscale" 
                                        isCover={true}
                                      />
                                    ) : (
@@ -2881,14 +3731,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                        mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
                                      }
                                    }} 
-                                   className="relative flex-1 aspect-[2.5/1] sm:aspect-[3.5/1] md:aspect-[4.5/1] rounded-lg overflow-hidden border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
+                                   className="relative flex-1 aspect-[2.2/1] sm:aspect-[3/1] md:aspect-[3.8/1] min-h-[120px] sm:min-h-[150px] rounded-lg overflow-hidden border portfolio-card-upscale cursor-pointer bg-zinc-950/20 group flex items-center justify-end"
                                    style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                                  >
                                    {nextCoverImg ? (
                                      <OptimizedMedia 
                                        src={nextCoverImg} 
                                        alt={nextPortfolio.title || ""} 
-                                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                                       className="absolute inset-0 w-full h-full object-cover portfolio-media-upscale" 
                                        isCover={true}
                                      />
                                    ) : (
@@ -3054,12 +3904,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           <button
                             type="submit"
                             disabled={contactSubmitting}
-                            className={`w-full sm:w-auto font-black text-sm transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
-                              theme === 'glass' || theme === 'dark'
-                                ? 'px-8 py-4 rounded-xl text-white shadow-lg hover:scale-[1.03] active:scale-[0.98]'
-                                : 'px-10 py-3.5 rounded-full text-white hover:brightness-110 active:scale-95 shadow-sm uppercase tracking-wider'
-                            }`}
-                            style={{ backgroundColor: brandColor || "#FE540B" }}
+                            className="site-btn-pill w-full sm:w-auto px-10 py-3.5 text-sm sm:text-base uppercase tracking-wider"
                           >
                             {contactSubmitting ? (
                               <>
@@ -3092,94 +3937,165 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="w-full"
             >
-              {/* 3. Contacts & Links Stack (Harmonized, wider container blocks) */}
-          <div className={`grid gap-4.5 pt-2 ${asPreview && previewMode === 'smartphone' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
-            {/* Legacy contact fields - Portfolio, Catalog, and Website remain as buttons */}
-            <ContactCard icon={Box} title="Portfólio" value={bio.portfolio_url ? 'Acessar Portfólio' : ''} href={bio.portfolio_url} />
-            <ContactCard icon={FileText} title="Catálogo" value={bio.catalog_url ? 'Ver Catálogo' : ''} href={bio.catalog_url} />
-            <ContactCard icon={Globe} title="Website" value={bio.website ? 'Visitar Site' : ''} href={bio.website} />
+              {/* 3. Contacts & Links Stack (Harmonized, wider container blocks - rendered only if active links exist) */}
+              {Boolean(bio.portfolio_url || bio.catalog_url || bio.website || (customLinks && customLinks.length > 0 && customLinks.some((l: any) => l.url || l.value))) && (
+                <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid gap-3 sm:gap-4.5 grid-cols-1 sm:grid-cols-2">
+                  {/* Legacy contact fields - Portfolio, Catalog, and Website remain as buttons */}
+                  <ContactCard icon={Box} title="Portfólio" value={bio.portfolio_url ? 'Acessar Portfólio' : ''} href={bio.portfolio_url} />
+                  <ContactCard icon={FileText} title="Catálogo" value={bio.catalog_url ? 'Ver Catálogo' : ''} href={bio.catalog_url} />
+                  <ContactCard icon={Globe} title="Website" value={bio.website ? 'Visitar Site' : ''} href={bio.website} />
 
-            {/* Dynamic Custom Links */}
-            {customLinks.map((link: any) => {
-              const Icon = getPlatformIcon(link.platform);
-              return (
-                <ContactCard 
-                  key={link.id} 
-                  icon={Icon} 
-                  title={link.label || 'Link'} 
-                  value={link.value || undefined} 
-                  href={link.url} 
-                />
-              );
-            })}
-          </div>
+                  {/* Dynamic Custom Links */}
+                  {customLinks.map((link: any) => {
+                    const Icon = getPlatformIcon(link.platform);
+                    return (
+                      <ContactCard 
+                        key={link.id} 
+                        icon={Icon} 
+                        title={link.label || 'Link'} 
+                        value={link.value || undefined} 
+                        href={link.url} 
+                      />
+                    );
+                  })}
+                </div>
+              )}
 
-          {/* 3.5. "Sobre sua empresa" Section */}
-          {bio.show_about !== false && (
-            <div 
-              id="about-company-section" 
-              className="relative w-full my-6 animate-fade-in"
-            >
-              {/* Content Wrapper */}
-              <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-10 md:py-16 max-w-none w-full mx-auto space-y-6 md:space-y-8 h-full">
-                {/* Title */}
-                <h2 
-                  className={`tracking-tight select-none leading-tight ${
-                    theme === 'light' ? 'text-zinc-900' : 'text-white'
-                  } ${
-                    (bio.about_title_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_title_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
-                  } ${
-                    bio.about_title_bold !== false ? 'font-extrabold' : 'font-normal'
-                  } ${
-                    bio.about_title_italic ? 'italic' : 'not-italic'
-                  } ${
-                    getFontSizeClass(bio.about_title_size || "30 pt")
-                  } bio-desc-font-${bio.about_title_font || "funnel"}`}
+              {/* 3.5. "Sobre sua empresa" Section - Connects directly to the main banner with clean division line */}
+              {bio.show_about !== false && (
+                <div 
+                  id="about-company-section" 
+                  className="relative w-full py-12 sm:py-16 md:py-24 border-t border-b border-white/10 bg-black/25 scroll-mt-20 md:scroll-mt-36 animate-fade-in"
                 >
-                  {(bio.about_title || `Sobre a ${companyName || 'Sua Empresa'}`).toUpperCase()}
-                </h2>
+              {/* Content Wrapper */}
+              <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 md:px-12 flex flex-col items-center justify-center text-center space-y-6 md:space-y-8 h-full">
+                {/* Title */}
+                <EditableItem
+                  isEditMode={isLiveEditMode && !previewAsVisitor}
+                  label="Editar Título Sobre"
+                  onClick={() => {
+                    setQuickEditorState({
+                      isOpen: true,
+                      title: "Editar Título 'Sobre a Empresa'",
+                      subtitle: "Altere o título da seção de apresentação",
+                      elementType: "title",
+                      initialText: bio.about_title || `Sobre a ${companyName || 'Sua Empresa'}`,
+                      initialFormatting: {
+                        font: bio.about_title_font || "funnel",
+                        size: bio.about_title_size || "30 pt",
+                        align: bio.about_title_align || "center",
+                        bold: bio.about_title_bold !== false,
+                      },
+                      targetField: "about_title",
+                    });
+                  }}
+                  className="w-full inline-block p-1"
+                >
+                  <h2 
+                    className={`tracking-tight select-none leading-tight ${
+                      theme === 'light' ? 'text-zinc-900' : 'text-white'
+                    } ${
+                      (bio.about_title_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_title_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
+                    } ${
+                      bio.about_title_bold !== false ? 'font-extrabold' : 'font-normal'
+                    } ${
+                      bio.about_title_italic ? 'italic' : 'not-italic'
+                    } ${
+                      getFontSizeClass(bio.about_title_size || "30 pt")
+                    } bio-desc-font-${bio.about_title_font || "funnel"}`}
+                  >
+                    {(bio.about_title || `Sobre a ${companyName || 'Sua Empresa'}`).toUpperCase()}
+                  </h2>
+                </EditableItem>
 
                 {/* Main Description */}
                 {(bio.about_description || !bio.about_title) && (
-                  <p 
-                    className={`leading-relaxed max-w-none w-full mx-auto tracking-wide ${
-                      theme === 'light' ? 'text-zinc-600' : 'text-zinc-200/95'
-                    } ${
-                      (bio.about_desc_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_desc_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
-                    } ${
-                      bio.about_desc_bold ? 'font-bold' : 'font-normal'
-                    } ${
-                      bio.about_desc_italic ? 'italic' : 'not-italic'
-                    } ${
-                      getFontSizeClass(bio.about_desc_size || "16 pt")
-                    } bio-desc-font-${bio.about_desc_font || "ui"}`}
+                  <EditableItem
+                    isEditMode={isLiveEditMode && !previewAsVisitor}
+                    label="Editar Descrição Sobre"
+                    onClick={() => {
+                      setQuickEditorState({
+                        isOpen: true,
+                        title: "Editar Descrição 'Sobre a Empresa'",
+                        subtitle: "Altere o texto institucional da empresa",
+                        elementType: "description",
+                        initialText: bio.about_description || `Acreditamos que o design é mais do que aparência – é comunicação, engajamento e construção de confiança. Trabalhamos para criar marcas que deixem uma impressão duradoura e que transmitam seu propósito de forma clara e consistente.`,
+                        initialFormatting: {
+                          font: bio.about_desc_font || "ui",
+                          size: bio.about_desc_size || "16 pt",
+                          align: bio.about_desc_align || "center",
+                          bold: !!bio.about_desc_bold,
+                          italic: !!bio.about_desc_italic,
+                        },
+                        targetField: "about_description",
+                      });
+                    }}
+                    className="w-full inline-block p-1"
                   >
-                    {bio.about_description || `Acreditamos que o design é mais do que aparência – é comunicação, engajamento e construção de confiança. Trabalhamos para criar marcas que deixem uma impressão duradoura e que transmitam seu propósito de forma clara e consistente.`}
-                  </p>
+                    <p 
+                      className={`leading-relaxed max-w-none w-full mx-auto tracking-wide ${
+                        theme === 'light' ? 'text-zinc-600' : 'text-zinc-200/95'
+                      } ${
+                        (bio.about_desc_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_desc_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
+                      } ${
+                        bio.about_desc_bold ? 'font-bold' : 'font-normal'
+                      } ${
+                        bio.about_desc_italic ? 'italic' : 'not-italic'
+                      } ${
+                        getFontSizeClass(bio.about_desc_size || "16 pt")
+                      } bio-desc-font-${bio.about_desc_font || "ui"}`}
+                    >
+                      {bio.about_description || `Acreditamos que o design é mais do que aparência – é comunicação, engajamento e construção de confiança. Trabalhamos para criar marcas que deixem uma impressão duradoura e que transmitam seu propósito de forma clara e consistente.`}
+                    </p>
+                  </EditableItem>
                 )}
 
                 {/* Highlight text (Bold) */}
                 {(bio.about_highlight || !bio.about_title) && (
-                  <p 
-                    className={`tracking-wide max-w-none w-full mx-auto ${
-                      theme === 'light' ? 'text-zinc-800' : 'text-white'
-                    } ${
-                      (bio.about_highlight_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_highlight_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
-                    } ${
-                      bio.about_highlight_bold !== false ? 'font-extrabold' : 'font-normal'
-                    } ${
-                      bio.about_highlight_italic ? 'italic' : 'not-italic'
-                    } ${
-                      getFontSizeClass(bio.about_highlight_size || "16 pt")
-                    } bio-desc-font-${bio.about_highlight_font || "ui"}`}
+                  <EditableItem
+                    isEditMode={isLiveEditMode && !previewAsVisitor}
+                    label="Editar Destaque Sobre"
+                    onClick={() => {
+                      setQuickEditorState({
+                        isOpen: true,
+                        title: "Editar Chamada de Destaque",
+                        subtitle: "Altere a frase de impacto e convite para ação",
+                        elementType: "description",
+                        initialText: bio.about_highlight || `Comece sua jornada com a ${companyName || 'Sua Empresa'}. Vamos criar algo inesquecível.`,
+                        initialFormatting: {
+                          font: bio.about_highlight_font || "ui",
+                          size: bio.about_highlight_size || "16 pt",
+                          align: bio.about_highlight_align || "center",
+                          bold: bio.about_highlight_bold !== false,
+                          italic: !!bio.about_highlight_italic,
+                        },
+                        targetField: "about_highlight",
+                      });
+                    }}
+                    className="w-full inline-block p-1"
                   >
-                    {bio.about_highlight || `Comece sua jornada com a ${companyName || 'Sua Empresa'}. Vamos criar algo inesquecível.`}
-                  </p>
+                    <p 
+                      className={`tracking-wide max-w-none w-full mx-auto ${
+                        theme === 'light' ? 'text-zinc-800' : 'text-white'
+                      } ${
+                        (bio.about_highlight_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_highlight_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
+                      } ${
+                        bio.about_highlight_bold !== false ? 'font-extrabold' : 'font-normal'
+                      } ${
+                        bio.about_highlight_italic ? 'italic' : 'not-italic'
+                      } ${
+                        getFontSizeClass(bio.about_highlight_size || "16 pt")
+                      } bio-desc-font-${bio.about_highlight_font || "ui"}`}
+                    >
+                      {bio.about_highlight || `Comece sua jornada com a ${companyName || 'Sua Empresa'}. Vamos criar algo inesquecível.`}
+                    </p>
+                  </EditableItem>
                 )}
 
                 {/* Orange rounded-full button identical to the print */}
                 <div className="pt-2">
-                  <a
+                  <SitePillButton
+                    label={bio.about_btn_text || 'Fale Conosco'}
                     href={(() => {
                       if (bio.about_btn_link) {
                         return bio.about_btn_link;
@@ -3191,51 +4107,119 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     })()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-10 py-4 rounded-full text-base sm:text-lg font-bold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30"
-                    style={{
-                      backgroundColor: brandColor || '#FE540B'
-                    }}
-                  >
-                    {bio.about_btn_text || 'Fale Conosco'}
-                  </a>
+                  />
                 </div>
               </div>
             </div>
           )}
 
           {/* 4. Products Catalog Section */}
-          {bio.catalog_items && bio.catalog_items.length > 0 && (
-            <div id="catalog-section" className="pt-4 space-y-4 relative w-full">
+          {((bio.catalog_items && bio.catalog_items.length > 0) || isLiveEditMode) && (
+            <div 
+              id="catalog-section" 
+              className="relative w-full py-12 sm:py-16 md:py-24 border-b border-white/5 scroll-mt-20 md:scroll-mt-36"
+            >
+              <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 space-y-6 sm:space-y-8">
               <div className="flex items-center justify-between px-2">
-                {bio.catalog_title && <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${t.textTitle}`}>{bio.catalog_title}</h2>}
+                <EditableItem
+                  isEditMode={isLiveEditMode && !previewAsVisitor}
+                  label="Editar Título dos Produtos"
+                  onClick={() => {
+                    setQuickEditorState({
+                      isOpen: true,
+                      title: "Editar Título dos Produtos",
+                      subtitle: "Altere o título da seção de catálogo",
+                      elementType: "section_title",
+                      initialText: bio.catalog_title || "Nossos Produtos",
+                      initialFormatting: {
+                        color: brandColor,
+                      },
+                      targetField: "catalog_title",
+                    });
+                  }}
+                  className="p-1 -ml-1 inline-block"
+                >
+                  <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${t.textTitle}`}>{bio.catalog_title || "Nossos Produtos"}</h2>
+                </EditableItem>
+                {isLiveEditMode && !previewAsVisitor && (
+                  <button
+                    type="button"
+                    onClick={() => setProductModalState({ isOpen: true, product: null })}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FE540B] text-white text-xs font-black shadow-md hover:scale-105 transition-all cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar Produto</span>
+                  </button>
+                )}
               </div>
               
-              <div className="relative w-full overflow-hidden px-1 sm:px-12 py-4">
-                <div className="overflow-hidden w-full">
+              <div 
+                className="relative w-full overflow-hidden px-1 sm:px-12 py-4"
+                onTouchStart={handleCatalogTouchStart}
+                onTouchEnd={handleCatalogTouchEnd}
+              >
+                <div className="overflow-hidden w-full py-2 -my-2">
                   <div 
                     className="flex transition-transform duration-500 ease-in-out will-change-transform"
                     style={{
                       transform: `translate3d(-${catalogIndex * (isMobileView ? 100 : 100 / 3)}%, 0px, 0px)`
                     }}
                   >
-                    {bio.catalog_items.map((item: any) => {
+                    {(bio.catalog_items || []).map((item: any) => {
                       return (
                         <div 
                           key={item.id} 
                           className={`${isMobileView ? 'w-full' : 'w-1/3'} flex-shrink-0 p-2.5 sm:p-3 flex flex-col`}
                         >
-                          <div 
-                            onClick={() => {
-                              setSelectedProduct(item);
-                              setActiveImageIndex(0);
-                            }}
-                            className={`overflow-hidden rounded-[2rem] border transition-[transform,box-shadow,border-color] duration-300 flex flex-col h-full cursor-pointer hover:shadow-lg group ${t.cardBg} ${t.cardBorder} catalog-card-item flex-1`}
+                          <EditableItem
+                            isEditMode={isLiveEditMode && !previewAsVisitor}
+                            label={`Editar: ${item.name || "Produto"}`}
+                            onClick={() => setProductModalState({ isOpen: true, product: item })}
+                            className="h-full flex flex-col flex-1"
                           >
+                            <div 
+                              onClick={() => {
+                                if (isLiveEditMode && !previewAsVisitor) {
+                                  setProductModalState({ isOpen: true, product: item });
+                                  return;
+                                }
+                                setSelectedProduct(item);
+                                setActiveImageIndex(0);
+                              }}
+                              className={`overflow-hidden rounded-[2rem] border catalog-card-upscale flex flex-col h-full cursor-pointer group ${t.cardBg} ${t.cardBorder} catalog-card-item flex-1 relative`}
+                            >
+                              {/* Live Edit overlay buttons on each product card */}
+                              {isLiveEditMode && !previewAsVisitor && (
+                                <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setProductModalState({ isOpen: true, product: item });
+                                    }}
+                                    className="p-1.5 rounded-full bg-black/85 hover:bg-black text-white hover:text-[#FE540B] shadow-md cursor-pointer transition-colors"
+                                    title="Editar Produto"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteProduct(item.id);
+                                    }}
+                                    className="p-1.5 rounded-full bg-black/85 hover:bg-black text-white hover:text-red-400 shadow-md cursor-pointer transition-colors"
+                                    title="Excluir Produto"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
                             {item.image_url ? (() => {
                               const isItemPng = item.image_url.toLowerCase().includes('.png') || item.image_url.toLowerCase().includes('image/png') || item.image_url.toLowerCase().includes('format=png');
                               return (
-                                <div className="w-full aspect-square overflow-hidden relative flex items-center justify-center p-1.5 rounded-[1.5rem] border" style={{ backgroundColor: isItemPng ? '#ffffff' : theme === 'dark' ? `${brandColor}08` : '#ffffff', borderColor: theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.05)' }}>
-                                  <OptimizedMedia src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" width={400} isCover={true} />
+                                <div className="w-full aspect-square overflow-hidden relative flex items-center justify-center rounded-[1.5rem] border" style={{ backgroundColor: isItemPng ? '#ffffff' : theme === 'dark' ? `${brandColor}08` : '#ffffff', borderColor: theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.05)' }}>
+                                  <OptimizedMedia src={item.image_url} alt={item.name} className={`w-full h-full ${isItemPng ? 'object-contain p-3.5' : 'object-cover'} catalog-media-upscale`} width={500} isCover={!isItemPng} />
                                 </div>
                               );
                             })() : (
@@ -3252,8 +4236,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
+                        </EditableItem>
+                      </div>
+                    );
                     })}
                   </div>
                 </div>
@@ -3266,7 +4251,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         e.stopPropagation();
                         setCatalogIndex((prev) => (prev <= 0 ? maxCatalogIndex : prev - 1));
                       }}
-                      className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 text-white shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md"
+                      className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center bg-zinc-950/90 hover:bg-black border border-white/20 hover:border-[#FE540B]/80 text-white shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md"
+                      aria-label="Produto anterior"
                     >
                       <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: brandColor || '#FE540B' }} />
                     </button>
@@ -3277,12 +4263,36 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         e.stopPropagation();
                         setCatalogIndex((prev) => (prev >= maxCatalogIndex ? 0 : prev + 1));
                       }}
-                      className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 text-white shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md"
+                      className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center bg-zinc-950/90 hover:bg-black border border-white/20 hover:border-[#FE540B]/80 text-white shadow-xl transition-all hover:scale-110 active:scale-95 cursor-pointer backdrop-blur-md"
+                      aria-label="Próximo produto"
                     >
                       <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: brandColor || '#FE540B' }} />
                     </button>
                   </>
                 )}
+
+                {/* Carousel Pagination Indicators (Desktop & Mobile) */}
+                {maxCatalogIndex > 0 && (
+                  <div className="flex justify-center items-center gap-2 pt-4 pb-2">
+                    {Array.from({ length: maxCatalogIndex + 1 }).map((_, dotIdx) => (
+                      <button
+                        key={dotIdx}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCatalogIndex(dotIdx);
+                        }}
+                        className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                          catalogIndex === dotIdx 
+                            ? "w-8 bg-[#FE540B] shadow-[0_0_12px_rgba(254,84,11,0.6)]" 
+                            : "w-2.5 bg-white/25 hover:bg-white/50"
+                        }`}
+                        aria-label={`Ver slide de produtos ${dotIdx + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
               </div>
             </div>
           )}
@@ -3291,14 +4301,47 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
           
           {/* Portfólio Section */}
-          {bio.portfolio_items && bio.portfolio_items.length > 0 && (
-            <div id="portfolio-section" className="pt-4 space-y-4 relative">
+          {((bio.portfolio_items && bio.portfolio_items.length > 0) || isLiveEditMode) && (
+            <div 
+              id="portfolio-section" 
+              className="relative w-full py-12 sm:py-16 md:py-24 border-b border-white/5 scroll-mt-20 md:scroll-mt-36"
+            >
+              <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 space-y-6 sm:space-y-8">
               <div className="flex items-center justify-between px-2">
-                {bio.portfolio_title && <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${t.textTitle}`}>{bio.portfolio_title}</h2>}
+                <EditableItem
+                  isEditMode={isLiveEditMode && !previewAsVisitor}
+                  label="Editar Título do Portfólio"
+                  onClick={() => {
+                    setQuickEditorState({
+                      isOpen: true,
+                      title: "Editar Título do Portfólio",
+                      subtitle: "Altere o título da seção de portfólio de projetos",
+                      elementType: "section_title",
+                      initialText: bio.portfolio_title || "Nosso Portfólio",
+                      initialFormatting: {
+                        color: brandColor,
+                      },
+                      targetField: "portfolio_title",
+                    });
+                  }}
+                  className="p-1 -ml-1 inline-block"
+                >
+                  <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${t.textTitle}`}>{bio.portfolio_title || "Nosso Portfólio"}</h2>
+                </EditableItem>
+                {isLiveEditMode && !previewAsVisitor && (
+                  <button
+                    type="button"
+                    onClick={() => setPortfolioModalState({ isOpen: true, project: null })}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FE540B] text-white text-xs font-black shadow-md hover:scale-105 transition-all cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Adicionar Projeto</span>
+                  </button>
+                )}
               </div>
               
-              <div className={`grid gap-6 ${asPreview && previewMode === 'smartphone' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-                {bio.portfolio_items.map((item: any) => {
+              <div className={`grid gap-5 sm:gap-6 ${isMobileView ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                {(bio.portfolio_items || []).map((item: any) => {
                    const isNewFormat = !!item.layers;
                    const hasDesktopLayers = !!item.layers && item.layers.length > 0;
                    const hasMobileLayers = !!item.mobile_layers && item.mobile_layers.length > 0;
@@ -3307,26 +4350,58 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                      : (hasDesktopLayers ? item.layers[0].image_url : (hasMobileLayers ? item.mobile_layers[0].image_url : item.image_url));
                    
                    return (
-                     <div 
+                     <EditableItem
                        key={item.id}
-                       onClick={() => {
-                         setActivePortfolioId(item.id);
-                         setActiveView("portfolio");
-                         window.scrollTo({ top: 0, behavior: 'smooth' });
-                         document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
-                         document.body.scrollTo({ top: 0, behavior: 'smooth' });
-                         if (mainScrollRef.current) {
-                           mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                         }
-                       }}
-                       className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden border shadow-lg hover:shadow-lg transition-all duration-300 cursor-pointer bg-zinc-950/20 group flex items-center justify-center"
+                       isEditMode={isLiveEditMode && !previewAsVisitor}
+                       label={`Editar: ${item.title || "Projeto"}`}
+                       onClick={() => setPortfolioModalState({ isOpen: true, project: item })}
+                       className="relative aspect-square w-full rounded-[1.5rem]"
+                     >
+                       <div 
+                         onClick={() => {
+                           if (isLiveEditMode && !previewAsVisitor) {
+                             setPortfolioModalState({ isOpen: true, project: item });
+                             return;
+                           }
+                           setActivePortfolioId(item.id);
+                           setActiveView("portfolio");
+                           smoothScrollToTarget(0);
+                         }}
+                         className="relative aspect-square w-full rounded-[1.5rem] overflow-hidden border portfolio-card-upscale cursor-pointer bg-zinc-950/20 group flex items-center justify-center"
                        style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                      >
+                       {/* Live Edit controls for portfolio project card */}
+                       {isLiveEditMode && !previewAsVisitor && (
+                         <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
+                           <button
+                             type="button"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               setPortfolioModalState({ isOpen: true, project: item });
+                             }}
+                             className="p-1.5 rounded-full bg-black/85 hover:bg-black text-white hover:text-[#FE540B] shadow-md cursor-pointer transition-colors"
+                             title="Editar Projeto"
+                           >
+                             <Edit3 className="w-3.5 h-3.5" />
+                           </button>
+                           <button
+                             type="button"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleDeletePortfolioProject(item.id);
+                             }}
+                             className="p-1.5 rounded-full bg-black/85 hover:bg-black text-white hover:text-red-400 shadow-md cursor-pointer transition-colors"
+                             title="Excluir Projeto"
+                           >
+                             <Trash2 className="w-3.5 h-3.5" />
+                           </button>
+                         </div>
+                       )}
                        {coverImg ? (
                          <OptimizedMedia 
                            src={coverImg} 
                            alt={item.title || "Portfolio item"} 
-                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                           className="w-full h-full object-cover portfolio-media-upscale" 
                            isCover={true}
                          />
                        ) : (
@@ -3361,9 +4436,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                        </div>
                        
 
-                     </div>
+                       </div>
+                     </EditableItem>
                    );
                 })}
+              </div>
               </div>
             </div>
           )}
@@ -3400,38 +4477,76 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           )}
 
           {/* 6. Admin Area / Login Footer Trigger */}
-          <div className="pt-8 pb-8 text-center space-y-6">
-            <div className="text-sm sm:text-base font-bold tracking-wider opacity-90">
-              <span className={theme === 'dark' || theme === 'glass' ? "text-white font-extrabold" : "text-zinc-900 font-extrabold"}>
-                {companyName ? companyName.toUpperCase() : "GM EDIFICAÇÃO"}®
-              </span>{' '}
-              <span style={{ color: brandColor || "#FE540B" }} className="font-extrabold">2026</span>
-            </div>
-            <div>
-              <button 
-                onClick={() => {
-                  if (user) {
-                    navigate("/");
-                  } else {
-                    setIsLoginOpen(true);
-                  }
-                }}
-                className="inline-flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer"
+          <div className="w-full mt-auto py-12 sm:py-16 bg-black/80 backdrop-blur-md border-t border-white/10 text-center space-y-6 px-4 sm:px-6 mb-0">
+            <div className="max-w-5xl mx-auto px-6 space-y-6">
+              <EditableItem
+                isEditMode={isLiveEditMode && !previewAsVisitor}
+                label="Editar Nome & Rodapé"
+                onClick={() => setIsLogoModalOpen(true)}
+                className="inline-block p-1"
               >
-                <Lock className="w-5 h-5 text-white/50" />
-                <span 
-                  className="text-base font-black bg-clip-text text-transparent drop-shadow-sm font-funnel"
-                  style={{
-                    backgroundImage: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
-                    backgroundSize: '300% 300%',
-                    animation: 'color-loop 5s ease infinite',
-                  }}
-                >
-                  Área Restrita / Login do Administrador
-                </span>
-              </button>
+                <div className="text-sm sm:text-base font-bold tracking-wider opacity-90">
+                  <span className={theme === 'dark' || theme === 'glass' ? "text-white font-extrabold" : "text-zinc-900 font-extrabold"}>
+                    {companyName ? companyName.toUpperCase() : "GM EDIFICAÇÃO"}®
+                  </span>{' '}
+                  <span style={{ color: brandColor || "#FE540B" }} className="font-extrabold">2026</span>
+                </div>
+              </EditableItem>
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-2.5">
+                  {/* Botão Acesso ao Painel Admin */}
+                  <button 
+                    type="button"
+                    onClick={() => setIsAdminHubOpen(true)}
+                    className="inline-flex items-center gap-2 hover:scale-105 transition-all cursor-pointer px-5 py-2.5 rounded-full border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs sm:text-sm font-black shadow-lg"
+                    title="Acessar Pedidos, Aprovação de Pix, Clientes e Loja"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                    <span>Painel do Administrador (Pedidos & Loja)</span>
+                  </button>
+
+                  {/* Botão Modo Editor Visual */}
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (user) {
+                        setIsLiveEditMode(!isLiveEditMode);
+                        pushToast({
+                          title: !isLiveEditMode ? "Modo Edição em Tempo Real" : "Modo Visitante",
+                          message: !isLiveEditMode ? "Você pode agora editar textos, banners, fotos e produtos diretamente no site!" : "Modo de edição desativado.",
+                          type: !isLiveEditMode ? "success" : "info"
+                        });
+                      } else {
+                        setIsLoginOpen(true);
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer px-4 py-2.5 rounded-full border border-white/10 bg-black/30 backdrop-blur-sm shadow-md text-xs sm:text-sm font-black"
+                  >
+                    <Lock className="w-4 h-4 text-[#FE540B]" />
+                    <span 
+                      className="bg-clip-text text-transparent drop-shadow-sm font-funnel"
+                      style={{
+                        backgroundImage: `linear-gradient(90deg, ${brandColor || '#FE540B'}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor || '#FE540B'})`,
+                        backgroundSize: '300% 300%',
+                        animation: 'color-loop 5s ease infinite',
+                      }}
+                    >
+                      {user ? (isLiveEditMode ? "Sair do Modo Editor" : "Modo Editor Visual") : "Login do Editor"}
+                    </span>
+                  </button>
+                </div>
+
+                {user && (
+                  <button
+                    onClick={() => navigate("/")}
+                    className="text-xs text-zinc-400 hover:text-white underline cursor-pointer transition-colors mt-1"
+                  >
+                    Ir para Dashboard Geral do Sistema
+                  </button>
+                )}
+              </div>
             </div>
-        </div>
+          </div>
           </div>
 
         </div>
@@ -3682,11 +4797,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
               {/* Scrollable Container (Grid with Left/Right split on Desktop) */}
               <div className="overflow-y-auto md:overflow-visible flex-1 no-scrollbar p-5 md:p-8">
-                <div className={`grid items-stretch ${asPreview && previewMode === 'smartphone' ? 'grid-cols-1 gap-6' : 'grid-cols-1 md:grid-cols-12 gap-6 md:gap-10'}`}>
+                <div className={`grid items-stretch ${isMobileView ? 'grid-cols-1 gap-6' : 'grid-cols-1 md:grid-cols-12 gap-6 md:gap-10'}`}>
                   
                   {/* LEFT COLUMN: Image Gallery (Span 5) */}
                   <div 
-                    className={`${asPreview && previewMode === 'smartphone' ? '' : 'md:col-span-5 md:pr-8 md:border-r'} flex flex-col justify-start space-y-4 items-center`}
+                    className={`${isMobileView ? '' : 'md:col-span-5 md:pr-8 md:border-r'} flex flex-col justify-start space-y-4 items-center`}
                     style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.1)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                   >
                     <div className="w-full max-w-[280px] sm:max-w-[360px] md:max-w-[380px] lg:max-w-[420px] xl:max-w-[450px] mx-auto flex flex-col space-y-5">
@@ -3799,7 +4914,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   </div>
 
                   {/* RIGHT COLUMN: Info & Actions (Span 7) */}
-                  <div className={`${asPreview && previewMode === 'smartphone' ? '' : 'md:col-span-7 md:pl-6'} flex flex-col justify-between h-full space-y-6`}>
+                  <div className={`${isMobileView ? '' : 'md:col-span-7 md:pl-6'} flex flex-col justify-between h-full space-y-6`}>
                     
                     {/* Product Meta details */}
                     <div className="space-y-4 text-left">
@@ -3926,7 +5041,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             )}
                           </div>
 
-                          {/* Right column: Comprar Já & Voltar ao Catálogo */}
+                          {/* Right column: Comprar Já */}
                           <div className="flex flex-col gap-2.5">
                             <button 
                               onClick={() => {
@@ -3939,27 +5054,6 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             >
                               <ShoppingCart className="w-4 h-4 mr-1.5 shrink-0" />
                               Comprar Já
-                            </button>
-
-                            <button 
-                              onClick={() => {
-                                setSelectedProduct(null);
-                                setTimeout(() => {
-                                  const el = document.getElementById("catalog-section");
-                                  if (el) {
-                                    el.scrollIntoView({ behavior: "smooth" });
-                                  }
-                                }, 100);
-                              }}
-                              className={`w-full py-3.5 text-xs font-bold rounded-lg border transition-colors cursor-pointer ${
-                                theme === 'glass'
-                                  ? 'bg-transparent text-zinc-300 hover:text-white border-white/10 hover:bg-white/5'
-                                  : theme === 'dark' 
-                                    ? 'bg-transparent text-zinc-400 hover:text-white border-zinc-800 hover:bg-zinc-900' 
-                                    : 'bg-transparent text-slate-500 hover:text-slate-800 border-slate-200 hover:bg-slate-50'
-                              }`}
-                            >
-                              Voltar ao Catálogo
                             </button>
                           </div>
                         </div>
@@ -4336,6 +5430,41 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         <h4 className="text-sm font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 pb-1.5 border-b border-slate-200 dark:border-white/10">
                           Identificação e Entrega
                         </h4>
+
+                        {/* Status da Conta do Cliente no Checkout */}
+                        {currentCustomer ? (
+                          <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-2.5 text-xs text-emerald-400">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                              <span className="truncate">
+                                Conectado como <strong>{currentCustomer.full_name}</strong>
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setIsCustomerDashboardOpen(true)}
+                              className="text-[11px] font-bold text-white underline hover:opacity-80 shrink-0 cursor-pointer"
+                            >
+                              Meus Pedidos
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="p-3.5 rounded-xl bg-orange-500/10 border border-orange-500/25 flex items-center justify-between gap-2 text-xs text-orange-300">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <User className="w-4 h-4 shrink-0 text-orange-400" />
+                              <span className="text-[11px] sm:text-xs">
+                                Já é cliente? <strong>Faça Login</strong> para preencher rápido.
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setIsCustomerAuthModalOpen(true)}
+                              className="px-2.5 py-1 rounded-lg bg-orange-500 text-white font-bold text-[11px] shrink-0 hover:bg-orange-600 transition-colors cursor-pointer"
+                            >
+                              Entrar
+                            </button>
+                          </div>
+                        )}
                         
                         <div className="space-y-1.5">
                           <label className="text-sm font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
@@ -4621,18 +5750,30 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       <ChevronRight className="w-5 h-5 ml-1.5" />
                     </button>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       <button 
-                        onClick={handleCheckoutWhatsApp}
-                        className="w-full flex items-center justify-center p-4 rounded-lg text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer bg-green-600 hover:bg-green-700"
+                        type="button"
+                        onClick={handleCheckoutDirectPayment}
+                        className="w-full flex items-center justify-center p-4 rounded-xl text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                        style={{ backgroundColor: brandColor }}
                       >
-                        <MessageCircle className="w-5 h-5 mr-2" />
+                        <CreditCard className="w-5 h-5 mr-2" />
+                        Finalizar & Pagar com Segurança
+                      </button>
+
+                      <button 
+                        type="button"
+                        onClick={handleCheckoutWhatsApp}
+                        className="w-full flex items-center justify-center p-3 rounded-xl text-white font-black text-xs sm:text-sm transition-all shadow hover:brightness-110 active:scale-[0.98] cursor-pointer bg-green-600 hover:bg-green-700"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
                         Finalizar e Enviar via WhatsApp
                       </button>
                       
                       <button 
+                        type="button"
                         onClick={() => setCheckoutStep("cart")}
-                        className="w-full py-2 text-xs font-bold opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+                        className="w-full py-1.5 text-xs font-bold opacity-60 hover:opacity-100 transition-opacity cursor-pointer text-center"
                       >
                         Voltar para o Carrinho
                       </button>
@@ -4908,6 +6049,179 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           </div>
         </div>
       )}
+
+      {/* Real-time Live Admin Modals */}
+      <HeroEditModal
+        isOpen={isHeroModalOpen}
+        onClose={() => setIsHeroModalOpen(false)}
+        data={bio}
+        tenantId={currentData?.tenant_id || userTenantId || "global"}
+        onUpdate={handleUpdateHero}
+      />
+
+      <LogoModal
+        isOpen={isLogoModalOpen}
+        onClose={() => setIsLogoModalOpen(false)}
+        companyName={companyName || ""}
+        logoUrl={websiteLogo || ""}
+        tenantId={currentData?.tenant_id || userTenantId || "global"}
+        onUpdate={handleUpdateLogoAndName}
+      />
+
+      <ThemeColorsModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+        brandColor={brandColor}
+        theme={theme}
+        buttonStyle={buttonStyle}
+        onUpdate={handleUpdateThemeColors}
+      />
+
+      <ContactsModal
+        isOpen={isContactsModalOpen}
+        onClose={() => setIsContactsModalOpen(false)}
+        data={bio}
+        onUpdate={handleUpdateContacts}
+      />
+
+      <ProductModal
+        isOpen={productModalState.isOpen}
+        onClose={() => setProductModalState({ isOpen: false, product: null })}
+        productToEdit={productModalState.product}
+        catalogItems={bio.catalog_items || []}
+        tenantId={currentData?.tenant_id || userTenantId || "global"}
+        onSaveProduct={handleSaveProductList}
+      />
+
+      <PortfolioModal
+        isOpen={portfolioModalState.isOpen}
+        onClose={() => setPortfolioModalState({ isOpen: false, project: null })}
+        projectToEdit={portfolioModalState.project}
+        portfolioItems={bio.portfolio_items || []}
+        tenantId={currentData?.tenant_id || userTenantId || "global"}
+        onSavePortfolio={handleSavePortfolioList}
+      />
+
+      <PixEditModal
+        isOpen={isPixModalOpen}
+        onClose={() => setIsPixModalOpen(false)}
+        data={bio}
+        onUpdate={(updates) => {
+          handleUpdateBioConfig(updates);
+        }}
+      />
+
+      {/* Real-time Inline Element/Text Editor */}
+      <QuickTextEditorModal
+        isOpen={quickEditorState.isOpen}
+        onClose={() => setQuickEditorState((prev) => ({ ...prev, isOpen: false }))}
+        title={quickEditorState.title}
+        subtitle={quickEditorState.subtitle}
+        elementType={quickEditorState.elementType}
+        initialText={quickEditorState.initialText}
+        initialFormatting={quickEditorState.initialFormatting}
+        onSave={handleQuickEditorSave}
+        brandColor={brandColor || "#FE540B"}
+      />
+
+      {/* Customer Auth Modal (Login & Cadastro) */}
+      <CustomerAuthModal
+        isOpen={isCustomerAuthModalOpen}
+        onClose={() => setIsCustomerAuthModalOpen(false)}
+        onSuccess={(cust) => {
+          setCurrentCustomer(cust);
+          setIsCustomerAuthModalOpen(false);
+          pushToast({ type: "success", title: "Olá!", message: `Bem-vindo(a), ${cust.full_name.split(' ')[0]}!` });
+        }}
+        brandColor={brandColor || "#FE540B"}
+        tenantId={currentData?.tenant_id || userTenantId || "global"}
+      />
+
+      {/* Customer Dashboard Modal (Meus Pedidos & Perfil) */}
+      {currentCustomer && (
+        <CustomerDashboardModal
+          isOpen={isCustomerDashboardOpen}
+          onClose={() => setIsCustomerDashboardOpen(false)}
+          customer={currentCustomer}
+          onCustomerUpdated={(updated) => {
+            setCurrentCustomer(updated);
+          }}
+          onLogout={() => {
+            setCurrentCustomer(null);
+            pushToast({ type: "info", title: "Até logo", message: "Você saiu da sua conta de cliente." });
+          }}
+          brandColor={brandColor || "#FE540B"}
+          pixKey={pixKey}
+          pixType={pixType}
+          cardUrl={cardUrl}
+          companyWhatsapp={bio.whatsapp || bio.phone || ""}
+          companyName={companyName || "GM Edificação"}
+          onOpenAdminOrders={() => setIsAdminHubOpen(true)}
+          isAdmin={true}
+        />
+      )}
+
+      {/* Modal de Pagamento Seguro Direto (Criado no Checkout do Carrinho) */}
+      <OrderPaymentModal
+        isOpen={!!activePaymentOrder}
+        onClose={() => setActivePaymentOrder(null)}
+        order={activePaymentOrder}
+        pixKey={pixKey}
+        pixType={pixType}
+        cardUrl={cardUrl}
+        brandColor={brandColor || "#FE540B"}
+        companyName={companyName || "GM Edificação"}
+        companyWhatsapp={bio.whatsapp || bio.phone || ""}
+        onPaymentUpdated={() => {
+          // Quando atualizado, fecha o modal ou recarrega dados
+        }}
+      />
+
+      {/* Modal de Gestão de Pedidos para o Administrador / Lojista */}
+      <AdminOrdersModal
+        isOpen={isAdminOrdersModalOpen}
+        onClose={() => setIsAdminOrdersModalOpen(false)}
+        tenantId={currentData?.tenant_id || userTenantId || "global"}
+        brandColor={brandColor || "#FE540B"}
+        companyName={companyName || "GM Edificação"}
+        companyWhatsapp={bio.whatsapp || bio.phone || ""}
+      />
+
+      {/* Modal Principal do Administrador (Pedidos em Andamento, Aprovação de Comprovante Pix, Clientes e Gestão da Loja) */}
+      <AdminHubModal
+        isOpen={isAdminHubOpen}
+        onClose={() => setIsAdminHubOpen(false)}
+        tenantId={currentData?.tenant_id || userTenantId || "global"}
+        brandColor={brandColor || "#FE540B"}
+        companyName={companyName || "GM Edificação"}
+        companyWhatsapp={bio.whatsapp || bio.phone || ""}
+        companyEmail={bio.email || "gmedificacao@gmail.com"}
+        pixKey={pixKey}
+        pixType={pixType}
+        isLiveEditMode={isLiveEditMode}
+        onOpenLiveEdit={() => {
+          setIsAdminHubOpen(false);
+          setIsLiveEditMode(true);
+          setPreviewAsVisitor(false);
+        }}
+        onOpenThemeModal={() => {
+          setIsAdminHubOpen(false);
+          setIsThemeModalOpen(true);
+        }}
+        onUpdatePixConfig={(newKey, newType) => {
+          setCurrentData((prev: any) => ({
+            ...prev,
+            pix_key: newKey,
+            pix_type: newType,
+            bio_config: {
+              ...(prev?.bio_config || {}),
+              pix_key: newKey,
+              pix_type: newType,
+            }
+          }));
+          setHasUnsavedChanges(true);
+        }}
+      />
       </div>
     </div>
   );

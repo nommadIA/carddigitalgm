@@ -77,6 +77,38 @@ html:not([data-theme="light"]):not(.gm-light) .fora {
 }
 
 /* =========================================================
+   Smooth Upscale for Portfólios and Catálogos
+   Somente nas miniaturas (imagens), containers 100% fixos
+   Iniciando lento e terminando um pouco rápido
+   Curva: cubic-bezier(0.4, 0, 0.75, 0.2)
+========================================================= */
+.portfolio-card-upscale,
+.catalog-card-upscale {
+  position: relative;
+  transform: none !important;
+}
+
+.portfolio-card-upscale:hover,
+.catalog-card-upscale:hover {
+  transform: none !important;
+}
+
+.portfolio-media-upscale,
+.catalog-media-upscale {
+  will-change: transform;
+  transform: scale(1) translateZ(0);
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.group:hover .portfolio-media-upscale,
+.group:hover .catalog-media-upscale,
+.portfolio-card-upscale:hover .portfolio-media-upscale,
+.catalog-card-upscale:hover .catalog-media-upscale {
+  transform: scale(1.10) translateZ(0);
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.75, 0.2);
+}
+
+/* =========================================================
    CardDigital GM — UI System FINAL (Clean & Flat)
 ========================================================= */
 
@@ -7837,6 +7869,8 @@ button.mobile-nav-link {
   outline: none !important;
   transform: none !important;
   border-radius: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .topbar-nav-link:hover,
@@ -8295,6 +8329,63 @@ div[class*="fixed inset-0"] > div[class*="rounded-"] {
   100% {
     offset-distance: 100%;
   }
+}
+
+/* =========================================================
+   PADRÃO DE DESIGN DE BOTÕES DO SITE (Estilo "Fale Conosco")
+   Normal: Fundo Laranja (#FE540B), Texto Branco, Formato Pílula (rounded-full)
+   Versão Branca (Hover / Clique): Fundo Branco (#FFFFFF), Texto Laranja (#FE540B), SEM CONTORNO OU BORDA
+   ========================================================= */
+.site-btn-pill {
+  background-color: #FE540B !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 9999px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.2) !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.site-btn-pill,
+.site-btn-pill span,
+.site-btn-pill svg {
+  color: #FFFFFF !important;
+  transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Versão Branca ao passar o mouse ou clicar: SEM BORDA OU CONTORNO */
+.site-btn-pill:hover,
+.site-btn-pill:active {
+  background-color: #FFFFFF !important;
+  color: #FE540B !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.25) !important;
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+.site-btn-pill:focus {
+  outline: none !important;
+  border: none !important;
+}
+
+.site-btn-pill:hover span,
+.site-btn-pill:hover svg,
+.site-btn-pill:active span,
+.site-btn-pill:active svg {
+  color: #FE540B !important;
+}
+
+.site-btn-pill:active {
+  transform: translateY(0) scale(0.97) !important;
 }
 
 

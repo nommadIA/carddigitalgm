@@ -670,7 +670,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-xl font-bold text-[color:var(--gm-text)] tracking-tight">
-                  Palette
+                  Paleta de Cores
                 </h2>
                 <p className="text-xs text-[color:var(--gm-text-tertiary)] font-medium">
                   Paleta de cores oficial do sistema
@@ -681,7 +681,7 @@ export default function Dashboard() {
               </span>
             </div>
 
-            {/* GRID DE CARDS DA PALETA IGUAL À IMAGEM ANEXADA */}
+            {/* GRID DE CARDS DA PALETA */}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-2.5">
               {[
                 { name: "Ink", hex: "#0B0B0C" },
@@ -701,10 +701,10 @@ export default function Dashboard() {
                       pushToast({ title: "Cor copiada", message: `Cor ${color.name} (${color.hex}) copiada!`, type: "success" });
                     } catch (e) {}
                   }}
-                  className="rounded-xl border border-white/10 overflow-hidden barra hover:border-[#F65A1A]/70 transition-all cursor-pointer group shadow-none flex flex-col"
+                  className="rounded-xl overflow-hidden hover:border-[#F65A1A]/70 transition-all cursor-pointer group shadow-none flex flex-col border border-white/10 bg-transparent"
                   title={`Clique para copiar ${color.hex}`}
                 >
-                  {/* Bloco Superior com a Cor */}
+                  {/* Bloco Único/Superior com a Cor preenchendo o topo de ponta a ponta */}
                   <div
                     className="h-14 sm:h-16 w-full transition-transform duration-300 group-hover:scale-[1.03] relative"
                     style={{ backgroundColor: color.hex }}
@@ -714,8 +714,8 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  {/* Painel Inferior com Nome e Código Hex */}
-                  <div className="p-2 sm:p-2.5 barra border-t border-white/10 flex flex-col justify-center">
+                  {/* Painel Inferior com Nome e Código Hex integrado sem borda interna duplicada */}
+                  <div className="p-2 sm:p-2.5 bg-black/30 flex flex-col justify-center">
                     <h4 className="text-xs font-bold text-white group-hover:text-[#F65A1A] transition-colors leading-tight">
                       {color.name}
                     </h4>

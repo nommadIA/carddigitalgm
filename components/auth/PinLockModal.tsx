@@ -1110,11 +1110,11 @@ export default function PinLockModal({
                 description ||
                 (currentMode === "setup"
                   ? setupStep === "create"
-                    ? "Digite 4 dígitos que você lembrará facilmente para desbloquear o app neste computador."
+                    ? "Digite 4 dígitos que você lembrará facilmente para desbloquear o app neste dispositivo."
                     : "Digite os mesmos 4 dígitos para confirmar."
                   : userName
                   ? `Olá, ${userName}. Digite os 4 dígitos para continuar.`
-                  : "Este computador possui credenciais salvas protegidas por PIN. Digite os 4 dígitos para continuar.")
+                  : "Este dispositivo possui credenciais salvas protegidas por PIN. Digite os 4 dígitos para continuar.")
               )}
             </p>
 

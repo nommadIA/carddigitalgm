@@ -277,7 +277,7 @@ export default function Login() {
                     <div className="flex flex-col text-left justify-center">
                       <div className="flex items-center gap-2">
                         <span className="text-white text-sm sm:text-[15px] font-semibold tracking-tight">
-                          Proteger este computador com PIN
+                          Proteger este dispositivo com PIN
                         </span>
                         {(isPinActiveForUser || protectWithPin) && (
                           <span className="hidden sm:inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/30">
@@ -288,7 +288,7 @@ export default function Login() {
                       <span className="text-[11px] text-zinc-400">
                         {isPinActiveForUser
                           ? "Bloqueio ativado para credenciais salvas"
-                          : "Exigir 4 dígitos ao ligar o computador"}
+                          : "Exigir 4 dígitos ao abrir no celular ou computador"}
                       </span>
                     </div>
                   </div>
@@ -383,8 +383,8 @@ export default function Login() {
           open={showPinSetupModal}
           mode="setup"
           email={email.trim()}
-          title="Criar PIN deste Computador"
-          description="Crie um PIN de 4 dígitos para proteger suas credenciais salvas sempre que ligar este computador."
+          title="Criar PIN deste Dispositivo"
+          description="Crie um PIN de 4 dígitos para proteger suas credenciais salvas neste aparelho (smartphone ou computador)."
           onSuccess={handlePinSetupSuccess}
           onCancel={() => {
             setShowPinSetupModal(false);

@@ -140,7 +140,7 @@ export default function DevicePinGate({ children }: DevicePinGateProps) {
           email={user.email}
           userName={user.full_name || user.email.split("@")[0]}
           title="Dispositivo Protegido por PIN"
-          description="Este computador possui credenciais salvas protegidas por PIN. Digite os 4 dígitos para continuar."
+          description="Este dispositivo possui credenciais salvas protegidas por PIN. Digite os 4 dígitos para continuar."
           onSuccess={handleUnlock}
           onCancel={handleCancelAndSignOut}
         />

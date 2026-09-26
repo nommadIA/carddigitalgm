@@ -4,6 +4,56 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>GM Edificação</title>
+
+    <!-- Safe fetch property configuration: Prevents "Cannot set property fetch of #<Window> which has only a getter" -->
+    <script>
+      (function() {
+        try {
+          var originalFetch = typeof window !== 'undefined' && window.fetch ? window.fetch.bind(window) : null;
+          var activeFetch = originalFetch;
+
+          function getFetch() {
+            return activeFetch || (typeof window !== 'undefined' && originalFetch ? originalFetch : function() {
+              return Promise.reject(new Error("fetch not initialized"));
+            });
+          }
+
+          function setFetch(fn) {
+            activeFetch = fn;
+          }
+
+          // Define on Window.prototype so that prototype-chain assignment (window.fetch = ...) never throws getter-only error
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            try {
+              var protoDesc = Object.getOwnPropertyDescriptor(Window.prototype, 'fetch');
+              if (!protoDesc || !protoDesc.set) {
+                Object.defineProperty(Window.prototype, 'fetch', {
+                  get: getFetch,
+                  set: setFetch,
+                  configurable: true,
+                  enumerable: true
+                });
+              }
+            } catch (eProto) {}
+          }
+
+          // Also define on window instance
+          if (typeof window !== 'undefined') {
+            try {
+              var winDesc = Object.getOwnPropertyDescriptor(window, 'fetch');
+              if (!winDesc || !winDesc.set || !winDesc.writable) {
+                Object.defineProperty(window, 'fetch', {
+                  get: getFetch,
+                  set: setFetch,
+                  configurable: true,
+                  enumerable: true
+                });
+              }
+            } catch (eWin) {}
+          }
+        } catch (err) {}
+      })();
+    </script>
     
     <!-- Open Graph / WhatsApp Rich Previews -->
     <meta name="description" content="Orçamentos, serviços e atendimento em um único lugar.&#10;Design de Marcas | Material Gráfico | Comunicação Visual&#10;&#10;Acesse nosso site de forma rápida e segura!" />
@@ -266,36 +316,56 @@
   }
 </style>
 
+  <script>
+    (function () {
+      try {
+        var path = (window.location.pathname || '').toLowerCase().split('/').filter(Boolean)[0] || '';
+        var hash = (window.location.hash || '').toLowerCase();
+        var host = (window.location.hostname || '').toLowerCase();
+        var reserved = [
+          'login', 'register', 'auth', 'update-password', 'budgets', 
+          'clients', 'expenses', 'market', 'notes', 'financial', 
+          'minha-bio', 'configuracoes', 'dashboard', 'pix'
+        ];
+        var isSite = (window.location.href.indexOf('/bio') !== -1 || hash.indexOf('/bio') !== -1) ||
+                     (path && !reserved.includes(path)) ||
+                     (host.endsWith('.netlify.app') && !host.startsWith('carddigital')) ||
+                     (!host.includes('.run.app') && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('carddigital'));
+        if (isSite) {
+          document.write('<style>#gm-splash { display: none !important; visibility: hidden !important; }</style>');
+        }
+      } catch (e) {}
+    })();
+  </script>
 <link rel="stylesheet" href="/index.css">
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.564.0",
-    "path": "https://esm.sh/path@^0.12.7",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.95.3",
-    "qrcode": "https://esm.sh/qrcode@^1.5.4",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
-    "pdf-lib": "https://esm.sh/pdf-lib@^1.17.1",
-    "jspdf": "https://esm.sh/jspdf@^4.1.0",
-    "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.7"
-  }
-}
-</script>
 </head>
   <body class="bg-app text-muted transition-colors duration-200">
     
     <div id="gm-splash">
       <script>
-        if (window.location.href.indexOf('/bio') !== -1 || window.location.hash.indexOf('/bio') !== -1) {
-          document.getElementById('gm-splash').style.display = 'none';
-        }
+        (function() {
+          try {
+            var path = (window.location.pathname || '').toLowerCase().split('/').filter(Boolean)[0] || '';
+            var hash = (window.location.hash || '').toLowerCase();
+            var host = (window.location.hostname || '').toLowerCase();
+            var reserved = [
+              'login', 'register', 'auth', 'update-password', 'budgets', 
+              'clients', 'expenses', 'market', 'notes', 'financial', 
+              'minha-bio', 'configuracoes', 'dashboard', 'pix'
+            ];
+            var isSite = (window.location.href.indexOf('/bio') !== -1 || hash.indexOf('/bio') !== -1) ||
+                         (path && !reserved.includes(path)) ||
+                         (host.endsWith('.netlify.app') && !host.startsWith('carddigital')) ||
+                         (!host.includes('.run.app') && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('carddigital'));
+            if (isSite) {
+              var s = document.getElementById('gm-splash');
+              if (s) {
+                s.style.display = 'none';
+                if (s.parentNode) s.parentNode.removeChild(s);
+              }
+            }
+          } catch(e) {}
+        })();
       </script>
       <div class="gm-card-splash">
         <div class="gm-logo-container">
@@ -335,9 +405,20 @@
       var splashEl = document.getElementById("gm-splash");
       var subEl = document.getElementById("gm-splash-sub");
 
-      var isBioRoute = window.location.href.indexOf('/bio') !== -1 || window.location.hash.indexOf('/bio') !== -1;
+      var path = (window.location.pathname || '').toLowerCase().split('/').filter(Boolean)[0] || '';
+      var hash = (window.location.hash || '').toLowerCase();
+      var host = (window.location.hostname || '').toLowerCase();
+      var reserved = [
+        'login', 'register', 'auth', 'update-password', 'budgets', 
+        'clients', 'expenses', 'market', 'notes', 'financial', 
+        'minha-bio', 'configuracoes', 'dashboard', 'pix'
+      ];
+      var isSiteRoute = (window.location.href.indexOf('/bio') !== -1 || hash.indexOf('/bio') !== -1) ||
+                        (path && !reserved.includes(path)) ||
+                        (host.endsWith('.netlify.app') && !host.startsWith('carddigital')) ||
+                        (!host.includes('.run.app') && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('carddigital'));
 
-      if (isBioRoute) {
+      if (isSiteRoute) {
         if (splashEl) {
           splashEl.style.display = 'none';
           try {
@@ -440,7 +521,7 @@
 
       // Initialize dotted grid immediately for maximum visual impact as page loads
       try {
-        if (!isBioRoute) {
+        if (!isSiteRoute) {
           createDottedGrid();
         }
       } catch (e) {
@@ -496,7 +577,7 @@
 
       // Inicia a animação de digitação
       setTimeout(function() {
-        if (!isBioRoute) {
+        if (!isSiteRoute) {
           type();
         }
       }, 300);
@@ -523,7 +604,7 @@
         isReactReady = true;
         isAnimationFinished = true;
         attemptHide();
-      }, isBioRoute ? 0 : 6500);
+      }, isSiteRoute ? 0 : 6500);
     })();
   </script>
   <video id="gm-video-bg" autoPlay loop muted playsInline style="display: none;"></video>

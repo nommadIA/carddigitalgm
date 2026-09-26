@@ -985,10 +985,10 @@ export default function Expenses() {
       </div>
 
       {/* LISTA DE DESPESAS DIRETA COM EXPANSÃO INLINE ESTILO NOTION */}
-      <SectionDivider label="Despesas Cadastradas" />
+      <SectionDivider label="Despesas Cadastradas" className="mt-8 mb-4" />
       <div className="w-full fora bg-white/[0.02] backdrop-blur-md rounded-2xl border border-white/10 shadow-none mb-12 flex flex-col overflow-visible">
-        {/* Header fixo da tabela (visível no desktop) */}
-        <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-4 border-b border-white/10 font-black opacity-80 uppercase tracking-widest text-[11px] barra bg-black/20 text-slate-300 rounded-t-2xl">
+        {/* Header fixo da tabela (visível no desktop) com cápsula de informação destacada e espaçamento refinado */}
+        <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-3.5 border-b border-white/10 font-black opacity-85 uppercase tracking-widest text-[11px] barra bg-black/25 text-slate-300 rounded-t-2xl">
           <div>Vencimento</div>
           <div>Descrição da Despesa</div>
           <div className="text-right">Valor (R$)</div>

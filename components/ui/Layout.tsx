@@ -681,14 +681,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           aria-label={`Sons dos Botões: ${uiSoundsActive ? "Ativado (ON)" : "Desativado (OFF)"}`}
           className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${
             uiSoundsActive
-              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-              : "bg-white/5 text-slate-500 border-white/10 hover:bg-white/10 opacity-70"
+              ? "bg-emerald-500/20 text-white border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+              : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white opacity-70"
           }`}
         >
           {uiSoundsActive ? (
-            <Volume2 size={18} className="animate-pulse" />
+            <Volume2 size={18} className="animate-pulse text-white" />
           ) : (
-            <VolumeX size={18} />
+            <VolumeX size={18} className="text-white" />
           )}
         </button>
       );
@@ -710,14 +710,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           <div
             className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
               uiSoundsActive
-                ? "bg-emerald-500 text-slate-950 font-bold shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                : "bg-white/10 text-slate-400"
+                ? "bg-emerald-500 text-white font-bold shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                : "bg-white/10 text-white"
             }`}
           >
             {uiSoundsActive ? (
-              <Volume2 size={15} className="stroke-[2.5]" />
+              <Volume2 size={15} className="stroke-[2.5] text-white" />
             ) : (
-              <VolumeX size={15} />
+              <VolumeX size={15} className="text-white" />
             )}
           </div>
           <span
