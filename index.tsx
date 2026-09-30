@@ -53,7 +53,9 @@ bootReal();
 // Registro do Service Worker para PWA/Netlify
 if ("serviceWorker" in navigator && window.self === window.top) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(console.error);
+    navigator.serviceWorker.register("/sw.js").catch((err) => {
+      console.warn("ServiceWorker registration skipped:", err?.message || err);
+    });
     
     // Listen for navigation messages from the service worker (for pushes)
     navigator.serviceWorker.addEventListener('message', (event) => {

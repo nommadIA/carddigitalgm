@@ -298,9 +298,19 @@ create policy "settings_select" on public.app_settings
       {/* Cinematic Splash Overlay containing only the animated logo */}
       {!introFinished && (
         <div 
-          className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050507] transition-opacity duration-500 ease-in-out ${
+          data-website-root="true"
+          className={`gm-website-fullscreen site-full-viewport gm-website-viewport gm-site-fullscreen fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050507] transition-opacity duration-500 ease-in-out ${
             introExiting ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            margin: 0,
+            padding: 0,
+            border: 0,
+            borderRadius: 0,
+            boxShadow: 'none'
+          }}
         >
           {/* Center Logo Area - Increased size slightly */}
           <div className="relative w-56 h-56 flex items-center justify-center select-none">

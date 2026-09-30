@@ -60,7 +60,11 @@ export function AdminHubModal({
     return localStorage.getItem("gm_admin_authenticated") === "true";
   });
 
-  const isOwnerLoggedIn = !!user || isLiveEditMode || localAdminAuth;
+  const isOwnerLoggedIn = Boolean(
+    (user?.email && (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() || user.email.toLowerCase() === "admin@carddigital.com" || contextIsAdmin || user.is_admin || user.role === 'admin')) ||
+    isLiveEditMode ||
+    localAdminAuth
+  );
   const [adminEmail, setAdminEmail] = useState(ADMIN_EMAIL);
   const [adminPassword, setAdminPassword] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);

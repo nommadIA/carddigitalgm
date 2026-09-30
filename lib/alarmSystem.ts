@@ -20,7 +20,9 @@ export const getAlarms = (): BudgetAlarm[] => {
 
 export const saveAlarms = (alarms: BudgetAlarm[]) => {
   localStorage.setItem(ALARM_KEY, JSON.stringify(alarms));
-  syncAlarmsToDB(alarms).catch(console.error);
+  syncAlarmsToDB(alarms).catch((err) => {
+    console.warn("[Alarm] Sync to DB skipped:", err?.message || err);
+  });
 };
 
 export const getBudgetReminderTimes = (): string[] => {
@@ -269,7 +271,9 @@ export const markAlarmAsTriggered = (alarmId: string) => {
     };
   });
   saveAlarms(updated as any);
-  markAlarmAsTriggeredInDB(alarmId).catch(console.error);
+  markAlarmAsTriggeredInDB(alarmId).catch((err) => {
+    console.warn("[Alarm] Mark triggered in DB skipped:", err?.message || err);
+  });
 };
 
 export const snoozeAlarm = (alarmId: string) => {

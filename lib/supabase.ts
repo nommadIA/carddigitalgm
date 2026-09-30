@@ -32,10 +32,14 @@ if (typeof window !== "undefined") {
     if (
       text.includes("Invalid Refresh Token") ||
       text.includes("Refresh Token Not Found") ||
-      text.includes("invalid_grant")
+      text.includes("invalid_grant") ||
+      text.includes("Failed to fetch") ||
+      text.includes("NetworkError")
     ) {
-      console.warn("Supabase auth session expirada ou token inválido. Limpando armazenamento local...");
-      purgeSupabaseAuthStorage();
+      console.warn("Supabase auth session expirada ou aviso de rede capturado:", text);
+      if (text.includes("Refresh Token") || text.includes("invalid_grant")) {
+        purgeSupabaseAuthStorage();
+      }
       return;
     }
     originalConsoleError.apply(console, args);
@@ -47,11 +51,16 @@ if (typeof window !== "undefined") {
     if (
       msg.includes("Invalid Refresh Token") ||
       msg.includes("Refresh Token Not Found") ||
-      msg.includes("invalid_grant")
+      msg.includes("invalid_grant") ||
+      msg.includes("Failed to fetch") ||
+      msg.includes("NetworkError") ||
+      msg.includes("Load failed")
     ) {
       event.preventDefault();
-      purgeSupabaseAuthStorage();
-      console.warn("Rejeição de refresh token expirado tratada com sucesso.");
+      if (msg.includes("Refresh Token") || msg.includes("invalid_grant")) {
+        purgeSupabaseAuthStorage();
+      }
+      console.warn("Rejeição de rede ou refresh token tratada com sucesso:", msg);
     }
   });
 }
@@ -95,8 +104,19 @@ const safeAuthFetch: typeof fetch = async (input, init) => {
     }
     return response;
   } catch (err: any) {
-    if (String(err?.message || "").includes("Refresh Token")) {
+    const msg = String(err?.message || err);
+    if (msg.includes("Refresh Token")) {
       console.warn("Supabase fetch token refresh:", err);
+    }
+    // Retry once for transient network failures
+    if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+      try {
+        await new Promise((r) => setTimeout(r, 400));
+        return await fetch(input, init);
+      } catch (retryErr: any) {
+        console.warn("Supabase fetch network status:", retryErr?.message || retryErr);
+        throw retryErr;
+      }
     }
     throw err;
   }

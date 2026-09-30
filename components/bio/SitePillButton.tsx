@@ -89,7 +89,7 @@ export function SitePillButton({
       target={target}
       rel={rel}
       onClick={onClick}
-      className={`site-btn-pill px-10 py-4 text-base sm:text-lg select-none ${className}`}
+      className={`site-btn-pill px-6 sm:px-10 py-3 sm:py-4 text-sm sm:text-base md:text-lg select-none ${className}`}
       style={dynamicStyle}
       {...handlers}
     >
@@ -99,7 +99,7 @@ export function SitePillButton({
     <button
       type="button"
       onClick={onClick}
-      className={`site-btn-pill px-10 py-4 text-base sm:text-lg select-none ${className}`}
+      className={`site-btn-pill px-6 sm:px-10 py-3 sm:py-4 text-sm sm:text-base md:text-lg select-none ${className}`}
       style={dynamicStyle}
       {...handlers}
     >

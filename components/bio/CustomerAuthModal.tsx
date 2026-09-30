@@ -4,6 +4,7 @@ import {
   CheckCircle2, AlertCircle, Loader2, ArrowRight, ShieldCheck, FileText, ChevronDown, ChevronUp
 } from "lucide-react";
 import { signInCustomer, signUpCustomer, lookupViaCep, Customer } from "../../lib/customerService";
+import { ADMIN_EMAIL } from "../../constants";
 
 interface CustomerAuthModalProps {
   isOpen: boolean;
@@ -88,7 +89,12 @@ export function CustomerAuthModal({
       return;
     }
 
-    setSuccessMessage("Login realizado com sucesso!");
+    const isLoggingAsAdmin = loginEmail.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase() || loginEmail.trim().toLowerCase() === "admin@carddigital.com";
+    if (isLoggingAsAdmin) {
+      localStorage.setItem("gm_admin_authenticated", "true");
+    }
+
+    setSuccessMessage(isLoggingAsAdmin ? "Login de Administrador aprovado! Painel de gestão liberado." : "Login realizado com sucesso!");
     setTimeout(() => {
       onSuccess(res.customer!);
       onClose();
@@ -145,11 +151,11 @@ export function CustomerAuthModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto gm-customer-modal-overlay"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-xl sm:max-w-2xl bg-[#0f1016]/98 border border-white/12 rounded-[2.25rem] p-6 sm:p-9 shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative my-auto max-h-[92vh] overflow-y-auto text-white"
+        className="w-full max-w-xl sm:max-w-2xl bg-[#0f1016]/98 border border-white/12 rounded-[2.25rem] p-6 sm:p-9 shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative my-auto max-h-[92vh] overflow-y-auto text-white gm-customer-modal-container"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}

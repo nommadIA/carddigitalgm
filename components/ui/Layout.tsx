@@ -120,6 +120,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   const { signOut, tenantId } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isBioRoute = location.pathname.startsWith('/minha-bio');
 
   const sidebarRef = useRef<HTMLElement | null>(null);
   const handleRef = useRef<HTMLDivElement | null>(null);
@@ -913,35 +914,37 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {showTutorial && <AppTutorial onClose={() => setShowTutorial(false)} />}
 
       {/* MOBILE TOP HEADER - FROSTED GLASS TRANSLUCENT */}
-      <header 
-        className="fixed top-0 left-0 right-0 w-full h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-black/10 dark:bg-black/10 backdrop-blur-md border-b border-white/10 shadow-none gm-mobile-header select-none"
-        style={{
-          zIndex: 100,
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          background: "rgba(10, 10, 14, 0.15)",
-        }}
-      >
-        <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center shrink-0">
-              <div className="w-8 h-8 rounded-lg border border-white/15 flex items-center justify-center overflow-hidden shadow-none bg-black/40 !p-0">
-                <img 
-                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                  alt="Logo CardDigital GM" 
-                  className="w-full h-full object-cover scale-[1.3] transform"
-                />
+      {!isBioRoute && (
+        <header 
+          className="fixed top-0 left-0 right-0 w-full h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-black/10 dark:bg-black/10 backdrop-blur-md border-b border-white/10 shadow-none gm-mobile-header select-none"
+          style={{
+            zIndex: 100,
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            background: "rgba(10, 10, 14, 0.15)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+              <div className="relative flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg border border-white/15 flex items-center justify-center overflow-hidden shadow-none bg-black/40 !p-0">
+                  <img 
+                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
+                    alt="Logo CardDigital GM" 
+                    className="w-full h-full object-cover scale-[1.3] transform"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col leading-tight">
-                <span className="text-lg font-bold text-slate-900 dark:text-white">
-                  CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span>
-                </span>
-            </div>
-        </div>
+              <div className="flex flex-col leading-tight">
+                  <span className="text-lg font-bold text-slate-900 dark:text-white">
+                    CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span>
+                  </span>
+              </div>
+          </div>
 
-        {/* Botões do cabeçalho mobile: caixas quadradas 1:1 com bordas levemente arredondadas e ícones na cor laranja */}
-        {renderHeaderActionButtons()}
-      </header>
+          {/* Botões do cabeçalho mobile: caixas quadradas 1:1 com bordas levemente arredondadas e ícones na cor laranja */}
+          {renderHeaderActionButtons()}
+        </header>
+      )}
 
       {/* DESKTOP SIDEBAR */}
       <aside
@@ -1100,9 +1103,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       <main 
         ref={setMainRefs}
-        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden w-full p-0 scroll-smooth"
+        className={isBioRoute ? "w-full min-h-screen p-0 m-0 flex flex-col overflow-x-hidden" : "gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-[100dvh] max-h-[100dvh] overflow-y-auto overflow-x-hidden w-full p-0 scroll-smooth"}
       >
-        <div className="gm-container w-full max-w-[1440px] mx-auto flex flex-col items-stretch px-5 sm:px-8 md:px-10 lg:px-12 xl:px-16 pt-20 md:pt-10 lg:pt-12 pb-[calc(var(--bottom-nav-safe-space)+90px)] md:pb-48 lg:pb-56 xl:pb-64">
+        <div className={isBioRoute ? "w-full min-h-screen p-0 m-0 flex flex-col" : "gm-container w-full max-w-[1440px] mx-auto flex flex-col items-stretch px-0 sm:px-8 md:px-10 lg:px-12 xl:px-16 pt-20 md:pt-10 lg:pt-12 pb-[calc(var(--bottom-nav-safe-space)+90px)] md:pb-48 lg:pb-56 xl:pb-64"}>
           {children}
         </div>
       </main>
@@ -1137,67 +1140,69 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           </AnimatePresence>
 
           {/* SCROLL INDICATOR ARROWS (CENTERED VERTICALLY IN THE MIDDLE OF THE SCREEN ON THE RIGHT - NO BOX/BACKGROUND, ONLY ARROW STROKE) */}
-          <div 
-            className="fixed right-1.5 sm:right-2.5 md:right-4 top-1/2 -translate-y-1/2 z-[10001] flex flex-col items-center gap-2 pointer-events-none select-none" 
-            style={{ zIndex: 10001 }}
-          >
-            {/* BACK TO TOP ARROW (PURE CHEVRON STROKE) */}
-            <button
-              onClick={() => {
-                const activeEl = document.querySelector('[data-active-scroll="true"]');
-                if (activeEl) {
-                  activeEl.scrollTo({ top: 0, behavior: "smooth" });
-                } else {
-                  const scrollableElements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
-                  scrollableElements.forEach(el => el.scrollTo({ top: 0, behavior: "smooth" }));
-                }
-              }}
-              className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-transparent border-0 shadow-none pointer-events-auto cursor-pointer focus:outline-none group ${
-                canScrollUp ? "opacity-85 hover:opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
-              }`}
-              aria-label="Rolar para o topo"
-              title="Rolar para o topo"
+          {!isBioRoute && (
+            <div 
+              className="fixed right-1.5 sm:right-2.5 md:right-4 top-1/2 -translate-y-1/2 z-[10001] flex flex-col items-center gap-2 pointer-events-none select-none" 
+              style={{ zIndex: 10001 }}
             >
-              <ChevronUp 
-                size={34} 
-                strokeWidth={2.8} 
-                className="text-[var(--gm-primary,#FE540B)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] group-hover:scale-125 group-active:scale-90 transition-transform duration-200" 
-              />
-            </button>
-
-            {/* SCROLL DOWN ARROW (PURE CHEVRON STROKE) */}
-            {location.pathname !== '/' && (
-              <button 
+              {/* BACK TO TOP ARROW (PURE CHEVRON STROKE) */}
+              <button
                 onClick={() => {
-                  let target = document.querySelector('[data-active-scroll="true"]') as HTMLElement;
-                  if (!target) {
-                    const elements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
-                    for (let i = elements.length - 1; i >= 0; i--) {
-                      const el = elements[i] as HTMLElement;
-                      if (el.scrollHeight > el.clientHeight + 10) {
-                        target = el;
-                        break;
-                      }
-                    }
-                  }
-                  if (target) {
-                    target.scrollBy({ top: Math.min(target.clientHeight * 0.7, 320), behavior: "smooth" });
+                  const activeEl = document.querySelector('[data-active-scroll="true"]');
+                  if (activeEl) {
+                    activeEl.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    const scrollableElements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
+                    scrollableElements.forEach(el => el.scrollTo({ top: 0, behavior: "smooth" }));
                   }
                 }}
                 className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-transparent border-0 shadow-none pointer-events-auto cursor-pointer focus:outline-none group ${
-                  canScrollDown ? "opacity-85 hover:opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
+                  canScrollUp ? "opacity-85 hover:opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
                 }`}
-                aria-label="Rolar para baixo"
-                title="Rolar para baixo"
+                aria-label="Rolar para o topo"
+                title="Rolar para o topo"
               >
-                <ChevronDown 
+                <ChevronUp 
                   size={34} 
                   strokeWidth={2.8} 
                   className="text-[var(--gm-primary,#FE540B)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] group-hover:scale-125 group-active:scale-90 transition-transform duration-200" 
                 />
               </button>
-            )}
-          </div>
+
+              {/* SCROLL DOWN ARROW (PURE CHEVRON STROKE) */}
+              {location.pathname !== '/' && (
+                <button 
+                  onClick={() => {
+                    let target = document.querySelector('[data-active-scroll="true"]') as HTMLElement;
+                    if (!target) {
+                      const elements = document.querySelectorAll('.overflow-y-auto, .gm-main, [style*="overflow-y: auto"], [style*="overflowY: auto"]');
+                      for (let i = elements.length - 1; i >= 0; i--) {
+                        const el = elements[i] as HTMLElement;
+                        if (el.scrollHeight > el.clientHeight + 10) {
+                          target = el;
+                          break;
+                        }
+                      }
+                    }
+                    if (target) {
+                      target.scrollBy({ top: Math.min(target.clientHeight * 0.7, 320), behavior: "smooth" });
+                    }
+                  }}
+                  className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-transparent border-0 shadow-none pointer-events-auto cursor-pointer focus:outline-none group ${
+                    canScrollDown ? "opacity-85 hover:opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"
+                  }`}
+                  aria-label="Rolar para baixo"
+                  title="Rolar para baixo"
+                >
+                  <ChevronDown 
+                    size={34} 
+                    strokeWidth={2.8} 
+                    className="text-[var(--gm-primary,#FE540B)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] group-hover:scale-125 group-active:scale-90 transition-transform duration-200" 
+                  />
+                </button>
+              )}
+            </div>
+          )}
 
           {/* HUD TOAST INDICADOR DE TROCA DE PÁGINA */}
           <AnimatePresence>

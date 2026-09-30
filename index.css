@@ -76,6 +76,198 @@ html:not([data-theme="light"]):not(.gm-light) .fora {
   fill: #FE540B !important;
 }
 
+/* Links do Topbar */
+.topbar-nav-link {
+  transition: color 0.2s ease;
+}
+.topbar-nav-link:hover,
+.topbar-nav-link:hover span {
+  color: #FE540B !important;
+}
+
+/* Área de seleção de texto no cabeçalho */
+.selection-orange ::selection,
+.selection-orange::selection {
+  background-color: #FE540B !important;
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   Overlap Scroll & Page Transition (details.so/vault/page-transition-03)
+========================================================= */
+:root {
+  --transitions-ease: cubic-bezier(.4, .3, 0, 1);
+  --ease-out-expo: cubic-bezier(.16, 1, .3, 1);
+  --ease-out-quart: cubic-bezier(.165, .84, .44, 1);
+  --reveal-descender: 0.18em;
+  --reveal-clip-margin: 0.06em;
+}
+
+/* Lenis Smooth Scroll Engine */
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* Overlap Transition Classes */
+.overlap-transition-view {
+  will-change: transform, opacity, clip-path;
+}
+
+/* =========================================================
+   CINEMATIC GRAIN & CURTAIN REVEAL (Inspirado em orleansbrandao.com.br)
+   ========================================================= */
+.ob-grain {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
+.psd-side-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.03) 25%, rgba(0, 0, 0, 0.68) 65%, rgba(0, 0, 0, 0.92) 100%);
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .psd-side-shade {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.52) 45%, rgba(0, 0, 0, 0.92) 100%);
+  }
+}
+
+.ob-line-mask {
+  overflow: hidden;
+  display: block;
+}
+
+.ob-line-reveal {
+  display: block;
+  animation: obTextReveal 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes obTextReveal {
+  from {
+    transform: translateY(130%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+.ob-curtain-reveal {
+  animation: obCurtainWipe 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: clip-path, transform;
+}
+
+@keyframes obCurtainWipe {
+  from {
+    clip-path: inset(12% 0% 0% 0%);
+    transform: translateY(18px) scale(0.99);
+    opacity: 0.7;
+  }
+  to {
+    clip-path: inset(0% 0% 0% 0%);
+    transform: translateY(0%) scale(1);
+    opacity: 1;
+  }
+}
+
+.ob-image-parallax-zoom {
+  animation: obImageZoom 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+}
+
+@keyframes obImageZoom {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Efeito de transição e fluidez contínua entre seções */
+.overlap-stack-layer {
+  position: relative;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  box-shadow: none;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+@media (min-width: 640px) {
+  .overlap-stack-layer {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    box-shadow: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .overlap-stack-layer {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* Parallax zoom suave nas imagens de fundo */
+.overlap-parallax-bg {
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Masked Text Reveal on Scroll (details.so/vault/page-transition-03) */
+.scroll-reveal-mask {
+  overflow: clip;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.scroll-reveal-inner {
+  display: inline-block;
+  will-change: transform, opacity;
+  animation: reveal-slide-up 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes reveal-slide-up {
+  0% {
+    transform: translateY(115%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+
+
 /* =========================================================
    Smooth Upscale for Portfólios and Catálogos
    Somente nas miniaturas (imagens), containers 100% fixos
@@ -7162,7 +7354,7 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   }
 
   /* Responsive modal overlays allowing smooth vertical drag/scroll */
-  .fixed.inset-0:not(.pointer-events-none):not(.gm-note-modal-overlay) {
+  .fixed.inset-0:not(.pointer-events-none):not(.gm-note-modal-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-overlay) {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
@@ -7188,9 +7380,33 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     z-index: 1000000 !important;
   }
 
+  /* Fullscreen Website Layout Override - Edge-to-edge on smartphone and desktop without floating container or rounded box */
+  .gm-website-fullscreen,
+  .site-full-viewport,
+  .gm-website-viewport,
+  .gm-site-fullscreen,
+  .gm-website-fullscreen > div,
+  .site-full-viewport > div,
+  .gm-site-fullscreen > div,
+  [data-website-root],
+  [data-website-root] > div,
+  [data-site-preview],
+  [data-site-preview] > div {
+    padding: 0 !important;
+    margin: 0 !important;
+    margin-bottom: 0 !important;
+    max-width: 100vw !important;
+    max-height: 100dvh !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+  }
+
   /* Responsive modals on small screens - centralizados com respiro total em relação ao menu inferior */
-  .fixed.inset-0 > div:not(.absolute):not(.fixed):not(.pointer-events-none):not(.gm-note-modal),
-  .fixed.inset-0 > form,
+  .fixed.inset-0:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-overlay) > div:not(.absolute):not(.fixed):not(.pointer-events-none):not(.gm-note-modal):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-container),
+  .fixed.inset-0:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-overlay) > form,
   .gm-modal,
   [role="dialog"] {
     max-width: calc(100vw - 24px) !important;
@@ -7205,6 +7421,29 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     box-sizing: border-box !important;
     z-index: 1000001 !important;
     scroll-padding-bottom: 24px !important;
+  }
+
+  /* Área do Cliente Modal Centering (Desktop & Smartphone) */
+  .gm-customer-modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    margin: 0 !important;
+    z-index: 1000005 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .gm-customer-modal-container {
+    margin: auto !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+    align-self: center !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
   }
 
   .gm-note-modal {
@@ -8208,8 +8447,8 @@ body::before {
 
 /* 3. Respiro Universal de Modais e Popups */
 .gm-modal-overlay,
-div[class*="fixed inset-0"][class*="z-"],
-div[class*="fixed inset-0"][class*="backdrop-blur"] {
+div[class*="fixed inset-0"][class*="z-"]:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
+div[class*="fixed inset-0"][class*="backdrop-blur"]:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
   box-sizing: border-box !important;
   padding: clamp(1rem, 3vw, 2.5rem) !important;
 }
@@ -8217,7 +8456,7 @@ div[class*="fixed inset-0"][class*="backdrop-blur"] {
 .gm-modal-container,
 .gm-modal,
 [role="dialog"],
-div[class*="fixed inset-0"] > div[class*="rounded-"] {
+div[class*="fixed inset-0"]:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) > div[class*="rounded-"]:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
   max-height: calc(100dvh - clamp(2rem, 6vh, 5rem)) !important;
   margin-top: auto !important;
   margin-bottom: auto !important;
@@ -8285,11 +8524,11 @@ div[class*="fixed inset-0"] > div[class*="rounded-"] {
    APPLE GLASS BLUR (Fale com a gente - Website)
    ========================================================= */
 .apple-glass-card {
-  background: rgba(20, 20, 26, 0.42) !important;
-  backdrop-filter: blur(32px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18) !important;
+  background: rgba(18, 18, 24, 0.45) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.50), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.20) !important;
 }
 
 .apple-glass-input {

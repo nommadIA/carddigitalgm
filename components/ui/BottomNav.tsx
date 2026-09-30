@@ -115,9 +115,10 @@ export default function BottomNav() {
                 setExpanded(false);
               }
             }}
-            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav backdrop-blur-2xl border-t border-white/15 border-b-0 border-x-0 !rounded-t-[28px] !rounded-b-none pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+400px+12px)] -mb-[400px] shadow-none select-none overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav backdrop-blur-2xl border-t border-white/15 border-b-0 border-x-0 !rounded-t-[28px] !rounded-b-none pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] shadow-none select-none overflow-hidden"
             style={{
               zIndex: 800,
+              "--gm-mobile-nav-height": "76px",
               borderTopLeftRadius: "28px",
               borderTopRightRadius: "28px",
               borderBottomLeftRadius: "0px",
@@ -125,7 +126,7 @@ export default function BottomNav() {
               backdropFilter: "blur(28px) saturate(180%)",
               WebkitBackdropFilter: "blur(28px) saturate(180%)",
               background: "rgba(10, 10, 14, 0.45)",
-            }}
+            } as React.CSSProperties}
           >
             {/* BARRA SUPERIOR CENTRALIZADA (CLIQUE OU ARRASTE PARA OCULTAR) */}
             <div
