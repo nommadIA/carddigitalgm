@@ -91,12 +91,12 @@ export default function SecurityVerifier({
       {/* Container único, sem caixas extras ou botões separados */}
       <div
         onClick={status === "idle" ? handleStartChallenge : () => hiddenInputRef.current?.focus()}
-        className={`w-full apple-glass-input rounded-xl px-4 py-3.5 flex flex-col justify-center select-none transition-all duration-300 relative overflow-hidden ${
+        className={`w-full apple-glass-input rounded-xl px-3 py-2 sm:py-2.5 flex flex-col justify-center select-none transition-all duration-300 relative overflow-hidden ${
           status === "idle" ? "cursor-pointer hover:border-white/30 hover:bg-white/[0.08]" : ""
-        } ${status === "inputting" ? "border-[#4285F4]/70 shadow-lg shadow-blue-500/10" : ""} ${
+        } ${status === "inputting" ? "border-[#4285F4]/70 shadow-md shadow-blue-500/10" : ""} ${
           status === "success" ? "border-[#0F9D58]/60 bg-[#0F9D58]/[0.06]" : ""
         }`}
-        style={{ minHeight: "74px" }}
+        style={{ minHeight: "58px" }}
       >
         {/* Input invisível que captura o teclado automaticamente */}
         {status === "inputting" && (
@@ -113,16 +113,16 @@ export default function SecurityVerifier({
 
         <div className="flex items-center justify-between w-full">
           {/* LADO ESQUERDO: Checkbox / Interação Inteligente */}
-          <div className="flex items-center gap-3.5 flex-1 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
             {/* Estado 1: Inicial (Aguardando clique) */}
             {status === "idle" && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-3.5"
+                className="flex items-center gap-2.5 sm:gap-3"
               >
-                <div className="w-7 h-7 rounded-lg border-2 border-white/40 hover:border-[#4285F4] hover:shadow-[0_0_12px_rgba(66,133,244,0.4)] transition-all shrink-0 flex items-center justify-center bg-black/40" />
-                <span className="text-zinc-200 text-sm sm:text-base font-medium">
+                <div className="w-6 h-6 rounded-md border-2 border-white/40 hover:border-[#4285F4] hover:shadow-[0_0_10px_rgba(66,133,244,0.4)] transition-all shrink-0 flex items-center justify-center bg-black/40" />
+                <span className="text-zinc-200 text-xs sm:text-[13px] font-medium">
                   Não sou um robô
                 </span>
               </motion.div>
@@ -133,7 +133,7 @@ export default function SecurityVerifier({
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-2.5 sm:gap-3 flex-wrap"
+                className="flex items-center gap-2 sm:gap-2.5 flex-wrap"
               >
                 {/* Código interativo: clique no próprio código para trocar */}
                 <motion.div
@@ -141,14 +141,14 @@ export default function SecurityVerifier({
                   animate={{ rotateY: isFlipping ? 180 : 0 }}
                   transition={{ duration: 0.35 }}
                   title="Clique no código para gerar outro"
-                  className="h-10 px-3 rounded-lg bg-black/60 border border-white/20 hover:border-[#4285F4] flex items-center justify-center gap-1.5 cursor-pointer shadow-inner transition-colors group relative"
+                  className="h-8 px-2.5 rounded-lg bg-black/60 border border-white/20 hover:border-[#4285F4] flex items-center justify-center gap-1 cursor-pointer shadow-inner transition-colors group relative"
                 >
                   {targetCode.split("").map((c, i) => {
                     const colors = ["#4285F4", "#EA4335", "#FBBC05", "#34A853"];
                     return (
                       <span
                         key={i}
-                        className="font-mono font-black text-lg drop-shadow"
+                        className="font-mono font-black text-base drop-shadow"
                         style={{ color: colors[i % colors.length] }}
                       >
                         {c}
@@ -164,7 +164,7 @@ export default function SecurityVerifier({
                 <motion.div
                   animate={isShaking ? { x: [-6, 6, -5, 5, -2, 2, 0] } : {}}
                   transition={{ duration: 0.4 }}
-                  className="flex items-center gap-1.5"
+                  className="flex items-center gap-1"
                 >
                   {[0, 1, 2, 3].map((idx) => {
                     const char = userInput[idx] || "";
@@ -172,7 +172,7 @@ export default function SecurityVerifier({
                     return (
                       <div
                         key={idx}
-                        className={`w-9 h-10 rounded-lg flex items-center justify-center font-mono font-bold text-lg transition-all ${
+                        className={`w-7 h-8 rounded-md flex items-center justify-center font-mono font-bold text-base transition-all ${
                           char
                             ? "bg-blue-500/20 border-2 border-[#4285F4] text-white shadow-sm shadow-blue-500/30"
                             : isCurrent
@@ -193,11 +193,11 @@ export default function SecurityVerifier({
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-2.5"
               >
-                <div className="w-7 h-7 flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 flex items-center justify-center shrink-0">
                   <svg
-                    className="w-6 h-6 animate-spin text-[#4285F4]"
+                    className="w-5 h-5 animate-spin text-[#4285F4]"
                     viewBox="0 0 24 24"
                     fill="none"
                   >
@@ -216,7 +216,7 @@ export default function SecurityVerifier({
                     />
                   </svg>
                 </div>
-                <span className="text-white text-sm font-medium tracking-wide">
+                <span className="text-white text-xs sm:text-[13px] font-medium tracking-wide">
                   Validando segurança...
                 </span>
               </motion.div>
@@ -228,12 +228,12 @@ export default function SecurityVerifier({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-2.5"
               >
-                <div className="w-7 h-7 rounded-lg bg-[#0F9D58] flex items-center justify-center text-white shrink-0 shadow-lg shadow-emerald-500/30">
-                  <Check className="w-4 h-4 stroke-[3.5]" />
+                <div className="w-6 h-6 rounded-md bg-[#0F9D58] flex items-center justify-center text-white shrink-0 shadow-md shadow-emerald-500/30">
+                  <Check className="w-3.5 h-3.5 stroke-[3.5]" />
                 </div>
-                <span className="text-white font-semibold text-sm sm:text-base tracking-tight">
+                <span className="text-white font-semibold text-xs sm:text-[13px] tracking-tight">
                   Não sou um robô
                 </span>
               </motion.div>
@@ -241,10 +241,10 @@ export default function SecurityVerifier({
           </div>
 
           {/* LADO DIREITO: Identidade Oficial Google reCAPTCHA */}
-          <div className="flex flex-col items-center justify-center shrink-0 pl-3">
-            <div className="flex items-center gap-1.5">
+          <div className="flex flex-col items-center justify-center shrink-0 pl-2">
+            <div className="flex items-center gap-1">
               <svg
-                className="w-5 h-5 shrink-0"
+                className="w-4 h-4 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -266,11 +266,11 @@ export default function SecurityVerifier({
                   fill="#EA4335"
                 />
               </svg>
-              <span className="text-[10px] font-semibold text-white/90 tracking-wider uppercase">
+              <span className="text-[9px] font-semibold text-white/90 tracking-wider uppercase">
                 reCAPTCHA
               </span>
             </div>
-            <div className="text-[9px] text-zinc-400 font-normal mt-0.5 select-none space-x-1">
+            <div className="text-[8px] text-zinc-400 font-normal mt-0.5 select-none space-x-1">
               <a
                 href="https://policies.google.com/privacy"
                 target="_blank"

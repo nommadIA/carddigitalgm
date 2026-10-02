@@ -25,6 +25,7 @@ export interface Customer {
   neighborhood?: string | null;
   city?: string | null;
   state?: string | null;
+  is_admin?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -113,6 +114,27 @@ export async function fetchCustomerProfile(authUserId: string, tenantId = "globa
   }
 }
 
+function formatAuthErrorMessage(msg: string): string {
+  if (!msg) return "Ocorreu um erro. Tente novamente.";
+  const lower = msg.toLowerCase();
+  if (lower.includes("already registered") || lower.includes("already in use") || lower.includes("user already exists")) {
+    return "Este e-mail já está cadastrado. Alterne para a aba 'Já sou Cliente' e faça login com sua senha.";
+  }
+  if (lower.includes("invalid login credentials") || lower.includes("invalid_credentials") || lower.includes("wrong password")) {
+    return "E-mail ou senha incorretos. Verifique seus dados e tente novamente.";
+  }
+  if (lower.includes("email not confirmed")) {
+    return "Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.";
+  }
+  if (lower.includes("password should be at least") || lower.includes("weak_password")) {
+    return "A senha deve ter no mínimo 6 dígitos.";
+  }
+  if (lower.includes("rate limit") || lower.includes("too many requests")) {
+    return "Muitas tentativas em pouco tempo. Aguarde alguns instantes e tente novamente.";
+  }
+  return msg;
+}
+
 /**
  * Cadastro de novo cliente
  */
@@ -143,7 +165,7 @@ export async function signUpCustomer(params: {
     });
 
     if (authError) {
-      return { success: false, error: authError.message };
+      return { success: false, error: formatAuthErrorMessage(authError.message) };
     }
 
     const authUserId = authData.user?.id;
@@ -209,7 +231,7 @@ export async function signInCustomer(
     });
 
     if (authError) {
-      return { success: false, error: authError.message };
+      return { success: false, error: formatAuthErrorMessage(authError.message) };
     }
 
     if (!authData.user) {

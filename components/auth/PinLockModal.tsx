@@ -693,8 +693,8 @@ export default function PinLockModal({
           )}
         </motion.div>
 
-        {/* OVERLAY ESCURECEDOR SUAVE E TRANSPARENTE (SEM NENHUM BLUR, MANTENDO A IMAGEM NÍTIDA) */}
-        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+        {/* OVERLAY ESCURECEDOR SUAVE E TRANSPARENTE (COM BLUR LEVE, MANTENDO A IMAGEM VISÍVEL E NÍTIDA) */}
+        <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px] pointer-events-none" />
       </div>
 
       {/* FLASH SUAVE DE SEGURANÇA NO TRAVAMENTO */}
@@ -734,8 +734,13 @@ export default function PinLockModal({
           duration: isUnlocking ? 0.6 : 0.35,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="relative w-full max-w-[340px] sm:max-w-[360px] rounded-[32px] border border-white/[0.10] p-5 sm:p-6 shadow-[0_30px_90px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col items-center text-center max-h-[95vh] overflow-y-auto overflow-x-hidden font-sans select-none z-10"
+        className="gm-login-card-square gm-pin-card-compact apple-glass-card relative w-full rounded-[32px] border border-white/[0.10] p-6 sm:p-7 shadow-[0_30px_90px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col items-center text-center max-h-[95vh] overflow-y-auto overflow-x-hidden font-sans select-none z-10"
         style={{
+          width: "100%",
+          maxWidth: "440px",
+          marginLeft: "auto",
+          marginRight: "auto",
+          boxSizing: "border-box",
           background: "rgba(18, 18, 24, 0.65)",
           backdropFilter: "blur(20px) saturate(180%)",
           WebkitBackdropFilter: "blur(20px) saturate(180%)",
@@ -1177,7 +1182,7 @@ export default function PinLockModal({
 
             {/* TECLADO NUMÉRICO VIRTUAL APPLE GLASS */}
             <div
-              className={`grid grid-cols-3 gap-2.5 w-full max-w-[260px] transition-all duration-300 ${
+              className={`grid grid-cols-3 gap-2.5 w-full max-w-[310px] sm:max-w-[330px] transition-all duration-300 ${
                 isUnlocking ? "opacity-25 pointer-events-none scale-95" : "opacity-100"
               }`}
             >

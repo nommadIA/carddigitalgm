@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { 
-  X, Mail, Lock, User, Phone, MapPin, Eye, EyeOff, 
-  CheckCircle2, AlertCircle, Loader2, ArrowRight, ShieldCheck, FileText, ChevronDown, ChevronUp
+  X, Mail, Lock, User, UserPlus, Phone, MapPin, Eye, EyeOff, 
+  CheckCircle2, AlertCircle, Loader2, ArrowRight, ShieldCheck, FileText, Send, ExternalLink
 } from "lucide-react";
 import { signInCustomer, signUpCustomer, lookupViaCep, Customer } from "../../lib/customerService";
+import { supabase } from "../../lib/supabase";
 import { ADMIN_EMAIL } from "../../constants";
 
 interface CustomerAuthModalProps {
@@ -12,6 +13,11 @@ interface CustomerAuthModalProps {
   onSuccess: (customer: Customer) => void;
   brandColor?: string;
   tenantId?: string;
+  companyAddress?: string;
+  companyAddressUrl?: string;
+  companyWhatsapp?: string;
+  companyName?: string;
+  companyEmail?: string;
 }
 
 export function CustomerAuthModal({
@@ -20,8 +26,13 @@ export function CustomerAuthModal({
   onSuccess,
   brandColor = "#FE540B",
   tenantId = "global",
+  companyAddress,
+  companyAddressUrl,
+  companyWhatsapp = "98987505041",
+  companyName = "GM Edificação",
+  companyEmail = "gmedificacao@gmail.com",
 }: CustomerAuthModalProps) {
-  const [tab, setTab] = useState<"login" | "register">("register");
+  const [tab, setTab] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -39,7 +50,6 @@ export function CustomerAuthModal({
   const [regCpfCnpj, setRegCpfCnpj] = useState("");
 
   // Address fields
-  const [showAddressFields, setShowAddressFields] = useState(false);
   const [regCep, setRegCep] = useState("");
   const [regStreet, setRegStreet] = useState("");
   const [regNumber, setRegNumber] = useState("");
@@ -49,8 +59,28 @@ export function CustomerAuthModal({
   const [regState, setRegState] = useState("");
   const [loadingCep, setLoadingCep] = useState(false);
 
-  // Submit button hover state for identical SitePillButton effect
-  const [btnHover, setBtnHover] = useState(false);
+  // Phone and CPF/CNPJ masks
+  const formatPhone = (val: string) => {
+    const digits = val.replace(/\D/g, "").slice(0, 11);
+    if (digits.length === 0) return "";
+    if (digits.length <= 2) return `(${digits}`;
+    if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+  };
+
+  const formatCpfCnpj = (val: string) => {
+    const digits = val.replace(/\D/g, "").slice(0, 14);
+    if (digits.length <= 11) {
+      if (digits.length <= 3) return digits;
+      if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+      if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+    } else {
+      if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+      return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -81,7 +111,7 @@ export function CustomerAuthModal({
     setErrorMessage("");
     setSuccessMessage("");
 
-    const res = await signInCustomer(loginEmail, loginPassword, tenantId);
+    const res = await signInCustomer(loginEmail.trim(), loginPassword);
     setLoading(false);
 
     if (!res.success || !res.customer) {
@@ -89,27 +119,53 @@ export function CustomerAuthModal({
       return;
     }
 
-    const isLoggingAsAdmin = loginEmail.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase() || loginEmail.trim().toLowerCase() === "admin@carddigital.com";
+    const cleanInputEmail = loginEmail.trim().toLowerCase();
+    const cleanAdminEmail = (ADMIN_EMAIL || "gmedificacao@gmail.com").trim().toLowerCase();
+    const isLoggingAsAdmin = cleanInputEmail === cleanAdminEmail || !!res.customer?.is_admin;
+
     if (isLoggingAsAdmin) {
       localStorage.setItem("gm_admin_authenticated", "true");
     }
 
-    setSuccessMessage(isLoggingAsAdmin ? "Login de Administrador aprovado! Painel de gestão liberado." : "Login realizado com sucesso!");
+    setSuccessMessage(isLoggingAsAdmin ? "Login de Administrador aprovado! Painel liberado." : "Login realizado com sucesso!");
     setTimeout(() => {
       onSuccess(res.customer!);
       onClose();
     }, 600);
   };
 
+  const handleForgotPassword = async () => {
+    if (!loginEmail.trim()) {
+      setErrorMessage("Digite seu e-mail acima para recuperar sua senha.");
+      return;
+    }
+    setLoading(true);
+    setErrorMessage("");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(loginEmail.trim(), {
+        redirectTo: window.location.origin,
+      });
+      setLoading(false);
+      if (error) {
+        setErrorMessage(error.message);
+      } else {
+        setSuccessMessage("Instruções de redefinição de senha foram enviadas para o seu e-mail!");
+      }
+    } catch {
+      setLoading(false);
+      setErrorMessage("Não foi possível enviar o link de redefinição. Tente novamente.");
+    }
+  };
+
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName.trim() || !regEmail.trim() || !regPassword) {
-      setErrorMessage("Por favor, preencha todos os campos obrigatórios.");
+    if (!regName.trim() || !regEmail.trim() || !regPassword || !regPhone.trim()) {
+      setErrorMessage("Por favor, preencha nome, e-mail, WhatsApp e crie uma senha.");
       return;
     }
 
     if (regPassword.length < 6) {
-      setErrorMessage("A senha deve conter no mínimo 6 dígitos.");
+      setErrorMessage("A senha deve ter no mínimo 6 caracteres.");
       return;
     }
 
@@ -117,20 +173,21 @@ export function CustomerAuthModal({
     setErrorMessage("");
     setSuccessMessage("");
 
+    const hasAddress = regCep.trim() || regStreet.trim();
     const res = await signUpCustomer({
-      full_name: regName,
-      email: regEmail,
+      full_name: regName.trim(),
+      email: regEmail.trim(),
       password: regPassword,
-      phone: regPhone,
-      cpf_cnpj: regCpfCnpj,
-      address: showAddressFields ? {
-        cep: regCep,
-        street: regStreet,
-        number: regNumber,
-        complement: regComplement,
-        neighborhood: regNeighborhood,
-        city: regCity,
-        state: regState,
+      phone: regPhone.trim(),
+      cpf_cnpj: regCpfCnpj.trim() || undefined,
+      address: hasAddress ? {
+        cep: regCep.trim() || undefined,
+        street: regStreet.trim() || undefined,
+        number: regNumber.trim() || undefined,
+        complement: regComplement.trim() || undefined,
+        neighborhood: regNeighborhood.trim() || undefined,
+        city: regCity.trim() || undefined,
+        state: regState.trim() || undefined,
       } : undefined,
       tenant_id: tenantId,
     });
@@ -149,396 +206,565 @@ export function CustomerAuthModal({
     }, 700);
   };
 
+  const cleanWhatsapp = (companyWhatsapp || "98987505041").replace(/\D/g, "");
+  const whatsappUrl = `https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(
+    tab === "login"
+      ? "Olá! Preciso de ajuda para acessar a Área do Cliente da GM Edificação."
+      : "Olá! Gostaria de ajuda para realizar meu cadastro na GM Edificação."
+  )}`;
+
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto gm-customer-modal-overlay"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-start p-3 sm:p-6 sm:py-8 bg-black/80 backdrop-blur-2xl overflow-y-auto overscroll-contain gm-customer-modal-overlay"
       onClick={onClose}
     >
-      <div 
-        className="w-full max-w-xl sm:max-w-2xl bg-[#0f1016]/98 border border-white/12 rounded-[2.25rem] p-6 sm:p-9 shadow-[0_20px_60px_rgba(0,0,0,0.85)] relative my-auto max-h-[92vh] overflow-y-auto text-white gm-customer-modal-container"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close Button */}
+      {/* 1. Header: Title & Description (Idêntico ao Fale com a Gente) */}
+      <div className="w-full max-w-6xl mx-auto flex flex-col items-center text-center space-y-3 mb-6 sm:mb-8 pt-3 sm:pt-6 shrink-0 relative">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 sm:top-6 sm:right-6 w-10 h-10 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer z-10"
+          className="absolute top-0 right-0 sm:right-2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-zinc-300 hover:text-white transition-all cursor-pointer z-30 shadow-md"
           aria-label="Fechar"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Modal Header with Badge */}
-        <div className="text-center space-y-2 mb-6 sm:mb-8">
-          <div 
-            className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center shadow-lg"
-            style={{ 
-              backgroundColor: `${brandColor}20`, 
-              border: `1px solid ${brandColor}40`,
-              boxShadow: `0 8px 24px ${brandColor}25`
-            }}
-          >
-            <User className="w-7 h-7" style={{ color: brandColor }} />
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-            {tab === "login" ? "Área do Cliente" : "Criar sua Conta"}
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-400 font-medium max-w-md mx-auto leading-relaxed">
-            {tab === "login" 
-              ? "Acesse para acompanhar pedidos e finalizar compras mais rápido" 
-              : "Preencha seus dados para fazer pedidos e comprar no site"}
-          </p>
-        </div>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-sans font-black tracking-tight leading-tight select-none text-white">
+          {tab === "login" ? "Área do Cliente" : "Criar sua Conta de Cliente"}
+        </h2>
+        
+        <p className="text-xs sm:text-sm md:text-base font-medium leading-relaxed max-w-2xl text-zinc-300">
+          {tab === "login" 
+            ? "Acesse para gerenciar seus pedidos, compras e atendimentos personalizados com rapidez e segurança." 
+            : "Cadastre-se para comprar com agilidade, acompanhar o status das suas entregas e receber orçamentos exclusivos."}
+        </p>
+      </div>
 
-        {/* Tab Toggle (Large Rounded Pill) */}
-        <div className="p-1.5 bg-black/50 rounded-full border border-white/10 mb-7 grid grid-cols-2 gap-1.5">
-          <button
-            type="button"
-            onClick={() => {
-              setTab("login");
-              setErrorMessage("");
-              setSuccessMessage("");
-            }}
-            className={`h-12 rounded-full text-xs sm:text-sm font-black transition-all cursor-pointer select-none flex items-center justify-center ${
-              tab === "login" 
-                ? "bg-white text-zinc-950 shadow-md scale-[1.01]" 
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            Já sou Cliente (Entrar)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setTab("register");
-              setErrorMessage("");
-              setSuccessMessage("");
-            }}
-            className={`h-12 rounded-full text-xs sm:text-sm font-black transition-all cursor-pointer select-none flex items-center justify-center ${
-              tab === "register" 
-                ? "bg-white text-zinc-950 shadow-md scale-[1.01]" 
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            Criar Nova Conta
-          </button>
-        </div>
-
-        {/* Feedback Messages */}
-        {errorMessage && (
-          <div className="p-4 mb-5 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center gap-3 text-red-400 text-xs sm:text-sm font-semibold animate-in shake">
-            <AlertCircle className="w-5 h-5 shrink-0 text-red-400" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="p-4 mb-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3 text-emerald-400 text-xs sm:text-sm font-semibold animate-in fade-in">
-            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
-            <span>{successMessage}</span>
-          </div>
-        )}
-
-        {/* ============================================================== */}
-        {/* LOGIN FORM                                                     */}
-        {/* ============================================================== */}
-        {tab === "login" && (
-          <form onSubmit={handleLoginSubmit} className="space-y-5">
-            <div>
-              <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">
-                E-mail de Acesso <span className="text-red-500">*</span>
-              </label>
-              <div className="relative flex items-center">
-                <Mail className="w-5 h-5 text-zinc-500 absolute left-4.5 pointer-events-none" />
-                <input
-                  type="email"
-                  required
-                  placeholder="seu@email.com"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  className="w-full h-14 pl-13 pr-5 rounded-2xl bg-[#14151e] border border-white/12 text-white placeholder-zinc-500 text-sm sm:text-base font-semibold focus:outline-none focus:border-[#FE540B] focus:ring-2 focus:ring-[#FE540B]/25 transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">
-                Senha <span className="text-red-500">*</span>
-              </label>
-              <div className="relative flex items-center">
-                <Lock className="w-5 h-5 text-zinc-500 absolute left-4.5 pointer-events-none" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  placeholder="Sua senha secreta"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full h-14 pl-13 pr-13 rounded-2xl bg-[#14151e] border border-white/12 text-white placeholder-zinc-500 text-sm sm:text-base font-semibold focus:outline-none focus:border-[#FE540B] focus:ring-2 focus:ring-[#FE540B]/25 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/5"
-                  title={showPassword ? "Ocultar senha" : "Ver senha"}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
+      {/* 2. Main Grid: Form + Address/Map (Idêntico ao Fale com a Gente) */}
+      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-24 sm:mb-12">
+        
+        {/* Form Container (Col 1-7 or Col 1-12 if no address) */}
+        <div 
+          className={`w-full ${companyAddress ? "lg:col-span-7" : "lg:col-span-8 lg:col-start-3"} apple-glass-card p-5 sm:p-8 md:p-10 rounded-[2.5rem] text-white gm-customer-auth-container gm-customer-modal-container transition-all duration-300 relative`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Segmented Control - Tab Switcher */}
+          <div className="w-full max-w-[320px] mx-auto mb-6 p-1 bg-black/60 backdrop-blur-md rounded-2xl border border-white/15 flex flex-row items-center gap-1 h-12 box-border">
             <button
-              type="submit"
-              disabled={loading}
-              onMouseEnter={() => setBtnHover(true)}
-              onMouseLeave={() => setBtnHover(false)}
-              className="w-full h-14 sm:h-15 rounded-full font-black text-base sm:text-lg tracking-wide transition-all duration-200 shadow-xl cursor-pointer flex items-center justify-center gap-2.5 mt-6 border-0 select-none"
-              style={{
-                backgroundColor: btnHover ? "#FFFFFF" : brandColor,
-                color: btnHover ? brandColor : "#FFFFFF",
-                boxShadow: btnHover 
-                  ? "0 8px 25px rgba(255,255,255,0.3)" 
-                  : `0 6px 22px ${brandColor}40`,
-                transform: btnHover ? "scale(1.01)" : "none",
+              type="button"
+              onClick={() => {
+                setTab("login");
+                setErrorMessage("");
+                setSuccessMessage("");
               }}
+              className={`flex-1 h-full rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none flex items-center justify-center text-center whitespace-nowrap px-3 ${
+                tab === "login" 
+                  ? "bg-white text-zinc-950 shadow-md font-black" 
+                  : "text-zinc-400 hover:text-white"
+              }`}
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Acessando...</span>
-                </>
-              ) : (
-                <>
-                  <span>Entrar na Área do Cliente</span>
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
+              Já sou Cliente
             </button>
-          </form>
-        )}
+            <button
+              type="button"
+              onClick={() => {
+                setTab("register");
+                setErrorMessage("");
+                setSuccessMessage("");
+              }}
+              className={`flex-1 h-full rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none flex items-center justify-center text-center whitespace-nowrap px-3 ${
+                tab === "register" 
+                  ? "bg-white text-zinc-950 shadow-md font-black" 
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              Criar Nova Conta
+            </button>
+          </div>
 
-        {/* ============================================================== */}
-        {/* REGISTER FORM                                                  */}
-        {/* ============================================================== */}
-        {tab === "register" && (
-          <form onSubmit={handleRegisterSubmit} className="space-y-4 sm:space-y-5">
-            {/* Nome Completo (100% de largura para máximo conforto) */}
-            <div>
-              <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">
-                Nome Completo <span className="text-red-500">*</span>
-              </label>
-              <div className="relative flex items-center">
-                <User className="w-5 h-5 text-zinc-500 absolute left-4.5 pointer-events-none" />
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Denis Silva"
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  className="w-full h-14 pl-13 pr-5 rounded-2xl bg-[#14151e] border border-white/12 text-white placeholder-zinc-500 text-sm sm:text-base font-semibold focus:outline-none focus:border-[#FE540B] focus:ring-2 focus:ring-[#FE540B]/25 transition-all"
-                />
-              </div>
+          {/* Card Sub-Header */}
+          <div className="mb-6 flex items-center gap-3.5 pb-4 border-b border-white/10">
+            <div 
+              className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-md shrink-0 border border-white/20 text-white"
+              style={{ backgroundColor: brandColor || "#FE540B" }}
+            >
+              {tab === "register" ? (
+                <UserPlus className="w-5 h-5 stroke-[2.5]" />
+              ) : (
+                <User className="w-5 h-5 stroke-[2.5]" />
+              )}
             </div>
-
-            {/* E-mail (100% de largura para caber qualquer e-mail sem cortar) */}
             <div>
-              <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">
-                E-mail <span className="text-red-500">*</span>
-              </label>
-              <div className="relative flex items-center">
-                <Mail className="w-5 h-5 text-zinc-500 absolute left-4.5 pointer-events-none" />
-                <input
-                  type="email"
-                  required
-                  placeholder="seu@email.com"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  className="w-full h-14 pl-13 pr-5 rounded-2xl bg-[#14151e] border border-white/12 text-white placeholder-zinc-500 text-sm sm:text-base font-semibold focus:outline-none focus:border-[#FE540B] focus:ring-2 focus:ring-[#FE540B]/25 transition-all"
-                />
-              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-white">
+                {tab === "login" ? "Acesse sua Conta" : "Dados para Cadastro"}
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-400">
+                {tab === "login" 
+                  ? "Preencha suas credenciais para gerenciar pedidos e dados." 
+                  : "Preencha suas informações para agilizar suas compras e pedidos."}
+              </p>
             </div>
+          </div>
 
-            {/* WhatsApp e CPF/CNPJ lado a lado com espaçamento generoso */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Feedback Messages */}
+          {errorMessage && (
+            <div className="p-3.5 mb-5 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center gap-2.5 text-red-300 text-xs sm:text-sm font-bold animate-in shake">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="p-3.5 mb-5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-2.5 text-emerald-300 text-xs sm:text-sm font-bold animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+              <span>{successMessage}</span>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* LOGIN FORM                                                     */}
+          {/* ============================================================== */}
+          {tab === "login" && (
+            <form onSubmit={handleLoginSubmit} className="space-y-4 sm:space-y-5">
               <div>
-                <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">
-                  WhatsApp / Celular
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                  E-mail de Acesso <span className="text-red-500">*</span>
                 </label>
                 <div className="relative flex items-center">
-                  <Phone className="w-5 h-5 text-zinc-500 absolute left-4.5 pointer-events-none" />
+                  <Mail className="w-4 h-4 text-zinc-400 absolute left-4 pointer-events-none" />
                   <input
-                    type="tel"
-                    placeholder="(00) 00000-0000"
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    className="w-full h-14 pl-13 pr-5 rounded-2xl bg-[#14151e] border border-white/12 text-white placeholder-zinc-500 text-sm sm:text-base font-semibold focus:outline-none focus:border-[#FE540B] focus:ring-2 focus:ring-[#FE540B]/25 transition-all"
+                    type="email"
+                    required
+                    placeholder="seu@email.com"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">
-                  CPF / CNPJ <span className="text-[10px] text-zinc-500 font-normal lowercase">(opcional)</span>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                  Senha <span className="text-red-500">*</span>
                 </label>
                 <div className="relative flex items-center">
-                  <FileText className="w-5 h-5 text-zinc-500 absolute left-4.5 pointer-events-none" />
+                  <Lock className="w-4 h-4 text-zinc-400 absolute left-4 pointer-events-none" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="Sua senha secreta"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="w-full pl-11 pr-11 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10"
+                    title={showPassword ? "Ocultar senha" : "Ver senha"}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs text-zinc-400 hover:text-[#FE540B] transition-colors cursor-pointer"
+                  >
+                    Esqueceu sua senha?
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit & WhatsApp Action Buttons (Idênticos ao Fale com a Gente) */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="site-btn-pill w-full sm:w-auto px-8 sm:px-10 py-3.5 text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer font-black"
+                  style={{ backgroundColor: brandColor || "#FE540B" }}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Acessando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Entrar na Área do Cliente</span>
+                    </>
+                  )}
+                </button>
+
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-full font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg transition-all active:scale-95 cursor-pointer"
+                >
+                  <img 
+                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
+                    alt="WhatsApp" 
+                    className="w-4 h-4 object-contain"
+                  />
+                  <span>Atendimento WhatsApp</span>
+                </a>
+              </div>
+            </form>
+          )}
+
+          {/* ============================================================== */}
+          {/* REGISTER FORM                                                  */}
+          {/* ============================================================== */}
+          {tab === "register" && (
+            <form onSubmit={handleRegisterSubmit} className="space-y-4 sm:space-y-5">
+              {/* Nome Completo */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                  Seu Nome Completo <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <User className="w-4 h-4 text-zinc-400 absolute left-4 pointer-events-none" />
                   <input
                     type="text"
-                    placeholder="000.000.000-00"
-                    value={regCpfCnpj}
-                    onChange={(e) => setRegCpfCnpj(e.target.value)}
-                    className="w-full h-14 pl-13 pr-5 rounded-2xl bg-[#14151e] border border-white/12 text-white placeholder-zinc-500 text-sm sm:text-base font-semibold focus:outline-none focus:border-[#FE540B] focus:ring-2 focus:ring-[#FE540B]/25 transition-all"
+                    required
+                    placeholder="Como podemos te chamar?"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Senha (100% de largura) */}
-            <div>
-              <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">
-                Senha de Acesso (Mínimo 6 Dígitos) <span className="text-red-500">*</span>
-              </label>
-              <div className="relative flex items-center">
-                <Lock className="w-5 h-5 text-zinc-500 absolute left-4.5 pointer-events-none" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  placeholder="Crie uma senha segura"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full h-14 pl-13 pr-13 rounded-2xl bg-[#14151e] border border-white/12 text-white placeholder-zinc-500 text-sm sm:text-base font-semibold focus:outline-none focus:border-[#FE540B] focus:ring-2 focus:ring-[#FE540B]/25 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/5"
-                  title={showPassword ? "Ocultar senha" : "Ver senha"}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Card de Expansão de Endereço */}
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => setShowAddressFields(!showAddressFields)}
-                className="w-full p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 text-xs sm:text-sm font-bold text-zinc-300 hover:text-white flex items-center justify-between transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <MapPin className="w-4 h-4" style={{ color: brandColor }} />
-                  <span>Cadastrar endereço de entrega (opcional)</span>
-                </div>
-                {showAddressFields ? (
-                  <ChevronUp className="w-4 h-4 text-zinc-400" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-zinc-400" />
-                )}
-              </button>
-            </div>
-
-            {showAddressFields && (
-              <div className="space-y-3.5 p-5 rounded-3xl bg-black/40 border border-white/10 animate-in fade-in duration-200">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                      CEP {loadingCep && <span className="text-[10px] text-orange-400 lowercase font-normal">(buscando...)</span>}
-                    </label>
+              {/* E-mail e WhatsApp */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    E-mail de Acesso <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Mail className="w-4 h-4 text-zinc-400 absolute left-4 pointer-events-none" />
                     <input
-                      type="text"
-                      placeholder="00000-000"
-                      maxLength={9}
-                      value={regCep}
-                      onChange={(e) => handleCepChange(e.target.value)}
-                      className="w-full h-12 px-4 rounded-xl bg-[#14151e] border border-white/10 text-white text-sm font-medium focus:outline-none focus:border-[#FE540B]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                      Número
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ex: 120"
-                      value={regNumber}
-                      onChange={(e) => setRegNumber(e.target.value)}
-                      className="w-full h-12 px-4 rounded-xl bg-[#14151e] border border-white/10 text-white text-sm font-medium focus:outline-none focus:border-[#FE540B]"
+                      type="email"
+                      required
+                      placeholder="seu@email.com"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                    Rua / Logradouro
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    WhatsApp / Telefone <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Rua, Avenida..."
-                    value={regStreet}
-                    onChange={(e) => setRegStreet(e.target.value)}
-                    className="w-full h-12 px-4 rounded-xl bg-[#14151e] border border-white/10 text-white text-sm font-medium focus:outline-none focus:border-[#FE540B]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                      Bairro
-                    </label>
+                  <div className="relative flex items-center">
+                    <div className="w-6 h-6 rounded-lg bg-[#25D366] flex items-center justify-center absolute left-3.5 pointer-events-none shadow-sm text-white">
+                      <img 
+                        src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
+                        alt="WhatsApp" 
+                        className="w-3.5 h-3.5 object-contain"
+                      />
+                    </div>
                     <input
-                      type="text"
-                      placeholder="Bairro"
-                      value={regNeighborhood}
-                      onChange={(e) => setRegNeighborhood(e.target.value)}
-                      className="w-full h-12 px-4 rounded-xl bg-[#14151e] border border-white/10 text-white text-sm font-medium focus:outline-none focus:border-[#FE540B]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                      Cidade / UF
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Cidade - UF"
-                      value={regCity ? `${regCity}${regState ? ` / ${regState}` : ""}` : ""}
-                      onChange={(e) => setRegCity(e.target.value)}
-                      className="w-full h-12 px-4 rounded-xl bg-[#14151e] border border-white/10 text-white text-sm font-medium focus:outline-none focus:border-[#FE540B]"
+                      type="tel"
+                      required
+                      placeholder="(98) 98750-5041"
+                      maxLength={15}
+                      value={regPhone}
+                      onChange={(e) => setRegPhone(formatPhone(e.target.value))}
+                      className="w-full pl-12 pr-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
                     />
                   </div>
                 </div>
               </div>
+
+              {/* CPF/CNPJ e Senha */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    CPF / CNPJ <span className="text-[10px] text-zinc-500 font-normal lowercase">(opcional)</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <FileText className="w-4 h-4 text-zinc-400 absolute left-4 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="000.000.000-00"
+                      maxLength={18}
+                      value={regCpfCnpj}
+                      onChange={(e) => setRegCpfCnpj(formatCpfCnpj(e.target.value))}
+                      className="w-full pl-11 pr-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Senha (Mín. 6 Dígitos) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Lock className="w-4 h-4 text-zinc-400 absolute left-4 pointer-events-none" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      placeholder="Crie uma senha segura"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      className="w-full pl-11 pr-11 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10"
+                      title={showPassword ? "Ocultar senha" : "Ver senha"}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Endereço Completo para Entregas */}
+              <div className="pt-2">
+                <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/10">
+                  <MapPin className="w-4 h-4 text-[#FE540B]" />
+                  <h4 className="text-sm font-bold text-white tracking-wide">
+                    Endereço para Entregas <span className="text-xs font-normal text-zinc-400 lowercase">(opcional)</span>
+                  </h4>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                        CEP {loadingCep && <span className="text-[10px] text-orange-400 lowercase font-normal">(buscando...)</span>}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="00000-000"
+                        maxLength={9}
+                        value={regCep}
+                        onChange={(e) => handleCepChange(e.target.value)}
+                        className="w-full px-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                        Número
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ex: 120"
+                        value={regNumber}
+                        onChange={(e) => setRegNumber(e.target.value)}
+                        className="w-full px-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                        Rua / Logradouro
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Rua, Avenida..."
+                        value={regStreet}
+                        onChange={(e) => setRegStreet(e.target.value)}
+                        className="w-full px-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                        Complemento (opcional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Apto, Bloco, Casa..."
+                        value={regComplement}
+                        onChange={(e) => setRegComplement(e.target.value)}
+                        className="w-full px-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                        Bairro
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Bairro"
+                        value={regNeighborhood}
+                        onChange={(e) => setRegNeighborhood(e.target.value)}
+                        className="w-full px-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                        Cidade
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Cidade"
+                        value={regCity}
+                        onChange={(e) => setRegCity(e.target.value)}
+                        className="w-full px-4 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                        Estado (UF)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="UF"
+                        maxLength={2}
+                        value={regState}
+                        onChange={(e) => setRegState(e.target.value.toUpperCase())}
+                        className="w-full px-4 py-3.5 text-sm sm:text-base text-center uppercase border focus:outline-none transition-all duration-300 rounded-2xl apple-glass-input font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit & WhatsApp Action Buttons */}
+              <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="site-btn-pill w-full sm:w-auto px-8 sm:px-10 py-3.5 text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer font-black"
+                  style={{ backgroundColor: brandColor || "#FE540B" }}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Salvando dados...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Concluir Cadastro & Acessar</span>
+                    </>
+                  )}
+                </button>
+
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-full font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg transition-all active:scale-95 cursor-pointer"
+                >
+                  <img 
+                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
+                    alt="WhatsApp" 
+                    className="w-4 h-4 object-contain"
+                  />
+                  <span>Atendimento WhatsApp</span>
+                </a>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* Side Card: Map & Location (Col 8-12) - Idêntico ao Fale com a Gente */}
+        <div className="w-full lg:col-span-5 flex flex-col gap-5">
+          <div 
+            className="p-6 sm:p-8 rounded-[2.5rem] border transition-all duration-300 apple-glass-card border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md shrink-0"
+                style={{ backgroundColor: brandColor || '#FE540B' }}
+              >
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-lg sm:text-xl font-black text-white">
+                  Nossa Localização & Atendimento
+                </h4>
+                <p className="text-xs text-zinc-400">Atendimento e suporte presencial</p>
+              </div>
+            </div>
+
+            {companyAddress && (
+              <p className="text-xs sm:text-sm font-medium mb-4 leading-relaxed text-zinc-300">
+                {companyAddress}
+              </p>
             )}
 
-            {/* Submit Button (Identical to SitePillButton in style, size and hover) */}
-            <button
-              type="submit"
-              disabled={loading}
-              onMouseEnter={() => setBtnHover(true)}
-              onMouseLeave={() => setBtnHover(false)}
-              className="w-full h-14 sm:h-15 rounded-full font-black text-base sm:text-lg tracking-wide transition-all duration-200 shadow-xl cursor-pointer flex items-center justify-center gap-2.5 mt-6 border-0 select-none"
-              style={{
-                backgroundColor: btnHover ? "#FFFFFF" : brandColor,
-                color: btnHover ? brandColor : "#FFFFFF",
-                boxShadow: btnHover 
-                  ? "0 8px 25px rgba(255,255,255,0.3)" 
-                  : `0 6px 22px ${brandColor}40`,
-                transform: btnHover ? "scale(1.01)" : "none",
-              }}
+            {companyAddress ? (
+              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 shadow-md relative z-0 mb-4 bg-zinc-900 group/map">
+                <iframe
+                  title="Localização Comercial"
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(companyAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  className="w-full h-full border-0 rounded-2xl pointer-events-none sm:pointer-events-auto"
+                  allowFullScreen={false}
+                  loading="lazy"
+                />
+                <div className="sm:hidden absolute inset-0 pointer-events-none flex items-end justify-center p-3">
+                  <span className="px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-bold text-white/90 border border-white/15 shadow">
+                    📍 Toque no botão abaixo para abrir a rota
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-4">
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Atendimento online rápido em todo o Maranhão e envio de pedidos com nota fiscal e garantia.
+                </p>
+              </div>
+            )}
+
+            {companyAddress && (
+              <a
+                href={companyAddressUrl ? companyAddressUrl : `https://maps.google.com/?q=${encodeURIComponent(companyAddress)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white transition-all border border-white/15 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98] mb-3"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Abrir no Google Maps</span>
+              </a>
+            )}
+
+            {/* Direct WhatsApp Assistance Button */}
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white transition-all shadow-md cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Criando Conta...</span>
-                </>
-              ) : (
-                <>
-                  <span>Concluir Cadastro & Acessar</span>
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </form>
-        )}
+              <img 
+                src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
+                alt="WhatsApp" 
+                className="w-4 h-4 object-contain"
+              />
+              <span>Atendimento Direto WhatsApp</span>
+            </a>
+          </div>
+
+          {/* Commitment / Security Badge (Idêntico ao Fale com a Gente) */}
+          <div 
+            className="p-5 rounded-2xl bg-gradient-to-r from-white/5 to-white/[0.02] border border-white/10 flex items-center gap-3.5 text-white/90"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h5 className="text-xs sm:text-sm font-black text-white">Atendimento Confiável & Dados Seguros</h5>
+              <p className="text-xs text-zinc-400">Seus dados e pedidos são protegidos com criptografia e tratados com total prioridade e sigilo.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

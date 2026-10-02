@@ -5,6 +5,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { motion } from "framer-motion";
 
+const DEFAULT_ARCH_WALLPAPER =
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80";
+
 export default function Register() {
   const { signUpWithEmail } = useAuth();
   const navigate = useNavigate();
@@ -51,16 +54,42 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 py-8 bg-[#0a0a0a] relative overflow-y-auto">
+    <div className="min-h-[100dvh] min-h-screen w-full flex items-center justify-center p-3.5 sm:p-6 bg-[#0a0a0a] relative overflow-x-hidden selection:bg-[var(--gm-primary)] selection:text-white" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Background Wallpaper */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center" aria-hidden="true">
+        <div
+          className="w-full h-full bg-cover bg-center scale-[1.02]"
+          style={{
+            backgroundImage: `url("${DEFAULT_ARCH_WALLPAPER}")`,
+            backgroundPosition: "50% 50%",
+          }}
+        />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] bg-gradient-to-br from-[var(--gm-primary)]/20 via-orange-600/10 to-transparent rounded-full blur-3xl opacity-80" />
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, y: 18 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-        className="w-full max-w-[560px] relative z-10"
+        transition={{ duration: 0.35 }}
+        className="gm-login-card-square gm-login-card-compact relative z-10 m-auto flex flex-col justify-center"
+        style={{
+          width: "100%",
+          maxWidth: "440px",
+          marginLeft: "auto",
+          marginRight: "auto",
+          boxSizing: "border-box",
+        }}
       >
         <Card
-          className="p-8 md:p-12 relative overflow-hidden"
-          style={{ borderRadius: 8 }}
+          className="gm-login-card-square gm-login-card-compact apple-glass-card p-6 sm:p-8 relative overflow-hidden rounded-3xl border border-white/15 shadow-2xl backdrop-blur-2xl"
+          style={{
+            width: "100%",
+            maxWidth: "440px",
+            marginLeft: "auto",
+            marginRight: "auto",
+            boxSizing: "border-box",
+          }}
         >
           {/* CABEÇALHO COMO ANTES */}
           <div className="flex flex-col items-center mb-8">
