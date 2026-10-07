@@ -162,20 +162,22 @@ const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "rgba(0, 0, 0, 0.6)",
+  background: "rgba(0, 0, 0, 0.65)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   padding: 16,
-  backdropFilter: "blur(20px) saturate(180%)",
-  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  backdropFilter: "blur(24px) saturate(180%)",
+  WebkitBackdropFilter: "blur(24px) saturate(180%)",
 };
 
 const fullScreenContainer: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "#09090b",
+  background: "rgba(10, 10, 14, 0.88)",
+  backdropFilter: "blur(28px) saturate(180%)",
+  WebkitBackdropFilter: "blur(28px) saturate(180%)",
   color: "#f4f4f5",
   display: "flex",
   flexDirection: "column",
@@ -186,15 +188,15 @@ const topBar: React.CSSProperties = {
   position: "sticky",
   top: 0,
   zIndex: 50,
-  background: "rgba(24, 24, 27, 0.95)",
-  borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+  background: "rgba(18, 18, 24, 0.75)",
+  borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
   padding: "16px 24px",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  backdropFilter: "blur(16px)",
-  WebkitBackdropFilter: "blur(16px)",
-  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
+  backdropFilter: "blur(24px) saturate(180%)",
+  WebkitBackdropFilter: "blur(24px) saturate(180%)",
+  boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
 };
 
 const pageContent: React.CSSProperties = {
@@ -650,7 +652,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     return createPortal(
       <div style={overlay} onClick={onClose}>
         <div
-          className="w-full max-w-[800px] p-8 md:p-10 rounded-2xl gm-modal gm-card bg-[var(--gm-surface)] border-none text-white shadow-2xl animate-fade-in"
+          className="w-full max-w-[800px] p-8 md:p-10 rounded-2xl gm-modal apple-glass-card fora border border-white/15 text-white shadow-2xl backdrop-blur-2xl animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-start mb-8">

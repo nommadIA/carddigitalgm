@@ -252,7 +252,7 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200"
       onClick={onClose}
       style={{ zIndex: 99999 }}
     >

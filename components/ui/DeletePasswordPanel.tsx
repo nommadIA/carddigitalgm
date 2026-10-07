@@ -137,7 +137,7 @@ export default function DeletePasswordPanel() {
 
         {/* Modal: Set Password */}
         {modalOpen && (
-            <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => !loadingPass && setModalOpen(false)}>
+            <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 animate-fade-in" onClick={() => !loadingPass && setModalOpen(false)}>
                 <div className="gm-card w-full max-w-md rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
                     <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
                         <h3 className="text-xl font-bold text-white">Definir Senha de Exclusão</h3>
@@ -198,7 +198,7 @@ export default function DeletePasswordPanel() {
 
         {/* Modal: Confirm Empty Trash */}
         {showTrashConfirm && (
-            <div className="fixed inset-0 z-[1001] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => !loadingTrash && setShowTrashConfirm(false)}>
+            <div className="fixed inset-0 z-[1001] bg-black/80 flex items-center justify-center p-4 animate-fade-in" onClick={() => !loadingTrash && setShowTrashConfirm(false)}>
                 <div className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
                     <div className="p-8 text-center">
                         <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">

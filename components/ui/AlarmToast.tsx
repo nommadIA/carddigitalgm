@@ -48,8 +48,7 @@ const AlarmToast = () => {
       Notification.requestPermission();
     }
 
-    // Polling a cada 10 segundos para verificar alarmes
-    const interval = setInterval(() => {
+    const runAlarmCheck = () => {
       const alarm = checkAlarms();
       if (alarm) {
         setAlarms((prev) => {
@@ -86,9 +85,31 @@ const AlarmToast = () => {
         // Marca como disparado (no storage e IndexedDB)
         markAlarmAsTriggered(alarm.id);
       }
-    }, 10000);
+    };
 
-    return () => clearInterval(interval);
+    // 1. Checagem imediata na montagem
+    runAlarmCheck();
+
+    // 2. Polling a cada 10 segundos
+    const interval = setInterval(runAlarmCheck, 10000);
+
+    // 3. Resiliência: checagem imediata quando a aba/janela volta de minimizado/segundo plano
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        runAlarmCheck();
+      } else {
+        // Quando entra em segundo plano, avisa o Service Worker para manter sincronização
+        if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: "CHECK_BACKGROUND_ALARMS" });
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const dismiss = (id: string) => {

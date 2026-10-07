@@ -286,7 +286,7 @@ export function CustomerDashboardModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-start p-3 sm:p-6 sm:py-8 bg-black/80 backdrop-blur-2xl overflow-y-auto overscroll-contain gm-customer-modal-overlay"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-start p-3 sm:p-6 sm:py-8 bg-black/80 overflow-y-auto overscroll-contain gm-customer-modal-overlay"
       onClick={onClose}
     >
       {/* 1. Header: Title & Description (Idêntico ao Fale com a Gente) */}

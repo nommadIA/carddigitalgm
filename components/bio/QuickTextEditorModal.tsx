@@ -156,11 +156,11 @@ export function QuickTextEditorModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[220] flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto"
+      className="fixed inset-0 z-[220] flex items-center justify-center p-3 sm:p-5 bg-black/75 animate-fade-in overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-2xl max-h-[92vh] rounded-[2rem] bg-[#0e0f17] border border-white/10 text-white shadow-2xl flex flex-col overflow-hidden my-auto animate-scale-in"
+        className="w-full max-w-2xl max-h-[92vh] rounded-[2rem] fora border border-white/10 text-white shadow-2xl flex flex-col overflow-hidden my-auto animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

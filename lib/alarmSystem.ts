@@ -241,22 +241,71 @@ export const toggleAlarmsForBudget = (budgetId: string, active: boolean) => {
 };
 
 // ✅ AGORA: dispara 1x por dia por horário (recorrente)
-// Não depende mais do "triggered" antigo
+// Resiliente a minimização de janelas e segundo plano (se o timer do navegador atrasar até 45 min)
 export const checkAlarms = (): BudgetAlarm | null => {
   const alarms = getAlarms();
   const now = new Date();
-  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const currentHours = now.getHours();
+  const currentMinutes = now.getMinutes();
+  const currentTotalMinutes = currentHours * 60 + currentMinutes;
+  const currentTime = `${String(currentHours).padStart(2, "0")}:${String(currentMinutes).padStart(2, "0")}`;
   const today = todayKey();
 
   const alarmToTrigger = alarms.find((a: any) => {
     if (!a.active) return false;
-    if (a.time !== currentTime) return false;
     if (a.date && a.date !== today) return false;
     const last = String(a.lastTriggeredOn || "");
-    return last !== today; // ✅ só 1x por dia naquele horário
+    if (last === today) return false; // ✅ só 1x por dia naquele horário
+
+    // Se bater exatamente o minuto atual
+    if (a.time === currentTime) return true;
+
+    // Resiliência para segundo plano / app minimizado:
+    // Se o timer atrasou ou a aba foi desminimizada, verifica se o horário do alarme
+    // passou há menos de 45 minutos no dia de hoje
+    try {
+      const [alarmH, alarmM] = (a.time || "00:00").split(":").map(Number);
+      const alarmTotalMinutes = alarmH * 60 + alarmM;
+      const diffMinutes = currentTotalMinutes - alarmTotalMinutes;
+      if (diffMinutes >= 0 && diffMinutes <= 45) {
+        return true;
+      }
+    } catch {}
+
+    return false;
   });
 
   return (alarmToTrigger as any) || null;
+};
+
+// Informações de saúde dos alarmes para diagnóstico e check-in
+export const getAlarmsHealthInfo = () => {
+  const alarms = getAlarms();
+  const activeAlarms = alarms.filter((a) => a.active);
+  const now = new Date();
+  const currentTotal = now.getHours() * 60 + now.getMinutes();
+
+  let nextUpcoming: BudgetAlarm | null = null;
+  let minDiff = 24 * 60;
+
+  activeAlarms.forEach((a) => {
+    try {
+      const [h, m] = (a.time || "00:00").split(":").map(Number);
+      let diff = (h * 60 + m) - currentTotal;
+      if (diff < 0) diff += 24 * 60; // dia seguinte
+      if (diff < minDiff) {
+        minDiff = diff;
+        nextUpcoming = a;
+      }
+    } catch {}
+  });
+
+  return {
+    totalCount: alarms.length,
+    activeCount: activeAlarms.length,
+    nextUpcoming,
+    alarms: activeAlarms,
+  };
 };
 
 export const markAlarmAsTriggered = (alarmId: string) => {

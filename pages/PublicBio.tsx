@@ -196,7 +196,7 @@ export default function PublicBio() {
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="max-w-md w-full bg-[#121215] border border-white/5 rounded-[2rem] p-6 text-center space-y-6 shadow-lg relative z-10">
+        <div className="max-w-md w-full fora apple-glass-card border border-white/15 rounded-[2rem] p-6 text-center space-y-6 shadow-2xl backdrop-blur-2xl relative z-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#32BCAD]/10 text-[#32BCAD]">
             <Sparkles className="w-8 h-8" />
           </div>

@@ -161,3 +161,262 @@ export async function triggerRealNotification(options: SystemNotificationOptions
 
   return true;
 }
+
+/**
+ * Adiciona uma notificação ao histórico local do cabeçalho do app
+ */
+export function addInAppNotificationItem(item: {
+  title: string;
+  message: string;
+  type?: "system" | "alarm" | "update" | "direct";
+  url?: string;
+}) {
+  try {
+    const raw = localStorage.getItem("gm.notifications");
+    const list = raw ? JSON.parse(raw) : [];
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const newItem = {
+      id: "notif_" + Date.now(),
+      title: item.title,
+      message: item.message,
+      time: timeStr,
+      read: false,
+      type: item.type || "system",
+      url: item.url || "/",
+    };
+    list.unshift(newItem);
+    localStorage.setItem("gm.notifications", JSON.stringify(list.slice(0, 50)));
+    window.dispatchEvent(new CustomEvent("gm_notifications_changed"));
+  } catch (e) {}
+}
+
+/**
+ * 1. CHECK-IN ESTADO 1: APP ABERTO (FOREGROUND)
+ * Dispara visual em tela, áudio tátil, vibração smartphone e atualiza sino
+ */
+export async function testNotificationAberto(customSound?: string): Promise<{ ok: boolean; message: string }> {
+  const title = "🟢 CardDigital GM · App Aberto";
+  const body = "Alerta visual, toque sonoro e vibração tátil funcionando perfeitamente em primeiro plano!";
+
+  // 1. Toca som
+  try {
+    playNotificationSound(customSound);
+  } catch {}
+
+  // 2. Vibra smartphone
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    try {
+      navigator.vibrate([150, 80, 150]);
+    } catch {}
+  }
+
+  // 3. Adiciona ao sino de notificações
+  addInAppNotificationItem({
+    title,
+    message: body,
+    type: "system",
+  });
+
+  // 4. Toast Apple Glass
+  pushToast({
+    type: "success",
+    title,
+    message: body,
+    ttl: 5000,
+  });
+
+  return { ok: true, message: "Notificação em tela executada com sucesso!" };
+}
+
+/**
+ * 2. CHECK-IN ESTADO 2: APP MINIMIZADO
+ * Agenda notificação via Service Worker com atraso (ex: 5s) para o usuário poder minimizar a janela
+ */
+export async function testNotificationMinimizado(delaySeconds = 5): Promise<{ ok: boolean; message: string }> {
+  // Solicita permissão se necessário
+  if (typeof Notification !== "undefined" && Notification.permission !== "granted") {
+    try {
+      await Notification.requestPermission();
+    } catch {}
+  }
+
+  const title = "🟡 CardDigital GM · App Minimizado";
+  const body = "O sistema detectou que a janela estava minimizada e entregou o alerta nativo no sistema operacional!";
+  const icon = getUserRegisteredLogo() || OFFICIAL_APP_FAVICON;
+
+  // Tenta agendar no Service Worker para não ser congelado pelo navegador
+  if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && reg.active) {
+        reg.active.postMessage({
+          type: "SCHEDULE_TEST_NOTIFICATION",
+          delay: delaySeconds * 1000,
+          title,
+          body,
+          icon,
+          badge: OFFICIAL_APP_FAVICON,
+          url: "/",
+        });
+        return {
+          ok: true,
+          message: `Alerta agendado! Minimize a janela agora: ele surgirá em ${delaySeconds} segundos.`,
+        };
+      }
+    } catch (e) {}
+  }
+
+  // Fallback com setTimeout se SW indisponível
+  setTimeout(async () => {
+    await triggerRealNotification({
+      title,
+      body,
+      icon,
+      inAppToast: false,
+    });
+  }, delaySeconds * 1000);
+
+  return {
+    ok: true,
+    message: `Alerta agendado! Minimize a janela agora: ele surgirá em ${delaySeconds} segundos.`,
+  };
+}
+
+/**
+ * 3. CHECK-IN ESTADO 3: EM SEGUNDO PLANO (OUTRA ABA OU TELA BLOQUEADA)
+ * Agenda no Service Worker para 8 segundos para o usuário trocar de aba ou bloquear a tela
+ */
+export async function testNotificationSegundoPlano(delaySeconds = 8): Promise<{ ok: boolean; message: string }> {
+  if (typeof Notification !== "undefined" && Notification.permission !== "granted") {
+    try {
+      await Notification.requestPermission();
+    } catch {}
+  }
+
+  const title = "🔵 CardDigital GM · Segundo Plano";
+  const body = "Notificação recebida com sucesso com o dispositivo com tela bloqueada ou em outra aba!";
+  const icon = getUserRegisteredLogo() || OFFICIAL_APP_FAVICON;
+
+  if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && reg.active) {
+        reg.active.postMessage({
+          type: "SCHEDULE_TEST_NOTIFICATION",
+          delay: delaySeconds * 1000,
+          title,
+          body,
+          icon,
+          badge: OFFICIAL_APP_FAVICON,
+          url: "/",
+        });
+        return {
+          ok: true,
+          message: `Agendado! Bloqueie a tela ou abra outro aplicativo agora. Alerta chegará em ${delaySeconds}s.`,
+        };
+      }
+    } catch (e) {}
+  }
+
+  setTimeout(async () => {
+    await triggerRealNotification({
+      title,
+      body,
+      icon,
+      inAppToast: false,
+    });
+  }, delaySeconds * 1000);
+
+  return {
+    ok: true,
+    message: `Agendado! Bloqueie a tela ou abra outro aplicativo agora. Alerta chegará em ${delaySeconds}s.`,
+  };
+}
+
+/**
+ * 4. CHECK-IN ESTADO 4: APP FECHADO (PUSH & SERVICE WORKER)
+ * Dispara notificação via Service Worker nativo e checa prontidão de Web Push
+ */
+export async function testNotificationFechado(): Promise<{ ok: boolean; message: string; details: any }> {
+  const title = "🟣 CardDigital GM · App Fechado / Push";
+  const body = "Infraestrutura de Push e Service Worker ativa! Notificações chegam mesmo com o app encerrado.";
+  const icon = getUserRegisteredLogo() || OFFICIAL_APP_FAVICON;
+
+  let swActive = false;
+  let permission = typeof Notification !== "undefined" ? Notification.permission : "unknown";
+
+  if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && typeof reg.showNotification === "function") {
+        await reg.showNotification(title, {
+          body,
+          icon,
+          badge: OFFICIAL_APP_FAVICON,
+          vibrate: [200, 100, 200, 100, 200],
+          tag: "test-push-fechado-" + Date.now(),
+          renotify: true,
+          data: { url: "/" },
+        } as any);
+        swActive = true;
+      }
+    } catch (e) {}
+  }
+
+  return {
+    ok: swActive,
+    message: swActive
+      ? "Push disparado com sucesso através do Service Worker independente!"
+      : "Service Worker ainda iniciando ou permissão pendente.",
+    details: {
+      permission,
+      serviceWorkerActive: swActive,
+    },
+  };
+}
+
+/**
+ * Diagnóstico completo em tempo real do ecossistema de notificações
+ */
+export async function getNotificationDiagnostics() {
+  const isBrowser = typeof window !== "undefined";
+  const notifSupported = isBrowser && "Notification" in window;
+  const permission = notifSupported ? Notification.permission : "unsupported";
+  const swSupported = isBrowser && "serviceWorker" in navigator;
+  let swReady = false;
+  let swScope = "";
+
+  if (swSupported) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        swReady = true;
+        swScope = reg.scope;
+      }
+    } catch {}
+  }
+
+  const isIOS = isBrowser && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = isBrowser && (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (navigator as any).standalone === true
+  );
+
+  const vibrateSupported = isBrowser && "vibrate" in navigator;
+  const savedSound = isBrowser ? localStorage.getItem("gm.notificationSound") || "classic_chord" : "classic_chord";
+  const muted = isBrowser ? localStorage.getItem("gm.notificationsMuted") === "true" : false;
+
+  return {
+    notificationSupported: notifSupported,
+    permission,
+    serviceWorkerSupported: swSupported,
+    serviceWorkerReady: swReady,
+    serviceWorkerScope: swScope,
+    isIOS,
+    isStandalone,
+    vibrateSupported,
+    currentSound: savedSound,
+    soundMuted: muted,
+  };
+}

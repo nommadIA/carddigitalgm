@@ -60,6 +60,7 @@ import { fetchSettingsSupabase, applySettingsToDOM, readSettingsLocal } from "..
 import { initSyncHub, getSavedNotifications, saveNotifications } from "../../lib/syncHub";
 import AlarmToast from "./AlarmToast";
 import SmartphonePermissionModal from "./SmartphonePermissionModal";
+import NotificationCheckinModal from "../notifications/NotificationCheckinModal";
 import { ToastHost } from "./Toast";
 import BottomNav from "./BottomNav";
 
@@ -154,6 +155,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   const [showTutorial, setShowTutorial] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showCheckinModal, setShowCheckinModal] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>(() => {
     const cached = localStorage.getItem("gm.notifications");
@@ -449,7 +451,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (reduced) {
+    const isMobileDevice =
+      typeof window !== "undefined" &&
+      (window.innerWidth < 768 || ("ontouchstart" in window && window.innerWidth < 1024));
+
+    if (reduced || isMobileDevice) {
       document.documentElement.style.setProperty("--gm-app-bg-parallax-y", "0px");
       document.documentElement.style.setProperty("--gm-app-bg-parallax-x", "0px");
       document.documentElement.style.setProperty("--gm-app-bg-parallax-y-mouse", "0px");
@@ -1224,46 +1230,72 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       <BottomNav />
       <ToastHost />
 
-      {/* UPDATE DIALOG MODAL (NOTIFICAÇÕES CENTER) */}
+      {/* UPDATE DIALOG MODAL (NOTIFICAÇÕES CENTER EXPANDIDO) */}
       {showUpdateModal && (
-        <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl animate-fade-in" style={{ zIndex: 1000000 }}>
-          <div className="relative w-full max-w-md fora border border-white/12 rounded-2xl p-5 shadow-none flex flex-col gap-4 text-white overflow-hidden font-sans">
+        <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-3 sm:p-6 bg-black/75 animate-fade-in" style={{ zIndex: 1000000 }}>
+          <div className="relative w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl gm-push-glass-card rounded-[28px] border border-white/20 p-5 sm:p-7 shadow-[0_30px_90px_rgba(0,0,0,0.85)] flex flex-col gap-4.5 text-white overflow-hidden font-sans max-h-[90vh]">
+            
+            {/* Specular reflection overlay */}
+            <div className="absolute inset-0 pointer-events-none rounded-[28px] bg-gradient-to-b from-white/[0.12] via-transparent to-black/30" />
             
             {/* Ambient Glow */}
-            <div className="absolute -top-12 -left-12 w-28 h-28 bg-[var(--gm-primary)]/15 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -top-12 -left-12 w-32 h-32 bg-[var(--gm-primary)]/15 rounded-full blur-3xl pointer-events-none" />
             
             {/* Header */}
-            <div className="flex items-center justify-between shrink-0 pb-3 border-b border-white/10">
+            <div className="flex items-center justify-between shrink-0 pb-3.5 border-b border-white/10 relative z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl barra border border-white/10 flex items-center justify-center text-zinc-300 relative shadow-none">
-                  <Bell size={18} className={unreadCount > 0 ? "text-[var(--gm-primary)]" : "text-zinc-400"} />
+                <div className="w-11 h-11 rounded-2xl barra border border-white/15 flex items-center justify-center text-zinc-300 relative shadow-none">
+                  <Bell size={20} className={unreadCount > 0 ? "text-[var(--gm-primary)]" : "text-zinc-400"} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-black animate-pulse" />
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-black animate-pulse" />
                   )}
                 </div>
                 <div className="text-left">
-                  <h3 className="font-extrabold text-base tracking-tight text-white mb-0">Notificações</h3>
-                  <span className="text-[10px] font-bold text-zinc-400 tracking-wide uppercase">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-base sm:text-lg tracking-tight text-white mb-0 uppercase">Notificações</h3>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/15">
+                      Central Push
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold text-zinc-400 tracking-wide uppercase">
                     {unreadCount > 0 ? `${unreadCount} pendentes` : "Tudo em dia"}
                   </span>
                 </div>
               </div>
               <button
                 type="button"
-                className="w-8 h-8 rounded-full barra hover:bg-white/10 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-white/10 shadow-none cursor-pointer"
+                className="w-9 h-9 rounded-full barra hover:bg-white/15 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-white/10 shadow-none cursor-pointer"
                 onClick={() => setShowUpdateModal(false)}
                 title="Fechar Notificações"
               >
-                <X size={14} />
+                <X size={16} />
               </button>
             </div>
 
+            {/* Botão de Check-in de Notificações nos 4 Estados (Expandido) */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowUpdateModal(false);
+                setShowCheckinModal(true);
+              }}
+              className="w-full py-2.5 px-4 rounded-xl border border-[var(--gm-primary)]/35 bg-[var(--gm-primary)]/10 hover:bg-[var(--gm-primary)]/20 text-xs font-black text-white flex items-center justify-between transition-all cursor-pointer shadow-none shrink-0 relative z-10 group"
+            >
+              <span className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)] animate-pulse" />
+                <span className="uppercase tracking-wide">Check-in de Notificações (4 Estados)</span>
+              </span>
+              <span className="text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold group-hover:scale-105 transition-transform">
+                Aberto · Minimizado · 2º Plano · Fechado
+              </span>
+            </button>
+
             {/* Tabs Filter Bar */}
-            <div className="flex items-center gap-1 barra border border-white/10 rounded-xl p-1 shrink-0 shadow-none">
+            <div className="flex items-center gap-1.5 barra border border-white/10 rounded-xl p-1.5 shrink-0 shadow-none relative z-10">
               <button
                 type="button"
                 onClick={() => setActiveTab("todas")}
-                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
+                className={`py-2 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
                   activeTab === "todas"
                     ? "bg-[var(--gm-primary)] text-white border border-[var(--gm-primary)]/40 shadow-none"
                     : "text-zinc-400 hover:text-zinc-200"
@@ -1274,7 +1306,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setActiveTab("nao_lidas")}
-                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
+                className={`py-2 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
                   activeTab === "nao_lidas"
                     ? "bg-[var(--gm-primary)] text-white border border-[var(--gm-primary)]/40 shadow-none"
                     : "text-zinc-400 hover:text-zinc-200"
@@ -1285,7 +1317,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setActiveTab("diretas")}
-                className={`py-1.5 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
+                className={`py-2 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
                   activeTab === "diretas"
                     ? "bg-[var(--gm-primary)] text-white border border-[var(--gm-primary)]/40 shadow-none"
                     : "text-zinc-400 hover:text-zinc-200"
@@ -1297,20 +1329,20 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
             {/* Marcar todas como lidas Button */}
             {unreadCount > 0 && (
-              <div className="flex justify-end shrink-0 px-1 -mt-1">
+              <div className="flex justify-end shrink-0 px-1 -mt-1 relative z-10">
                 <button
                   type="button"
                   onClick={markAllAsRead}
-                  className="text-[10px] font-black text-[var(--gm-primary)] hover:text-orange-400 transition-all uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
+                  className="text-xs font-black text-[var(--gm-primary)] hover:text-orange-400 transition-all uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
                 >
-                  <Check size={11} className="stroke-[3]" />
+                  <Check size={12} className="stroke-[3]" />
                   Marcar todas como lidas
                 </button>
               </div>
             )}
 
             {/* Notifications Feed Viewport */}
-            <div className="overflow-y-auto pr-0.5 space-y-3 max-h-[320px] no-scrollbar text-left flex-1 min-h-[220px] flex flex-col">
+            <div className="overflow-y-auto pr-0.5 space-y-3 max-h-[380px] no-scrollbar text-left flex-1 min-h-[220px] flex flex-col relative z-10">
               {filteredNotifications.length > 0 ? (
                 <div className="space-y-3 w-full">
                   {filteredNotifications.map((noti) => (
@@ -1410,7 +1442,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             </div>
 
             {/* Footer watermark & CTA close */}
-            <div className="shrink-0 border-t border-white/10 pt-3 flex items-center justify-between text-[10px] font-bold text-zinc-400 tracking-wider">
+            <div className="shrink-0 border-t border-white/10 pt-3 flex items-center justify-between text-[10px] font-bold text-zinc-400 tracking-wider relative z-10">
               <span className="flex items-center gap-1">
                 <span className="text-white font-black tracking-normal">CardDigital</span>
                 <span className="text-[var(--gm-primary)] font-black tracking-normal">GM</span>
@@ -1430,6 +1462,10 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         </div>
       )}
       <WhatsAppSelectorModal />
+      <NotificationCheckinModal
+        isOpen={showCheckinModal}
+        onClose={() => setShowCheckinModal(false)}
+      />
     </div>
   );
 }

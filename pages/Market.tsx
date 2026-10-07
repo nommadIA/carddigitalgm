@@ -11,6 +11,7 @@ import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
 import { SectionDivider } from "../components/ui/SectionDivider";
+import { BorderBeam } from "../components/ui/BorderBeam";
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from '@google/genai';
 
@@ -1022,8 +1023,9 @@ const Market = () => {
        <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
        <SectionDivider label="Resumo Financeiro" />
        <Grid cols={1}>
-           <div className="gm-card fora rounded-2xl border border-white/10 p-0 overflow-hidden shadow-none">
-              <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+           <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-0 overflow-hidden shadow-none">
+              <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+              <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
                  <div>
                     <p className="text-xs opacity-70 uppercase tracking-widest font-bold mb-1 text-slate-400">Saldo Disponível</p>
                     <div className="flex items-center justify-center sm:justify-start gap-4">
@@ -1058,8 +1060,9 @@ const Market = () => {
 
        {showHistory ? (
            <Grid cols={1}>
-               <div className="gm-card fora p-6 rounded-2xl border border-white/10 shadow-none">
-                   <div className="text-lg font-bold text-white mb-5">Histórico de Gastos Mensais</div>
+               <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-6 overflow-hidden shadow-none">
+                   <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+                   <div className="text-lg font-bold text-white mb-5 relative z-10">Histórico de Gastos Mensais</div>
                    {historyLoading ? (
                        <div className="flex justify-center py-12">
                            <Loader2 size={32} className="animate-spin text-slate-500" />

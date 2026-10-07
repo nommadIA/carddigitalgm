@@ -206,11 +206,11 @@ body {
 .dialog,
 .barra,
 .fora {
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
   box-shadow: none !important;
   contain: none !important;
   transition: all .22s;
@@ -320,10 +320,10 @@ html:not([data-theme="light"]):not(.gm-light) .gm-filter-tab,
 html:not([data-theme="light"]):not(.gm-light) .gm-status-capsule,
 html:not([data-theme="light"]):not(.gm-light) .barra,
 html:not([data-theme="light"]):not(.gm-light) .fora {
-  background: rgba(18, 18, 24, 0.40) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
   box-shadow: none !important;
   contain: none !important;
 }

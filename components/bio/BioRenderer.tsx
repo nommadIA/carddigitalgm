@@ -5489,7 +5489,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
       {/* WEBSITE LOGIN MODAL OVERLAY */}
       {isLoginOpen && (
-        <div className="fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setIsLoginOpen(false)}>
+        <div className="fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/80 animate-fade-in" onClick={() => setIsLoginOpen(false)}>
           <div 
             className={`w-full max-w-md rounded-[2rem] border overflow-hidden shadow-lg flex flex-col ${
               theme === 'glass'
@@ -5602,7 +5602,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
       {/* PWA / MOBILE APP LAUNCH REDIRECT MODAL */}
       {showAppRedirectScreen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/85 animate-fade-in">
           <div 
             className={`w-full max-w-md rounded-[2.5rem] border p-8 flex flex-col items-center text-center shadow-lg relative ${
               theme === 'glass'
@@ -5708,7 +5708,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         const isMainPng = isPngImage(activeImageUrl);
 
         return (
-          <div className="fixed inset-0 z-[150] flex items-start md:items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto py-6 sm:py-10 animate-fade-in" onClick={() => setSelectedProduct(null)}>
+          <div className="fixed inset-0 z-[150] flex items-start md:items-center justify-center p-4 bg-black/80 overflow-y-auto py-6 sm:py-10 animate-fade-in" onClick={() => setSelectedProduct(null)}>
             <div 
               className={`w-full max-w-lg md:max-w-[1200px] lg:max-w-[1400px] xl:max-w-[1500px] rounded-[2rem] border overflow-hidden md:overflow-visible shadow-lg flex flex-col h-auto md:max-h-none ${
                 theme === 'glass'
@@ -6009,7 +6009,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       {/* Zoomed Image Lightbox Overlay */}
       {zoomedImage && (
         <div 
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-fade-in cursor-zoom-out"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 animate-fade-in cursor-zoom-out"
           onClick={() => setZoomedImage(null)}
         >
           <button 
@@ -6032,7 +6032,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       {/* Portfolio Fullscreen Lightbox Overlay */}
       {portfolioLightbox && (
         <div 
-          className="fixed inset-0 z-[250] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md animate-fade-in cursor-default select-none"
+          className="fixed inset-0 z-[250] flex flex-col items-center justify-center bg-black/95 animate-fade-in cursor-default select-none"
           onClick={() => setPortfolioLightbox(null)}
         >
           {/* Top panel with details / close button */}
@@ -7000,7 +7000,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
       {/* Elegant Custom Alert Modal */}
       {customAlert && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setCustomAlert(null)}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 animate-fade-in" onClick={() => setCustomAlert(null)}>
           <div 
             className={`w-full max-w-sm rounded-[2rem] border overflow-hidden shadow-lg p-6 flex flex-col items-center text-center gap-4 animate-scale-up ${
               theme === 'dark' 

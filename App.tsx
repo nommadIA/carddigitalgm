@@ -46,31 +46,28 @@ const PrivateRoutes = () => {
   return (
     <ProtectedRoute>
       <Layout>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.14, ease: "easeOut" }}
-            className="grid grid-cols-1 w-full max-w-full p-4 sm:px-6 sm:py-6 md:px-8 md:py-8 gap-4 sm:gap-6 box-border"
-          >
-            <Suspense fallback={<PageLoader />}>
-              <Routes location={location}>
-                <Route path="/" element={<RouteBoundary title="Dashboard"><Dashboard /></RouteBoundary>} />
-                <Route path="/budgets" element={<RouteBoundary title="Orçamentos"><Budgets /></RouteBoundary>} />
-                <Route path="/clients" element={<RouteBoundary title="Clientes"><Clients /></RouteBoundary>} />
-                <Route path="/expenses" element={<RouteBoundary title="Despesas"><Expenses /></RouteBoundary>} />
-                <Route path="/market" element={<RouteBoundary title="Mercado"><Market /></RouteBoundary>} />
-                <Route path="/notes" element={<RouteBoundary title="Anotações"><Notes /></RouteBoundary>} />
-                <Route path="/financial" element={<RouteBoundary title="Financeiro"><Financial /></RouteBoundary>} />
-                <Route path="/minha-bio" element={<RouteBoundary title="Minha Bio"><Bio /></RouteBoundary>} />
-                <Route path="/configuracoes" element={<RouteBoundary title="Configurações"><Configuracoes /></RouteBoundary>} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </motion.div>
-        </AnimatePresence>
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0.9 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.08, ease: [0.16, 1, 0.3, 1] }}
+          className="grid grid-cols-1 w-full max-w-full p-4 sm:px-6 sm:py-6 md:px-8 md:py-8 gap-4 sm:gap-6 box-border will-change-[opacity]"
+        >
+          <Suspense fallback={<PageLoader />}>
+            <Routes location={location}>
+              <Route path="/" element={<RouteBoundary title="Dashboard"><Dashboard /></RouteBoundary>} />
+              <Route path="/budgets" element={<RouteBoundary title="Orçamentos"><Budgets /></RouteBoundary>} />
+              <Route path="/clients" element={<RouteBoundary title="Clientes"><Clients /></RouteBoundary>} />
+              <Route path="/expenses" element={<RouteBoundary title="Despesas"><Expenses /></RouteBoundary>} />
+              <Route path="/market" element={<RouteBoundary title="Mercado"><Market /></RouteBoundary>} />
+              <Route path="/notes" element={<RouteBoundary title="Anotações"><Notes /></RouteBoundary>} />
+              <Route path="/financial" element={<RouteBoundary title="Financeiro"><Financial /></RouteBoundary>} />
+              <Route path="/minha-bio" element={<RouteBoundary title="Minha Bio"><Bio /></RouteBoundary>} />
+              <Route path="/configuracoes" element={<RouteBoundary title="Configurações"><Configuracoes /></RouteBoundary>} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </motion.div>
       </Layout>
     </ProtectedRoute>
   );
@@ -167,33 +164,24 @@ const AppRoutes = () => {
   }
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={getRouteKey(location.pathname)}
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.97 }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full min-h-full flex-1 flex flex-col"
-      >
-        <Suspense fallback={<PageLoader />}>
-          <Routes location={location}>
-            {subdomainTenant && (
-              <Route path="/" element={<PublicBio />} />
-            )}
-            <Route path="/pix" element={<PixCopy />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/bio/:tenantId" element={<PublicBio />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/update-password" element={<UpdatePassword />} />
-            
-            {/* Catch-all to PrivateRoutes (matched base is "/") */}
-            <Route path="/*" element={<PrivateRoutes />} />
-          </Routes>
-        </Suspense>
-      </motion.div>
-    </AnimatePresence>
+    <div className="w-full min-h-full flex-1 flex flex-col will-change-[opacity]">
+      <Suspense fallback={<PageLoader />}>
+        <Routes location={location}>
+          {subdomainTenant && (
+            <Route path="/" element={<PublicBio />} />
+          )}
+          <Route path="/pix" element={<PixCopy />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/bio/:tenantId" element={<PublicBio />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
+          
+          {/* Catch-all to PrivateRoutes (matched base is "/") */}
+          <Route path="/*" element={<PrivateRoutes />} />
+        </Routes>
+      </Suspense>
+    </div>
   );
 };
 

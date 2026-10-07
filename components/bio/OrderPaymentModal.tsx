@@ -256,11 +256,11 @@ export function OrderPaymentModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto gm-customer-modal-overlay"
+      className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 bg-black/80 animate-in fade-in duration-200 overflow-y-auto gm-customer-modal-overlay"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-xl sm:max-w-2xl bg-[#0f1016]/98 border border-white/12 rounded-[2.25rem] p-6 sm:p-8 shadow-[0_25px_70px_rgba(0,0,0,0.85)] relative my-auto max-h-[92vh] flex flex-col text-white overflow-hidden gm-customer-modal-container"
+        className="w-full max-w-xl sm:max-w-2xl fora border border-white/12 rounded-[2.25rem] p-6 sm:p-8 shadow-2xl relative my-auto max-h-[92vh] flex flex-col text-white overflow-hidden gm-customer-modal-container"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}

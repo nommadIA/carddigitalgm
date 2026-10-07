@@ -52,7 +52,7 @@ interface BudgetRow {
 
 /* ---------- Estilos reutilizáveis (tokens do tema em --gm-*) ---------- */
 const cardBase =
-  "fora rounded-2xl transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+  "relative rounded-2xl p-6 border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden transition-all shadow-none";
 const inputBase =
   "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
 
@@ -373,8 +373,8 @@ export default function Dashboard() {
 
       {/* 2. CARD DO RELÓGIO DIGITAL CENTRALIZADO (COMO NO PRINT DO USUÁRIO) */}
       <div className="relative rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden shadow-none">
-        {/* Efeito de Feixe de Luz Apple Glass na borda (curvatura perfeita nos cantos, acelera nas horizontais) */}
-        <BorderBeam duration={9} borderWidth={1.4} color="#ffffff" size={240} />
+        {/* Efeito de Feixe de Luz Apple Glass na borda */}
+        <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
 
         {/* Conteúdo interno do container */}
         <div className="relative z-10 flex items-center justify-center gap-3 sm:gap-4 text-white">
@@ -392,28 +392,30 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
         <Link
           to="/budgets?new=true"
-          className="gm-btn group h-14 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none"
+          className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden gm-btn group h-14 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer text-white shadow-none"
         >
-          <Plus size={18} className="transition-transform duration-300 ease-in-out group-hover:rotate-180 text-[color:var(--gm-primary)]" />
-          <span>NOVO ORÇAMENTO</span>
+          <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
+          <Plus size={18} className="transition-transform duration-300 ease-in-out group-hover:rotate-180 text-[color:var(--gm-primary)] relative z-10" />
+          <span className="relative z-10">NOVO ORÇAMENTO</span>
         </Link>
 
         <button
           type="button"
           onClick={handleExport}
           disabled={exporting}
-          className="gm-btn group h-14 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
+          className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden gm-btn group h-14 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer text-white shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
           title="Exportar relatório consolidado (Orçamentos, Clientes, Notas, Financeiro e Mercado) no papel timbrado"
         >
+          <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
           {exporting ? (
             <>
-              <Loader2 size={18} className="animate-spin text-white" />
-              <span>EXPORTANDO...</span>
+              <Loader2 size={18} className="animate-spin text-white relative z-10" />
+              <span className="relative z-10">EXPORTANDO...</span>
             </>
           ) : (
             <>
-              <Download size={18} className="transition-transform duration-300 ease-in-out group-hover:scale-110 text-[color:var(--gm-primary)]" />
-              <span>EXPORTAR</span>
+              <Download size={18} className="transition-transform duration-300 ease-in-out group-hover:scale-110 text-[color:var(--gm-primary)] relative z-10" />
+              <span className="relative z-10">EXPORTAR</span>
             </>
           )}
         </button>
@@ -425,8 +427,10 @@ export default function Dashboard() {
       {/* 4. TOP METRIC CARDS WITH DISTINCT ICON BOXES (4 COLUMNS) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-1">
         {/* CARD 1: FATURADO NO MÊS */}
-        <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
-          <div className="flex items-start justify-between">
+        <div className={`p-6 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
+          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+
+          <div className="flex items-start justify-between relative z-10">
             <div>
               <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
                 Faturado no Mês
@@ -440,9 +444,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="h-10 my-1" />
+          <div className="h-10 my-1 relative z-10" />
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg w-fit border border-emerald-500/20">
               <ArrowUpRight size={14} />
               <span>+12,4% este mês</span>
@@ -451,8 +455,10 @@ export default function Dashboard() {
         </div>
 
         {/* CARD 2: ORÇAMENTOS ABERTOS */}
-        <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-amber-500/40`}>
-          <div className="flex items-start justify-between">
+        <div className={`p-6 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-amber-500/40`}>
+          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+
+          <div className="flex items-start justify-between relative z-10">
             <div>
               <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
                 Orçamentos Abertos
@@ -466,9 +472,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="h-10 my-1" />
+          <div className="h-10 my-1 relative z-10" />
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-lg w-fit border border-amber-500/20">
               <Clock size={14} />
               <span>{stats.aguardando} em análise</span>
@@ -477,8 +483,10 @@ export default function Dashboard() {
         </div>
 
         {/* CARD 3: TICKET MÉDIO */}
-        <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-emerald-500/40`}>
-          <div className="flex items-start justify-between">
+        <div className={`p-6 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-emerald-500/40`}>
+          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+
+          <div className="flex items-start justify-between relative z-10">
             <div>
               <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
                 Ticket Médio
@@ -492,9 +500,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="h-10 my-1" />
+          <div className="h-10 my-1 relative z-10" />
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg w-fit border border-emerald-500/20">
               <ArrowUpRight size={14} />
               <span>+4,1% do alvo</span>
@@ -503,8 +511,10 @@ export default function Dashboard() {
         </div>
 
         {/* CARD 4: CLIENTES ATIVOS */}
-        <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-blue-500/40`}>
-          <div className="flex items-start justify-between">
+        <div className={`p-6 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-blue-500/40`}>
+          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+
+          <div className="flex items-start justify-between relative z-10">
             <div>
               <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
                 Clientes Ativos
@@ -518,9 +528,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="h-10 my-1" />
+          <div className="h-10 my-1 relative z-10" />
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-lg w-fit border border-blue-500/20">
               <Users size={14} />
               <span>+9 novos esta semana</span>
@@ -550,11 +560,12 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        <div className={`overflow-hidden ${cardBase}`}>
-          <div className="overflow-x-auto">
+        <div className={`overflow-hidden ${cardBase} !p-0`}>
+          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+          <div className="overflow-x-auto relative z-10">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="barra border-b border-white/10 text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
+                <tr className="border-b border-white/10 text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider bg-white/[0.02]">
                   <th className="px-6 py-4">CLIENTE</th>
                   <th className="px-6 py-4">SERVIÇO</th>
                   <th className="px-6 py-4">VALOR</th>
@@ -613,60 +624,64 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-1 mb-8 sm:mb-12 md:mb-16">
         {/* LEFT COLUMN: NOVO CLIENTE */}
         <div className={`lg:col-span-2 p-6 ${cardBase}`}>
-          <div className="flex items-center gap-3.5 mb-5">
-            <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
-              <UserPlus size={20} />
+          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3.5 mb-5">
+              <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
+                <UserPlus size={20} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[color:var(--gm-text)] tracking-tight">
+                  Novo cliente
+                </h2>
+                <p className="text-xs text-[color:var(--gm-text-tertiary)] font-medium">
+                  Cadastre novos contatos rapidamente para emitir orçamentos
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-[color:var(--gm-text)] tracking-tight">
-                Novo cliente
-              </h2>
-              <p className="text-xs text-[color:var(--gm-text-tertiary)] font-medium">
-                Cadastre novos contatos rapidamente para emitir orçamentos
-              </p>
-            </div>
+
+            <form onSubmit={handleCreateClient} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-[color:var(--gm-text-secondary)] mb-2 block uppercase tracking-wide">
+                  Nome do Cliente
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Studio Marés Design"
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                  className={inputBase}
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[color:var(--gm-text-secondary)] mb-2 block uppercase tracking-wide">
+                  WhatsApp / Telefone
+                </label>
+                <input
+                  type="text"
+                  placeholder="(00) 90000-0000"
+                  value={newClientPhone}
+                  onChange={(e) => setNewClientPhone(formatPhoneBR(e.target.value))}
+                  inputMode="tel"
+                  className={inputBase}
+                />
+              </div>
+
+              <div className="pt-2">
+                <button type="submit" disabled={savingClient} className="gm-btn h-12 text-xs uppercase tracking-wider shadow-none">
+                  {savingClient ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                  <span>Cadastrar Cliente</span>
+                </button>
+              </div>
+            </form>
           </div>
-
-          <form onSubmit={handleCreateClient} className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-[color:var(--gm-text-secondary)] mb-2 block uppercase tracking-wide">
-                Nome do Cliente
-              </label>
-              <input
-                type="text"
-                placeholder="Ex: Studio Marés Design"
-                value={newClientName}
-                onChange={(e) => setNewClientName(e.target.value)}
-                className={inputBase}
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-[color:var(--gm-text-secondary)] mb-2 block uppercase tracking-wide">
-                WhatsApp / Telefone
-              </label>
-              <input
-                type="text"
-                placeholder="(00) 90000-0000"
-                value={newClientPhone}
-                onChange={(e) => setNewClientPhone(formatPhoneBR(e.target.value))}
-                inputMode="tel"
-                className={inputBase}
-              />
-            </div>
-
-            <div className="pt-2">
-              <button type="submit" disabled={savingClient} className="gm-btn h-12 text-xs uppercase tracking-wider shadow-none">
-                {savingClient ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-                <span>Cadastrar Cliente</span>
-              </button>
-            </div>
-          </form>
         </div>
 
         {/* RIGHT COLUMN: PALETA DO SISTEMA (CONFORME IMAGEM DE PALETA) */}
         <div className={`lg:col-span-1 p-6 flex flex-col justify-between ${cardBase}`}>
-          <div>
+          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+          <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-xl font-bold text-[color:var(--gm-text)] tracking-tight">

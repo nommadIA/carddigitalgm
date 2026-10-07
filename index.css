@@ -22,37 +22,59 @@
 }
 
 /* =========================================================
-   VIDRO FOSCO NO LUGAR DE SOMBRA PESADA (.barra e .fora)
+   VIDRO FOSCO SUAVE (.barra e .fora) - EFEITO PADRÃO LIMPO
 ========================================================= */
-.barra,
+.barra {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: none !important;
+}
+
 .fora {
-  background: rgba(18, 18, 24, 0.40);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
   box-shadow: none !important;
 }
 
 [data-theme="light"] .barra,
-[data-theme="light"] .fora,
-.gm-light .barra,
-.gm-light .fora {
+.gm-light .barra {
   background: rgba(255, 255, 255, 0.65) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   box-shadow: none !important;
 }
 
+[data-theme="light"] .fora,
+.gm-light .fora {
+  background: rgba(255, 255, 255, 0.70) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
+}
+
 [data-theme="dark"] .barra,
-[data-theme="dark"] .fora,
 .gm-dark .barra,
+html:not([data-theme="light"]):not(.gm-light) .barra {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .fora,
 .gm-dark .fora,
-html:not([data-theme="light"]):not(.gm-light) .barra,
 html:not([data-theme="light"]):not(.gm-light) .fora {
-  background: rgba(18, 18, 24, 0.40) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
   box-shadow: none !important;
 }
 
@@ -9171,5 +9193,225 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
   }
 }
 
+/* =========================================================================
+   SISTEMA APPLE IPHONE - VELOCIDADE DE NAVEGAÇÃO & FLUIDEZ TOTAL
+   Zero travamento, resposta tátil instantânea (60/120fps ProMotion)
+   ========================================================================= */
 
+/* 1. Eliminação do atraso de 300ms de toque em qualquer elemento interativo */
+html,
+body,
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+.cursor-pointer,
+.sidebar-btn,
+.gm-btn,
+.bio-button,
+.gm-filter-tab,
+.gm-status-capsule,
+.gm-budget-action-btn {
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: manipulation;
+}
 
+/* 2. Rolagem fluida com momentum nativo do iOS Safari */
+html,
+body,
+.gm-main,
+.gm-container,
+.gm-scrollable,
+.scroll-y-auto,
+[data-page-container],
+.page-container,
+.overflow-y-auto,
+[style*="overflow-y: auto"],
+[style*="overflowY: auto"] {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: auto !important;
+  scroll-behavior: smooth;
+}
+
+/* 3. Aceleração de hardware e composição direta na GPU em containers e transições */
+.gm-layout,
+.gm-main,
+.gm-container,
+.gm-bottom-nav,
+.gm-sidebar,
+.gm-mobile-header,
+.gm-card,
+.apple-glass-card,
+.fora,
+.barra,
+.gm-modal {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Transições ultra-ágeis de troca de abas sem atraso visual */
+.gm-bottom-nav a,
+.gm-sidebar a,
+.gm-filter-tab {
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.12s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.gm-bottom-nav a:active,
+.gm-sidebar a:active,
+.gm-filter-tab:active,
+.gm-btn:active {
+  transform: scale(0.96) !important;
+}
+
+/* =========================================================================
+   DESFOQUE BLUR PADRÃO DO APP EM TODAS AS PÁGINAS (SEM FALHAS)
+   Suporte universal completo para Apple WebKit / iOS Safari / Chrome
+   ========================================================================= */
+
+/* Compatibilidade universal de -webkit-backdrop-filter para classes Tailwind */
+.backdrop-blur-none {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.backdrop-blur-xs,
+[class*="backdrop-blur-[1px]"],
+[class*="backdrop-blur-[2px]"] {
+  -webkit-backdrop-filter: blur(2px) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+.backdrop-blur-sm,
+[class*="backdrop-blur-sm"] {
+  -webkit-backdrop-filter: blur(8px) saturate(160%) !important;
+  backdrop-filter: blur(8px) saturate(160%) !important;
+}
+
+.backdrop-blur,
+[class*="backdrop-blur"]:not([class*="backdrop-blur-none"]):not([class*="backdrop-blur-sm"]):not([class*="backdrop-blur-md"]):not([class*="backdrop-blur-lg"]):not([class*="backdrop-blur-xl"]):not([class*="backdrop-blur-2xl"]):not([class*="backdrop-blur-3xl"]) {
+  -webkit-backdrop-filter: blur(14px) saturate(175%) !important;
+  backdrop-filter: blur(14px) saturate(175%) !important;
+}
+
+.backdrop-blur-md,
+[class*="backdrop-blur-md"] {
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+}
+
+.backdrop-blur-lg,
+[class*="backdrop-blur-lg"] {
+  -webkit-backdrop-filter: blur(24px) saturate(185%) !important;
+  backdrop-filter: blur(24px) saturate(185%) !important;
+}
+
+.backdrop-blur-xl,
+[class*="backdrop-blur-xl"] {
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+}
+
+.backdrop-blur-2xl,
+[class*="backdrop-blur-2xl"] {
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+}
+
+.backdrop-blur-3xl,
+[class*="backdrop-blur-3xl"] {
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+}
+
+/* Superfícies limpas dos containers do app sem o desfoque pesado antigo */
+.gm-modal,
+.gm-search-apple-glass,
+.gm-pin-lock-card,
+.gm-bottom-nav,
+.gm-mobile-header {
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* Cards e containers do app com efeito limpo e transparente */
+.gm-card,
+.glass-card,
+.fora,
+.apple-glass-card,
+.gm-budget-card,
+.gm-budget-row,
+.gm-dashboard-card,
+.gm-settings-card,
+.gm-note-card,
+.gm-login-card-compact,
+.gm-login-card-square,
+.gm-pin-card-compact,
+.gm-pin-card-square {
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Container de Vidro Fosco Líquido Especial para Configurações e Notificações Push */
+.gm-push-glass-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: none !important;
+}
+
+/* Transparência líquida limpa em Modo Escuro (padrão) */
+html:not([data-theme="light"]):not(.gm-light) .fora,
+html:not([data-theme="light"]):not(.gm-light) .gm-card,
+html:not([data-theme="light"]):not(.gm-light) .glass-card,
+html:not([data-theme="light"]):not(.gm-light) .apple-glass-card,
+[data-theme="dark"] .fora,
+[data-theme="dark"] .gm-card,
+[data-theme="dark"] .glass-card,
+[data-theme="dark"] .apple-glass-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: none !important;
+}
+
+/* Transparência líquida perfeita em Modo Claro */
+[data-theme="light"] .fora,
+[data-theme="light"] .barra,
+[data-theme="light"] .gm-card,
+[data-theme="light"] .glass-card,
+[data-theme="light"] .apple-glass-card,
+.gm-light .fora,
+.gm-light .barra,
+.gm-light .gm-card,
+.gm-light .glass-card,
+.gm-light .apple-glass-card {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
+}
+
+/* Desfoque elegante em cabeçalhos fixos e sticky ao rolar */
+.sticky.top-0,
+.sticky.-top-4,
+.sticky.-top-6,
+.sticky.-top-8,
+.gm-mobile-header,
+header.sticky {
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  background: rgba(12, 12, 16, 0.65) !important;
+}
+
+/* Desfoque consistente em todos os overlays de modais */
+div[class*="fixed inset-0"][class*="z-"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+}

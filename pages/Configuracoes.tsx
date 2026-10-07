@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import Select from "../components/ui/Select";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
+import { BorderBeam } from "../components/ui/BorderBeam";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { ScaleSlider } from "../components/ScaleSlider";
 import { ColorSettingsManager } from "../components/ColorSettingsManager";
@@ -56,10 +57,16 @@ import {
   Music,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   Square,
   MousePointerClick,
   Keyboard,
   ShieldCheck,
+  Radio,
+  Apple,
+  Layers,
+  Zap,
+  Info,
 } from "lucide-react";
 import SecurityPinSettings from "../components/ui/SecurityPinSettings";
 import { BackgroundEffectsGallery } from "../components/settings/BackgroundEffectsGallery";
@@ -96,6 +103,7 @@ import {
 import { triggerRealNotification } from "../lib/realNotification";
 import { broadcastBackgroundChange, broadcastAppNotification } from "../lib/syncHub";
 import SmartphonePermissionModal from "../components/ui/SmartphonePermissionModal";
+import NotificationCheckinModal from "../components/notifications/NotificationCheckinModal";
 
 type Fit = "cover" | "contain";
 
@@ -211,6 +219,7 @@ export default function Configuracoes() {
   });
   const [shakeTest, setShakeTest] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [showCheckinModal, setShowCheckinModal] = useState(false);
 
   const variants = {
     enter: (direction: number) => ({
@@ -1683,9 +1692,10 @@ export default function Configuracoes() {
             <div className="w-full flex flex-col gap-6">
               {/* SUBDIVISÃO SUPERIOR: Menu de Cápsulas de Expansão do Painel de Configurações */}
               <SectionDivider label="Personalização do app" />
-              <div className="gm-settings-card fora flex flex-col gap-3 p-4 sm:p-5 rounded-2xl border border-white/10 shadow-none backdrop-blur-md">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 px-1">
-                  <span className="text-xs font-extrabold text-[var(--gm-primary)] uppercase tracking-wider flex items-center gap-2">
+              <div className="relative rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden flex flex-col gap-3 p-4 sm:p-5 shadow-none">
+                <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 px-1 relative z-10">
+                  <span className="text-xs font-black text-[var(--gm-primary)] uppercase tracking-wider flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4 text-[var(--gm-primary)]" />
                     PAINEL DE CONFIGURAÇÕES
                   </span>
@@ -2750,142 +2760,319 @@ export default function Configuracoes() {
 
               {/* SEÇÃO 6: NOTIFICAÇÕES PUSH */}
               {openSections.push && (
-                <div className="gm-settings-card fora border border-white/10 p-4 sm:p-6 md:p-8 rounded-2xl space-y-6 shadow-none backdrop-blur-md w-full pb-10 animate-in fade-in duration-300">
-                  <div className="sticky -top-4 sm:-top-6 md:-top-8 z-20 barra py-3 sm:py-4 border-b border-white/10 flex items-center justify-between mb-2 rounded-t-xl px-2">
-                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
-                      <Bell className="w-5 h-5 text-[var(--gm-primary)] shrink-0" />
-                      <span>NOTIFICAÇÕES PUSH</span>
+                <div
+                  className="relative rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 space-y-6 sm:space-y-7 w-full pb-10 border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden animate-in fade-in duration-300 shadow-none"
+                >
+                  <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+
+                  {/* Barra de Cabeçalho Fixa */}
+                  <div
+                    className="sticky -top-4 sm:-top-6 md:-top-8 z-20 py-3.5 sm:py-4 flex items-center justify-between mb-2 rounded-t-xl px-3 sm:px-4 border-b border-white/10 bg-black/40 backdrop-blur-md"
+                  >
+                    <span className="flex items-center gap-2.5 text-base sm:text-lg font-black text-white uppercase tracking-wider">
+                      <div className="w-8 h-8 rounded-xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] shadow-sm shrink-0">
+                        <Bell className="w-4.5 h-4.5" />
+                      </div>
+                      <span>NOTIFICAÇÕES PUSH & ALERTAS</span>
                     </span>
-                    <span className="text-xs font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-3 py-1 rounded-full border border-[var(--gm-primary)]/20 whitespace-nowrap shadow-sm">
                       Edição Ativa
                     </span>
                   </div>
 
-                  <div className="flex flex-col items-center text-center max-w-md mx-auto space-y-5">
+                  {/* 1. HERO CARD: STATUS PRINCIPAL DO DISPOSITIVO (HORIZONTALMENTE EXPANDIDO) */}
+                  <div
+                    className="relative w-full p-6 sm:p-7 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden text-center flex flex-col items-center gap-3.5 shadow-none"
+                  >
+                    <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
                     <div
-                      className={"w-16 h-16 rounded-full flex items-center justify-center border transition-all duration-300 " + (pushActive && pushPermission === "granted" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 animate-pulse" : "bg-amber-500/10 border-amber-500/30 text-amber-500")}
+                      className={"relative z-10 w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-300 shadow-md " + (pushActive && pushPermission === "granted" ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400" : "bg-amber-500/15 border-amber-500/40 text-amber-400")}
                     >
-                      <Bell size={28} className={testing ? "animate-bounce" : ""} />
+                      <Bell size={26} className={testing ? "animate-bounce" : ""} />
                     </div>
 
-                    <div>
-                      <h4 className="text-base font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
+                    <div className="space-y-1 relative z-10">
+                      <h4 className="text-base sm:text-xl font-black text-white uppercase tracking-wider">
                         Alertas e Notificações do Dispositivo
                       </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                        Ative os alertas push para receber avisos em tempo real diretamente no seu smartphone ou computador.
+                      <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                        Ative as notificações push para receber alertas instantâneos de orçamentos aprovados, prazos e mensagens diretamente no smartphone e computador.
                       </p>
                     </div>
 
-                    <div className="w-full flex flex-col gap-3 pt-2">
-                      <div className="w-full flex items-center justify-between p-3.5 fora rounded-xl border border-white/10">
-                        <div className="text-left">
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Notificações Push</p>
-                          <p className={"text-[10px] font-semibold uppercase " + (pushActive && pushPermission === "granted" ? "text-emerald-500" : "text-amber-500")}>
-                            {pushActive && pushPermission === "granted" ? "Ativo (Ligado)" : "Desativado (Desligado)"}
-                          </p>
+                    {/* Badge de Status Geral em Tempo Real */}
+                    <div className="pt-1 relative z-10">
+                      {pushActive && pushPermission === "granted" ? (
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold shadow-sm">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Notificações Ativas e Prontas no Dispositivo</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            if (pushPermission !== "granted") {
-                              const permission = await Notification.requestPermission();
-                              setPushPermission(permission);
-                              if (permission === "granted") {
-                                setPushActive(true);
-                                localStorage.setItem("gm.pushActive", "true");
-                              } else {
-                                setPushActive(false);
-                                localStorage.setItem("gm.pushActive", "false");
-                              }
-                            } else {
-                              const nextActive = !pushActive;
-                              setPushActive(nextActive);
-                              localStorage.setItem("gm.pushActive", nextActive ? "true" : "false");
-                            }
-                          }}
-                          className={"w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none " + (pushActive && pushPermission === "granted" ? "bg-emerald-500 justify-end" : "bg-slate-300 dark:bg-zinc-800 justify-start")}
-                        >
-                          <motion.div layout className="w-5 h-5 bg-white rounded-full shadow-md" />
-                        </button>
-                      </div>
-
-                      <div className="w-full flex items-center justify-between p-3.5 fora rounded-xl border border-white/10">
-                        <div className="text-left">
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Sons de Alerta</p>
-                          <p className={"text-[10px] font-semibold uppercase " + (!notificationsMuted ? "text-emerald-500" : "text-amber-500")}>
-                            {!notificationsMuted ? "Ativo (Ligado)" : "Desativado (Desligado)"}
-                          </p>
+                      ) : pushPermission === "denied" ? (
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-300 text-xs font-bold shadow-sm">
+                          <span className="w-2 h-2 rounded-full bg-red-400" />
+                          <span>Permissão Bloqueada no Navegador (Ative nas Configurações)</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const next = !notificationsMuted;
-                            localStorage.setItem("gm.notificationsMuted", next ? "true" : "false");
-                            setNotificationsMuted(next);
-                          }}
-                          className={"w-11 h-6 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none " + (!notificationsMuted ? "bg-emerald-500 justify-end" : "bg-slate-300 dark:bg-zinc-800 justify-start")}
-                        >
-                          <motion.div layout className="w-5 h-5 bg-white rounded-full shadow-md" />
-                        </button>
+                      ) : (
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold shadow-sm">
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                          <span>Permissão Pendente no Navegador</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2. GRID DE CONTROLES: NOTIFICAÇÕES E SONS (HORIZONTALMENTE EXPANDIDO EM 2 COLUNAS) */}
+                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Cápsula 1: Notificações Push */}
+                    <div
+                      className="relative p-5 sm:p-5.5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden hover:border-white/25 transition-all flex items-center justify-between gap-4"
+                    >
+                      <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
+                      <div className="flex items-center gap-3.5 min-w-0 relative z-10">
+                        <div className="w-11 h-11 rounded-xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)] flex items-center justify-center shrink-0 shadow-sm">
+                          <Bell size={20} />
+                        </div>
+                        <div className="text-left min-w-0">
+                          <p className="text-xs sm:text-sm font-black text-white uppercase tracking-wide truncate">
+                            Notificações Push
+                          </p>
+                          <p className={"text-[11px] font-bold uppercase " + (pushActive && pushPermission === "granted" ? "text-emerald-400" : "text-amber-400")}>
+                            {pushActive && pushPermission === "granted" ? "Ativo (Ligado)" : "Desativado"}
+                          </p>
+                          <span className="text-[10px] text-slate-400 block pt-0.5">Alertas em 1º plano, 2º plano e barra de tarefas</span>
+                        </div>
                       </div>
-
-                      <motion.button
-                        type="button"
-                        animate={shakeTest ? { x: [-6, 6, -6, 6, -4, 4, -2, 2, 0] } : {}}
-                        transition={{ duration: 0.4 }}
-                        disabled={testing}
-                        onClick={async () => {
-                          setShakeTest(true);
-                          setTimeout(() => setShakeTest(false), 450);
-
-                          if (pushPermission !== "granted" && typeof Notification !== "undefined") {
-                            try {
-                              const permission = await Notification.requestPermission();
-                              setPushPermission(permission);
-                            } catch (e) {}
-                          }
-
-                          if (!pushActive) {
-                            setPushActive(true);
-                            localStorage.setItem("gm.pushActive", "true");
-                          }
-
-                          setTesting(true);
-                          try {
-                            // 1. Dispara localmente
-                            await triggerRealNotification({
-                              title: "🔔 CardDigital GM · Notificação Simultânea",
-                              body: "Notificação funcionando simultaneamente no Smartphone e Desktop!",
-                              soundId: activeSound,
-                            });
-
-                            // 2. Dispara simultaneamente para todos os dispositivos logados na mesma conta
-                            broadcastAppNotification(tenantId, {
-                              title: "🔔 CardDigital GM · Teste Simultâneo",
-                              message: "Notificação disparada e sincronizada em todos os seus dispositivos!",
-                              type: "system",
-                            });
-                          } catch (e) {
-                            console.error("[Notification Test]", e);
-                          } finally {
-                            setTimeout(() => setTesting(false), 1200);
-                          }
-                        }}
-                        className="gm-btn py-3 flex items-center justify-center gap-2 text-xs font-bold w-full transition-all text-white rounded-xl shadow-none hover:brightness-110 active:scale-[0.98] mt-2 cursor-pointer"
-                      >
-                        {testing ? <Loader2 size={16} className="animate-spin" /> : <Bell size={16} />}
-                        {testing ? "Disparando nos Dispositivos..." : "Enviar Notificação de Teste Simultânea"}
-                      </motion.button>
 
                       <button
                         type="button"
-                        onClick={() => setShowPermissionModal(true)}
-                        className="w-full py-2.5 px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-200 hover:text-white flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        onClick={async () => {
+                          if (pushPermission !== "granted") {
+                            const permission = await Notification.requestPermission();
+                            setPushPermission(permission);
+                            if (permission === "granted") {
+                              setPushActive(true);
+                              localStorage.setItem("gm.pushActive", "true");
+                            } else {
+                              setPushActive(false);
+                              localStorage.setItem("gm.pushActive", "false");
+                            }
+                          } else {
+                            const nextActive = !pushActive;
+                            setPushActive(nextActive);
+                            localStorage.setItem("gm.pushActive", nextActive ? "true" : "false");
+                          }
+                        }}
+                        className={"w-12 h-6.5 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none shrink-0 cursor-pointer relative z-10 " + (pushActive && pushPermission === "granted" ? "bg-emerald-500 justify-end" : "bg-slate-300 dark:bg-zinc-800 justify-start")}
                       >
-                        <Sparkles size={14} className="text-[var(--gm-primary)]" />
-                        Permissões do Sistema Estilo Apple (Notificações, Voz, Câmera e Áudio)
+                        <motion.div layout className="w-5.5 h-5.5 bg-white rounded-full shadow-md" />
                       </button>
+                    </div>
+
+                    {/* Cápsula 2: Sons de Alerta */}
+                    <div
+                      className="relative p-5 sm:p-5.5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden hover:border-white/25 transition-all flex items-center justify-between gap-4"
+                    >
+                      <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
+                      <div className="flex items-center gap-3.5 min-w-0 relative z-10">
+                        <div className="w-11 h-11 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0 shadow-sm">
+                          <Volume2 size={20} />
+                        </div>
+                        <div className="text-left min-w-0">
+                          <p className="text-xs sm:text-sm font-black text-white uppercase tracking-wide truncate">
+                            Sons de Alerta
+                          </p>
+                          <p className={"text-[11px] font-bold uppercase " + (!notificationsMuted ? "text-emerald-400" : "text-amber-400")}>
+                            {!notificationsMuted ? "Ativo (Ligado)" : "Silenciado (Mudo)"}
+                          </p>
+                          <span className="text-[10px] text-slate-400 block pt-0.5">Toques sonoros de confirmação e alarmes</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = !notificationsMuted;
+                          localStorage.setItem("gm.notificationsMuted", next ? "true" : "false");
+                          setNotificationsMuted(next);
+                        }}
+                        className={"w-12 h-6.5 flex items-center rounded-full p-0.5 transition-all duration-300 outline-none shrink-0 cursor-pointer relative z-10 " + (!notificationsMuted ? "bg-emerald-500 justify-end" : "bg-slate-300 dark:bg-zinc-800 justify-start")}
+                      >
+                        <motion.div layout className="w-5.5 h-5.5 bg-white rounded-full shadow-md" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3. CARD DESTAQUE: CHECK-IN DE NOTIFICAÇÕES NOS 4 ESTADOS (HORIZONTALMENTE EXPANDIDO) */}
+                  <div
+                    className="relative w-full p-5 sm:p-7 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-5 shadow-none"
+                  >
+                    <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/10 pb-4 relative z-10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] shrink-0 shadow-sm">
+                          <Radio size={18} className="animate-pulse" />
+                        </div>
+                        <div className="text-left">
+                          <h5 className="text-xs sm:text-base font-black text-white uppercase tracking-wider">
+                            Check-in de Notificações nos 4 Estados
+                          </h5>
+                          <p className="text-xs text-slate-400">
+                            Auditoria e teste em tempo real das condições de entrega do aplicativo
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="text-[10.5px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 self-start sm:self-auto shadow-sm">
+                        4 Estados Suportados
+                      </span>
+                    </div>
+
+                    {/* Grade das 4 Cápsulas dos Estados (Expandida em 4 colunas em telas médias/grandes) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-left w-full relative z-10">
+                      <div
+                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-none"
+                      >
+                        <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
+                        <div className="flex items-center gap-1.5 relative z-10">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span className="text-xs font-black text-white uppercase">1. Aberto</span>
+                        </div>
+                        <span className="text-[10px] font-extrabold text-emerald-400 block uppercase tracking-wide relative z-10">Em Tela (1º Plano)</span>
+                        <p className="text-[10px] text-slate-400 leading-relaxed relative z-10">Toast Apple Glass, áudio espacial e vibração no celular</p>
+                      </div>
+
+                      <div
+                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-none"
+                      >
+                        <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
+                        <div className="flex items-center gap-1.5 relative z-10">
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                          <span className="text-xs font-black text-white uppercase">2. Minimizado</span>
+                        </div>
+                        <span className="text-[10px] font-extrabold text-amber-400 block uppercase tracking-wide relative z-10">Janela Oculta</span>
+                        <p className="text-[10px] text-slate-400 leading-relaxed relative z-10">Alerta nativo no Windows, macOS, Android e iOS</p>
+                      </div>
+
+                      <div
+                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-none"
+                      >
+                        <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
+                        <div className="flex items-center gap-1.5 relative z-10">
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                          <span className="text-xs font-black text-white uppercase">3. 2º Plano</span>
+                        </div>
+                        <span className="text-[10px] font-extrabold text-blue-400 block uppercase tracking-wide relative z-10">Tela Bloqueada</span>
+                        <p className="text-[10px] text-slate-400 leading-relaxed relative z-10">Service Worker mantém sincronia e alarmes ativos</p>
+                      </div>
+
+                      <div
+                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-none"
+                      >
+                        <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
+                        <div className="flex items-center gap-1.5 relative z-10">
+                          <span className="w-2.5 h-2.5 rounded-full bg-purple-400" />
+                          <span className="text-xs font-black text-white uppercase">4. Fechado</span>
+                        </div>
+                        <span className="text-[10px] font-extrabold text-purple-400 block uppercase tracking-wide relative z-10">Push Remoto</span>
+                        <p className="text-[10px] text-slate-400 leading-relaxed relative z-10">Web Push FCM acorda o aparelho mesmo fechado</p>
+                      </div>
+                    </div>
+
+                    {/* Botão de Abertura do Modal de Check-in (Expandido Horizontalmente) */}
+                    <button
+                      type="button"
+                      onClick={() => setShowCheckinModal(true)}
+                      className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden w-full py-4 px-5 text-xs sm:text-sm font-black text-white flex items-center justify-between gap-3 transition-all cursor-pointer group active:scale-[0.99] hover:brightness-110 shadow-none"
+                    >
+                      <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
+                      <div className="flex items-center gap-3 relative z-10">
+                        <Radio size={17} className="text-[var(--gm-primary)] animate-pulse" />
+                        <span className="font-black tracking-wide uppercase">
+                          Abrir Painel de Check-in e Diagnóstico dos 4 Estados
+                        </span>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-300 group-hover:translate-x-1.5 transition-transform relative z-10" />
+                    </button>
+                  </div>
+
+                  {/* 4. GRID DE AÇÕES RÁPIDAS DE TESTE E PERMISSÕES (HORIZONTALMENTE EXPANDIDO) */}
+                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Botão de Teste Simultâneo */}
+                    <motion.button
+                      type="button"
+                      animate={shakeTest ? { x: [-6, 6, -6, 6, -4, 4, -2, 2, 0] } : {}}
+                      transition={{ duration: 0.4 }}
+                      disabled={testing}
+                      onClick={async () => {
+                        setShakeTest(true);
+                        setTimeout(() => setShakeTest(false), 450);
+
+                        if (pushPermission !== "granted" && typeof Notification !== "undefined") {
+                          try {
+                            const permission = await Notification.requestPermission();
+                            setPushPermission(permission);
+                          } catch (e) {}
+                        }
+
+                        if (!pushActive) {
+                          setPushActive(true);
+                          localStorage.setItem("gm.pushActive", "true");
+                        }
+
+                        setTesting(true);
+                        try {
+                          // 1. Dispara localmente
+                          await triggerRealNotification({
+                            title: "🔔 CardDigital GM · Notificação Simultânea",
+                            body: "Notificação funcionando simultaneamente no Smartphone e Desktop!",
+                            soundId: activeSound,
+                          });
+
+                          // 2. Dispara simultaneamente para todos os dispositivos logados na mesma conta
+                          broadcastAppNotification(tenantId, {
+                            title: "🔔 CardDigital GM · Teste Simultâneo",
+                            message: "Notificação disparada e sincronizada em todos os seus dispositivos!",
+                            type: "system",
+                          });
+                        } catch (e) {
+                          console.error("[Notification Test]", e);
+                        } finally {
+                          setTimeout(() => setTesting(false), 1200);
+                        }
+                      }}
+                      className="gm-btn py-4 px-5 flex items-center justify-center gap-3 text-xs sm:text-sm font-black w-full transition-all text-white rounded-xl shadow-none hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                    >
+                      {testing ? <Loader2 size={17} className="animate-spin" /> : <Bell size={17} />}
+                      <span>{testing ? "Disparando nos Dispositivos..." : "Enviar Notificação de Teste Simultânea"}</span>
+                    </motion.button>
+
+                    {/* Botão de Permissões Estilo Apple */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPermissionModal(true)}
+                      className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden py-4 px-5 hover:border-white/30 text-xs sm:text-sm font-bold text-slate-200 hover:text-white flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-none active:scale-[0.98]"
+                    >
+                      <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
+                      <Sparkles size={16} className="text-[var(--gm-primary)] relative z-10" />
+                      <span className="relative z-10">Permissões Estilo Apple (Voz, Câmera e Áudio)</span>
+                    </button>
+                  </div>
+
+                  {/* 5. DICA INFORMATIVA DE COMPATIBILIDADE IPHONE APPLE (iOS) (HORIZONTALMENTE EXPANDIDO) */}
+                  <div
+                    className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden w-full p-4.5 flex items-start gap-3.5 text-left shadow-none"
+                  >
+                    <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
+                    <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 text-white shadow-sm relative z-10">
+                      <Apple size={18} />
+                    </div>
+                    <div className="space-y-0.5 relative z-10">
+                      <p className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">
+                        Compatibilidade com Apple iPhone (iOS)
+                      </p>
+                      <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
+                        No iPhone/iPad (iOS 16.4+), para receber notificações com o app fechado, abra pelo Safari, toque no ícone de <strong>Compartilhar</strong> (quadrado com seta para cima) e escolha <strong>"Adicionar à Tela de Início"</strong>.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -3671,6 +3858,11 @@ export default function Configuracoes() {
       <SmartphonePermissionModal
         forceOpen={showPermissionModal}
         onClose={() => setShowPermissionModal(false)}
+      />
+
+      <NotificationCheckinModal
+        isOpen={showCheckinModal}
+        onClose={() => setShowCheckinModal(false)}
       />
     </Page>
   );

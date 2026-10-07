@@ -227,11 +227,11 @@ export function AdminOrdersModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto"
+      className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-black/80 animate-in fade-in duration-200 overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-4xl bg-[#0d0e14]/98 border border-white/12 rounded-[2.25rem] p-6 sm:p-8 shadow-[0_25px_80px_rgba(0,0,0,0.9)] relative my-auto max-h-[94vh] flex flex-col text-white overflow-hidden"
+        className="w-full max-w-4xl fora border border-white/12 rounded-[2.25rem] p-6 sm:p-8 shadow-2xl relative my-auto max-h-[94vh] flex flex-col text-white overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
@@ -647,7 +647,7 @@ export function AdminOrdersModal({
       {/* Lightbox / Fullscreen Receipt Viewer */}
       {selectedReceiptUrl && (
         <div 
-          className="fixed inset-0 z-[180] flex items-center justify-center p-4 bg-black/95 backdrop-blur-lg animate-in fade-in duration-200"
+          className="fixed inset-0 z-[180] flex items-center justify-center p-4 bg-black/90 animate-in fade-in duration-200"
           onClick={() => setSelectedReceiptUrl(null)}
         >
           <div 

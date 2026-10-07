@@ -50,6 +50,24 @@
                 });
               }
             } catch (eWin) {}
+
+            // Suppress WebSocket / HMR disconnect errors in cloud proxy environment
+            window.addEventListener('error', function(e) {
+              var m = e && e.message ? String(e.message) : '';
+              if (m.indexOf('send was called before connect') !== -1 || m.indexOf('[vite]') !== -1 || m.indexOf('WebSocket') !== -1) {
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                if (e.preventDefault) e.preventDefault();
+                return true;
+              }
+            }, true);
+
+            window.addEventListener('unhandledrejection', function(e) {
+              var r = e && e.reason ? String(e.reason.message || e.reason) : '';
+              if (r.indexOf('send was called before connect') !== -1 || r.indexOf('[vite]') !== -1 || r.indexOf('WebSocket') !== -1) {
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                if (e.preventDefault) e.preventDefault();
+              }
+            }, true);
           }
         } catch (err) {}
       })();

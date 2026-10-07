@@ -1364,7 +1364,7 @@ export default function Expenses() {
       <AnimatePresence>
         {showEditModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto"
             onClick={() => setShowEditModal(false)}
           >
             <motion.div
@@ -1607,7 +1607,7 @@ export default function Expenses() {
       <AnimatePresence>
         {showNewModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto"
             onClick={() => setShowNewModal(false)}
           >
             <motion.div
@@ -1830,7 +1830,7 @@ export default function Expenses() {
       <AnimatePresence>
         {showShareModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto"
             onClick={() => setShowShareModal(false)}
           >
             <motion.div
@@ -1906,7 +1906,7 @@ export default function Expenses() {
       <AnimatePresence>
         {deleteConfirmId && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 backdrop-blur-md"
+            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4"
             onClick={() => setDeleteConfirmId(null)}
           >
             <motion.div
@@ -1950,7 +1950,7 @@ export default function Expenses() {
           <AnimatePresence>
             {showMonthModal && (
               <div
-                className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-hidden"
+                className="fixed inset-0 z-[99999] bg-black/85 flex items-center justify-center p-3 sm:p-5 overflow-hidden"
                 style={{
                   position: "fixed",
                   top: 0,

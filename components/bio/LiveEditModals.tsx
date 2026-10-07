@@ -48,11 +48,11 @@ function ModalWrapper({
 
   return (
     <div 
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 animate-fade-in overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className={`w-full ${maxWidth} max-h-[90vh] rounded-[2rem] bg-[#12131b] border border-white/10 text-white shadow-2xl flex flex-col overflow-hidden my-auto animate-scale-in`}
+        className={`w-full ${maxWidth} max-h-[90vh] rounded-[2rem] fora border border-white/10 text-white shadow-2xl flex flex-col overflow-hidden my-auto animate-scale-in`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

@@ -8,6 +8,7 @@ import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
 import { SignalBottomGradient } from "../components/ui/SignalBottomGradient";
+import { BorderBeam } from "../components/ui/BorderBeam";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -136,7 +137,7 @@ import { openWhatsapp } from "../services/whatsApp";
 import jsPDF from "jspdf";
 
 const cardBase =
-  "fora rounded-2xl transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+  "relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden transition-all shadow-none";
 const inputBase =
   "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
 
@@ -1772,6 +1773,9 @@ export default function Notes() {
                         : ""
                     }`}
                   >
+                    {/* Efeito BorderBeam no card de notas */}
+                    <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
+
                     {/* Efeito de Sinalização de Degradê: Canto Inferior Esquerdo -> Canto Inferior Direito (só para com clique ou mouse por cima) */}
                     <SignalBottomGradient
                       active={note.id === highlightedId}

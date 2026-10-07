@@ -347,11 +347,11 @@ export function AdminHubModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[170] flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-xl animate-in fade-in duration-200 overflow-y-auto"
+      className="fixed inset-0 z-[170] flex items-center justify-center p-3 sm:p-6 bg-black/80 animate-in fade-in duration-200 overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-5xl bg-[#0c0d14]/98 border border-white/12 rounded-[2.25rem] p-6 sm:p-9 shadow-[0_30px_90px_rgba(0,0,0,0.95)] relative my-auto max-h-[94vh] flex flex-col text-white overflow-hidden"
+        className="w-full max-w-5xl fora border border-white/12 rounded-[2.25rem] p-6 sm:p-9 shadow-2xl relative my-auto max-h-[94vh] flex flex-col text-white overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ============================================================== */}
@@ -1191,7 +1191,7 @@ export function AdminHubModal({
       {/* Lightbox / Fullscreen Receipt Viewer */}
       {selectedReceiptUrl && (
         <div 
-          className="fixed inset-0 z-[190] flex items-center justify-center p-4 bg-black/95 backdrop-blur-lg animate-in fade-in duration-200"
+          className="fixed inset-0 z-[190] flex items-center justify-center p-4 bg-black/90 animate-in fade-in duration-200"
           onClick={() => setSelectedReceiptUrl(null)}
         >
           <div 

@@ -129,8 +129,8 @@ export default function ReminderConfigModal({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative bg-[#151619] border border-white/10 rounded-2xl w-full max-w-md shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-slide-up">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 animate-fade-in">
+      <div className="relative fora border border-white/15 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-slide-up">
         {/* Efeito de Feixe de Luz Apple Glass na borda */}
         <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
         {/* Header */}

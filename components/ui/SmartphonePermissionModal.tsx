@@ -333,20 +333,20 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
     <AnimatePresence>
       <div
         id="apple-permission-overlay"
-        className="fixed inset-0 z-[1000002] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-2xl"
+        className="fixed inset-0 z-[1000002] flex items-center justify-center p-3 sm:p-4 bg-black/70"
         style={{ zIndex: 1000002 }}
       >
         {/* Backdrop click dismiss */}
         <div className="absolute inset-0" onClick={handleDismiss} />
 
-        {/* DIÁLOGO LIMPO E MINIMALISTA - ESTILO APPLE */}
+        {/* DIÁLOGO LIMPO E MINIMALISTA - ESTILO APPLE EXPANDIDO */}
         <motion.div
           id="apple-permission-dialog"
           initial={{ opacity: 0, scale: 0.94, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full max-w-[440px] bg-[#161618]/90 dark:bg-[#121214]/92 backdrop-blur-3xl border border-white/[0.12] rounded-[32px] p-5 sm:p-6 shadow-[0_30px_90px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.18)] flex flex-col gap-4 text-white overflow-hidden font-sans select-none z-10"
+          className="relative w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl gm-push-glass-card border border-white/[0.18] rounded-[32px] p-5 sm:p-7 shadow-[0_30px_90px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.20)] flex flex-col gap-5 text-white overflow-hidden font-sans select-none z-10 max-h-[92vh] overflow-y-auto no-scrollbar"
         >
           {/* Luz de topo estilo specularity Apple */}
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
@@ -356,22 +356,25 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
           <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-orange-600/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* CABEÇALHO */}
-          <div className="flex items-center justify-between shrink-0 pb-3 border-b border-white/[0.08] relative">
+          <div className="flex items-center justify-between shrink-0 pb-3.5 border-b border-white/[0.08] relative">
             <div className="flex items-center gap-3">
               {/* Ícone Squircle */}
-              <div className="relative w-11 h-11 rounded-[16px] bg-gradient-to-b from-white/12 to-white/[0.04] border border-[var(--gm-primary,#FE540B)]/30 flex items-center justify-center shadow-md overflow-hidden shrink-0">
+              <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-[16px] bg-gradient-to-b from-white/12 to-white/[0.04] border border-[var(--gm-primary,#FE540B)]/30 flex items-center justify-center shadow-md overflow-hidden shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-tr from-[var(--gm-primary,#FE540B)]/20 to-orange-500/20" />
-                <MonitorSmartphone size={20} className="text-[var(--gm-primary,#FE540B)] relative z-10" />
+                <MonitorSmartphone size={22} className="text-[var(--gm-primary,#FE540B)] relative z-10" />
               </div>
 
               <div className="text-left">
-                <div className="flex items-center gap-1.5">
-                  <h3 className="font-semibold text-[15px] sm:text-[16px] tracking-tight text-white">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-base sm:text-lg tracking-tight text-white uppercase">
                     Permissões do Sistema
                   </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-400 uppercase">
+                    Apple Device Sync
+                  </span>
                 </div>
-                <p className="text-[11px] sm:text-[12px] text-zinc-400 font-normal">
-                  Sincronização em tempo real
+                <p className="text-xs text-zinc-400 font-normal">
+                  Sincronização em tempo real de notificações, alertas sonoros e multimídia
                 </p>
               </div>
             </div>
@@ -381,16 +384,16 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
               id="apple-permission-close-btn"
               type="button"
               onClick={handleDismiss}
-              className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-white/10 cursor-pointer"
+              className="w-8 h-8 rounded-full barra hover:bg-white/20 active:scale-95 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-white/10 cursor-pointer"
               title="Fechar"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           </div>
 
           {/* DESCRIÇÃO E BARRA DE PROGRESSO DINÂMICA */}
           <div className="flex flex-col gap-2 text-left">
-            <div className="flex items-center justify-between text-[11px] sm:text-[12px]">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-zinc-400 font-medium">
                 {isSequenceRunning
                   ? `Verificando etapa ${grantedCount + 1} de 4...`
@@ -398,13 +401,13 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
                   ? "Todas as 4 permissões concedidas"
                   : `${grantedCount} de 4 permissões ativas`}
               </span>
-              <span className="font-mono text-[11px] font-semibold text-zinc-300">
+              <span className="font-mono text-xs font-semibold text-zinc-300">
                 {Math.round(progressPercent)}%
               </span>
             </div>
 
             {/* Apple Minimalist Progress Bar */}
-            <div className="w-full h-1 bg-white/[0.08] rounded-full overflow-hidden relative">
+            <div className="w-full h-1.5 bg-white/[0.08] rounded-full overflow-hidden relative">
               <motion.div
                 className="h-full rounded-full bg-gradient-to-r from-[var(--gm-primary,#FE540B)] via-amber-400 to-emerald-400"
                 initial={{ width: 0 }}
@@ -414,8 +417,8 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
             </div>
           </div>
 
-          {/* LISTA DAS 4 PERMISSÕES COM ANIMAÇÃO INDIVIDUAL */}
-          <div className="flex flex-col gap-2.5 text-left">
+          {/* LISTA DAS 4 PERMISSÕES COM ANIMAÇÃO INDIVIDUAL (EXPANDIDA EM GRID 2 COLUNAS) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-left">
             {PERMISSION_CONFIG.map((item, index) => {
               const status = statuses[item.id];
               const isActive = activeStepId === item.id;

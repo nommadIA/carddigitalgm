@@ -50,12 +50,21 @@ async function bootReal() {
 // Inicia o boot mas não bloqueia a renderização do React
 bootReal();
 
-// Registro do Service Worker para PWA/Netlify
-if ("serviceWorker" in navigator && window.self === window.top) {
+// Registro do Service Worker para PWA/Push Notifications
+if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch((err) => {
-      console.warn("ServiceWorker registration skipped:", err?.message || err);
-    });
+    try {
+      navigator.serviceWorker.register("/sw.js").then((reg) => {
+        // Inicia sincronização de alarmes em segundo plano
+        if (reg && reg.active) {
+          reg.active.postMessage({ type: 'START_BACKGROUND_SYNC' });
+        }
+      }).catch((err) => {
+        console.warn("ServiceWorker registration skipped:", err?.message || err);
+      });
+    } catch (err) {
+      console.warn("ServiceWorker init error:", err);
+    }
     
     // Listen for navigation messages from the service worker (for pushes)
     navigator.serviceWorker.addEventListener('message', (event) => {
