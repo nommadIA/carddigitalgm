@@ -656,76 +656,153 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
   const handleQuickEditorSave = (newText: string, formatting: TextEditorFormatting) => {
     const field = quickEditorState.targetField;
+    // REGRA 1: Se estiver editando na versão Smartphone, altera apenas os campos mobile!
+    // Se estiver editando na versão Computador, altera apenas os campos desktop!
     if (field === "hero_title") {
-      handleUpdateBioConfig({
-        hero_title: newText,
-        title: newText,
-        title_font: formatting.font,
-        title_size: formatting.size,
-        title_color: formatting.color,
-      });
-      setCurrentData((prev: any) => ({
-        ...prev,
-        company_name: newText,
-      }));
+      if (isMobileView) {
+        handleUpdateBioConfig({
+          hero_title_mobile: newText,
+          title_font_mobile: formatting.font,
+          title_size_mobile: formatting.size,
+          title_color_mobile: formatting.color,
+        });
+      } else {
+        handleUpdateBioConfig({
+          hero_title: newText,
+          title: newText,
+          title_font: formatting.font,
+          title_size: formatting.size,
+          title_color: formatting.color,
+        });
+        setCurrentData((prev: any) => ({
+          ...prev,
+          company_name: newText,
+        }));
+      }
     } else if (field === "description") {
-      handleUpdateBioConfig({
-        description: newText,
-        description_mobile: newText,
-        description_bold: formatting.bold,
-        description_italic: formatting.italic,
-        description_size: formatting.size,
-        description_size_mobile: formatting.size,
-        description_font: formatting.font,
-        description_font_mobile: formatting.font,
-        description_align: formatting.align,
-        description_align_mobile: formatting.align,
-        description_color: formatting.color,
-      });
+      if (isMobileView) {
+        handleUpdateBioConfig({
+          description_mobile: newText,
+          description_bold_mobile: formatting.bold,
+          description_italic_mobile: formatting.italic,
+          description_size_mobile: formatting.size,
+          description_font_mobile: formatting.font,
+          description_align_mobile: formatting.align,
+          description_color_mobile: formatting.color,
+        });
+      } else {
+        handleUpdateBioConfig({
+          description: newText,
+          description_bold: formatting.bold,
+          description_italic: formatting.italic,
+          description_size: formatting.size,
+          description_font: formatting.font,
+          description_align: formatting.align,
+          description_color: formatting.color,
+        });
+      }
     } else if (field === "hero_button") {
-      handleUpdateBioConfig({
-        hero_button_label: newText,
-        hero_button_action: formatting.buttonAction,
-        hero_button_url: formatting.buttonUrl,
-        hero_button_style: formatting.buttonStyle,
-      });
+      if (isMobileView) {
+        handleUpdateBioConfig({
+          hero_button_label_mobile: newText,
+          hero_button_action_mobile: formatting.buttonAction,
+          hero_button_url_mobile: formatting.buttonUrl,
+          hero_button_style_mobile: formatting.buttonStyle,
+        });
+      } else {
+        handleUpdateBioConfig({
+          hero_button_label: newText,
+          hero_button_action: formatting.buttonAction,
+          hero_button_url: formatting.buttonUrl,
+          hero_button_style: formatting.buttonStyle,
+        });
+      }
     } else if (field === "catalog_title") {
-      handleUpdateBioConfig({
-        catalog_title: newText,
-      });
+      if (isMobileView) {
+        handleUpdateBioConfig({
+          catalog_title_mobile: newText,
+        });
+      } else {
+        handleUpdateBioConfig({
+          catalog_title: newText,
+        });
+      }
     } else if (field === "portfolio_title") {
-      handleUpdateBioConfig({
-        portfolio_title: newText,
-      });
+      if (isMobileView) {
+        handleUpdateBioConfig({
+          portfolio_title_mobile: newText,
+        });
+      } else {
+        handleUpdateBioConfig({
+          portfolio_title: newText,
+        });
+      }
     } else if (field === "about_title") {
-      handleUpdateBioConfig({
-        about_title: newText,
-        about_title_size: formatting.size,
-        about_title_font: formatting.font,
-        about_title_align: formatting.align,
-        about_title_bold: formatting.bold,
-      });
+      if (isMobileView) {
+        handleUpdateBioConfig({
+          about_title_mobile: newText,
+          about_title_size_mobile: formatting.size,
+          about_title_font_mobile: formatting.font,
+          about_title_align_mobile: formatting.align,
+          about_title_bold_mobile: formatting.bold,
+        });
+      } else {
+        handleUpdateBioConfig({
+          about_title: newText,
+          about_title_size: formatting.size,
+          about_title_font: formatting.font,
+          about_title_align: formatting.align,
+          about_title_bold: formatting.bold,
+        });
+      }
     } else if (field === "about_description") {
-      handleUpdateBioConfig({
-        about_description: newText,
-        about_desc_size: formatting.size,
-        about_desc_font: formatting.font,
-        about_desc_align: formatting.align,
-        about_desc_bold: formatting.bold,
-        about_desc_italic: formatting.italic,
-      });
+      if (isMobileView) {
+        handleUpdateBioConfig({
+          about_description_mobile: newText,
+          about_desc_size_mobile: formatting.size,
+          about_desc_font_mobile: formatting.font,
+          about_desc_align_mobile: formatting.align,
+          about_desc_bold_mobile: formatting.bold,
+          about_desc_italic_mobile: formatting.italic,
+        });
+      } else {
+        handleUpdateBioConfig({
+          about_description: newText,
+          about_desc_size: formatting.size,
+          about_desc_font: formatting.font,
+          about_desc_align: formatting.align,
+          about_desc_bold: formatting.bold,
+          about_desc_italic: formatting.italic,
+        });
+      }
     } else if (field === "about_highlight") {
-      handleUpdateBioConfig({
-        about_highlight: newText,
-        about_highlight_size: formatting.size,
-        about_highlight_font: formatting.font,
-        about_highlight_align: formatting.align,
-        about_highlight_bold: formatting.bold,
-      });
+      if (isMobileView) {
+        handleUpdateBioConfig({
+          about_highlight_mobile: newText,
+          about_highlight_size_mobile: formatting.size,
+          about_highlight_font_mobile: formatting.font,
+          about_highlight_align_mobile: formatting.align,
+          about_highlight_bold_mobile: formatting.bold,
+        });
+      } else {
+        handleUpdateBioConfig({
+          about_highlight: newText,
+          about_highlight_size: formatting.size,
+          about_highlight_font: formatting.font,
+          about_highlight_align: formatting.align,
+          about_highlight_bold: formatting.bold,
+        });
+      }
     } else if (field === "footer") {
-      handleUpdateBioConfig({
-        footer_text: newText,
-      });
+      if (isMobileView) {
+        handleUpdateBioConfig({
+          footer_text_mobile: newText,
+        });
+      } else {
+        handleUpdateBioConfig({
+          footer_text: newText,
+        });
+      }
     }
   };
 
@@ -738,10 +815,18 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const bio = currentData?.bio_config || {};
   const bgAnimation = bio.bg_animation || "parallax";
 
-  // Handlers for Live Editing
+  // Handlers for Live Editing - Auto-salva imediatamente no Supabase
   const handleUpdateBioConfig = (bioUpdates: Record<string, any>) => {
     setCurrentData((prev: any) => {
       const updatedBio = { ...(prev?.bio_config || {}), ...bioUpdates };
+      
+      const targetTenant = prev?.tenant_id || currentData?.tenant_id || userTenantId || (typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null) || "global";
+      upsertSettingsSupabase(targetTenant, {
+        bio_config: updatedBio,
+        company_name: bioUpdates.title !== undefined ? bioUpdates.title : prev?.company_name,
+        brand_primary: bioUpdates.color !== undefined ? bioUpdates.color : prev?.brand_primary,
+      }).catch((err) => console.warn("Auto-salvamento em segundo plano:", err));
+
       return {
         ...prev,
         bio_config: updatedBio,
@@ -765,9 +850,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         logo_url: newWebsiteLogo !== undefined ? newWebsiteLogo : prev?.bio_config?.logo_url,
         website_logo_url: newWebsiteLogo !== undefined ? newWebsiteLogo : (prev?.bio_config?.website_logo_url || prev?.bio_config?.logo_url),
       };
+      const targetTenant = prev?.tenant_id || currentData?.tenant_id || userTenantId || (typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null) || "global";
+      upsertSettingsSupabase(targetTenant, {
+        company_name: updates.company_name !== undefined ? updates.company_name : prev?.company_name,
+        bio_config: updatedBio,
+      }).catch((err) => console.warn("Auto-salvamento logo warn:", err));
+
       return {
         ...prev,
-        // Preserva o logo interno do aplicativo (company_logo_url). O logo do site fica em bio_config!
         company_name: updates.company_name !== undefined ? updates.company_name : prev?.company_name,
         bio_config: updatedBio,
       };
@@ -778,11 +868,18 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const handleUpdateThemeColors = (updates: { brand_primary?: string; theme?: string; button_style?: string }) => {
     setCurrentData((prev: any) => {
       const updatedBio = { 
-        ...(prev?.bio_config || {}),
+        ...(prev?.bio_config || {}), 
         color: updates.brand_primary !== undefined ? updates.brand_primary : prev?.bio_config?.color,
         theme: updates.theme !== undefined ? updates.theme : prev?.bio_config?.theme,
         button_style: updates.button_style !== undefined ? updates.button_style : prev?.bio_config?.button_style,
       };
+      const targetTenant = prev?.tenant_id || currentData?.tenant_id || userTenantId || (typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null) || "global";
+      upsertSettingsSupabase(targetTenant, {
+        brand_primary: updates.brand_primary !== undefined ? updates.brand_primary : prev?.brand_primary,
+        button_style: updates.button_style !== undefined ? updates.button_style : prev?.button_style,
+        bio_config: updatedBio,
+      }).catch((err) => console.warn("Auto-salvamento tema warn:", err));
+
       return {
         ...prev,
         brand_primary: updates.brand_primary !== undefined ? updates.brand_primary : prev?.brand_primary,
@@ -808,21 +905,59 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     pushToast({ type: "info", title: "Produto removido" });
   };
 
-  const handleSavePortfolioList = (newPortfolioItems: any[]) => {
+  const handleSavePortfolioList = async (newPortfolioItems: any[]) => {
+    // 1. Atualiza o estado em tela
     handleUpdateBioConfig({ portfolio_items: newPortfolioItems });
+    
+    // 2. Persiste imediatamente no Supabase (Regra 1 e correção de salvamentos)
+    try {
+      const targetTenant = currentData?.tenant_id || userTenantId || (typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null) || "global";
+      const updatedBio = {
+        ...(currentData?.bio_config || {}),
+        portfolio_items: newPortfolioItems,
+      };
+      await upsertSettingsSupabase(targetTenant, {
+        bio_config: updatedBio,
+      });
+      setHasUnsavedChanges(false);
+      pushToast({
+        type: "success",
+        title: "Portfólio Salvo no Banco!",
+        message: "As imagens e alterações do portfólio foram salvas com sucesso no banco de dados."
+      });
+    } catch (err: any) {
+      console.error("Erro ao salvar portfólio:", err);
+      pushToast({
+        type: "error",
+        title: "Erro ao Salvar",
+        message: err.message || "Não foi possível salvar o portfólio no banco de dados."
+      });
+    }
   };
 
-  const handleDeletePortfolioProject = (projectId: string) => {
+  const handleDeletePortfolioProject = async (projectId: string) => {
     const currentItems = bio.portfolio_items || [];
     const newItems = currentItems.filter((i: any) => i.id !== projectId);
     handleUpdateBioConfig({ portfolio_items: newItems });
-    pushToast({ type: "info", title: "Projeto removido" });
+    try {
+      const targetTenant = currentData?.tenant_id || userTenantId || (typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null) || "global";
+      const updatedBio = {
+        ...(currentData?.bio_config || {}),
+        portfolio_items: newItems,
+      };
+      await upsertSettingsSupabase(targetTenant, {
+        bio_config: updatedBio,
+      });
+      pushToast({ type: "info", title: "Projeto removido e salvo com sucesso" });
+    } catch (err: any) {
+      console.error("Erro ao excluir projeto:", err);
+    }
   };
 
   const handleSaveLiveChanges = async () => {
     setIsSavingLive(true);
     try {
-      const targetTenant = currentData?.tenant_id || userTenantId || "global";
+      const targetTenant = currentData?.tenant_id || userTenantId || (typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null) || "global";
       const bioConfig = currentData?.bio_config || {};
       const payload: Partial<AppSettings> = {
         company_name: currentData?.company_name,
@@ -2240,7 +2375,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
   // Navegação suave entre seções: 1 clique mostra a seção centralizada na tela
   const advanceToNextSection = () => {
-    // Se houver modal com scroll aberto (ex: Área do Cliente), rola suavemente para baixo no modal
+    // 1. Se houver modal com scroll aberto (ex: Área do Cliente em modal, Orçamento, etc)
     const modalContainer = (document.querySelector('.gm-customer-modal-overlay') ||
                             document.querySelector('.gm-customer-auth-container') ||
                             document.querySelector('.gm-customer-dashboard-container') ||
@@ -2251,7 +2386,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       return;
     }
 
-    if (activeView === "contact" || activeView === "customer") {
+    // 2. Visualização da Área do Cliente (página web):
+    if (activeView === "customer") {
+      const currentScroll = (mainScrollRef.current?.scrollTop || window.scrollY || document.documentElement.scrollTop || 0);
+      const locCard = document.getElementById("customer-location-card");
+      if (locCard && currentScroll < 120) {
+        smoothScrollToTarget(locCard, 'center');
+        return;
+      }
       const docHeight = Math.max(
         document.body.scrollHeight,
         document.documentElement.scrollHeight,
@@ -2261,7 +2403,27 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       return;
     }
 
-    const currentScroll = (mainScrollRef.current?.scrollTop || window.scrollY || 0);
+    // 3. Visualização de Contato (página web):
+    if (activeView === "contact") {
+      const docHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        mainScrollRef.current?.scrollHeight || 0
+      );
+      smoothScrollToTarget(docHeight, 'top');
+      return;
+    }
+
+    // 4. Visualização de Portfólio (projeto específico ou lista):
+    if (activeView === "portfolio") {
+      const currentScroll = (mainScrollRef.current?.scrollTop || window.scrollY || document.documentElement.scrollTop || 0);
+      const scrollStep = Math.max(300, (window.innerHeight || 800) * 0.75);
+      smoothScrollToTarget(currentScroll + scrollStep, 'top');
+      return;
+    }
+
+    // 5. Visualização principal (Bio / Website Início):
+    const currentScroll = (mainScrollRef.current?.scrollTop || window.scrollY || document.documentElement.scrollTop || 0);
     const winHeight = window.innerHeight || 800;
     const aboutEl = document.getElementById("about-company-section");
     const catalogEl = document.getElementById("catalog-section");
@@ -2284,15 +2446,15 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     const portfolioCenterY = getElCenterScroll(portfolioEl);
 
     // 1 clique = SOBRE centralizado na tela
-    if (currentScroll < aboutCenterY - 100 && aboutEl) {
+    if (aboutEl && currentScroll < aboutCenterY - 80) {
       smoothScrollToTarget(aboutEl, 'center');
     } 
     // Outro clique = PRODUTOS centralizado na tela
-    else if (currentScroll < catalogCenterY - 100 && catalogEl) {
+    else if (catalogEl && currentScroll < catalogCenterY - 80) {
       smoothScrollToTarget(catalogEl, 'center');
     } 
     // Outro clique = PORTFÓLIO centralizado na tela
-    else if (currentScroll < portfolioCenterY - 100 && portfolioEl) {
+    else if (portfolioEl && currentScroll < portfolioCenterY - 80) {
       smoothScrollToTarget(portfolioEl, 'center');
     } 
     // Outro clique = CONTATO
@@ -2303,7 +2465,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
   // Seta para cima (subir): 1 clique = voltar ao topo da tela do website
   const retreatToPrevSection = () => {
-    // Se houver modal com scroll aberto e rolado para baixo, volta ao topo do modal
+    // 1. Se houver modal com scroll aberto e rolado para baixo, volta ao topo do modal
     const modalContainer = (document.querySelector('.gm-customer-modal-overlay') ||
                             document.querySelector('.gm-customer-auth-container') ||
                             document.querySelector('.gm-customer-dashboard-container') ||
@@ -2313,10 +2475,21 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       return;
     }
 
-    if (activeView !== "bio") {
-      setActiveView("bio");
-      setActivePortfolioId(null);
+    // 2. Se a tela estiver rolada para baixo (em qualquer tela: bio, customer, contact, portfolio), volta suavemente ao topo da tela atual
+    const currentScroll = (mainScrollRef.current?.scrollTop || window.scrollY || document.documentElement.scrollTop || 0);
+    if (currentScroll > 40) {
+      smoothScrollToTarget(0, 'top');
+      return;
     }
+
+    // 3. Se estiver no topo em portfólio com projeto aberto, volta para a lista de projetos do portfólio
+    if (activeView === "portfolio" && activePortfolioId) {
+      setActivePortfolioId(null);
+      smoothScrollToTarget(0, 'top');
+      return;
+    }
+
+    // 4. Sempre garante scroll suave para o topo sem trocar de tela inesperadamente
     smoothScrollToTarget(0, 'top');
   };
 
@@ -3007,14 +3180,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     </div>
 
                     {/* Actions Row */}
-                    <div className="pt-2 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-2.5 w-full max-w-[280px] sm:max-w-none mx-auto">
+                    <div className="pt-6 sm:pt-8 mt-2 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-2.5 w-full max-w-[280px] sm:max-w-none mx-auto">
                       {bio.portfolio_items && bio.portfolio_items.length > 0 && (
                         <button 
                           onClick={() => {
                             const el = document.getElementById("portfolio-section");
                             if (el) el.scrollIntoView({ behavior: 'smooth' });
                           }}
-                          className="site-btn-pill px-6 py-2.5 text-xs sm:text-sm shadow-md w-full sm:w-auto"
+                          className="site-btn-pill px-6 py-2.5 text-xs sm:text-sm shadow-md w-full sm:w-auto mt-1"
                         >
                           <span>Veja nosso Portfólio</span>
                         </button>
@@ -3461,7 +3634,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               })()}
                             </EditableItem>
                             
-                            <div className="mt-8 sm:mt-10 flex gap-4">
+                            <div className="mt-10 sm:mt-12 flex gap-4">
                               <SitePillButton
                                 label={bio.hero_button_label || "Conheça nossos Serviços"}
                                 isEditMode={isLiveEditMode && !previewAsVisitor}
@@ -3938,7 +4111,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             </div>
 
                             {/* Bloco 3: Botão de Ação e Indicador de Rolagem integrado na visualização */}
-                            <div className="w-full flex flex-col items-center gap-3 pt-2 shrink-0">
+                            <div className="w-full flex flex-col items-center gap-3 pt-6 sm:pt-8 mt-2 shrink-0">
                               <SitePillButton
                                 label={bio.hero_button_label || "Conheça nossos Serviços"}
                                 isEditMode={isLiveEditMode && !previewAsVisitor}
@@ -3968,29 +4141,6 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   }
                                 }}
                               />
-
-                              {/* Seta de rolagem do website central - perfeitamente estática no centro, sem sombra, branca e muda para laranja no hover */}
-                              <button 
-                                type="button"
-                                className="pt-2 pb-1 flex flex-col items-center justify-center cursor-pointer group/scroll bg-transparent border-0 outline-none p-0 select-none transition-colors duration-200 focus:outline-none"
-                                onClick={() => {
-                                  const el = document.getElementById("about-company-section") || document.getElementById("catalog-section") || document.getElementById("portfolio-section");
-                                  if (el) {
-                                    smoothScrollToTarget(el);
-                                  }
-                                }}
-                                title="Rolar para baixo"
-                                aria-label="Rolar para baixo"
-                                style={{ transform: "none" }}
-                              >
-                                <span className="text-[10px] sm:text-[11px] font-bold text-white/80 uppercase tracking-widest mb-0.5 select-none transition-colors duration-200 group-hover/scroll:text-[#FE540B]">
-                                  Role para ver mais
-                                </span>
-                                <ChevronDown 
-                                  className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover/scroll:text-[#FE540B] transition-colors duration-200 stroke-[2.5]" 
-                                  style={{ filter: "none", boxShadow: "none", textShadow: "none", transform: "none" }}
-                                />
-                              </button>
                             </div>
                           </div>
                         )}
@@ -4704,131 +4854,166 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               {/* Content Wrapper - Enquadramento horizontal amplo sem caixa conforme solicitado pelo usuário */}
               <div className="relative z-10 max-w-6xl w-full mx-auto px-6 sm:px-10 md:px-16 flex flex-col items-center justify-center text-center space-y-6 sm:space-y-8 h-full">
                 {/* Title */}
-                <EditableItem
-                  isEditMode={isLiveEditMode && !previewAsVisitor}
-                  label="Editar Título Sobre"
-                  onClick={() => {
-                    setQuickEditorState({
-                      isOpen: true,
-                      title: "Editar Título 'Sobre a Empresa'",
-                      subtitle: "Altere o título da seção de apresentação",
-                      elementType: "title",
-                      initialText: bio.about_title || `Sobre a ${companyName || 'Sua Empresa'}`,
-                      initialFormatting: {
-                        font: bio.about_title_font || "funnel",
-                        size: bio.about_title_size || "30 pt",
-                        align: bio.about_title_align || "center",
-                        bold: bio.about_title_bold !== false,
-                      },
-                      targetField: "about_title",
-                    });
-                  }}
-                  className="w-full inline-block p-1"
-                >
-                  <h2 
-                    className={`tracking-tight select-none leading-tight ${
-                      theme === 'light' ? 'text-zinc-900' : 'text-white'
-                    } ${
-                      (bio.about_title_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_title_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
-                    } ${
-                      bio.about_title_bold !== false ? 'font-extrabold' : 'font-normal'
-                    } ${
-                      bio.about_title_italic ? 'italic' : 'not-italic'
-                    } ${
-                      getFontSizeClass(bio.about_title_size || "30 pt")
-                    } bio-desc-font-${bio.about_title_font || "funnel"}`}
-                  >
-                    <span className="scroll-reveal-mask">
-                      <span className="scroll-reveal-inner">
-                        {(bio.about_title || `Sobre a ${companyName || 'Sua Empresa'}`).toUpperCase()}
-                      </span>
-                    </span>
-                  </h2>
-                </EditableItem>
+                {(() => {
+                  const activeAboutTitle = isMobileView 
+                    ? (bio.about_title_mobile || bio.about_title || `Sobre a ${companyName || 'Sua Empresa'}`)
+                    : (bio.about_title || `Sobre a ${companyName || 'Sua Empresa'}`);
+                  const activeAboutFont = isMobileView ? (bio.about_title_font_mobile || bio.about_title_font || "funnel") : (bio.about_title_font || "funnel");
+                  const activeAboutSize = isMobileView ? (bio.about_title_size_mobile || bio.about_title_size || "30 pt") : (bio.about_title_size || "30 pt");
+                  const activeAboutAlign = isMobileView ? (bio.about_title_align_mobile || bio.about_title_align || "center") : (bio.about_title_align || "center");
+                  const isAboutBold = isMobileView ? (bio.about_title_bold_mobile !== false) : (bio.about_title_bold !== false);
+
+                  return (
+                    <EditableItem
+                      isEditMode={isLiveEditMode && !previewAsVisitor}
+                      label="Editar Título Sobre"
+                      onClick={() => {
+                        setQuickEditorState({
+                          isOpen: true,
+                          title: "Editar Título 'Sobre a Empresa'",
+                          subtitle: "Altere o título da seção de apresentação",
+                          elementType: "title",
+                          initialText: activeAboutTitle,
+                          initialFormatting: {
+                            font: activeAboutFont,
+                            size: activeAboutSize,
+                            align: activeAboutAlign,
+                            bold: isAboutBold,
+                          },
+                          targetField: "about_title",
+                        });
+                      }}
+                      className="w-full inline-block p-1"
+                    >
+                      <h2 
+                        className={`tracking-tight select-none leading-tight ${
+                          theme === 'light' ? 'text-zinc-900' : 'text-white'
+                        } ${
+                          activeAboutAlign === 'left' ? 'text-left w-full' : activeAboutAlign === 'right' ? 'text-right w-full' : 'text-center w-full'
+                        } ${
+                          isAboutBold ? 'font-extrabold' : 'font-normal'
+                        } ${
+                          bio.about_title_italic ? 'italic' : 'not-italic'
+                        } ${
+                          getFontSizeClass(activeAboutSize)
+                        } bio-desc-font-${activeAboutFont}`}
+                      >
+                        <span className="scroll-reveal-mask">
+                          <span className="scroll-reveal-inner">
+                            {activeAboutTitle.toUpperCase()}
+                          </span>
+                        </span>
+                      </h2>
+                    </EditableItem>
+                  );
+                })()}
 
                 {/* Main Description - Área de texto ampla horizontalmente conforme marcação do usuário */}
-                {(bio.about_description || !bio.about_title) && (
-                  <EditableItem
-                    isEditMode={isLiveEditMode && !previewAsVisitor}
-                    label="Editar Descrição Sobre"
-                    onClick={() => {
-                      setQuickEditorState({
-                        isOpen: true,
-                        title: "Editar Descrição 'Sobre a Empresa'",
-                        subtitle: "Altere o texto institucional da empresa",
-                        elementType: "description",
-                        initialText: bio.about_description || `A GM edificação é uma agência criativa que transforma ideias em experiências visuais, marcas e conteúdos que comunicam, conectam e geram impacto. Especializada em Design Gráfico, Branding, Identidade Visual, Motion Design, Design 3D, Social Media e Produção de Conteúdo, a GM edificação combina criatividade, estratégia e tecnologia para desenvolver projetos únicos, profissionais e alinhados à essência de cada cliente. Mais do que criar uma arte, construímos conceitos.`,
-                        initialFormatting: {
-                          font: bio.about_desc_font || "ui",
-                          size: bio.about_desc_size || "16 pt",
-                          align: bio.about_desc_align || "center",
-                          bold: !!bio.about_desc_bold,
-                          italic: !!bio.about_desc_italic,
-                        },
-                        targetField: "about_description",
-                      });
-                    }}
-                    className="w-full max-w-5xl lg:max-w-6xl inline-block p-1"
-                  >
-                    <p 
-                      className={`leading-relaxed sm:leading-[1.8] max-w-5xl lg:max-w-6xl w-full mx-auto tracking-normal text-base sm:text-lg md:text-xl lg:text-[1.24rem] ${
-                        theme === 'light' ? 'text-zinc-600' : 'text-zinc-200/95'
-                      } ${
-                        (bio.about_desc_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_desc_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
-                      } ${
-                        bio.about_desc_bold ? 'font-bold' : 'font-normal'
-                      } ${
-                        bio.about_desc_italic ? 'italic' : 'not-italic'
-                      } ${
-                        getFontSizeClass(bio.about_desc_size || "16 pt")
-                      } bio-desc-font-${bio.about_desc_font || "ui"}`}
+                {(() => {
+                  const defaultAboutDesc = `A GM edificação é uma agência criativa que transforma ideias em experiências visuais, marcas e conteúdos que comunicam, conectam e geram impacto. Especializada em Design Gráfico, Branding, Identidade Visual, Motion Design, Design 3D, Social Media e Produção de Conteúdo, a GM edificação combina criatividade, estratégia e tecnologia para desenvolver projetos únicos, profissionais e alinhados à essência de cada cliente. Mais do que criar uma arte, construímos conceitos.`;
+                  const activeAboutDesc = isMobileView 
+                    ? (bio.about_description_mobile || bio.about_description || defaultAboutDesc)
+                    : (bio.about_description || defaultAboutDesc);
+                  const activeDescFont = isMobileView ? (bio.about_desc_font_mobile || bio.about_desc_font || "ui") : (bio.about_desc_font || "ui");
+                  const activeDescSize = isMobileView ? (bio.about_desc_size_mobile || bio.about_desc_size || "16 pt") : (bio.about_desc_size || "16 pt");
+                  const activeDescAlign = isMobileView ? (bio.about_desc_align_mobile || bio.about_desc_align || "center") : (bio.about_desc_align || "center");
+                  const isDescBold = isMobileView ? (bio.about_desc_bold_mobile !== undefined ? bio.about_desc_bold_mobile : !!bio.about_desc_bold) : !!bio.about_desc_bold;
+                  const isDescItalic = isMobileView ? (bio.about_desc_italic_mobile !== undefined ? bio.about_desc_italic_mobile : !!bio.about_desc_italic) : !!bio.about_desc_italic;
+
+                  return (
+                    <EditableItem
+                      isEditMode={isLiveEditMode && !previewAsVisitor}
+                      label="Editar Descrição Sobre"
+                      onClick={() => {
+                        setQuickEditorState({
+                          isOpen: true,
+                          title: "Editar Descrição 'Sobre a Empresa'",
+                          subtitle: "Altere o texto institucional da empresa",
+                          elementType: "description",
+                          initialText: activeAboutDesc,
+                          initialFormatting: {
+                            font: activeDescFont,
+                            size: activeDescSize,
+                            align: activeDescAlign,
+                            bold: isDescBold,
+                            italic: isDescItalic,
+                          },
+                          targetField: "about_description",
+                        });
+                      }}
+                      className="w-full max-w-5xl lg:max-w-6xl inline-block p-1"
                     >
-                      {bio.about_description || `A GM edificação é uma agência criativa que transforma ideias em experiências visuais, marcas e conteúdos que comunicam, conectam e geram impacto. Especializada em Design Gráfico, Branding, Identidade Visual, Motion Design, Design 3D, Social Media e Produção de Conteúdo, a GM edificação combina criatividade, estratégia e tecnologia para desenvolver projetos únicos, profissionais e alinhados à essência de cada cliente. Mais do que criar uma arte, construímos conceitos.`}
-                    </p>
-                  </EditableItem>
-                )}
+                      <p 
+                        className={`leading-relaxed sm:leading-[1.8] max-w-5xl lg:max-w-6xl w-full mx-auto tracking-normal text-base sm:text-lg md:text-xl lg:text-[1.24rem] ${
+                          theme === 'light' ? 'text-zinc-600' : 'text-zinc-200/95'
+                        } ${
+                          activeDescAlign === 'left' ? 'text-left w-full' : activeDescAlign === 'right' ? 'text-right w-full' : 'text-center w-full'
+                        } ${
+                          isDescBold ? 'font-bold' : 'font-normal'
+                        } ${
+                          isDescItalic ? 'italic' : 'not-italic'
+                        } ${
+                          getFontSizeClass(activeDescSize)
+                        } bio-desc-font-${activeDescFont}`}
+                      >
+                        {activeAboutDesc}
+                      </p>
+                    </EditableItem>
+                  );
+                })()}
 
                 {/* Highlight text (Bold) */}
-                {(bio.about_highlight || !bio.about_title) && (
-                  <EditableItem
-                    isEditMode={isLiveEditMode && !previewAsVisitor}
-                    label="Editar Destaque Sobre"
-                    onClick={() => {
-                      setQuickEditorState({
-                        isOpen: true,
-                        title: "Editar Chamada de Destaque",
-                        subtitle: "Altere a frase de impacto e convite para ação",
-                        elementType: "description",
-                        initialText: bio.about_highlight || `Edificamos ideias. Criamos impacto. Design Feroz. 🦁`,
-                        initialFormatting: {
-                          font: bio.about_highlight_font || "ui",
-                          size: bio.about_highlight_size || "16 pt",
-                          align: bio.about_highlight_align || "center",
-                          bold: bio.about_highlight_bold !== false,
-                          italic: !!bio.about_highlight_italic,
-                        },
-                        targetField: "about_highlight",
-                      });
-                    }}
-                    className="w-full max-w-4xl inline-block p-1"
-                  >
-                    <p 
-                      className={`tracking-normal max-w-4xl w-full mx-auto text-base sm:text-lg md:text-xl font-bold ${
-                        theme === 'light' ? 'text-zinc-800' : 'text-white'
-                      } ${
-                        (bio.about_highlight_align || 'center') === 'left' ? 'text-left w-full' : (bio.about_highlight_align || 'center') === 'right' ? 'text-right w-full' : 'text-center w-full'
-                      } ${
-                        bio.about_highlight_bold !== false ? 'font-extrabold' : 'font-normal'
-                      } ${
-                        bio.about_highlight_italic ? 'italic' : 'not-italic'
-                      } ${
-                        getFontSizeClass(bio.about_highlight_size || "16 pt")
-                      } bio-desc-font-${bio.about_highlight_font || "ui"}`}
+                {(() => {
+                  const defaultHighlight = `Edificamos ideias. Criamos impacto. Design Feroz. 🦁`;
+                  const activeHighlight = isMobileView 
+                    ? (bio.about_highlight_mobile || bio.about_highlight || defaultHighlight)
+                    : (bio.about_highlight || defaultHighlight);
+                  const activeHlFont = isMobileView ? (bio.about_highlight_font_mobile || bio.about_highlight_font || "ui") : (bio.about_highlight_font || "ui");
+                  const activeHlSize = isMobileView ? (bio.about_highlight_size_mobile || bio.about_highlight_size || "16 pt") : (bio.about_highlight_size || "16 pt");
+                  const activeHlAlign = isMobileView ? (bio.about_highlight_align_mobile || bio.about_highlight_align || "center") : (bio.about_highlight_align || "center");
+                  const isHlBold = isMobileView ? (bio.about_highlight_bold_mobile !== false) : (bio.about_highlight_bold !== false);
+
+                  return (
+                    <EditableItem
+                      isEditMode={isLiveEditMode && !previewAsVisitor}
+                      label="Editar Destaque Sobre"
+                      onClick={() => {
+                        setQuickEditorState({
+                          isOpen: true,
+                          title: "Editar Chamada de Destaque",
+                          subtitle: "Altere a frase de impacto e convite para ação",
+                          elementType: "description",
+                          initialText: activeHighlight,
+                          initialFormatting: {
+                            font: activeHlFont,
+                            size: activeHlSize,
+                            align: activeHlAlign,
+                            bold: isHlBold,
+                            italic: !!bio.about_highlight_italic,
+                          },
+                          targetField: "about_highlight",
+                        });
+                      }}
+                      className="w-full max-w-4xl inline-block p-1"
                     >
-                      {bio.about_highlight || `Edificamos ideias. Criamos impacto. Design Feroz. 🦁`}
-                    </p>
-                  </EditableItem>
-                )}
+                      <p 
+                        className={`tracking-normal max-w-4xl w-full mx-auto text-base sm:text-lg md:text-xl font-bold ${
+                          theme === 'light' ? 'text-zinc-800' : 'text-white'
+                        } ${
+                          activeHlAlign === 'left' ? 'text-left w-full' : activeHlAlign === 'right' ? 'text-right w-full' : 'text-center w-full'
+                        } ${
+                          isHlBold ? 'font-extrabold' : 'font-normal'
+                        } ${
+                          bio.about_highlight_italic ? 'italic' : 'not-italic'
+                        } ${
+                          getFontSizeClass(activeHlSize)
+                        } bio-desc-font-${activeHlFont}`}
+                      >
+                        {activeHighlight}
+                      </p>
+                    </EditableItem>
+                  );
+                })()}
 
                 {/* Orange rounded-full button identical to the print */}
                 <div className="pt-2">
@@ -5051,32 +5236,39 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             >
               <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 space-y-6 sm:space-y-8">
               <div className="flex items-center justify-between px-2">
-                <EditableItem
-                  isEditMode={isLiveEditMode && !previewAsVisitor}
-                  label="Editar Título do Portfólio"
-                  onClick={() => {
-                    setQuickEditorState({
-                      isOpen: true,
-                      title: "Editar Título do Portfólio",
-                      subtitle: "Altere o título da seção de portfólio de projetos",
-                      elementType: "section_title",
-                      initialText: bio.portfolio_title || "Nosso Portfólio",
-                      initialFormatting: {
-                        color: brandColor,
-                      },
-                      targetField: "portfolio_title",
-                    });
-                  }}
-                  className="p-1 -ml-1 inline-block"
-                >
-                  <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${t.textTitle}`}>
-                    <span className="scroll-reveal-mask">
-                      <span className="scroll-reveal-inner">
-                        {bio.portfolio_title || "Nosso Portfólio"}
-                      </span>
-                    </span>
-                  </h2>
-                </EditableItem>
+                {(() => {
+                  const activePortfolioTitle = isMobileView 
+                    ? (bio.portfolio_title_mobile || bio.portfolio_title || "Nosso Portfólio")
+                    : (bio.portfolio_title || "Nosso Portfólio");
+                  return (
+                    <EditableItem
+                      isEditMode={isLiveEditMode && !previewAsVisitor}
+                      label="Editar Título do Portfólio"
+                      onClick={() => {
+                        setQuickEditorState({
+                          isOpen: true,
+                          title: "Editar Título do Portfólio",
+                          subtitle: "Altere o título da seção de portfólio de projetos",
+                          elementType: "section_title",
+                          initialText: activePortfolioTitle,
+                          initialFormatting: {
+                            color: brandColor,
+                          },
+                          targetField: "portfolio_title",
+                        });
+                      }}
+                      className="p-1 -ml-1 inline-block"
+                    >
+                      <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${t.textTitle}`}>
+                        <span className="scroll-reveal-mask">
+                          <span className="scroll-reveal-inner">
+                            {activePortfolioTitle}
+                          </span>
+                        </span>
+                      </h2>
+                    </EditableItem>
+                  );
+                })()}
                 {isLiveEditMode && !previewAsVisitor && (
                   <button
                     type="button"
@@ -5095,8 +5287,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                    const hasDesktopLayers = !!item.layers && item.layers.length > 0;
                    const hasMobileLayers = !!item.mobile_layers && item.mobile_layers.length > 0;
                    const coverImg = isMobileView
-                     ? (hasMobileLayers ? item.mobile_layers[0].image_url : (hasDesktopLayers ? item.layers[0].image_url : item.image_url))
-                     : (hasDesktopLayers ? item.layers[0].image_url : (hasMobileLayers ? item.mobile_layers[0].image_url : item.image_url));
+                     ? (item.main_banner_mobile_url || (hasMobileLayers ? item.mobile_layers[0].image_url : (hasDesktopLayers ? item.layers[0].image_url : item.image_url)))
+                     : (item.main_banner_url || (hasDesktopLayers ? item.layers[0].image_url : (hasMobileLayers ? item.mobile_layers[0].image_url : item.image_url)));
                    
                    return (
                      <EditableItem
@@ -6529,13 +6721,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         </div>
       )}
 
-      {/* Seta Descer no Meio da Página: FIXA no rodapé central da tela (oculta quando modal está aberto para não sobrepor formulários) */}
+      {/* Seta Descer no Meio da Página: FIXA no rodapé central da tela (oculta quando no fim da página ou modal aberto) */}
       {!isCartOpen && typeof document !== "undefined" && createPortal(
         <button
           type="button"
           onClick={advanceToNextSection}
           className={`psd-down !fixed !left-0 !right-0 !mx-auto !bottom-5 sm:!bottom-7 !z-[10000030] !bg-transparent !border-none !outline-none !shadow-none !ring-0 focus:!ring-0 focus:!outline-none hover:!bg-transparent hover:!border-none hover:!shadow-none !transform-none hover:!transform-none active:!transform-none ${
-            !isCustomerAuthModalOpen && !isCustomerDashboardOpen && (canScrollDown || activeView === "bio" || activeView === "contact" || activeView === "customer")
+            !isCustomerAuthModalOpen && !isCustomerDashboardOpen && (canScrollDown || (activeView === "bio" && (mainScrollRef.current?.scrollTop || window.scrollY || 0) < 60))
               ? "opacity-100 pointer-events-auto" 
               : "opacity-0 pointer-events-none !hidden"
           }`}
@@ -6556,6 +6748,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             height: "48px",
             transform: "none",
             transition: "opacity 0.3s ease",
+            touchAction: "manipulation",
           }}
           aria-label="Avançar para próxima tela"
         >
@@ -6582,7 +6775,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 ? "pointer-events-auto opacity-100 !opacity-100"
                 : "pointer-events-none opacity-0 !opacity-0 !hidden"
             }`}
-            style={{ opacity: !isCustomerAuthModalOpen && !isCustomerDashboardOpen ? 1 : 0, pointerEvents: !isCustomerAuthModalOpen && !isCustomerDashboardOpen ? "auto" : "none", zIndex: 10000030 }}
+            style={{ 
+              opacity: !isCustomerAuthModalOpen && !isCustomerDashboardOpen ? 1 : 0, 
+              pointerEvents: !isCustomerAuthModalOpen && !isCustomerDashboardOpen ? "auto" : "none", 
+              zIndex: 10000030,
+              touchAction: "manipulation",
+            }}
             title="Subir para o topo"
             aria-label="Subir para seção anterior"
           >

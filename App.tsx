@@ -42,23 +42,18 @@ const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
 
 const PrivateRoutes = () => {
   const location = useLocation();
-  const isBioRoute = location.pathname.startsWith('/minha-bio');
 
   return (
     <ProtectedRoute>
       <Layout>
-        <AnimatePresence mode="popLayout" initial={false}>
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, scale: 0.99 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.99 }}
-            transition={{ duration: 0.16, ease: [0.32, 0.72, 0, 1] }}
-            className={`w-full min-h-full flex-1 flex flex-col overflow-x-hidden max-w-full ${
-              isBioRoute 
-                ? "p-0 m-0 w-full" 
-                : "grid grid-cols-1 w-full max-w-full p-4 sm:px-6 sm:py-6 md:px-8 md:py-8 gap-4 sm:gap-6 box-border overflow-x-hidden"
-            }`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.14, ease: "easeOut" }}
+            className="grid grid-cols-1 w-full max-w-full p-4 sm:px-6 sm:py-6 md:px-8 md:py-8 gap-4 sm:gap-6 box-border"
           >
             <Suspense fallback={<PageLoader />}>
               <Routes location={location}>

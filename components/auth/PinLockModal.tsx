@@ -48,10 +48,23 @@ interface BackgroundInfo {
 const DEFAULT_ARCH_WALLPAPER =
   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80";
 
+function isMobileDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.innerWidth <= 768 ||
+    window.matchMedia("(max-width: 768px)").matches ||
+    window.matchMedia("(orientation: portrait) and (max-width: 1024px)").matches
+  );
+}
+
 function resolveAppBackground(): BackgroundInfo {
+  const isMobile = isMobileDevice();
   try {
     const s = readSettingsLocal();
-    const candidate = s?.app_background_url || s?.mobile_app_background_url;
+    const candidate = isMobile
+      ? (s?.mobile_app_background_url || s?.app_background_url)
+      : (s?.app_background_url || s?.mobile_app_background_url);
+
     if (candidate && typeof candidate === "string" && candidate.trim().length > 0) {
       const cleanUrl = candidate.trim();
       const isVideo =
@@ -60,10 +73,18 @@ function resolveAppBackground(): BackgroundInfo {
       return {
         url: cleanUrl,
         isVideo,
-        fit: s?.app_background_fit || "cover",
-        pos_x: s?.app_background_pos_x || "50%",
-        pos_y: s?.app_background_pos_y || "50%",
-        scale: s?.app_background_scale ?? 1,
+        fit: isMobile
+          ? (s?.mobile_app_background_fit || s?.app_background_fit || "cover")
+          : (s?.app_background_fit || "cover"),
+        pos_x: isMobile
+          ? (s?.mobile_app_background_pos_x || s?.app_background_pos_x || "50%")
+          : (s?.app_background_pos_x || "50%"),
+        pos_y: isMobile
+          ? (s?.mobile_app_background_pos_y || s?.app_background_pos_y || "50%")
+          : (s?.app_background_pos_y || "50%"),
+        scale: isMobile
+          ? Number(s?.mobile_app_background_scale ?? s?.app_background_scale ?? 1.15)
+          : Number(s?.app_background_scale ?? 1),
       };
     }
   } catch {}
@@ -72,7 +93,11 @@ function resolveAppBackground(): BackgroundInfo {
   if (typeof window !== "undefined") {
     try {
       const root = document.documentElement;
-      const cssBg = getComputedStyle(root).getPropertyValue("--gm-app-bg-url")?.trim();
+      const cssMobileBg = isMobile ? getComputedStyle(root).getPropertyValue("--gm-mobile-bg-url")?.trim() : null;
+      const cssBg = cssMobileBg && cssMobileBg !== "none" && cssMobileBg.startsWith("url(")
+        ? cssMobileBg
+        : getComputedStyle(root).getPropertyValue("--gm-app-bg-url")?.trim();
+
       if (cssBg && cssBg !== "none" && cssBg.startsWith("url(")) {
         const match = cssBg.match(/url\(["']?(.*?)["']?\)/);
         if (match && match[1]) {
@@ -82,10 +107,18 @@ function resolveAppBackground(): BackgroundInfo {
           return {
             url: match[1],
             isVideo,
-            fit: getComputedStyle(root).getPropertyValue("--gm-app-bg-fit")?.trim() || "cover",
-            pos_x: getComputedStyle(root).getPropertyValue("--gm-app-bg-pos-x")?.trim() || "50%",
-            pos_y: getComputedStyle(root).getPropertyValue("--gm-app-bg-pos-y")?.trim() || "50%",
-            scale: 1,
+            fit: isMobile
+              ? (getComputedStyle(root).getPropertyValue("--gm-mobile-bg-fit")?.trim() || "cover")
+              : (getComputedStyle(root).getPropertyValue("--gm-app-bg-fit")?.trim() || "cover"),
+            pos_x: isMobile
+              ? (getComputedStyle(root).getPropertyValue("--gm-mobile-bg-pos-x")?.trim() || "50%")
+              : (getComputedStyle(root).getPropertyValue("--gm-app-bg-pos-x")?.trim() || "50%"),
+            pos_y: isMobile
+              ? (getComputedStyle(root).getPropertyValue("--gm-mobile-bg-pos-y")?.trim() || "50%")
+              : (getComputedStyle(root).getPropertyValue("--gm-app-bg-pos-y")?.trim() || "50%"),
+            scale: isMobile
+              ? Number(getComputedStyle(root).getPropertyValue("--gm-mobile-bg-scale")?.trim() || 1.15)
+              : 1,
           };
         }
       }
@@ -98,7 +131,7 @@ function resolveAppBackground(): BackgroundInfo {
     fit: "cover",
     pos_x: "50%",
     pos_y: "50%",
-    scale: 1,
+    scale: isMobile ? 1.15 : 1,
   };
 }
 
@@ -627,7 +660,27 @@ export default function PinLockModal({
   const modalContent = (
     <div
       onPointerMove={handlePointerMove}
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 select-none overflow-hidden"
+      className="gm-pin-lock-overlay fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-5 select-none overflow-hidden"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100%",
+        minHeight: "100dvh",
+        maxHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "16px",
+        overflow: "hidden",
+        touchAction: "none",
+        zIndex: 999999,
+        boxSizing: "border-box",
+      }}
     >
       {/* BANNER FLUTUANTE EXCLUSIVO QUANDO EM MODO DE PRÉVIA */}
       {isPreviewMode && (
@@ -652,9 +705,23 @@ export default function PinLockModal({
       )}
       {/* ========================================================================= */}
       {/* BACKGROUND COM EFEITO DINÂMICO ESCOLHIDO NA GALERIA */}
-      {/* (SEM DESFOQUE NA TELA GERAL - DESFOQUE SOMENTE NO MODAL) */}
+      {/* (SE ESTENDE E ADAPTA AO FORMATO SMARTPHONE - 100% PREENCHIMENTO SEM BORDAS) */}
       {/* ========================================================================= */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center">
+      <div 
+        className="fixed -inset-[6%] sm:-inset-[4%] pointer-events-none overflow-hidden z-0 flex items-center justify-center w-[112%] sm:w-[108%] h-[112%] sm:h-[108%] min-h-[112dvh] min-w-[112dvw] select-none"
+        style={{
+          position: "fixed",
+          top: "-6%",
+          left: "-6%",
+          right: "-6%",
+          bottom: "-6%",
+          width: "112%",
+          height: "112%",
+          minHeight: "112dvh",
+          minWidth: "112dvw",
+          touchAction: "none",
+        }}
+      >
         {/* CAMADA AURORA LUMINESCENTE (QUANDO EFEITO AURORA ATIVO NA TELA DE BLOQUEIO) */}
         {isLockEffectActive && lockEffectType === "aurora" && (
           <div className="gm-bg-aurora-layer" />
@@ -671,6 +738,8 @@ export default function PinLockModal({
           className="w-full h-full will-change-transform"
           style={{
             transformOrigin: "center center",
+            width: "100%",
+            height: "100%",
           }}
         >
           {bgInfo.isVideo ? (
@@ -681,13 +750,23 @@ export default function PinLockModal({
               muted
               playsInline
               className="w-full h-full object-cover"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: (bgInfo.fit as any) || "cover",
+                objectPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
+              }}
             />
           ) : (
             <div
-              className="w-full h-full bg-cover bg-center"
+              className="w-full h-full transition-transform duration-1000"
               style={{
+                width: "100%",
+                height: "100%",
                 backgroundImage: `url("${bgInfo.url}")`,
+                backgroundSize: bgInfo.fit || "cover",
                 backgroundPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
+                backgroundRepeat: "no-repeat",
               }}
             />
           )}
@@ -695,6 +774,9 @@ export default function PinLockModal({
 
         {/* OVERLAY ESCURECEDOR SUAVE E TRANSPARENTE (COM BLUR LEVE, MANTENDO A IMAGEM VISÍVEL E NÍTIDA) */}
         <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px] pointer-events-none" />
+
+        {/* GRADIENTE VERTICAL DE PROFUNDIDADE PARA O FORMATO ALONGADO DO SMARTPHONE */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
       </div>
 
       {/* FLASH SUAVE DE SEGURANÇA NO TRAVAMENTO */}
@@ -734,14 +816,20 @@ export default function PinLockModal({
           duration: isUnlocking ? 0.6 : 0.35,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="gm-login-card-square gm-pin-card-compact apple-glass-card relative w-full rounded-[32px] border border-white/[0.10] p-6 sm:p-7 shadow-[0_30px_90px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col items-center text-center max-h-[95vh] overflow-y-auto overflow-x-hidden font-sans select-none z-10"
+        className="gm-pin-lock-card gm-pin-modal-card gm-pin-card-compact apple-glass-card relative w-full rounded-[24px] sm:rounded-[30px] border border-white/[0.12] p-4 sm:p-5.5 shadow-[0_30px_90px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col items-center text-center overflow-hidden font-sans select-none z-10 m-auto"
         style={{
           width: "100%",
-          maxWidth: "440px",
+          maxWidth: "340px",
+          maxHeight: "calc(100dvh - 32px)",
+          margin: "auto",
           marginLeft: "auto",
           marginRight: "auto",
+          marginTop: "auto",
+          marginBottom: "auto",
+          alignSelf: "center",
+          justifySelf: "center",
           boxSizing: "border-box",
-          background: "rgba(18, 18, 24, 0.65)",
+          background: "rgba(18, 18, 24, 0.72)",
           backdropFilter: "blur(20px) saturate(180%)",
           WebkitBackdropFilter: "blur(20px) saturate(180%)",
         }}
@@ -949,7 +1037,7 @@ export default function PinLockModal({
             </AnimatePresence>
 
             {/* CADEADO APPLE COM COR PREDEFINIDA NO APP E MOVIMENTO MECÂNICO */}
-            <div className="relative flex items-center justify-center mb-3">
+            <div className="relative flex items-center justify-center mb-1.5 sm:mb-2">
               {/* ONDAS DE CHOQUE RADIAIS - BLOQUEIO */}
               {isLocking && (
                 <>
@@ -957,13 +1045,13 @@ export default function PinLockModal({
                     initial={{ scale: 0.6, opacity: 0.9 }}
                     animate={{ scale: 2.2, opacity: 0 }}
                     transition={{ duration: 0.7, ease: "easeOut" }}
-                    className="absolute w-16 h-16 rounded-full border-2 border-[var(--gm-primary,#FE540B)] pointer-events-none shadow-[0_0_20px_var(--gm-primary,#FE540B)]"
+                    className="absolute w-12 h-12 rounded-full border-2 border-[var(--gm-primary,#FE540B)] pointer-events-none shadow-[0_0_20px_var(--gm-primary,#FE540B)]"
                   />
                   <motion.div
                     initial={{ scale: 0.4, opacity: 0.7 }}
                     animate={{ scale: 1.7, opacity: 0 }}
                     transition={{ duration: 0.55, ease: "easeOut", delay: 0.1 }}
-                    className="absolute w-16 h-16 rounded-full bg-[var(--gm-primary,#FE540B)]/20 pointer-events-none"
+                    className="absolute w-12 h-12 rounded-full bg-[var(--gm-primary,#FE540B)]/20 pointer-events-none"
                   />
                 </>
               )}
@@ -975,13 +1063,13 @@ export default function PinLockModal({
                     initial={{ scale: 0.6, opacity: 1 }}
                     animate={{ scale: 2.5, opacity: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="absolute w-16 h-16 rounded-full border-2 border-[var(--gm-primary,#FE540B)] pointer-events-none shadow-[0_0_30px_var(--gm-primary,#FE540B)]"
+                    className="absolute w-12 h-12 rounded-full border-2 border-[var(--gm-primary,#FE540B)] pointer-events-none shadow-[0_0_30px_var(--gm-primary,#FE540B)]"
                   />
                   <motion.div
                     initial={{ scale: 0.35, opacity: 0.8 }}
                     animate={{ scale: 2.0, opacity: 0 }}
                     transition={{ duration: 0.65, ease: "easeOut", delay: 0.08 }}
-                    className="absolute w-16 h-16 rounded-full bg-[var(--gm-primary,#FE540B)]/25 pointer-events-none"
+                    className="absolute w-12 h-12 rounded-full bg-[var(--gm-primary,#FE540B)]/25 pointer-events-none"
                   />
                 </>
               )}
@@ -999,11 +1087,12 @@ export default function PinLockModal({
                   duration: 0.45,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className={`w-16 h-16 sm:w-17 sm:h-17 rounded-[22px] flex items-center justify-center shrink-0 relative transition-all duration-300 border ${
+                className={`w-12 h-12 sm:w-13 sm:h-13 rounded-[18px] flex items-center justify-center shrink-0 relative transition-all duration-300 border ${
                   isUnlocking
                     ? "bg-white/10 border-white/25 shadow-[0_0_30px_rgba(254,84,11,0.45)] text-[var(--gm-primary,#FE540B)]"
                     : "bg-white/[0.06] border-white/12 shadow-[0_10px_30px_rgba(0,0,0,0.5)] text-[var(--gm-primary,#FE540B)]"
                 }`}
+                style={{ width: "48px", height: "48px" }}
               >
                 {/* AURA SUTIL */}
                 <motion.div
@@ -1016,15 +1105,15 @@ export default function PinLockModal({
                     duration: 2.5,
                     ease: "easeInOut",
                   }}
-                  className="absolute inset-0 rounded-[22px] bg-[var(--gm-primary,#FE540B)]/15 blur-md pointer-events-none"
+                  className="absolute inset-0 rounded-[18px] bg-[var(--gm-primary,#FE540B)]/15 blur-md pointer-events-none"
                 />
 
                 {(currentMode === "setup" || (currentMode === "change" && changeStep !== "verify_current")) && !isUnlocking ? (
-                  <KeyRound size={26} className="text-[var(--gm-primary,#FE540B)] relative z-10" />
+                  <KeyRound size={22} className="text-[var(--gm-primary,#FE540B)] relative z-10" />
                 ) : (
                   <svg
-                    width="34"
-                    height="34"
+                    width="26"
+                    height="26"
                     viewBox="0 0 24 24"
                     fill="none"
                     className="overflow-visible relative z-10"
@@ -1082,7 +1171,7 @@ export default function PinLockModal({
             </div>
 
             {/* TÍTULO E INSTRUÇÃO DINÂMICOS */}
-            <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight transition-colors duration-300">
+            <h3 className="text-base sm:text-lg font-bold text-white tracking-tight transition-colors duration-300">
               {isUnlocking
                 ? (currentMode === "change" ? "PIN Alterado com Sucesso!" : "Acesso Liberado!")
                 : currentMode === "change"
@@ -1096,39 +1185,39 @@ export default function PinLockModal({
                     ? setupStep === "create"
                       ? "Definir PIN de Segurança"
                       : "Confirme o seu PIN"
-                    : "Dispositivo Protegido por PIN")}
+                    : "PIN de Segurança")}
             </h3>
 
-            <p className="text-xs text-zinc-300/80 mt-1 mb-4 px-2 leading-relaxed min-h-[32px] flex items-center justify-center">
+            <p className="text-[11px] sm:text-xs text-zinc-300/80 mt-0.5 mb-2 px-1 leading-snug line-clamp-2">
               {isUnlocking ? (
-                <span className="text-[var(--gm-primary,#FE540B)] font-semibold flex items-center gap-1.5 animate-pulse">
-                  <Sparkles size={14} />{" "}
-                  {currentMode === "change" ? "Gravando novo PIN de segurança..." : "Carregando sua área de trabalho..."}
+                <span className="text-[var(--gm-primary,#FE540B)] font-semibold flex items-center justify-center gap-1.5 animate-pulse">
+                  <Sparkles size={13} />{" "}
+                  {currentMode === "change" ? "Gravando novo PIN..." : "Carregando..."}
                 </span>
               ) : currentMode === "change" ? (
                 changeStep === "verify_current"
                   ? "Digite seu PIN atual de 4 dígitos para autorizar a alteração."
                   : changeStep === "create_new"
-                  ? "PIN atual verificado! Agora, digite o novo PIN de 4 dígitos."
+                  ? "PIN atual verificado! Digite o novo PIN de 4 dígitos."
                   : "Digite os mesmos 4 dígitos novamente para confirmar."
               ) : (
                 description ||
                 (currentMode === "setup"
                   ? setupStep === "create"
-                    ? "Digite 4 dígitos que você lembrará facilmente para desbloquear o app neste dispositivo."
+                    ? "Digite 4 dígitos que você lembrará facilmente."
                     : "Digite os mesmos 4 dígitos para confirmar."
                   : userName
                   ? `Olá, ${userName}. Digite os 4 dígitos para continuar.`
-                  : "Este dispositivo possui credenciais salvas protegidas por PIN. Digite os 4 dígitos para continuar.")
+                  : "Digite seu PIN de 4 dígitos para autorizar o acesso com as credenciais salvas.")
               )}
             </p>
 
             {/* 4 PONTOS / BUBBLES DO PIN */}
-            <div className="relative mb-4 flex flex-col items-center">
+            <div className="relative mb-2 flex flex-col items-center">
               <motion.div
                 animate={isShaking ? { x: [-12, 12, -9, 9, -4, 4, 0] } : {}}
                 transition={{ duration: 0.4 }}
-                className="flex items-center justify-center gap-3.5 relative z-10"
+                className="flex items-center justify-center gap-2.5 relative z-10"
               >
                 {[0, 1, 2, 3].map((index) => {
                   const filled = pin.length > index;
@@ -1145,7 +1234,7 @@ export default function PinLockModal({
                           : {}
                       }
                       transition={{ delay: index * 0.06, duration: 0.3, ease: "easeOut" }}
-                      className={`w-3.5 h-3.5 rounded-full border-2 transition-all duration-200 ${
+                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 transition-all duration-200 ${
                         isUnlocking
                           ? "bg-[var(--gm-primary,#FE540B)] border-[var(--gm-primary,#FE540B)] shadow-[0_0_18px_var(--gm-primary,#FE540B)]"
                           : filled
@@ -1165,45 +1254,63 @@ export default function PinLockModal({
                   initial={{ scaleX: 0, opacity: 0 }}
                   animate={{ scaleX: 1, opacity: 1 }}
                   transition={{ duration: 0.45, ease: "easeOut" }}
-                  className="absolute top-1.5 h-0.5 w-32 bg-[var(--gm-primary,#FE540B)] shadow-[0_0_14px_var(--gm-primary,#FE540B)] rounded-full pointer-events-none"
+                  className="absolute top-1 h-0.5 w-28 bg-[var(--gm-primary,#FE540B)] shadow-[0_0_14px_var(--gm-primary,#FE540B)] rounded-full pointer-events-none"
                 />
               )}
             </div>
 
             {/* MENSAGEM DE ERRO */}
-            {errorMsg ? (
-              <div className="text-xs text-rose-400 font-semibold mb-3 flex items-center justify-center gap-1.5 animate-fade-in">
-                <AlertCircle size={14} />
+            {errorMsg && (
+              <div className="text-[11px] text-rose-400 font-semibold mb-1.5 flex items-center justify-center gap-1.5 animate-fade-in">
+                <AlertCircle size={13} />
                 <span>{errorMsg}</span>
               </div>
-            ) : (
-              <div className="h-4 mb-2" />
             )}
 
             {/* TECLADO NUMÉRICO VIRTUAL APPLE GLASS */}
             <div
-              className={`grid grid-cols-3 gap-2.5 w-full max-w-[310px] sm:max-w-[330px] transition-all duration-300 ${
+              className={`gm-pin-keypad grid grid-cols-3 gap-2 w-full max-w-[280px] sm:max-w-[304px] transition-all duration-300 ${
                 isUnlocking ? "opacity-25 pointer-events-none scale-95" : "opacity-100"
               }`}
+              style={{
+                width: "100%",
+                maxWidth: "284px",
+                marginLeft: "auto",
+                marginRight: "auto",
+                display: "grid",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: "8px",
+                boxSizing: "border-box",
+              }}
             >
               {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
                 <button
                   key={num}
                   type="button"
                   onClick={() => handleDigit(num)}
-                  className="h-12 sm:h-13 rounded-2xl bg-white/[0.07] hover:bg-white/[0.14] active:bg-[var(--gm-primary,#FE540B)]/30 border border-white/12 hover:border-white/25 active:scale-95 transition-all text-xl font-semibold text-white flex items-center justify-center cursor-pointer shadow-none"
+                  className="gm-pin-key h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] rounded-[14px] bg-white/[0.08] hover:bg-white/[0.15] active:bg-[var(--gm-primary,#FE540B)]/30 border border-white/12 hover:border-white/25 active:scale-95 transition-all text-[19px] sm:text-[20px] font-semibold text-white flex items-center justify-center cursor-pointer shadow-none touch-manipulation select-none"
+                  style={{
+                    height: "44px",
+                    minHeight: "44px",
+                    fontSize: "19px",
+                    borderRadius: "14px",
+                    lineHeight: "1",
+                  }}
                 >
                   {num}
                 </button>
               ))}
 
               {/* BOTÃO CANCELAR */}
-              <div className="h-12 sm:h-13 flex items-center justify-center">
+              <div 
+                className="h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] flex items-center justify-center"
+                style={{ height: "44px", minHeight: "44px" }}
+              >
                 {onCancel ? (
                   <button
                     type="button"
                     onClick={onCancel}
-                    className="text-xs text-zinc-400 hover:text-white uppercase font-bold tracking-wider transition px-2 py-1 cursor-pointer"
+                    className="text-[11px] text-zinc-400 hover:text-white uppercase font-bold tracking-wider transition px-1.5 py-1.5 cursor-pointer touch-manipulation active:scale-95"
                   >
                     Cancelar
                   </button>
@@ -1214,7 +1321,14 @@ export default function PinLockModal({
               <button
                 type="button"
                 onClick={() => handleDigit("0")}
-                className="h-12 sm:h-13 rounded-2xl bg-white/[0.07] hover:bg-white/[0.14] active:bg-[var(--gm-primary,#FE540B)]/30 border border-white/12 hover:border-white/25 active:scale-95 transition-all text-xl font-semibold text-white flex items-center justify-center cursor-pointer shadow-none"
+                className="gm-pin-key h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] rounded-[14px] bg-white/[0.08] hover:bg-white/[0.15] active:bg-[var(--gm-primary,#FE540B)]/30 border border-white/12 hover:border-white/25 active:scale-95 transition-all text-[19px] sm:text-[20px] font-semibold text-white flex items-center justify-center cursor-pointer shadow-none touch-manipulation select-none"
+                style={{
+                  height: "44px",
+                  minHeight: "44px",
+                  fontSize: "19px",
+                  borderRadius: "14px",
+                  lineHeight: "1",
+                }}
               >
                 0
               </button>
@@ -1224,7 +1338,12 @@ export default function PinLockModal({
                 type="button"
                 onClick={handleDelete}
                 disabled={pin.length === 0}
-                className="h-12 sm:h-13 rounded-2xl bg-white/[0.05] hover:bg-white/[0.12] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 transition-all flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer"
+                className="gm-pin-key h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] rounded-[14px] bg-white/[0.05] hover:bg-white/[0.12] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 transition-all flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer touch-manipulation select-none"
+                style={{
+                  height: "44px",
+                  minHeight: "44px",
+                  borderRadius: "14px",
+                }}
                 title="Apagar"
               >
                 <Delete size={18} />
@@ -1233,22 +1352,22 @@ export default function PinLockModal({
 
             {/* BOTÃO ESQUECI MEU PIN (VISÍVEL NO MODO VERIFY OU NA VERIFICAÇÃO DO PIN ATUAL NO MODO CHANGE) */}
             {((currentMode === "verify") || (currentMode === "change" && changeStep === "verify_current")) && !isUnlocking && (
-              <div className="mt-3.5 flex items-center justify-center">
+              <div className="mt-1.5 sm:mt-2 flex items-center justify-center">
                 <button
                   type="button"
                   onClick={() => {
                     setIsForgotView(true);
                     setErrorMsg("");
                   }}
-                  className="text-[13px] sm:text-[14px] hover:scale-105 text-zinc-400 hover:text-[var(--gm-primary,#FE540B)] font-medium no-underline hover:no-underline transition-all duration-200 cursor-pointer bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent border-0 outline-none p-1 select-none shadow-none"
+                  className="text-xs hover:scale-105 text-zinc-400 hover:text-[var(--gm-primary,#FE540B)] font-medium no-underline hover:no-underline transition-all duration-200 cursor-pointer bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent border-0 outline-none p-1 select-none shadow-none touch-manipulation"
                 >
                   Esqueci meu PIN
                 </button>
               </div>
             )}
 
-            {/* DICA DE TECLADO FÍSICO */}
-            <p className="text-[10px] text-zinc-400/80 mt-3 select-none">
+            {/* DICA DE TECLADO FÍSICO (SOMENTE NO DESKTOP) */}
+            <p className="text-[9.5px] text-zinc-400/80 mt-1 select-none hidden sm:block">
               Você também pode digitar pelo teclado numérico
             </p>
           </>

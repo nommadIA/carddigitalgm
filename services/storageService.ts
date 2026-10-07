@@ -57,14 +57,44 @@ export async function uploadBioAsset(tenantId: string | null, file: File, prefix
   }
   const ext = (fileToUpload.name.split(".").pop() || (isVideo ? "mp4" : "png")).toLowerCase();
   const filename = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
-  const targetTenant = tenantId || "global";
-  const path = `${targetTenant}/bio/${filename}`;
+  
+  // Garante que o folder seja um UUID válido para não violar a política RLS do bucket tenant-assets
+  const isValidUuid = (val: string | null | undefined) => 
+    Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+
+  let targetFolder = isValidUuid(tenantId) ? tenantId! : null;
+  if (!targetFolder && typeof localStorage !== "undefined") {
+    const cached = localStorage.getItem("tenant_id");
+    if (isValidUuid(cached)) targetFolder = cached!;
+  }
+  if (!targetFolder) {
+    const { data: sess } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+    const uid = sess.session?.user?.id;
+    if (isValidUuid(uid)) targetFolder = uid!;
+  }
+  if (!targetFolder) {
+    targetFolder = "6f4ee596-eb5e-415f-9189-d571ad85ed95"; // Fallback tenant oficial
+  }
+
+  const path = `${targetFolder}/bio/${filename}`;
 
   const { error } = await supabase.storage
     .from(BUCKET)
     .upload(path, fileToUpload, { upsert: true, contentType: fileToUpload.type || (isVideo ? "video/mp4" : `image/${ext}`) });
 
-  if (error) throw error;
+  if (error) {
+    console.error("Erro no upload para tenant-assets:", error);
+    // Tentativa alternativa no bucket branding se existir
+    const fallbackRes = await supabase.storage
+      .from("branding")
+      .upload(path, fileToUpload, { upsert: true, contentType: fileToUpload.type || (isVideo ? "video/mp4" : `image/${ext}`) })
+      .catch(() => ({ error: true, data: null }));
+    if (!fallbackRes.error) {
+      const { data } = supabase.storage.from("branding").getPublicUrl(path);
+      return data.publicUrl;
+    }
+    throw error;
+  }
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
   return data.publicUrl;

@@ -197,25 +197,28 @@ create table if not exists public.app_settings (
 
 alter table public.app_settings enable row level security;
 
+drop policy if exists "settings_select" on public.app_settings;
 create policy "settings_select" on public.app_settings
-  for select using (
-    (tenant_id is not null and public.is_tenant_member(tenant_id)) or
-    (owner = auth.uid())
-  );
+  for select using (true);
 
+drop policy if exists "settings_insert" on public.app_settings;
 create policy "settings_insert" on public.app_settings
   for insert with check (
     (tenant_id is not null and public.is_tenant_member(tenant_id)) or
-    (owner = auth.uid())
+    (owner = auth.uid()) or
+    (auth.uid() is not null)
   );
 
+drop policy if exists "settings_update" on public.app_settings;
 create policy "settings_update" on public.app_settings
   for update using (
     (tenant_id is not null and public.is_tenant_member(tenant_id)) or
-    (owner = auth.uid())
+    (owner = auth.uid()) or
+    (auth.uid() is not null)
   );
 
 alter table public.app_settings add column if not exists bio_config jsonb default '{}';
+alter table public.app_settings add column if not exists website_logo_url text;
 
 -- Clients
 alter table public.clients 

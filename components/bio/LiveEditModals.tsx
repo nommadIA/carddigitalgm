@@ -21,7 +21,9 @@ import {
   AlignCenter,
   AlignRight,
   Bold,
-  Italic
+  Italic,
+  Monitor,
+  Smartphone
 } from "lucide-react";
 import { uploadBioAsset } from "../../services/storageService";
 import { pushToast } from "../../store/toast";
@@ -1112,7 +1114,7 @@ export function ProductModal({
   );
 }
 
-// 6. PORTFOLIO ITEM MODAL (Add or Edit)
+// 6. PORTFOLIO ITEM MODAL (Add or Edit with Desktop & Smartphone tabs - REGRA 1)
 export function PortfolioModal({
   isOpen,
   onClose,
@@ -1128,48 +1130,148 @@ export function PortfolioModal({
   portfolioItems: any[];
   onSavePortfolio: (newPortfolioItems: any[]) => void;
 }) {
+  const [tab, setTab] = useState<"desktop" | "smartphone">("desktop");
+
+  // Desktop fields
   const [title, setTitle] = useState(projectToEdit?.title || "");
   const [desc, setDesc] = useState(projectToEdit?.description || "");
-  const [images, setImages] = useState<string[]>(
+  const [mainBannerDesktop, setMainBannerDesktop] = useState(projectToEdit?.main_banner_url || "");
+  const [desktopImages, setDesktopImages] = useState<string[]>(
     projectToEdit?.layers?.map((l: any) => l.image_url) || (projectToEdit?.image_url ? [projectToEdit.image_url] : [])
   );
-  const [uploading, setUploading] = useState(false);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Smartphone fields
+  const [titleMobile, setTitleMobile] = useState(projectToEdit?.title_mobile || "");
+  const [descMobile, setDescMobile] = useState(projectToEdit?.description_mobile || "");
+  const [mainBannerMobile, setMainBannerMobile] = useState(projectToEdit?.main_banner_mobile_url || "");
+  const [mobileImages, setMobileImages] = useState<string[]>(
+    projectToEdit?.mobile_layers?.map((l: any) => l.image_url) || []
+  );
+
+  const [uploadingDesktop, setUploadingDesktop] = useState(false);
+  const [uploadingMobile, setUploadingMobile] = useState(false);
+  const [uploadingBannerDesktop, setUploadingBannerDesktop] = useState(false);
+  const [uploadingBannerMobile, setUploadingBannerMobile] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(projectToEdit?.title || "");
+      setDesc(projectToEdit?.description || "");
+      setMainBannerDesktop(projectToEdit?.main_banner_url || "");
+      setDesktopImages(
+        projectToEdit?.layers?.map((l: any) => l.image_url) || (projectToEdit?.image_url ? [projectToEdit.image_url] : [])
+      );
+
+      setTitleMobile(projectToEdit?.title_mobile || "");
+      setDescMobile(projectToEdit?.description_mobile || "");
+      setMainBannerMobile(projectToEdit?.main_banner_mobile_url || "");
+      setMobileImages(
+        projectToEdit?.mobile_layers?.map((l: any) => l.image_url) || []
+      );
+    }
+  }, [isOpen, projectToEdit]);
+
+  // Upload Desktop Layer
+  const handleDesktopImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
+    setUploadingDesktop(true);
     try {
-      const url = await uploadBioAsset(tenantId, file, "portfolio");
-      setImages(prev => [url, ...prev]);
-      pushToast({ type: "success", title: "Foto do portfólio adicionada!" });
+      const url = await uploadBioAsset(tenantId, file, "portfolio_desk");
+      setDesktopImages(prev => [...prev, url]);
+      pushToast({ type: "success", title: "Foto desktop adicionada!" });
     } catch (err: any) {
       console.error(err);
       pushToast({ type: "error", title: "Erro no upload", message: err.message || "Falha ao enviar foto." });
     } finally {
-      setUploading(false);
+      setUploadingDesktop(false);
+    }
+  };
+
+  // Upload Mobile Layer
+  const handleMobileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingMobile(true);
+    try {
+      const url = await uploadBioAsset(tenantId, file, "portfolio_mob");
+      setMobileImages(prev => [...prev, url]);
+      pushToast({ type: "success", title: "Foto smartphone adicionada!" });
+    } catch (err: any) {
+      console.error(err);
+      pushToast({ type: "error", title: "Erro no upload", message: err.message || "Falha ao enviar foto." });
+    } finally {
+      setUploadingMobile(false);
+    }
+  };
+
+  // Upload Desktop Main Banner
+  const handleMainBannerDesktopUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingBannerDesktop(true);
+    try {
+      const url = await uploadBioAsset(tenantId, file, "portfolio_main_desk");
+      setMainBannerDesktop(url);
+      pushToast({ type: "success", title: "Banner desktop atualizado!" });
+    } catch (err: any) {
+      console.error(err);
+      pushToast({ type: "error", title: "Erro no upload", message: err.message || "Falha ao enviar banner." });
+    } finally {
+      setUploadingBannerDesktop(false);
+    }
+  };
+
+  // Upload Mobile Main Banner
+  const handleMainBannerMobileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingBannerMobile(true);
+    try {
+      const url = await uploadBioAsset(tenantId, file, "portfolio_main_mob");
+      setMainBannerMobile(url);
+      pushToast({ type: "success", title: "Banner smartphone atualizado!" });
+    } catch (err: any) {
+      console.error(err);
+      pushToast({ type: "error", title: "Erro no upload", message: err.message || "Falha ao enviar banner." });
+    } finally {
+      setUploadingBannerMobile(false);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
-      pushToast({ type: "error", title: "Título obrigatório" });
+    if (!title.trim() && !titleMobile.trim()) {
+      pushToast({ type: "error", title: "Título obrigatório", message: "Preencha o título do projeto." });
       return;
     }
 
-    const cleanImages = images.filter(Boolean);
-    const layers = cleanImages.map((img, idx) => ({
-      id: `${Date.now()}_${idx}`,
+    const cleanDesktopImages = desktopImages.filter(Boolean);
+    const cleanMobileImages = mobileImages.filter(Boolean);
+
+    const layers = cleanDesktopImages.map((img, idx) => ({
+      id: `desk_${Date.now()}_${idx}`,
       image_url: img
     }));
 
+    const mobileLayers = cleanMobileImages.map((img, idx) => ({
+      id: `mob_${Date.now()}_${idx}`,
+      image_url: img
+    }));
+
+    // REGRA 1: Preserva e salva ambos separadamente, sem vazar desktop para mobile ou vice-versa
     const updatedProject = {
+      ...(projectToEdit || {}),
       id: projectToEdit?.id || Date.now().toString(),
-      title: title.trim(),
+      title: title.trim() || (projectToEdit?.title || ""),
+      title_mobile: titleMobile.trim() || (projectToEdit?.title_mobile || ""),
       description: desc.trim(),
-      image_url: cleanImages[0] || "",
-      layers: layers
+      description_mobile: descMobile.trim() || (projectToEdit?.description_mobile || ""),
+      main_banner_url: mainBannerDesktop || cleanDesktopImages[0] || (projectToEdit?.main_banner_url || ""),
+      main_banner_mobile_url: mainBannerMobile || cleanMobileImages[0] || (projectToEdit?.main_banner_mobile_url || ""),
+      image_url: cleanDesktopImages[0] || cleanMobileImages[0] || (projectToEdit?.image_url || ""),
+      layers: layers,
+      mobile_layers: mobileLayers,
     };
 
     let updatedList: any[] = [];
@@ -1186,78 +1288,251 @@ export function PortfolioModal({
   return (
     <ModalWrapper
       title={projectToEdit ? "Editar Projeto do Portfólio" : "Novo Projeto para o Portfólio"}
-      subtitle="Apresente seus trabalhos e cases de sucesso"
+      subtitle="Configure imagens e textos exclusivos para Computador e Smartphone (Regra 1)"
       isOpen={isOpen}
       onClose={onClose}
+      maxWidth="max-w-3xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         
-        {/* Images */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
-            Imagens do Projeto
-          </label>
-          <div className="flex items-center gap-3 overflow-x-auto pb-2">
-            {images.map((img, idx) => (
-              <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0 group">
-                <img src={img} alt="Projeto" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setImages(images.filter((_, i) => i !== idx))}
-                  className="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+        {/* Seletor de Versão: COMPUTADOR vs SMARTPHONE (Regra 1) */}
+        <div className="grid grid-cols-2 p-1 bg-black/50 border border-white/10 rounded-2xl">
+          <button
+            type="button"
+            onClick={() => setTab("desktop")}
+            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+              tab === "desktop"
+                ? "bg-[#FE540B] text-white shadow-md"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <Monitor className="w-4 h-4" />
+            <span>Versão Computador (Desktop)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("smartphone")}
+            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+              tab === "smartphone"
+                ? "bg-[#FE540B] text-white shadow-md"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <Smartphone className="w-4 h-4" />
+            <span>Versão Smartphone (Celular)</span>
+          </button>
+        </div>
+
+        {/* ========================================================= */}
+        {/* ABA 1: VERSÃO COMPUTADOR (DESKTOP)                        */}
+        {/* ========================================================= */}
+        {tab === "desktop" && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Title Desktop */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                Título do Projeto (Desktop) *
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex: Fachada Residencial Alto Padrão"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
+              />
+            </div>
+
+            {/* Description Desktop */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                Descrição do Projeto (Desktop)
+              </label>
+              <textarea
+                rows={3}
+                value={desc}
+                onChange={(e) => setDesc(e.target.value)}
+                placeholder="Detalhes técnicos, materiais e conceito para visualização no computador..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE540B]"
+              />
+            </div>
+
+            {/* Banner Principal Desktop (16:9 widescreen) */}
+            <div className="space-y-2 pt-2 border-t border-white/10">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Banner Principal Desktop (Topo Widescreen 16:9)
+                </label>
+                {mainBannerDesktop && (
+                  <button
+                    type="button"
+                    onClick={() => setMainBannerDesktop("")}
+                    className="text-xs text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                  >
+                    Remover
+                  </button>
+                )}
               </div>
-            ))}
 
-            <label className="w-20 h-20 rounded-xl border-2 border-dashed border-white/20 hover:border-emerald-500 flex flex-col items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0">
-              <Plus className="w-5 h-5 mb-1" />
-              <span className="text-[10px] font-bold">{uploading ? "..." : "Adicionar"}</span>
-              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
-            </label>
+              {mainBannerDesktop ? (
+                <div className="relative aspect-video max-h-48 rounded-xl overflow-hidden bg-black/40 border border-white/10">
+                  <img src={mainBannerDesktop} alt="Banner Principal Desktop" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center aspect-video max-h-40 rounded-xl border-2 border-dashed border-white/15 hover:border-[#FE540B] bg-white/[0.02] cursor-pointer transition-colors p-4 text-center">
+                  <Upload className="w-5 h-5 text-zinc-400 mb-1" />
+                  <span className="text-xs text-zinc-300 font-bold">
+                    {uploadingBannerDesktop ? "Enviando..." : "Enviar Banner Principal Desktop (1920x600 ou 16:9)"}
+                  </span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleMainBannerDesktopUpload} disabled={uploadingBannerDesktop} />
+                </label>
+              )}
+            </div>
+
+            {/* Banners Internos Desktop (Galeria / Layers) */}
+            <div className="space-y-2 pt-2 border-t border-white/10">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                Imagens da Galeria Desktop ({desktopImages.length})
+              </label>
+              <div className="flex items-center gap-3 overflow-x-auto pb-2">
+                {desktopImages.map((img, idx) => (
+                  <div key={idx} className="relative w-24 h-20 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0 group">
+                    <img src={img} alt="Projeto Desktop" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setDesktopImages(desktopImages.filter((_, i) => i !== idx))}
+                      className="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+
+                <label className="w-24 h-20 rounded-xl border-2 border-dashed border-white/20 hover:border-[#FE540B] flex flex-col items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0">
+                  <Plus className="w-5 h-5 mb-1" />
+                  <span className="text-[10px] font-bold">{uploadingDesktop ? "..." : "Adicionar Foto"}</span>
+                  <input type="file" accept="image/*,video/mp4" className="hidden" onChange={handleDesktopImageUpload} disabled={uploadingDesktop} />
+                </label>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Title */}
-        <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Título do Projeto</label>
-          <input
-            type="text"
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex: Branding Restaurante Fogo & Sabor"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-sm text-white font-bold outline-none focus:border-emerald-500"
-          />
-        </div>
+        {/* ========================================================= */}
+        {/* ABA 2: VERSÃO SMARTPHONE (CELULAR)                        */}
+        {/* ========================================================= */}
+        {tab === "smartphone" && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Title Mobile */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                <Smartphone className="w-3.5 h-3.5" />
+                Título do Projeto no Smartphone
+              </label>
+              <input
+                type="text"
+                value={titleMobile}
+                onChange={(e) => setTitleMobile(e.target.value)}
+                placeholder={title ? `Deixe em branco para usar "${title}"` : "Ex: Fachada Residencial Celular"}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
+              />
+              <p className="text-[11px] text-zinc-400">
+                Se deixado em branco, utiliza o título da versão Desktop automaticamente.
+              </p>
+            </div>
 
-        {/* Description */}
-        <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Descrição / Categoria</label>
-          <textarea
-            rows={3}
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-            placeholder="Detalhes sobre o desafio, conceito e resultado..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-emerald-500"
-          />
-        </div>
+            {/* Description Mobile */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                <Smartphone className="w-3.5 h-3.5" />
+                Descrição no Smartphone
+              </label>
+              <textarea
+                rows={3}
+                value={descMobile}
+                onChange={(e) => setDescMobile(e.target.value)}
+                placeholder={desc ? "Deixe em branco para usar a mesma descrição do Desktop..." : "Descrição resumida para telas de celular..."}
+                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE540B]"
+              />
+            </div>
+
+            {/* Banner Principal Smartphone (6:5 ou 9:16 vertical) */}
+            <div className="space-y-2 pt-2 border-t border-white/10">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                  <Smartphone className="w-3.5 h-3.5" />
+                  Banner Principal Smartphone (Proporção 6:5 ou 9:16)
+                </label>
+                {mainBannerMobile && (
+                  <button
+                    type="button"
+                    onClick={() => setMainBannerMobile("")}
+                    className="text-xs text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                  >
+                    Remover
+                  </button>
+                )}
+              </div>
+
+              {mainBannerMobile ? (
+                <div className="relative aspect-[6/5] max-h-48 max-w-[200px] rounded-xl overflow-hidden bg-black/40 border border-white/10">
+                  <img src={mainBannerMobile} alt="Banner Principal Smartphone" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center aspect-[6/5] max-h-40 max-w-[200px] rounded-xl border-2 border-dashed border-white/15 hover:border-[#FE540B] bg-white/[0.02] cursor-pointer transition-colors p-4 text-center">
+                  <Upload className="w-5 h-5 text-zinc-400 mb-1" />
+                  <span className="text-xs text-zinc-300 font-bold">
+                    {uploadingBannerMobile ? "Enviando..." : "Enviar Banner Smartphone"}
+                  </span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleMainBannerMobileUpload} disabled={uploadingBannerMobile} />
+                </label>
+              )}
+            </div>
+
+            {/* Banners Internos Smartphone (Galeria / Mobile Layers) */}
+            <div className="space-y-2 pt-2 border-t border-white/10">
+              <label className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                <Smartphone className="w-3.5 h-3.5" />
+                Imagens da Galeria Smartphone ({mobileImages.length})
+              </label>
+              <div className="flex items-center gap-3 overflow-x-auto pb-2">
+                {mobileImages.map((img, idx) => (
+                  <div key={idx} className="relative w-20 h-24 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0 group">
+                    <img src={img} alt="Projeto Smartphone" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setMobileImages(mobileImages.filter((_, i) => i !== idx))}
+                      className="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+
+                <label className="w-20 h-24 rounded-xl border-2 border-dashed border-white/20 hover:border-[#FE540B] flex flex-col items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0">
+                  <Plus className="w-5 h-5 mb-1" />
+                  <span className="text-[10px] font-bold">{uploadingMobile ? "..." : "Adicionar Celular"}</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleMobileImageUpload} disabled={uploadingMobile} />
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
-        <div className="pt-3 border-t border-white/10 flex justify-end gap-2">
+        <div className="pt-4 border-t border-white/10 flex justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors shadow-lg cursor-pointer"
+            className="px-6 py-2.5 rounded-xl bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-black uppercase tracking-wider transition-all shadow-lg active:scale-95 cursor-pointer flex items-center gap-2"
           >
-            {projectToEdit ? "Salvar Projeto" : "Adicionar ao Portfólio"}
+            <Check className="w-4 h-4 stroke-[3]" />
+            <span>{projectToEdit ? "Salvar Alterações do Projeto" : "Concluir e Salvar no Portfólio"}</span>
           </button>
         </div>
 

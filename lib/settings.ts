@@ -656,9 +656,14 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
   const { data: sess } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
   const owner = sess.session?.user?.id || null;
 
+  const isValidUuid = (val: string | null | undefined) => 
+    Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+
+  const validTenantId = isValidUuid(tenantId) ? tenantId : (isValidUuid(patch.tenant_id) ? patch.tenant_id : null);
+
   const payload: AppSettings = {
     ...patch,
-    tenant_id: tenantId || null,
+    tenant_id: validTenantId,
     owner,
   };
 
@@ -700,16 +705,83 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
 
   let dbData: any = null;
 
-  const res = await supabase
-    .from("app_settings")
-    .upsert(dbPayload, { onConflict: "tenant_id" })
-    .select("*")
-    .maybeSingle();
+  // Busca se já existe um registro para o tenantId ou owner para atualizar diretamente pelo ID
+  // Isso evita erros de Postgres quando a tabela app_settings não possui constraint UNIQUE em tenant_id
+  let existingRecordId: string | null = null;
+  try {
+    if (validTenantId) {
+      const { data: found } = await supabase
+        .from("app_settings")
+        .select("id")
+        .eq("tenant_id", validTenantId)
+        .limit(1)
+        .maybeSingle();
+      if (found?.id) {
+        existingRecordId = found.id;
+      }
+    }
+    
+    if (!existingRecordId && owner) {
+      const { data: foundByOwner } = await supabase
+        .from("app_settings")
+        .select("id")
+        .eq("owner", owner)
+        .limit(1)
+        .maybeSingle();
+      if (foundByOwner?.id) {
+        existingRecordId = foundByOwner.id;
+      }
+    }
+  } catch (errCheck) {
+    console.warn("Aviso ao verificar registro existente em app_settings:", errCheck);
+  }
 
-  if (res.error) {
-    console.info("Info do salvamento no Supabase (configurações salvas localmente e no bio_config):", res.error);
+  if (existingRecordId) {
+    // 1) UPDATE direto pelo id (100% seguro contra erro 42P10 de ON CONFLICT)
+    const updateRes = await supabase
+      .from("app_settings")
+      .update(dbPayload)
+      .eq("id", existingRecordId)
+      .select("*")
+      .maybeSingle();
+
+    if (!updateRes.error && updateRes.data) {
+      dbData = updateRes.data;
+    } else if (updateRes.error) {
+      console.warn("Aviso no update de app_settings:", updateRes.error);
+      // Tentativa alternativa com upsert
+      const upsertFallback = await supabase
+        .from("app_settings")
+        .upsert({ ...dbPayload, id: existingRecordId })
+        .select("*")
+        .maybeSingle();
+      if (!upsertFallback.error && upsertFallback.data) {
+        dbData = upsertFallback.data;
+      }
+    }
   } else {
-    dbData = res.data;
+    // 2) INSERT novo registro se ainda não existir
+    const insertRes = await supabase
+      .from("app_settings")
+      .insert(dbPayload)
+      .select("*")
+      .maybeSingle();
+
+    if (!insertRes.error && insertRes.data) {
+      dbData = insertRes.data;
+    } else {
+      // Se falhou insert (possível race condition ou constraint), tenta upsert
+      const upsertRes = await supabase
+        .from("app_settings")
+        .upsert(dbPayload, { onConflict: "tenant_id" })
+        .select("*")
+        .maybeSingle();
+      if (!upsertRes.error && upsertRes.data) {
+        dbData = upsertRes.data;
+      } else {
+        console.warn("Aviso no salvamento de app_settings no Supabase:", insertRes.error || upsertRes?.error);
+      }
+    }
   }
 
   const settings = { ...DEFAULT_SETTINGS, ...(dbData || {}), ...payload } as AppSettings;

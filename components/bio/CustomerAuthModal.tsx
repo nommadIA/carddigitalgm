@@ -377,8 +377,8 @@ export function CustomerAuthModal({
                 </div>
               </div>
 
-              {/* Submit & WhatsApp Action Buttons (Idênticos ao Fale com a Gente) */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+              {/* Submit Action Button */}
+              <div className="pt-2 flex justify-start">
                 <button
                   type="submit"
                   disabled={loading}
@@ -397,20 +397,6 @@ export function CustomerAuthModal({
                     </>
                   )}
                 </button>
-
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-full font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg transition-all active:scale-95 cursor-pointer"
-                >
-                  <img 
-                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
-                    alt="WhatsApp" 
-                    className="w-4 h-4 object-contain"
-                  />
-                  <span>Atendimento WhatsApp</span>
-                </a>
               </div>
             </form>
           )}
@@ -634,8 +620,8 @@ export function CustomerAuthModal({
                 </div>
               </div>
 
-              {/* Submit & WhatsApp Action Buttons */}
-              <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
+              {/* Submit Action Button */}
+              <div className="pt-4 flex justify-start">
                 <button
                   type="submit"
                   disabled={loading}
@@ -654,27 +640,13 @@ export function CustomerAuthModal({
                     </>
                   )}
                 </button>
-
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-full font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg transition-all active:scale-95 cursor-pointer"
-                >
-                  <img 
-                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
-                    alt="WhatsApp" 
-                    className="w-4 h-4 object-contain"
-                  />
-                  <span>Atendimento WhatsApp</span>
-                </a>
               </div>
             </form>
           )}
         </div>
 
-        {/* Side Card: Map & Location (Col 8-12) - Idêntico ao Fale com a Gente */}
-        <div className="w-full lg:col-span-5 flex flex-col gap-5">
+        {/* Side Card: Map & Location (Col 8-12 ou Col 3-10 se não houver mapa/endereço) */}
+        <div className={`w-full ${companyAddress ? "lg:col-span-5" : "lg:col-span-8 lg:col-start-3"} flex flex-col gap-5`}>
           <div 
             className="p-6 sm:p-8 rounded-[2.5rem] border transition-all duration-300 apple-glass-card border-white/10"
             onClick={(e) => e.stopPropagation()}

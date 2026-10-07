@@ -257,6 +257,7 @@ html.lenis, html.lenis body {
   animation: psd-float-down 2.2s ease-in-out infinite !important;
   position: absolute !important;
   inset: 0 !important;
+  pointer-events: none !important;
 }
 
 .psd-down i {
@@ -273,6 +274,7 @@ html.lenis, html.lenis body {
   box-shadow: none !important;
   text-shadow: none !important;
   transition: border-color 0.2s ease !important;
+  pointer-events: none !important;
 }
 
 /* Ao passar o mouse por cima, apenas muda de cor para laranja sem se mover para os lados */
@@ -332,6 +334,7 @@ html.lenis, html.lenis body {
   animation: psd-float-up 2.2s ease-in-out infinite !important;
   position: absolute !important;
   inset: 0 !important;
+  pointer-events: none !important;
 }
 
 @keyframes psd-float-down {
@@ -366,6 +369,7 @@ html.lenis, html.lenis body {
   box-shadow: none !important;
   text-shadow: none !important;
   transition: border-color 0.2s ease !important;
+  pointer-events: none !important;
 }
 
 /* Ao passar o mouse por cima, muda para a cor primária laranja */
@@ -1224,10 +1228,10 @@ button.handle,
   flex: 1;
   width: 100%;
   min-width: 0;
-  height: 100vh;
-  max-height: 100vh;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
   overflow-y: auto !important;
-  overflow-x: hidden !important;
   box-sizing: border-box;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
@@ -1236,10 +1240,11 @@ button.handle,
 
 @media (min-width: 769px) {
   .gm-main {
-    height: 100vh;
-    max-height: 100vh;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
     overflow-y: auto !important;
-    overflow-x: hidden !important;
     scroll-behavior: smooth;
   }
 }
@@ -7557,7 +7562,7 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   }
 
   /* Responsive modal overlays allowing smooth vertical drag/scroll */
-  .fixed.inset-0:not(.pointer-events-none):not(.gm-note-modal-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-overlay) {
+  .fixed.inset-0:not(.pointer-events-none):not(.gm-note-modal-overlay):not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-overlay) {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
@@ -7608,8 +7613,8 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   }
 
   /* Responsive modals on small screens - centralizados com respiro total em relação ao menu inferior */
-  .fixed.inset-0:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-overlay) > div:not(.absolute):not(.fixed):not(.pointer-events-none):not(.gm-note-modal):not(.gm-login-card-compact):not(.gm-login-card-square):not(.gm-pin-card-compact):not(.gm-pin-card-square):not(.apple-glass-card):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-container),
-  .fixed.inset-0:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-overlay) > form,
+  .fixed.inset-0:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-overlay):not(.gm-pin-lock-overlay) > div:not(.absolute):not(.fixed):not(.pointer-events-none):not(.gm-note-modal):not(.gm-login-card-compact):not(.gm-login-card-square):not(.gm-pin-card-compact):not(.gm-pin-card-square):not(.gm-pin-lock-card):not(.gm-pin-modal-card):not(.apple-glass-card):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-container),
+  .fixed.inset-0:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen):not(.gm-customer-modal-overlay):not(.gm-pin-lock-overlay) > form,
   .gm-modal,
   [role="dialog"] {
     max-width: calc(100vw - 24px) !important;
@@ -7630,10 +7635,14 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   .gm-login-card-compact,
   .gm-login-card-square,
   .gm-pin-card-compact,
-  .gm-pin-card-square {
-    max-width: min(440px, calc(100vw - 24px)) !important;
+  .gm-pin-card-square,
+  .gm-pin-lock-card,
+  .gm-pin-modal-card {
+    max-width: min(340px, calc(100vw - 24px)) !important;
     width: 100% !important;
     margin: auto !important;
+    align-self: center !important;
+    justify-self: center !important;
   }
 
   /* Área do Cliente Modal: Rolagem Fluida e Estilo Idêntico para Smartphone e Computador */
@@ -8662,13 +8671,13 @@ body::before {
   padding-left: clamp(1.25rem, 3.2vw, 3.5rem) !important;
   padding-right: clamp(1.25rem, 3.2vw, 3.5rem) !important;
   padding-top: 5.5rem !important; /* Mobile com top bar */
-  padding-bottom: calc(var(--bottom-nav-safe-space, 96px) + 80px) !important;
+  padding-bottom: calc(var(--bottom-nav-height, 84px) + max(env(safe-area-inset-bottom, 0px), 16px) + 36px) !important;
 }
 
 @media (min-width: 768px) {
   .gm-container {
     padding-top: clamp(2rem, 3.5vh, 3.5rem) !important; /* Desktop com respiro superior equilibrado */
-    padding-bottom: clamp(10rem, 16vh, 18rem) !important; /* Respiro inferior amplo para tabelas e cards */
+    padding-bottom: 5rem !important; /* Respiro inferior elegante para tabelas e cards */
   }
 }
 
@@ -8680,8 +8689,8 @@ body::before {
 
 /* 3. Respiro Universal de Modais e Popups */
 .gm-modal-overlay,
-div[class*="fixed inset-0"][class*="z-"]:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
-div[class*="fixed inset-0"][class*="backdrop-blur"]:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
+div[class*="fixed inset-0"][class*="z-"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
+div[class*="fixed inset-0"][class*="backdrop-blur"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
   box-sizing: border-box !important;
   padding: clamp(1rem, 3vw, 2.5rem) !important;
 }
@@ -8689,7 +8698,7 @@ div[class*="fixed inset-0"][class*="backdrop-blur"]:not(.gm-website-fullscreen):
 .gm-modal-container,
 .gm-modal,
 [role="dialog"],
-div[class*="fixed inset-0"]:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) > div[class*="rounded-"]:not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
+div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) > div[class*="rounded-"]:not(.gm-pin-lock-card):not(.gm-pin-modal-card):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
   max-height: calc(100dvh - clamp(2rem, 6vh, 5rem)) !important;
   margin-top: auto !important;
   margin-bottom: auto !important;
@@ -8895,8 +8904,113 @@ div[class*="fixed inset-0"]:not(.gm-website-fullscreen):not(.site-full-viewport)
   .apple-glass-card.gm-login-card-compact,
   .apple-glass-card.gm-pin-card-square,
   .apple-glass-card.gm-pin-card-compact {
-    max-width: calc(100vw - 24px) !important;
-    width: calc(100vw - 24px) !important;
+    max-width: min(385px, calc(100vw - 24px)) !important;
+    width: 100% !important;
+    margin: auto !important;
+    overflow: hidden !important;
+  }
+}
+
+.gm-login-logo-box {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 18px !important;
+}
+
+.gm-login-logo-box .gm-logo-border-wrapper {
+  border-radius: 18px !important;
+}
+
+.gm-login-logo-box .gm-logo-border-wrapper::after {
+  border-radius: 16px !important;
+}
+
+.gm-login-logo-box .gm-logo {
+  border-radius: 15px !important;
+}
+
+/* =========================================================================
+   LOGIN BACKGROUND SMARTPHONE - EXTENSÃO TOTAL E ADAPTAÇÃO AO FORMATO MOBILE
+   ========================================================================= */
+.gm-login-page-root {
+  min-height: 100dvh !important;
+  height: 100dvh !important;
+  width: 100vw !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+  .gm-login-page-root {
+    min-height: 100dvh !important;
+    min-height: -webkit-fill-available !important;
+    padding: 14px 16px !important;
+  }
+}
+
+.gm-login-bg-container {
+  position: fixed !important;
+  top: -6% !important;
+  left: -6% !important;
+  right: -6% !important;
+  bottom: -6% !important;
+  width: 112% !important;
+  height: 112% !important;
+  min-height: 112dvh !important;
+  min-width: 112dvw !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* =========================================================================
+   KEYPAD PIN - PROPORÇÕES E ERGONOMIA NO SMARTPHONE E NO COMPUTADOR
+   ========================================================================= */
+.gm-pin-keypad {
+  width: 100% !important;
+  max-width: 320px !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+}
+
+.gm-pin-key {
+  height: 50px !important;
+  min-height: 50px !important;
+  border-radius: 16px !important;
+  font-size: 21px !important;
+  line-height: 1 !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  touch-action: manipulation !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 480px) {
+  .gm-pin-keypad {
+    max-width: 284px !important;
+    gap: 8px !important;
+  }
+  .gm-pin-key {
+    height: 44px !important;
+    min-height: 44px !important;
+    font-size: 19px !important;
+    border-radius: 14px !important;
   }
 }
 
@@ -8942,6 +9056,118 @@ div[class*="fixed inset-0"]:not(.gm-website-fullscreen):not(.site-full-viewport)
   35%, 100% {
     opacity: 0.15;
     background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* =========================================================================
+   CÁPSULAS DE STATUS NO MODO GRADE (ORÇAMENTOS) - VERSÃO SMARTPHONE
+   Mais largas na altura para toque confortável e excelente legibilidade
+   ========================================================================= */
+@media (max-width: 640px) {
+  .gm-budget-card .gm-status-capsule {
+    height: 40px !important;
+    min-height: 40px !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    border-radius: 9999px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+    letter-spacing: -0.01em !important;
+  }
+}
+
+/* =========================================================================
+   PIN E SEGURANÇA NO SMARTPHONE - RIGOROSAMENTE CENTRALIZADO NA TELA
+   Sem rolagem, centralizado no centro exato da tela do smartphone com respiro
+   ========================================================================= */
+.gm-pin-lock-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  width: 100dvw !important;
+  height: 100% !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+  z-index: 9999999 !important;
+  box-sizing: border-box !important;
+}
+
+.gm-pin-lock-card,
+.apple-glass-card.gm-pin-lock-card,
+.gm-pin-card-compact.gm-pin-lock-card {
+  position: relative !important;
+  margin: auto !important;
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  align-self: center !important;
+  justify-self: center !important;
+  width: 100% !important;
+  max-width: 340px !important;
+  max-height: calc(100dvh - 32px) !important;
+  border-radius: 26px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  transform-origin: center center !important;
+}
+
+@media (max-width: 640px) {
+  .gm-pin-lock-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 14px 16px !important;
+    padding-bottom: 14px !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    touch-action: none !important;
+    overscroll-behavior: none !important;
+  }
+
+  .gm-pin-lock-card,
+  .apple-glass-card.gm-pin-lock-card,
+  .gm-pin-card-compact.gm-pin-lock-card {
+    max-width: min(340px, calc(100vw - 28px)) !important;
+    width: 100% !important;
+    margin: auto !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-self: center !important;
+    justify-self: center !important;
+    overflow: hidden !important;
   }
 }
 

@@ -664,7 +664,7 @@ function VirtualizedBudgetGrid({
 
             {/* FOOTER: cápsulas + 6 botões organizados */}
             <div className="mt-4 pt-3.5 border-t border-white/10 flex flex-col gap-2.5">
-              {/* Cápsulas de status uniformes */}
+              {/* Cápsulas de status uniformes (mais largas na altura no smartphone) */}
               <div className="grid grid-cols-4 gap-1.5 sm:gap-2 w-full">
                 {sortedOptions.map((opt) => {
                   const isActive = currentStatus === opt.value;
@@ -680,7 +680,7 @@ function VirtualizedBudgetGrid({
                         e.stopPropagation();
                         updateStatusInstant(r.id, opt.value);
                       }}
-                      className={`gm-status-capsule fora w-full h-7 sm:h-7.5 px-1 rounded-full text-[9.5px] sm:text-[10.5px] font-extrabold tracking-tight transition-all truncate flex items-center justify-center border ${
+                      className={`gm-status-capsule fora w-full h-10 sm:h-7.5 min-h-[40px] sm:min-h-[30px] px-1 rounded-full text-[10.5px] sm:text-[10.5px] font-black tracking-tight transition-all truncate flex items-center justify-center border shadow-sm ${
                         isActive ? activeCls : inactiveCls
                       }`}
                     >
@@ -1593,7 +1593,7 @@ export default function Budgets() {
       {/* ✅ 3 CÁPSULAS VERTICAIS PEGANDO A EXTREMIDADE DA TELA DO APP */}
       <div className="mb-4 flex flex-col gap-2.5 w-full text-xs text-slate-400">
         {/* CÁPSULA 1: ORÇAMENTOS (X) - 100% LARGURA PEGANDO AS EXTREMIDADES DA TELA */}
-        <div className="w-full px-4 py-3 rounded-2xl gm-search-glass text-white font-extrabold flex items-center justify-between shadow-lg select-none">
+        <div className="w-full px-4 py-3.5 sm:py-3 min-h-[50px] sm:min-h-[44px] rounded-2xl gm-search-glass text-white font-extrabold flex items-center justify-between shadow-lg select-none">
           <div className="flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)] animate-pulse shadow-[0_0_8px_var(--gm-primary)]" />
             <FileText size={18} className="text-[var(--gm-primary)]" />
@@ -1611,7 +1611,7 @@ export default function Budgets() {
               setSelectedMonth("TODOS");
             }
           }}
-          className={`w-full px-4 py-3 rounded-2xl gm-search-glass flex items-center justify-between shadow-lg select-none ${
+          className={`w-full px-4 py-3.5 sm:py-3 min-h-[50px] sm:min-h-[44px] rounded-2xl gm-search-glass flex items-center justify-between shadow-lg select-none ${
             selectedMonth !== "TODOS"
               ? "cursor-pointer hover:border-[var(--gm-primary)]/50 active:scale-[0.99]"
               : ""
@@ -1644,7 +1644,7 @@ export default function Budgets() {
           <button
             type="button"
             onClick={() => handleSetViewMode("grid")}
-            className={`w-full py-3.5 rounded-2xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full py-4 sm:py-3.5 min-h-[50px] sm:min-h-[44px] rounded-2xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
               viewMode === "grid"
                 ? "gm-viewmode-btn-active scale-100"
                 : "gm-viewmode-btn-inactive"
@@ -1657,7 +1657,7 @@ export default function Budgets() {
           <button
             type="button"
             onClick={() => handleSetViewMode("list")}
-            className={`w-full py-3.5 rounded-2xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full py-4 sm:py-3.5 min-h-[50px] sm:min-h-[44px] rounded-2xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
               viewMode === "list"
                 ? "gm-viewmode-btn-active scale-100"
                 : "gm-viewmode-btn-inactive"

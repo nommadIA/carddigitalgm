@@ -418,7 +418,7 @@ export function CustomerAreaSection({
   };
 
   return (
-    <div id="customer-section" className="w-full max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-8 sm:gap-12 shrink-0">
+    <div id="customer-section" className="w-full max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-8 sm:gap-12 shrink-0 pb-28 sm:pb-36">
       
       {/* 1. Header: Title & Description (Idêntico ao Fale com a Gente) */}
       <div className="w-full flex flex-col items-center text-center space-y-3 max-w-3xl mx-auto">
@@ -1038,7 +1038,7 @@ export function CustomerAreaSection({
                     </div>
                   </div>
 
-                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                  <div className="pt-2 flex justify-start">
                     <button
                       type="submit"
                       disabled={authLoading}
@@ -1057,20 +1057,6 @@ export function CustomerAreaSection({
                         </>
                       )}
                     </button>
-
-                    <a
-                      href={generalWhatsappUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:w-auto px-6 py-3.5 rounded-full font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg transition-all active:scale-95 cursor-pointer"
-                    >
-                      <img 
-                        src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
-                        alt="WhatsApp" 
-                        className="w-4 h-4 object-contain"
-                      />
-                      <span>Atendimento WhatsApp</span>
-                    </a>
                   </div>
                 </form>
               )}
@@ -1289,7 +1275,7 @@ export function CustomerAreaSection({
                     </div>
                   </div>
 
-                  <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
+                  <div className="pt-4 flex justify-start">
                     <button
                       type="submit"
                       disabled={authLoading}
@@ -1308,20 +1294,6 @@ export function CustomerAreaSection({
                         </>
                       )}
                     </button>
-
-                    <a
-                      href={generalWhatsappUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:w-auto px-6 py-3.5 rounded-full font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg transition-all active:scale-95 cursor-pointer"
-                    >
-                      <img 
-                        src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
-                        alt="WhatsApp" 
-                        className="w-4 h-4 object-contain"
-                      />
-                      <span>Atendimento WhatsApp</span>
-                    </a>
                   </div>
                 </form>
               )}
@@ -1329,8 +1301,8 @@ export function CustomerAreaSection({
           )}
         </div>
 
-        {/* Side Card: Map, WhatsApp & Security (Col 8-12) - Idêntico ao Fale com a Gente */}
-        <div className="w-full lg:col-span-5 flex flex-col gap-5">
+        {/* Side Card: Map, WhatsApp & Security (Col 8-12 ou Col 3-10 se não houver mapa/endereço) */}
+        <div id="customer-location-card" className={`w-full ${companyAddress ? "lg:col-span-5" : "lg:col-span-8 lg:col-start-3"} flex flex-col gap-5`}>
           <div className={`p-6 sm:p-8 rounded-[2.5rem] border transition-all duration-300 ${
             isWebsiteLayout || theme === 'glass' || theme === 'dark'
               ? 'apple-glass-card border-white/10'
