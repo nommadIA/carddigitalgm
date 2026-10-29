@@ -17,20 +17,23 @@ create table if not exists public.tenant_memberships (
   primary key (tenant_id, user_id)
 );
 
--- RLS para Tenants e Memberships
+-- Permissões e RLS para Tenants e Memberships
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.tenants to authenticated;
+grant select on public.tenants to anon;
+grant select, insert, update, delete on public.tenant_memberships to authenticated;
+grant select on public.tenant_memberships to anon;
+
 alter table public.tenants enable row level security;
 alter table public.tenant_memberships enable row level security;
 
+drop policy if exists "Users can view their memberships" on public.tenant_memberships;
 create policy "Users can view their memberships" on public.tenant_memberships
-for select using (auth.uid() = user_id);
+for select using (auth.uid() = user_id or auth.uid() is null);
 
+drop policy if exists "Users can view tenants they belong to" on public.tenants;
 create policy "Users can view tenants they belong to" on public.tenants
-for select using (
-  exists (
-    select 1 from public.tenant_memberships
-    where tenant_id = tenants.id and user_id = auth.uid()
-  )
-);
+for select using (true);
 
 -- 2. BRANDING TABLE
 create table if not exists public.user_branding (

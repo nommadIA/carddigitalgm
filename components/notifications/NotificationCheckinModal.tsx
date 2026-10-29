@@ -174,17 +174,14 @@ export default function NotificationCheckinModal({
   const isGranted = diagnostics.permission === "granted";
 
   return (
-    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto no-scrollbar bg-black/75 animate-fade-in">
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto no-scrollbar bg-black/50 backdrop-blur-xl animate-fade-in">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.2 }}
-        className="w-full max-w-4xl lg:max-w-5xl gm-push-glass-card rounded-[28px] border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.85)] p-5 sm:p-7 md:p-8 text-slate-100 relative overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative w-full max-w-4xl lg:max-w-5xl rounded-2xl border border-white/10 fora gm-modal apple-glass-refraction shadow-none overflow-hidden p-5 sm:p-7 md:p-8 text-slate-100 flex flex-col max-h-[92vh]"
       >
-        {/* Specular glass reflection */}
-        <div className="absolute inset-0 pointer-events-none rounded-[28px] bg-gradient-to-b from-white/[0.12] via-transparent to-black/30" />
-
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10 shrink-0 relative z-10">
           <div className="flex items-center gap-3">
@@ -209,7 +206,7 @@ export default function NotificationCheckinModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full barra border border-white/10 hover:border-white/25 flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer"
+            className="w-9 h-9 rounded-xl border border-white/10 bg-white/[0.03] hover:border-white/25 flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -219,8 +216,8 @@ export default function NotificationCheckinModal({
         <div className="overflow-y-auto no-scrollbar space-y-5 pr-0.5 flex-1 relative z-10 text-left">
           
           {/* PAINEL DE SAÚDE DO SISTEMA (RADAR DIAGNÓSTICO) */}
-          <div className="barra p-4 sm:p-5 rounded-2xl border border-white/10 space-y-3">
-            <div className="flex items-center justify-between">
+          <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden space-y-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
+            <div className="flex items-center justify-between relative z-10">
               <span className="text-[11px] font-black uppercase tracking-widest text-[var(--gm-primary)] flex items-center gap-2">
                 <ShieldCheck size={15} />
                 Status do Ecossistema no Dispositivo
@@ -236,7 +233,7 @@ export default function NotificationCheckinModal({
               )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 relative z-10">
               {/* Permissão */}
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-1.5">
                 <span className="text-[9.5px] font-semibold text-slate-400 uppercase tracking-wider">Permissão SO</span>
@@ -314,8 +311,8 @@ export default function NotificationCheckinModal({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* ESTADO 1: APP ABERTO */}
-              <div className="p-4 sm:p-5 rounded-2xl barra border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between gap-4">
-                <div className="space-y-1.5">
+              <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
+                <div className="space-y-1.5 relative z-10">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
@@ -332,7 +329,7 @@ export default function NotificationCheckinModal({
                   </p>
                 </div>
 
-                <div className="pt-1">
+                <div className="pt-1 relative z-10">
                   <button
                     type="button"
                     onClick={handleTest1}
@@ -355,8 +352,8 @@ export default function NotificationCheckinModal({
               </div>
 
               {/* ESTADO 2: APP MINIMIZADO */}
-              <div className="p-4 sm:p-5 rounded-2xl barra border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between gap-4">
-                <div className="space-y-1.5">
+              <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
+                <div className="space-y-1.5 relative z-10">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
@@ -365,7 +362,7 @@ export default function NotificationCheckinModal({
                       </span>
                     </div>
                     <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25 uppercase shrink-0">
-                      Janela Recolhida
+                      Janela Oculta
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 leading-relaxed">
@@ -373,7 +370,7 @@ export default function NotificationCheckinModal({
                   </p>
                 </div>
 
-                <div className="pt-1">
+                <div className="pt-1 relative z-10">
                   <button
                     type="button"
                     onClick={handleTest2}
@@ -407,8 +404,8 @@ export default function NotificationCheckinModal({
               </div>
 
               {/* ESTADO 3: SEGUNDO PLANO */}
-              <div className="p-4 sm:p-5 rounded-2xl barra border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between gap-4">
-                <div className="space-y-1.5">
+              <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
+                <div className="space-y-1.5 relative z-10">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-blue-400 shrink-0" />
@@ -425,7 +422,7 @@ export default function NotificationCheckinModal({
                   </p>
                 </div>
 
-                <div className="pt-1">
+                <div className="pt-1 relative z-10">
                   <button
                     type="button"
                     onClick={handleTest3}
@@ -459,8 +456,8 @@ export default function NotificationCheckinModal({
               </div>
 
               {/* ESTADO 4: APP FECHADO / PUSH */}
-              <div className="p-4 sm:p-5 rounded-2xl barra border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between gap-4">
-                <div className="space-y-1.5">
+              <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
+                <div className="space-y-1.5 relative z-10">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shrink-0" />
@@ -480,7 +477,7 @@ export default function NotificationCheckinModal({
                   )}
                 </div>
 
-                <div className="pt-1">
+                <div className="pt-1 relative z-10">
                   <button
                     type="button"
                     onClick={handleTest4}
@@ -496,11 +493,11 @@ export default function NotificationCheckinModal({
           </div>
 
           {/* DICA ESPECIAL PARA IPHONE APPLE (iOS) */}
-          <div className="p-4 sm:p-5 rounded-2xl barra border border-white/10 flex items-start gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 text-white">
+          <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex items-start gap-3.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
+            <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 text-white relative z-10">
               <Apple size={18} />
             </div>
-            <div className="space-y-1 text-left">
+            <div className="space-y-1 text-left relative z-10">
               <h5 className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">
                 Instruções Importantes para Apple iPhone (iOS)
               </h5>
@@ -512,15 +509,15 @@ export default function NotificationCheckinModal({
 
           {/* RESUMO DOS ALARMES ATIVOS */}
           {alarmsHealth.activeCount > 0 && (
-            <div className="p-3.5 rounded-xl barra border border-white/10 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
+            <div className="relative rounded-xl p-3.5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex items-center justify-between text-xs shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
+              <div className="flex items-center gap-2 relative z-10">
                 <Clock size={15} className="text-[var(--gm-primary)]" />
                 <span className="text-slate-300 font-medium">
                   {alarmsHealth.activeCount} alarme(s) de orçamentos e prazos agendados no sistema.
                 </span>
               </div>
               {alarmsHealth.nextUpcoming && (
-                <span className="text-[10px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                <span className="text-[10px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 relative z-10">
                   Próximo: {alarmsHealth.nextUpcoming.time}
                 </span>
               )}
@@ -539,7 +536,7 @@ export default function NotificationCheckinModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 active:scale-95 text-xs font-black text-white uppercase tracking-wider shadow-none transition-all cursor-pointer"
+            className="h-10 px-6 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-all cursor-pointer"
           >
             Concluir Check-in
           </button>

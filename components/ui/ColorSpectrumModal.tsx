@@ -252,17 +252,20 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200"
       onClick={onClose}
       style={{ zIndex: 99999 }}
     >
-      {/* CONTAINER PRINCIPAL REDIMENSIONADO: MESMO TAMANHO E ESTRUTURA DO MODAL DAS NOTAS */}
+      {/* CONTAINER PRINCIPAL: CAIXA CENTRALIZADA COM EXCELENTE RESPIRO DA TELA */}
       <div
-        className="w-full h-auto md:w-[94%] md:max-w-4xl lg:max-w-5xl max-h-[90vh] md:max-h-[85vh] flex flex-col rounded-2xl md:rounded-3xl border border-white/20 shadow-[0_30px_70px_rgba(0,0,0,0.85)] relative my-auto animate-in zoom-in-95 duration-200 overflow-hidden"
+        className="w-full flex flex-col rounded-2xl md:rounded-3xl border border-white/15 shadow-2xl relative my-auto animate-in zoom-in-95 duration-200 overflow-hidden gm-modal"
         style={{
-          background: "linear-gradient(145deg, rgba(20, 20, 24, 0.98) 0%, rgba(10, 10, 12, 0.99) 100%)",
-          backdropFilter: "blur(32px) saturate(190%)",
-          WebkitBackdropFilter: "blur(32px) saturate(190%)",
+          width: "100%",
+          maxWidth: "680px",
+          maxHeight: "85vh",
+          background: "rgba(18, 18, 22, 0.75)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
           borderColor: currentColorHex,
           borderWidth: "1px",
           borderStyle: "solid",

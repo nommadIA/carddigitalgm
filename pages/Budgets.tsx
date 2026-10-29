@@ -1,11 +1,14 @@
 
 import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
 import { Grid } from "../components/ui/Grid";
+import { cn } from "../lib/utils";
 import { supabase } from "../lib/supabase";
 import { fetchSettingsSupabase, readSettingsLocal } from "../lib/settings";
+import { readBudgetsLocal, writeBudgetsLocal } from "../lib/budgetsCache";
 import { softDelete as softDeleteApi, restore as restoreApi } from "../lib/trash";
 import { useAuth } from "../store/AuthContext";
 import { scheduleApprovedBudgetReminders, removeAlarmsForBudget, getBudgetRemindersEnabled, getBudgetReminderTimes, syncAlarmsWithBudgets } from "../lib/alarmSystem";
@@ -17,6 +20,7 @@ import NewBudgetModal from "./budgets/NewBudgetModal";
 import ReminderConfigModal from "../components/budgets/ReminderConfigModal";
 import ExpandedBudgetRow from "../components/budgets/ExpandedBudgetRow";
 import { SignalBottomGradient } from "../components/ui/SignalBottomGradient";
+import { ForgeSpecCard } from "../components/ui/ForgeSpecCard";
 import {
   Plus,
   Search,
@@ -112,6 +116,21 @@ const STATUS_OPTIONS = [
 
 type TabKey = "AGUARDANDO" | "APROVADO" | "CONCLUIDOS" | "CANCELADOS" | "LIXEIRA";
 
+const BUDGET_TABS: Array<{ key: TabKey; label: string; dotColor: string }> = [
+  { key: "AGUARDANDO", label: "AGUARDANDO", dotColor: "bg-amber-500" },
+  { key: "APROVADO", label: "APROVADO", dotColor: "bg-blue-500" },
+  { key: "CONCLUIDOS", label: "CONCLUÍDOS", dotColor: "bg-emerald-500" },
+  { key: "CANCELADOS", label: "CANCELADOS", dotColor: "bg-rose-500" },
+  { key: "LIXEIRA", label: "LIXEIRA", dotColor: "bg-zinc-400" },
+];
+
+const ELASTIC_SPRING = {
+  type: "spring" as const,
+  stiffness: 340,
+  damping: 24,
+  mass: 0.8,
+};
+
 function normalizeStatus(s?: string | null) {
   const v = (s || "AGUARDANDO").toString().toUpperCase().trim();
   if (v.includes("CONCL")) return "CONCLUIDO";
@@ -200,11 +219,11 @@ function VirtualizedBudgetList({
   handlePdf?: (id: string, tenant_id: string) => void;
 }) {
   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "orange") => {
-    const base = "gm-budget-action-btn fora w-7.5 h-7.5 sm:w-8 sm:h-8 !p-0 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 cursor-pointer border";
-    if (tone === "orange") return `${base} border-[var(--gm-primary)]/40 text-[var(--gm-primary)] bg-white/[0.02] hover:bg-[var(--gm-primary)] hover:text-white hover:border-[var(--gm-primary)] shadow-none hover:scale-105 active:scale-95`;
-    if (tone === "green") return `${base} border-emerald-500/40 text-emerald-400 bg-white/[0.02] hover:bg-emerald-500 hover:text-white hover:border-emerald-500 shadow-none hover:scale-105 active:scale-95`;
-    if (tone === "red") return `${base} border-red-500/40 text-red-400 bg-white/[0.02] hover:bg-red-500 hover:text-white hover:border-red-500 shadow-none hover:scale-105 active:scale-95`;
-    return `${base} border-[var(--gm-primary)]/40 text-[var(--gm-primary)] bg-white/[0.02] hover:bg-white/15 hover:text-white hover:border-white/30 shadow-none hover:scale-105 active:scale-95`;
+    const base = "gm-budget-action-btn w-7.5 h-7.5 sm:w-8 sm:h-8 !p-0 flex items-center justify-center shrink-0 rounded-full transition-all duration-150 cursor-pointer border";
+    if (tone === "orange") return `${base} border-[#1a0e08] hover:border-[#b33a0e] text-[#f4ecd8] bg-[#1a0e08] hover:bg-[#b33a0e] hover:text-[#f4ecd8] shadow-none`;
+    if (tone === "green") return `${base} border-[#1a0e08] hover:border-emerald-500 text-emerald-400 bg-[#1a0e08] hover:bg-emerald-600 hover:text-white shadow-none`;
+    if (tone === "red") return `${base} border-[#1a0e08] hover:border-red-500 text-red-400 bg-[#1a0e08] hover:bg-red-600 hover:text-white shadow-none`;
+    return `${base} border-[#1a0e08] hover:border-[#b33a0e] text-[#f4ecd8] bg-[#1a0e08] hover:bg-[#b33a0e] hover:text-[#f4ecd8] shadow-none`;
   };
 
   if (!items || items.length === 0) {
@@ -633,19 +652,19 @@ function VirtualizedBudgetGrid({
             {/* HEADER estruturado e equilibrado */}
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <div className="font-black truncate text-white text-[15px] sm:text-base tracking-tight uppercase">
+                <div className="font-black truncate text-white text-[15px] sm:text-base tracking-tight uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
                   {(r.client_name || "CLIENTE").toUpperCase()}
                 </div>
-                <div className="text-xs sm:text-sm truncate mt-0.5 font-medium text-slate-300">
+                <div className="text-xs sm:text-sm truncate mt-0.5 font-bold text-slate-200 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
                   {r.title || "Orçamento"}
                 </div>
 
                 <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-white/[0.04] border border-white/10 text-slate-300 text-[11px] sm:text-xs font-semibold">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-white/15 text-slate-100 text-[11px] sm:text-xs font-bold backdrop-blur-md shadow-sm">
                     <Calendar size={13} className="text-[var(--gm-primary)] shrink-0" />
                     <span>{created ? created.toLocaleDateString("pt-BR") : "-"}</span>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-white/[0.04] border border-white/10 text-slate-300 text-[11px] sm:text-xs font-semibold">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-white/15 text-slate-100 text-[11px] sm:text-xs font-bold backdrop-blur-md shadow-sm">
                     <Clock size={13} className="text-[var(--gm-primary)] shrink-0" />
                     <span>{r.delivery_days ?? 5} dias úteis</span>
                   </div>
@@ -653,10 +672,10 @@ function VirtualizedBudgetGrid({
               </div>
 
               <div className="text-right shrink-0 pl-1">
-                <div className="font-black text-[17px] sm:text-[19px] text-[var(--gm-primary)] leading-tight">
+                <div className="font-black text-[17px] sm:text-[19px] text-[var(--gm-primary)] leading-tight drop-shadow-[0_1px_4px_rgba(254,84,11,0.35)]">
                   {CURRENCY.format(Number(r.total_amount || 0))}
                 </div>
-                <div className="text-[10px] sm:text-xs text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">
+                <div className="text-[10px] sm:text-xs text-slate-300 font-black uppercase tracking-wider mt-0.5">
                   Total
                 </div>
               </div>
@@ -670,7 +689,7 @@ function VirtualizedBudgetGrid({
                   const isActive = currentStatus === opt.value;
                   const activeCls = pillClass(opt.value);
                   const inactiveCls =
-                    "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
+                    "bg-black/35 border border-white/15 text-slate-200 hover:bg-white/15 hover:text-white font-bold backdrop-blur-md shadow-sm";
 
                   return (
                     <button
@@ -830,7 +849,7 @@ export default function Budgets() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const [rows, setRows] = useState<BudgetRow[]>([]);
+  const [rows, setRows] = useState<BudgetRow[]>(() => (readBudgetsLocal(tenantId) as BudgetRow[]) || []);
   const [loading, setLoading] = useState(false);
 
   const [tab, setTabState] = useState<TabKey>(() => {
@@ -1059,20 +1078,42 @@ export default function Budgets() {
   }, [tenantId]);
 
   async function load() {
-    setLoading(true);
+    setLoading(rows.length === 0);
     try {
       let query = supabase.from("budgets").select("*").order("created_at", { ascending: false });
       if (tenantId) query = query.eq("tenant_id", tenantId);
       const { data, error } = await query;
-      if (error) throw error;
-      setRows((data || []) as BudgetRow[]);
-      
-      // ✅ Sincroniza os alarmes com a lista real de orçamentos
+
+      if (error) {
+        const errorMsg = error?.message || String(error);
+        const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("tenant_memberships") || errorMsg.includes("42501");
+        if (!isQuiet) {
+          console.warn("[Budgets] Erro ao carregar orçamentos remotos:", errorMsg);
+        }
+        // Fallback para cache local
+        const local = readBudgetsLocal(tenantId);
+        if (local && local.length > 0) {
+          setRows(local as BudgetRow[]);
+          syncAlarmsWithBudgets(local);
+        }
+        return;
+      }
+
       if (data) {
+        setRows(data as BudgetRow[]);
+        writeBudgetsLocal(data as BudgetRow[], tenantId);
         syncAlarmsWithBudgets(data);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      const errorMsg = e?.message || String(e);
+      const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("tenant_memberships") || errorMsg.includes("42501");
+      if (!isQuiet) {
+        console.warn("[Budgets] Erro no carregamento:", errorMsg);
+      }
+      const local = readBudgetsLocal(tenantId);
+      if (local && local.length > 0) {
+        setRows(local as BudgetRow[]);
+      }
     } finally {
       setLoading(false);
     }
@@ -1357,39 +1398,46 @@ export default function Budgets() {
       title="Orçamentos"
       actions={
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          {/* SELETOR DE MODO NO CABEÇALHO DO TOPO (SEM CONTAINER MODAL POR TRÁS) */}
-          <div className="flex items-center gap-2">
+          {/* SELETOR DE MODO NO CABEÇALHO DO TOPO (FORGE UI SYSTEM) */}
+          <div className="flex items-center gap-1 p-1 bg-[#131315] border border-[#26262a] rounded">
             <button
               type="button"
               onClick={() => handleSetViewMode("grid")}
-              className={`h-11 sm:h-12 px-4 sm:px-5 rounded-2xl text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+              className={`h-7 px-2.5 rounded-[3px] text-[11px] font-semibold transition-all duration-150 flex items-center gap-1 cursor-pointer uppercase tracking-wider ${
                 viewMode === "grid"
-                  ? "gm-viewmode-btn-active"
-                  : "gm-viewmode-btn-inactive"
-              } active:scale-95`}
+                  ? "gm-viewmode-btn-active !h-7 !px-2.5"
+                  : "gm-viewmode-btn-inactive !h-7 !px-2.5"
+              }`}
               title="Visualização em Grade de Cards"
             >
-              <LayoutGrid size={16} className={viewMode === "grid" ? "text-white" : "text-[var(--gm-primary)]"} />
-              <span className="text-white">Grade</span>
+              <LayoutGrid size={13} />
+              <span>Grade</span>
             </button>
             <button
               type="button"
               onClick={() => handleSetViewMode("list")}
-              className={`h-11 sm:h-12 px-4 sm:px-5 rounded-2xl text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+              className={`h-7 px-2.5 rounded-[3px] text-[11px] font-semibold transition-all duration-150 flex items-center gap-1 cursor-pointer uppercase tracking-wider ${
                 viewMode === "list"
-                  ? "gm-viewmode-btn-active"
-                  : "gm-viewmode-btn-inactive"
-              } active:scale-95`}
+                  ? "gm-viewmode-btn-active !h-7 !px-2.5"
+                  : "gm-viewmode-btn-inactive !h-7 !px-2.5"
+              }`}
               title="Visualização em Listas com Linhas e Setas de Expansão"
             >
-              <List size={16} className={viewMode === "list" ? "text-white" : "text-[var(--gm-primary)]"} />
-              <span className="text-white">Listas</span>
+              <List size={13} />
+              <span>Listas</span>
             </button>
           </div>
 
-          <button className="gm-btn fora h-11 sm:h-12 text-xs uppercase tracking-wider font-extrabold" type="button" onClick={() => setNewOpen(true)}>
-            <Plus size={16} />
-            Novo Orçamento
+          {/* BOTÃO PRIMÁRIO: FORGE BUTTON */}
+          <button 
+            className="forge-btn forge-btn--primary" 
+            type="button" 
+            onClick={() => setNewOpen(true)}
+          >
+            <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
+              <Plus size={14} strokeWidth={2.5} className="forge-btn__icon gm-btn-plus-black" stroke="#0b0b0c" />
+            </span>
+            <span>Novo Orçamento</span>
           </button>
         </div>
       }
@@ -1399,56 +1447,58 @@ export default function Budgets() {
         <SectionDivider label="Resumo" />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div 
+          <ForgeSpecCard
+            id="01"
+            title="EM ABERTO"
+            status="FILA"
+            statusLive={true}
+            eyebrow="AGUARDANDO + APROVADO"
+            figure={CURRENCY.format(statusSummary.totalAtivo)}
+            tags={[
+              { label: `${statusSummary.countAtivo} ORÇAMENTO(S)`, accent: true }
+            ]}
             onClick={() => setTab("AGUARDANDO")}
-            className="gm-dashboard-card barra rounded-2xl p-5 cursor-pointer hover:border-[var(--gm-primary)]/40 transition-all active:scale-[0.99]"
-            title="Clique para ver os orçamentos em aberto"
-          >
-            <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
-              Em aberto (aguardando + aprovado)
-            </div>
-            <div className="text-2xl font-extrabold text-[color:var(--gm-text)] mt-1.5">
-              {CURRENCY.format(statusSummary.totalAtivo)}
-            </div>
-            <div className="text-xs text-[color:var(--gm-text-tertiary)] mt-1">{statusSummary.countAtivo} orçamento(s)</div>
-          </div>
+          />
 
-          <div 
+          <ForgeSpecCard
+            id="02"
+            title="CONCLUÍDOS"
+            status="PAGO"
+            statusLive={true}
+            eyebrow="FINALIZADOS COM SUCESSO"
+            figure={CURRENCY.format(statusSummary.totalConcluido)}
+            tags={[
+              { label: `${statusSummary.countConcluido} ORÇAMENTO(S)`, accent: true }
+            ]}
             onClick={() => { setTab("CONCLUIDOS"); setSelectedMonth("TODOS"); }}
-            className="gm-dashboard-card barra rounded-2xl p-5 cursor-pointer hover:border-emerald-500/40 transition-all active:scale-[0.99]"
-            title="Clique para ver todos os orçamentos concluídos"
-          >
-            <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider">
-              Concluídos
-            </div>
-            <div className="text-2xl font-extrabold text-emerald-400 mt-1.5">
-              {CURRENCY.format(statusSummary.totalConcluido)}
-            </div>
-            <div className="text-xs text-[color:var(--gm-text-tertiary)] mt-1">{statusSummary.countConcluido} orçamento(s)</div>
-          </div>
+          />
 
-          <div className="gm-dashboard-card barra rounded-2xl p-5 sm:col-span-1 col-span-1 overflow-hidden">
-            <div className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider mb-2">
-              Valor por status
+          <div className="forge-spec">
+            <div className="forge-spec__bar">
+              <span className="forge-spec__id">03</span>
+              <span className="forge-spec__title">VALOR POR STATUS</span>
+              <span className="forge-spec__status">GRÁFICO</span>
             </div>
-            <div className="h-28 relative overflow-hidden w-full">
-              <SafeResponsive height={112}>
-                <BarChart data={statusSummary.chartData} barSize={22} margin={{ top: 10, right: 8, left: 8, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="name" stroke="#888" fontSize={9} tickLine={false} axisLine={false} interval={0} />
-                  <YAxis hide domain={[0, (dataMax: number) => (dataMax > 0 ? dataMax * 1.2 : 100)]} />
-                  <Tooltip
-                    formatter={(val: number) => CURRENCY.format(val)}
-                    cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                    contentStyle={{ backgroundColor: "rgba(18, 18, 22, 0.85)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#fff", fontSize: 12, backdropFilter: "blur(12px)" }}
-                  />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    {statusSummary.chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </SafeResponsive>
+            <div className="forge-spec__body !py-3">
+              <div className="h-28 relative overflow-hidden w-full">
+                <SafeResponsive height={112}>
+                  <BarChart data={statusSummary.chartData} barSize={22} margin={{ top: 10, right: 8, left: 8, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="name" stroke="#888" fontSize={9} tickLine={false} axisLine={false} interval={0} />
+                    <YAxis hide domain={[0, (dataMax: number) => (dataMax > 0 ? dataMax * 1.2 : 100)]} />
+                    <Tooltip
+                      formatter={(val: number) => CURRENCY.format(val)}
+                      cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                      contentStyle={{ backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#fff", fontSize: 12 }}
+                    />
+                    <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                      {statusSummary.chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </SafeResponsive>
+              </div>
             </div>
           </div>
         </div>
@@ -1457,65 +1507,69 @@ export default function Budgets() {
       {/* ✅ Tabs + Busca + Divisor Mensal */}
       <div className="mb-6 space-y-4">
         <SectionDivider label="Filtros" />
-        <DraggableScroll className="pb-1">
-          {[
-            { key: "AGUARDANDO", label: "AGUARDANDO", statusVal: "AGUARDANDO" },
-            { key: "APROVADO", label: "APROVADO", statusVal: "APROVADO" },
-            { key: "CONCLUIDOS", label: "CONCLUÍDOS", statusVal: "CONCLUIDO" },
-            { key: "CANCELADOS", label: "CANCELADOS", statusVal: "CANCELADO" },
-          ].map((item) => {
-            const active = tab === item.key;
-            const activeCls = pillClass(item.statusVal);
-            const inactiveCls =
-              "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
-
+        {/* ✅ Tabs de Status - Forge Tabs UI (From Uiverse.io by uiverse-astronaut) */}
+        <div className="forge-tabs w-full overflow-x-auto no-scrollbar">
+          {BUDGET_TABS.map((item, index) => {
+            const isActive = tab === item.key;
+            const num = String(index + 1).padStart(2, "0");
             return (
               <button
                 key={item.key}
                 type="button"
-                onClick={() => setTab(item.key as TabKey)}
-                className={`gm-filter-tab fora snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border ${
-                  active ? activeCls : inactiveCls
-                }`}
+                onClick={() => setTab(item.key)}
+                className={cn(
+                  "forge-tabs__tab shrink-0 select-none !bg-transparent !shadow-none !border-0 !rounded-none !outline-none !transform-none",
+                  isActive && "is-active !text-white"
+                )}
+                style={{
+                  background: "transparent",
+                  backgroundColor: "transparent",
+                  boxShadow: "none",
+                  border: 0,
+                  outline: "none",
+                  transform: "none",
+                }}
               >
-                {item.label}
+                <span className="forge-tabs__num">{num}</span>
+                <span>{item.label}</span>
               </button>
             );
           })}
+        </div>
 
-          {/* Lixeira separada */}
-          <button
-            type="button"
-            onClick={() => setTab("LIXEIRA")}
-            className={`gm-filter-tab fora snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border ${
-              tab === "LIXEIRA"
-                ? pillClass("CANCELADO")
-                : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
-            }`}
-          >
-            LIXEIRA
-          </button>
-        </DraggableScroll>
-
-        {/* ✅ Divisor Mensal de Busca (JAN a DEZ) */}
-        <div className="space-y-1.5 pt-1">
-          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <Calendar size={13} className="text-[var(--gm-primary)]" />
+        {/* ✅ Divisor Mensal de Busca (JAN a DEZ) em Container Forge UI */}
+        <div 
+          className="space-y-2.5 p-3 sm:p-3.5 rounded-xl gm-card forge-card w-full"
+          style={{
+            background: "#121215",
+            borderRadius: "14px",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 8px 30px rgba(0, 0, 0, 0.4)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div className="flex items-center justify-between text-xs font-bold text-zinc-300 px-1">
+            <span className="flex items-center gap-1.5 text-zinc-100 font-extrabold text-xs sm:text-sm">
+              <Calendar size={15} className="text-[var(--gm-primary)]" />
               Filtrar por Mês
             </span>
-            {selectedMonth !== "TODOS" && (
-              <span className="text-[var(--gm-primary)] font-extrabold flex items-center gap-1">
+            {selectedMonth !== "TODOS" ? (
+              <span className="text-[var(--gm-primary)] font-extrabold flex items-center gap-1 text-xs">
                 {MONTHS.find((m) => m.key === selectedMonth)?.full}{" "}
                 {selectedMonth === currentCalMonth && (
-                  <span className="text-[10px] uppercase px-1.5 py-0.2 rounded bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 font-bold ml-1">
+                  <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 font-bold ml-1">
                     Mês Atual
                   </span>
                 )}
               </span>
+            ) : (
+              <span className="text-zinc-400 font-semibold text-[11px]">
+                Exibindo todos os meses
+              </span>
             )}
           </div>
-          <DraggableScroll className="pb-1">
+          <div className="grid grid-cols-6 md:grid-cols-13 gap-1 sm:gap-1.5 w-full">
             {MONTHS.map((m) => {
               const isSelected = selectedMonth === m.key;
               const isCurrent = currentCalMonth === m.key;
@@ -1525,23 +1579,37 @@ export default function Budgets() {
                   key={m.key}
                   type="button"
                   onClick={() => setSelectedMonth(m.key)}
-                  className={`gm-filter-tab fora relative snap-start shrink-0 px-3.5 h-8 rounded-xl text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center gap-1.5 border cursor-pointer ${
+                  className={cn(
+                    "relative w-full h-8 sm:h-9 rounded-xl text-[11px] sm:text-xs tracking-tight flex items-center justify-center gap-1 cursor-pointer select-none transition-colors duration-200 border",
                     isSelected
-                      ? "bg-[var(--gm-primary)] border-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20"
+                      ? "border-transparent bg-transparent text-white font-black"
                       : isCurrent
-                      ? "bg-[var(--gm-primary)]/10 border-[var(--gm-primary)]/40 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/20"
-                      : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
-                  }`}
+                      ? "bg-[var(--gm-primary,#FE540B)]/10 border-[var(--gm-primary,#FE540B)]/45 text-orange-400 font-bold hover:bg-[var(--gm-primary,#FE540B)]/15"
+                      : "bg-[#18181b] border-white/[0.08] text-zinc-300 font-bold hover:border-white/20 hover:text-white hover:bg-[#202025]"
+                  )}
                   title={`${m.full}${isCurrent ? " (Mês Atual no Calendário)" : ""}`}
                 >
-                  <span>{m.label}</span>
-                  {isCurrent && (
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        isSelected ? "bg-white" : "bg-[var(--gm-primary)] animate-pulse"
-                      }`}
+                  {isSelected && (
+                    <motion.div
+                      layoutId="active-month-capsule"
+                      className="absolute inset-0 rounded-xl border-2 border-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/15 shadow-[0_0_16px_rgba(254,84,11,0.35),inset_0_0_10px_rgba(254,84,11,0.12)] pointer-events-none"
+                      initial={false}
+                      transition={ELASTIC_SPRING}
                     />
                   )}
+                  <span className="relative z-10 flex items-center gap-1">
+                    <span>{m.label}</span>
+                    {isCurrent && (
+                      <span
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200",
+                          isSelected
+                            ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]"
+                            : "bg-[var(--gm-primary,#FE540B)] animate-pulse shadow-[0_0_6px_rgba(254,84,11,0.6)]"
+                        )}
+                      />
+                    )}
+                  </span>
                 </button>
               );
             })}
@@ -1550,15 +1618,24 @@ export default function Budgets() {
             <button
               type="button"
               onClick={() => setSelectedMonth("TODOS")}
-              className={`gm-filter-tab fora snap-start shrink-0 px-4 h-8 rounded-xl text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border cursor-pointer ${
+              className={cn(
+                "relative col-span-6 md:col-span-1 w-full h-8 sm:h-9 rounded-xl text-[11px] sm:text-xs tracking-tight flex items-center justify-center cursor-pointer select-none transition-colors duration-200 border",
                 selectedMonth === "TODOS"
-                  ? "bg-[var(--gm-primary)] border-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/20"
-                  : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
-              }`}
+                  ? "border-transparent bg-transparent text-white font-black"
+                  : "bg-[#18181b] border-white/[0.08] text-zinc-300 font-bold hover:border-white/20 hover:text-white hover:bg-[#202025]"
+              )}
             >
-              TODOS
+              {selectedMonth === "TODOS" && (
+                <motion.div
+                  layoutId="active-month-capsule"
+                  className="absolute inset-0 rounded-xl border-2 border-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/15 shadow-[0_0_16px_rgba(254,84,11,0.35),inset_0_0_10px_rgba(254,84,11,0.12)] pointer-events-none"
+                  initial={false}
+                  transition={ELASTIC_SPRING}
+                />
+              )}
+              <span className="relative z-10">TODOS</span>
             </button>
-          </DraggableScroll>
+          </div>
         </div>
 
         {/* ✅ Busca com Visual Padrão Glass Desfocado Apple */}
@@ -1590,82 +1667,82 @@ export default function Budgets() {
       {/* ✅ Divisor de Seção dos Orçamentos */}
       <SectionDivider label="Orçamentos Cadastrados" />
 
-      {/* ✅ 3 CÁPSULAS VERTICAIS PEGANDO A EXTREMIDADE DA TELA DO APP */}
-      <div className="mb-4 flex flex-col gap-2.5 w-full text-xs text-slate-400">
-        {/* CÁPSULA 1: ORÇAMENTOS (X) - 100% LARGURA PEGANDO AS EXTREMIDADES DA TELA */}
-        <div className="w-full px-4 py-3.5 sm:py-3 min-h-[50px] sm:min-h-[44px] rounded-2xl gm-search-glass text-white font-extrabold flex items-center justify-between shadow-lg select-none">
+      {/* ✅ 3 CÁPSULAS VERTICAIS - FORGE UI SYSTEM */}
+      <div className="mb-4 flex flex-col gap-2 w-full text-xs text-slate-400">
+        {/* CÁPSULA 1: ORÇAMENTOS (X) */}
+        <div className="w-full px-4 py-3 min-h-[44px] rounded-[4px] bg-[#131315] border border-[#26262a] text-[#f2f2f3] font-semibold flex items-center justify-between select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
           <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)] animate-pulse shadow-[0_0_8px_var(--gm-primary)]" />
-            <FileText size={18} className="text-[var(--gm-primary)]" />
-            <span className="text-sm font-black text-white tracking-tight uppercase">Orçamentos</span>
+            <span className="w-2 h-2 rounded-[1px] bg-[#f65a1a]" />
+            <FileText size={16} className="text-[#f65a1a]" />
+            <span className="text-xs font-semibold text-[#f2f2f3] tracking-wider uppercase font-mono">Orçamentos</span>
           </div>
-          <span className="px-3 py-1 rounded-xl bg-[var(--gm-primary)]/20 border border-[var(--gm-primary)]/40 text-[var(--gm-primary)] font-black text-xs sm:text-sm">
-            ({filtered.length})
+          <span className="px-2.5 py-0.5 rounded-[2px] bg-[#f65a1a]/15 border border-[#f65a1a]/30 text-[#f65a1a] font-mono font-bold text-xs">
+            {filtered.length}
           </span>
         </div>
 
-        {/* CÁPSULA 2: MÊS SET (VER TODOS OS 55) - 100% LARGURA PEGANDO AS EXTREMIDADES DA TELA */}
+        {/* CÁPSULA 2: MÊS SET */}
         <div
           onClick={() => {
             if (selectedMonth !== "TODOS") {
               setSelectedMonth("TODOS");
             }
           }}
-          className={`w-full px-4 py-3.5 sm:py-3 min-h-[50px] sm:min-h-[44px] rounded-2xl gm-search-glass flex items-center justify-between shadow-lg select-none ${
+          className={`w-full px-4 py-3 min-h-[44px] rounded-[4px] bg-[#131315] border border-[#26262a] flex items-center justify-between select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
             selectedMonth !== "TODOS"
-              ? "cursor-pointer hover:border-[var(--gm-primary)]/50 active:scale-[0.99]"
+              ? "cursor-pointer hover:border-[#38383f] hover:bg-[#18181b] transition-colors"
               : ""
           }`}
           title={selectedMonth !== "TODOS" ? "Clique para exibir todos os orçamentos" : "Filtrado por mês"}
         >
           <div className="flex items-center gap-2.5">
-            <Calendar size={18} className="text-[var(--gm-primary)]" />
-            <span className="text-xs sm:text-sm font-bold text-slate-200">
+            <Calendar size={16} className="text-[#f65a1a]" />
+            <span className="text-xs font-semibold text-[#8b8b92] uppercase font-mono tracking-wider">
               Mês:{" "}
-              <strong className="text-[var(--gm-primary)] font-black uppercase text-sm">
+              <strong className="text-[#f2f2f3] font-bold">
                 {selectedMonth === "TODOS" ? "TODOS" : (MONTHS.find((m) => m.key === selectedMonth)?.label || "SET")}
               </strong>
             </span>
           </div>
 
           {selectedMonth !== "TODOS" ? (
-            <span className="text-xs font-black text-[var(--gm-primary)] px-3 py-1 rounded-xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 hover:bg-[var(--gm-primary)]/25 transition-colors">
-              (Ver todos os {totalInCurrentTab})
+            <span className="text-xs font-mono font-bold text-[#f65a1a] px-2.5 py-0.5 rounded-[2px] bg-[#f65a1a]/15 border border-[#f65a1a]/30 hover:bg-[#f65a1a]/25 transition-colors">
+              VER TODOS ({totalInCurrentTab})
             </span>
           ) : (
-            <span className="text-xs font-extrabold text-slate-400 px-3 py-1 rounded-xl bg-white/5 border border-white/10">
-              ({totalInCurrentTab} orçamentos)
+            <span className="text-xs font-mono font-semibold text-[#8b8b92] px-2.5 py-0.5 rounded-[2px] bg-white/[0.04] border border-white/[0.08]">
+              {totalInCurrentTab} orçamentos
             </span>
           )}
         </div>
 
-        {/* CÁPSULA 3: GRADE E LISTA - SEM CONTAINER MODAL POR TRÁS */}
+        {/* CÁPSULA 3: GRADE E LISTA - FORGE BUTTON STYLE */}
         <div className="w-full grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => handleSetViewMode("grid")}
-            className={`w-full py-4 sm:py-3.5 min-h-[50px] sm:min-h-[44px] rounded-2xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full h-9 rounded-[4px] text-[11.5px] font-semibold uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
               viewMode === "grid"
-                ? "gm-viewmode-btn-active scale-100"
+                ? "gm-viewmode-btn-active"
                 : "gm-viewmode-btn-inactive"
-            } active:scale-95`}
+            }`}
             title="Visualização em Grade de Cards"
           >
-            <LayoutGrid size={18} className={viewMode === "grid" ? "text-white" : "text-[var(--gm-primary)]"} />
-            <span className="text-white">Grade</span>
+            <LayoutGrid size={14} />
+            <span>Grade</span>
           </button>
           <button
             type="button"
             onClick={() => handleSetViewMode("list")}
-            className={`w-full py-4 sm:py-3.5 min-h-[50px] sm:min-h-[44px] rounded-2xl text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full h-9 rounded-[4px] text-[11.5px] font-semibold uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
               viewMode === "list"
-                ? "gm-viewmode-btn-active scale-100"
+                ? "gm-viewmode-btn-active"
                 : "gm-viewmode-btn-inactive"
-            } active:scale-95`}
+            }`}
             title="Visualização em Listas com Linhas e Setas de Expansão"
           >
-            <List size={18} className={viewMode === "list" ? "text-white" : "text-[var(--gm-primary)]"} />
-            <span className="text-white">Listas</span>
+            <List size={14} />
+            <span>Listas</span>
           </button>
         </div>
       </div>

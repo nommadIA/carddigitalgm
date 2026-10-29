@@ -32,63 +32,44 @@ No modo Forge, a hierarquia visual é construída por separadores e linhas limpa
 
 ---
 
-## 2. Segredo 2 — Tipografia Reduzida e Proporcional
-Os tamanhos de fonte foram reduzidos para máxima densidade e elegância:
-- **`h1` (`48px`)**: `font-weight: 800; letter-spacing: -2px; line-height: 1;` (reduzido de 54px).
-- **`h2` (`34px`)**: `font-weight: 700;` (reduzido de 42px).
-- **Títulos dos Cards (`28px`)**: `.metric-title, .card-title-lg { font-size: 28px; font-weight: 700; }` (reduzido de 34px).
-- **Texto (`p`)**: `font-size: 15px; line-height: 1.7; opacity: .75; color: var(--text-secondary);`.
+## 2. Segredo 2 — Escala Padronizada de Tipografia Forge
+A tipografia foi organizada em uma escala estipulada e consistente para todo o app:
+- **Hero / Contadores (`32px – 44px`)**: `font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; color: #FFFFFF;` (Relógio grande, métricas de faturamento principal).
+- **`h1` (`22px – 28px`)**: `font-weight: 900; letter-spacing: -0.02em; line-height: 1.2; color: #FFFFFF;` (Títulos de página: Dashboard, Orçamentos, Clientes, etc.).
+- **`h2` (`18px – 22px`)**: `font-weight: 800; letter-spacing: -0.015em; line-height: 1.3; color: #FFFFFF;` (Títulos de seções principais e painéis).
+- **`h3` (`16px – 18px`)**: `font-weight: 800; letter-spacing: -0.01em; line-height: 1.35; color: #FFFFFF;` (Cards, modais e containers).
+- **Texto Principal `p` (`14px – 15px`)**: `font-size: 14px; line-height: 1.6; color: #F2F2F3;` (Leitura limpa, contraste total).
+- **Subtextos / Apoio (`13px`)**: `font-size: 13px; line-height: 1.5; color: #CBD5E1;` (Descrições e observações).
+- **Cápsulas de Métricas (`13px`)**: `font-size: 13px; line-height: 17px; font-weight: 800;` (Indicadores de tendência e status).
+- **Rótulos / Labels (`12px`)**: `font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #F8FAFC;` (Campos de formulário e cabeçalhos `th`).
+- **Kickers / Seções (`11px`)**: `font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #FFFFFF;` (Separadores "MÉTRICAS GERAIS", etc.).
 
 ---
 
 ## 3. Segredo 3 — Espaçamento Generoso Forge
-- **Entre seções**: `72px` (nunca menos).
-- **Entre cards**: `32px`.
-- **Padding interno**: `28px`.
+- **Entre seções**: `48px` a `72px`.
+- **Entre cards**: `24px` a `32px`.
+- **Padding interno**: `24px` a `28px`.
 
 ---
 
-## 4. Segredo 4 — Botões Forge (Modelo 1 e Modelo 2)
-Dois modelos de botões com exatamente `48px` de altura, `font-size: 14px`, uppercase e `radius 4px`:
-```css
-/* Modelo 1: Laranja Primário */
-button.primary,
-.btn-primary {
-  height: 48px;
-  padding: 0 26px;
-  background: #FF5A1A;
-  border: none;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  border-radius: 4px;
-  color: white;
-}
-button.primary:hover,
-.btn-primary:hover {
-  transform: translateY(-1px);
-  background: #FF6C28;
-}
+## 4. Segredo 4 — Botões Forge (Formatos, Tamanhos e Cores)
+Botões com borda de `6px` (`rounded-md`), transição ágil de `0.16s` e alto contraste:
 
-/* Modelo 2: Outline Forge */
-button.secondary,
-.btn-secondary {
-  height: 48px;
-  padding: 0 26px;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: white;
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: .06em;
-  border-radius: 4px;
-}
-button.secondary:hover,
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, .03);
-}
-```
+### Tamanhos Padronizados:
+- **LG (Grande - 48px)**: `height: 48px; padding: 0 24px; font-size: 13px–14px; font-weight: 900; uppercase;` (Ações principais de topo / novo registro).
+- **MD (Médio - 40px)**: `height: 40px; padding: 0 18px; font-size: 12px–13px; font-weight: 800; uppercase;` (Padrão de toolbar, formulários e modais).
+- **SM (Pequeno - 32px)**: `height: 32px; padding: 0 12px; font-size: 11px; font-weight: 700; uppercase;` (Ações inline em linhas e filtros).
+- **Icon Buttons (40px / 36px / 32px)**: Proporção 1:1 quadrada com `radius: 6px`.
+
+### Variantes Oficiais:
+- **Primary (Ember Solid)**: Fundo `#F65A1A` + Borda `#F65A1A` + Texto e Ícones `#0B0B0C` (Ink Black) com peso `900`.
+- **Primary White**: Fundo `#F65A1A` + Texto `#FFFFFF` (Branco puro).
+- **Secondary (Graphite Solid)**: Fundo `#131315` + Borda `#26262A` + Texto e Ícones `#F2F2F3` (Bone White) com peso `800`.
+- **Ghost**: Fundo transparente + Texto `#CBD5E1` (Hover `#FFFFFF`).
+- **Danger**: Fundo `#1F1315` + Borda `#EF4444` + Texto `#EF4444` (Hover `#FFFFFF`).
+- **Success**: Fundo `#0D1F17` + Borda `#22C55E` + Texto `#22C55E` (Hover `#0B0B0C`).
+- **Disabled**: Fundo `#18181B` + Borda `#26262A` + Texto `#52525B`.
 
 ---
 

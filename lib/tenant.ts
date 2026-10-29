@@ -9,32 +9,23 @@ async function withTimeout<T>(p: Promise<T>, ms = 8000): Promise<T> {
 
 export async function fetchTenantsSafe(userId: string) {
   try {
-    // tenta pegar tenant via memberships (mais seguro)
-    const req = supabase
-      .from("tenant_memberships")
-      .select("tenant_id")
-      .eq("user_id", userId);
+    // 1) Primeiro tenta via RPC get_my_tenants (executa com SECURITY DEFINER no banco)
+    const { data: rpcData, error: rpcError } = await withTimeout<any>(
+      supabase.rpc("get_my_tenants") as any,
+      4000
+    ).catch(() => ({ data: null, error: null }));
 
-    const { data, error } = await withTimeout<any>(req as any, 8000).catch((err) => ({
-      data: null,
-      error: err,
-    }));
-
-    if (error) {
-      const msg = error?.message || String(error);
-      if (!msg.includes("Failed to fetch") && !msg.includes("future") && !msg.includes("JWT")) {
-        console.warn("Erro ao buscar tenants:", msg);
-      }
-      return [];
+    if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+      const ids = rpcData.map((x: any) => x.tenant_id).filter(Boolean);
+      if (ids.length > 0) return ids;
     }
 
-    const ids = (data || []).map((x: any) => x.tenant_id).filter(Boolean);
-    return ids;
-  } catch (e: any) {
-    const msg = e?.message || String(e);
-    if (!msg.includes("Failed to fetch") && !msg.includes("future") && !msg.includes("JWT")) {
-      console.warn("Erro ao buscar tenants:", msg);
-    }
-    return []; // ✅ nunca trava
+    // 2) Fallback para tenant em localStorage
+    const cached = typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null;
+    if (cached) return [cached];
+
+    return [];
+  } catch {
+    return []; // nunca trava o app nem emite warnings desnecessários
   }
 }

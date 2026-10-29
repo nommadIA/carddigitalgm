@@ -3,7 +3,7 @@ import { Page } from "../components/ui/Page";
 import { Link } from "react-router-dom";
 import { Copy, Check, Info, Plus, Trash, Eye, X, Upload, ChevronDown, ChevronUp, ChevronLeft, Save, Smartphone, Monitor, Layout, Link as LinkIcon, ShoppingBag, MapPin, Sparkles, Globe, Phone, CreditCard, List, PlusCircle, Trash2, RotateCcw, Edit3, AlignLeft, AlignCenter, AlignRight, Bold, Italic, ArrowLeft, CheckCircle2, Loader2, Image as ImageIcon } from "lucide-react";
 import { useAuth } from "../store/AuthContext";
-import { fetchSettingsSupabase, upsertSettingsSupabase, readSettingsLocal, AppSettings } from "../lib/settings";
+import { fetchSettingsSupabase, upsertSettingsSupabase, readSettingsLocal, AppSettings, DEFAULT_GM_BIO_CONFIG } from "../lib/settings";
 import { pushToast } from "../store/toast";
 import BioRenderer, { getPlatformIcon } from "../components/bio/BioRenderer";
 import { supabase } from "../lib/supabase";
@@ -173,96 +173,9 @@ export default function Bio() {
     }
   };
 
-  // Campos principais
-  const [bioConfig, setBioConfig] = useState({
-    title: "",
-    title_mobile: "",
-    description: "",
-    description_mobile: "",
-    description_align: "center" as "center" | "left" | "right",
-    description_align_mobile: "center" as "center" | "left" | "right",
-    description_bold: false,
-    description_bold_mobile: false,
-    description_italic: false,
-    description_italic_mobile: false,
-    description_font: "ui",
-    description_font_mobile: "ui",
-    description_size: "lg",
-    description_size_mobile: "lg",
-    phone: "",
-    email: "",
-    whatsapp: "",
-    instagram: "",
-    facebook: "",
-    telegram: "",
-    linkedin: "",
-    tiktok: "",
-    website: "",
-    portfolio_url: "",
-    catalog_url: "",
-    address: "",
-    address_url: "", // NEW
-    pix_key: "",
-    pix_type: "CPF",
-    card_url: "", // NEW
-    custom_links: [] as any[],
-    theme: "dark",
-    color: "",
-    catalog_title: "Catálogo",
-    catalog_items: [] as any[],
-    portfolio_title: "Portfólio",
-    portfolio_items: [] as any[],
-    bg_image_url: "",
-    bg_mobile_image_url: "",
-    show_banners: false,
-    banner_img_url_1: "",
-    banner_img_url_2: "",
-    banner_img_url_3: "",
-    mobile_banner_img_url_1: "",
-    mobile_banner_img_url_2: "",
-    mobile_banner_img_url_3: "",
-    site_font: "inter",
-    site_font_size: "md",
-    site_font_mobile: "",
-    site_font_size_mobile: "",
-    bg_animation: "parallax",
-    contact_banner_img_url: "",
-    contact_title: "",
-    contact_desc: "",
-    chat_balloon_enabled: true,
-    chat_balloon_show_qrcode: true,
-    chat_balloon_qr_link: "",
-    chat_balloon_qr_msg: "Olá! Estou vindo do site GM edificação, quero saber mais.",
-    chat_balloon_bg_color: "#FE540B",
-    chat_balloon_text_color: "#FFFFFF",
-    chat_balloon_text: "Olá 👋\nSou Denis, como posso te ajudar hoje?",
-    chat_balloon_button_text: "Abrir chat",
-    show_about: true,
-    about_title: "",
-    about_description: "",
-    about_highlight: "",
-    about_banner_url: "",
-    about_btn_text: "Fale Conosco",
-    about_btn_link: "",
-    about_title_align: "center" as "center" | "left" | "right",
-    about_title_bold: true,
-    about_title_italic: false,
-    about_title_font: "funnel",
-    about_title_size: "30 pt",
-    about_desc_align: "center" as "center" | "left" | "right",
-    about_desc_bold: false,
-    about_desc_italic: false,
-    about_desc_font: "ui",
-    about_desc_size: "16 pt",
-    about_highlight_align: "center" as "center" | "left" | "right",
-    about_highlight_bold: true,
-    about_highlight_italic: false,
-    about_highlight_font: "ui",
-    about_highlight_size: "16 pt",
-    website_logo_url: "",
-    hero_button_label: "Conheça nossos Serviços",
-    hero_button_action: "portfolio",
-    hero_button_url: "",
+  // Campos principais inicializados com o estado restaurado do website (08/10/2026)
+  const [bioConfig, setBioConfig] = useState<Record<string, any>>({
+    ...DEFAULT_GM_BIO_CONFIG,
     hero_button_style: "glow",
   });
 
@@ -1142,24 +1055,64 @@ export default function Bio() {
     const s = await fetchSettingsSupabase(tenantId);
     if (s) {
       setSettings(s);
-      if (s.bio_config) {
-        setBioConfig(prev => ({
-          ...prev,
-          ...s.bio_config,
-          custom_links: s.bio_config.custom_links || [],
-          catalog_items: s.bio_config.catalog_items || [],
-          catalog_title: s.bio_config.catalog_title || "Catálogo",
-          portfolio_items: s.bio_config.portfolio_items || [],
-          portfolio_title: s.bio_config.portfolio_title || "Portfólio",
-        }));
-      } else {
-        setBioConfig(prev => ({
-          ...prev,
-          title: s.company_name || "",
-          pix_key: s.pix_key || "",
-          pix_type: s.pix_type || "CPF",
-        }));
-      }
+      const isGM = !s.company_name || s.company_name.toLowerCase().includes("gm");
+      const baseConfig: Record<string, any> = isGM ? DEFAULT_GM_BIO_CONFIG : {};
+      const incoming: Record<string, any> = s.bio_config || {};
+
+      setBioConfig(prev => ({
+        ...baseConfig,
+        ...prev,
+        ...incoming,
+        title: incoming.title || prev.title || baseConfig.title || "GM edificação",
+        title_mobile: incoming.title_mobile || prev.title_mobile || baseConfig.title_mobile || "GM edificação",
+        title_font: incoming.title_font || prev.title_font || baseConfig.title_font || "syne",
+        title_font_mobile: incoming.title_font_mobile || prev.title_font_mobile || baseConfig.title_font_mobile || "syne",
+        title_size: incoming.title_size || prev.title_size || baseConfig.title_size || "36 pt",
+        title_size_mobile: incoming.title_size_mobile || prev.title_size_mobile || baseConfig.title_size_mobile || "26 pt",
+        title_color: incoming.title_color || prev.title_color || baseConfig.title_color || "#FFFFFF",
+        hero_title: incoming.hero_title || incoming.title || prev.hero_title || baseConfig.hero_title || "GM edificação",
+        hero_title_mobile: incoming.hero_title_mobile || incoming.hero_title || incoming.title_mobile || incoming.title || prev.hero_title_mobile || baseConfig.hero_title_mobile || "GM edificação",
+        description: incoming.description || prev.description || baseConfig.description || "GM edificação, Design Feroz",
+        description_mobile: incoming.description_mobile || incoming.description || prev.description_mobile || baseConfig.description_mobile || "GM edificação, Design Feroz",
+        description_font: incoming.description_font || prev.description_font || baseConfig.description_font || "syne",
+        description_font_mobile: incoming.description_font_mobile || prev.description_font_mobile || baseConfig.description_font_mobile || "syne",
+        description_size: incoming.description_size || prev.description_size || baseConfig.description_size || "18 pt",
+        description_size_mobile: incoming.description_size_mobile || prev.description_size_mobile || baseConfig.description_size_mobile || "16 pt",
+        description_bold: incoming.description_bold !== undefined ? incoming.description_bold : (baseConfig.description_bold !== undefined ? baseConfig.description_bold : true),
+        description_bold_mobile: incoming.description_bold_mobile !== undefined ? incoming.description_bold_mobile : (baseConfig.description_bold_mobile !== undefined ? baseConfig.description_bold_mobile : true),
+        description_color: incoming.description_color || prev.description_color || baseConfig.description_color || "#E4E4E7",
+        show_banners: isGM ? true : (incoming.show_banners !== undefined ? incoming.show_banners : (baseConfig.show_banners !== undefined ? baseConfig.show_banners : true)),
+        banner_img_url_1: incoming.banner_img_url_1 || prev.banner_img_url_1 || baseConfig.banner_img_url_1 || "",
+        mobile_banner_img_url_1: incoming.mobile_banner_img_url_1 || prev.mobile_banner_img_url_1 || baseConfig.mobile_banner_img_url_1 || "",
+        contact_banner_img_url: incoming.contact_banner_img_url || prev.contact_banner_img_url || baseConfig.contact_banner_img_url || "",
+        about_banner_url: incoming.about_banner_url || prev.about_banner_url || baseConfig.about_banner_url || "",
+        website_logo_url: incoming.website_logo_url || prev.website_logo_url || baseConfig.website_logo_url || "",
+        logo_url: incoming.logo_url || prev.logo_url || baseConfig.logo_url || "",
+        show_about: incoming.show_about !== undefined ? incoming.show_about : true,
+        about_title: incoming.about_title || prev.about_title || baseConfig.about_title || "SOBRE A GM EDIFICAÇÃO",
+        about_description: incoming.about_description || prev.about_description || baseConfig.about_description || "",
+        about_highlight: incoming.about_highlight || prev.about_highlight || baseConfig.about_highlight || "",
+        about_btn_text: incoming.about_btn_text || prev.about_btn_text || baseConfig.about_btn_text || "Fale Conosco",
+        about_btn_link: incoming.about_btn_link || prev.about_btn_link || baseConfig.about_btn_link || "https://wa.me/5598988402049",
+        about_title_font: incoming.about_title_font || prev.about_title_font || baseConfig.about_title_font || "funnel",
+        about_title_size: incoming.about_title_size || prev.about_title_size || baseConfig.about_title_size || "30 pt",
+        about_title_bold: incoming.about_title_bold !== undefined ? incoming.about_title_bold : true,
+        about_desc_font: incoming.about_desc_font || prev.about_desc_font || baseConfig.about_desc_font || "ui",
+        about_desc_size: incoming.about_desc_size || prev.about_desc_size || baseConfig.about_desc_size || "16 pt",
+        about_highlight_font: incoming.about_highlight_font || prev.about_highlight_font || baseConfig.about_highlight_font || "ui",
+        about_highlight_size: incoming.about_highlight_size || prev.about_highlight_size || baseConfig.about_highlight_size || "16 pt",
+        about_highlight_bold: incoming.about_highlight_bold !== undefined ? incoming.about_highlight_bold : true,
+        button_style: incoming.button_style || prev.button_style || baseConfig.button_style || "solid",
+        button_bg: incoming.button_bg || prev.button_bg || baseConfig.button_bg || "#FE540B",
+        button_border: incoming.button_border || prev.button_border || baseConfig.button_border || "#FE540B",
+        button_text: incoming.button_text || prev.button_text || baseConfig.button_text || "#FFFFFF",
+        button_icon: incoming.button_icon || prev.button_icon || baseConfig.button_icon || "#FFFFFF",
+        custom_links: (incoming.custom_links && incoming.custom_links.length > 0) ? incoming.custom_links : (prev.custom_links && prev.custom_links.length > 0 ? prev.custom_links : baseConfig.custom_links || []),
+        catalog_items: incoming.catalog_items || prev.catalog_items || baseConfig.catalog_items || [],
+        catalog_title: incoming.catalog_title || prev.catalog_title || baseConfig.catalog_title || "Catálogo de Serviços",
+        portfolio_items: (incoming.portfolio_items && incoming.portfolio_items.length > 0) ? incoming.portfolio_items : (prev.portfolio_items && prev.portfolio_items.length > 0 ? prev.portfolio_items : baseConfig.portfolio_items || []),
+        portfolio_title: incoming.portfolio_title || prev.portfolio_title || baseConfig.portfolio_title || "Portfólio",
+      }));
     }
   };
 
@@ -1173,10 +1126,9 @@ export default function Bio() {
     setSaving(true);
     setSaveSuccess(false);
     try {
+      // ✅ ISOLAMENTO ESTRITO: O website bio salva exclusivamente a sua bio_config e website_logo_url
+      // sem sobrescrever dados do app principal (como company_name, pix_key ou plano de fundo do app)
       const payload: Partial<AppSettings> = {
-        company_name: bioConfig.title || settings?.company_name, 
-        pix_key: bioConfig.pix_key,
-        pix_type: bioConfig.pix_type,
         website_logo_url: (bioConfig as any)?.website_logo_url || (bioConfig as any)?.logo_url || null,
         bio_config: bioConfig,
       };
@@ -1725,34 +1677,34 @@ export default function Bio() {
            </h3>
            <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
            
-           <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 pt-2 w-full max-w-2xl mx-auto">
+           <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 pt-2 w-full max-w-2xl mx-auto">
               <button 
                 onClick={handleCopyLink} 
-                className="w-full sm:w-[200px] h-12 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center border-2 border-[color:var(--gm-primary)] barra hover:bg-[color:var(--gm-primary)]/15 active:scale-95 text-white shadow-none transition-all cursor-pointer"
+                className="w-full sm:w-[180px] h-10 px-3.5 rounded-md font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer shadow-sm"
               >
-                {copied ? <Check className="w-4 h-4 mr-2 text-emerald-400" /> : <Copy className="w-4 h-4 mr-2 text-[color:var(--gm-primary)]" />}
+                {copied ? <Check className="w-4 h-4 mr-2 text-emerald-400" /> : <Copy className="w-4 h-4 mr-2 text-[#8B8B92]" />}
                 {copied ? "Link Copiado!" : "Copiar Link"}
               </button>
               <a 
                 href={`${window.location.origin}/${getCustomSlug()}`} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-full sm:w-[200px] h-12 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center border-2 border-[color:var(--gm-primary)] barra hover:bg-[color:var(--gm-primary)]/15 active:scale-95 text-white shadow-none transition-all cursor-pointer"
+                className="w-full sm:w-[180px] h-10 px-3.5 rounded-md font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer shadow-sm"
               >
-                <Globe className="w-4 h-4 mr-2 text-[color:var(--gm-primary)]" /> Ver Tela Inteira
+                <Globe className="w-4 h-4 mr-2 text-[#8B8B92]" /> Ver Tela Inteira
               </a>
               <button 
                 onClick={() => setPreviewOpen(true)} 
-                className="w-full sm:w-[200px] h-12 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center border-2 border-[color:var(--gm-primary)] barra hover:bg-[color:var(--gm-primary)]/15 active:scale-95 text-white shadow-none transition-all cursor-pointer"
+                className="w-full sm:w-[180px] h-10 px-3.5 rounded-md font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer shadow-sm"
               >
-                <Eye className="w-4 h-4 mr-2 text-[color:var(--gm-primary)]" /> Visualizar Prévia
+                <Eye className="w-4 h-4 mr-2 text-[#8B8B92]" /> Visualizar Prévia
               </button>
               <button 
                 onClick={handleSave} 
                 disabled={saving}
-                className="w-full sm:w-[200px] h-12 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center border-2 border-[color:var(--gm-primary)] barra hover:bg-[color:var(--gm-primary)]/15 active:scale-95 text-white shadow-none transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-[190px] h-10 px-4 rounded-md font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#F65A1A] bg-[#F65A1A] hover:bg-[#FF7A38] active:scale-95 text-[#0B0B0C] shadow-sm transition-all disabled:opacity-50 cursor-pointer"
               >
-                <Save className="w-4 h-4 mr-2 text-[color:var(--gm-primary)]" /> {saving ? "Salvando..." : "Salvar Alterações"}
+                <Save className="w-4 h-4 mr-2 text-[#0B0B0C]" /> {saving ? "Salvando..." : "Salvar Alterações"}
               </button>
             </div>
 
@@ -2601,6 +2553,25 @@ export default function Bio() {
                     className="sr-only peer"
                     checked={!!bioConfig.show_banners}
                     onChange={e => handleChange("show_banners", e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-600 after:border-zinc-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary-color)] peer-checked:after:bg-white peer-checked:after:border-white"></div>
+                </label>
+              </div>
+
+              {/* Toggle Menu de Texto no Topo */}
+              <div className="sm:col-span-2 border-t border-white/10 pt-4 mt-2 flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                    <List className="w-4 h-4 text-[var(--primary-color)]" /> Menu de Texto no Topo (Início, Sobre, etc.)
+                  </span>
+                  <p className="text-[11px] text-zinc-400">Por padrão, a barra do topo exibe exclusivamente os ícones dos links cadastrados.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer"
+                    checked={!!bioConfig.show_nav_links}
+                    onChange={e => handleChange("show_nav_links", e.target.checked)}
                   />
                   <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-600 after:border-zinc-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary-color)] peer-checked:after:bg-white peer-checked:after:border-white"></div>
                 </label>
@@ -4578,16 +4549,16 @@ export default function Bio() {
                     handleSave();
                   }}
                   disabled={saving}
-                  className="gm-floating-save-btn w-14 h-14 hover:brightness-110 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 border border-white/20 cursor-pointer outline-none"
+                  className="gm-floating-save-btn !p-0 w-14 h-14 hover:brightness-110 active:translate-y-0.5 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 border border-white/20 cursor-pointer outline-none"
                   style={{ backgroundColor: (bioConfig as any).brand_color || bioConfig.color || 'var(--gm-primary)' }}
                   title="Salvar todas as alterações da Bio"
                 >
                   {saving ? (
-                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                    <Loader2 className="w-6 h-6 animate-spin text-white shrink-0" />
                   ) : saveSuccess ? (
-                    <CheckCircle2 className="w-6 h-6 text-white animate-bounce" />
+                    <CheckCircle2 className="w-6 h-6 text-white animate-bounce shrink-0" />
                   ) : (
-                    <Save className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-200" />
+                    <Save className="w-6 h-6 text-white shrink-0" />
                   )}
                 </button>
               </div>
@@ -4604,10 +4575,10 @@ export default function Bio() {
                     if (isDraggingRef.current) return;
                     setPreviewOpen(true);
                   }}
-                  className="w-14 h-14 bg-[var(--gm-primary)] hover:brightness-110 active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(255,105,0,0.45)] hover:shadow-[0_12px_32px_rgba(255,105,0,0.65)] transition-all duration-300 hover:scale-110 border border-orange-300/40 cursor-pointer outline-none"
+                  className="w-14 h-14 bg-[var(--gm-primary)] hover:brightness-110 active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(255,105,0,0.45)] hover:shadow-[0_12px_32px_rgba(255,105,0,0.65)] transition-all duration-300 border border-orange-300/40 cursor-pointer outline-none"
                   title="Visualizar Prévia"
                 >
-                  <Eye className="w-6 h-6 text-white group-hover:scale-110 transition-transform duration-200" />
+                  <Eye className="w-6 h-6 text-white transition-transform duration-200" />
                 </button>
               </div>
             </motion.div>

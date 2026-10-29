@@ -6,53 +6,86 @@
 ========================================================= */
 
 :root {
-  /* Tipografia */
+  /* Tipografia Forge */
   --font-display: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
   --font-body: Inter, ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  /* Raios (Forge Padrão: 4px ~ 8px) */
+  /* Escala Padronizada de Tipografia Forge Industrial */
+  --font-size-hero: 44px;
+  --font-size-h1: 26px;
+  --font-size-h2: 20px;
+  --font-size-h3: 17px;
+  --font-size-h4: 15px;
+  --font-size-body: 14px;
+  --font-size-sm: 13px;
+  --font-size-xs: 12px;
+  --font-size-micro: 11px;
+  --font-size-nano: 10px;
+
+  /* Tamanhos Padronizados de Botões */
+  --btn-height-lg: 48px;
+  --btn-height-md: 40px;
+  --btn-height-sm: 32px;
+  --btn-radius: 6px;
+
+  /* Raios Forge (Técnico e Sólido: 4px ~ 6px ~ 8px) */
   --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
   --radius-lg: 8px;
 
-  /* Espaçamento Forge (Nunca menos) */
-  --gap-section: 72px;
-  --gap-cards: 32px;
-  --padding-card: 28px;
+  /* Espaçamento Forge */
+  --gap-section: 48px;
+  --gap-cards: 24px;
+  --padding-card: 24px;
   --container-max: 1600px;
 
-  /* Sombras Quase Imperceptíveis (14) */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .05);
-  --shadow: 0 10px 30px rgba(0, 0, 0, .08);
+  /* TC PILL BUTTON TOKENS (Uiverse.io by uiverse-astronaut) */
+  --color-ink: #1a0e08;
+  --color-parchment: #f4ecd8;
+  --color-clay: #b33a0e;
+  --color-saffron: #f2c545;
+  --color-graphite: #131315;
+  --color-slate: #1B1B1E;
+  --color-filament: #26262A;
+  --color-ember: #b33a0e;
+  --color-spark: #cf4512;
+  --color-bone: #f4ecd8;
+  --color-ash: #8B8B92;
 
-  --transition: .22s cubic-bezier(.22, 1, .36, 1);
+  /* Transição suave e precisa */
+  --transition: .18s cubic-bezier(.16, 1, .3, 1);
 
-  /* DARK MODE DEFAULT (Igual à imagem / [data-theme="dark"]) */
-  --bg: #090909;
-  --bg-secondary: #101010;
+  /* DARK MODE DEFAULT */
+  --bg: #0B0B0C;
+  --bg-secondary: #131315;
 
-  --surface: #151515;
-  --surface-hover: #1C1C1C;
+  --surface: #131315;
+  --surface-hover: #1B1B1E;
 
-  /* 7) Bordas Forge: no dark rgba(255,255,255,.08) */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.14);
+  /* Micro-borda hairline */
+  --border: #26262A;
+  --border-hover: #3F3F46;
 
-  --text: #F5F5F5;
-  --text-secondary: #AFAFAF;
-  --text-muted: #777777;
+  --text: #F2F2F3;
+  --text-secondary: #8B8B92;
+  --text-muted: #71717A;
 
-  --primary: #FF5A1A;
-  --primary-hover: #FF7439;
+  --primary: #F65A1A;
+  --primary-hover: #FF7A38;
 
-  --success: #19C37D;
-  --warning: #FFB020;
-  --danger: #E5484D;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
 
-  /* Compatibilidade de aliases com classes .gm- */
+  /* Sombreamento sutil técnico com highlight superior */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 8px 24px rgba(0, 0, 0, .6);
+
+  /* Aliases compatíveis com classes legadas .gm- */
   --gm-primary: var(--primary);
+  --gm-primary-foreground: #0B0B0C;
   --gm-accent: var(--primary);
   --gm-bg: var(--bg);
   --gm-bg-secondary: var(--bg-secondary);
@@ -65,75 +98,39 @@
   --gm-border-light: var(--border-hover);
   --gm-font: var(--font-body);
   --font-funnel: var(--font-display);
-  --gm-radius: 8px;
+  --gm-radius: 6px;
   --gm-radius-sm: 4px;
 }
 
 /* =========================================================
-   DARK MODE EXPLICITO (14. Sombras: 0 15px 40px rgba(0,0,0,.35))
+   DARK SYSTEM THEME (Sólido, sem tema claro)
 ========================================================= */
 [data-theme="dark"],
-.gm-dark {
-  --bg: #090909;
-  --bg-secondary: #101010;
-
-  --surface: #151515;
-  --surface-hover: #1C1C1C;
-
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.14);
-
-  --text: #F5F5F5;
-  --text-secondary: #AFAFAF;
-  --text-muted: #777777;
-
-  --primary: #FF5A1A;
-  --primary-hover: #FF7439;
-
-  --success: #19C37D;
-  --warning: #FFB020;
-  --danger: #E5484D;
-
-  --shadow: 0 15px 40px rgba(0, 0, 0, .35);
-
-  --gm-bg: var(--bg);
-  --gm-bg-secondary: var(--bg-secondary);
-  --gm-text: var(--text);
-  --gm-text-secondary: var(--text-secondary);
-  --gm-text-tertiary: var(--text-muted);
-  --gm-surface: var(--surface);
-  --gm-surface-2: var(--surface-hover);
-  --gm-border: var(--border);
-  --gm-border-light: var(--border-hover);
-}
-
-/* =========================================================
-   DARK SYSTEM THEME ONLY (Não existe tema claro)
-========================================================= */
 [data-theme="light"],
+.gm-dark,
 .gm-light {
-  --bg: #090909;
-  --bg-secondary: #101010;
+  --bg: #0B0B0C;
+  --bg-secondary: #131315;
 
-  --surface: #151515;
-  --surface-hover: #1C1C1C;
+  --surface: #131315;
+  --surface-hover: #1B1B1E;
 
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.14);
+  --border: #26262A;
+  --border-hover: #3F3F46;
 
-  --text: #F5F5F5;
-  --text-secondary: #AFAFAF;
-  --text-muted: #777777;
+  --text: #F2F2F3;
+  --text-secondary: #8B8B92;
+  --text-muted: #71717A;
 
-  --primary: #FF5A1A;
-  --primary-hover: #FF7439;
+  --primary: #F65A1A;
+  --primary-hover: #FF7A38;
 
-  --success: #19C37D;
-  --warning: #FFB020;
-  --danger: #E5484D;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
 
-  --shadow: 0 15px 40px rgba(0, 0, 0, .35);
-
+  --gm-primary: var(--primary);
+  --gm-primary-foreground: #0B0B0C;
   --gm-bg: var(--bg);
   --gm-bg-secondary: var(--bg-secondary);
   --gm-text: var(--text);
@@ -180,7 +177,13 @@ body {
   box-shadow: none !important;
 }
 
-/* 6) Cards, Modais, Sidebar, Bottom Nav, Painéis - VIDRO FOSCO NO LUGAR DE SOMBRA PESADA (.barra e .fora) */
+/* =========================================================
+   6) Cards, Modais, Sidebar, Bottom Nav, Painéis - FORGE SOLID SURFACES
+   - Zero Glass / Zero Blur
+   - Fundo Sólido #131315 (Graphite)
+   - Micro-borda hairline #26262A (Filament)
+   - Destaque sutil superior inset 0 1px 0 rgba(255,255,255,0.05)
+========================================================= */
 .card,
 .panel,
 .gm-panel,
@@ -206,175 +209,35 @@ body {
 .dialog,
 .barra,
 .fora {
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: #131315 !important;
+  border-radius: 8px !important;
+  border: 1px solid #26262A !important;
+  box-shadow: 
+    0 4px 20px -2px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05) !important;
   contain: none !important;
-  transition: all .22s;
+  overflow: hidden;
+  position: relative;
+  transition: all .18s ease;
+  color: #F2F2F3;
 }
 
 aside.gm-sidebar,
 .gm-sidebar {
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: #131315 !important;
   border-top-left-radius: 0px !important;
   border-bottom-left-radius: 0px !important;
-  border-top-right-radius: 24px !important;
-  border-bottom-right-radius: 24px !important;
+  border-top-right-radius: 12px !important;
+  border-bottom-right-radius: 12px !important;
   border-left: none !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: none !important;
-  contain: none !important;
-}
-
-[data-theme="dark"] .card,
-[data-theme="dark"] .panel,
-[data-theme="dark"] .gm-panel,
-[data-theme="dark"] .gm-toolbar,
-[data-theme="dark"] .gm-card,
-[data-theme="dark"] .gm-budget-card,
-[data-theme="dark"] .gm-budget-row,
-[data-theme="dark"] .gm-dashboard-card,
-[data-theme="dark"] .gm-stat-card,
-[data-theme="dark"] .gm-client-card,
-[data-theme="dark"] .gm-item-card,
-[data-theme="dark"] .gm-product-card,
-[data-theme="dark"] .gm-expense-card,
-[data-theme="dark"] .gm-note-card,
-[data-theme="dark"] .gm-summary-card,
-[data-theme="dark"] .gm-clock-card,
-[data-theme="dark"] .gm-chart-container,
-[data-theme="dark"] .gm-modal,
-[data-theme="dark"] .gm-modal-content,
-[data-theme="dark"] .gm-note-modal,
-[data-theme="dark"] [role="dialog"],
-[data-theme="dark"] .modal,
-[data-theme="dark"] .dialog,
-[data-theme="dark"] .gm-bottom-nav-btn,
-[data-theme="dark"] .gm-budget-action-btn,
-[data-theme="dark"] .gm-filter-tab,
-[data-theme="dark"] .gm-status-capsule,
-[data-theme="dark"] .barra,
-[data-theme="dark"] .fora,
-.gm-dark .card,
-.gm-dark .panel,
-.gm-dark .gm-panel,
-.gm-dark .gm-toolbar,
-.gm-dark .gm-card,
-.gm-dark .gm-budget-card,
-.gm-dark .gm-budget-row,
-.gm-dark .gm-dashboard-card,
-.gm-dark .gm-stat-card,
-.gm-dark .gm-client-card,
-.gm-dark .gm-item-card,
-.gm-dark .gm-product-card,
-.gm-dark .gm-expense-card,
-.gm-dark .gm-note-card,
-.gm-dark .gm-summary-card,
-.gm-dark .gm-clock-card,
-.gm-dark .gm-chart-container,
-.gm-dark .gm-modal,
-.gm-dark .gm-modal-content,
-.gm-dark .gm-note-modal,
-.gm-dark [role="dialog"],
-.gm-dark .modal,
-.gm-dark .dialog,
-.gm-dark .gm-bottom-nav-btn,
-.gm-dark .gm-budget-action-btn,
-.gm-dark .gm-filter-tab,
-.gm-dark .gm-status-capsule,
-.gm-dark .barra,
-.gm-dark .fora,
-html:not([data-theme="light"]):not(.gm-light) .card,
-html:not([data-theme="light"]):not(.gm-light) .panel,
-html:not([data-theme="light"]):not(.gm-light) .gm-panel,
-html:not([data-theme="light"]):not(.gm-light) .gm-toolbar,
-html:not([data-theme="light"]):not(.gm-light) .gm-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-budget-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-budget-row,
-html:not([data-theme="light"]):not(.gm-light) .gm-dashboard-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-stat-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-client-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-item-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-product-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-expense-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-note-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-summary-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-clock-card,
-html:not([data-theme="light"]):not(.gm-light) .gm-chart-container,
-html:not([data-theme="light"]):not(.gm-light) .gm-modal,
-html:not([data-theme="light"]):not(.gm-light) .gm-modal-content,
-html:not([data-theme="light"]):not(.gm-light) .gm-note-modal,
-html:not([data-theme="light"]):not(.gm-light) [role="dialog"],
-html:not([data-theme="light"]):not(.gm-light) .modal,
-html:not([data-theme="light"]):not(.gm-light) .dialog,
-html:not([data-theme="light"]):not(.gm-light) .gm-bottom-nav-btn,
-html:not([data-theme="light"]):not(.gm-light) .gm-budget-action-btn,
-html:not([data-theme="light"]):not(.gm-light) .gm-filter-tab,
-html:not([data-theme="light"]):not(.gm-light) .gm-status-capsule,
-html:not([data-theme="light"]):not(.gm-light) .barra,
-html:not([data-theme="light"]):not(.gm-light) .fora {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  box-shadow: none !important;
-  contain: none !important;
-}
-
-/* Glassmorphism Efeito Vidro Desfocado (Clean Frosted Glass) para as barras inferior e superior no smartphone */
-[data-theme="dark"] nav.fixed.bottom-0,
-[data-theme="dark"] .gm-bottom-nav,
-.gm-dark nav.fixed.bottom-0,
-.gm-dark .gm-bottom-nav,
-html:not([data-theme="light"]):not(.gm-light) nav.fixed.bottom-0,
-html:not([data-theme="light"]):not(.gm-light) .gm-bottom-nav,
-nav.fixed.bottom-0,
-.gm-bottom-nav {
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  background: rgba(10, 10, 14, 0.15) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: none !important;
-}
-
-[data-theme="dark"] header.fixed.top-0,
-[data-theme="dark"] .gm-mobile-header,
-.gm-dark header.fixed.top-0,
-.gm-dark .gm-mobile-header,
-html:not([data-theme="light"]):not(.gm-light) header.fixed.top-0,
-html:not([data-theme="light"]):not(.gm-light) .gm-mobile-header,
-header.fixed.top-0,
-.gm-mobile-header {
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  background: rgba(10, 10, 14, 0.15) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: none !important;
-}
-
-[data-theme="dark"] aside.gm-sidebar,
-[data-theme="dark"] .gm-sidebar,
-.gm-dark aside.gm-sidebar,
-.gm-dark .gm-sidebar,
-html:not([data-theme="light"]):not(.gm-light) aside.gm-sidebar,
-html:not([data-theme="light"]):not(.gm-light) .gm-sidebar {
-  background: rgba(18, 18, 22, 0.6) !important;
-  border-top-left-radius: 0px !important;
-  border-bottom-left-radius: 0px !important;
-  border-top-right-radius: 24px !important;
-  border-bottom-right-radius: 24px !important;
-  border-left: none !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: none !important;
+  border-right: 1px solid #26262A !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5) !important;
   contain: none !important;
 }
 
@@ -384,32 +247,11 @@ html:not([data-theme="light"]):not(.gm-light) .gm-sidebar {
 .gm-dashboard-card:hover,
 .barra:hover,
 .fora:hover {
-  background: rgba(255, 255, 255, 0.75) !important;
-  border-color: rgba(255, 255, 255, 0.45) !important;
-  box-shadow: none !important;
-}
-
-[data-theme="dark"] .card:hover,
-[data-theme="dark"] .gm-card:hover,
-[data-theme="dark"] .gm-budget-card:hover,
-[data-theme="dark"] .gm-dashboard-card:hover,
-[data-theme="dark"] .barra:hover,
-[data-theme="dark"] .fora:hover,
-.gm-dark .card:hover,
-.gm-dark .gm-card:hover,
-.gm-dark .gm-budget-card:hover,
-.gm-dark .gm-dashboard-card:hover,
-.gm-dark .barra:hover,
-.gm-dark .fora:hover,
-html:not([data-theme="light"]):not(.gm-light) .card:hover,
-html:not([data-theme="light"]):not(.gm-light) .gm-card:hover,
-html:not([data-theme="light"]):not(.gm-light) .gm-budget-card:hover,
-html:not([data-theme="light"]):not(.gm-light) .gm-dashboard-card:hover,
-html:not([data-theme="light"]):not(.gm-light) .barra:hover,
-html:not([data-theme="light"]):not(.gm-light) .fora:hover {
-  background: rgba(28, 28, 34, 0.75) !important;
-  border-color: rgba(255, 255, 255, 0.22) !important;
-  box-shadow: none !important;
+  background: #17171A !important;
+  border-color: #3F3F46 !important;
+  box-shadow: 
+    0 6px 24px -2px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 .gm-card-header {
@@ -428,103 +270,517 @@ html:not([data-theme="light"]):not(.gm-light) .fora:hover {
 
 .gm-card-title h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.2px;
+  color: #F2F2F3;
 }
 
 .gm-compact {
-  padding: 16px 20px !important;
-  border-radius: 8px !important;
+  padding: 14px 18px !important;
+  border-radius: 6px !important;
 }
 
 /* =========================================================
-   4) Botões Forge (Modelo 1 - Laranja / Modelo 2 - Outline)
+   4) Botões Forge Sólidos (uiverse.io/design/systems/forge)
+   - Primário: Sólido Ember #F65A1A com texto preto Ink #0B0B0C
+   - Secundário: Sólido Graphite #131315 com borda #26262A e texto #F2F2F3
+   - Ghost: Transparente com texto #8B8B92
+   - Disabled: #18181B com borda #26262A e texto #52525B
+   - Square Icon: Fundo Ember #F65A1A + Ícone Ink Black #0B0B0C
 ========================================================= */
+/* =========================================================
+   4) BOTÕES FORGE SÓLIDOS & PADRÕES DE TAMANHO
+   Tamanhos Oficiais:
+   - LG (Grande / Ações Principais): 48px de altura, px-6, fonte 13-14px
+   - MD (Médio / Padrão do Sistema): 40px de altura, px-4.5, fonte 12-13px
+   - SM (Pequeno / Inline / Chips): 32px de altura, px-3, fonte 11px
+   - Icon Buttons: 40x40 / 36x36 / 32x32 com proporção 1:1
+
+   Variantes Oficiais:
+   - Primary: Sólido Ember #F65A1A + Texto Ink Black #0B0B0C (font 900)
+   - Primary White: Sólido Ember #F65A1A + Texto Branco Puro #FFFFFF
+   - Secondary: Sólido Graphite #131315 + Borda #26262A + Texto Bone #F2F2F3
+   - Ghost: Fundo transparente + Texto #CBD5E1 (hover #FFFFFF)
+   - Danger: Sólido #1F1315 + Borda #EF4444 + Texto #EF4444
+   - Success: Sólido #0D1F17 + Borda #22C55E + Texto #22C55E
+   - Disabled: Fundo #18181B + Borda #26262A + Texto #52525B
+========================================================= */
+
+/* Base de todos os botões do sistema */
 button.gm-btn,
 .gm-btn {
-  height: 48px;
-  padding: 0 26px;
-  border-radius: 4px;
-  font-weight: 700;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 6px;
+  font-weight: 800;
   cursor: pointer;
-  transition: .25s;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 12px;
+  line-height: 1;
+  outline: none;
+  box-sizing: border-box;
 }
 
-/* Modelo 1 (Laranja) */
+/* Modificadores de Tamanho de Botão */
+.gm-btn-lg,
+.btn-lg,
+button.lg,
+a.gm-btn-lg,
+button[class*="h-12"]:not([class*="w-"]):not(.rounded-full):not([class*="rounded-2xl"]):not([class*="rounded-xl"]):not([class*="!p-0"]):not(.gm-floating-save-btn):not(.gm-floating-whatsapp-btn),
+button[class*="h-13"]:not([class*="w-"]):not(.rounded-full):not([class*="rounded-2xl"]):not([class*="rounded-xl"]):not([class*="!p-0"]):not(.gm-floating-save-btn):not(.gm-floating-whatsapp-btn),
+a[class*="h-12"]:not([class*="w-"]):not(.rounded-full),
+a[class*="h-13"]:not([class*="w-"]):not(.rounded-full) {
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 24px !important;
+  font-size: 13px !important;
+  border-radius: 6px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.05em !important;
+}
+
+.gm-btn-lg span,
+.btn-lg span,
+button[class*="h-12"] span,
+button[class*="h-13"] span,
+a[class*="h-12"] span,
+a[class*="h-13"] span {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.05em !important;
+}
+
+.gm-btn-md,
+.btn-md,
+/* =========================================================
+   TC PILL BUTTON SYSTEM (From Uiverse.io by uiverse-astronaut)
+   Substituição completa da UI e efeitos dos botões do app
+   ========================================================= */
+
+.tc-pill-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  height: 48px;
+  padding: 0 26px !important;
+  font-family: var(--font-body, "Inter", system-ui, sans-serif) !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.005em !important;
+  line-height: 1 !important;
+  border-radius: 999px !important;
+  border: 1.5px solid var(--color-ink, #1a0e08) !important;
+  background: var(--color-ink, #1a0e08) !important;
+  color: var(--color-parchment, #f4ecd8) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition:
+    background 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    border-color 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+
+.tc-pill-btn:hover {
+  background: var(--color-clay, #b33a0e) !important;
+  border-color: var(--color-clay, #b33a0e) !important;
+  color: var(--color-parchment, #f4ecd8) !important;
+}
+
+.tc-pill-btn:active {
+  transform: translateY(1px) !important;
+}
+
+.tc-pill-btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--color-saffron, #f2c545) !important;
+}
+
+.tc-pill-btn__icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none !important;
+  stroke: currentColor !important;
+  transition: transform 180ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+
+.tc-pill-btn:hover .tc-pill-btn__icon {
+  transform: translate(2px, -2px) !important;
+}
+
+/* =========================================================
+   FORGE UI BUTTON SYSTEM (From Uiverse.io by uiverse-astronaut)
+   - Borda arredondada suave (4px)
+   - Cor de Fundo Ember (#f65a1a) com texto e ícones Ink (#0b0b0c)
+   - Hover Spark (#ff7a38)
+   - Tipografia Uppercase 14px, Letter-spacing 0.04em, Peso 600
+========================================================= */
+.forge-btn,
+.tc-pill-btn-primary,
 button.primary,
 .btn-primary,
-.gm-btn-primary {
-  height: 48px;
-  padding: 0 26px;
-  background: var(--gm-primary, #FE540B) !important;
-  border: none !important;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  border-radius: 4px !important;
-  color: var(--gm-primary-foreground, #FFFFFF) !important;
+.gm-btn-primary,
+.forge-btn-primary,
+.forge-btn--primary,
+.gm-btn-primary-white,
+button.primary-white,
+button[class*="bg-[#F65A1A]"],
+button[class*="bg-[#f65a1a]"],
+button[class*="bg-[var(--gm-primary)]"],
+a[class*="bg-[#F65A1A]"],
+a[class*="bg-[#f65a1a]"],
+a[class*="bg-[var(--gm-primary)]"] {
+  --color-ink: #0b0b0c;
+  --color-ember: #f65a1a;
+  --color-spark: #ff7a38;
+  --color-text: #f2f2f3;
+  --color-border: #26262a;
+  --color-ember-halo: rgba(246, 90, 26, 0.24);
+  --radius-md: 4px;
+  --space-xs: 8px;
+  --space-md: 16px;
+  --duration-fast: 120ms;
+  --ease-out: cubic-bezier(0.2, 0.65, 0.25, 1);
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--space-xs) !important;
+  height: 40px !important;
+  padding: 0 var(--space-md) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid transparent !important;
+  background: var(--color-ember) !important;
+  background-color: var(--color-ember) !important;
+  color: var(--color-ink) !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  user-select: none !important;
   box-shadow: none !important;
-  backdrop-filter: none !important;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
 }
 
+.forge-btn:focus-visible,
+.tc-pill-btn-primary:focus-visible,
+button.primary:focus-visible,
+.btn-primary:focus-visible,
+.gm-btn-primary:focus-visible,
+.forge-btn-primary:focus-visible,
+.forge-btn--primary:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--color-ember-halo, rgba(246, 90, 26, 0.24)) !important;
+}
+
+.forge-btn--primary,
+.forge-btn-primary {
+  background: var(--color-ember) !important;
+  color: var(--color-ink) !important;
+}
+
+.forge-btn--primary:hover,
+.forge-btn-primary:hover,
+.tc-pill-btn-primary:hover,
 button.primary:hover,
 .btn-primary:hover,
-.gm-btn-primary:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--gm-primary, #FE540B) 35%, transparent) !important;
+.gm-btn-primary:hover,
+button[class*="bg-[#F65A1A]"]:hover,
+button[class*="bg-[#f65a1a]"]:hover,
+button[class*="bg-[var(--gm-primary)]"]:hover,
+a[class*="bg-[#F65A1A]"]:hover,
+a[class*="bg-[#f65a1a]"]:hover,
+a[class*="bg-[var(--gm-primary)]"]:hover {
+  background: var(--color-spark, #ff7a38) !important;
+  background-color: var(--color-spark, #ff7a38) !important;
+  border-color: transparent !important;
+  color: var(--color-ink, #0b0b0c) !important;
 }
 
-/* Modelo 2 (Botão Outline igual ao Forge) */
+.forge-btn:active,
+.forge-btn--primary:active,
+.tc-pill-btn-primary:active,
+button.primary:active,
+.btn-primary:active,
+.gm-btn-primary:active,
+.forge-btn-primary:active {
+  transform: translateY(1px) !important;
+}
+
+.forge-btn__icon {
+  width: 14px !important;
+  height: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+/* 2. MODELO SECUNDÁRIO FORGE (Slate #1b1b1e com borda #26262a e radius 4px) */
+.forge-btn--secondary,
+.tc-pill-btn-secondary,
 button.secondary,
 .btn-secondary,
-.gm-btn-secondary {
-  height: 48px;
-  padding: 0 26px;
-  background: transparent !important;
-  border: 1px solid var(--border) !important;
-  color: white;
-  text-transform: uppercase;
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: .06em;
+.gm-btn-secondary,
+.forge-btn-secondary,
+.gm-btn-outline,
+.gm-btn,
+.btn,
+button.ghost,
+.btn-ghost,
+.gm-btn-ghost,
+.forge-btn-ghost {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  height: 40px !important;
+  padding: 0 16px !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
   border-radius: 4px !important;
-  backdrop-filter: none !important;
+  border: 1px solid #26262a !important;
+  background: #1b1b1e !important;
+  background-color: #1b1b1e !important;
+  color: #f2f2f3 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+  box-shadow: none !important;
+  transition:
+    background 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+
+.forge-btn--secondary:hover,
+.tc-pill-btn-secondary:hover,
+button.secondary:hover,
+.btn-secondary:hover,
+.gm-btn-secondary:hover,
+.forge-btn-secondary:hover,
+.gm-btn-outline:hover,
+.gm-btn:hover,
+.btn:hover,
+button.ghost:hover,
+.btn-ghost:hover,
+.gm-btn-ghost:hover,
+.forge-btn-ghost:hover {
+  background: #26262a !important;
+  background-color: #26262a !important;
+  border-color: #38383f !important;
+  color: #ffffff !important;
+}
+
+/* 3. BOTÕES DE AÇÃO E ÍCONES (Formato Forge 4px) */
+.gm-btn-icon-square,
+.forge-btn-icon-square,
+.forge-btn-icon,
+.gm-btn-icon-secondary,
+.forge-btn-icon-secondary,
+.gm-budget-action-btn,
+.gm-grid-action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 4px !important;
+  border: 1px solid #26262a !important;
+  background: #1b1b1e !important;
+  background-color: #1b1b1e !important;
+  color: #f2f2f3 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transition:
+    background 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+
+.gm-btn-icon-square:hover,
+.forge-btn-icon-square:hover,
+.forge-btn-icon:hover,
+.gm-btn-icon-secondary:hover,
+.forge-btn-icon-secondary:hover,
+.gm-budget-action-btn:hover,
+.gm-grid-action-btn:hover {
+  background: #26262a !important;
+  background-color: #26262a !important;
+  border-color: #38383f !important;
+  color: #ffffff !important;
+}
+
+/* 4. Cores e tipografia dos textos dentro de botões */
+button span,
+.tc-pill-btn span,
+.gm-btn span,
+.btn span,
+button.primary span,
+button.secondary span,
+button[class*="bg-"] span,
+a[class*="bg-"] span {
+  color: inherit !important;
+  font-family: var(--font-body, "Inter", system-ui, sans-serif) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.005em !important;
+  text-shadow: none !important;
+}
+
+/* 5. Ícones dentro dos botões (outline sem preenchimento, com animação Astronaut translate(2px, -2px)) */
+button svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.tc-pill-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.tc-pill-btn__icon,
+.gm-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+a.tc-pill-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+button.primary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+button.secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]) {
+  fill: none !important;
+  stroke: currentColor !important;
+  color: inherit !important;
+  transition: transform 180ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+
+button:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.tc-pill-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.tc-pill-btn:hover .tc-pill-btn__icon,
+.gm-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+a.tc-pill-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]) {
+  fill: none !important;
+  stroke: currentColor !important;
+  transform: translate(2px, -2px) !important;
+}
+
+/* 6. Active state universal: translateY(1px) */
+button:active,
+.tc-pill-btn:active,
+.gm-btn:active,
+.btn:active {
+  transform: translateY(1px) !important;
+}
+
+/* 7. Focus Visible com contorno Saffron #f2c545 */
+button:focus-visible,
+.tc-pill-btn:focus-visible,
+.gm-btn:focus-visible,
+.btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--color-saffron, #f2c545) !important;
+}
+
+/* 8. Botão Disabled */
+button:disabled,
+button[disabled],
+.tc-pill-btn:disabled,
+.gm-btn:disabled {
+  background: #14100e !important;
+  border-color: #261b16 !important;
+  color: #63534b !important;
+  cursor: not-allowed !important;
+  opacity: 0.55 !important;
+  pointer-events: none !important;
+  transform: none !important;
   box-shadow: none !important;
 }
 
-button.secondary:hover,
-.btn-secondary:hover,
-.gm-btn-secondary:hover {
-  background: rgba(255, 255, 255, .03);
+button:disabled svg,
+.tc-pill-btn:disabled svg {
+  color: #63534b !important;
+  stroke: #63534b !important;
+  transform: none !important;
 }
 
-[data-theme="light"] button.secondary,
-[data-theme="light"] .btn-secondary,
-[data-theme="light"] .gm-btn-secondary {
-  color: var(--text);
+/* 9. Variações de Tamanho Padronizadas com Raio Pill 999px */
+.tc-pill-btn-lg,
+button.lg,
+.gm-btn-lg {
+  height: 48px !important;
+  padding: 0 26px !important;
+  font-size: 1rem !important;
+  border-radius: 999px !important;
 }
 
-.gm-btn-danger {
-  height: 48px;
-  padding: 0 26px;
-  border-radius: 4px;
-  background: rgba(229, 72, 77, .12);
-  color: var(--danger);
-  border: 1px solid rgba(229, 72, 77, .3);
-  font-weight: 600;
-  letter-spacing: .06em;
-  text-transform: uppercase;
+.tc-pill-btn-md,
+button.md,
+.gm-btn-md,
+button[class*="h-10"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
+button[class*="h-11"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
+a[class*="h-10"]:not([class*="w-"]):not(.rounded-full),
+a[class*="h-11"]:not([class*="w-"]):not(.rounded-full) {
+  height: 42px !important;
+  padding: 0 22px !important;
+  font-size: 0.9rem !important;
+  border-radius: 999px !important;
 }
 
-.gm-btn-danger:hover {
-  background: rgba(229, 72, 77, .22);
+.tc-pill-btn-sm,
+button.sm,
+.gm-btn-sm,
+button[class*="h-8"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
+button[class*="h-9"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
+a[class*="h-8"]:not([class*="w-"]):not(.rounded-full),
+a[class*="h-9"]:not([class*="w-"]):not(.rounded-full) {
+  height: 34px !important;
+  padding: 0 16px !important;
+  font-size: 0.8rem !important;
+  border-radius: 999px !important;
+}
+
+/* Protecao Total para Botoes de Acao e Icones (Clientes, Orcamentos, etc) */
+.btn-action-edit,
+.btn-action-neutral,
+.btn-action-delete,
+.btn-whatsapp,
+.gm-budget-action-btn,
+.gm-grid-action-btn,
+.gm-btn-icon,
+.gm-btn-icon-square,
+.forge-btn-icon,
+.forge-btn-icon-square,
+button[class*="w-10"][class*="h-10"],
+button[class*="w-8"][class*="h-8"],
+button[class*="w-7"][class*="h-7"],
+button[class*="w-9"][class*="h-9"],
+button[class*="!p-0"],
+button.p-0 {
+  padding: 0 !important;
+  min-width: unset !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+.btn-action-edit svg,
+.btn-action-neutral svg,
+.btn-action-delete svg,
+.btn-whatsapp svg,
+.gm-budget-action-btn svg,
+.gm-grid-action-btn svg,
+button[class*="w-10"][class*="h-10"] svg,
+button[class*="w-8"][class*="h-8"] svg {
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* =========================================================
@@ -562,38 +818,99 @@ select.gm-select:focus,
 }
 
 /* =========================================================
-   2) Tipografia Forge Reduzida
+   2) Tipografia Forge Padronizada e Organizada
+   Escala Oficial: 
+   - Hero (32-44px): Relógio e grandes métricas
+   - H1 (22-28px): Títulos de páginas e visualizações
+   - H2 (18-22px): Seções principais e painéis
+   - H3 (16-18px): Cards, containers e modais
+   - H4 (15px): Agrupamentos e subcabeçalhos
+   - Body (14-15px): Texto corrido, parágrafos e células
+   - Sm (13px): Indicadores, cápsulas e subtextos (line-height: 17px)
+   - Labels (12px): Rótulos de campos e cabeçalhos de tabela
+   - Micro (11px): Kickers de seções e tags técnicas
 ========================================================= */
-/* H1: 54px → 48px */
-h1.gm-h1, .gm-h1 {
+/* Hero / Grandes Contadores */
+.gm-hero-text, .gm-stat-hero {
   font-family: var(--font-display);
-  font-size: 42px;
-  font-weight: 800;
-  letter-spacing: -1.5px;
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
   line-height: 1.1;
+  color: #FFFFFF !important;
 }
 
-/* H2: 42px → 34px */
-h2.gm-h2, .gm-h2 {
+/* H1: Títulos de Páginas */
+h1.gm-h1, .gm-h1, .gm-page-title {
   font-family: var(--font-display);
-  font-size: 30px;
-  font-weight: 700;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #FFFFFF !important;
 }
 
-/* Títulos dos Cards: 34px → 28px */
+/* H2: Títulos de Seção e Painéis */
+h2.gm-h2, .gm-h2, .gm-section-title-lg {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  color: #FFFFFF !important;
+}
+
+/* H3: Títulos dos Cards e Modais */
 h3.gm-h3, .gm-h3,
 .metric-title,
-.card-title-lg {
-  font-size: 24px;
-  font-weight: 700;
+.card-title-lg,
+.gm-card-title h3,
+.gm-modal-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  color: #FFFFFF !important;
 }
 
-/* Texto: 15px */
-p.gm-body, .gm-body {
+/* H4: Subcabeçalhos de Agrupamento */
+h4.gm-h4, .gm-h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #F8FAFC !important;
+}
+
+/* Texto Principal de Leitura */
+p.gm-body, .gm-body, .gm-text-body {
   font-size: 14px;
   line-height: 1.6;
-  opacity: .75;
-  color: var(--text-secondary);
+  opacity: 1;
+  color: #F2F2F3 !important;
+}
+
+/* Textos Secundários e de Apoio */
+.gm-subtext, .gm-caption, .gm-text-secondary {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #CBD5E1 !important;
+}
+
+/* Indicadores e Cápsulas de Métricas (13px padrão com altura 17px) */
+.gm-metric-capsule,
+.gm-status-capsule span {
+  font-size: 13px !important;
+  line-height: 17px !important;
+  font-weight: 800 !important;
+}
+
+/* Rótulos de Formulários */
+label.gm-label, .gm-label {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: #F8FAFC !important;
 }
 
 a {
@@ -730,8 +1047,6 @@ nav.gm-top-nav {
 ========================================================= */
 .sidebar,
 .gm-sidebar {
-  width: 250px;
-  background: var(--surface);
   border-right: 1px solid var(--border);
 }
 
@@ -1639,6 +1954,85 @@ textarea,
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Botão Flutuante de Salvar & WhatsApp - Ícones Visíveis e Sem Padding que Esmague */
+.gm-floating-save-btn,
+button.gm-floating-save-btn {
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  background: var(--gm-primary, #FE540B) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 8px 25px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.45) !important;
+}
+
+.gm-floating-save-btn:hover,
+button.gm-floating-save-btn:hover {
+  background-color: var(--gm-primary, #FE540B) !important;
+  background: var(--gm-primary, #FE540B) !important;
+  filter: brightness(1.15) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 12px 32px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.65) !important;
+  transform: none !important;
+}
+
+.gm-floating-save-btn svg,
+button.gm-floating-save-btn svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  fill: none !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  flex-shrink: 0 !important;
+}
+
+.gm-floating-whatsapp-btn,
+button.gm-floating-whatsapp-btn {
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  background-color: #25D366 !important;
+  background: #25D366 !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 8px 28px rgba(37, 211, 102, 0.45) !important;
+}
+
+.gm-floating-whatsapp-btn:hover,
+button.gm-floating-whatsapp-btn:hover {
+  background-color: #20ba5a !important;
+  background: #20ba5a !important;
+  filter: brightness(1.08) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 12px 36px rgba(37, 211, 102, 0.65) !important;
+  transform: none !important;
+}
+
+.gm-floating-whatsapp-btn svg,
+button.gm-floating-whatsapp-btn svg {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: none !important;
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  flex-shrink: 0 !important;
 }
 
 

@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import Select from "../components/ui/Select";
 import { Page } from "../components/ui/Page";
 import { Card } from "../components/ui/Card";
-import { BorderBeam } from "../components/ui/BorderBeam";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { ScaleSlider } from "../components/ScaleSlider";
 import { ColorSettingsManager } from "../components/ColorSettingsManager";
@@ -67,8 +66,13 @@ import {
   Layers,
   Zap,
   Info,
+  Crown,
+  QrCode,
 } from "lucide-react";
+import SmartQrCodeGenerator from "../components/settings/SmartQrCodeGenerator";
+import PixQrDownloadFormats from "../components/settings/PixQrDownloadFormats";
 import SecurityPinSettings from "../components/ui/SecurityPinSettings";
+import DatabasePermissionsCard from "../components/settings/DatabasePermissionsCard";
 import { BackgroundEffectsGallery } from "../components/settings/BackgroundEffectsGallery";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -290,6 +294,7 @@ export default function Configuracoes() {
     sounds: false,
     tutorial: false,
     security: false,
+    qrcode: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -305,6 +310,7 @@ export default function Configuracoes() {
         sounds: false,
         tutorial: false,
         security: false,
+        qrcode: false,
       };
       next[section] = isOpen;
       return next;
@@ -1664,18 +1670,18 @@ export default function Configuracoes() {
           </AnimatePresence>
           <button
             type="button"
-            className="gm-btn w-auto justify-center h-12 px-6 text-sm rounded-xl disabled:opacity-50 transition-all font-extrabold active:scale-95 shadow-[0_4px_14px_rgba(255,105,0,0.25)] flex items-center gap-2"
+            className="h-10 px-5 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs uppercase tracking-wider font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
             onClick={handleSave}
             disabled={saving}
           >
             {saving ? (
               <>
-                <Loader2 size={16} className="animate-spin text-white" />
+                <Loader2 size={16} className="animate-spin text-[#0B0B0C]" />
                 <span>Salvando...</span>
               </>
             ) : (
               <>
-                <Save size={16} className="text-white" />
+                <Save size={16} className="text-[#0B0B0C]" />
                 <span>Salvar</span>
               </>
             )}
@@ -1692,8 +1698,7 @@ export default function Configuracoes() {
             <div className="w-full flex flex-col gap-6">
               {/* SUBDIVISÃO SUPERIOR: Menu de Cápsulas de Expansão do Painel de Configurações */}
               <SectionDivider label="Personalização do app" />
-              <div className="relative rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden flex flex-col gap-3 p-4 sm:p-5 shadow-none">
-                <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+              <div className="relative rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col gap-3 p-4 sm:p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_0_rgba(0,0,0,0.25)]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 px-1 relative z-10">
                   <span className="text-xs font-black text-[var(--gm-primary)] uppercase tracking-wider flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4 text-[var(--gm-primary)]" />
@@ -1910,6 +1915,29 @@ export default function Configuracoes() {
                           <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
                         )}
                         <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.security ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* 10. Gerador de QR Code Inteligente */}
+                  {(!hasActiveSection || openSections.qrcode) && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('qrcode')}
+                      className={getSectionBtnClass(openSections.qrcode)}
+                    >
+                      {openSections.qrcode && (
+                        <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--gm-primary)] rounded-full shadow-[0_0_8px_var(--gm-primary)]" />
+                      )}
+                      <span className="flex items-center gap-3">
+                        <QrCode className={"w-4 h-4 transition-transform duration-200 " + (openSections.qrcode ? "text-[var(--gm-primary)] scale-110" : "text-[var(--gm-primary)] opacity-85 group-hover:scale-110")} />
+                        GERADOR DE QR CODE
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {openSections.qrcode && (
+                          <span className="text-[10px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-full border border-[var(--gm-primary)]/20 uppercase tracking-wide font-bold animate-pulse">RECOLHER</span>
+                        )}
+                        <ChevronDown className={"w-4 h-4 transition-transform duration-300 " + (openSections.qrcode ? "text-[var(--gm-primary)] rotate-180" : "text-slate-400 group-hover:text-[var(--gm-primary)]")} />
                       </div>
                     </button>
                   )}
@@ -2618,33 +2646,18 @@ export default function Configuracoes() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                      <div className="rounded-xl border border-white/10 fora p-5 flex flex-col items-center justify-between shadow-none">
+                      <div className="rounded-xl border border-white/10 fora p-5 flex flex-col items-center justify-center shadow-none">
                         <div className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-3 self-start">
                           QR Code Pix Universal
                         </div>
                         {pixQrPreview ? (
-                          <div className="bg-white rounded-lg p-4 shadow-sm my-2">
+                          <div className="bg-white rounded-xl p-4 shadow-sm my-auto flex items-center justify-center">
                             <img src={pixQrPreview} alt="QR Pix (Preview)" className="w-[180px] h-auto" />
                           </div>
                         ) : (
                           <div className="text-xs text-slate-500 text-center py-12">
                             Informe uma chave Pix válida acima para gerar o QR Code.
                           </div>
-                        )}
-
-                        {pixQrPreview && (
-                          <button
-                            type="button"
-                            className="gm-btn-soft w-full mt-3 justify-center py-2 text-xs font-bold"
-                            onClick={() => {
-                              const a = document.createElement("a");
-                              a.href = pixQrPreview;
-                              a.download = "pix_qr_configuracoes.png";
-                              a.click();
-                            }}
-                          >
-                            <Download size={16} /> Baixar Imagem QR
-                          </button>
                         )}
                       </div>
 
@@ -2684,6 +2697,15 @@ export default function Configuracoes() {
                         )}
                       </div>
                     </div>
+
+                    {/* OPÇÕES DE BAIXAR QR CODE PIX EM 5 FORMATOS (IGUAL AO GERADOR DE QR-CODE) */}
+                    {pixPayloadPreview && (
+                      <PixQrDownloadFormats
+                        pixPayload={pixPayloadPreview}
+                        pixKey={pixKey}
+                        companyName={companyName}
+                      />
+                    )}
                   </div>
                 </div>
               )}
@@ -2761,10 +2783,8 @@ export default function Configuracoes() {
               {/* SEÇÃO 6: NOTIFICAÇÕES PUSH */}
               {openSections.push && (
                 <div
-                  className="relative rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 space-y-6 sm:space-y-7 w-full pb-10 border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden animate-in fade-in duration-300 shadow-none"
+                  className="relative rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 space-y-6 sm:space-y-7 w-full pb-10 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden animate-in fade-in duration-300 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_0_rgba(0,0,0,0.25)]"
                 >
-                  <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
-
                   {/* Barra de Cabeçalho Fixa */}
                   <div
                     className="sticky -top-4 sm:-top-6 md:-top-8 z-20 py-3.5 sm:py-4 flex items-center justify-between mb-2 rounded-t-xl px-3 sm:px-4 border-b border-white/10 bg-black/40 backdrop-blur-md"
@@ -2782,9 +2802,8 @@ export default function Configuracoes() {
 
                   {/* 1. HERO CARD: STATUS PRINCIPAL DO DISPOSITIVO (HORIZONTALMENTE EXPANDIDO) */}
                   <div
-                    className="relative w-full p-6 sm:p-7 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden text-center flex flex-col items-center gap-3.5 shadow-none"
+                    className="relative w-full p-6 sm:p-7 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden text-center flex flex-col items-center gap-3.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_0_rgba(0,0,0,0.25)]"
                   >
-                    <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
                     <div
                       className={"relative z-10 w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-300 shadow-md " + (pushActive && pushPermission === "granted" ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400" : "bg-amber-500/15 border-amber-500/40 text-amber-400")}
                     >
@@ -2825,9 +2844,8 @@ export default function Configuracoes() {
                   <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Cápsula 1: Notificações Push */}
                     <div
-                      className="relative p-5 sm:p-5.5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden hover:border-white/25 transition-all flex items-center justify-between gap-4"
+                      className="relative p-5 sm:p-5.5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden hover:border-white/25 transition-all flex items-center justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]"
                     >
-                      <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
                       <div className="flex items-center gap-3.5 min-w-0 relative z-10">
                         <div className="w-11 h-11 rounded-xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 text-[var(--gm-primary)] flex items-center justify-center shrink-0 shadow-sm">
                           <Bell size={20} />
@@ -2870,9 +2888,8 @@ export default function Configuracoes() {
 
                     {/* Cápsula 2: Sons de Alerta */}
                     <div
-                      className="relative p-5 sm:p-5.5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden hover:border-white/25 transition-all flex items-center justify-between gap-4"
+                      className="relative p-5 sm:p-5.5 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden hover:border-white/25 transition-all flex items-center justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]"
                     >
-                      <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
                       <div className="flex items-center gap-3.5 min-w-0 relative z-10">
                         <div className="w-11 h-11 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0 shadow-sm">
                           <Volume2 size={20} />
@@ -2904,9 +2921,8 @@ export default function Configuracoes() {
 
                   {/* 3. CARD DESTAQUE: CHECK-IN DE NOTIFICAÇÕES NOS 4 ESTADOS (HORIZONTALMENTE EXPANDIDO) */}
                   <div
-                    className="relative w-full p-5 sm:p-7 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-5 shadow-none"
+                    className="relative w-full p-5 sm:p-7 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden space-y-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_0_rgba(0,0,0,0.25)]"
                   >
-                    <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/10 pb-4 relative z-10">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] shrink-0 shadow-sm">
@@ -2930,9 +2946,8 @@ export default function Configuracoes() {
                     {/* Grade das 4 Cápsulas dos Estados (Expandida em 4 colunas em telas médias/grandes) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-left w-full relative z-10">
                       <div
-                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-none"
+                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
                       >
-                        <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
                         <div className="flex items-center gap-1.5 relative z-10">
                           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                           <span className="text-xs font-black text-white uppercase">1. Aberto</span>
@@ -2942,9 +2957,8 @@ export default function Configuracoes() {
                       </div>
 
                       <div
-                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-none"
+                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
                       >
-                        <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
                         <div className="flex items-center gap-1.5 relative z-10">
                           <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                           <span className="text-xs font-black text-white uppercase">2. Minimizado</span>
@@ -2954,9 +2968,8 @@ export default function Configuracoes() {
                       </div>
 
                       <div
-                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-none"
+                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
                       >
-                        <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
                         <div className="flex items-center gap-1.5 relative z-10">
                           <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
                           <span className="text-xs font-black text-white uppercase">3. 2º Plano</span>
@@ -2966,9 +2979,8 @@ export default function Configuracoes() {
                       </div>
 
                       <div
-                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-none"
+                        className="relative p-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden space-y-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
                       >
-                        <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
                         <div className="flex items-center gap-1.5 relative z-10">
                           <span className="w-2.5 h-2.5 rounded-full bg-purple-400" />
                           <span className="text-xs font-black text-white uppercase">4. Fechado</span>
@@ -2982,9 +2994,8 @@ export default function Configuracoes() {
                     <button
                       type="button"
                       onClick={() => setShowCheckinModal(true)}
-                      className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden w-full py-4 px-5 text-xs sm:text-sm font-black text-white flex items-center justify-between gap-3 transition-all cursor-pointer group active:scale-[0.99] hover:brightness-110 shadow-none"
+                      className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden w-full py-4 px-5 text-xs sm:text-sm font-black text-white flex items-center justify-between gap-3 transition-all cursor-pointer group active:scale-[0.99] hover:brightness-110 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]"
                     >
-                      <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
                       <div className="flex items-center gap-3 relative z-10">
                         <Radio size={17} className="text-[var(--gm-primary)] animate-pulse" />
                         <span className="font-black tracking-wide uppercase">
@@ -3050,9 +3061,8 @@ export default function Configuracoes() {
                     <button
                       type="button"
                       onClick={() => setShowPermissionModal(true)}
-                      className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden py-4 px-5 hover:border-white/30 text-xs sm:text-sm font-bold text-slate-200 hover:text-white flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-none active:scale-[0.98]"
+                      className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden py-4 px-5 hover:border-white/30 text-xs sm:text-sm font-bold text-slate-200 hover:text-white flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)] active:scale-[0.98]"
                     >
-                      <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
                       <Sparkles size={16} className="text-[var(--gm-primary)] relative z-10" />
                       <span className="relative z-10">Permissões Estilo Apple (Voz, Câmera e Áudio)</span>
                     </button>
@@ -3060,9 +3070,8 @@ export default function Configuracoes() {
 
                   {/* 5. DICA INFORMATIVA DE COMPATIBILIDADE IPHONE APPLE (iOS) (HORIZONTALMENTE EXPANDIDO) */}
                   <div
-                    className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden w-full p-4.5 flex items-start gap-3.5 text-left shadow-none"
+                    className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden w-full p-4.5 flex items-start gap-3.5 text-left shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]"
                   >
-                    <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
                     <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 text-white shadow-sm relative z-10">
                       <Apple size={18} />
                     </div>
@@ -3803,6 +3812,17 @@ export default function Configuracoes() {
                   </div>
 
                   <SecurityPinSettings />
+
+                  <div className="pt-2 border-t border-white/10">
+                    <DatabasePermissionsCard />
+                  </div>
+                </div>
+              )}
+
+              {/* SEÇÃO 10: GERADOR DE QR CODE */}
+              {openSections.qrcode && (
+                <div className="w-full animate-in fade-in duration-300 mt-5 sm:mt-6">
+                  <SmartQrCodeGenerator />
                 </div>
               )}
             </div>
@@ -3830,14 +3850,14 @@ export default function Configuracoes() {
         </AnimatePresence>
 
         <div className="relative group flex items-center">
-          <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
+          <span className="absolute right-[calc(100%+12px)] opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm z-30">
             {saving ? "Salvando..." : "Salvar Configurações"}
           </span>
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="gm-floating-save-btn w-12 h-12 md:w-14 md:h-14 hover:brightness-110 active:scale-95 text-white rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-105 disabled:opacity-50 border border-white/30 cursor-pointer outline-none shadow-2xl"
+            className="gm-floating-save-btn !p-0 w-12 h-12 md:w-14 md:h-14 hover:brightness-110 active:translate-y-0.5 text-white rounded-2xl flex items-center justify-center transition-all duration-200 disabled:opacity-50 border border-white/30 cursor-pointer outline-none shadow-2xl"
             style={{
               backgroundColor: "var(--gm-primary, #FE540B)",
               boxShadow: "0 8px 28px var(--gm-primary, rgba(255,105,0,0.5))"
@@ -3845,11 +3865,11 @@ export default function Configuracoes() {
             title="Salvar todas as alterações de configurações"
           >
             {saving ? (
-              <Loader2 className="w-6 h-6 animate-spin text-white" />
+              <Loader2 className="w-6 h-6 animate-spin text-white shrink-0" />
             ) : saveSuccess ? (
-              <CheckCircle2 className="w-6 h-6 text-white animate-bounce" />
+              <CheckCircle2 className="w-6 h-6 text-white animate-bounce shrink-0" />
             ) : (
-              <Save className="w-6 h-6 text-white group-hover:rotate-12 transition-transform duration-200" />
+              <Save className="w-6 h-6 text-white shrink-0" />
             )}
           </button>
         </div>

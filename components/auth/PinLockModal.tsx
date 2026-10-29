@@ -27,12 +27,12 @@ import {
 } from "../../lib/securityPin";
 import { playUiSound } from "../../lib/uiSound";
 import { readSettingsLocal } from "../../lib/settings";
-import { BorderBeam } from "../ui/BorderBeam";
 import {
   isEffectActiveFor,
   getEffectFor,
   getEffectStrength,
   readBgEffectConfig,
+  applyBgEffectToRoot,
   BgEffectConfig,
 } from "../../lib/backgroundEffects";
 
@@ -43,6 +43,8 @@ interface BackgroundInfo {
   pos_x: string;
   pos_y: string;
   scale: number;
+  blur: number;
+  opacity: number;
 }
 
 const DEFAULT_ARCH_WALLPAPER =
@@ -85,6 +87,12 @@ function resolveAppBackground(): BackgroundInfo {
         scale: isMobile
           ? Number(s?.mobile_app_background_scale ?? s?.app_background_scale ?? 1.15)
           : Number(s?.app_background_scale ?? 1),
+        blur: isMobile
+          ? Number(s?.mobile_app_background_blur ?? s?.app_background_blur ?? 0)
+          : Number(s?.app_background_blur ?? 0),
+        opacity: isMobile
+          ? Number(s?.mobile_app_background_opacity ?? s?.app_background_opacity ?? 1)
+          : Number(s?.app_background_opacity ?? 1),
       };
     }
   } catch {}
@@ -119,6 +127,12 @@ function resolveAppBackground(): BackgroundInfo {
             scale: isMobile
               ? Number(getComputedStyle(root).getPropertyValue("--gm-mobile-bg-scale")?.trim() || 1.15)
               : 1,
+            blur: isMobile
+              ? parseFloat(getComputedStyle(root).getPropertyValue("--gm-mobile-bg-blur") || "0") || 0
+              : parseFloat(getComputedStyle(root).getPropertyValue("--gm-app-bg-blur") || "0") || 0,
+            opacity: isMobile
+              ? parseFloat(getComputedStyle(root).getPropertyValue("--gm-mobile-bg-opacity") || "1") || 1
+              : parseFloat(getComputedStyle(root).getPropertyValue("--gm-app-bg-opacity") || "1") || 1,
           };
         }
       }
@@ -132,6 +146,8 @@ function resolveAppBackground(): BackgroundInfo {
     pos_x: "50%",
     pos_y: "50%",
     scale: isMobile ? 1.15 : 1,
+    blur: 0,
+    opacity: 1,
   };
 }
 
@@ -185,15 +201,23 @@ export default function PinLockModal({
 
   useEffect(() => {
     setBgInfo(resolveAppBackground());
-    setBgEffect(readBgEffectConfig());
+    const eff = readBgEffectConfig();
+    setBgEffect(eff);
+    applyBgEffectToRoot(eff);
 
     const handleUpdate = () => {
       setBgInfo(resolveAppBackground());
     };
 
     const handleBgEffectUpdate = (e: any) => {
-      if (e?.detail) setBgEffect(e.detail);
-      else setBgEffect(readBgEffectConfig());
+      if (e?.detail) {
+        setBgEffect(e.detail);
+        applyBgEffectToRoot(e.detail);
+      } else {
+        const nextEff = readBgEffectConfig();
+        setBgEffect(nextEff);
+        applyBgEffectToRoot(nextEff);
+      }
     };
 
     window.addEventListener("storage", handleUpdate);
@@ -207,6 +231,20 @@ export default function PinLockModal({
       window.removeEventListener("gm:theme_synced", handleUpdate);
       window.removeEventListener("gm-bg-effect-changed", handleBgEffectUpdate);
     };
+  }, [open]);
+
+  // Listener global de mouse para efeito parallax interativo fluido na tela de bloqueio
+  useEffect(() => {
+    if (!open) return;
+    const onGlobalPointerMove = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
+      const nx = (e.clientX / window.innerWidth) * 2 - 1;
+      const ny = (e.clientY / window.innerHeight) * 2 - 1;
+      setLockMouse({ x: nx * 14, y: -ny * 10 });
+    };
+
+    window.addEventListener("pointermove", onGlobalPointerMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onGlobalPointerMove);
   }, [open]);
 
   // Sincroniza modo recebido por props
@@ -724,12 +762,12 @@ export default function PinLockModal({
       >
         {/* CAMADA AURORA LUMINESCENTE (QUANDO EFEITO AURORA ATIVO NA TELA DE BLOQUEIO) */}
         {isLockEffectActive && lockEffectType === "aurora" && (
-          <div className="gm-bg-aurora-layer" />
+          <div className="gm-bg-aurora-layer" style={{ zIndex: 1 }} />
         )}
 
         {/* CAMADA PRISMA (QUANDO EFEITO PRISMA ATIVO NA TELA DE BLOQUEIO) */}
         {isLockEffectActive && lockEffectType === "prism" && (
-          <div className="gm-bg-prism-layer" />
+          <div className="gm-bg-prism-layer" style={{ zIndex: 1 }} />
         )}
 
         <motion.div
@@ -749,17 +787,19 @@ export default function PinLockModal({
               loop
               muted
               playsInline
-              className="w-full h-full object-cover"
+              className="gm-pin-bg-video w-full h-full object-cover will-change-transform"
               style={{
                 width: "100%",
                 height: "100%",
                 objectFit: (bgInfo.fit as any) || "cover",
                 objectPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
+                opacity: bgInfo.opacity ?? 1,
+                filter: `blur(${bgInfo.blur || 0}px) saturate(1.08) contrast(1.05)`,
               }}
             />
           ) : (
             <div
-              className="w-full h-full transition-transform duration-1000"
+              className="gm-pin-bg-image w-full h-full will-change-transform"
               style={{
                 width: "100%",
                 height: "100%",
@@ -767,16 +807,18 @@ export default function PinLockModal({
                 backgroundSize: bgInfo.fit || "cover",
                 backgroundPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
                 backgroundRepeat: "no-repeat",
+                opacity: bgInfo.opacity ?? 1,
+                filter: `blur(${bgInfo.blur || 0}px) saturate(1.08) contrast(1.05)`,
               }}
             />
           )}
         </motion.div>
 
-        {/* OVERLAY ESCURECEDOR SUAVE E TRANSPARENTE (COM BLUR LEVE, MANTENDO A IMAGEM VISÍVEL E NÍTIDA) */}
-        <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px] pointer-events-none" />
+        {/* OVERLAY TRANSLÚCIDO APPLE PARA TELA DE BLOQUEIO */}
+        <div className="absolute inset-0 bg-black/35 pointer-events-none" />
 
         {/* GRADIENTE VERTICAL DE PROFUNDIDADE PARA O FORMATO ALONGADO DO SMARTPHONE */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50 pointer-events-none" />
       </div>
 
       {/* FLASH SUAVE DE SEGURANÇA NO TRAVAMENTO */}
@@ -827,18 +869,15 @@ export default function PinLockModal({
           marginTop: "auto",
           marginBottom: "auto",
           alignSelf: "center",
-          justifySelf: "center",
-          boxSizing: "border-box",
-          background: "rgba(18, 18, 24, 0.72)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          background: "#141418",
+          borderRadius: "16px",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          boxShadow:
+            "inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 24px 64px -10px rgba(0, 0, 0, 0.85)",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
-        {/* ========================================================================= */}
-        {/* RASTRO SUTIL DE LUZ PERCORRENDO TODA A BORDA DA CAIXA (APPLE GLASS STYLE) */}
-        {/* ========================================================================= */}
-        <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
-
         {/* BRILHO AMBIENTE PREDEFINIDO NO APP DISCRETO */}
         <div className="absolute -top-16 -right-16 w-36 h-36 bg-[var(--gm-primary,#FE540B)]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-[var(--gm-primary,#FE540B)]/10 rounded-full blur-3xl pointer-events-none" />

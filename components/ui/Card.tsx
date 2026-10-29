@@ -1,5 +1,6 @@
 import React from "react";
 import { BorderBeam } from "./BorderBeam";
+import { cn } from "../../lib/utils";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
@@ -21,37 +22,37 @@ export const Card = ({
   style,
   onClick,
   id,
-  borderBeam = true,
+  borderBeam = false,
   ...rest
 }: CardProps) => {
   return (
     <div
       id={id}
-      className={`relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden transition-all ${
-        onClick ? "cursor-pointer active:scale-[0.985] transition-transform duration-150" : ""
-      } ${className}`}
+      className={cn(
+        "forge-spec relative overflow-hidden transition-all",
+        onClick && "cursor-pointer active:scale-[0.99] transition-transform duration-150",
+        className
+      )}
       onClick={onClick}
-      style={{
-        width: "100%",
-        minWidth: 0,
-        ...style
-      }}
+      style={style}
       {...rest}
     >
-      {/* Feixe de Luz BorderBeam nos containers */}
-      {borderBeam && <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />}
+      {/* Feixe de Luz BorderBeam se habilitado */}
+      {borderBeam && <BorderBeam duration={6} borderWidth={1.2} color="#f65a1a" />}
 
       {(title || right) && (
-        <div className="gm-card-header relative z-10">
-          <div className="gm-card-title">
+        <div className="forge-spec__bar">
+          <div className="forge-spec__title">
             {title ? <h3>{title}</h3> : null}
           </div>
-          {right ? <div>{right}</div> : null}
+          {right ? <div className="ml-auto">{right}</div> : null}
         </div>
       )}
-      <div className="relative z-10 w-full">
+      <div className="relative z-10 w-full p-4 sm:p-5">
         {children}
       </div>
     </div>
   );
 };
+
+export default Card;

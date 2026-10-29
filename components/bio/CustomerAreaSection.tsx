@@ -418,10 +418,10 @@ export function CustomerAreaSection({
   };
 
   return (
-    <div id="customer-section" className="w-full max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-8 sm:gap-12 shrink-0 pb-28 sm:pb-36">
+    <div id="customer-section" className="w-full max-w-5xl mx-auto px-6 sm:px-10 md:px-16 lg:px-24 flex flex-col items-center gap-8 sm:gap-12 shrink-0 pb-28 sm:pb-36">
       
       {/* 1. Header: Title & Description (Idêntico ao Fale com a Gente) */}
-      <div className="w-full flex flex-col items-center text-center space-y-3 max-w-3xl mx-auto">
+      <div className="w-full flex flex-col items-center text-center space-y-3 max-w-2xl mx-auto px-2">
         <h2 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-sans font-black tracking-tight leading-tight select-none ${isWebsiteLayout || theme === 'dark' || theme === 'glass' ? 'text-white' : 'text-slate-900'}`}>
           {currentCustomer ? `Área do Cliente` : authTab === "login" ? "Área do Cliente" : "Criar sua Conta de Cliente"}
         </h2>
@@ -435,11 +435,11 @@ export function CustomerAreaSection({
         </p>
       </div>
 
-      {/* 2. Main Grid: Form/Dashboard + Address/Map (Idêntico ao Fale com a Gente) */}
-      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* 2. Container Vertical: Acesse sua Conta e Nossa Localização abaixo com respiro das laterais */}
+      <div className="w-full max-w-[660px] mx-auto flex flex-col items-center gap-8 sm:gap-10">
         
-        {/* Main Content Container (Col 1-7 or 1-12) */}
-        <div className={`w-full ${companyAddress ? "lg:col-span-7" : "lg:col-span-8 lg:col-start-3"} transition-all duration-300 ${
+        {/* Main Content Container: Acesse sua Conta / Criar Conta / Dashboard */}
+        <div className={`w-full transition-all duration-300 ${
           isWebsiteLayout || theme === 'glass' || theme === 'dark'
             ? 'apple-glass-card p-6 sm:p-8 md:p-10 rounded-[2.5rem]'
             : 'p-6 sm:p-8 md:p-10 rounded-[2.5rem] border border-zinc-200/80 bg-white/70 backdrop-blur-xl shadow-lg'
@@ -1301,8 +1301,8 @@ export function CustomerAreaSection({
           )}
         </div>
 
-        {/* Side Card: Map, WhatsApp & Security (Col 8-12 ou Col 3-10 se não houver mapa/endereço) */}
-        <div id="customer-location-card" className={`w-full ${companyAddress ? "lg:col-span-5" : "lg:col-span-8 lg:col-start-3"} flex flex-col gap-5`}>
+        {/* Card: Nossa Localização & Atendimento (Posicionado abaixo de Acesse sua conta) */}
+        <div id="customer-location-card" className="w-full flex flex-col gap-5">
           <div className={`p-6 sm:p-8 rounded-[2.5rem] border transition-all duration-300 ${
             isWebsiteLayout || theme === 'glass' || theme === 'dark'
               ? 'apple-glass-card border-white/10'
@@ -1330,7 +1330,7 @@ export function CustomerAreaSection({
             )}
 
             {companyAddress ? (
-              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 shadow-md relative z-0 mb-4 bg-zinc-900 group/map">
+              <div className="w-full aspect-[16/9] sm:aspect-[2.2/1] min-h-[220px] max-h-[380px] rounded-2xl overflow-hidden border border-white/10 shadow-md relative z-0 mb-4 bg-zinc-900 group/map">
                 <iframe
                   title="Localização Comercial"
                   src={`https://maps.google.com/maps?q=${encodeURIComponent(companyAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}

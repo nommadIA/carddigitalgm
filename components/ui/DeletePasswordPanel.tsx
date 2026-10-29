@@ -94,7 +94,7 @@ export default function DeletePasswordPanel() {
             
             <button 
                 onClick={() => setModalOpen(true)}
-                className="gm-btn gm-btn-outline w-full rounded-xl"
+                className="w-full h-11 rounded-md border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
             >
                 Configurar / Alterar Senha
             </button>
@@ -103,11 +103,11 @@ export default function DeletePasswordPanel() {
         {/* Card 2: Empty Trash */}
         <div className="gm-card p-6 rounded-lg relative overflow-hidden">
              <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                <AlertTriangle size={100} className="text-[var(--gm-primary)]" />
+                <AlertTriangle size={100} className="text-[#F65A1A]" />
             </div>
 
             <div className="flex items-center gap-3 mb-4 relative z-10">
-                <div className="p-2 bg-[var(--gm-primary)]/10 rounded-lg text-[var(--gm-primary)] border border-[var(--gm-primary)]/20 shadow-[0_0_10px_var(--gm-primary-10)]">
+                <div className="p-2 bg-[#F65A1A]/10 rounded-lg text-[#F65A1A] border border-[#F65A1A]/20">
                     <Trash2 size={20} />
                 </div>
                 <div>
@@ -127,18 +127,18 @@ export default function DeletePasswordPanel() {
                 <button
                     onClick={() => setShowTrashConfirm(true)}
                     disabled={loadingTrash || !trashPass}
-                    className="gm-btn w-full rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.3)] disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B] disabled:cursor-not-allowed cursor-pointer"
                 >
-                    {loadingTrash ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
-                    {loadingTrash ? "Processando..." : "Esvaziar Tudo"}
+                    {loadingTrash ? <Loader2 className="animate-spin text-[#0B0B0C]" size={16} /> : <Trash2 size={16} className="text-[#0B0B0C]" />}
+                    <span>{loadingTrash ? "Processando..." : "Esvaziar Tudo"}</span>
                 </button>
             </div>
         </div>
 
         {/* Modal: Set Password */}
         {modalOpen && (
-            <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 animate-fade-in" onClick={() => !loadingPass && setModalOpen(false)}>
-                <div className="gm-card w-full max-w-md rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-xl flex items-center justify-center p-4 animate-fade-in" onClick={() => !loadingPass && setModalOpen(false)}>
+                <div className="gm-modal gm-card w-full max-w-md rounded-[24px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
                     <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
                         <h3 className="text-xl font-bold text-white">Definir Senha de Exclusão</h3>
                         <button onClick={() => !loadingPass && setModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
@@ -198,8 +198,8 @@ export default function DeletePasswordPanel() {
 
         {/* Modal: Confirm Empty Trash */}
         {showTrashConfirm && (
-            <div className="fixed inset-0 z-[1001] bg-black/80 flex items-center justify-center p-4 animate-fade-in" onClick={() => !loadingTrash && setShowTrashConfirm(false)}>
-                <div className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="fixed inset-0 z-[1001] bg-black/50 backdrop-blur-xl flex items-center justify-center p-4 animate-fade-in" onClick={() => !loadingTrash && setShowTrashConfirm(false)}>
+                <div className="gm-modal gm-card w-full max-w-sm rounded-[24px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
                     <div className="p-8 text-center">
                         <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
                             <Trash2 size={32} className="text-[var(--gm-primary)]" />
@@ -212,16 +212,16 @@ export default function DeletePasswordPanel() {
                             <button
                                 onClick={() => setShowTrashConfirm(false)}
                                 disabled={loadingTrash}
-                                className="gm-btn gm-btn-outline flex-1 rounded-xl h-12"
+                                className="flex-1 h-11 rounded-md border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleEmptyTrash}
                                 disabled={loadingTrash}
-                                className="gm-btn flex-1 rounded-xl h-12 shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
+                                className="flex-1 h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.3)] cursor-pointer disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B]"
                             >
-                                {loadingTrash ? <Loader2 className="animate-spin" size={18} /> : "Esvaziar"}
+                                {loadingTrash ? <Loader2 className="animate-spin text-[#0B0B0C]" size={16} /> : "Esvaziar"}
                             </button>
                         </div>
                     </div>

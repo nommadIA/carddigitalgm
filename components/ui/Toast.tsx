@@ -17,9 +17,23 @@ export function ToastHost() {
   }, []);
 
   return (
-    <div className="toast-host" aria-live="polite" aria-relevant="additions removals">
+    <div 
+      className="toast-host" 
+      aria-live="polite" 
+      aria-relevant="additions removals"
+      style={{
+        background: "transparent",
+        border: "none",
+        boxShadow: "none",
+        backdropFilter: "none",
+        WebkitBackdropFilter: "none",
+        padding: 0,
+        margin: 0,
+        pointerEvents: "none",
+      }}
+    >
       {items.map((t) => (
-        <div key={t.id} className="toast">
+        <div key={t.id} className="toast pointer-events-auto">
           <div className="toast-left">
             {iconFor(t.type)}
             <div className="toast-text">

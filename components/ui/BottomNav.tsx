@@ -13,8 +13,10 @@ import {
   Settings,
   ChevronUp,
   GripHorizontal,
+  Crown,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
+import GoldCrownIcon from "./GoldCrownIcon";
 
 // Todos os ícones do menu da aplicação para o seletor horizontal
 const allNavItems = [
@@ -26,6 +28,7 @@ const allNavItems = [
   { to: "/notes", label: "Notas", icon: StickyNote },
   { to: "/financial", label: "Financeiro", icon: Wallet },
   { to: "/minha-bio", label: "Bio", icon: Smartphone },
+  { to: "/planos", label: "Planos", icon: Crown },
   { to: "/configuracoes", label: "Ajustes", icon: Settings },
 ];
 
@@ -41,6 +44,27 @@ export default function BottomNav() {
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const scrollLeftRef = useRef(0);
+
+  // Efeito elástico ao puxar para cima com retorno suave à origem e base 100% selada na borda
+  const stretchValue = useMotionValue(0);
+  const translateYValue = useMotionValue(0);
+
+  const springStretch = useSpring(stretchValue, { stiffness: 420, damping: 28 });
+  const springTranslateY = useSpring(translateYValue, { stiffness: 420, damping: 28 });
+
+  const heightAnim = useTransform(
+    springStretch,
+    (s) => `calc(76px + env(safe-area-inset-bottom, 0px) + ${s}px)`
+  );
+  const handleWidthAnim = useTransform(springStretch, [0, 60], [48, 64]);
+  const handleTopPaddingAnim = useTransform(springStretch, [0, 60], [6, 14]);
+
+  useEffect(() => {
+    if (expanded) {
+      stretchValue.set(0);
+      translateYValue.set(0);
+    }
+  }, [expanded, stretchValue, translateYValue]);
 
   useEffect(() => {
     setMounted(true);
@@ -107,37 +131,70 @@ export default function BottomNav() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 120, opacity: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 28 }}
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 160 }}
-            dragElastic={0.2}
-            onDragEnd={(_, info) => {
-              if (info.offset.y > 45 || info.velocity.y > 180) {
-                setExpanded(false);
+            onPan={(_, info) => {
+              if (info.offset.y < 0) {
+                // Puxar para cima: a base permanece 100% reta e fixa na borda (translateY = 0)
+                // e a altura expande elasticamente
+                translateYValue.set(0);
+                const pullUp = -info.offset.y;
+                const elastic = Math.min(65, pullUp * 0.38);
+                stretchValue.set(elastic);
+              } else {
+                // Puxar para baixo: altura normal, translada para baixo para colapsar
+                stretchValue.set(0);
+                translateYValue.set(info.offset.y);
               }
             }}
-            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav backdrop-blur-2xl border-t border-white/15 border-b-0 border-x-0 !rounded-t-[28px] !rounded-b-none pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] shadow-none select-none overflow-hidden"
+            onPanEnd={(_, info) => {
+              if (info.offset.y > 45 || info.velocity.y > 180) {
+                setExpanded(false);
+              } else {
+                stretchValue.set(0);
+                translateYValue.set(0);
+              }
+            }}
+            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav bg-[#131315] border-t border-[#26262A] border-b-0 border-x-0 !rounded-t-[14px] !rounded-b-none pb-[calc(env(safe-area-inset-bottom,0px)+8px)] shadow-none select-none overflow-hidden"
             style={{
+              y: springTranslateY,
+              height: heightAnim,
               zIndex: 800,
               "--gm-mobile-nav-height": "76px",
-              borderTopLeftRadius: "28px",
-              borderTopRightRadius: "28px",
+              borderTopLeftRadius: "14px",
+              borderTopRightRadius: "14px",
               borderBottomLeftRadius: "0px",
               borderBottomRightRadius: "0px",
-              backdropFilter: "blur(28px) saturate(180%)",
-              WebkitBackdropFilter: "blur(28px) saturate(180%)",
-              background: "rgba(10, 10, 14, 0.45)",
-            } as React.CSSProperties}
+              borderLeft: "none",
+              borderRight: "none",
+              borderBottom: "none",
+              background: "#131315",
+            } as unknown as React.CSSProperties}
           >
-            {/* BARRA SUPERIOR CENTRALIZADA (CLIQUE OU ARRASTE PARA OCULTAR) */}
+            {/* FUNDO SELADO (ZERO FRESTA NA BASE) */}
             <div
-              className="w-full flex justify-center py-1.5 cursor-pointer group active:opacity-80 transition-opacity"
+              className="gm-bottom-nav-skirt"
+              style={{
+                borderTopLeftRadius: "14px",
+                borderTopRightRadius: "14px",
+                borderBottomLeftRadius: "0px",
+                borderBottomRightRadius: "0px",
+                background: "#131315",
+              }}
+            />
+
+            {/* ALÇA SUPERIOR CENTRALIZADA (PUXAR P/ CIMA EXPANDE ALTURA / TOQUE OCULTA) */}
+            <motion.div
+              style={{ paddingTop: handleTopPaddingAnim }}
+              className="w-full flex justify-center pb-1.5 cursor-pointer group active:opacity-80 transition-opacity touch-none"
               onClick={() => setExpanded(false)}
               title="Toque ou arraste para baixo para ocultar o menu"
               role="button"
               tabIndex={0}
             >
-              <div className="w-12 h-1.5 rounded-full bg-white/20 group-hover:bg-white/40 active:scale-95 transition-all" />
-            </div>
+              <motion.div
+                style={{ width: handleWidthAnim }}
+                className="h-1.5 rounded-full bg-white/25 group-hover:bg-white/45 active:scale-95 transition-colors"
+              />
+            </motion.div>
 
             {/* CONTAINER DO SELETOR COM 5 ÍCONES VISÍVEIS POR PADRÃO */}
             <div className="relative w-full max-w-lg mx-auto">
@@ -151,6 +208,7 @@ export default function BottomNav() {
               >
                 {allNavItems.map((it) => {
                   const Icon = it.icon;
+                  const isPlanos = it.to === "/planos";
                   const isActive =
                     location.pathname === it.to ||
                     (it.to !== "/" && location.pathname.startsWith(it.to));
@@ -173,20 +231,26 @@ export default function BottomNav() {
                         const active = isActive || navActive;
                         return (
                           <>
-                            {/* Ícone na cor dinâmica do tema (var(--gm-menu-icon, var(--gm-primary))) */}
-                            <Icon
-                              size={22}
-                              style={{ color: "var(--gm-menu-icon, var(--gm-primary, #FE540B))" }}
-                              className={`transition-all duration-200 ${
-                                active
-                                  ? "scale-110 opacity-100 drop-shadow-sm"
-                                  : "opacity-75 group-hover:opacity-100 group-hover:scale-105"
-                              }`}
-                            />
-                            {/* Texto BRANCO centralizado */}
+                            {/* Ícone na cor dinâmica do tema ou Dourado com animação Gold se for Planos */}
+                            {isPlanos ? (
+                              <GoldCrownIcon size={22} className="my-0.5" />
+                            ) : (
+                              <Icon
+                                size={22}
+                                style={{ color: "var(--gm-menu-icon, var(--gm-primary, #FE540B))" }}
+                                className={`transition-all duration-200 ${
+                                  active
+                                    ? "scale-110 opacity-100 drop-shadow-sm"
+                                    : "opacity-75 group-hover:opacity-100 group-hover:scale-105"
+                                }`}
+                              />
+                            )}
+                            {/* Texto centralizado (Dourado sutil para Planos) */}
                             <span
                               className={`text-[10px] sm:text-[11px] tracking-tight mt-1 text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-full ${
-                                active
+                                isPlanos
+                                  ? "text-amber-300 font-bold"
+                                  : active
                                   ? "text-white font-black drop-shadow-xs"
                                   : "text-zinc-300 font-medium opacity-85 group-hover:opacity-100 group-hover:text-white"
                               }`}
@@ -216,12 +280,12 @@ export default function BottomNav() {
             <button
               type="button"
               onClick={() => setExpanded(true)}
-              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-zinc-950/75 dark:bg-zinc-950/75 backdrop-blur-2xl border border-white/15 shadow-xl text-white font-black text-xs uppercase tracking-wider hover:border-white/30 active:scale-95 transition-all cursor-pointer group"
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full barra fora text-white font-black text-xs uppercase tracking-wider hover:border-white/30 active:scale-95 transition-all cursor-pointer group shadow-none border border-white/15"
               aria-label="Expandir Menu"
               title="Expandir Menu (Gaveteiro)"
               style={{
-                backdropFilter: "blur(24px) saturate(180%)",
-                WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                backdropFilter: "blur(20px) saturate(180%)",
+                WebkitBackdropFilter: "blur(20px) saturate(180%)",
               }}
             >
               {/* Pontinhos em Laranja */}

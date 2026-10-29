@@ -244,10 +244,10 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xl animate-fade-in">
       <div 
         onClick={(e) => e.stopPropagation()} 
-        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto gm-modal gm-card barra fora border border-white/10 rounded-2xl custom-scrollbar flex flex-col"
+        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto gm-modal gm-card barra fora border border-white/10 rounded-2xl custom-scrollbar flex flex-col shadow-none"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-white/10 sticky top-0 bg-white/5 backdrop-blur-md z-10">
@@ -432,7 +432,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                         <div className="flex gap-3 pt-2">
                             <button
                                 onClick={onClose}
-                                className="flex-1 py-3 rounded-xl font-bold bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-all"
+                                className="flex-1 h-11 rounded-md font-bold text-xs uppercase tracking-wider bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-[#F2F2F3] transition-all cursor-pointer"
                             >
                                 Cancelar
                             </button>
@@ -440,10 +440,10 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                             <button
                                 onClick={onSave}
                                 disabled={saving}
-                                className="flex-1 py-3 rounded-xl font-bold bg-[var(--gm-primary)]/20 border border-[var(--gm-primary)]/50 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 h-11 rounded-md font-black text-xs uppercase tracking-wider bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] flex items-center justify-center gap-2 transition-all cursor-pointer disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B] disabled:cursor-not-allowed"
                             >
-                                {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                                {saving ? "Salvando..." : "Salvar"}
+                                {saving ? <Loader2 className="animate-spin text-[#0B0B0C]" size={18} /> : <Save size={18} className="text-[#0B0B0C]" />}
+                                <span>{saving ? "Salvando..." : "Salvar"}</span>
                             </button>
                         </div>
 

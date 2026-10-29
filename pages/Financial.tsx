@@ -22,15 +22,15 @@ import {
 } from "../lib/financeReports";
 
 const cardBase =
-  "fora rounded-2xl transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+  "relative rounded-xl border border-[#26262A] bg-[#131315] text-[#F2F2F3] shadow-sm overflow-hidden transition-all";
 
 const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
   const base =
-    "w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 group barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md cursor-pointer";
-  if (tone === "orange") return `${base} text-[var(--gm-primary)] hover:border-[var(--gm-primary)] hover:text-white hover:bg-[var(--gm-primary)]`;
-  if (tone === "green") return `${base} text-emerald-400 hover:border-emerald-500 hover:text-white hover:bg-emerald-500`;
-  if (tone === "red") return `${base} text-red-400 hover:border-red-500 hover:text-white hover:bg-red-500`;
-  return `${base} text-slate-400 hover:border-white/30 hover:text-white hover:bg-white/10`;
+    "w-10 h-10 flex items-center justify-center shrink-0 rounded-md transition-all duration-150 border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] cursor-pointer active:scale-95";
+  if (tone === "orange") return `${base} text-[#F65A1A] hover:border-[#F65A1A] hover:text-[#FF7A38]`;
+  if (tone === "green") return `${base} text-emerald-400 hover:border-emerald-500 hover:text-emerald-300`;
+  if (tone === "red") return `${base} text-red-400 hover:border-red-500 hover:text-red-300`;
+  return `${base} text-[#8B8B92] hover:border-[#F2F2F3]/40 hover:text-[#F2F2F3]`;
 };
 
 // Recharts
@@ -369,59 +369,59 @@ export default function Financial() {
       title="Relatórios Financeiros"
       actions={
         <div className="flex flex-col xl:flex-row gap-3 w-full items-stretch xl:items-center mt-4">
-          <div className="flex items-center fora rounded-2xl p-1.5 w-full xl:w-auto justify-between xl:justify-start h-[42px] border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md">
+          <div className="flex items-center rounded-md p-1 w-full xl:w-auto justify-between xl:justify-start h-[40px] border border-[#26262A] bg-[#131315]">
             <button 
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
-              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white flex items-center justify-center cursor-pointer"
+              className="p-1.5 hover:bg-[#1B1B1E] rounded-md transition-colors text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center cursor-pointer"
             >
               <ChevronLeft size={16} />
             </button>
-            <div className="px-3 flex items-center gap-2 font-bold text-sm min-w-[140px] justify-center text-white">
-              <Calendar size={14} className="text-[var(--gm-primary)]" />
+            <div className="px-3 flex items-center gap-2 font-bold text-xs uppercase tracking-wider min-w-[140px] justify-center text-[#F2F2F3]">
+              <Calendar size={14} className="text-[#F65A1A]" />
               <span className="capitalize">{selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
             </div>
             <button 
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
-              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/70 hover:text-white flex items-center justify-center cursor-pointer"
+              className="p-1.5 hover:bg-[#1B1B1E] rounded-md transition-colors text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center cursor-pointer"
             >
               <ChevronRight size={16} />
             </button>
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="ml-1 px-3 py-1 text-[10px] uppercase font-bold bg-white/10 hover:bg-[var(--gm-primary)] text-white hover:text-white rounded-lg transition-all h-[28px] flex items-center justify-center cursor-pointer shadow-none"
+              className="ml-1 px-2.5 py-1 text-[10px] uppercase font-black bg-[#1B1B1E] hover:bg-[#F65A1A] text-[#8B8B92] hover:text-[#0B0B0C] border border-[#26262A] rounded-md transition-all h-[26px] flex items-center justify-center cursor-pointer shadow-none"
             >
               Hoje
             </button>
           </div>
           
-          <div className="flex flex-row gap-2.5 w-full xl:w-auto justify-between xl:justify-start">
+          <div className="flex flex-row gap-2 w-full xl:w-auto justify-between xl:justify-start">
             <button
               onClick={() => handleShare(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }), transactions)}
-              className={listBtnClass("orange")}
+              className="forge-btn forge-btn--secondary !w-[38px] !h-[38px] !min-w-[38px] !p-0 !rounded-[4px] cursor-pointer"
               title="Compartilhar Relatório"
             >
-              <Share2 size={18} />
+              <Share2 size={15} />
             </button>
             <button 
               onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} 
-              className={listBtnClass("orange")} 
+              className="forge-btn forge-btn--secondary !w-[38px] !h-[38px] !min-w-[38px] !p-0 !rounded-[4px] cursor-pointer" 
               title="Gerar PDF"
             >
-              <FileText size={18} />
+              <FileText size={15} />
             </button>
             <button 
               onClick={handleSave} 
-              className={listBtnClass("orange")} 
+              className="forge-btn forge-btn--primary !w-[38px] !h-[38px] !min-w-[38px] !p-0 !rounded-[4px] cursor-pointer" 
               title="Fechar e Salvar Mês"
             >
-              <Save size={18} />
+              <Save size={15} />
             </button>
             <button 
               onClick={openHistory} 
-              className={listBtnClass("orange")} 
+              className="forge-btn forge-btn--secondary !w-[38px] !h-[38px] !min-w-[38px] !p-0 !rounded-[4px] cursor-pointer" 
               title="Histórico"
             >
-              <History size={18} />
+              <History size={15} />
             </button>
           </div>
         </div>
@@ -430,7 +430,7 @@ export default function Financial() {
       {loading ? (
         <div className="p-10 text-center opacity-60">Carregando dados financeiros...</div>
       ) : (
-        <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
+        <div className="w-full space-y-6 pb-6 sm:pb-10 mb-4">
           <div className="mb-2">
             <SectionDivider label="Resumo do mês" />
           </div>
@@ -511,11 +511,9 @@ export default function Financial() {
                       <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `R$${val}`} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "rgba(18, 18, 22, 0.85)",
-                          backdropFilter: "blur(20px) saturate(180%)",
-                          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                          border: "1px solid rgba(255, 255, 255, 0.12)",
-                          borderRadius: "12px",
+                          backgroundColor: "#141418",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                          borderRadius: "8px",
                           color: "#fff",
                           fontSize: 12,
                           boxShadow: "none",
@@ -550,11 +548,9 @@ export default function Financial() {
                       <YAxis stroke="#888" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `R$${val}`} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "rgba(18, 18, 22, 0.85)",
-                          backdropFilter: "blur(20px) saturate(180%)",
-                          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                          border: "1px solid rgba(255, 255, 255, 0.12)",
-                          borderRadius: "12px",
+                          backgroundColor: "#141418",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                          borderRadius: "8px",
                           color: "#fff",
                           fontSize: 12,
                           boxShadow: "none",

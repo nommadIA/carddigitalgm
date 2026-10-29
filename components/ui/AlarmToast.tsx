@@ -79,6 +79,7 @@ const AlarmToast = () => {
             type: "alarm",
             icon: userLogo,
             url: alarm.type === "EXPENSE" ? "/expenses" : alarm.type === "NOTE" ? "/notes" : "/budgets",
+            skipInAppToast: true,
           });
         } catch (e) {}
 
@@ -134,7 +135,19 @@ const AlarmToast = () => {
   const officialAppLogo = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
 
   return (
-    <div className="fixed inset-0 sm:inset-auto sm:bottom-20 sm:right-4 z-[9999] flex flex-col items-center justify-center sm:items-end p-4 sm:p-0 gap-3 pointer-events-none">
+    <div 
+      className="gm-alarm-host pointer-events-none fixed bottom-20 right-3 sm:bottom-6 sm:right-6 z-[99999] flex flex-col items-end gap-3"
+      style={{
+        background: "transparent",
+        border: "none",
+        boxShadow: "none",
+        backdropFilter: "none",
+        WebkitBackdropFilter: "none",
+        padding: 0,
+        margin: 0,
+        pointerEvents: "none",
+      }}
+    >
       {alarms.map((alarm) => {
         const descriptionText = getNotificationText(alarm);
 
@@ -142,20 +155,18 @@ const AlarmToast = () => {
           <div
             key={alarm.id}
             style={{
-              backdropFilter: "blur(28px) saturate(190%) contrast(105%)",
-              WebkitBackdropFilter: "blur(28px) saturate(190%) contrast(105%)",
-              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(20, 22, 28, 0.45) 40%, rgba(10, 12, 16, 0.65) 100%)",
+              background: "#121215",
+              borderRadius: "20px",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
             }}
-            className="pointer-events-auto w-[380px] max-w-[94vw] rounded-[24px] border border-white/20 shadow-[0_25px_60px_rgba(0,0,0,0.65),0_1px_1px_rgba(255,255,255,0.25)_inset,0_0_25px_rgba(255,255,255,0.03)_inset] p-4.5 sm:p-5 animate-scale-up sm:animate-slide-up transition-all relative overflow-hidden group"
+            className="pointer-events-auto w-[380px] max-w-[calc(100vw-24px)] rounded-[20px] p-4.5 sm:p-5 animate-scale-up sm:animate-slide-up transition-all relative overflow-hidden group"
           >
-            {/* Apple Glass specular reflection overlay */}
-            <div className="absolute inset-0 rounded-[24px] pointer-events-none bg-gradient-to-b from-white/[0.14] via-white/[0.02] to-transparent" />
-
             {/* Header: FIVE ICON (Logo Oficial do App CardDigital GM) + Identificação do Sistema */}
-            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-white/[0.12] relative z-10">
+            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-white/[0.08] relative z-10">
               <div className="flex items-center gap-2.5 min-w-0">
-                {/* FIVE ICON oficial do App CardDigital GM com tamanho ampliado exatamente como no anexo 2 */}
-                <div className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-[9px] border border-white/20 flex items-center justify-center overflow-hidden shadow-sm bg-black/50 shrink-0 !p-0">
+                {/* FIVE ICON oficial do App CardDigital GM */}
+                <div className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-[9px] border border-white/10 flex items-center justify-center overflow-hidden shadow-sm bg-black shrink-0 !p-0">
                   <img
                     src={officialAppLogo}
                     alt="CardDigital GM Oficial"
@@ -165,15 +176,15 @@ const AlarmToast = () => {
                     }}
                   />
                 </div>
-                {/* Texto CardDigital GM exatamente com a tipografia, cores e formato do anexo 2 */}
+                {/* Texto CardDigital GM */}
                 <div className="flex items-center leading-none">
-                  <span className="text-[14px] sm:text-[15px] font-bold text-white tracking-tight flex items-center drop-shadow-xs">
-                    CardDigital<span className="text-[#FE540B] font-black ml-1.5">GM</span>
+                  <span className="text-[14px] sm:text-[15px] font-bold text-white tracking-tight flex items-center" style={{ fontFamily: "'Funnel Display', sans-serif" }}>
+                    CardDigital<span className="text-[#FE540B] font-black ml-1.5" style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}>GM</span>
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.08] border border-white/15 text-[10px] font-bold uppercase tracking-wider text-orange-400 backdrop-blur-md">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-[10px] font-bold uppercase tracking-wider text-orange-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
                   AGORA
                 </span>
@@ -181,8 +192,8 @@ const AlarmToast = () => {
             </div>
 
             <div className="flex items-start gap-3.5 relative z-10">
-              {/* Apple Squircle Icon Box: LOGO CADASTRADO PELA CONTA DO USUÁRIO */}
-              <div className="w-12 h-12 rounded-[16px] bg-white/[0.08] border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0 relative overflow-hidden backdrop-blur-xl p-1">
+              {/* Icon Box: LOGO CADASTRADO PELA CONTA DO USUÁRIO */}
+              <div className="w-12 h-12 rounded-[16px] bg-[#18181c] border border-white/10 shadow-md flex items-center justify-center shrink-0 relative overflow-hidden p-1">
                 {userRegisteredLogo ? (
                   <img
                     src={userRegisteredLogo}
@@ -199,11 +210,11 @@ const AlarmToast = () => {
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <div className="text-white font-bold text-[13px] tracking-tight uppercase leading-snug drop-shadow-xs">
+                  <div className="text-white font-bold text-[13px] tracking-tight uppercase leading-snug">
                     {alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : alarm.type === 'NOTE' ? 'Lembrete de Nota' : 'Orçamento Aprovado'}
                   </div>
                   <button
-                    className="h-6 w-6 rounded-full bg-white/[0.08] hover:bg-white/[0.22] active:scale-95 text-white/60 hover:text-white flex items-center justify-center transition-all backdrop-blur-md cursor-pointer shrink-0 -mt-0.5 border border-white/15"
+                    className="h-6 w-6 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 text-white/60 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0 -mt-0.5 border border-white/10"
                     onClick={(e) => { e.stopPropagation(); dismiss(alarm.id); }}
                     type="button"
                     title="Fechar"
@@ -213,16 +224,16 @@ const AlarmToast = () => {
                 </div>
 
                 {/* Clean, fully left-aligned description with smooth Typewriter typing animation */}
-                <div className="text-[12px] text-white/85 leading-relaxed text-left font-normal drop-shadow-xs">
+                <div className="text-[12px] text-zinc-300 leading-relaxed text-left font-normal">
                   <TypewriterText text={descriptionText} />
                 </div>
               </div>
             </div>
 
-            {/* Apple Glass Action Buttons: centralizados em relação às extremidades da caixa */}
+            {/* Action Buttons: estilo sólido Forge UI */}
             <div className="flex items-center gap-2.5 mt-4 pt-0.5 relative z-10 w-full">
               <button
-                className="flex-1 h-9 rounded-xl bg-white/[0.09] hover:bg-white/[0.18] active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center border border-white/20 backdrop-blur-xl shadow-xs cursor-pointer"
+                className="flex-1 h-9 rounded-xl bg-[#1c1c21] hover:bg-[#27272e] active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center border border-white/10 shadow-xs cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); dismiss(alarm.id); }}
                 type="button"
               >
@@ -230,7 +241,7 @@ const AlarmToast = () => {
               </button>
 
               <button
-                className="flex-1 h-9 rounded-xl bg-[var(--gm-primary)]/90 hover:bg-[var(--gm-primary)] hover:brightness-110 active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center border border-white/30 backdrop-blur-xl shadow-[0_4px_16px_rgba(var(--gm-primary-rgb),0.35)] cursor-pointer"
+                className="flex-1 h-9 rounded-xl bg-[var(--gm-primary,#FE540B)] hover:brightness-110 active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center shadow-md shadow-[var(--gm-primary,#FE540B)]/30 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   const targetId = alarm.budgetId;

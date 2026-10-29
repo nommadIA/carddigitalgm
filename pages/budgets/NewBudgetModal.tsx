@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Select from "../../components/ui/Select";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../store/AuthContext";
+import { useAuth, MASTER_TENANT_ID } from "../../store/AuthContext";
 import { broadcastAppNotification } from "../../lib/syncHub";
 import {
   Palette,
@@ -24,6 +24,11 @@ import {
   ChevronUp,
   ChevronDown,
   ArrowRight,
+  User,
+  UserPlus,
+  Phone,
+  Mail,
+  Loader2,
 } from "lucide-react";
 
 type Props = {
@@ -59,7 +64,16 @@ function money(v: number) {
     currency: "BRL",
   }).format(v || 0);
 }
-const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+function clamp(val: number, min: number, max: number) {
+  return Math.min(Math.max(val, min), max);
+}
+function formatPhoneBR(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+}
 
 // Helper para extrair dados da descrição salva (Engenharia reversa do texto)
 function parseDescription(fullDesc: string) {
@@ -157,27 +171,111 @@ async function insertItemsWithAutoStrip(items: any[]) {
   }
 }
 
+async function resolveValidUserId(tenantId: string | null): Promise<string | null> {
+  // 1. Tentar pegar da sessão auth ativa do Supabase
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData?.user?.id) {
+      return authData.user.id;
+    }
+  } catch {}
+
+  // 2. Tentar pegar o user_id de tenant_memberships do tenant atual
+  if (tenantId) {
+    try {
+      const { data: membership } = await supabase
+        .from("tenant_memberships")
+        .select("user_id")
+        .eq("tenant_id", tenantId)
+        .limit(1)
+        .maybeSingle();
+      if (membership?.user_id) {
+        return membership.user_id;
+      }
+    } catch {}
+  }
+
+  // 3. Tentar pegar um user_id já aceito em algum cliente existente
+  try {
+    const { data: clientRow } = await supabase
+      .from("clients")
+      .select("user_id")
+      .not("user_id", "is", null)
+      .limit(1)
+      .maybeSingle();
+    if (clientRow?.user_id) {
+      return clientRow.user_id;
+    }
+  } catch {}
+
+  // 4. Tentar pegar de public.users se existir
+  try {
+    const { data: userRow } = await supabase
+      .from("users")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+    if (userRow?.id) {
+      return userRow.id;
+    }
+  } catch {}
+
+  return null;
+}
+
+async function insertQuickClientWithAutoStrip(payload: any) {
+  let current = { ...payload };
+
+  for (let i = 0; i < 6; i++) {
+    const res = await supabase.from("clients").insert(current).select("id, name").single();
+    if (!res.error && res.data) return res.data;
+
+    // Se o erro for chave estrangeira em user_id (23503), removemos user_id e tentamos novamente
+    if (
+      res.error?.code === "23503" ||
+      String(res.error?.message || "").includes("clients_user_id_fkey") ||
+      String(res.error?.message || "").includes("foreign key")
+    ) {
+      if ("user_id" in current) {
+        const next = { ...current };
+        delete next.user_id;
+        current = next;
+        continue;
+      }
+    }
+
+    if (isMissingColumnError(res.error)) {
+      const next = stripMissingColumn(current, res.error);
+      if (JSON.stringify(next) === JSON.stringify(current)) throw res.error;
+      current = next;
+      continue;
+    }
+    throw res.error;
+  }
+  throw new Error("Falha ao salvar cliente (schema incompatível).");
+}
+
 // --- STYLES ---
 const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "rgba(0, 0, 0, 0.65)",
+  background: "rgba(10, 10, 14, 0.48)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   padding: 16,
-  backdropFilter: "blur(24px) saturate(180%)",
-  WebkitBackdropFilter: "blur(24px) saturate(180%)",
 };
 
 const fullScreenContainer: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "rgba(10, 10, 14, 0.88)",
-  backdropFilter: "blur(28px) saturate(180%)",
-  WebkitBackdropFilter: "blur(28px) saturate(180%)",
+  background: "rgba(10, 10, 14, 0.65)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
   color: "#f4f4f5",
   display: "flex",
   flexDirection: "column",
@@ -188,15 +286,15 @@ const topBar: React.CSSProperties = {
   position: "sticky",
   top: 0,
   zIndex: 50,
-  background: "rgba(18, 18, 24, 0.75)",
+  background: "rgba(18, 18, 22, 0.55)",
   borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
   padding: "16px 24px",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  backdropFilter: "blur(24px) saturate(180%)",
-  WebkitBackdropFilter: "blur(24px) saturate(180%)",
-  boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  boxShadow: "none",
 };
 
 const pageContent: React.CSSProperties = {
@@ -261,7 +359,7 @@ const itemRow: React.CSSProperties = {
 };
 
 export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditId, duplicateFromBudgetId }: Props) {
-  const { tenantId } = useAuth();
+  const { user, tenantId } = useAuth();
 
   const [step, setStep] = useState<Step>("pick");
   const [kind, setKind] = useState<BudgetKind>("agency");
@@ -269,6 +367,14 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
   const [clients, setClients] = useState<ClientRow[]>([]);
   const [clientId, setClientId] = useState("");
   const [clientName, setClientName] = useState("");
+
+  // ✅ Cadastro Rápido de Cliente dentro da Proposta
+  const [showQuickClient, setShowQuickClient] = useState(false);
+  const [quickName, setQuickName] = useState("");
+  const [quickPhone, setQuickPhone] = useState("");
+  const [quickEmail, setQuickEmail] = useState("");
+  const [savingQuickClient, setSavingQuickClient] = useState(false);
+  const [quickClientSuccess, setQuickClientSuccess] = useState<string | null>(null);
 
   const [loadingClients, setLoadingClients] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
@@ -339,6 +445,81 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     setDeliveryDays(5);
     setItems([]);
     setSaving(false);
+    setShowQuickClient(false);
+    setQuickName("");
+    setQuickPhone("");
+    setQuickEmail("");
+    setSavingQuickClient(false);
+    setQuickClientSuccess(null);
+  };
+
+  // ✅ Salvar novo cliente rápido e selecionar imediatamente
+  const handleSaveQuickClient = async () => {
+    const trimmedName = quickName.trim();
+    if (!trimmedName) {
+      alert("Por favor, informe o nome do cliente.");
+      return;
+    }
+    if (!tenantId) {
+      alert("Sessão não identificada.");
+      return;
+    }
+
+    setSavingQuickClient(true);
+    try {
+      // Obter user_id real válido presente no banco ou omitir caso já desvinculado
+      const activeUserId = await resolveValidUserId(tenantId);
+
+      const cleanPhone = quickPhone.replace(/\D/g, "");
+      const clientPayload: any = {
+        tenant_id: tenantId,
+        name: trimmedName,
+        phone: cleanPhone || quickPhone.trim() || null,
+        whatsapp: cleanPhone || quickPhone.trim() || null,
+        email: quickEmail.trim() || null,
+      };
+
+      if (activeUserId) {
+        clientPayload.user_id = activeUserId;
+      }
+
+      const insertedClient = await insertQuickClientWithAutoStrip(clientPayload);
+
+      if (insertedClient) {
+        const newClient: ClientRow = { id: insertedClient.id, name: insertedClient.name };
+        setClients((prev) => {
+          const list = [...prev.filter((c) => c.id !== newClient.id), newClient];
+          return list.sort((a, b) => a.name.localeCompare(b.name));
+        });
+        setClientId(insertedClient.id);
+        setClientName(insertedClient.name);
+        setQuickClientSuccess(`Cliente "${insertedClient.name}" cadastrado e selecionado!`);
+        setTimeout(() => setQuickClientSuccess(null), 4000);
+
+        // Limpa campos e fecha o formulário rápido
+        setQuickName("");
+        setQuickPhone("");
+        setQuickEmail("");
+        setShowQuickClient(false);
+      }
+    } catch (err: any) {
+      console.error("Erro ao cadastrar cliente rápido:", err);
+      const isFkOrNullError =
+        err?.code === "23503" ||
+        err?.code === "23502" ||
+        String(err?.message || "").includes("clients_user_id_fkey") ||
+        String(err?.message || "").includes("user_id");
+
+      if (isFkOrNullError) {
+        alert(
+          "Atenção: A tabela 'clients' no Supabase possui restrição antiga de chave 'user_id'.\n\nExecute o script 'fix_clients_table.sql' no Supabase SQL Editor para liberar o cadastro de clientes por tenant."
+        );
+      } else {
+        alert(err?.message || "Erro ao cadastrar cliente.");
+      }
+    } finally {
+      setSavingQuickClient(false);
+    }
   };
 
   // Carregar clientes
@@ -652,7 +833,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     return createPortal(
       <div style={overlay} onClick={onClose}>
         <div
-          className="w-full max-w-[800px] p-8 md:p-10 rounded-2xl gm-modal apple-glass-card fora border border-white/15 text-white shadow-2xl backdrop-blur-2xl animate-fade-in"
+          className="w-full max-w-[800px] p-8 md:p-10 rounded-2xl gm-modal apple-glass-card fora border border-white/15 text-white shadow-none backdrop-blur-2xl animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-start mb-8">
@@ -749,19 +930,183 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
           <div className="flex flex-col gap-6">
             {/* 01. CLIENTE */}
           <div style={{ ...card, position: "relative", zIndex: 40 }}>
-            <div style={labelTop} className="flex justify-between">
-              <span>01. Cliente</span>
+            {/* Header com título e botão de alternância */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span style={labelTop} className="!mb-0">01. Cliente</span>
+                {clientId && !showQuickClient && (
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Selecionado
+                  </span>
+                )}
+              </div>
+
+              {!showQuickClient ? (
+                <button
+                  type="button"
+                  onClick={() => setShowQuickClient(true)}
+                  className="forge-btn forge-btn--primary !h-[32px] !text-[11px] !px-3"
+                  title="Cadastrar cliente rápido sem sair da proposta"
+                >
+                  <span className="gm-btn-plus-black">
+                    <Plus size={13} strokeWidth={3} />
+                  </span>
+                  <span>CADASTRAR CLIENTE</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowQuickClient(false)}
+                  className="forge-btn forge-btn--secondary !h-[32px] !text-[11px] !px-3"
+                >
+                  <ArrowLeft size={13} />
+                  <span>VOLTAR P/ SELEÇÃO</span>
+                </button>
+              )}
             </div>
-            <Select
-              style={inputBig}
-              value={clientId}
-              onChange={(val) => setClientId(String(val))}
-              disabled={loadingClients || loadingData}
-              className="cursor-pointer hover:bg-white/5 focus:bg-black/40 focus:border-[var(--gm-primary)]"
-              placeholder={loadingClients ? "Carregando..." : "Selecione o cliente..."}
-              options={clients.map(c => ({ value: c.id, label: c.name }))}
-              searchable={true}
-            />
+
+            {/* Banner de feedback de sucesso */}
+            {quickClientSuccess && (
+              <div className="mb-4 px-3.5 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                <span>{quickClientSuccess}</span>
+              </div>
+            )}
+
+            {!showQuickClient ? (
+              <Select
+                style={inputBig}
+                value={clientId}
+                onChange={(val) => {
+                  const idStr = String(val);
+                  setClientId(idStr);
+                  const found = clients.find((c) => c.id === idStr);
+                  if (found) setClientName(found.name);
+                }}
+                disabled={loadingClients || loadingData}
+                className="cursor-pointer hover:bg-white/5 focus:bg-black/40 focus:border-[var(--gm-primary)]"
+                placeholder={loadingClients ? "Carregando clientes..." : "Selecione o cliente..."}
+                options={clients.map((c) => ({ value: c.id, label: c.name }))}
+                searchable={true}
+              />
+            ) : (
+              /* Formulário Rápido de Cadastro */
+              <div className="p-4 rounded-xl bg-black/50 border border-white/10 flex flex-col gap-3">
+                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                    <UserPlus size={14} className="text-[var(--gm-primary)]" />
+                    <span>Cadastro Rápido de Cliente</span>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/20">
+                    RÁPIDO
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  {/* Nome */}
+                  <div className="md:col-span-2">
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Nome do Cliente ou Empresa *
+                    </label>
+                    <div className="relative">
+                      <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        autoFocus
+                        placeholder="Ex: Nome do cliente ou razão social"
+                        value={quickName}
+                        onChange={(e) => setQuickName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleSaveQuickClient();
+                          }
+                        }}
+                        className="w-full bg-black/60 border border-white/15 focus:border-[var(--gm-primary)] rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Telefone / WhatsApp */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      WhatsApp / Telefone
+                    </label>
+                    <div className="relative">
+                      <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="(00) 90000-0000"
+                        value={quickPhone}
+                        onChange={(e) => setQuickPhone(formatPhoneBR(e.target.value))}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleSaveQuickClient();
+                          }
+                        }}
+                        className="w-full bg-black/60 border border-white/15 focus:border-[var(--gm-primary)] rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      E-mail (opcional)
+                    </label>
+                    <div className="relative">
+                      <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      <input
+                        type="email"
+                        placeholder="cliente@exemplo.com"
+                        value={quickEmail}
+                        onChange={(e) => setQuickEmail(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleSaveQuickClient();
+                          }
+                        }}
+                        className="w-full bg-black/60 border border-white/15 focus:border-[var(--gm-primary)] rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ações do formulário rápido */}
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickClient(false)}
+                    disabled={savingQuickClient}
+                    className="forge-btn forge-btn--secondary !h-[36px] !text-[11px] !px-4"
+                  >
+                    <span>CANCELAR</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveQuickClient}
+                    disabled={savingQuickClient || !quickName.trim()}
+                    className="forge-btn forge-btn--primary !h-[36px] !text-[11px] !px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingQuickClient ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin text-black" />
+                        <span>CADASTRANDO...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="gm-btn-plus-black">
+                          <Plus size={14} strokeWidth={3} />
+                        </span>
+                        <span>CADASTRAR E SELECIONAR</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 02. ITENS */}
@@ -1189,18 +1534,18 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         <button
           onClick={(e) => { e.stopPropagation(); handleSave(); }}
           disabled={saving}
-          className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm bg-[var(--gm-primary)] text-white shadow-lg shadow-[var(--gm-primary)]/25 hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 sm:gap-3 shrink-0 cursor-pointer"
+          className="forge-btn forge-btn--primary !h-[38px] !px-4 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center gap-2 shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group shadow-none"
         >
           {saving ? (
             "Salvando..."
           ) : budgetToEditId ? (
             <>
-              <ArrowRight size={18} className="animate-arrow-point" />
+              <ArrowRight size={14} className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
               <span>Atualizar Proposta</span>
             </>
           ) : (
             <>
-              <ArrowRight size={18} className="animate-arrow-point" />
+              <ArrowRight size={14} className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
               <span>Finalizar Proposta</span>
             </>
           )}

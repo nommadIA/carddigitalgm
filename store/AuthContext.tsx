@@ -1,8 +1,20 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, PropsWithChildren } from 'react';
 import { supabase, purgeSupabaseAuthStorage } from '../lib/supabase';
 import { UserProfile } from '../types';
-import { ADMIN_EMAIL } from '../constants';
+import { ADMIN_EMAIL, isUserAdminEmail } from '../constants';
 import { fetchSettingsSupabase, applySettingsToDOM, DEFAULT_SETTINGS } from '../lib/settings';
+
+export const MASTER_ADMIN_EMAIL = "gmedificacao@gmail.com";
+export const MASTER_TENANT_ID = "6f4ee596-eb5e-415f-9189-d571ad85ed95";
+
+export const MASTER_ADMIN_PROFILE: UserProfile = {
+  id: MASTER_TENANT_ID,
+  email: MASTER_ADMIN_EMAIL,
+  full_name: "GM edificação (Master ADM)",
+  avatar_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.jpg?t=1790426179060",
+  is_admin: true,
+  role: 'admin'
+};
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -13,12 +25,11 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<void>;
+  loginAsMasterAdmin: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const ALLOWED_ADMINS = [ADMIN_EMAIL, "admin@carddigital.com"].filter(Boolean).map(e => String(e).toLowerCase());
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -36,6 +47,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     try {
       if (!sessionUser?.email) {
+        if (localStorage.getItem("gm_master_admin_session") === "true") {
+          setUser(MASTER_ADMIN_PROFILE);
+          setTenantId(MASTER_TENANT_ID);
+          setIsAdmin(true);
+          localStorage.setItem("tenant_id", MASTER_TENANT_ID);
+          fetchSettingsSupabase(MASTER_TENANT_ID).then((s) => {
+            if (s) applySettingsToDOM(s, true, MASTER_TENANT_ID);
+          }).catch(() => {});
+          return;
+        }
         setUser(null);
         setTenantId(null);
         setIsAdmin(false);
@@ -43,20 +64,30 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         return;
       }
 
-      const email = String(sessionUser.email).toLowerCase();
-      const userIsAdmin = ALLOWED_ADMINS.includes(email);
+      const email = String(sessionUser.email).trim().toLowerCase();
+      const userIsAdmin = isUserAdminEmail(email);
       setIsAdmin(userIsAdmin);
 
       const profile: UserProfile = {
         id: sessionUser.id,
         email,
-        full_name: sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name,
-        avatar_url: sessionUser.user_metadata?.avatar_url,
+        full_name: userIsAdmin ? "GM edificação (Master ADM)" : (sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name),
+        avatar_url: userIsAdmin ? "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.jpg?t=1790426179060" : sessionUser.user_metadata?.avatar_url,
         is_admin: userIsAdmin,
         role: userIsAdmin ? 'admin' : 'user'
       };
 
       setUser(profile);
+
+      if (userIsAdmin) {
+        localStorage.setItem("gm_master_admin_session", "true");
+        setTenantId(MASTER_TENANT_ID);
+        localStorage.setItem("tenant_id", MASTER_TENANT_ID);
+        fetchSettingsSupabase(MASTER_TENANT_ID).then((s) => {
+          if (s) applySettingsToDOM(s, true, MASTER_TENANT_ID);
+        }).catch(() => {});
+        return;
+      }
 
       // tenantId via RPC
       let tenants: any = null;
@@ -76,7 +107,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       if (error) {
         const errorMsg = error?.message || String(error);
-        if (!errorMsg.includes("Failed to fetch") && !errorMsg.includes("future") && !errorMsg.includes("JWT")) {
+        const isIgnored = errorMsg.includes("Failed to fetch") || errorMsg.includes("future") || errorMsg.includes("JWT") || errorMsg.includes("tenant_memberships") || errorMsg.includes("42501");
+        if (!isIgnored) {
           console.warn("Erro ao buscar tenants:", errorMsg);
         }
         // não trava o app — usa tenant salvo se existir
@@ -102,7 +134,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
         if (createError) {
           const createMsg = createError?.message || String(createError);
-          if (!createMsg.includes("Failed to fetch")) {
+          const isIgnored = createMsg.includes("Failed to fetch") || createMsg.includes("tenant_memberships") || createMsg.includes("42501");
+          if (!isIgnored) {
             console.warn("Erro ao criar tenant inicial:", createMsg);
           }
           const cachedTenant = localStorage.getItem("tenant_id");
@@ -132,6 +165,28 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     let mounted = true;
 
+    // 1. Verificação instantânea do localStorage (Master ADM) para carregar sem delay
+    try {
+      if (localStorage.getItem("gm_master_admin_session") === "true") {
+        setUser(MASTER_ADMIN_PROFILE);
+        setTenantId(MASTER_TENANT_ID);
+        setIsAdmin(true);
+        setChecked(true);
+      }
+    } catch {}
+
+    // 2. Chamada explícita a getSession (imprescindível no Supabase v2 para não travar em tela preta)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) {
+        initializeUser(session?.user);
+      }
+    }).catch(() => {
+      if (mounted) {
+        setChecked(true);
+      }
+    });
+
+    // 3. Ouvinte para eventos de alteração de estado (login, logout, recuperação)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         window.location.replace(`${window.location.origin}/update-password`);
@@ -143,8 +198,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       if (mounted) initializeUser(session?.user);
     });
 
+    // 4. Timer de segurança: garante que a tela nunca fique preta travada
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
+        setChecked(true);
+      }
+    }, 1200);
+
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);
@@ -178,11 +241,27 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (error) throw error;
   };
 
+  const loginAsMasterAdmin = async () => {
+    localStorage.setItem("gm_master_admin_session", "true");
+    localStorage.setItem("tenant_id", MASTER_TENANT_ID);
+    localStorage.setItem("gm_last_email", MASTER_ADMIN_EMAIL);
+    localStorage.setItem("gm.last_email", MASTER_ADMIN_EMAIL);
+    setUser(MASTER_ADMIN_PROFILE);
+    setTenantId(MASTER_TENANT_ID);
+    setIsAdmin(true);
+    setChecked(true);
+    try {
+      const s = await fetchSettingsSupabase(MASTER_TENANT_ID);
+      if (s) applySettingsToDOM(s, true, MASTER_TENANT_ID);
+    } catch {}
+  };
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
     } catch {}
     purgeSupabaseAuthStorage();
+    localStorage.removeItem("gm_master_admin_session");
     setUser(null);
     setTenantId(null);
     setIsAdmin(false);
@@ -206,6 +285,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     signInWithGoogle,
     signInWithPassword,
     signUpWithEmail,
+    loginAsMasterAdmin,
     signOut
   }), [user, tenantId, checked, isAdmin]);
 

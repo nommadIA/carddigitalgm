@@ -12,11 +12,11 @@ const LABEL: Record<BudgetStatus, string> = {
 };
 
 const STYLE: Record<BudgetStatus, string> = {
-  AGUARDANDO: "bg-[var(--gm-accent)]/15 text-[var(--gm-accent)] border-[var(--gm-accent)]/25 shadow-[0_0_10px_rgba(var(--gm-accent-rgb),0.2)]",
-  APROVADO: "bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border-[var(--gm-primary)]/25 shadow-[0_0_10px_rgba(var(--gm-primary-rgb),0.2)]",
-  PRODUCAO: "bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] border-[var(--gm-accent)]/30 shadow-[0_0_15px_rgba(var(--gm-accent-rgb),0.3)]",
-  CONCLUIDO: "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/30 shadow-[0_0_15px_rgba(var(--gm-primary-rgb),0.3)]",
-  CANCELADO: "bg-red-500/15 text-red-200 border-red-500/25 shadow-[0_0_10px_rgba(239,68,68,0.2)]",
+  AGUARDANDO: "bg-[#F65A1A]/15 text-[#FF7A38] border-[#F65A1A]/50 shadow-sm",
+  APROVADO: "bg-emerald-500/15 text-emerald-400 border-emerald-500/50 shadow-sm",
+  PRODUCAO: "bg-[#F65A1A]/20 text-[#FF7A38] border-[#F65A1A]/60 shadow-sm",
+  CONCLUIDO: "bg-emerald-500/20 text-emerald-400 border-emerald-500/60 shadow-sm",
+  CANCELADO: "bg-red-500/15 text-red-400 border-red-500/40 shadow-sm",
 };
 
 export default function StatusPicker({
@@ -38,10 +38,10 @@ export default function StatusPicker({
             type="button"
             onClick={() => onChange(s)}
             className={[
-              "px-3 py-2 rounded-full text-xs font-extrabold border backdrop-blur-md transition-all",
+              "h-9 px-3.5 rounded-md text-xs font-bold uppercase tracking-wider border transition-all cursor-pointer",
               active 
                 ? STYLE[s] 
-                : "border-white/10 bg-black/20 text-white/40 hover:bg-white/5 hover:text-white/60",
+                : "border-[#26262A] bg-[#131315] text-[#8B8B92] hover:bg-[#1B1B1E] hover:text-[#F2F2F3] hover:border-[#3F3F46]",
             ].join(" ")}
           >
             {LABEL[s]}

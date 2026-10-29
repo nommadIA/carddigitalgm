@@ -7,7 +7,7 @@ import { useAuth } from "../../store/AuthContext";
 import { Globe, Instagram, Facebook, Mail, Phone, MapPin, Copy, Box, FileText, Check, CheckCircle2, MessageCircle, Send, Linkedin, Twitter, Youtube, Link as LinkIcon, Music, Headphones, Github, ShoppingCart, Store, Utensils, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Share2, X, Trash2, ShoppingBag, Plus, Minus, CreditCard, User, Truck, Lock, ShieldCheck, Eye, EyeOff, ZoomIn , Layout, ExternalLink, Menu, Home, Maximize2, Minimize2, Edit3, Sparkles, Palette, ArrowRight } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { WhatsAppIcon } from "../ui/WhatsAppIcon";
-import { upsertSettingsSupabase, AppSettings } from "../../lib/settings";
+import { upsertSettingsSupabase, AppSettings, DEFAULT_GM_BIO_CONFIG } from "../../lib/settings";
 import { pushToast } from "../../store/toast";
 import LiveAdminBar from "./LiveAdminBar";
 import { 
@@ -363,6 +363,7 @@ function WebsiteDesktopNav({
   onNavigateSection,
   currentCustomer = null,
   onOpenCustomerArea,
+  showNavLinks = false,
 }: {
   activeView: string;
   setActiveView: (view: "bio" | "contact" | "portfolio" | "customer") => void;
@@ -378,6 +379,7 @@ function WebsiteDesktopNav({
   onNavigateSection?: (section: DesktopNavKey) => void;
   currentCustomer?: Customer | null;
   onOpenCustomerArea?: () => void;
+  showNavLinks?: boolean;
 }) {
   const [hoveredNav, setHoveredNav] = useState<DesktopNavKey | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -413,6 +415,7 @@ function WebsiteDesktopNav({
   });
 
   useEffect(() => {
+    if (!showNavLinks) return;
     const updatePosition = () => {
       const container = containerRef.current;
       const targetText = textRefs.current[currentIndicator] || textRefs.current["inicio"];
@@ -460,16 +463,16 @@ function WebsiteDesktopNav({
       window.removeEventListener("resize", updatePosition);
       if (ro) ro.disconnect();
     };
-  }, [currentIndicator, activeTarget, navItems.length]);
+  }, [currentIndicator, activeTarget, navItems.length, showNavLinks]);
 
   return (
     <div 
       ref={containerRef}
-      className="flex items-center gap-6 sm:gap-8 lg:gap-10 relative selection:bg-[#FE540B] selection:text-white"
+      className={`flex items-center ${showNavLinks ? 'gap-6 sm:gap-8 lg:gap-10' : 'gap-3 sm:gap-4 lg:gap-5'} relative selection:bg-[#FE540B] selection:text-white`}
       onMouseLeave={() => setHoveredNav(null)}
       onPointerLeave={() => setHoveredNav(null)}
     >
-      {navItems.map((item) => {
+      {showNavLinks && navItems.map((item) => {
         const isCurrentActive = activeTarget === item.key;
         const isHovered = hoveredNav === item.key;
         const isHighlighted = isHovered || (!hoveredNav && isCurrentActive);
@@ -498,7 +501,6 @@ function WebsiteDesktopNav({
             className="topbar-nav-link website-nav-btn relative !p-0 !px-0 py-1 text-base sm:text-lg font-bold transition-colors duration-200 cursor-pointer !bg-transparent !shadow-none !border-none select-none hover:!text-[#FE540B] inline-flex items-center justify-center"
             style={{
               background: 'transparent',
-              backgroundColor: 'transparent',
               boxShadow: 'none',
               border: 'none',
               outline: 'none',
@@ -517,7 +519,7 @@ function WebsiteDesktopNav({
       })}
 
       {/* Barra laranja que pega EXATAMENTE a área e largura do item ativo / selecionado */}
-      {coords.ready && (
+      {showNavLinks && coords.ready && (
         <motion.span 
           className="absolute h-[3px] rounded-full pointer-events-none shadow-[0_0_8px_rgba(254,84,11,0.6)]"
           initial={false}
@@ -532,10 +534,10 @@ function WebsiteDesktopNav({
         />
       )}
 
-      {/* Social Icons na barra superior com adaptação e inversão de cores por tema */}
+      {/* Ícones dos Links Cadastrados na barra superior com adaptação e inversão de cores por tema */}
       {userSocialLinks.length > 0 && (
         <>
-          <div className="w-1.5 sm:w-2" />
+          {showNavLinks && <div className="w-1.5 sm:w-2" />}
           <div className="flex items-center gap-2.5 sm:gap-3.5">
             {userSocialLinks.map((item) => (
               <TopBarSocialIcon key={item.id} item={item} theme={theme} asPreview={asPreview} />
@@ -812,7 +814,29 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     }
   }, [data]);
 
-  const bio = currentData?.bio_config || {};
+  const isGM = !currentData?.company_name || String(currentData?.company_name).toLowerCase().includes("gm");
+  const baseConfig: Record<string, any> = isGM ? DEFAULT_GM_BIO_CONFIG : {};
+  const rawBio: Record<string, any> = currentData?.bio_config || {};
+  const bio: Record<string, any> = {
+    ...baseConfig,
+    ...rawBio,
+    title: rawBio.title || baseConfig.title || currentData?.company_name || "GM edificação",
+    hero_title: rawBio.hero_title || rawBio.title || baseConfig.hero_title || "GM edificação",
+    hero_title_mobile: rawBio.hero_title_mobile || rawBio.hero_title || rawBio.title_mobile || rawBio.title || baseConfig.hero_title_mobile || "GM edificação",
+    description: rawBio.description || baseConfig.description || "GM edificação, Design Feroz",
+    description_mobile: rawBio.description_mobile || rawBio.description || baseConfig.description_mobile || "GM edificação, Design Feroz",
+    banner_img_url_1: rawBio.banner_img_url_1 || currentData?.app_background_url || baseConfig.banner_img_url_1 || "",
+    mobile_banner_img_url_1: rawBio.mobile_banner_img_url_1 || currentData?.mobile_app_background_url || baseConfig.mobile_banner_img_url_1 || "",
+    contact_banner_img_url: rawBio.contact_banner_img_url || baseConfig.contact_banner_img_url || "",
+    about_banner_url: rawBio.about_banner_url || baseConfig.about_banner_url || "",
+    website_logo_url: rawBio.website_logo_url || currentData?.website_logo_url || baseConfig.website_logo_url || "",
+    about_title: rawBio.about_title || baseConfig.about_title || "SOBRE A GM EDIFICAÇÃO",
+    about_description: rawBio.about_description || baseConfig.about_description || "",
+    about_highlight: rawBio.about_highlight || baseConfig.about_highlight || "",
+    custom_links: (rawBio.custom_links && rawBio.custom_links.length > 0) ? rawBio.custom_links : (baseConfig.custom_links || []),
+    portfolio_items: (rawBio.portfolio_items && rawBio.portfolio_items.length > 0) ? rawBio.portfolio_items : (baseConfig.portfolio_items || []),
+    portfolio_title: rawBio.portfolio_title || baseConfig.portfolio_title || "Portfólio",
+  };
   const bgAnimation = bio.bg_animation || "parallax";
 
   // Handlers for Live Editing - Auto-salva imediatamente no Supabase
@@ -2079,7 +2103,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
   const bgImg = bio.bg_image_url;
   const bgMobileImg = bio.bg_mobile_image_url;
 
-  const defaultArchitectureBanner = currentData?.app_background_url || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80";
+  const defaultArchitectureBanner = currentData?.app_background_url || bio.banner_img_url_1 || DEFAULT_GM_BIO_CONFIG.banner_img_url_1;
 
   // 1 ÚNICO PLANO DE FUNDO UNIFICADO (SITE 1 BACKGROUND)
   const singleSiteMobileBg = bio.mobile_banner_img_url_1 
@@ -3024,12 +3048,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           >
             {(() => {
               // Logo cadastrado pelo usuário/conta (GM Edificação) com fallback para o logo oficial cadastrado da GM Edificação
-              const gmDefaultLogo = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.jpg?t=1790426179060";
+              const gmDefaultLogo = DEFAULT_GM_BIO_CONFIG.website_logo_url;
               const userLogo = websiteLogo || currentData?.company_logo_url || bio.logo || currentData?.avatar_url;
               const effectiveLogo = userLogo || gmDefaultLogo;
 
-              // Banner padrão profissional de arquitetura/engenharia caso o usuário ainda não tenha configurado banners no BIO Editor
-              const defaultArchitectureBanner = currentData?.app_background_url || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80";
+              // Banner padrão oficial caso o usuário ainda não tenha configurado novos banners no BIO Editor
+              const defaultArchitectureBanner = currentData?.app_background_url || bio.banner_img_url_1 || DEFAULT_GM_BIO_CONFIG.banner_img_url_1;
 
               const desktopBanner = bio.banner_img_url_1 || defaultArchitectureBanner;
               const mobileBanner = bio.mobile_banner_img_url_1 || bio.banner_img_url_1 || currentData?.mobile_app_background_url || desktopBanner;
@@ -3038,7 +3062,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
               const isWebsiteLayout = true;
 
-              // Extrai redes sociais reais configuradas pelo usuário
+              // Extrai redes sociais e todos os links cadastrados pelo usuário no BIO editor
               const userSocialLinks: { id: string; title: string; href: string; icon: any }[] = [];
               if (bio.whatsapp) {
                 const cleanPhone = bio.whatsapp.replace(/\D/g, "");
@@ -3077,13 +3101,32 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   icon: Globe
                 });
               }
-              if (bio.email || (data?.pix_key && data.pix_key.includes("@"))) {
-                const emailAddr = bio.email || data?.pix_key;
+              if (bio.portfolio_url) {
+                const pUrl = bio.portfolio_url.startsWith("http") ? bio.portfolio_url : `https://${bio.portfolio_url}`;
                 userSocialLinks.push({
-                  id: "email",
-                  title: "E-mail",
-                  href: `mailto:${emailAddr}`,
-                  icon: Mail
+                  id: "portfolio_url",
+                  title: "Portfólio",
+                  href: pUrl,
+                  icon: Box
+                });
+              }
+              if (bio.catalog_url) {
+                const cUrl = bio.catalog_url.startsWith("http") ? bio.catalog_url : `https://${bio.catalog_url}`;
+                userSocialLinks.push({
+                  id: "catalog_url",
+                  title: "Catálogo",
+                  href: cUrl,
+                  icon: FileText
+                });
+              }
+              if (bio.telegram) {
+                const cleanTg = bio.telegram.replace(/^@/, "").trim();
+                const tgUrl = cleanTg.startsWith("http") ? cleanTg : `https://t.me/${cleanTg}`;
+                userSocialLinks.push({
+                  id: "telegram",
+                  title: "Telegram",
+                  href: tgUrl,
+                  icon: BrandTelegramIcon
                 });
               }
               if (bio.linkedin) {
@@ -3095,12 +3138,52 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   icon: Linkedin
                 });
               }
+              if (bio.tiktok) {
+                const ttHandle = bio.tiktok.replace(/^@/, "").trim();
+                const ttUrl = ttHandle.startsWith("http") ? ttHandle : `https://tiktok.com/@${ttHandle}`;
+                userSocialLinks.push({
+                  id: "tiktok",
+                  title: "TikTok",
+                  href: ttUrl,
+                  icon: Music
+                });
+              }
+              if (bio.email || (data?.pix_key && data.pix_key.includes("@"))) {
+                const emailAddr = bio.email || data?.pix_key;
+                userSocialLinks.push({
+                  id: "email",
+                  title: "E-mail",
+                  href: `mailto:${emailAddr}`,
+                  icon: Mail
+                });
+              }
               if (bio.phone) {
                 userSocialLinks.push({
                   id: "phone",
                   title: "Telefone",
                   href: `tel:${bio.phone.replace(/\D/g, "")}`,
                   icon: Phone
+                });
+              }
+
+              // Adiciona todos os outros links customizados cadastrados no BIO editor
+              if (customLinks && Array.isArray(customLinks)) {
+                customLinks.forEach((link: any, idx: number) => {
+                  if (link.url && link.url.trim()) {
+                    const formattedUrl = formatExternalUrl(link.url);
+                    if (formattedUrl) {
+                      const alreadyExists = userSocialLinks.some(s => s.href.toLowerCase() === formattedUrl.toLowerCase());
+                      if (!alreadyExists) {
+                        const IconComp = getPlatformIcon(link.platform);
+                        userSocialLinks.push({
+                          id: link.id || `custom-link-${idx}`,
+                          title: link.label || link.platform || "Link",
+                          href: formattedUrl,
+                          icon: IconComp
+                        });
+                      }
+                    }
+                  }
                 });
               }
 
@@ -3283,6 +3366,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           onNavigateSection={handleDesktopNavClick}
                           currentCustomer={currentCustomer}
                           onOpenCustomerArea={handleOpenCustomerArea}
+                          showNavLinks={!!bio.show_nav_links}
                         />
                       </div>
                       
@@ -3443,6 +3527,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             onNavigateSection={handleDesktopNavClick}
                             currentCustomer={currentCustomer}
                             onOpenCustomerArea={handleOpenCustomerArea}
+                            showNavLinks={!!bio.show_nav_links}
                           />
                         </div>
                         
@@ -3470,6 +3555,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
                             src={bio.banner_img_url_1 || bio.desktop_banner_img_url || bio.banner_url || currentData?.app_background_url || defaultArchitectureBanner} 
                             alt={companyName || "GM Edificação"} 
+                            loading="eager"
+                            decoding="async"
                             className="w-full h-full object-cover object-center select-none absolute inset-0 z-0 will-change-transform overlap-parallax-bg" 
                             style={{
                               transform: `translate3d(0, ${scrollTop * 0.22}px, 0)`
@@ -3827,7 +3914,16 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-2 sm:gap-2.5">
+                        <div className="flex items-center gap-1.5 sm:gap-2.5">
+                          {/* Ícones dos links cadastrados no topo do mobile */}
+                          {userSocialLinks.length > 0 && (
+                            <div className="flex items-center gap-1.5 sm:gap-2 mr-1">
+                              {userSocialLinks.map((item) => (
+                                <TopBarSocialIcon key={item.id} item={item} theme={theme} asPreview={asPreview} />
+                              ))}
+                            </div>
+                          )}
+
                           {/* Botão Área do Cliente Mobile direto na barra */}
                           <button
                             type="button"
@@ -3973,6 +4069,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 : (bio.mobile_banner_img_url_1 || bio.banner_img_url_1 || bio.desktop_banner_img_url || bio.banner_url || currentData?.mobile_app_background_url || currentData?.app_background_url || defaultArchitectureBanner)
                           } 
                           alt={companyName || "GM Edificação"} 
+                          loading="eager"
+                          decoding="async"
                           className="w-full h-full object-cover object-center select-none absolute inset-0 z-0 pointer-events-none will-change-transform" 
                           style={{
                             transform: `translate3d(0, ${scrollTop * 0.22}px, 0)`
@@ -4778,7 +4876,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full shrink-0 pt-8 sm:pt-14 pb-16 sm:pb-24 flex flex-col items-center overlap-transition-view"
+              className="w-full shrink-0 pt-8 sm:pt-14 pb-16 sm:pb-24 px-4 sm:px-8 md:px-12 flex flex-col items-center overlap-transition-view"
             >
               <CustomerAreaSection
                 currentCustomer={currentCustomer}
@@ -4821,29 +4919,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               exit="exit"
               className="w-full overlap-transition-view"
             >
-              {/* 3. Contacts & Links Stack (Harmonized, wider container blocks - rendered only if active links exist) */}
-              {Boolean(bio.portfolio_url || bio.catalog_url || bio.website || (customLinks && customLinks.length > 0 && customLinks.some((l: any) => l.url || l.value))) && (
-                <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 grid gap-3 sm:gap-4.5 grid-cols-1 sm:grid-cols-2">
-                  {/* Legacy contact fields - Portfolio, Catalog, and Website remain as buttons */}
-                  <ContactCard icon={Box} title="Portfólio" value={bio.portfolio_url ? 'Acessar Portfólio' : ''} href={bio.portfolio_url} />
-                  <ContactCard icon={FileText} title="Catálogo" value={bio.catalog_url ? 'Ver Catálogo' : ''} href={bio.catalog_url} />
-                  <ContactCard icon={Globe} title="Website" value={bio.website ? 'Visitar Site' : ''} href={bio.website} />
 
-                  {/* Dynamic Custom Links */}
-                  {customLinks.map((link: any) => {
-                    const Icon = getPlatformIcon(link.platform);
-                    return (
-                      <ContactCard 
-                        key={link.id} 
-                        icon={Icon} 
-                        title={link.label || 'Link'} 
-                        value={link.value || undefined} 
-                        href={link.url} 
-                      />
-                    );
-                  })}
-                </div>
-              )}
 
               {/* 3.5. "Sobre sua empresa" Section */}
               {bio.show_about !== false && (
@@ -5804,7 +5880,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 padding: '3px',
                                 boxShadow: `0 8px 24px -4px rgba(0,0,0,0.45), 0 0 16px ${brandColor || '#FE540B'}55`,
                               } : {
-                                backgroundColor: '#ffffff',
+                                background: '#ffffff',
                               };
 
                               return (
@@ -6734,7 +6810,6 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           style={{
             zIndex: 10000030,
             background: "transparent",
-            backgroundColor: "transparent",
             border: "none",
             outline: "none",
             boxShadow: "none",

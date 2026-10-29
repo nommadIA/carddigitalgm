@@ -1,5 +1,6 @@
 
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=JetBrains+Mono:wght@400;600;700&display=swap');
@@ -22,60 +23,1373 @@
 }
 
 /* =========================================================
-   VIDRO FOSCO SUAVE (.barra e .fora) - EFEITO PADRÃO LIMPO
+   FORGE UI DESIGN SYSTEM (Inspirado em forgeui.in & Uiverse)
+   - Zero Glass / Zero Blur / Sem Milky Frosted Glass
+   - Superfícies Obsidian Sólidas (#09090b, #121215, #18181b)
+   - Micro-bordas Nítidas de Alta Precisão (1px solid rgba(255, 255, 255, 0.08))
+   - Text Shimmer Efeito Metálico (forgeui.in/components/text-shimmer)
+   - Sombreamento Sutil com Highlight Superior (inset 0 1px 0 0 rgba(255,255,255,0.05))
 ========================================================= */
-.barra {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  box-shadow: none !important;
+
+/* From Uiverse.io by uiverse-astronaut */ 
+.forge-field {
+  --color-graphite: #131315;
+  --color-slate: #1b1b1e;
+  --color-border: #26262a;
+  --color-border-strong: #2f2f34;
+  --color-text: #f2f2f3;
+  --color-text-muted: #8b8b92;
+  --color-ash-soft: #5a5a60;
+  --color-accent: #f65a1a;
+  --color-ember-halo: rgba(246, 90, 26, 0.24);
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-md: 16px;
+  --radius-md: 4px;
+  --duration-fast: 120ms;
+  --ease-out: cubic-bezier(0.2, 0.65, 0.25, 1);
+  display: block;
+  width: 100%;
 }
 
-.fora {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+.forge-field__label {
+  display: block;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.forge-field__input {
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--space-md);
+  background: var(--color-slate);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.forge-field__input::placeholder {
+  color: var(--color-ash-soft);
+}
+
+.forge-field__input:hover {
+  border-color: var(--color-border-strong);
+}
+
+.forge-field__input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-ember-halo);
+  background: var(--color-graphite);
+}
+
+.forge-field__hint {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* =========================================================
+   FORGE SPEC UI CONTAINER (From Uiverse.io by uiverse-astronaut)
+========================================================= */
+.forge-spec {
+  --color-ink: #0b0b0c;
+  --color-graphite: #131315;
+  --color-border: #26262a;
+  --color-text: #f2f2f3;
+  --color-text-muted: #8b8b92;
+  --color-accent: #f65a1a;
+  --color-edge-highlight: rgba(255, 255, 255, 0.03);
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  width: 100%;
+  background: var(--color-graphite);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 0 var(--color-edge-highlight);
+  overflow: hidden;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.forge-spec:hover {
+  border-color: #38383f;
+}
+
+.forge-spec__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+}
+
+.forge-spec__id {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: var(--color-ink);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  shrink: 0;
+}
+
+.forge-spec__title {
+  flex: 1;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.forge-spec__status {
+  font-family: ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  padding: 2px 7px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  shrink: 0;
+}
+
+.forge-spec__status--live {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.forge-spec__body {
+  padding: 18px 20px;
+}
+
+.forge-spec__eyebrow {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.forge-spec__figure {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  line-height: 1.05;
+  margin-bottom: 14px;
+}
+
+@media (min-width: 640px) {
+  .forge-spec__figure {
+    font-size: 34px;
+  }
+}
+
+.forge-spec__unit {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-left: 8px;
+  text-transform: uppercase;
+}
+
+.forge-spec__tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.forge-spec__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 var(--space-xs);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-family: ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.forge-spec__tag--accent {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Container override to adopt Forge Spec UI globally */
+.gm-dashboard-card,
+.gm-stat-card,
+.forge-card {
+  background: var(--color-graphite, #131315) !important;
+  border: 1px solid var(--color-border, #26262a) !important;
+  border-radius: var(--radius-md, 4px) !important;
+  box-shadow: inset 0 1px 0 var(--color-edge-highlight, rgba(255, 255, 255, 0.03)) !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease !important;
+}
+
+.gm-dashboard-card:hover,
+.gm-stat-card:hover,
+.forge-card:hover {
+  border-color: #38383f !important;
+}
+
+/* =========================================================
+   FORGE TABS UI (From Uiverse.io by uiverse-astronaut)
+========================================================= */
+.forge-tabs {
+  --color-border: #26262a;
+  --color-text: #f2f2f3;
+  --color-text-muted: #8b8b92;
+  --color-accent: #f65a1a;
+  --space-sm: 12px;
+  --space-lg: 24px;
+  --duration-fast: 120ms;
+  --ease-out: cubic-bezier(0.2, 0.65, 0.25, 1);
+  display: flex;
+  gap: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.forge-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.forge-tabs__tab,
+button.forge-tabs__tab {
+  position: relative !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
   box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+  padding: var(--space-sm) 0 !important;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted) !important;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.forge-tabs__tab::after,
+button.forge-tabs__tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 4px;
+  background: transparent;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.forge-tabs__tab:hover,
+button.forge-tabs__tab:hover {
+  color: var(--color-text) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+.forge-tabs__tab:active,
+button.forge-tabs__tab:active,
+.forge-tabs__tab:focus,
+button.forge-tabs__tab:focus,
+.forge-tabs__tab:focus-visible,
+button.forge-tabs__tab:focus-visible {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+.forge-tabs__tab.is-active,
+button.forge-tabs__tab.is-active {
+  color: #ffffff !important;
+  font-weight: 600;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+.forge-tabs__tab.is-active::after,
+button.forge-tabs__tab.is-active::after {
+  background: var(--color-accent) !important;
+}
+
+.forge-tabs__tab.is-active:hover,
+.forge-tabs__tab.is-active:active,
+.forge-tabs__tab.is-active:focus,
+.forge-tabs__tab.is-active:focus-visible,
+button.forge-tabs__tab.is-active:hover,
+button.forge-tabs__tab.is-active:active,
+button.forge-tabs__tab.is-active:focus,
+button.forge-tabs__tab.is-active:focus-visible {
+  color: #ffffff !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+.forge-tabs__num {
+  color: var(--color-accent) !important;
+  margin-right: 6px;
+  font-weight: 600;
+}
+
+
+
+
+
+@keyframes forge-text-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes text-shimmer {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Forge UI Text Shimmer Components (forgeui.in/components/text-shimmer) */
+.text-shimmer,
+.forge-text-shimmer,
+.forge-shimmer {
+  background: linear-gradient(
+    110deg,
+    #71717a 20%,
+    #f4f4f5 50%,
+    #71717a 80%
+  ) !important;
+  background-size: 200% 100% !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block;
+  animation: forge-text-shimmer 3s ease-in-out infinite !important;
+}
+
+.text-shimmer-orange,
+.text-shimmer-primary {
+  background: linear-gradient(
+    110deg,
+    #ea580c 15%,
+    #fdba74 45%,
+    #ffffff 55%,
+    #ea580c 85%
+  ) !important;
+  background-size: 200% 100% !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block;
+  animation: forge-text-shimmer 3s ease-in-out infinite !important;
+}
+
+.text-shimmer-gold {
+  background: linear-gradient(
+    110deg,
+    #d97706 15%,
+    #fef08a 45%,
+    #ffffff 55%,
+    #d97706 85%
+  ) !important;
+  background-size: 200% 100% !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block;
+  animation: forge-text-shimmer 3s ease-in-out infinite !important;
+}
+
+.text-shimmer-emerald,
+.text-shimmer-success {
+  background: linear-gradient(
+    110deg,
+    #059669 15%,
+    #a7f3d0 45%,
+    #ffffff 55%,
+    #059669 85%
+  ) !important;
+  background-size: 200% 100% !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block;
+  animation: forge-text-shimmer 3s ease-in-out infinite !important;
+}
+
+/* Forge UI Shimmer Badge */
+.forge-shimmer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background-color: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  transition: all 0.2s ease;
+}
+.forge-shimmer-badge:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f4f4f5;
+}
+
+/* Forge UI Solid Surfaces (Substitui completamente o vidro e blur em todo o app) */
+.barra,
+.fora,
+.gm-card,
+.card,
+.panel,
+.forge-card,
+.apple-glass-refraction,
+.apple-glass-card,
+.glass-card,
+.cartao-de-vidro,
+.cartão-de-vidro,
+.gm-modal,
+.gm-dashboard-card,
+.gm-stat-card,
+.gm-chart-container,
+.gm-panel,
+aside.gm-sidebar,
+.gm-sidebar,
+nav.gm-bottom-nav,
+.gm-bottom-nav,
+[role="dialog"],
+.gm-dialog-container {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+  background: #131315 !important;
+  background-color: #131315 !important;
+  border: 1px solid #26262a !important;
+  border-color: #26262a !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.03), 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 4px !important;
+  overflow: hidden;
+  color: #f4f4f5;
 }
 
 [data-theme="light"] .barra,
-.gm-light .barra {
-  background: rgba(255, 255, 255, 0.65) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
-  box-shadow: none !important;
-}
-
+.gm-light .barra,
 [data-theme="light"] .fora,
-.gm-light .fora {
-  background: rgba(255, 255, 255, 0.70) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: none !important;
+.gm-light .fora,
+[data-theme="light"] .gm-card,
+.gm-light .gm-card,
+[data-theme="light"] .card,
+.gm-light .card,
+[data-theme="light"] .panel,
+.gm-light .panel,
+[data-theme="light"] .apple-glass-refraction,
+.gm-light .apple-glass-refraction,
+[data-theme="light"] .apple-glass-card,
+.gm-light .apple-glass-card,
+[data-theme="light"] .glass-card,
+.gm-light .glass-card,
+[data-theme="light"] .gm-modal,
+.gm-light .gm-modal,
+[data-theme="light"] .gm-dashboard-card,
+.gm-light .gm-dashboard-card,
+[data-theme="light"] .gm-stat-card,
+.gm-light .gm-stat-card,
+[data-theme="light"] .gm-chart-container,
+.gm-light .gm-chart-container,
+[data-theme="light"] .gm-panel,
+.gm-light .gm-panel,
+[data-theme="light"] aside.gm-sidebar,
+.gm-light aside.gm-sidebar,
+[data-theme="light"] .gm-sidebar,
+.gm-light .gm-sidebar,
+[data-theme="light"] nav.gm-bottom-nav,
+.gm-light nav.gm-bottom-nav,
+[data-theme="light"] .gm-bottom-nav,
+.gm-light .gm-bottom-nav,
+[data-theme="light"] [role="dialog"],
+.gm-light [role="dialog"] {
+  background: #18181b !important;
+  background-color: #18181b !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 [data-theme="dark"] .barra,
 .gm-dark .barra,
-html:not([data-theme="light"]):not(.gm-light) .barra {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+html:not([data-theme="light"]):not(.gm-light) .barra,
+[data-theme="dark"] .fora,
+.gm-dark .fora,
+html:not([data-theme="light"]):not(.gm-light) .fora,
+[data-theme="dark"] .gm-card,
+.gm-dark .gm-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-card,
+[data-theme="dark"] .card,
+.gm-dark .card,
+html:not([data-theme="light"]):not(.gm-light) .card,
+[data-theme="dark"] .panel,
+.gm-dark .panel,
+html:not([data-theme="light"]):not(.gm-light) .panel,
+[data-theme="dark"] .apple-glass-refraction,
+.gm-dark .apple-glass-refraction,
+html:not([data-theme="light"]):not(.gm-light) .apple-glass-refraction,
+[data-theme="dark"] .apple-glass-card,
+.gm-dark .apple-glass-card,
+html:not([data-theme="light"]):not(.gm-light) .apple-glass-card,
+[data-theme="dark"] .glass-card,
+.gm-dark .glass-card,
+html:not([data-theme="light"]):not(.gm-light) .glass-card,
+[data-theme="dark"] .gm-dashboard-card,
+.gm-dark .gm-dashboard-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-dashboard-card,
+[data-theme="dark"] .gm-stat-card,
+.gm-dark .gm-stat-card,
+html:not([data-theme="light"]):not(.gm-light) .gm-stat-card,
+[data-theme="dark"] .gm-chart-container,
+.gm-dark .gm-chart-container,
+html:not([data-theme="light"]):not(.gm-light) .gm-chart-container,
+[data-theme="dark"] .gm-panel,
+.gm-dark .gm-panel,
+html:not([data-theme="light"]):not(.gm-light) .gm-panel,
+[data-theme="dark"] aside.gm-sidebar,
+.gm-dark aside.gm-sidebar,
+html:not([data-theme="light"]):not(.gm-light) aside.gm-sidebar,
+[data-theme="dark"] .gm-sidebar,
+.gm-dark .gm-sidebar,
+html:not([data-theme="light"]):not(.gm-light) .gm-sidebar,
+[data-theme="dark"] nav.gm-bottom-nav,
+.gm-dark nav.gm-bottom-nav,
+html:not([data-theme="light"]):not(.gm-light) nav.gm-bottom-nav,
+[data-theme="dark"] .gm-bottom-nav,
+.gm-dark .gm-bottom-nav,
+html:not([data-theme="light"]):not(.gm-light) .gm-bottom-nav {
+  background: #121215 !important;
+  background-color: #121215 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .gm-modal,
+.gm-dark .gm-modal,
+html:not([data-theme="light"]):not(.gm-light) .gm-modal,
+[data-theme="dark"] [role="dialog"],
+.gm-dark [role="dialog"],
+html:not([data-theme="light"]):not(.gm-light) [role="dialog"],
+.gm-solid-modal {
+  background: #131315 !important;
+  background-color: #131315 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+  border: 1px solid #26262a !important;
+  border-color: #26262a !important;
+  box-shadow: 
+    0 24px 64px -10px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+  color: #ffffff !important;
+  overflow: hidden;
+  border-radius: 4px !important;
+}
+
+/* =========================================================
+   FORGE UI - SOLID BUTTONS & TECHNICAL CONTROLS
+   (uiverse.io/design/systems/forge)
+========================================================= */
+/* =========================================================
+   FORGE DESIGN SYSTEM - SPECIFICAÇÃO DOS BOTÕES
+   (Fonte visual de verdade: image_cf3a8eff.png)
+   1. PRIMARY: Sólido Ember #F65A1A + Texto e Ícone Ink Black #0B0B0C
+   2. SECONDARY: Sólido Graphite #131315 + Borda #26262A + Texto e Ícone Bone White #F2F2F3
+   3. GHOST: Fundo Transparente + Texto e Ícone Ash Gray #8B8B92 (Hover #F2F2F3)
+   4. DISABLED: Fundo #18181B + Borda #26262A + Texto e Ícone #52525B
+   5. SQUARE ICON: Fundo Ember #F65A1A + Ícone Ink Black #0B0B0C + Proporção 1:1
+========================================================= */
+
+/* =========================================================
+   FORGE UI - SOLID BUTTONS & TECHNICAL CONTROLS
+   (uiverse.io/design/systems/forge)
+========================================================= */
+/* =========================================================
+   FORGE DESIGN SYSTEM - ESPECIFICAÇÃO OFICIAL DOS BOTÕES
+   (Fonte visual de verdade: image_cf3a8eff.png)
+   1. PRIMARY: Sólido Ember #F65A1A + Texto e Ícone Ink Black #0B0B0C
+   2. PRIMARY WHITE: Sólido Ember #F65A1A + Texto e Ícone Branco Puro #FFFFFF
+   3. SECONDARY: Sólido Graphite #131315 + Borda #26262A + Texto e Ícone Bone White #F2F2F3
+   4. GHOST: Fundo Transparente + Texto e Ícone #CBD5E1 (Hover #FFFFFF)
+   5. DANGER: Sólido #1F1315 + Borda #EF4444 + Texto #EF4444 (Hover #FFFFFF)
+   6. SUCCESS: Sólido #0D1F17 + Borda #22C55E + Texto #22C55E (Hover #0B0B0C)
+   7. DISABLED: Fundo #18181B + Borda #26262A + Texto e Ícone #52525B
+   8. SQUARE ICON: Fundo Ember ou Graphite + Proporção 1:1
+
+   TAMANHOS PADRONIZADOS DE BOTÕES:
+   - LG (48px / h-12): Ações principais de tela e cabeçalho (fonte: 13-14px)
+   - MD (40px / h-10): Ações padrão de formulário, modais e toolbar (fonte: 12-13px)
+   - SM (32px / h-8): Ações inline em tabelas e mini filtros (fonte: 11px)
+========================================================= */
+
+/* Modificadores Globais de Botão Forge UI (Padrão: 38px, Radius 4px, 11.5px) */
+.gm-btn-lg,
+.btn-lg,
+button.lg,
+a.gm-btn-lg {
+  height: 42px !important;
+  min-height: 42px !important;
+  padding: 0 18px !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* =========================================================
+   From Uiverse.io by uiverse-astronaut
+   TC PILL BUTTON SYSTEM (Formato Pílula Ergonômico 999px)
+   ========================================================= */
+
+.tc-pill-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  font-family: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+  border-radius: 4px !important;
+  border: 1px solid #26262a !important;
+  background: #131315 !important;
+  background-color: #131315 !important;
+  color: #8b8b92 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+  box-shadow: none !important;
+  transition:
+    background 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    transform 120ms cubic-bezier(0.2, 0.65, 0.25, 1) !important;
+}
+
+.tc-pill-btn:hover {
+  background: #1b1b1e !important;
+  background-color: #1b1b1e !important;
+  border-color: #38383f !important;
+  color: #f2f2f3 !important;
+}
+
+.tc-pill-btn:active {
+  transform: scale(0.98) !important;
+}
+
+.tc-pill-btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(246, 90, 26, 0.24) !important;
+}
+
+.tc-pill-btn__icon {
+  width: 14px !important;
+  height: 14px !important;
+  display: block;
+  fill: none !important;
+  stroke: currentColor !important;
+  transition: color 120ms ease, stroke 120ms ease !important;
+}
+
+.tc-pill-btn:hover .tc-pill-btn__icon {
+  transform: none !important;
+}
+
+/* =========================================================
+   FORGE UI BUTTON SYSTEM (From Uiverse.io by uiverse-astronaut)
+   - Borda suave (4px)
+   - Cor de Fundo Ember (#f65a1a) com texto e ícones Ink (#0b0b0c)
+   - Hover Spark (#ff7a38)
+   - Tipografia Uppercase 14px, Letter-spacing 0.04em, Peso 600
+========================================================= */
+.forge-btn,
+.tc-pill-btn-primary,
+button.primary,
+.btn-primary,
+.gm-btn-primary,
+.forge-btn-primary,
+.forge-btn--primary,
+.gm-btn-primary-white,
+button.primary-white,
+button[class*="bg-[#F65A1A]"],
+button[class*="bg-[#f65a1a]"],
+button[class*="bg-[var(--gm-primary)]"],
+a[class*="bg-[#F65A1A]"],
+a[class*="bg-[#f65a1a]"],
+a[class*="bg-[var(--gm-primary)]"] {
+  --color-ink: #0b0b0c;
+  --color-ember: #f65a1a;
+  --color-spark: #ff7a38;
+  --color-text: #f2f2f3;
+  --color-border: #26262a;
+  --color-ember-halo: rgba(246, 90, 26, 0.24);
+  --radius-md: 4px;
+  --space-xs: 8px;
+  --space-md: 16px;
+  --duration-fast: 120ms;
+  --ease-out: cubic-bezier(0.2, 0.65, 0.25, 1);
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--space-xs) !important;
+  height: 38px !important;
+  padding: 0 14px !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid transparent !important;
+  background: var(--color-ember) !important;
+  background-color: var(--color-ember) !important;
+  color: var(--color-ink) !important;
+  font-family: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+  box-shadow: none !important;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform 120ms cubic-bezier(0.2, 0.65, 0.25, 1) !important;
+}
+
+.forge-btn:focus-visible,
+.tc-pill-btn-primary:focus-visible,
+button.primary:focus-visible,
+.btn-primary:focus-visible,
+.gm-btn-primary:focus-visible,
+.forge-btn-primary:focus-visible,
+.forge-btn--primary:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--color-ember-halo, rgba(246, 90, 26, 0.24)) !important;
+}
+
+.forge-btn--primary,
+.forge-btn-primary {
+  background: var(--color-ember) !important;
+  color: var(--color-ink) !important;
+}
+
+.forge-btn--primary:hover,
+.forge-btn-primary:hover,
+.tc-pill-btn-primary:hover,
+button.primary:hover,
+.btn-primary:hover,
+.gm-btn-primary:hover,
+button[class*="bg-[#F65A1A]"]:hover,
+button[class*="bg-[#f65a1a]"]:hover,
+button[class*="bg-[var(--gm-primary)]"]:hover,
+a[class*="bg-[#F65A1A]"]:hover,
+a[class*="bg-[#f65a1a]"]:hover,
+a[class*="bg-[var(--gm-primary)]"]:hover,
+.forge-btn--primary:focus-visible,
+.forge-btn-primary:focus-visible {
+  background: #FE540B !important;
+  background-color: #FE540B !important;
+  border-color: rgba(255, 170, 110, 0.65) !important;
+  box-shadow: 0 0 16px rgba(254, 84, 11, 0.6), 0 0 30px rgba(254, 84, 11, 0.28) !important;
+  color: #ffffff !important;
+}
+
+/* Estado Normal: Ícone Laranja Claro (#FF7A38), Texto Preto (#0b0b0c) */
+.forge-btn--primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
+.forge-btn-primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
+.tc-pill-btn-primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
+.gm-dash-primary-btn svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
+button.primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
+.btn-primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]) {
+  color: #FF7A38 !important;
+  stroke: #FF7A38 !important;
+  transition: color 140ms ease, stroke 140ms ease !important;
+}
+
+.forge-btn--primary span:not(.gm-plus-icon-wrapper),
+.forge-btn-primary span:not(.gm-plus-icon-wrapper),
+.tc-pill-btn-primary span:not(.gm-plus-icon-wrapper),
+.gm-dash-primary-btn span:not(.gm-plus-icon-wrapper),
+button.primary span:not(.gm-plus-icon-wrapper),
+.btn-primary span:not(.gm-plus-icon-wrapper) {
+  color: #0b0b0c !important;
+  transition: color 140ms ease !important;
+}
+
+/* Ícone de "+" em cor preta (#0b0b0c) no repouso com animação de rotação 90° no hover */
+.gm-btn-plus-black,
+svg.gm-btn-plus-black,
+.gm-plus-icon-wrapper svg,
+.forge-btn--primary svg.gm-btn-plus-black,
+.forge-btn-primary svg.gm-btn-plus-black,
+.forge-btn--primary .gm-plus-icon-wrapper svg,
+.forge-btn-primary .gm-plus-icon-wrapper svg {
+  color: #0b0b0c !important;
+  stroke: #0b0b0c !important;
+  fill: none !important;
+  transition: color 140ms ease, stroke 140ms ease !important;
+}
+
+.gm-plus-icon-wrapper {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transform-origin: center center !important;
+  transform: rotate(0deg) !important;
+  transition: transform 300ms cubic-bezier(0.2, 0.65, 0.25, 1) !important;
+  will-change: transform !important;
+}
+
+/* Animação: rotaciona 90° quando o mouse passa por cima */
+.forge-btn--primary:hover .gm-plus-icon-wrapper,
+.forge-btn-primary:hover .gm-plus-icon-wrapper,
+button:hover .gm-plus-icon-wrapper,
+a:hover .gm-plus-icon-wrapper,
+.group:hover .gm-plus-icon-wrapper {
+  transform: rotate(90deg) !important;
+}
+
+.forge-btn--primary:hover svg.gm-btn-plus-black,
+.forge-btn-primary:hover svg.gm-btn-plus-black,
+.forge-btn--primary:hover .gm-plus-icon-wrapper svg,
+.forge-btn-primary:hover .gm-plus-icon-wrapper svg,
+.group:hover svg.gm-btn-plus-black,
+.group:hover .gm-plus-icon-wrapper svg,
+button:hover svg.gm-btn-plus-black,
+a:hover svg.gm-btn-plus-black {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Hover ou Clique: "BOTÃO ACENDE" - Ícone e Texto Brancos */
+.forge-btn--primary:hover svg,
+.forge-btn-primary:hover svg,
+.tc-pill-btn-primary:hover svg,
+.gm-dash-primary-btn:hover svg,
+button.primary:hover svg,
+.btn-primary:hover svg,
+.forge-btn--primary:focus-visible svg,
+.forge-btn-primary:focus-visible svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.forge-btn--primary:hover span,
+.forge-btn-primary:hover span,
+.tc-pill-btn-primary:hover span,
+.gm-dash-primary-btn:hover span,
+button.primary:hover span,
+.btn-primary:hover span,
+.forge-btn--primary:focus-visible span,
+.forge-btn-primary:focus-visible span {
+  color: #ffffff !important;
+}
+
+.forge-btn--primary:active,
+.forge-btn-primary:active,
+.tc-pill-btn-primary:active,
+button.primary:active,
+.btn-primary:active,
+.gm-btn-primary:active,
+.gm-dash-primary-btn:active {
+  transform: scale(0.98) !important;
+  background: #FE540B !important;
+  box-shadow: 0 0 20px rgba(254, 84, 11, 0.75), 0 0 36px rgba(254, 84, 11, 0.35) !important;
+}
+
+.forge-btn--primary:active svg,
+.forge-btn-primary:active svg,
+.tc-pill-btn-primary:active svg,
+.gm-dash-primary-btn:active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.forge-btn--primary:active span,
+.forge-btn-primary:active span,
+.tc-pill-btn-primary:active span,
+.gm-dash-primary-btn:active span {
+  color: #ffffff !important;
+}
+
+.forge-btn__icon {
+  width: 14px !important;
+  height: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+/* 2. MODELO SECUNDÁRIO FORGE (Slate #131315 com borda #26262a, ícone Laranja Claro #FF7A38 e radius 4px) */
+.forge-btn--secondary,
+.tc-pill-btn-secondary,
+button.secondary,
+.btn-secondary,
+.gm-btn-secondary,
+.forge-btn-secondary,
+.gm-btn-outline,
+.gm-btn,
+.btn,
+button.ghost,
+.btn-ghost,
+.gm-btn-ghost,
+.forge-btn-ghost {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  height: 38px !important;
+  padding: 0 14px !important;
+  font-family: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+  border-radius: 4px !important;
+  border: 1px solid #26262a !important;
+  background: #131315 !important;
+  background-color: #131315 !important;
+  color: #8b8b92 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+  box-shadow: none !important;
+  transition:
+    background 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    box-shadow 140ms ease,
+    color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    transform 120ms cubic-bezier(0.2, 0.65, 0.25, 1) !important;
+}
+
+/* Estado Normal: Ícone Laranja Claro (#FF7A38) */
+.forge-btn--secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.tc-pill-btn-secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+button.secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.btn-secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.gm-btn-secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.forge-btn-secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.gm-btn-outline svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]) {
+  color: #FF7A38 !important;
+  stroke: #FF7A38 !important;
+  transition: color 140ms ease, stroke 140ms ease !important;
+}
+
+/* Hover e Active: "ACENDE" - Fundo #1b1b1e, borda iluminada #fe540b/50, glow aura, ícone e texto brancos */
+.forge-btn--secondary:hover,
+.tc-pill-btn-secondary:hover,
+button.secondary:hover,
+.btn-secondary:hover,
+.gm-btn-secondary:hover,
+.forge-btn-secondary:hover,
+.gm-btn-outline:hover,
+.gm-btn:hover,
+.btn:hover,
+button.ghost:hover,
+.btn-ghost:hover,
+.gm-btn-ghost:hover,
+.forge-btn-ghost:hover,
+.forge-btn--secondary:focus-visible,
+.forge-btn-secondary:focus-visible {
+  background: #1b1b1e !important;
+  background-color: #1b1b1e !important;
+  border-color: rgba(254, 84, 11, 0.5) !important;
+  box-shadow: 0 0 14px rgba(254, 84, 11, 0.22) !important;
+  color: #ffffff !important;
+}
+
+.forge-btn--secondary:hover svg,
+.tc-pill-btn-secondary:hover svg,
+button.secondary:hover svg,
+.btn-secondary:hover svg,
+.gm-btn-secondary:hover svg,
+.forge-btn-secondary:hover svg,
+.gm-btn-outline:hover svg,
+.forge-btn--secondary:focus-visible svg,
+.forge-btn--secondary:active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.forge-btn--secondary:hover span,
+.tc-pill-btn-secondary:hover span,
+button.secondary:hover span,
+.btn-secondary:hover span,
+.gm-btn-secondary:hover span,
+.forge-btn-secondary:hover span,
+.gm-btn-outline:hover span,
+.forge-btn--secondary:focus-visible span,
+.forge-btn--secondary:active span {
+  color: #ffffff !important;
+}
+
+.forge-btn--secondary:active,
+.tc-pill-btn-secondary:active,
+button.secondary:active,
+.btn-secondary:active,
+.gm-btn-secondary:active,
+.forge-btn-secondary:active {
+  transform: scale(0.98) !important;
+}
+
+/* 3. BOTÕES DE AÇÃO E ÍCONES (Formato Forge 4px) */
+.gm-btn-icon-square,
+.forge-btn-icon-square,
+.forge-btn-icon,
+.gm-btn-icon-secondary,
+.forge-btn-icon-secondary,
+.gm-budget-action-btn,
+.gm-grid-action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 4px !important;
+  border: 1px solid #26262a !important;
+  background: #1b1b1e !important;
+  background-color: #1b1b1e !important;
+  color: #f2f2f3 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transition:
+    background 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    box-shadow 140ms ease,
+    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+
+.gm-btn-icon-square svg:not(.whatsapp-icon),
+.forge-btn-icon-square svg:not(.whatsapp-icon),
+.forge-btn-icon svg:not(.whatsapp-icon) {
+  color: #FF7A38 !important;
+  stroke: #FF7A38 !important;
+  transition: color 140ms ease, stroke 140ms ease !important;
+}
+
+.gm-btn-icon-square:hover,
+.forge-btn-icon-square:hover,
+.forge-btn-icon:hover,
+.gm-btn-icon-secondary:hover,
+.forge-btn-icon-secondary:hover,
+.gm-budget-action-btn:hover,
+.gm-grid-action-btn:hover {
+  background: #26262a !important;
+  background-color: #26262a !important;
+  border-color: rgba(254, 84, 11, 0.5) !important;
+  box-shadow: 0 0 12px rgba(254, 84, 11, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.gm-btn-icon-square:hover svg:not(.whatsapp-icon),
+.forge-btn-icon-square:hover svg:not(.whatsapp-icon),
+.forge-btn-icon:hover svg:not(.whatsapp-icon) {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* 4. Textos, Spans e Rótulos dentro dos botões */
+button span,
+.forge-btn span,
+.tc-pill-btn span,
+.gm-btn span,
+.btn span,
+button.primary span,
+button.secondary span,
+button[class*="bg-"] span,
+a[class*="bg-"] span {
+  color: inherit !important;
+  font-family: inherit !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-shadow: none !important;
+}
+
+/* 5. Ícones dentro dos botões */
+button svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.tc-pill-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.forge-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.tc-pill-btn__icon,
+.gm-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+a.tc-pill-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+a.forge-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+button.primary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+button.secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]) {
+  fill: none !important;
+  stroke: currentColor !important;
+  color: inherit !important;
+  transition: color 120ms ease, stroke 120ms ease !important;
+}
+
+button:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]):not(.gm-btn-plus-black):not(.gm-btn-plus-rotate):not(.rotate-90),
+.tc-pill-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]):not(.gm-btn-plus-black):not(.gm-btn-plus-rotate):not(.rotate-90),
+.tc-pill-btn:hover .tc-pill-btn__icon,
+.gm-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]):not(.gm-btn-plus-black):not(.gm-btn-plus-rotate):not(.rotate-90),
+.btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]):not(.gm-btn-plus-black):not(.gm-btn-plus-rotate):not(.rotate-90),
+a.tc-pill-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]):not(.gm-btn-plus-black):not(.gm-btn-plus-rotate):not(.rotate-90) {
+  fill: none !important;
+  stroke: currentColor !important;
+  transform: none;
+}
+
+/* 6. Active state universal: scale(0.98) igual ao botão Grade */
+button:active,
+.tc-pill-btn:active,
+.gm-btn:active,
+.btn:active,
+.forge-btn:active {
+  transform: scale(0.98) !important;
+}
+
+/* 7. Focus Visible com contorno Ember Halo */
+button:focus-visible,
+.forge-btn:focus-visible,
+.tc-pill-btn:focus-visible,
+.gm-btn:focus-visible,
+.btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(246, 90, 26, 0.24) !important;
+}
+
+/* 8. Botão Disabled */
+button:disabled,
+button[disabled],
+.tc-pill-btn:disabled,
+.gm-btn:disabled {
+  background: #14100e !important;
+  border-color: #261b16 !important;
+  color: #63534b !important;
+  cursor: not-allowed !important;
+  opacity: 0.55 !important;
+  pointer-events: none !important;
+  transform: none !important;
   box-shadow: none !important;
 }
 
-[data-theme="dark"] .fora,
-.gm-dark .fora,
-html:not([data-theme="light"]):not(.gm-light) .fora {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  box-shadow: none !important;
+button:disabled svg,
+.tc-pill-btn:disabled svg {
+  color: #63534b !important;
+  stroke: #63534b !important;
+  transform: none !important;
+}
+
+/* 9. Variações de Tamanho Padronizadas Forge UI (Radius 4px, igual botão Grade) */
+.tc-pill-btn-lg,
+button.lg,
+.gm-btn-lg {
+  height: 42px !important;
+  padding: 0 18px !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+}
+
+.tc-pill-btn-md,
+button.md,
+.gm-btn-md,
+button[class*="h-10"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
+button[class*="h-11"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
+a[class*="h-10"]:not([class*="w-"]):not(.rounded-full),
+a[class*="h-11"]:not([class*="w-"]):not(.rounded-full) {
+  height: 38px !important;
+  padding: 0 14px !important;
+  font-size: 11.5px !important;
+  border-radius: 4px !important;
+}
+
+.tc-pill-btn-sm,
+button.sm,
+.gm-btn-sm,
+button[class*="h-8"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
+button[class*="h-9"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
+a[class*="h-8"]:not([class*="w-"]):not(.rounded-full),
+a[class*="h-9"]:not([class*="w-"]):not(.rounded-full) {
+  height: 32px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
+  border-radius: 4px !important;
+}
+
+/* Protecao Total para Botoes de Acao e Icones (Clientes, Orcamentos, etc) */
+.btn-action-edit,
+.btn-action-neutral,
+.btn-action-delete,
+.btn-whatsapp,
+.gm-budget-action-btn,
+.gm-grid-action-btn,
+.gm-btn-icon,
+.gm-btn-icon-square,
+.forge-btn-icon,
+.forge-btn-icon-square,
+button[class*="w-10"][class*="h-10"],
+button[class*="w-8"][class*="h-8"],
+button[class*="w-7"][class*="h-7"],
+button[class*="w-9"][class*="h-9"],
+button[class*="!p-0"],
+button.p-0 {
+  padding: 0 !important;
+  min-width: unset !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+.btn-action-edit svg,
+.btn-action-neutral svg,
+.btn-action-delete svg,
+.btn-whatsapp svg,
+.gm-budget-action-btn svg,
+.gm-grid-action-btn svg,
+button[class*="w-10"][class*="h-10"] svg,
+button[class*="w-8"][class*="h-8"] svg {
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Badges Técnicos Forge (NOMINAL, LIVE, RUNNING, PASSED, FAILED) */
+.forge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+.forge-badge-nominal,
+.forge-badge-passed,
+.forge-badge-success {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border: 1px solid rgba(34, 197, 94, 0.35) !important;
+  color: #22C55E !important;
+}
+.forge-badge-live,
+.forge-badge-running,
+.forge-badge-warning {
+  background: rgba(246, 90, 26, 0.1) !important;
+  border: 1px solid rgba(246, 90, 26, 0.35) !important;
+  color: #FF7A38 !important;
+}
+.forge-badge-failed,
+.forge-badge-danger {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #EF4444 !important;
+}
+
+/* Inputs Técnicos Forge */
+.gm-input,
+.forge-input,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  background: #131315 !important;
+  border: 1px solid #26262A !important;
+  border-radius: 6px !important;
+  color: #F2F2F3 !important;
+  font-weight: 500 !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease !important;
+}
+.gm-input:focus,
+.forge-input:focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+select:focus,
+textarea:focus {
+  border-color: #F65A1A !important;
+  box-shadow: 0 0 0 1px rgba(246, 90, 26, 0.35) !important;
+  outline: none !important;
 }
 
 /* =========================================================
@@ -112,6 +1426,179 @@ html:not([data-theme="light"]):not(.gm-light) .fora {
 .selection-orange::selection {
   background-color: #FE540B !important;
   color: #ffffff !important;
+}
+
+/* =========================================================
+   SISTEMA DE TIPOGRAFIA PADRÃO & CONTRASTE VISUAL FORGE
+   (Hierarquia Estipulada para Todo o App)
+   - Hero (32-44px): Contadores e grandes números
+   - H1 (24-28px): Títulos de páginas
+   - H2 (18-22px): Títulos de seções e painéis
+   - H3 (16-18px): Cards, containers e modais
+   - Body (14-15px): Texto corrido, descrições e células
+   - Sm / Cápsulas (13px / line-height: 17px): Indicadores de métricas e subtextos
+   - Labels (12px): Rótulos de campos e formulários
+   - Micro (11px): Kickers de seções ("MÉTRICAS GERAIS") e tags
+========================================================= */
+
+/* 1. TÍTULOS E HEADINGS: realce em branco puro (#ffffff) com sombreamento suave para leitura instantânea */
+h1, .gm-heading, .page-title, .gm-page-title, [class*="text-2xl"], [class*="text-3xl"], [class*="text-4xl"] {
+  color: #ffffff !important;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+h2, .gm-section-title-lg {
+  color: #ffffff !important;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) !important;
+}
+
+h3, h4, .gm-card-title, .gm-modal-title, .card-title-lg, .metric-title {
+  color: #ffffff !important;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* 2. RÓTULOS DE FORMULÁRIO (LABELS) & CABEÇALHOS DE TABELA (TH) */
+label,
+.gm-label,
+th,
+dt,
+legend,
+.form-label {
+  color: #f8fafc !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65) !important;
+}
+
+/* 3. TEXTOS CORRIDOS E PARÁGRAFOS PRINCIPAIS */
+p,
+.gm-body,
+.gm-text-body,
+li {
+  color: #f2f2f3;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 4. TEXTOS SECUNDÁRIOS, LEGENDAS E SUBTÍTULOS (Elevados para ardósia claro #cbd5e1 para legibilidade AA) */
+.text-zinc-400,
+.text-slate-400,
+.text-gray-400,
+.text-neutral-400,
+.text-zinc-500,
+.text-slate-500,
+.text-gray-500,
+.text-neutral-500,
+.text-muted,
+.text-muted-foreground,
+.caption,
+.subtitle,
+small,
+.gm-subtext,
+.gm-desc,
+.gm-caption {
+  color: #cbd5e1 !important;
+}
+
+/* Subtítulos mais destacados, textos de apoio e parágrafos */
+.text-zinc-300,
+.text-slate-300,
+.text-gray-300,
+.text-neutral-300,
+.text-zinc-200,
+.text-slate-200 {
+  color: #f1f5f9 !important;
+}
+
+/* 5. CÁPSULAS DE MÉTRICAS E INDICADORES (PADRÃO 13px / LINE-HEIGHT 17px) */
+.gm-metric-capsule,
+.gm-status-capsule span,
+[class*="bg-emerald-500/10"] span,
+[class*="bg-amber-500/10"] span,
+[class*="bg-teal-500/10"] span,
+[class*="bg-sky-500/10"] span {
+  font-size: 13px !important;
+  line-height: 17px !important;
+  font-weight: 800 !important;
+}
+
+/* 6. MODAIS, JANELAS SUSPENSAS E DIÁLOGOS (CONTRASTE MÁXIMO E LEGIBILIDADE FORGE) */
+.gm-modal,
+[role="dialog"],
+.gm-solid-modal {
+  background-color: #141418 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+.gm-modal h2,
+.gm-modal h3,
+[role="dialog"] h2,
+[role="dialog"] h3 {
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+}
+
+.gm-modal label,
+[role="dialog"] label {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+.gm-modal p,
+.gm-modal span.text-xs,
+.gm-modal span.text-sm,
+[role="dialog"] p,
+[role="dialog"] span.text-xs,
+[role="dialog"] span.text-sm,
+div[class*="fixed inset-0"] p,
+div[class*="fixed inset-0"] span.text-xs,
+div[class*="fixed inset-0"] span.text-sm {
+  color: #cbd5e1 !important;
+}
+
+/* 7. INPUTS, SELECTS E TEXTAREAS (NÍTIDOS COM TEXTO BRANCO E PLACEHOLDER VISÍVEL) */
+input, select, textarea {
+  color: #ffffff !important;
+  font-size: 14px !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #94a3b8 !important;
+  font-size: 13px !important;
+}
+
+/* 8. TABELAS E DATA GRIDS */
+table th {
+  color: #a1a1aa !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid #26262a !important;
+}
+
+table td {
+  color: #f2f2f3;
+  font-size: 13.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+table tr:hover td {
+  color: #ffffff;
 }
 
 /* =========================================================
@@ -422,8 +1909,8 @@ html.lenis, html.lenis body {
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s, border-color 0.2s, opacity 0.3s;
 }
 
@@ -1088,8 +2575,8 @@ body.resizing * {
   border-left: none;
   border-top: none;
   border-bottom: none;
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 50;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1107,10 +2594,12 @@ body.resizing * {
 .sidebar-inner {
   overflow: hidden;
   flex: 1;
+  height: 100% !important;
   border-radius: inherit;
   background: rgb(0 0 0 / 14%);
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
 }
 
 .sidebar header {
@@ -1125,7 +2614,9 @@ body.resizing * {
 }
 
 .logo-text {
-  height: 17px;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .gm-toggle-btn,
@@ -1159,22 +2650,56 @@ button.handle,
 .sidebar a.sidebar-btn {
   position: relative;
   display: flex;
-  gap: 20px;
+  gap: 14px !important;
   align-items: center;
-  height: 56px;
+  height: 42px !important;
+  min-height: 38px !important;
+  max-height: 44px !important;
   width: 100%;
   font-family: inherit;
-  font-size: 16px;
-  font-weight: 400;
+  font-size: 15px !important;
+  font-weight: 600;
   line-height: 1;
-  padding: 0 20px;
+  padding: 0 16px !important;
   background: transparent;
+  border-radius: 0 !important;
   border: 0;
   cursor: pointer;
   text-align: left;
-  opacity: 0.8;
-  color: rgb(255 255 255 / 95%);
-  transition: all 0.2s ease;
+  opacity: 0.95;
+  color: #b4b7c2;
+  transition: all 0.15s ease;
+}
+
+/* Indicador de janela ativa: barra vertical laranja na extremidade esquerda (igual ao print) */
+.sidebar-window-indicator {
+  display: inline-block;
+  position: absolute !important;
+  left: 0 !important;
+  top: 4px !important;
+  bottom: 4px !important;
+  width: 3.5px !important;
+  min-width: 3.5px !important;
+  max-width: 3.5px !important;
+  height: auto !important;
+  border-radius: 0 3px 3px 0 !important;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar a.sidebar-btn.active .sidebar-window-indicator,
+.sidebar button.sidebar-btn.active .sidebar-window-indicator {
+  background: var(--gm-menu-primary, var(--gm-primary, #FE540B)) !important;
+  opacity: 1 !important;
+  box-shadow: 0 0 10px rgba(254, 84, 11, 0.8) !important;
+}
+
+.sidebar.collapsed a.sidebar-btn .sidebar-window-indicator {
+  position: absolute !important;
+  left: 0 !important;
 }
 
 .sidebar button p:nth-child(2),
@@ -1184,32 +2709,42 @@ button.handle,
 
 .sidebar button:not(.active):hover,
 .sidebar a.sidebar-btn:not(.active):hover {
-  background: rgb(0 0 0 / 8%);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
   opacity: 1;
 }
 
 .sidebar a.sidebar-btn.active {
-  background: rgba(255, 255, 255, 0.08);
-  opacity: 1;
-  font-weight: 600;
-  color: #fff;
+  background: transparent !important;
+  opacity: 1 !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 .sidebar ul {
-  flex: 0 1 auto;
+  flex: 1 1 auto !important;
   list-style: none;
-  padding: 0;
+  padding: 8px 0 !important;
   margin: 0;
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-evenly !important;
+  overflow: hidden !important;
+}
+
+.sidebar-footer {
+  margin-top: auto !important;
+  flex-shrink: 0 !important;
 }
 
 .sidebar i,
-.sidebar svg {
-  font-size: 18px;
-  width: 18px;
-  max-width: 18px;
-  min-width: 18px;
+.sidebar svg:not(.gm-gold-crown-svg) {
+  font-size: 17px;
+  width: 17px;
+  max-width: 17px;
+  min-width: 17px;
 }
 
 .sidebar ul li:last-child {
@@ -1494,58 +3029,30 @@ button.handle,
 }
 
 /* =========================================================
-   CARDS (Vidro Fosco)
+   CARDS (Forge UI Dark Solid System)
 ========================================================= */
 .gm-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: #121215 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
   border-radius: var(--gm-radius);
   padding: var(--gm-space-5);
   overflow: hidden;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.4s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease;
   position: relative;
-  box-shadow: none !important;
   contain: none !important;
 }
 
 [data-theme="dark"] .gm-card,
 .gm-dark .gm-card,
 html:not([data-theme="light"]):not(.gm-light) .gm-card {
-  background: rgba(18, 18, 22, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.gm-card::before {
-  content: "";
-  position: absolute;
-  top: -15%;
-  left: -15%;
-  width: 130%;
-  height: 130%;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--gm-primary), transparent 90%) 0%, transparent 50%);
-  pointer-events: none;
-  opacity: 0.7;
-  z-index: 0;
-  animation: gm-reflection-animate 20s ease-in-out infinite;
-  will-change: transform, opacity;
-  transform: translateZ(0);
-}
-
-.gm-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gm-primary), transparent 60%), transparent);
-  pointer-events: none;
-  z-index: 2;
+  background: #121215 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .gm-card > * {
@@ -1556,13 +3063,13 @@ html:not([data-theme="light"]):not(.gm-light) .gm-card {
 @media (max-width: 640px) {
   .gm-card {
     padding: 16px;
-    border-radius: 16px;
+    border-radius: 14px;
   }
 }
 
 .gm-card:hover {
-  background: rgba(255, 255, 255, 0.75);
-  border-color: color-mix(in srgb, var(--gm-primary), transparent 70%);
+  background: #16161a !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
   transform: none;
   box-shadow: none;
 }
@@ -1570,7 +3077,8 @@ html:not([data-theme="light"]):not(.gm-light) .gm-card {
 [data-theme="dark"] .gm-card:hover,
 .gm-dark .gm-card:hover,
 html:not([data-theme="light"]):not(.gm-light) .gm-card:hover {
-  background: rgba(25, 25, 32, 0.75);
+  background: #16161a !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
 .gm-card:hover::before {
@@ -1938,8 +3446,8 @@ html:not([data-theme="light"]):not(.gm-light) .gm-card:hover {
 /* Efeito Glass Desfocado para Campo de Busca e Cápsulas dos Orçamentos */
 .gm-search-glass {
   background: rgba(18, 18, 22, 0.52) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
 }
@@ -1971,12 +3479,10 @@ html:not([data-theme="light"]):not(.gm-light) .gm-card:hover {
   height: 48px !important;
   border-radius: 16px !important;
   background: rgba(255, 255, 255, 0.06) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 
-    0 8px 32px 0 rgba(0, 0, 0, 0.3),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   overflow: hidden !important;
 }
@@ -1984,9 +3490,7 @@ html:not([data-theme="light"]):not(.gm-light) .gm-card:hover {
 .gm-search-apple-glass:hover {
   background: rgba(255, 255, 255, 0.09) !important;
   border-color: rgba(255, 255, 255, 0.25) !important;
-  box-shadow: 
-    0 12px 36px 0 rgba(0, 0, 0, 0.35),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.28) !important;
+  box-shadow: none !important;
 }
 
 .gm-search-apple-glass:focus-within {
@@ -2001,8 +3505,8 @@ html:not([data-theme="light"]):not(.gm-light) .gm-card:hover {
 [data-theme="light"] .gm-search-apple-glass,
 .gm-light .gm-search-apple-glass {
   background: rgba(255, 255, 255, 0.65) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(0, 0, 0, 0.09) !important;
   box-shadow: 
     0 8px 24px 0 rgba(0, 0, 0, 0.06),
@@ -2147,12 +3651,10 @@ button.gm-search-apple-glass-clear:hover {
   padding: 0 14px !important;
   border-radius: 9999px !important;
   background: rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 
-    0 4px 16px 0 rgba(0, 0, 0, 0.25),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3) !important;
+  box-shadow: none !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   cursor: pointer !important;
 }
@@ -2187,8 +3689,8 @@ button.gm-search-apple-glass-clear:hover {
 [data-theme="light"] .gm-status-apple-glass,
 .gm-light .gm-status-apple-glass {
   background: rgba(255, 255, 255, 0.72) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
   box-shadow: 
     0 4px 14px 0 rgba(0, 0, 0, 0.06),
@@ -2242,12 +3744,10 @@ button.gm-search-apple-glass-clear:hover {
   justify-content: center !important;
   padding: 0 !important;
   background: rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 
-    0 4px 16px 0 rgba(0, 0, 0, 0.2),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.28) !important;
+  box-shadow: none !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
   cursor: pointer !important;
 }
@@ -2255,7 +3755,7 @@ button.gm-search-apple-glass-clear:hover {
 .gm-action-apple-glass:hover {
   background: rgba(255, 255, 255, 0.16) !important;
   border-color: rgba(255, 255, 255, 0.35) !important;
-  transform: scale(1.08) !important;
+  transform: none !important;
 }
 
 .gm-action-apple-glass:active {
@@ -2265,8 +3765,8 @@ button.gm-search-apple-glass-clear:hover {
 [data-theme="light"] .gm-action-apple-glass,
 .gm-light .gm-action-apple-glass {
   background: rgba(255, 255, 255, 0.72) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
   box-shadow: 
     0 4px 12px 0 rgba(0, 0, 0, 0.05),
@@ -2306,8 +3806,8 @@ button.gm-search-apple-glass-clear:hover {
   flex: 1 !important;
   border-radius: 9999px !important;
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.18) 50%, rgba(255, 255, 255, 0.04) 100%) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
   filter: none !important;
   border: none !important;
@@ -2391,7 +3891,7 @@ button.gm-search-apple-glass-clear:hover {
 .gm-btn-primary:hover,
 .gm-preview-container[data-button-style="solid"] .gm-btn:hover {
   background: linear-gradient(180deg, #FF8838 0%, #FF6810 100%) !important;
-  transform: translateY(-1px) scale(1.01) !important;
+  transform: none !important;
   box-shadow: 0 6px 24px rgba(255, 107, 26, 0.5) !important;
 }
 
@@ -2535,8 +4035,8 @@ button.gm-search-apple-glass-clear:hover {
 [data-button-style="glass"] button.bg-\[var\(--gm-primary\)\]:not(.btn-whatsapp),
 .gm-preview-container[data-button-style="glass"] .gm-btn:not(.gm-btn-outline):not(.gm-btn-soft):not(.gm-btn-danger) {
   background: linear-gradient(135deg, var(--gm-primary-40, rgba(255, 105, 0, 0.45)) 0%, var(--gm-primary-20, rgba(255, 105, 0, 0.25)) 100%) !important;
-  backdrop-filter: blur(16px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(190%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   color: #ffffff !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.22), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.45) !important;
@@ -2561,8 +4061,8 @@ button.gm-search-apple-glass-clear:hover {
 .gm-preview-container[data-button-style="glass"] .gm-btn.gm-btn-soft,
 .gm-preview-container[data-button-style="glass"] .gm-btn-icon {
   background: rgba(255, 255, 255, 0.12) !important;
-  backdrop-filter: blur(14px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   color: #ffffff !important;
   box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25) !important;
@@ -2586,8 +4086,8 @@ button.gm-search-apple-glass-clear:hover {
 .gm-preview-container[data-button-style="glass"] .gm-btn.gm-btn-outline {
   background: rgba(255, 255, 255, 0.06) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   color: #ffffff !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
 }
@@ -2604,8 +4104,8 @@ button.gm-search-apple-glass-clear:hover {
 [data-button-style="glass"] .btn-action-delete,
 .gm-preview-container[data-button-style="glass"] .gm-btn.gm-btn-danger {
   background: rgba(239, 68, 68, 0.22) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(239, 68, 68, 0.4) !important;
   color: #ffffff !important;
   box-shadow: 0 4px 20px 0 rgba(239, 68, 68, 0.2), inset 0 1px 1px 0 rgba(255, 255, 255, 0.3) !important;
@@ -2625,8 +4125,8 @@ button.gm-search-apple-glass-clear:hover {
 [data-button-style="glass"] button.btn-whatsapp,
 .gm-preview-container[data-button-style="glass"] .btn-whatsapp {
   background: rgba(37, 211, 102, 0.22) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(37, 211, 102, 0.4) !important;
   color: #ffffff !important;
   box-shadow: 0 4px 20px 0 rgba(37, 211, 102, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.3) !important;
@@ -2645,8 +4145,8 @@ button.gm-search-apple-glass-clear:hover {
 [data-button-style="glass"] .gm-tab,
 .gm-preview-container[data-button-style="glass"] .gm-tab {
   background: rgba(255, 255, 255, 0.05) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   transition: all 0.25s ease !important;
 }
@@ -2654,8 +4154,9 @@ button.gm-search-apple-glass-clear:hover {
 [data-button-style="glass"] .gm-tab.active,
 .gm-preview-container[data-button-style="glass"] .gm-tab.active {
   background: rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: backdrop-filter;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   color: #ffffff !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
@@ -2663,8 +4164,9 @@ button.gm-search-apple-glass-clear:hover {
 
 [data-button-style="glass"] .bio-button {
   background: rgba(255, 255, 255, 0.15) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: backdrop-filter;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.35) !important;
 }
@@ -2679,8 +4181,8 @@ button.gm-search-apple-glass-clear:hover {
 .gm-preview-container[data-button-style="neon"] .gm-btn {
   background: rgba(10, 10, 12, 0.85) !important;
   border: 1.5px solid var(--gm-primary) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   color: #ffffff !important;
   box-shadow: 0 0 15px var(--gm-primary-20) !important;
   text-shadow: none !important;
@@ -2700,7 +4202,7 @@ button.gm-search-apple-glass-clear:hover {
 [data-button-style="neon"] .gm-btn.gm-btn-outline,
 .gm-preview-container[data-button-style="neon"] .gm-btn.gm-btn-outline {
   background: rgba(0, 0, 0, 0.4) !important;
-  backdrop-filter: blur(12px) !important;
+  backdrop-filter: none !important;
   border: 1px solid var(--gm-primary) !important;
   color: #fff !important;
 }
@@ -2748,8 +4250,8 @@ button.gm-search-apple-glass-clear:hover {
   border: 1px solid rgba(var(--gm-accent-rgb), 0.5) !important;
   color: #ffffff !important;
   text-shadow: 0 0 12px rgba(var(--gm-accent-rgb), 0.5) !important;
-  backdrop-filter: blur(16px) saturate(1.8) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(1.8) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 [data-button-style="neon"] .gm-btn.gm-btn-accent svg,
 .gm-preview-container[data-button-style="neon"] .gm-btn.gm-btn-accent svg {
@@ -2825,14 +4327,14 @@ button.gm-budget-action-btn:hover svg,
 .btn-action-delete:hover svg,
 .btn-action-neutral:hover svg,
 .btn-whatsapp:hover svg {
-  transform: scale(1.15);
+  transform: none !important;
 }
 
 .group:hover .group-hover\:rotate-180,
 .gm-btn:hover svg.group-hover\:rotate-180,
 button:hover svg.group-hover\:rotate-180,
 a:hover svg.group-hover\:rotate-180 {
-  transform: rotate(180deg) scale(1.15) !important;
+  transform: rotate(180deg) !important;
 }
 
 .gm-btn:active svg,
@@ -3255,8 +4757,9 @@ aside.gm-sidebar,
 .gm-sidebar {
   position: relative !important;
   overflow: visible !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: backdrop-filter;
   background: rgba(255, 255, 255, 0.6) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   box-shadow: none !important;
@@ -3316,12 +4819,14 @@ button.gm-sidebar-toggle:focus {
 [data-theme="dark"] .gm-sidebar,
 .gm-dark .gm-sidebar,
 html:not([data-theme="light"]):not(.gm-light) .gm-sidebar {
-  background: rgba(18, 18, 22, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #0e0e11 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-/* cards & containers glass premium - VIDRO FOSCO NO LUGAR DE SOMBRA PESADA */
+/* cards & containers Forge UI Dark Surface */
 .barra,
 .fora,
 .glass-card,
@@ -3344,14 +4849,15 @@ html:not([data-theme="light"]):not(.gm-light) .gm-sidebar {
 .btn-secondary {
   position: relative !important;
   overflow: hidden !important;
-  background: rgba(255, 255, 255, 0.6) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border-radius: 20px !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: none !important;
+  background: #121215 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  will-change: auto !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
   contain: none !important;
-  transition: all 0.25s ease !important;
+  transition: all 0.2s ease !important;
 }
 
 [data-theme="dark"] .barra,
@@ -3402,9 +4908,11 @@ html:not([data-theme="light"]):not(.gm-light) .panel,
 html:not([data-theme="light"]):not(.gm-light) .gm-filter-tab,
 html:not([data-theme="light"]):not(.gm-light) .gm-status-capsule,
 html:not([data-theme="light"]):not(.gm-light) .gm-budget-action-btn {
-  background: rgba(18, 18, 22, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: none !important;
+  background: #121215 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   contain: none !important;
 }
 
@@ -3426,21 +4934,7 @@ html:not([data-theme="light"]):not(.gm-light) .gm-budget-action-btn {
 .panel::before,
 .gm-filter-btn::before,
 .btn-glass::before {
-  content: '' !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: 1px !important;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.8),
-    transparent
-  ) !important;
-  pointer-events: none !important;
-  z-index: 2 !important;
-  display: block !important;
+  display: none !important;
 }
 
 /* Linha lateral esquerda luminosa em gradiente (::after) */
@@ -3455,21 +4949,7 @@ html:not([data-theme="light"]):not(.gm-light) .gm-budget-action-btn {
 .panel::after,
 .gm-filter-btn::after,
 .btn-glass::after {
-  content: '' !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 1px !important;
-  height: 100% !important;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.8),
-    transparent,
-    rgba(255, 255, 255, 0.3)
-  ) !important;
-  pointer-events: none !important;
-  z-index: 2 !important;
-  display: block !important;
+  display: none !important;
 }
 
 .gm-card:hover,
@@ -3480,13 +4960,8 @@ html:not([data-theme="light"]):not(.gm-light) .gm-budget-action-btn {
 .card:hover,
 .gm-filter-btn:hover,
 .btn-glass:hover {
-  background: rgba(255, 255, 255, 0.25) !important;
   border-color: rgba(255, 255, 255, 0.45) !important;
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 0 16px 8px rgba(255, 255, 255, 0.35) !important;
+  box-shadow: none !important;
 }
 
 /* inputs - glassmorphism styling across all typing fields */
@@ -3500,8 +4975,8 @@ textarea.gm-input,
 select.gm-input {
   background: rgba(16, 20, 26, 0.45) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  backdrop-filter: blur(16px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(130%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   transition: all 0.2s ease-in-out !important;
 }
 
@@ -3517,72 +4992,45 @@ select:focus {
 /* BG layer global & Root background container */
 .gm-layout {
   position: relative;
-  isolation: isolate;
   min-height: 100vh;
-  background-color: var(--gm-bg, #0b0f14);
+  background-color: transparent;
 }
 
 html,
 body,
-#root,
 .app-bg,
 [data-theme="dark"] body,
-.gm-dark body,
-html.gm-has-bg,
-html.gm-has-bg body,
-body.gm-has-bg {
+.gm-dark body {
   background-color: var(--gm-bg, #0b0f14) !important;
   color: var(--gm-title, var(--gm-text, #ffffff)) !important;
 }
 
-html:not(.gm-has-bg) .gm-layout::after {
-  background:
-    radial-gradient(900px 420px at 15% 0%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.08), transparent 60%),
-    radial-gradient(900px 420px at 85% 0%, rgba(var(--gm-accent-rgb, var(--gm-primary-rgb, 254, 84, 11)), 0.05), transparent 60%) !important;
+#root,
+.gm-layout,
+.gm-main,
+.gm-container {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Camada do plano de fundo adaptativa e contínua sem falhas nas bordas das telas */
+html.gm-has-bg body {
+  background-color: var(--gm-bg, #0b0f14) !important;
 }
 
 .gm-layout::before {
   content: "";
   position: fixed;
-  inset: 0;
-  z-index: -2;
+  top: -8vh;
+  left: -8vw;
+  width: 116vw;
+  height: 116vh;
+  min-width: calc(100vw + 120px);
+  min-height: calc(100vh + 120px);
   pointer-events: none;
-
   background-image: var(--gm-app-bg-url);
-  background-size: var(--gm-app-bg-fit, cover);
-  background-repeat:no-repeat;
-  
-  opacity: var(--gm-app-bg-opacity, 0);
-  transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05)));
-  will-change: transform, background-position, filter;
-  backface-visibility: hidden;
-}
-
-#gm-video-bg {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -3;
-  pointer-events: none;
-  object-fit: var(--gm-app-bg-fit, cover);
-  opacity: var(--gm-app-bg-opacity, 0);
-  transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05)));
-  filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) saturate(1.08) contrast(1.05);
-  object-position: 
-    calc(var(--gm-app-bg-pos-x, 50%) + var(--gm-app-bg-parallax-x, 0px))
-    calc(var(--gm-app-bg-pos-y, 50%) + var(--gm-app-bg-parallax-y, 0px) + var(--gm-app-bg-parallax-y-mouse, 0px));
-  will-change: transform, object-position, filter;
-}
-
-.gm-main{ background: transparent !important; }
-
-/* ============================= */
-/* PARALLAX 2.0 (X + Y)          */
-/* ============================= */
-
-.gm-layout::before{
-  /* usa X e Y juntos */
+  background-size: var(--gm-app-bg-fit, cover) !important;
+  background-repeat: no-repeat !important;
   background-position:
     calc(var(--gm-app-bg-pos-x, 50%) + var(--gm-app-bg-parallax-x, 0px))
     calc(
@@ -3590,18 +5038,50 @@ html:not(.gm-has-bg) .gm-layout::after {
       + var(--gm-app-bg-parallax-y, 0px)
       + var(--gm-app-bg-parallax-y-mouse, 0px)
     ) !important;
+  opacity: var(--gm-app-bg-opacity, 1);
+  transform: scale(calc(max(var(--gm-app-bg-scale, 1), 1.08) * var(--gm-app-bg-depth-scale, 1.05)));
+  transform-origin: center center;
+  filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) saturate(1.08) contrast(1.05);
+  will-change: transform, opacity;
+  z-index: -2;
+}
 
-  /* blur automático (calculado no JS) */
-  filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px)))
-          saturate(1.08) contrast(1.05);
+/* Camada interna do main para amostragem nativa por containers com backdrop-filter no Chrome e Safari */
+.gm-main-bg-layer {
+  content: "";
+  position: fixed;
+  top: -8vh;
+  left: -8vw;
+  width: 116vw;
+  height: 116vh;
+  min-width: calc(100vw + 120px);
+  min-height: calc(100vh + 120px);
+  pointer-events: none;
+  background-image: var(--gm-app-bg-url);
+  background-size: var(--gm-app-bg-fit, cover) !important;
+  background-repeat: no-repeat !important;
+  background-position:
+    calc(var(--gm-app-bg-pos-x, 50%) + var(--gm-app-bg-parallax-x, 0px))
+    calc(
+      var(--gm-app-bg-pos-y, 50%)
+      + var(--gm-app-bg-parallax-y, 0px)
+      + var(--gm-app-bg-parallax-y-mouse, 0px)
+    ) !important;
+  opacity: var(--gm-app-bg-opacity, 1);
+  transform: scale(calc(max(var(--gm-app-bg-scale, 1), 1.08) * var(--gm-app-bg-depth-scale, 1.05)));
+  transform-origin: center center;
+  filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) saturate(1.08) contrast(1.05);
+  will-change: transform, opacity;
+  z-index: 0;
 }
 
 @media (max-width: 1023px) {
-  .gm-layout::before {
+  .gm-layout::before,
+  .gm-main-bg-layer {
     background-image: var(--gm-mobile-bg-url, var(--gm-app-bg-url)) !important;
     background-size: var(--gm-mobile-bg-fit, var(--gm-app-bg-fit, cover)) !important;
-    opacity: var(--gm-mobile-bg-opacity, var(--gm-app-bg-opacity, 0)) !important;
-    transform: scale(calc(var(--gm-mobile-bg-scale, var(--gm-app-bg-scale, 1)) * var(--gm-app-bg-depth-scale, 1.05))) !important;
+    opacity: var(--gm-mobile-bg-opacity, var(--gm-app-bg-opacity, 1)) !important;
+    transform: scale(calc(max(var(--gm-mobile-bg-scale, var(--gm-app-bg-scale, 1)), 1.08) * var(--gm-app-bg-depth-scale, 1.05)));
     background-position:
       calc(var(--gm-mobile-bg-pos-x, var(--gm-app-bg-pos-x, 50%)) + var(--gm-app-bg-parallax-x, 0px))
       calc(
@@ -3609,9 +5089,76 @@ html:not(.gm-has-bg) .gm-layout::after {
         + var(--gm-app-bg-parallax-y, 0px)
         + var(--gm-app-bg-parallax-y-mouse, 0px)
       ) !important;
-    filter: blur(var(--gm-mobile-bg-blur-effective, var(--gm-mobile-bg-blur, var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px)))))
-            saturate(1.08) contrast(1.05) !important;
+    filter: blur(var(--gm-mobile-bg-blur-effective, var(--gm-mobile-bg-blur, var(--gm-app-bg-blur, 0px)))) saturate(1.08) contrast(1.05) !important;
   }
+}
+
+/* Camada interna do main para amostragem nativa por containers com backdrop-filter no Chrome e Safari */
+.gm-main-bg-layer {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(1100px 550px at 15% 10%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.16), transparent 65%),
+    radial-gradient(950px 500px at 85% 20%, rgba(var(--gm-accent-rgb, var(--gm-primary-rgb, 254, 84, 11)), 0.12), transparent 60%),
+    radial-gradient(1000px 600px at 50% 85%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.10), transparent 70%),
+    radial-gradient(750px 450px at 25% 75%, rgba(59, 130, 246, 0.08), transparent 60%),
+    var(--gm-bg, #0b0f14) !important;
+}
+
+html.gm-has-bg .gm-main-bg-layer {
+  background-image: var(--gm-app-bg-url) !important;
+  background-size: var(--gm-app-bg-fit, cover) !important;
+  background-repeat: no-repeat !important;
+  background-position:
+    calc(var(--gm-app-bg-pos-x, 50%) + var(--gm-app-bg-parallax-x, 0px))
+    calc(
+      var(--gm-app-bg-pos-y, 50%)
+      + var(--gm-app-bg-parallax-y, 0px)
+      + var(--gm-app-bg-parallax-y-mouse, 0px)
+    ) !important;
+  opacity: var(--gm-app-bg-opacity, 1) !important;
+  transform: scale(calc(max(var(--gm-app-bg-scale, 1), 1.08) * var(--gm-app-bg-depth-scale, 1.05)));
+  filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) saturate(1.08) contrast(1.05) !important;
+}
+
+html:not(.gm-has-bg) .gm-layout::after {
+  background:
+    radial-gradient(1100px 550px at 15% 10%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.16), transparent 65%),
+    radial-gradient(950px 500px at 85% 20%, rgba(var(--gm-accent-rgb, var(--gm-primary-rgb, 254, 84, 11)), 0.12), transparent 60%),
+    radial-gradient(1000px 600px at 50% 85%, rgba(var(--gm-primary-rgb, 254, 84, 11), 0.10), transparent 70%),
+    radial-gradient(750px 450px at 25% 75%, rgba(59, 130, 246, 0.08), transparent 60%) !important;
+}
+
+#gm-video-bg {
+  position: fixed;
+  top: -8vh;
+  left: -8vw;
+  width: 116vw;
+  height: 116vh;
+  z-index: -3;
+  pointer-events: none;
+  object-fit: var(--gm-app-bg-fit, cover);
+  opacity: var(--gm-app-bg-opacity, 1);
+  transform: scale(calc(max(var(--gm-app-bg-scale, 1), 1.08) * var(--gm-app-bg-depth-scale, 1.05)));
+  filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) saturate(1.08) contrast(1.05);
+  object-position: 
+    calc(var(--gm-app-bg-pos-x, 50%) + var(--gm-app-bg-parallax-x, 0px))
+    calc(var(--gm-app-bg-pos-y, 50%) + var(--gm-app-bg-parallax-y, 0px) + var(--gm-app-bg-parallax-y-mouse, 0px));
+  will-change: transform, object-position, filter;
+}
+
+html.gm-has-bg .gm-main,
+html:not(.gm-has-bg) .gm-main {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* =========================================================
@@ -3663,11 +5210,11 @@ html:not(.gm-has-bg) .gm-layout::after {
 @keyframes gmBgEffectPulse {
   0%, 100% {
     transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05) * 1.0));
-    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) saturate(1.08) contrast(1.05) brightness(1);
+    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) saturate(1.08) contrast(1.05) brightness(1);
   }
   50% {
     transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05) * 1.045));
-    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) saturate(1.16) contrast(1.08) brightness(1.05);
+    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) saturate(1.16) contrast(1.08) brightness(1.05);
   }
 }
 
@@ -3710,34 +5257,38 @@ html:not(.gm-has-bg) .gm-layout::after {
 @keyframes gmBgEffectAuroraLight {
   0% {
     transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05))) translate3d(calc(-10px * var(--gm-bg-effect-strength, 1)), calc(-5px * var(--gm-bg-effect-strength, 1)), 0);
-    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) saturate(calc(1 + 0.1 * var(--gm-bg-effect-strength, 1))) contrast(1.05) brightness(1);
+    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) saturate(calc(1 + 0.1 * var(--gm-bg-effect-strength, 1))) contrast(1.05) brightness(1);
   }
   50% {
     transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05) * (1 + 0.03 * var(--gm-bg-effect-strength, 1)))) translate3d(calc(10px * var(--gm-bg-effect-strength, 1)), calc(5px * var(--gm-bg-effect-strength, 1)), 0);
-    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) saturate(calc(1 + 0.25 * var(--gm-bg-effect-strength, 1))) contrast(1.10) brightness(calc(1 + 0.08 * var(--gm-bg-effect-strength, 1)));
+    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) saturate(calc(1 + 0.25 * var(--gm-bg-effect-strength, 1))) contrast(1.10) brightness(calc(1 + 0.08 * var(--gm-bg-effect-strength, 1)));
   }
   100% {
     transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05))) translate3d(calc(-10px * var(--gm-bg-effect-strength, 1)), calc(-5px * var(--gm-bg-effect-strength, 1)), 0);
-    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) saturate(calc(1 + 0.1 * var(--gm-bg-effect-strength, 1))) contrast(1.05) brightness(1);
+    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) saturate(calc(1 + 0.1 * var(--gm-bg-effect-strength, 1))) contrast(1.05) brightness(1);
   }
 }
 
 html[data-bg-effect-desktop="pulse"] .gm-layout::before,
+html[data-bg-effect-desktop="pulse"] .gm-main-bg-layer,
 html[data-bg-effect-desktop="pulse"] #gm-video-bg {
   animation: gmBgEffectPulse 12s ease-in-out infinite alternate !important;
 }
 
 html[data-bg-effect-desktop="drift"] .gm-layout::before,
+html[data-bg-effect-desktop="drift"] .gm-main-bg-layer,
 html[data-bg-effect-desktop="drift"] #gm-video-bg {
   animation: gmBgEffectDrift 28s ease-in-out infinite !important;
 }
 
 html[data-bg-effect-desktop="orbit"] .gm-layout::before,
+html[data-bg-effect-desktop="orbit"] .gm-main-bg-layer,
 html[data-bg-effect-desktop="orbit"] #gm-video-bg {
   animation: gmBgEffectOrbit 22s ease-in-out infinite !important;
 }
 
 html[data-bg-effect-desktop="aurora"] .gm-layout::before,
+html[data-bg-effect-desktop="aurora"] .gm-main-bg-layer,
 html[data-bg-effect-desktop="aurora"] #gm-video-bg {
   animation: gmBgEffectAuroraLight 16s ease-in-out infinite alternate !important;
 }
@@ -3745,24 +5296,53 @@ html[data-bg-effect-desktop="aurora"] #gm-video-bg {
 @keyframes gmBgEffectPrism {
   0% {
     transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05) * (1 + 0.01 * var(--gm-bg-effect-strength, 1)))) rotate(0deg) translate3d(0, 0, 0);
-    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) hue-rotate(0deg) saturate(1.08) brightness(1);
+    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) hue-rotate(0deg) saturate(1.08) brightness(1);
   }
   33% {
     transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05) * (1 + 0.04 * var(--gm-bg-effect-strength, 1)))) rotate(calc(0.4deg * var(--gm-bg-effect-strength, 1))) translate3d(calc(8px * var(--gm-bg-effect-strength, 1)), calc(-6px * var(--gm-bg-effect-strength, 1)), 0);
-    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) hue-rotate(calc(12deg * var(--gm-bg-effect-strength, 1))) saturate(calc(1 + 0.22 * var(--gm-bg-effect-strength, 1))) brightness(1.05);
+    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) hue-rotate(calc(12deg * var(--gm-bg-effect-strength, 1))) saturate(calc(1 + 0.22 * var(--gm-bg-effect-strength, 1))) brightness(1.05);
   }
   66% {
     transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05) * (1 + 0.03 * var(--gm-bg-effect-strength, 1)))) rotate(calc(-0.35deg * var(--gm-bg-effect-strength, 1))) translate3d(calc(-7px * var(--gm-bg-effect-strength, 1)), calc(7px * var(--gm-bg-effect-strength, 1)), 0);
-    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) hue-rotate(calc(-10deg * var(--gm-bg-effect-strength, 1))) saturate(calc(1 + 0.15 * var(--gm-bg-effect-strength, 1))) brightness(1.03);
+    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) hue-rotate(calc(-10deg * var(--gm-bg-effect-strength, 1))) saturate(calc(1 + 0.15 * var(--gm-bg-effect-strength, 1))) brightness(1.03);
   }
   100% {
     transform: scale(calc(var(--gm-app-bg-scale, 1) * var(--gm-app-bg-depth-scale, 1.05) * (1 + 0.01 * var(--gm-bg-effect-strength, 1)))) rotate(0deg) translate3d(0, 0, 0);
-    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 10px))) hue-rotate(0deg) saturate(1.08) brightness(1);
+    filter: blur(var(--gm-app-bg-blur-effective, var(--gm-app-bg-blur, 0px))) hue-rotate(0deg) saturate(1.08) brightness(1);
   }
 }
 
 html[data-bg-effect-desktop="prism"] .gm-layout::before,
+html[data-bg-effect-desktop="prism"] .gm-main-bg-layer,
 html[data-bg-effect-desktop="prism"] #gm-video-bg {
+  animation: gmBgEffectPrism 18s ease-in-out infinite !important;
+}
+
+/* =========================================================
+   EFEITOS DINÂMICOS DO PLANO DE FUNDO: TELA DE BLOQUEIO / PIN
+   ========================================================= */
+html[data-bg-effect-lockscreen="pulse"] .gm-pin-bg-image,
+html[data-bg-effect-lockscreen="pulse"] .gm-pin-bg-video {
+  animation: gmBgEffectPulse 12s ease-in-out infinite alternate !important;
+}
+
+html[data-bg-effect-lockscreen="drift"] .gm-pin-bg-image,
+html[data-bg-effect-lockscreen="drift"] .gm-pin-bg-video {
+  animation: gmBgEffectDrift 28s ease-in-out infinite !important;
+}
+
+html[data-bg-effect-lockscreen="orbit"] .gm-pin-bg-image,
+html[data-bg-effect-lockscreen="orbit"] .gm-pin-bg-video {
+  animation: gmBgEffectOrbit 22s ease-in-out infinite !important;
+}
+
+html[data-bg-effect-lockscreen="aurora"] .gm-pin-bg-image,
+html[data-bg-effect-lockscreen="aurora"] .gm-pin-bg-video {
+  animation: gmBgEffectAuroraLight 16s ease-in-out infinite alternate !important;
+}
+
+html[data-bg-effect-lockscreen="prism"] .gm-pin-bg-image,
+html[data-bg-effect-lockscreen="prism"] .gm-pin-bg-video {
   animation: gmBgEffectPrism 18s ease-in-out infinite !important;
 }
 
@@ -3991,8 +5571,8 @@ aside.gm-sidebar button.absolute {
   border-top: 1px solid rgba(255, 255, 255, 0.6) !important;
   box-shadow: none !important;
   color: var(--gm-title, #1B1D22) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="light"] .gm-card::before, .gm-light .gm-card::before,
@@ -4004,8 +5584,8 @@ aside.gm-sidebar button.absolute {
 /* Painel de Configurações (Wrapper dos Ajustes) */
 [data-theme="light"] .gm-settings-card, .gm-light .gm-settings-card {
   background: rgba(255, 255, 255, 0.6) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.35) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.6) !important;
   box-shadow: none !important;
@@ -4816,12 +6396,12 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
 /* Note Card and Note Modal Premium Overrides for Light Theme */
 [data-theme="light"] .gm-note-card,
 .gm-light .gm-note-card {
-  background-color: #FFFFFF !important;
-  background: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  background-color: rgba(255, 255, 255, 0.6) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   color: #1B1D22 !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: none !important;
 }
 
 [data-theme="light"] .gm-note-card h3,
@@ -4833,13 +6413,13 @@ html:not([data-button-style="glass"]):not([data-button-style="neon"]):not([data-
 
 [data-theme="light"] .gm-note-modal,
 .gm-light .gm-note-modal {
-  background-color: var(--gm-surface) !important;
-  background: var(--gm-surface) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  background-color: rgba(255, 255, 255, 0.6) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-color: var(--gm-border) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
   color: var(--gm-text) !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
 }
 
 /* Specific component overrides for light theme in Note Modal */
@@ -5167,14 +6747,37 @@ body{
   scrollbar-width: none;
 }
 
-.toast-host{
+.toast-host,
+.gm-alarm-host {
   position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+}
+
+.toast-host {
   right: 16px;
   bottom: 16px;
-  z-index: 9999;
   display: grid;
   gap: 10px;
   width: min(420px, calc(100vw - 32px));
+}
+
+.gm-alarm-host {
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 .toast{
@@ -5183,12 +6786,12 @@ body{
   justify-content:space-between;
   gap: 12px;
   padding: 13px 15px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(18, 20, 26, 0.50) 50%, rgba(10, 12, 16, 0.70) 100%);
-  backdrop-filter: blur(28px) saturate(190%) contrast(105%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(105%);
-  box-shadow: 0 24px 50px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.22);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #141418;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 20px 45px rgba(0,0,0,0.85);
 
   transform: translateY(6px);
   opacity: 0;
@@ -5222,7 +6825,7 @@ body{
   padding: 5px;
   line-height: 0;
   transition: all 0.2s ease;
-  backdrop-filter: blur(12px);
+  backdrop-filter: none !important;
   cursor: pointer;
 }
 .toast-close:hover{ background: rgba(255,255,255,0.20); color: #fff; }
@@ -5254,7 +6857,7 @@ body{
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.10);
   background: rgba(0,0,0,0.18);
-  backdrop-filter: blur(12px) saturate(1.15);
+  backdrop-filter: none !important;
   font-size: 11px;
   font-weight: 900;
   letter-spacing: .04em;
@@ -5272,7 +6875,7 @@ body{
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.10);
   background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(18px) saturate(1.25);
+  backdrop-filter: none !important;
   box-shadow: 0 18px 55px rgba(0,0,0,0.55);
   overflow: hidden;
   z-index: 50;
@@ -5331,7 +6934,7 @@ body{
   font-weight: 800;
   font-size: 13px;
   box-shadow: 0 0 15px var(--gm-accent-10);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none !important;
 }
 
 .gm-pill-neon-primary {
@@ -5347,7 +6950,7 @@ body{
   font-weight: 800;
   font-size: 13px;
   box-shadow: 0 0 15px var(--gm-primary-10);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none !important;
 }
 
 .gm-pill-neon-red {
@@ -5363,7 +6966,7 @@ body{
   font-weight: 800;
   font-size: 13px;
   box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none !important;
 }
 
 .gm-pill-gray{ border-color: var(--gm-border); background: var(--gm-surface-2); color: var(--gm-text); opacity: 0.8; }
@@ -5398,8 +7001,8 @@ body{
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(15, 15, 15, 0.75);
-  backdrop-filter: blur(18px) saturate(1.5);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 .gm-select-ico{ opacity: .75; }
 .gm-select{
@@ -5461,8 +7064,8 @@ body{
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(15, 15, 15, 0.8);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   /* flex-wrap: wrap; */
   box-shadow: 0 10px 40px rgba(0,0,0,0.4);
 }
@@ -5582,18 +7185,85 @@ body.bottom-nav-visible .pagination-dots-container {
 .gm-highlighted-row-glass,
 .gm-sidebar,
 .gm-navbar,
-.gm-bottom-nav,
-nav.fixed.bottom-0,
 [role="dialog"] {
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  background: rgba(18, 18, 22, 0.5) !important;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: #121215 !important;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
   contain: none !important;
+}
+
+/* Regra específica para o BottomNav móvel: Forge UI Dark System sólido sem transparência difusa */
+.gm-bottom-nav,
+nav.fixed.bottom-0 {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  border-top-left-radius: 16px !important;
+  border-top-right-radius: 16px !important;
+  border-bottom-left-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  background: #121215 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5) !important;
+  contain: none !important;
+}
+
+[data-theme="light"] .gm-bottom-nav,
+.gm-light .gm-bottom-nav,
+[data-theme="light"] nav.fixed.bottom-0,
+.gm-light nav.fixed.bottom-0 {
+  background: #18181b !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Fundo estendido contínuo anti-vazado do BottomNav móvel */
+.gm-bottom-nav-skirt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: -400px;
+  pointer-events: none;
+  z-index: -10;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  border-bottom-left-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  background: #121215 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="light"] .gm-bottom-nav-skirt,
+.gm-light .gm-bottom-nav-skirt {
+  background: #18181b !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="light"] .barra,
@@ -5659,11 +7329,12 @@ nav.fixed.bottom-0,
 .gm-light .gm-settings-card,
 .gm-light .gm-settings-section,
 .gm-light .gm-panel {
-  background: rgba(255, 255, 255, 0.6) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.35) !important;
-  box-shadow: none !important;
+  background: #18181b !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  border-radius: 14px;
 }
 
 .gm-card::before,
@@ -5774,11 +7445,14 @@ nav.fixed.bottom-0,
   z-index: 2;
 }
 
-/* TRANSPARÊNCIA E DESFOQUE ULTRALÍPIDO QUANDO O BACKGROUND ESTIVER ATIVADO */
+/* =========================================================================
+   FÓRMULA .glass-card EXATA PROPAGADA QUANDO O BACKGROUND ESTIVER ATIVADO
+   ========================================================================= */
 html.gm-has-bg .gm-card,
 html.gm-has-bg .gm-budget-card,
 html.gm-has-bg .gm-budget-row,
 html.gm-has-bg .gm-client-card,
+html.gm-has-bg .gm-client-row,
 html.gm-has-bg .gm-item-card,
 html.gm-has-bg .gm-product-card,
 html.gm-has-bg .gm-stat-card,
@@ -5801,20 +7475,31 @@ html.gm-has-bg .gm-menu-dropdown,
 html.gm-has-bg .gm-glass,
 html.gm-has-bg .glass,
 html.gm-has-bg .glass-card,
+html.gm-has-bg .cartao-de-vidro,
+html.gm-has-bg .cartão-de-vidro,
+html.gm-has-bg .apple-glass-refraction,
+html.gm-has-bg .apple-glass-card,
 html.gm-has-bg .glass-container,
 html.gm-has-bg .gm-box,
 html.gm-has-bg .gm-section,
 html.gm-has-bg .gm-chart-box,
 html.gm-has-bg .gm-chart-container,
 html.gm-has-bg .gm-note-card,
+html.gm-has-bg .gm-note-pinned,
+html.gm-has-bg .gm-note-category,
 html.gm-has-bg .gm-expense-card,
+html.gm-has-bg .gm-expense-row,
 html.gm-has-bg .gm-market-card,
+html.gm-has-bg .gm-market-category,
 html.gm-has-bg .gm-finance-card,
+html.gm-has-bg .gm-finance-chart,
+html.gm-has-bg .gm-finance-summary,
 html.gm-has-bg .gm-report-card,
 html.gm-has-bg .gm-bio-card,
 html.gm-has-bg .gm-bio-container,
 html.gm-has-bg .gm-bio-preview,
 html.gm-has-bg .gm-table-container,
+html.gm-has-bg .gm-table-card,
 html.gm-has-bg .gm-widget,
 html.gm-has-bg .gm-filter-bar,
 html.gm-has-bg .gm-accordion,
@@ -5823,13 +7508,22 @@ html.gm-has-bg .gm-navbar,
 html.gm-has-bg .gm-bottom-nav,
 html.gm-has-bg [role="dialog"],
 html.gm-has-bg .barra,
-html.gm-has-bg .fora {
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  background: rgba(18, 18, 24, 0.40) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: none !important;
-  contain: none !important;
+html.gm-has-bg .fora,
+html.gm-has-bg .gm-search-apple-glass {
+  background: rgba(255, 255, 255, 0.15) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 20px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 20px 10px rgba(255, 255, 255, 0.12) !important;
+  position: relative;
+  overflow: hidden;
+  will-change: backdrop-filter;
 }
 
 html.gm-has-bg[data-theme="light"] .gm-card,
@@ -5848,8 +7542,8 @@ html.gm-has-bg[data-theme="light"] .barra,
 html.gm-has-bg[data-theme="light"] .fora,
 html.gm-has-bg.gm-light .barra,
 html.gm-has-bg.gm-light .fora {
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   background: rgba(255, 255, 255, 0.6) !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   box-shadow: none !important;
@@ -5859,18 +7553,19 @@ html.gm-has-bg.gm-light .fora {
 .gm-input,
 select.gm-input,
 .gm-tab {
-  backdrop-filter: blur(16px) saturate(125%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(125%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   background: rgba(16, 20, 26, 0.35) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 nav.fixed.bottom-0,
 .gm-bottom-nav {
-  backdrop-filter: blur(28px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(150%) !important;
-  background: rgba(12, 16, 22, 0.55) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(18, 18, 24, 0.45) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
 }
 
 [data-theme="light"] nav.fixed.bottom-0,
@@ -6782,8 +8477,8 @@ main [data-button-style="outline"] .gm-btn svg {
 .gm-btn-glass {
   background-color: var(--gm-btn-bg, rgba(255, 255, 255, 0.16)) !important;
   background: var(--gm-btn-bg, linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.07) 100%)) !important;
-  backdrop-filter: blur(16px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(200%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1.5px solid var(--gm-btn-border, rgba(255, 255, 255, 0.35)) !important;
   box-shadow: inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.45), 0 8px 20px -4px rgba(0, 0, 0, 0.3) !important;
   color: var(--gm-btn-text, #ffffff) !important;
@@ -6860,27 +8555,41 @@ main [data-button-style="outline"] .gm-btn svg {
   transform: none !important;
 }
 
-/* Botão Flutuante de Salvar - Sempre Sólido com Cor do Tema e Ícone Branco Visível */
+/* Botão Flutuante de Salvar - Forge Button Style */
 .gm-floating-save-btn,
 button.gm-floating-save-btn,
 html[data-theme="light"] .gm-floating-save-btn,
 html[data-theme="light"] button.gm-floating-save-btn,
 html.gm-light .gm-floating-save-btn,
 html.gm-light button.gm-floating-save-btn {
-  background-color: var(--gm-primary, #FE540B) !important;
-  background: var(--gm-primary, #FE540B) !important;
-  color: #FFFFFF !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 8px 25px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.45) !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  border-radius: 4px !important;
+  background-color: #f65a1a !important;
+  background: #f65a1a !important;
+  color: #0b0b0c !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  transition: background 120ms cubic-bezier(0.2, 0.65, 0.25, 1) !important;
 }
 
 .gm-floating-save-btn:hover,
 button.gm-floating-save-btn:hover {
-  background-color: var(--gm-primary, #FE540B) !important;
-  background: var(--gm-primary, #FE540B) !important;
-  filter: brightness(1.15) !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 12px 32px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.65) !important;
+  background-color: #ff7a38 !important;
+  background: #ff7a38 !important;
+  filter: none !important;
+  color: #0b0b0c !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .gm-floating-save-btn svg,
@@ -6889,31 +8598,77 @@ html[data-theme="light"] .gm-floating-save-btn svg,
 html[data-theme="light"] button.gm-floating-save-btn svg,
 html.gm-light .gm-floating-save-btn svg,
 html.gm-light button.gm-floating-save-btn svg {
-  color: #FFFFFF !important;
-  stroke: #FFFFFF !important;
+  color: #0b0b0c !important;
+  stroke: #0b0b0c !important;
   fill: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  flex-shrink: 0 !important;
+}
+
+/* Botão Flutuante do WhatsApp (Dashboard) - Sempre Sólido Verde com Ícone Branco Visível */
+.gm-floating-whatsapp-btn,
+button.gm-floating-whatsapp-btn {
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  background-color: #25D366 !important;
+  background: #25D366 !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 8px 28px rgba(37, 211, 102, 0.45) !important;
+}
+
+.gm-floating-whatsapp-btn:hover,
+button.gm-floating-whatsapp-btn:hover {
+  background-color: #20ba5a !important;
+  background: #20ba5a !important;
+  filter: brightness(1.08) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 12px 36px rgba(37, 211, 102, 0.65) !important;
+  transform: none !important;
+}
+
+.gm-floating-whatsapp-btn svg,
+button.gm-floating-whatsapp-btn svg {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: none !important;
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  flex-shrink: 0 !important;
 }
 
 /* =========================================================
    DESIGN SYSTEM PREMIUM SAAS TOKENS (CARDS, BUTTONS, INPUTS, TABLES, MODALS)
    ========================================================= */
 
-/* CARDS */
+/* CARDS - FÓRMULA DE VIDRO FOSCO (.fora e .barra) */
 .gm-card,
 .card,
 [data-theme="light"] .gm-card,
-.gm-light .gm-card {
-  border-radius: 18px !important;
-  transition: transform 250ms cubic-bezier(.4,0,.2,1), box-shadow 250ms cubic-bezier(.4,0,.2,1), background-color 250ms cubic-bezier(.4,0,.2,1), border-color 250ms cubic-bezier(.4,0,.2,1) !important;
-}
-
-[data-theme="light"] .gm-card,
-[data-theme="light"] .card,
 .gm-light .gm-card,
+[data-theme="light"] .card,
 .gm-light .card {
-  background-color: #FFFFFF !important;
-  border: 1px solid #ECEEF3 !important;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: none !important;
+  transition: transform 250ms cubic-bezier(.4,0,.2,1), border-color 250ms cubic-bezier(.4,0,.2,1) !important;
 }
 
 [data-theme="light"] .gm-card:hover,
@@ -6921,16 +8676,22 @@ html.gm-light button.gm-floating-save-btn svg {
 .gm-light .gm-card:hover,
 .gm-light .card:hover {
   transform: none !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important;
+  box-shadow: none !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
 }
 
 [data-theme="dark"] .gm-card,
 [data-theme="dark"] .card,
 .gm-dark .gm-card,
-.gm-dark .card {
-  background-color: #1F232D !important;
-  border: 1px solid #313847 !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35) !important;
+.gm-dark .card,
+html:not([data-theme="light"]):not(.gm-light) .gm-card,
+html:not([data-theme="light"]):not(.gm-light) .card {
+  background: rgba(18, 18, 24, 0.45) !important;
+  background-color: rgba(18, 18, 24, 0.45) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
 }
 
 [data-theme="dark"] .gm-card:hover,
@@ -6939,6 +8700,7 @@ html.gm-light button.gm-floating-save-btn svg {
 .gm-dark .card:hover {
   transform: none !important;
   box-shadow: none !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 /* BUTTONS */
@@ -7235,17 +8997,21 @@ button:active, .gm-btn:active {
   transform: scale(0.97);
 }
 
-/* Form input focus enhancement */
+/* Form input focus enhancement - Forge Field System */
 .gm-input, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
-  min-height: 44px;
-  border-radius: 12px;
-  transition: border-color 200ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 40px;
+  border-radius: 4px !important;
+  background-color: #1b1b1e !important;
+  border: 1px solid #26262a !important;
+  color: #f2f2f3 !important;
+  transition: border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1), box-shadow 120ms cubic-bezier(0.2, 0.65, 0.25, 1);
 }
 
 .gm-input:focus, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--gm-primary) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gm-primary) 25%, transparent) !important;
+  border-color: #f65a1a !important;
+  box-shadow: 0 0 0 2px rgba(246, 90, 26, 0.24) !important;
+  background-color: #131315 !important;
 }
 
 
@@ -7260,18 +9026,7 @@ button:active, .gm-btn:active {
    e tabs — para não sobrarem resíduos "vidro/neon" por cima do Forge.
    Fica no final do arquivo para vencer a cascata.
    ========================================================================= */
-
-.gm-card::before, .gm-card::after{ content: none !important; animation: none !important; }
-
-[data-theme="dark"] .gm-modal, [data-theme="dark"] [role="dialog"],
-.gm-dark .gm-modal, .gm-dark [role="dialog"],
-.gm-modal, [role="dialog"]{
-  background-color: var(--gm-surface) !important;
-  border: 1px solid var(--gm-border-light) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 24px 60px -12px rgba(0,0,0,0.6) !important;
-  backdrop-filter: none !important;
-}
+/* Acabamento de cards e modais unificado com a fórmula glass-card */
 
 .gm-badge, .gm-tab-badge, .gm-pill,
 .gm-pill-green, .gm-pill-blue, .gm-pill-red, .gm-pill-gray,
@@ -7518,8 +9273,8 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
 [data-theme="light"] .fixed.inset-0:not(.pointer-events-none),
 .gm-light .fixed.inset-0:not(.pointer-events-none) {
   background-color: rgba(15, 23, 42, 0.45) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="light"] .fixed.inset-0 > div,
@@ -7681,9 +9436,9 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
-    background: rgba(0, 0, 0, 0.76) !important;
-    backdrop-filter: blur(28px) saturate(190%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+    background: rgba(10, 10, 14, 0.48) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .gm-customer-modal-container,
@@ -7953,19 +9708,11 @@ aside.gm-sidebar .gm-nav a.active span,
 }
 
 /* =========================================================
-   GLASSMORPHISM DO MENU LATERAL (SIDEBAR - VIDRO FOSCO)
+   GLASSMORPHISM DO MENU LATERAL (SIDEBAR - VIDRO FOSCO UNIFORME)
    ========================================================= */
 aside.gm-sidebar,
-.gm-sidebar,
-[data-theme="dark"] aside.gm-sidebar,
-.gm-dark aside.gm-sidebar,
-html.gm-has-bg .gm-sidebar {
+.gm-sidebar {
   position: relative !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  background: rgba(18, 18, 22, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: none !important;
 }
 
 /* Remoção do container Glassmorphism por trás dos títulos em todas as janelas */
@@ -7987,8 +9734,8 @@ html.gm-has-bg .gm-sidebar {
 .gm-light aside.gm-sidebar,
 html.gm-has-bg[data-theme="light"] .gm-sidebar {
   position: relative !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   background: rgba(255, 255, 255, 0.6) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   box-shadow: none !important;
@@ -8134,8 +9881,8 @@ input.gm-note-title-input,
 .modal,
 .dialog {
   position: relative !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   background: rgba(18, 18, 24, 0.40) !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
@@ -8168,8 +9915,8 @@ nav.fixed.bottom-0,
   left: 0 !important;
   right: 0 !important;
   z-index: 999999 !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   background: rgba(10, 10, 14, 0.45) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
@@ -8184,8 +9931,8 @@ header.fixed.top-0,
   left: 0 !important;
   right: 0 !important;
   z-index: 100 !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   background: rgba(10, 10, 14, 0.25) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: none !important;
@@ -8289,9 +10036,9 @@ a.btn,
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(.psd-up-bounce):not(.psd-back-to-top):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):hover,
-button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(.psd-up-bounce):not(.psd-back-to-top):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):active,
-button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(.psd-up-bounce):not(.psd-back-to-top):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):focus-visible,
+button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(.psd-up-bounce):not(.psd-back-to-top):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):hover,
+button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(.psd-up-bounce):not(.psd-back-to-top):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):active,
+button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(.psd-up-bounce):not(.psd-back-to-top):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):focus-visible,
 .btn-action-edit:hover,
 .btn-action-edit:active,
 .btn-action-neutral:hover,
@@ -8334,12 +10081,12 @@ button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(
   transition: transform 0.15s ease, background-color 0.15s ease !important;
 }
 .gm-sidebar-toggle:hover {
-  transform: scale(1.12) !important;
+  transform: none !important;
   background-color: var(--gm-primary-hover, var(--gm-accent, #FF7A38)) !important;
 }
 
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
+button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .btn-action-edit:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .btn-action-edit:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
 .btn-action-neutral:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
@@ -8711,8 +10458,8 @@ body::before {
 
 /* 3. Respiro Universal de Modais e Popups */
 .gm-modal-overlay,
-div[class*="fixed inset-0"][class*="z-"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
-div[class*="fixed inset-0"][class*="backdrop-blur"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
+div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
+div[class*="fixed inset-0"][class*="backdrop-blur"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
   box-sizing: border-box !important;
   padding: clamp(1rem, 3vw, 2.5rem) !important;
 }
@@ -8733,40 +10480,133 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
   margin-bottom: 2.5rem !important;
 }
 
-/* 5. Estilos das Cápsulas Grade e Listas (Padrão Apple Glass Blur) */
+/* 5. Estilos dos Botões Grade e Listas (FORGE UI SYSTEM) */
+/* 5. Estilos dos Botões Grade e Listas (FORGE UI SYSTEM - PADRÃO OFICIAL) */
 .gm-viewmode-btn-active {
-  background: linear-gradient(135deg, rgba(246, 90, 26, 0.88) 0%, rgba(230, 75, 15, 0.82) 100%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 160, 100, 0.45) !important;
-  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.35), 0 8px 24px -4px rgba(246, 90, 26, 0.38) !important;
+  background: var(--color-ember, #f65a1a) !important;
+  background-color: var(--color-ember, #f65a1a) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #0b0b0c !important;
+  border: 1px solid rgba(254, 84, 11, 0.35) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition:
+    background 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    box-shadow 140ms ease,
+    color 140ms ease,
+    transform 120ms ease !important;
 }
-.gm-viewmode-btn-active svg,
+
+/* Estado normal: Ícone Laranja Claro (#FF7A38), Texto Preto (#0B0B0C) */
+.gm-viewmode-btn-active svg {
+  color: #FF7A38 !important;
+  stroke: #FF7A38 !important;
+  transition: color 140ms ease, stroke 140ms ease !important;
+}
+
 .gm-viewmode-btn-active span {
+  color: #0b0b0c !important;
+  transition: color 140ms ease !important;
+}
+
+/* Hover ou Clique: "BOTÃO ACENDE" - Fundo Neon (#FE540B), Aura Glow, Ícone e Texto Brancos */
+.gm-viewmode-btn-active:hover,
+.gm-viewmode-btn-active:focus-visible {
+  background: #FE540B !important;
+  background-color: #FE540B !important;
+  border-color: rgba(255, 170, 110, 0.65) !important;
+  box-shadow: 0 0 16px rgba(254, 84, 11, 0.6), 0 0 30px rgba(254, 84, 11, 0.28) !important;
+  color: #ffffff !important;
+}
+
+.gm-viewmode-btn-active:hover svg,
+.gm-viewmode-btn-active:focus-visible svg,
+.gm-viewmode-btn-active:active svg {
   color: #ffffff !important;
   stroke: #ffffff !important;
 }
 
+.gm-viewmode-btn-active:hover span,
+.gm-viewmode-btn-active:focus-visible span,
+.gm-viewmode-btn-active:active span {
+  color: #ffffff !important;
+}
+
+.gm-viewmode-btn-active:active {
+  transform: scale(0.98) !important;
+  background: #FE540B !important;
+  box-shadow: 0 0 20px rgba(254, 84, 11, 0.75), 0 0 36px rgba(254, 84, 11, 0.35) !important;
+}
+
+/* BOTÃO INATIVO (LISTAS): Fundo grafite, borda discreta, ícone laranja claro, acende no hover */
 .gm-viewmode-btn-inactive {
-  background: rgba(255, 255, 255, 0.05) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.08) !important;
+  background: #131315 !important;
+  background-color: #131315 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #8b8b92 !important;
+  border: 1px solid #26262a !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition:
+    background 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
+    box-shadow 140ms ease,
+    color 140ms ease,
+    transform 120ms ease !important;
 }
-.gm-viewmode-btn-inactive:hover {
-  background: rgba(255, 255, 255, 0.09) !important;
-  border-color: rgba(255, 255, 255, 0.22) !important;
-  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15) !important;
-}
+
 .gm-viewmode-btn-inactive svg {
-  color: var(--gm-primary, #f65a1a) !important;
-  stroke: var(--gm-primary, #f65a1a) !important;
+  color: #FF7A38 !important;
+  stroke: #FF7A38 !important;
+  transition: color 140ms ease, stroke 140ms ease !important;
 }
+
 .gm-viewmode-btn-inactive span {
+  color: #8b8b92 !important;
+  transition: color 140ms ease !important;
+}
+
+.gm-viewmode-btn-inactive:hover,
+.gm-viewmode-btn-inactive:focus-visible {
+  background: #1b1b1e !important;
+  background-color: #1b1b1e !important;
+  border-color: rgba(254, 84, 11, 0.5) !important;
+  box-shadow: 0 0 14px rgba(254, 84, 11, 0.22) !important;
   color: #ffffff !important;
+}
+
+.gm-viewmode-btn-inactive:hover svg,
+.gm-viewmode-btn-inactive:focus-visible svg,
+.gm-viewmode-btn-inactive:active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.gm-viewmode-btn-inactive:hover span,
+.gm-viewmode-btn-inactive:focus-visible span,
+.gm-viewmode-btn-inactive:active span {
+  color: #ffffff !important;
+}
+
+.gm-viewmode-btn-inactive:active {
+  transform: scale(0.98) !important;
 }
 
 /* =========================================================
@@ -8789,16 +10629,16 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
    ========================================================= */
 .apple-glass-card {
   background: rgba(18, 18, 24, 0.45) !important;
-  backdrop-filter: blur(36px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.16) !important;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.50), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.20) !important;
 }
 
 .apple-glass-input {
   background: rgba(255, 255, 255, 0.07) !important;
-  backdrop-filter: blur(24px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
   box-shadow: inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.18), 0 4px 20px rgba(0, 0, 0, 0.15) !important;
   color: #FFFFFF !important;
@@ -8872,7 +10712,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
   border: none !important;
   outline: none !important;
   box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.25) !important;
-  transform: translateY(-1px) scale(1.02) !important;
+  transform: none !important;
 }
 
 .site-btn-pill:focus {
@@ -9235,20 +11075,9 @@ body,
   scroll-behavior: smooth;
 }
 
-/* 3. Aceleração de hardware e composição direta na GPU em containers e transições */
-.gm-layout,
-.gm-main,
-.gm-container,
+/* Aceleração em componentes interativos sem quebrar o contexto de composição do backdrop-filter */
 .gm-bottom-nav,
-.gm-sidebar,
-.gm-mobile-header,
-.gm-card,
-.apple-glass-card,
-.fora,
-.barra,
-.gm-modal {
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
+.gm-sidebar {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
@@ -9274,144 +11103,502 @@ body,
    Suporte universal completo para Apple WebKit / iOS Safari / Chrome
    ========================================================================= */
 
-/* Compatibilidade universal de -webkit-backdrop-filter para classes Tailwind */
-.backdrop-blur-none {
+/* Compatibilidade universal sem efeito glass */
+.backdrop-blur-none,
+.backdrop-blur,
+.backdrop-blur-xs,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl,
+.backdrop-blur-2xl,
+.backdrop-blur-3xl,
+[class*="backdrop-blur"] {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
+  will-change: auto !important;
 }
 
-.backdrop-blur-xs,
-[class*="backdrop-blur-[1px]"],
-[class*="backdrop-blur-[2px]"] {
-  -webkit-backdrop-filter: blur(2px) !important;
-  backdrop-filter: blur(2px) !important;
-}
+/* =========================================================
+   FORGE UI CARDS, CONTAINERS & PESQUISA
+   Superfícies obsidian nítidas com micro-bordas sem vidro
+   ========================================================= */
 
-.backdrop-blur-sm,
-[class*="backdrop-blur-sm"] {
-  -webkit-backdrop-filter: blur(8px) saturate(160%) !important;
-  backdrop-filter: blur(8px) saturate(160%) !important;
-}
-
-.backdrop-blur,
-[class*="backdrop-blur"]:not([class*="backdrop-blur-none"]):not([class*="backdrop-blur-sm"]):not([class*="backdrop-blur-md"]):not([class*="backdrop-blur-lg"]):not([class*="backdrop-blur-xl"]):not([class*="backdrop-blur-2xl"]):not([class*="backdrop-blur-3xl"]) {
-  -webkit-backdrop-filter: blur(14px) saturate(175%) !important;
-  backdrop-filter: blur(14px) saturate(175%) !important;
-}
-
-.backdrop-blur-md,
-[class*="backdrop-blur-md"] {
-  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
-  backdrop-filter: blur(18px) saturate(180%) !important;
-}
-
-.backdrop-blur-lg,
-[class*="backdrop-blur-lg"] {
-  -webkit-backdrop-filter: blur(24px) saturate(185%) !important;
-  backdrop-filter: blur(24px) saturate(185%) !important;
-}
-
-.backdrop-blur-xl,
-[class*="backdrop-blur-xl"] {
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-}
-
-.backdrop-blur-2xl,
-[class*="backdrop-blur-2xl"] {
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-}
-
-.backdrop-blur-3xl,
-[class*="backdrop-blur-3xl"] {
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-}
-
-/* Superfícies limpas dos containers do app sem o desfoque pesado antigo */
-.gm-modal,
-.gm-search-apple-glass,
-.gm-pin-lock-card,
-.gm-bottom-nav,
-.gm-mobile-header {
-  -webkit-backdrop-filter: blur(12px) !important;
-  backdrop-filter: blur(12px) !important;
-}
-
-/* Cards e containers do app com efeito limpo e transparente */
-.gm-card,
 .glass-card,
-.fora,
+.cartao-de-vidro,
+.cartão-de-vidro {
+  width: auto;
+  max-width: 100%;
+  background: #121215 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before,
+.cartao-de-vidro::before,
+.cartão-de-vidro::before,
+.glass-card::after,
+.cartao-de-vidro::after,
+.cartão-de-vidro::after {
+  display: none !important;
+}
+
+/* Containers Forge UI unificados em todo o app */
+.apple-glass-refraction,
 .apple-glass-card,
+.gm-card,
+.card,
+.fora,
+.barra,
+aside.gm-sidebar,
+.gm-sidebar,
+nav.gm-bottom-nav,
+.gm-bottom-nav,
+.gm-modal,
+.gm-modal-content,
+.gm-push-glass-card,
 .gm-budget-card,
 .gm-budget-row,
 .gm-dashboard-card,
+.gm-stat-card,
+.gm-chart-container,
 .gm-settings-card,
+.gm-settings-section,
+.gm-config-card,
 .gm-note-card,
+.gm-note-pinned,
+.gm-note-category,
+.gm-expense-card,
+.gm-expense-row,
+.gm-market-card,
+.gm-market-category,
+.gm-finance-card,
+.gm-finance-chart,
+.gm-finance-summary,
+.gm-client-card,
+.gm-client-row,
 .gm-login-card-compact,
 .gm-login-card-square,
 .gm-pin-card-compact,
-.gm-pin-card-square {
-  -webkit-backdrop-filter: blur(12px) !important;
-  backdrop-filter: blur(12px) !important;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border-color: rgba(255, 255, 255, 0.10) !important;
+.gm-pin-card-square,
+.gm-pin-lock-card,
+.gm-panel,
+.panel,
+.gm-box,
+.gm-table-container,
+.gm-table-card,
+#apple-permission-dialog {
+  background: #121215 !important;
+  background-color: #121215 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 8px 30px rgba(0, 0, 0, 0.4) !important;
+  color: #ffffff !important;
+  position: relative;
+  overflow: hidden;
+  will-change: auto;
 }
 
-/* Container de Vidro Fosco Líquido Especial para Configurações e Notificações Push */
-.gm-push-glass-card {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+/* Fundo escuro limpo atrás de qualquer modal (sem desfoque) */
+div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]) {
+  background: rgba(0, 0, 0, 0.75) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.apple-glass-refraction::before,
+.apple-glass-card::before,
+.gm-card::before,
+.card::before,
+.fora::before,
+aside.gm-sidebar::before,
+.gm-sidebar::before,
+nav.gm-bottom-nav::before,
+.gm-bottom-nav::before,
+.gm-modal::before,
+.gm-modal-content::before,
+.gm-push-glass-card::before,
+.gm-budget-card::before,
+.gm-dashboard-card::before,
+.gm-stat-card::before,
+.gm-chart-container::before,
+.gm-settings-card::before,
+.gm-settings-section::before,
+.gm-config-card::before,
+.gm-note-card::before,
+.gm-expense-card::before,
+.gm-market-card::before,
+.gm-finance-card::before,
+.gm-client-card::before,
+.gm-login-card-compact::before,
+.gm-login-card-square::before,
+.gm-panel::before,
+.panel::before,
+.gm-table-container::before,
+.gm-table-card::before,
+[role="dialog"]::before,
+#apple-permission-dialog::before,
+.apple-glass-refraction::after,
+.apple-glass-card::after,
+.gm-card::after,
+.card::after,
+.fora::after,
+aside.gm-sidebar::after,
+.gm-sidebar::after,
+nav.gm-bottom-nav::after,
+.gm-bottom-nav::after,
+.gm-modal::after,
+.gm-modal-content::after,
+.gm-push-glass-card::after,
+.gm-budget-card::after,
+.gm-dashboard-card::after,
+.gm-stat-card::after,
+.gm-chart-container::after,
+.gm-settings-card::after,
+.gm-settings-section::after,
+.gm-config-card::after,
+.gm-note-card::after,
+.gm-expense-card::after,
+.gm-market-card::after,
+.gm-finance-card::after,
+.gm-client-card::after,
+.gm-login-card-compact::after,
+.gm-login-card-square::after,
+.gm-panel::after,
+.panel::after,
+.gm-table-container::after,
+.gm-table-card::after,
+[role="dialog"]::after,
+#apple-permission-dialog::after {
+  display: none !important;
+}
+
+/* =========================================================================
+   DESTACAMENTO NÍTIDO DE TEXTOS E ÍCONES (FORGE UI)
+   ========================================================================= */
+
+/* Títulos principais em cards e containers */
+.gm-budget-card .text-white,
+.gm-budget-row .text-white,
+.gm-card .text-white,
+.apple-glass-card .text-white {
+  color: #FFFFFF !important;
+  text-shadow: none !important;
+}
+
+/* Subtítulos e textos informativos nos cards */
+.gm-budget-card .text-slate-300,
+.gm-budget-card .text-slate-400,
+.gm-budget-row .text-slate-300,
+.gm-budget-row .text-slate-400 {
+  color: #A1A1AA !important;
+  text-shadow: none !important;
+}
+
+/* Ícones de ação nos cards de orçamento (em repouso) */
+.gm-grid-action-btn {
+  height: 40px !important;
+  background-color: #18181b !important;
+  background: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 10px !important;
+  transition: all 0.2s ease !important;
 }
 
-/* Transparência líquida limpa em Modo Escuro (padrão) */
-html:not([data-theme="light"]):not(.gm-light) .fora,
-html:not([data-theme="light"]):not(.gm-light) .gm-card,
-html:not([data-theme="light"]):not(.gm-light) .glass-card,
-html:not([data-theme="light"]):not(.gm-light) .apple-glass-card,
-[data-theme="dark"] .fora,
-[data-theme="dark"] .gm-card,
-[data-theme="dark"] .glass-card,
-[data-theme="dark"] .apple-glass-card {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border-color: rgba(255, 255, 255, 0.10) !important;
+.gm-grid-action-btn:hover {
+  background-color: #27272a !important;
+  background: #27272a !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.gm-grid-action-btn .gm-grid-icon-wrap svg {
+  filter: none !important;
+}
+
+/* Cápsulas de status inativas: Forge UI solid zinc */
+.gm-status-capsule:not(.bg-emerald-500\/10):not(.bg-emerald-500\/20):not(.bg-rose-500\/10):not(.bg-rose-500\/20):not(.bg-\[var\(--gm-primary\)\]\/10):not(.bg-\[var\(--gm-primary\)\]\/20) {
+  background: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #D4D4D8 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Cápsulas Grade e Listas */
+.gm-viewmode-btn-inactive {
+  background: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow: none !important;
+  color: #D4D4D8 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.gm-viewmode-btn-inactive span {
+  color: #D4D4D8 !important;
+  text-shadow: none !important;
 }
 
-/* Transparência líquida perfeita em Modo Claro */
-[data-theme="light"] .fora,
-[data-theme="light"] .barra,
-[data-theme="light"] .gm-card,
-[data-theme="light"] .glass-card,
-[data-theme="light"] .apple-glass-card,
-.gm-light .fora,
-.gm-light .barra,
-.gm-light .gm-card,
-.gm-light .glass-card,
-.gm-light .apple-glass-card {
-  background: rgba(255, 255, 255, 0.65) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
+/* Barra de pesquisa Forge UI */
+.gm-search-apple-glass,
+.gm-search-glass {
+  background: #18181b !important;
+  background-color: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
   box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: border-color 0.2s ease !important;
 }
 
-/* Desfoque elegante em cabeçalhos fixos e sticky ao rolar */
+.gm-search-apple-glass:focus-within,
+.gm-search-glass:focus-within {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.gm-search-apple-glass input,
+.gm-search-glass input {
+  color: #FFFFFF !important;
+  text-shadow: none !important;
+}
+
+.gm-search-apple-glass input::placeholder,
+.gm-search-glass input::placeholder {
+  color: #71717A !important;
+}
+
+.gm-search-apple-glass .gm-search-icon,
+.gm-search-glass .gm-search-icon {
+  color: #A1A1AA !important;
+}
+
+.gm-search-glass span {
+  text-shadow: none !important;
+}
+
+/* Cabeçalhos fixos e sticky com fundo sólido Forge */
 .sticky.top-0,
 .sticky.-top-4,
 .sticky.-top-6,
 .sticky.-top-8,
 .gm-mobile-header,
 header.sticky {
-  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
-  backdrop-filter: blur(24px) saturate(190%) !important;
-  background: rgba(12, 12, 16, 0.65) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  will-change: auto;
+  background: #09090b !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
 }
 
-/* Desfoque consistente em todos os overlays de modais */
-div[class*="fixed inset-0"][class*="z-"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
-  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
-  backdrop-filter: blur(18px) saturate(180%) !important;
+/* Overlay dos Modais */
+.gm-modal-overlay,
+.gm-customer-modal-overlay,
+#apple-permission-overlay,
+.gm-note-modal-overlay,
+div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
+div[class*="fixed inset-0"][class*="bg-black"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
+div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]) > div[class*="absolute inset-0"],
+div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]) > motion.div[class*="absolute inset-0"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0.75) !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  will-change: auto;
 }
+
+[data-theme="light"] .gm-modal-overlay,
+[data-theme="light"] .gm-customer-modal-overlay,
+[data-theme="light"] #apple-permission-overlay,
+.gm-light .gm-modal-overlay,
+.gm-light .gm-customer-modal-overlay,
+.gm-light #apple-permission-overlay,
+[data-theme="light"] div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
+.gm-light div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  will-change: auto;
+}
+
+/* 2. Container/Card do Modal: acabamento unificado idêntico a todos os containers */
+
+/* =========================================================
+   ANIMAÇÃO GOLD & ESTILO DOURADO PARA O ÍCONE DA COROA (PLANOS)
+   Pulsar leve, sem rotação e sem esfumaçado neon atrás da coroa
+   ========================================================= */
+
+@keyframes gm-gold-crown-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: none !important;
+    box-shadow: none !important;
+  }
+  50% {
+    transform: scale(1.09);
+    filter: none !important;
+    box-shadow: none !important;
+  }
+}
+
+.gm-gold-crown-animated,
+.gm-gold-crown-container,
+.gm-gold-crown-svg {
+  color: #FFD700 !important;
+  transform-origin: center center;
+  will-change: transform;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background: transparent !important;
+}
+
+.gm-gold-crown-container {
+  transform-origin: center center;
+  animation: gm-gold-crown-pulse 2.2s ease-in-out infinite !important;
+}
+
+aside.gm-sidebar a .gm-gold-crown-svg,
+aside.gm-sidebar a:hover .gm-gold-crown-svg,
+aside.gm-sidebar a.active .gm-gold-crown-svg,
+.sidebar a .gm-gold-crown-svg,
+.sidebar a:hover .gm-gold-crown-svg,
+.sidebar a.active .gm-gold-crown-svg {
+  color: #FFD700 !important;
+  filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* =========================================================
+   FORGE TABS - STRICT ZERO-BOX ENFORCEMENT
+   Garante que as abas de filtro não tenham fundo, cápsula ou borda,
+   apenas o texto (branco quando ativo) e a linha laranja inferior.
+   ========================================================= */
+.forge-tabs__tab,
+button.forge-tabs__tab,
+.forge-tabs__tab:hover,
+button.forge-tabs__tab:hover,
+.forge-tabs__tab:active,
+button.forge-tabs__tab:active,
+.forge-tabs__tab:focus,
+button.forge-tabs__tab:focus,
+.forge-tabs__tab:focus-visible,
+button.forge-tabs__tab:focus-visible,
+.forge-tabs__tab.is-active,
+button.forge-tabs__tab.is-active,
+.forge-tabs__tab.is-active:hover,
+button.forge-tabs__tab.is-active:hover,
+.forge-tabs__tab.is-active:active,
+button.forge-tabs__tab.is-active:active,
+.forge-tabs__tab.is-active:focus,
+button.forge-tabs__tab.is-active:focus,
+.forge-tabs__tab.is-active:focus-visible,
+button.forge-tabs__tab.is-active:focus-visible {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+.forge-tabs__tab.is-active,
+button.forge-tabs__tab.is-active {
+  color: #ffffff !important;
+}
+
+.forge-tabs__tab.is-active::after,
+button.forge-tabs__tab.is-active::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: -1px !important;
+  height: 4px !important;
+  background: #f65a1a !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   FORGE UI - SIDEBAR & NAVIGATION BAR ENFORCEMENT
+   - Sólido Graphite #0B0B0C / #131315
+   - Micro-borda hairline #26262A
+   - Itens de menu com 4px border-radius
+   - Ativo com highlight #18181B + indicador ember #F65A1A
+   ========================================================= */
+aside.gm-sidebar,
+.sidebar.gm-sidebar {
+  background: #0B0B0C !important;
+  background-color: #0B0B0C !important;
+  border-right: 1px solid #26262A !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+aside.gm-sidebar .sidebar-inner {
+  background: #0B0B0C !important;
+}
+
+aside.gm-sidebar header {
+  background: #0B0B0C !important;
+  border-bottom: 1px solid #26262A !important;
+}
+
+aside.gm-sidebar .sidebar-btn {
+  border-radius: 4px !important;
+  transition: background 120ms cubic-bezier(0.2, 0.65, 0.25, 1), color 120ms cubic-bezier(0.2, 0.65, 0.25, 1), border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1) !important;
+}
+
+aside.gm-sidebar .sidebar-btn.active,
+.sidebar-btn.active {
+  background: #18181B !important;
+  background-color: #18181B !important;
+  color: #F2F2F3 !important;
+}
+
+aside.gm-sidebar .sidebar-btn:hover:not(.active),
+.sidebar-btn:hover:not(.active) {
+  background: #131315 !important;
+  background-color: #131315 !important;
+  color: #FFFFFF !important;
+}
+
+.sidebar-window-indicator {
+  position: absolute !important;
+  left: 0 !important;
+  top: 6px !important;
+  bottom: 6px !important;
+  width: 3px !important;
+  border-radius: 0 2px 2px 0 !important;
+  background: #F65A1A !important;
+  display: none !important;
+}
+
+.sidebar-btn.active .sidebar-window-indicator {
+  display: block !important;
+}
+
+
+
+

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, BellOff, Clock, Save, X } from "lucide-react";
 import { GlassTimePicker } from "../ui/GlassTimePicker";
-import { BorderBeam } from "../ui/BorderBeam";
 import {
   getBudgetReminderTimes,
   setBudgetReminderTimes,
@@ -129,10 +128,8 @@ export default function ReminderConfigModal({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 animate-fade-in">
-      <div className="relative fora border border-white/15 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-slide-up">
-        {/* Efeito de Feixe de Luz Apple Glass na borda */}
-        <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xl animate-fade-in">
+      <div className="relative border border-white/10 rounded-2xl w-full max-w-md fora gm-modal apple-glass-refraction shadow-none overflow-hidden animate-slide-up">
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black/30">
           <div className="flex items-center gap-3">
@@ -260,20 +257,20 @@ export default function ReminderConfigModal({
 
             <div className="grid grid-cols-2 gap-3">
               <button
-                className="h-12 rounded-xl bg-[var(--gm-primary)] hover:opacity-90 text-white text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(var(--gm-primary-rgb),0.2)]"
+                className="h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3)] cursor-pointer"
                 onClick={handleSave}
               >
-                <Save size={14} />
-                Salvar
+                <Save size={16} className="text-[#0B0B0C]" />
+                <span>Salvar</span>
               </button>
 
               <button
-                className="h-12 rounded-xl border border-white/10 bg-white/5 text-white/40 text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                className="h-11 rounded-md border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-none"
                 onClick={handleTestNotification}
                 type="button"
               >
-                <Bell size={14} />
-                Testar
+                <Bell size={16} className="text-[#F65A1A]" />
+                <span>Testar</span>
               </button>
             </div>
 

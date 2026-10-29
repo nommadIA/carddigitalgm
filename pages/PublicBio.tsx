@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import BioRenderer from "../components/bio/BioRenderer";
 import { Sparkles, ArrowRight } from "lucide-react";
+import { DEFAULT_GM_BIO_CONFIG } from "../lib/settings";
 
 // Helper function to sanitize name into a URL-friendly slug
 function sanitizeSlug(name: string): string {
@@ -91,7 +92,7 @@ export default function PublicBio() {
         if (isUUID) {
           const { data, error } = await supabase
             .from("app_settings")
-            .select("company_name, company_logo_url, avatar_url, pix_key, pix_type, bio_config, brand_primary, tenant_id, button_style")
+            .select("*")
             .eq("tenant_id", tenantId)
             .maybeSingle();
 
@@ -107,14 +108,15 @@ export default function PublicBio() {
 
           const { data: allSettings, error } = await supabase
             .from("app_settings")
-            .select("company_name, company_logo_url, avatar_url, pix_key, pix_type, bio_config, brand_primary, tenant_id, button_style");
+            .select("*");
 
           if (error) {
             console.error("Erro RLS/Supabase ao listar:", error);
             setErrorDetails(error.message);
           } else if (allSettings) {
-            // Sort to prioritize settings with registered logo/avatar first, non-null tenant_id, and with richer bio_config
-            const sortedSettings = [...allSettings].sort((a, b) => {
+            // Exclude obsolete duplicate row and sort to prioritize active settings with logo/avatar first
+            const validSettings = allSettings.filter(s => s.id !== "19609c6b-85a3-4fb1-a40a-18250554fc62" && s.tenant_id !== "d79bb193-0927-4b56-bcba-83e2b2bef9c6");
+            const sortedSettings = [...validSettings].sort((a, b) => {
               // Row with registered logo or avatar is highest priority
               const aHasLogo = (a.company_logo_url || a.avatar_url) ? 1 : 0;
               const bHasLogo = (b.company_logo_url || b.avatar_url) ? 1 : 0;
@@ -142,13 +144,106 @@ export default function PublicBio() {
           }
         }
 
+        // Se for GM edificação ou se tenantId tiver "gm", assegura fallback completo restaurado
+        const isGM = !tenantId || tenantId.toLowerCase().includes("gm") || (fetchedData?.company_name || "").toLowerCase().includes("gm");
+
+        if (!fetchedData && isGM) {
+          fetchedData = {
+            company_name: "GM edificação",
+            brand_primary: "#FE540B",
+            brand_accent: "#FF7A38",
+            brand_bg: "#0B0B0C",
+            company_logo_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.jpg?t=1790426179060",
+            website_logo_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/bio/logo_1790345925228_lq174s.svg",
+            app_background_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/background_1787217210889.jpg?t=1787217210889",
+            mobile_app_background_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/background_1787213992954.webp?t=1787213992954",
+            pix_key: "carddigitalgm@gmail.com",
+            pix_type: "CNPJ",
+            bio_config: DEFAULT_GM_BIO_CONFIG,
+            button_style: "solid",
+            tenant_id: "6f4ee596-eb5e-415f-9189-d571ad85ed95"
+          };
+        }
+
         if (fetchedData) {
+          const rawBio = fetchedData.bio_config || {};
+          const fallbackBio = isGM ? DEFAULT_GM_BIO_CONFIG : {};
+
+          fetchedData.bio_config = {
+            ...fallbackBio,
+            ...rawBio,
+            title: rawBio.title || (isGM ? DEFAULT_GM_BIO_CONFIG.title : (fetchedData.company_name || "")),
+            title_mobile: rawBio.title_mobile || rawBio.title || (isGM ? DEFAULT_GM_BIO_CONFIG.title_mobile : ""),
+            title_font: rawBio.title_font || (isGM ? DEFAULT_GM_BIO_CONFIG.title_font : "syne"),
+            title_font_mobile: rawBio.title_font_mobile || rawBio.title_font || (isGM ? DEFAULT_GM_BIO_CONFIG.title_font_mobile : "syne"),
+            title_size: rawBio.title_size || (isGM ? DEFAULT_GM_BIO_CONFIG.title_size : "36 pt"),
+            title_size_mobile: rawBio.title_size_mobile || rawBio.title_size || (isGM ? DEFAULT_GM_BIO_CONFIG.title_size_mobile : "26 pt"),
+            title_color: rawBio.title_color || (isGM ? DEFAULT_GM_BIO_CONFIG.title_color : "#FFFFFF"),
+            hero_title: rawBio.hero_title || rawBio.title || (isGM ? DEFAULT_GM_BIO_CONFIG.hero_title : ""),
+            hero_title_mobile: rawBio.hero_title_mobile || rawBio.hero_title || rawBio.title_mobile || rawBio.title || (isGM ? DEFAULT_GM_BIO_CONFIG.hero_title_mobile : ""),
+            description: rawBio.description || (isGM ? DEFAULT_GM_BIO_CONFIG.description : ""),
+            description_mobile: rawBio.description_mobile || rawBio.description || (isGM ? DEFAULT_GM_BIO_CONFIG.description_mobile : ""),
+            description_font: rawBio.description_font || (isGM ? DEFAULT_GM_BIO_CONFIG.description_font : "syne"),
+            description_font_mobile: rawBio.description_font_mobile || rawBio.description_font || (isGM ? DEFAULT_GM_BIO_CONFIG.description_font_mobile : "syne"),
+            description_size: rawBio.description_size || (isGM ? DEFAULT_GM_BIO_CONFIG.description_size : "18 pt"),
+            description_size_mobile: rawBio.description_size_mobile || rawBio.description_size || (isGM ? DEFAULT_GM_BIO_CONFIG.description_size_mobile : "16 pt"),
+            description_bold: rawBio.description_bold !== undefined ? rawBio.description_bold : (isGM ? DEFAULT_GM_BIO_CONFIG.description_bold : true),
+            description_bold_mobile: rawBio.description_bold_mobile !== undefined ? rawBio.description_bold_mobile : (isGM ? DEFAULT_GM_BIO_CONFIG.description_bold_mobile : true),
+            description_color: rawBio.description_color || (isGM ? DEFAULT_GM_BIO_CONFIG.description_color : "#E4E4E7"),
+            show_banners: isGM ? true : (rawBio.show_banners !== undefined ? rawBio.show_banners : true),
+            banner_img_url_1: rawBio.banner_img_url_1 || (isGM ? DEFAULT_GM_BIO_CONFIG.banner_img_url_1 : ""),
+            mobile_banner_img_url_1: rawBio.mobile_banner_img_url_1 || (isGM ? DEFAULT_GM_BIO_CONFIG.mobile_banner_img_url_1 : ""),
+            contact_banner_img_url: rawBio.contact_banner_img_url || (isGM ? DEFAULT_GM_BIO_CONFIG.contact_banner_img_url : ""),
+            about_banner_url: rawBio.about_banner_url || (isGM ? DEFAULT_GM_BIO_CONFIG.about_banner_url : ""),
+            website_logo_url: rawBio.website_logo_url || fetchedData.website_logo_url || (isGM ? DEFAULT_GM_BIO_CONFIG.website_logo_url : ""),
+            logo_url: rawBio.logo_url || (isGM ? DEFAULT_GM_BIO_CONFIG.logo_url : ""),
+            show_about: rawBio.show_about !== undefined ? rawBio.show_about : true,
+            about_title: rawBio.about_title || (isGM ? DEFAULT_GM_BIO_CONFIG.about_title : "SOBRE A GM EDIFICAÇÃO"),
+            about_description: rawBio.about_description || (isGM ? DEFAULT_GM_BIO_CONFIG.about_description : ""),
+            about_highlight: rawBio.about_highlight || (isGM ? DEFAULT_GM_BIO_CONFIG.about_highlight : ""),
+            about_btn_text: rawBio.about_btn_text || (isGM ? DEFAULT_GM_BIO_CONFIG.about_btn_text : "Fale Conosco"),
+            about_btn_link: rawBio.about_btn_link || (isGM ? DEFAULT_GM_BIO_CONFIG.about_btn_link : "https://wa.me/5598988402049"),
+            about_title_font: rawBio.about_title_font || (isGM ? DEFAULT_GM_BIO_CONFIG.about_title_font : "funnel"),
+            about_title_size: rawBio.about_title_size || (isGM ? DEFAULT_GM_BIO_CONFIG.about_title_size : "30 pt"),
+            about_title_bold: rawBio.about_title_bold !== undefined ? rawBio.about_title_bold : true,
+            about_desc_font: rawBio.about_desc_font || (isGM ? DEFAULT_GM_BIO_CONFIG.about_desc_font : "ui"),
+            about_desc_size: rawBio.about_desc_size || (isGM ? DEFAULT_GM_BIO_CONFIG.about_desc_size : "16 pt"),
+            about_highlight_font: rawBio.about_highlight_font || (isGM ? DEFAULT_GM_BIO_CONFIG.about_highlight_font : "ui"),
+            about_highlight_size: rawBio.about_highlight_size || (isGM ? DEFAULT_GM_BIO_CONFIG.about_highlight_size : "16 pt"),
+            about_highlight_bold: rawBio.about_highlight_bold !== undefined ? rawBio.about_highlight_bold : true,
+            button_style: rawBio.button_style || (isGM ? DEFAULT_GM_BIO_CONFIG.button_style : "solid"),
+            button_bg: rawBio.button_bg || (isGM ? DEFAULT_GM_BIO_CONFIG.button_bg : "#FE540B"),
+            button_border: rawBio.button_border || (isGM ? DEFAULT_GM_BIO_CONFIG.button_border : "#FE540B"),
+            button_text: rawBio.button_text || (isGM ? DEFAULT_GM_BIO_CONFIG.button_text : "#FFFFFF"),
+            button_icon: rawBio.button_icon || (isGM ? DEFAULT_GM_BIO_CONFIG.button_icon : "#FFFFFF"),
+            custom_links: (rawBio.custom_links && rawBio.custom_links.length > 0) ? rawBio.custom_links : (isGM ? DEFAULT_GM_BIO_CONFIG.custom_links : []),
+            portfolio_items: (rawBio.portfolio_items && rawBio.portfolio_items.length > 0) ? rawBio.portfolio_items : (isGM ? DEFAULT_GM_BIO_CONFIG.portfolio_items : []),
+            portfolio_title: rawBio.portfolio_title || (isGM ? DEFAULT_GM_BIO_CONFIG.portfolio_title : "Portfólio"),
+            whatsapp: rawBio.whatsapp || (isGM ? DEFAULT_GM_BIO_CONFIG.whatsapp : ""),
+            instagram: rawBio.instagram || (isGM ? DEFAULT_GM_BIO_CONFIG.instagram : ""),
+            website: rawBio.website || (isGM ? DEFAULT_GM_BIO_CONFIG.website : ""),
+            email: rawBio.email || (isGM ? DEFAULT_GM_BIO_CONFIG.email : ""),
+            address: rawBio.address || (isGM ? DEFAULT_GM_BIO_CONFIG.address : ""),
+            pix_key: rawBio.pix_key || (isGM ? DEFAULT_GM_BIO_CONFIG.pix_key : ""),
+            pix_type: rawBio.pix_type || (isGM ? DEFAULT_GM_BIO_CONFIG.pix_type : "CNPJ"),
+            chat_balloon_enabled: rawBio.chat_balloon_enabled !== undefined ? rawBio.chat_balloon_enabled : true,
+            chat_balloon_show_qrcode: rawBio.chat_balloon_show_qrcode !== undefined ? rawBio.chat_balloon_show_qrcode : true,
+            chat_balloon_qr_link: rawBio.chat_balloon_qr_link || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_qr_link : ""),
+            chat_balloon_qr_msg: rawBio.chat_balloon_qr_msg || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_qr_msg : ""),
+            chat_balloon_bg_color: rawBio.chat_balloon_bg_color || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_bg_color : "#FE540B"),
+            chat_balloon_text_color: rawBio.chat_balloon_text_color || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_text_color : "#FFFFFF"),
+            chat_balloon_text: rawBio.chat_balloon_text || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_text : ""),
+            chat_balloon_button_text: rawBio.chat_balloon_button_text || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_button_text : "Abrir chat"),
+          };
+
+          if (!fetchedData.website_logo_url && isGM) {
+            fetchedData.website_logo_url = DEFAULT_GM_BIO_CONFIG.website_logo_url;
+          }
           if (!fetchedData.company_logo_url && fetchedData.avatar_url) {
             fetchedData.company_logo_url = fetchedData.avatar_url;
           }
-          const isGM = (fetchedData.company_name || "").toLowerCase().includes("gm");
           if (isGM && !fetchedData.company_logo_url) {
-            fetchedData.company_logo_url = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.webp?t=1787112280980";
+            fetchedData.company_logo_url = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.jpg?t=1790426179060";
           }
           fetchedDataResult = fetchedData;
           if (fetchedData.brand_primary) {
@@ -164,22 +259,21 @@ export default function PublicBio() {
       }
     }
 
-    // Set a guaranteed cinematic timer of 2.5 seconds for the single-run logo animation to play fully
+    // Arranque ultrarrápido (650ms) mantendo a suave e elegante animação de transição
     const introTimer = setTimeout(() => {
       timerDone = true;
       checkCompletion();
-    }, 2500);
+    }, 650);
 
     function checkCompletion() {
       if (apiDone && timerDone) {
         setData(fetchedDataResult);
         setApiLoading(false);
-        // Start the elegant fade-out transition of the overlay
+        // Transição suave de fade-out do splash overlay
         setIntroExiting(true);
-        // Fully remove the splash screen overlay from the DOM after transition complete (500ms)
         setTimeout(() => {
           setIntroFinished(true);
-        }, 500);
+        }, 350);
       }
     }
 

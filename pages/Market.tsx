@@ -11,7 +11,6 @@ import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
 import { SectionDivider } from "../components/ui/SectionDivider";
-import { BorderBeam } from "../components/ui/BorderBeam";
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from '@google/genai';
 
@@ -1004,17 +1003,19 @@ const Market = () => {
         actions={
             <div className="flex gap-2">
                 <button 
-                    className="gm-btn gm-btn-outline shadow-none border-white/10 hover:border-white/20" 
+                    className="forge-btn forge-btn--secondary !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] group cursor-pointer" 
                     onClick={() => setShowHistory(!showHistory)}
                 >
-                    <History size={16} /> {showHistory ? "Ver Lista" : "Histórico"}
+                    <History size={14} className="w-3.5 h-3.5 shrink-0 stroke-[2]" />
+                    <span>{showHistory ? "Ver Lista" : "Histórico"}</span>
                 </button>
                 {!showHistory && cartItems.length > 0 && (
                     <button 
-                        className="gm-btn gm-btn-accent shadow-none" 
+                        className="forge-btn forge-btn--primary !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] group cursor-pointer" 
                         onClick={handleShare}
                     >
-                        <Share2 size={16} /> Compartilhar
+                        <Share2 size={14} className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
+                        <span>Compartilhar</span>
                     </button>
                 )}
             </div>
@@ -1023,8 +1024,7 @@ const Market = () => {
        <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
        <SectionDivider label="Resumo Financeiro" />
        <Grid cols={1}>
-           <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-0 overflow-hidden shadow-none">
-              <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+           <div className="relative rounded-2xl border border-white/10 apple-glass-refraction gm-card p-0 overflow-hidden">
               <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
                  <div>
                     <p className="text-xs opacity-70 uppercase tracking-widest font-bold mb-1 text-slate-400">Saldo Disponível</p>
@@ -1060,8 +1060,7 @@ const Market = () => {
 
        {showHistory ? (
            <Grid cols={1}>
-               <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-6 overflow-hidden shadow-none">
-                   <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
+               <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-6 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_0_rgba(0,0,0,0.25)]">
                    <div className="text-lg font-bold text-white mb-5 relative z-10">Histórico de Gastos Mensais</div>
                    {historyLoading ? (
                        <div className="flex justify-center py-12">
@@ -1209,7 +1208,7 @@ const Market = () => {
                                     type="button"
                                     onClick={handleVoiceCommand1Product}
                                     disabled={isListening || processingVoice}
-                                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    className={`px-3 !h-[38px] rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
                                         activeVoiceCommand === 'product' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'product' && processingVoice
@@ -1228,7 +1227,7 @@ const Market = () => {
                                     ) : activeVoiceCommand === 'product' && processingVoice ? (
                                         <Loader2 size={13} className="animate-spin" />
                                     ) : (
-                                        <Mic size={13} className={voiceStep === 'product' ? 'text-white' : 'text-[var(--gm-primary)]'} />
+                                        <Mic size={13} className={voiceStep === 'product' ? 'text-white' : 'text-[#FF7A38]'} />
                                     )}
                                     <span>1. Produto</span>
                                 </button>
@@ -1238,7 +1237,7 @@ const Market = () => {
                                     type="button"
                                     onClick={handleVoiceCommand2Price}
                                     disabled={isListening || processingVoice}
-                                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    className={`px-3 !h-[38px] rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
                                         activeVoiceCommand === 'price' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'price' && processingVoice
@@ -1257,7 +1256,7 @@ const Market = () => {
                                     ) : activeVoiceCommand === 'price' && processingVoice ? (
                                         <Loader2 size={13} className="animate-spin" />
                                     ) : (
-                                        <Mic size={13} className={voiceStep === 'price' ? 'text-white' : 'text-[var(--gm-primary)]'} />
+                                        <Mic size={13} className={voiceStep === 'price' ? 'text-white' : 'text-[#FF7A38]'} />
                                     )}
                                     <span>2. Preço</span>
                                 </button>
@@ -1267,7 +1266,7 @@ const Market = () => {
                                     type="button"
                                     onClick={handleVoiceCommand3Value}
                                     disabled={isListening || processingVoice}
-                                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    className={`px-3 !h-[38px] rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
                                         activeVoiceCommand === 'value' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'value' && processingVoice
@@ -1286,7 +1285,7 @@ const Market = () => {
                                     ) : activeVoiceCommand === 'value' && processingVoice ? (
                                         <Loader2 size={13} className="animate-spin" />
                                     ) : (
-                                        <Mic size={13} className={voiceStep === 'value' ? 'text-white' : 'text-[var(--gm-primary)]'} />
+                                        <Mic size={13} className={voiceStep === 'value' ? 'text-white' : 'text-[#FF7A38]'} />
                                     )}
                                     <span>3. Valor</span>
                                 </button>
@@ -1296,7 +1295,7 @@ const Market = () => {
                                     type="button"
                                     onClick={handleVoiceCommand4Quantity}
                                     disabled={isListening || processingVoice}
-                                    className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    className={`px-3 !h-[38px] rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
                                         activeVoiceCommand === 'quantity' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'quantity' && processingVoice
@@ -1315,7 +1314,7 @@ const Market = () => {
                                     ) : activeVoiceCommand === 'quantity' && processingVoice ? (
                                         <Loader2 size={13} className="animate-spin" />
                                     ) : (
-                                        <Mic size={13} className={voiceStep === 'quantity' ? 'text-white' : 'text-[var(--gm-primary)]'} />
+                                        <Mic size={13} className={voiceStep === 'quantity' ? 'text-white' : 'text-[#FF7A38]'} />
                                     )}
                                     <span>4. Quantidade</span>
                                 </button>
@@ -1326,12 +1325,12 @@ const Market = () => {
                                 type="button"
                                 onClick={handleVoiceSequential}
                                 disabled={isListening || processingVoice}
-                                className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all shadow-none cursor-pointer ${
+                                className={`w-full !h-[38px] !px-4 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center justify-center gap-2 border transition-all cursor-pointer ${
                                     activeVoiceCommand === 'sequential' && isListening
-                                        ? 'bg-red-500 text-white border-red-400 animate-pulse'
+                                        ? 'bg-red-500 text-white border-red-400 animate-pulse shadow-none'
                                         : activeVoiceCommand === 'sequential' && processingVoice
-                                        ? 'bg-amber-500 text-white border-amber-400'
-                                        : 'bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white border-[var(--gm-primary)]/30'
+                                        ? 'bg-amber-500 text-white border-amber-400 shadow-none'
+                                        : 'forge-btn forge-btn--primary shadow-none'
                                 }`}
                             >
                                 {activeVoiceCommand === 'sequential' && isListening ? (
@@ -1346,8 +1345,8 @@ const Market = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <Mic size={14} />
-                                        <span>🎙️ Gravar Sequencial Completo (1. Produto ➔ 2. Preço ➔ 4. Qtd)</span>
+                                        <Mic size={14} className="forge-btn__icon" />
+                                        <span>Gravar Sequencial Completo (1. Produto ➔ 2. Preço ➔ 4. Qtd)</span>
                                     </>
                                 )}
                             </button>
@@ -1491,8 +1490,13 @@ const Market = () => {
                                     />
                                 </div>
 
-                                <button className="gm-btn h-12 w-full md:w-auto px-8 rounded-xl font-bold flex items-center justify-center gap-2 shadow-none" onClick={handleAddItem} disabled={addingItem}>
-                                    {addingItem ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />} Adicionar
+                                <button 
+                                    className="forge-btn forge-btn--primary !h-[38px] w-full md:w-auto !px-6 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50" 
+                                    onClick={handleAddItem} 
+                                    disabled={addingItem}
+                                >
+                                    {addingItem ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} className="stroke-[2.5]" />}
+                                    <span>Adicionar</span>
                                 </button>
                             </div>
                         </div>
@@ -1504,12 +1508,12 @@ const Market = () => {
                         <div className="text-lg font-bold text-white">Itens na Lista ({cartItems.length})</div>
                         {cartItems.length > 0 && (
                             <button 
-                                className="gm-btn gm-btn-accent font-black transition-all px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-none"
+                                className="forge-btn forge-btn--primary !h-[38px] !px-6 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center gap-2 cursor-pointer disabled:opacity-50"
                                 onClick={() => setShowFinalizeConfirm(true)}
                                 disabled={finalizing}
                             >
-                                {finalizing ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} strokeWidth={3} />}
-                                FINALIZAR LISTA
+                                {finalizing ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} className="stroke-[2.5]" />}
+                                <span>FINALIZAR LISTA</span>
                             </button>
                         )}
                     </div>
@@ -1523,7 +1527,7 @@ const Market = () => {
                             {cartItems.map(item => (
                                 <div key={item.id} className="flex flex-col sm:flex-row justify-between sm:items-center py-4 px-6 hover:bg-white/[0.03] transition-colors gap-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl barra border border-white/10 flex items-center justify-center font-bold text-slate-300 text-sm flex-shrink-0 shadow-none">
+                                        <div className="w-10 h-10 rounded-md bg-[#131315] border border-[#26262A] flex items-center justify-center font-bold text-slate-300 text-sm flex-shrink-0 shadow-none">
                                             {item.quantity}x
                                         </div>
                                         <div className="min-w-0">
@@ -1535,10 +1539,10 @@ const Market = () => {
                                         <span className="font-bold text-xl text-[var(--gm-primary)]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
                                         <button 
                                             onClick={() => handleRemoveItem(item.id)} 
-                                            className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] text-white hover:brightness-110 transition-all flex items-center justify-center shrink-0 shadow-none border border-[var(--gm-primary)]/30 cursor-pointer"
+                                            className="h-10 w-10 rounded-md bg-[#131315] hover:bg-[#1B1B1E] text-slate-300 hover:text-red-400 border border-[#26262A] hover:border-red-500/40 transition-all flex items-center justify-center shrink-0 shadow-sm cursor-pointer active:scale-95"
                                             title="Remover item"
                                         >
-                                            <Trash2 size={18} className="text-white" />
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 </div>
@@ -1591,14 +1595,14 @@ const Market = () => {
                         
                         <div className="grid grid-cols-1 gap-3 w-full">
                             <button 
-                                className="gm-btn w-full py-3.5 font-black text-base rounded-xl shadow-none" 
+                                className="w-full h-12 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] transition-all cursor-pointer active:scale-95 disabled:opacity-50" 
                                 onClick={handleTopUp}
                                 disabled={toppingUp}
                             >
-                                {toppingUp ? <Loader2 size={22} className="animate-spin mx-auto" /> : "CONFIRMAR RECARGA"}
+                                {toppingUp ? <Loader2 size={20} className="animate-spin text-[#0B0B0C] mx-auto" /> : "CONFIRMAR RECARGA"}
                             </button>
                             <button 
-                                className="gm-btn gm-btn-soft w-full py-3 rounded-xl shadow-none border border-white/10" 
+                                className="w-full h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95" 
                                 onClick={() => setTopUpModalOpen(false)}
                             >
                                 CANCELAR
@@ -1627,8 +1631,8 @@ const Market = () => {
                                 onClick={e => e.stopPropagation()}
                             >
                                 <div className="p-7 text-center">
-                                    <div className="w-16 h-16 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-none">
-                                        <Trash2 size={28} className="text-[var(--gm-primary)]" />
+                                    <div className="w-16 h-16 bg-[#F65A1A]/10 border border-[#F65A1A]/20 rounded-xl flex items-center justify-center mx-auto mb-5 shadow-none">
+                                        <Trash2 size={28} className="text-[#F65A1A]" />
                                     </div>
                                     <h3 className="text-2xl font-extrabold text-white mb-2.5">Excluir Compra?</h3>
                                     <p className="text-slate-300 text-base mb-6 leading-relaxed">
@@ -1637,17 +1641,17 @@ const Market = () => {
                                     
                                     <div className="flex gap-3">
                                         <button 
-                                            className="gm-btn gm-btn-outline flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none border-white/10 hover:border-white/20"
+                                            className="flex-1 h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
                                             onClick={() => setShowDeleteListConfirm(null)}
                                         >
                                             Voltar
                                         </button>
                                         <button 
-                                            className="gm-btn flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none"
+                                            className="flex-1 h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] disabled:opacity-50"
                                             onClick={() => handleDeleteList(showDeleteListConfirm)}
                                             disabled={historyLoading}
                                         >
-                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Excluir"}
+                                            {historyLoading ? <Loader2 className="animate-spin text-[#0B0B0C] mx-auto" size={18} /> : "Excluir"}
                                         </button>
                                     </div>
                                 </div>
@@ -1675,8 +1679,8 @@ const Market = () => {
                                 onClick={e => e.stopPropagation()}
                             >
                                 <div className="p-7 text-center">
-                                    <div className="w-16 h-16 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-none">
-                                        <Trash2 size={28} className="text-[var(--gm-primary)]" />
+                                    <div className="w-16 h-16 bg-[#F65A1A]/10 border border-[#F65A1A]/20 rounded-xl flex items-center justify-center mx-auto mb-5 shadow-none">
+                                        <Trash2 size={28} className="text-[#F65A1A]" />
                                     </div>
                                     <h2 className="text-2xl font-extrabold text-white mb-2.5">Excluir Histórico?</h2>
                                     <p className="text-slate-300 text-base mb-6 leading-relaxed">
@@ -1687,17 +1691,17 @@ const Market = () => {
                                     
                                     <div className="flex gap-3">
                                         <button 
-                                            className="gm-btn gm-btn-outline flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none border-white/10 hover:border-white/20"
+                                            className="flex-1 h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
                                             onClick={() => setShowDeleteHistoryConfirm(null)}
                                         >
                                             Voltar
                                         </button>
                                         <button 
-                                            className="gm-btn flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none"
+                                            className="flex-1 h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] disabled:opacity-50"
                                             onClick={() => handleDeleteHistoryMonth(showDeleteHistoryConfirm)}
                                             disabled={historyLoading}
                                         >
-                                            {historyLoading ? <Loader2 className="animate-spin mx-auto" size={18} /> : "Excluir"}
+                                            {historyLoading ? <Loader2 className="animate-spin text-[#0B0B0C] mx-auto" size={18} /> : "Excluir"}
                                         </button>
                                     </div>
                                 </div>
@@ -1723,15 +1727,15 @@ const Market = () => {
                         className="gm-modal fora border border-white/12 relative w-full max-w-sm rounded-2xl p-7 shadow-none overflow-hidden"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="absolute top-0 left-0 w-full h-1 bg-[var(--gm-primary)]"></div>
+                        <div className="absolute top-0 left-0 w-full h-1 bg-[#F65A1A]"></div>
                         
                         <div className="flex flex-col items-center text-center">
-                            <div className="w-16 h-16 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-2xl flex items-center justify-center mb-5 text-[var(--gm-primary)] shadow-none">
+                            <div className="w-16 h-16 bg-[#F65A1A]/10 border border-[#F65A1A]/20 rounded-xl flex items-center justify-center mb-5 text-[#F65A1A] shadow-none">
                                 <ShoppingCart size={30} />
                             </div>
                             <h3 className="text-2xl font-black text-white mb-2.5">Finalizar Compra?</h3>
                             <p className="text-slate-300 mb-6 text-base leading-relaxed">
-                                Deseja finalizar esta lista no valor de <span className="text-[var(--gm-primary)] font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
+                                Deseja finalizar esta lista no valor de <span className="text-[#F65A1A] font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
                                 O valor será deduzido do seu saldo de mercado.
                             </p>
                             
@@ -1739,14 +1743,14 @@ const Market = () => {
                                 <button 
                                     onClick={handleFinalize}
                                     disabled={finalizing}
-                                    className="gm-btn w-full py-3.5 font-black flex items-center justify-center gap-2 rounded-xl shadow-none"
+                                    className="w-full h-12 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                                 >
-                                    {finalizing ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
+                                    {finalizing ? <Loader2 size={18} className="animate-spin text-[#0B0B0C]" /> : <Check size={18} className="text-[#0B0B0C] stroke-[3]" />}
                                     SIM, FINALIZAR AGORA
                                 </button>
                                 <button 
                                     onClick={() => setShowFinalizeConfirm(false)}
-                                    className="gm-btn gm-btn-soft w-full py-3 rounded-xl shadow-none border border-white/10"
+                                    className="w-full h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
                                 >
                                     CANCELAR
                                 </button>
@@ -1775,28 +1779,28 @@ const Market = () => {
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="p-7 text-center">
-                            <div className="w-16 h-16 bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-none">
-                                <Trash2 size={28} className="text-[var(--gm-primary)]" />
+                            <div className="w-16 h-16 bg-[#F65A1A]/10 border border-[#F65A1A]/20 rounded-xl flex items-center justify-center mx-auto mb-5 shadow-none">
+                                <Trash2 size={28} className="text-[#F65A1A]" />
                             </div>
                             <h3 className="text-2xl font-extrabold text-white mb-2.5">Zerar Saldo?</h3>
                             <p className="text-slate-300 text-base mb-6 leading-relaxed">
-                                Tem certeza que deseja zerar o seu saldo disponível de <span className="text-[var(--gm-primary)] font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
+                                Tem certeza que deseja zerar o seu saldo disponível de <span className="text-[#F65A1A] font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
                                 <br/>Esta ação não pode ser desfeita.
                             </p>
                             
                             <div className="flex gap-3">
                                 <button 
                                     onClick={() => setShowResetConfirm(false)}
-                                    className="gm-btn gm-btn-outline flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none border-white/10 hover:border-white/20"
+                                    className="flex-1 h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
                                 >
                                     Cancelar
                                 </button>
                                 <button 
                                     onClick={handleResetBalance}
                                     disabled={resettingBalance}
-                                    className="gm-btn flex-1 h-11 rounded-xl text-xs uppercase tracking-widest font-black shadow-none"
+                                    className="flex-1 h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] disabled:opacity-50"
                                 >
-                                    {resettingBalance ? <Loader2 size={22} className="animate-spin mx-auto" /> : "Zerar"}
+                                    {resettingBalance ? <Loader2 size={18} className="animate-spin text-[#0B0B0C] mx-auto" /> : "Zerar"}
                                 </button>
                             </div>
                         </div>
@@ -1822,13 +1826,13 @@ const Market = () => {
                     openWhatsapp("", shareData.message);
                     setShareData(null);
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40 rounded-xl"
+                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#F65A1A]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
                 >
                   <div className="shrink-0">
-                    <WhatsAppIcon size={22} className="text-[var(--gm-primary)]" />
+                    <WhatsAppIcon size={22} className="text-[#F65A1A]" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-[var(--gm-primary)] leading-tight">WhatsApp</p>
+                    <p className="font-bold text-[#F2F2F3] leading-tight">WhatsApp</p>
                     <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Enviar diretamente para um contato</p>
                   </div>
                 </button>
@@ -1838,13 +1842,13 @@ const Market = () => {
                     window.open(`mailto:?subject=${shareData.title}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40 rounded-xl"
+                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#F65A1A]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
                 >
                   <div className="shrink-0">
-                    <Mail size={22} className="text-[var(--gm-primary)]" />
+                    <Mail size={22} className="text-[#F65A1A]" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-[var(--gm-primary)] leading-tight">E-mail</p>
+                    <p className="font-bold text-[#F2F2F3] leading-tight">E-mail</p>
                     <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Enviar por correio eletrônico</p>
                   </div>
                 </button>
@@ -1859,13 +1863,13 @@ const Market = () => {
                       alert("Erro ao copiar texto.");
                     }
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40 rounded-xl"
+                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#F65A1A]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
                 >
                   <div className="shrink-0">
-                    <Copy size={22} className="text-[var(--gm-primary)]" />
+                    <Copy size={22} className="text-[#F65A1A]" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-[var(--gm-primary)] leading-tight">Copiar Texto</p>
+                    <p className="font-bold text-[#F2F2F3] leading-tight">Copiar Texto</p>
                     <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Copiar para colar em outro lugar</p>
                   </div>
                 </button>
@@ -1885,14 +1889,14 @@ const Market = () => {
                         }
                       }
                     }}
-                    className="w-full gm-btn gm-btn-outline !justify-start !pl-4 gap-3 py-3.5 border-white/10 shadow-none hover:border-[var(--gm-primary)]/40 rounded-xl"
+                    className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#F65A1A]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
                   >
                     <div className="shrink-0">
-                      <Share2 size={22} className="text-[var(--gm-primary)]" />
+                      <Share2 size={22} className="text-[#F65A1A]" />
                     </div>
                     <div className="text-left">
-                      <p className="font-bold text-[var(--gm-primary)] leading-tight">Mais Opções</p>
-                      <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Menu de compartilhamento do sistema</p>
+                      <p className="font-bold text-[#F2F2F3] leading-tight">Outros Aplicativos</p>
+                      <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Compartilhar via menu do sistema</p>
                     </div>
                   </button>
                 )}

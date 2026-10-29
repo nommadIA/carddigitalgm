@@ -88,15 +88,19 @@ export default function SecurityVerifier({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Container único, sem caixas extras ou botões separados */}
+      {/* Container único, minimalista e sem efeito glass */}
       <div
         onClick={status === "idle" ? handleStartChallenge : () => hiddenInputRef.current?.focus()}
-        className={`w-full apple-glass-input rounded-xl px-3 sm:px-3.5 py-2 sm:py-2.5 flex flex-col justify-center select-none transition-all duration-300 relative overflow-hidden ${
-          status === "idle" ? "cursor-pointer hover:border-white/30 hover:bg-white/[0.08]" : ""
-        } ${status === "inputting" ? "border-[#4285F4]/70 shadow-md shadow-blue-500/10" : ""} ${
-          status === "success" ? "border-[#0F9D58]/60 bg-[#0F9D58]/[0.06]" : ""
+        className={`w-full rounded-2xl px-4 py-3 flex flex-col justify-center select-none transition-all duration-200 relative overflow-hidden bg-[#151922] border ${
+          status === "idle"
+            ? "border-white/10 hover:border-white/20 cursor-pointer"
+            : status === "inputting"
+            ? "border-[#4285F4]/70"
+            : status === "success"
+            ? "border-emerald-500/40 bg-[#111c17]"
+            : "border-white/10"
         }`}
-        style={{ minHeight: "48px" }}
+        style={{ minHeight: "52px" }}
       >
         {/* Input invisível que captura o teclado automaticamente */}
         {status === "inputting" && (
@@ -113,16 +117,16 @@ export default function SecurityVerifier({
 
         <div className="flex items-center justify-between w-full">
           {/* LADO ESQUERDO: Checkbox / Interação Inteligente */}
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             {/* Estado 1: Inicial (Aguardando clique) */}
             {status === "idle" && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2.5"
+                className="flex items-center gap-3"
               >
-                <div className="w-5.5 h-5.5 rounded-md border-2 border-white/40 hover:border-[#4285F4] hover:shadow-[0_0_10px_rgba(66,133,244,0.4)] transition-all shrink-0 flex items-center justify-center bg-black/40" />
-                <span className="text-zinc-100 text-xs sm:text-sm font-medium">
+                <div className="w-5 h-5 rounded-md border border-zinc-600 hover:border-[#4285F4] transition-colors shrink-0 flex items-center justify-center bg-zinc-900/80" />
+                <span className="text-zinc-200 text-xs sm:text-sm font-medium">
                   Não sou um robô
                 </span>
               </motion.div>

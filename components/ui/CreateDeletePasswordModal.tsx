@@ -51,11 +51,11 @@ export default function CreateDeletePasswordModal({ open, onClose }: Props) {
   return (
     <div
       onClick={() => !loading && onClose()}
-      className="fixed inset-0 z-[1200] bg-black/75 flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-[1200] bg-black/50 backdrop-blur-xl flex items-center justify-center p-4 animate-fade-in"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md fora border border-white/10 rounded-2xl p-6 shadow-2xl relative"
+        className="w-full max-w-md fora gm-modal border border-white/10 rounded-2xl p-6 shadow-2xl relative"
       >
         <button 
             onClick={onClose} 
@@ -92,7 +92,7 @@ export default function CreateDeletePasswordModal({ open, onClose }: Props) {
             <button
               onClick={onClose}
               disabled={loading}
-              className="flex-1 py-3 rounded-xl border border-white/10 bg-transparent text-slate-300 font-bold hover:bg-white/5 transition-all disabled:opacity-50"
+              className="flex-1 h-11 rounded-md border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer"
             >
               Voltar
             </button>
@@ -100,12 +100,10 @@ export default function CreateDeletePasswordModal({ open, onClose }: Props) {
             <button
               onClick={handleSave}
               disabled={!canSave}
-              className={`flex-1 py-3 rounded-xl border border-white/10 text-white font-bold flex items-center justify-center gap-2 transition-all ${
-                  canSave ? "bg-[var(--gm-primary)] hover:brightness-110 shadow-lg shadow-[var(--gm-primary)]/20" : "bg-[var(--gm-primary)]/20 cursor-not-allowed text-white/50"
-              }`}
+              className="flex-1 h-11 rounded-md border border-[#F65A1A] bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.3)] disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B] disabled:cursor-not-allowed cursor-pointer"
             >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-              {loading ? "Salvando..." : "Salvar"}
+              {loading ? <Loader2 className="animate-spin text-[#0B0B0C]" size={16} /> : <Save size={16} className="text-[#0B0B0C]" />}
+              <span>{loading ? "Salvando..." : "Salvar"}</span>
             </button>
           </div>
         </div>

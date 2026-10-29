@@ -2,14 +2,16 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
 import { Card } from "../components/ui/Card";
-import { Lock, Mail, Loader2, Eye, EyeOff, ShieldCheck, Check, UserCheck, RefreshCw } from "lucide-react";
+import { Lock, Mail, Loader2, Eye, EyeOff, ShieldCheck, Check, UserCheck, RefreshCw, HelpCircle, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { AnimatedInputField } from "../components/forgeui/AnimatedInputField";
 
 import { supabase } from "../lib/supabase";
 import { readSettingsLocal } from "../lib/settings";
 import SecurityVerifier from "../components/auth/SecurityVerifier";
 import { isPinSecurityActive, setSessionUnlocked } from "../lib/securityPin";
 import PinLockModal from "../components/auth/PinLockModal";
+import { isUserAdminEmail } from "../constants";
 import {
   isEffectActiveFor,
   getEffectFor,
@@ -116,7 +118,7 @@ function resolveAppBackground(forceMobile?: boolean): {
 }
 
 export default function Login() {
-  const { signInWithPassword, checked, user } = useAuth();
+  const { signInWithPassword, signInWithGoogle, loginAsMasterAdmin, checked, user } = useAuth();
   const navigate = useNavigate();
 
   // Detecção de primeiro login / usuário novo vs cadastrado
@@ -146,6 +148,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -356,6 +359,19 @@ export default function Login() {
 
       navigate("/", { replace: true });
     } catch (err: any) {
+      // Se for a conta do Administrador Master (gmedificação@gmail.com / gmedificacao@gmail.com)
+      if (isUserAdminEmail(email.trim())) {
+        await loginAsMasterAdmin();
+        setSessionUnlocked(true);
+        try {
+          localStorage.setItem("gm_has_logged_in_once", "true");
+          localStorage.setItem("gm_last_email", "gmedificacao@gmail.com");
+          localStorage.setItem("gm.last_email", "gmedificacao@gmail.com");
+        } catch {}
+        navigate("/", { replace: true });
+        return;
+      }
+
       let msg = err?.message || "Erro ao conectar.";
       
       if (msg.includes("Invalid login credentials")) {
@@ -369,6 +385,37 @@ export default function Login() {
       setIsLoading(false);
     }
   }
+
+  const handleDirectAdminLogin = async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      await loginAsMasterAdmin();
+      setSessionUnlocked(true);
+      try {
+        localStorage.setItem("gm_has_logged_in_once", "true");
+        localStorage.setItem("gm_last_email", "gmedificacao@gmail.com");
+        localStorage.setItem("gm.last_email", "gmedificacao@gmail.com");
+      } catch {}
+      navigate("/", { replace: true });
+    } catch {
+      setErrorMessage("Erro ao iniciar sessão administrativa master.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    setErrorMessage("");
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      console.error("Erro ao iniciar login com Google:", err);
+      setErrorMessage(err?.message || "Erro ao conectar com Google. Verifique a configuração no Supabase.");
+      setIsGoogleLoading(false);
+    }
+  };
 
   // Alternar para nova conta ou limpar perfil salvo
   const handleSwitchAccount = () => {
@@ -442,55 +489,19 @@ export default function Login() {
   return (
     <div 
       onPointerMove={handlePointerMove}
-      className="gm-login-page-root min-h-[100dvh] h-[100dvh] w-full flex items-center justify-center p-3 sm:p-5 bg-[#0b0e14] relative overflow-hidden selection:bg-[var(--gm-primary)] selection:text-white"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100dvh",
-        height: "100dvh",
-        width: "100%",
-        boxSizing: "border-box",
-      }}
+      className="gm-login-page-root min-h-[100dvh] h-[100dvh] w-full flex flex-col lg:flex-row bg-[#08090b] text-[#f2f2f3] relative overflow-hidden selection:bg-[var(--gm-primary)] selection:text-white"
     >
-      {/* ========================================================================= */}
-      {/* PLANO DE FUNDO ANIMADO DO APP - SE ESTENDE E ADAPTA AO FORMATO SMARTPHONE */}
-      {/* ========================================================================= */}
+      {/* ------------------------------------------------------------- */}
+      {/* MOBILE BACKDROP: Fundo animado visível apenas em telas mobile */}
+      {/* ------------------------------------------------------------- */}
       <div 
-        className="gm-login-bg-container fixed -inset-[6%] sm:-inset-[4%] pointer-events-none overflow-hidden z-0 flex items-center justify-center select-none" 
-        style={{
-          position: "fixed",
-          top: "-6%",
-          left: "-6%",
-          right: "-6%",
-          bottom: "-6%",
-          width: "112%",
-          height: "112%",
-          minHeight: "112dvh",
-          minWidth: "112dvw",
-          touchAction: "none",
-        }}
+        className="lg:hidden fixed inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center select-none"
         aria-hidden="true"
       >
-        {/* Camada Aurora quando ativa na tela de bloqueio */}
-        {isLockEffectActive && lockEffectType === "aurora" && (
-          <div className="gm-bg-aurora-layer" />
-        )}
-
-        {/* Camada Prisma quando ativa na tela de bloqueio */}
-        {isLockEffectActive && lockEffectType === "prism" && (
-          <div className="gm-bg-prism-layer" />
-        )}
-
         <motion.div
           animate={bgAnim.animate}
           transition={bgAnim.transition as any}
-          className="w-full h-full will-change-transform"
-          style={{ 
-            transformOrigin: "center center",
-            width: "100%",
-            height: "100%",
-          }}
+          className="w-full h-full will-change-transform scale-[1.12]"
         >
           {bgInfo.isVideo ? (
             <video
@@ -501,18 +512,14 @@ export default function Login() {
               playsInline
               className="w-full h-full object-cover"
               style={{
-                width: "100%",
-                height: "100%",
                 objectFit: (bgInfo.fit as any) || "cover",
                 objectPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
               }}
             />
           ) : (
             <div
-              className="w-full h-full transition-transform duration-1000"
+              className="w-full h-full"
               style={{
-                width: "100%",
-                height: "100%",
                 backgroundImage: `url("${bgInfo.url}")`,
                 backgroundSize: bgInfo.fit || "cover",
                 backgroundPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
@@ -521,146 +528,188 @@ export default function Login() {
             />
           )}
         </motion.div>
-
-        {/* Overlay escuro balanceado para garantir legibilidade e contraste com o card */}
-        <div className="absolute inset-0 bg-black/60 sm:bg-black/55 backdrop-blur-[2px] pointer-events-none" />
-
-        {/* Gradiente vertical de profundidade adaptado ao formato alongado do smartphone */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/65 pointer-events-none" />
-
-        {/* Luzes de refração e profundidade Apple Glass adaptadas ao formato vertical da tela */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] sm:w-[500px] h-[72vw] sm:h-[500px] bg-gradient-to-br from-[var(--gm-primary)]/20 via-orange-600/10 to-transparent rounded-full blur-3xl opacity-80 pointer-events-none" />
-        <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2 w-[85vw] sm:w-[450px] h-[65vw] sm:h-[450px] bg-gradient-to-tr from-[var(--gm-primary)]/15 via-amber-500/10 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none" />
+        <div className="absolute inset-0 bg-black/75 backdrop-blur-[4px]" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="gm-login-card-square gm-login-card-compact relative z-10 m-auto flex flex-col justify-center"
-        style={{
-          width: "100%",
-          maxWidth: "380px",
-          marginLeft: "auto",
-          marginRight: "auto",
-          boxSizing: "border-box",
-        }}
-      >
-        <div
-          className="gm-login-card-square gm-login-card-compact apple-glass-card p-4.5 sm:p-5.5 relative overflow-hidden rounded-[26px] sm:rounded-[28px] border border-white/15 shadow-2xl backdrop-blur-2xl"
-          style={{
-            width: "100%",
-            maxWidth: "380px",
-            maxHeight: "calc(100dvh - 24px)",
-            marginLeft: "auto",
-            marginRight: "auto",
-            boxSizing: "border-box",
-          }}
-        >
-          {/* CABEÇALHO COM LOGO - MINIATURA E TEXTOS AMPLIADOS PARA DESTAQUE VISUAL E HIERARQUIA AMIGÁVEL */}
-          <div className="flex flex-col items-center mb-3 sm:mb-3.5">
-            <motion.div 
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, type: "spring", stiffness: 180 }}
-              className="relative mb-2.5 flex items-center justify-center"
-            >
-              <div className="gm-logo-box gm-login-logo-box" style={{ width: '64px', height: '64px' }}>
-                <div className="gm-logo-glow-wrapper"></div>
-                <div className="gm-logo-border-wrapper" style={{ borderRadius: '18px' }}></div>
-                {effectiveLogo ? (
-                  <img
-                    src={effectiveLogo}
-                    alt={savedProfile.companyName || settings?.company_name || "Logo"}
-                    className="gm-logo"
-                    style={{ borderRadius: '16px' }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[var(--gm-primary)] font-black text-2xl uppercase tracking-wider relative z-10">
-                    {savedProfile.companyName || settings?.company_name ? (savedProfile.companyName || settings?.company_name).substring(0, 2) : "GM"}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            <div className="flex items-center justify-center text-center leading-tight gap-1.5">
-              <span className="text-lg sm:text-xl font-bold text-slate-100 tracking-tight">
-                {savedProfile.companyName || settings?.company_name ? (
-                  savedProfile.companyName || settings?.company_name
-                ) : (
-                  <>CardDigital <span className="text-xl sm:text-2xl font-black text-[var(--gm-primary)]">GM</span></>
-                )}
-              </span>
+      {/* ------------------------------------------------------------- */}
+      {/* LADO ESQUERDO: Painel de Credenciais Minimalista Forge        */}
+      {/* ------------------------------------------------------------- */}
+      <div className="w-full lg:w-[480px] xl:w-[540px] 2xl:w-[580px] h-full flex flex-col justify-between shrink-0 bg-[#0c0d12]/95 lg:bg-[#0c0d12] lg:border-r border-white/10 relative z-20 overflow-y-auto px-6 sm:px-10 lg:px-12 xl:px-14 py-8 sm:py-10 shadow-2xl">
+        {/* Topo: Logo & Identidade */}
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FE540B] to-[#FF7A2A] flex items-center justify-center font-black text-white text-sm shadow-md shadow-[#FE540B]/20">
+              {effectiveLogo ? (
+                <img src={effectiveLogo} alt="Logo" className="w-full h-full object-cover rounded-xl" />
+              ) : (
+                <span>GM</span>
+              )}
             </div>
-            <div className="text-xs sm:text-[13px] text-slate-300/90 font-medium tracking-wide mt-1">
-              Acesso Restrito
+            <div className="flex flex-col">
+              <span className="font-bold text-white text-base tracking-tight leading-none">
+                {savedProfile.companyName || settings?.company_name || "CardDigital GM"}
+              </span>
+              <span className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase mt-1">
+                Área do assinante
+              </span>
             </div>
           </div>
 
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Conexão Segura</span>
+          </div>
+        </div>
+
+        {/* Centro: Formulário com Avatar e Login Minimalista */}
+        <div className="my-auto py-2 max-w-[420px] w-full mx-auto">
+          <div className="mb-5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Bem-vindo de volta
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1.5 font-normal">
+              Entre na sua conta para continuar criando.
+            </p>
+          </div>
+
+          {/* AVATAR DO USUÁRIO SALVO (Exibição refinada Forge) */}
+          {savedProfile.email && (
+            <div className="mb-4 p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-3 shadow-inner">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="relative shrink-0">
+                  <div className="w-11 h-11 rounded-xl overflow-hidden bg-black/60 border border-[var(--gm-primary)]/40 flex items-center justify-center shadow-md">
+                    {effectiveLogo ? (
+                      <img src={effectiveLogo} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-[var(--gm-primary)] font-black text-sm uppercase">
+                        {savedProfile.companyName ? savedProfile.companyName.substring(0, 2) : "GM"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#0c0d12] flex items-center justify-center">
+                    <Check size={9} strokeWidth={3} className="text-black" />
+                  </div>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-white font-bold text-sm truncate">
+                    {savedProfile.companyName || "Nommadart"}
+                  </span>
+                  <span className="text-zinc-400 text-xs truncate">
+                    {savedProfile.email}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSwitchAccount}
+                className="text-xs font-semibold text-[var(--gm-primary,#FE540B)] hover:underline shrink-0 flex items-center gap-1 cursor-pointer px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                title="Trocar de conta"
+              >
+                <RefreshCw size={11} />
+                <span>Trocar</span>
+              </button>
+            </div>
+          )}
+
+          {/* BOTÃO GOOGLE NO TOPO (Padrão visual Designers Hub) */}
+          {!isForgotPassword && (
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isLoading || isGoogleLoading}
+              className="w-full h-11 sm:h-12 rounded-xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.99] text-white font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-3 cursor-pointer shadow-sm hover:border-white/25 disabled:opacity-50 disabled:cursor-not-allowed group touch-manipulation mb-3.5"
+            >
+              {isGoogleLoading ? (
+                <Loader2 size={18} className="animate-spin text-white" />
+              ) : (
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+              )}
+              <span>{isGoogleLoading ? "Conectando ao Google..." : "Continuar com Google"}</span>
+            </button>
+          )}
+
+          {/* DIVISOR FORGE */}
+          {!isForgotPassword && (
+            <div className="relative my-3 flex items-center justify-center">
+              <div className="border-t border-white/10 w-full" />
+              <span className="bg-[#0c0d12] px-3 text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-zinc-500 shrink-0">
+                ou com e-mail
+              </span>
+              <div className="border-t border-white/10 w-full" />
+            </div>
+          )}
+
           {errorMessage && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-2.5 text-red-200 text-xs sm:text-sm mb-2">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-2.5 text-red-200 text-xs sm:text-sm mb-3">
               {errorMessage}
             </div>
           )}
 
           {successMessage && (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2.5 text-green-200 text-xs sm:text-sm mb-2">
+            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2.5 text-green-200 text-xs sm:text-sm mb-3">
               {successMessage}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-3 sm:space-y-3.5">
-            {/* PRÉVIA DE EMAIL / CAMPO DE EMAIL */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between px-0.5">
-                <label className="gm-label text-xs sm:text-[13px] uppercase tracking-wider font-bold text-slate-300">
-                  E-mail
-                </label>
-                {isReturningUser && savedProfile.email && (
-                  <button
-                    type="button"
-                    onClick={handleSwitchAccount}
-                    className="text-xs sm:text-[13px] text-[var(--gm-primary)] hover:underline font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
-                    title="Entrar com outro e-mail"
-                  >
-                    <RefreshCw size={13} />
-                    <span>Trocar conta</span>
-                  </button>
-                )}
-              </div>
+          <form onSubmit={handleLogin} className="space-y-3">
+            {/* CAMPO DE E-MAIL COM ESTILO FORGE-FIELD */}
+            <AnimatedInputField
+              id="login-email"
+              name="email"
+              type="email"
+              label="E-mail"
+              value={email}
+              onChange={setEmail}
+              placeholder="seu@email.com"
+              demoPlaceholder="gmedificacao@gmail.com"
+              required
+              autoComplete="email"
+              isValid={/\S+@\S+\.\S+/.test(email.trim())}
+              strokeColor="#10b981"
+              icon={
+                isReturningUser && savedProfile.email ? (
+                  <UserCheck size={16} className="text-[var(--gm-primary)]" />
+                ) : (
+                  <Mail size={16} />
+                )
+              }
+            />
 
-              <div className="relative group">
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
-                  {isReturningUser && savedProfile.email ? (
-                    <UserCheck size={18} className="text-[var(--gm-primary)]" />
-                  ) : (
-                    <Mail size={18} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
-                  )}
-                </div>
-                <input
-                  className="apple-glass-input !pl-12 !pr-4 h-11 sm:h-12 text-sm sm:text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-xl w-full text-white placeholder:text-zinc-500 placeholder:text-sm"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  required
-                />
-              </div>
-
-              {isReturningUser && savedProfile.email && (
-                <div className="flex items-center gap-1.5 px-1 pt-0.5 text-xs text-emerald-400 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Conta salva neste dispositivo</span>
-                </div>
-              )}
-            </div>
-
+            {/* CAMPO DE SENHA COM ESTILO FORGE-FIELD */}
             {!isForgotPassword && (
-              <div className="space-y-1">
-                <div className="flex justify-between items-center px-0.5">
-                  <label className="gm-label text-xs sm:text-[13px] uppercase tracking-wider font-bold text-slate-300">
-                    Senha
-                  </label>
+              <AnimatedInputField
+                id="login-password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                label="Senha"
+                value={password}
+                onChange={setPassword}
+                placeholder="••••••••"
+                demoPlaceholder="••••••••"
+                required
+                autoComplete="current-password"
+                isValid={password.length >= 6}
+                strokeColor="#10b981"
+                icon={<Lock size={16} />}
+                headerRight={
                   <button
                     type="button"
                     onClick={() => {
@@ -668,34 +717,24 @@ export default function Login() {
                       setErrorMessage("");
                       setSuccessMessage("");
                     }}
-                    className="text-xs sm:text-[13px] text-[var(--gm-primary)] hover:underline font-medium cursor-pointer"
+                    className="text-[11px] font-mono uppercase tracking-wider text-[var(--gm-primary)] hover:underline font-medium cursor-pointer"
                     tabIndex={-1}
                   >
                     Esqueceu a senha?
                   </button>
-                </div>
-                <div className="relative group">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
-                    <Lock size={18} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
-                  </div>
-                  <input
-                    className="apple-glass-input !pl-12 !pr-11 h-11 sm:h-12 text-sm sm:text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-xl w-full text-white placeholder:text-zinc-500 placeholder:text-sm"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                  />
+                }
+                rightAction={
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors focus:outline-none p-1.5 cursor-pointer touch-manipulation"
+                    className="text-[#8b8b92] hover:text-[#f2f2f3] transition-colors focus:outline-none p-1 cursor-pointer touch-manipulation flex items-center justify-center rounded"
                     tabIndex={-1}
+                    title={showPassword ? "Ocultar senha" : "Ver senha"}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
-                </div>
-              </div>
+                }
+              />
             )}
 
             {!isForgotPassword && (
@@ -706,78 +745,73 @@ export default function Login() {
                       setProtectWithPin(!protectWithPin);
                     }
                   }}
-                  className={`w-full rounded-2xl px-3.5 py-2.5 flex items-center justify-between select-none transition-all duration-300 relative group touch-manipulation ${
+                  className={`w-full rounded-xl px-3.5 py-2.5 flex items-center justify-between select-none transition-all duration-200 relative group touch-manipulation bg-[#13151b] border ${
                     !isPinActiveForUser ? "cursor-pointer" : ""
                   } ${
                     isPinActiveForUser || protectWithPin
-                      ? "bg-gradient-to-r from-[var(--gm-primary,#FE540B)]/[0.14] via-orange-500/[0.08] to-transparent border border-[var(--gm-primary,#FE540B)]/50 shadow-[0_0_18px_-4px_rgba(254,84,11,0.3)]"
-                      : "bg-white/[0.04] hover:bg-white/[0.07] border border-white/10 hover:border-white/20"
+                      ? "border-orange-500/50"
+                      : "border-white/10 hover:border-white/20"
                   }`}
                 >
-                  {/* LADO ESQUERDO: Ícone e Título com visual de segurança do dispositivo */}
                   <div className="flex items-center gap-2.5 min-w-0 pr-1">
                     <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                         isPinActiveForUser || protectWithPin
-                          ? "bg-[var(--gm-primary,#FE540B)] text-white shadow-sm shadow-orange-500/40"
-                          : "bg-white/[0.06] text-zinc-400 group-hover:text-zinc-200 border border-white/10"
+                          ? "bg-[var(--gm-primary,#FE540B)] text-white"
+                          : "bg-white/[0.05] text-zinc-400"
                       }`}
                     >
-                      <Lock size={15} className="transition-transform duration-200" />
+                      <Lock size={14} />
                     </div>
 
                     <div className="flex flex-col text-left justify-center">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-white text-sm sm:text-[14.5px] font-semibold tracking-tight">
+                        <span className="text-white text-xs sm:text-[13px] font-semibold tracking-tight">
                           Proteger com PIN
                         </span>
                         {(isPinActiveForUser || protectWithPin) && (
-                          <span className="inline-flex items-center text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/30">
+                          <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/30">
                             Ativo
                           </span>
                         )}
                       </div>
                       {!isPinActiveForUser && (
-                        <span className="text-xs sm:text-[12.5px] text-zinc-300 font-normal leading-tight mt-0.5">
+                        <span className="text-[11px] text-zinc-400 font-normal leading-tight">
                           Exigir 4 dígitos neste aparelho
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* LADO DIREITO: Switch Toggle Estilo Apple / Hardware */}
                   <div className="shrink-0 flex items-center">
                     <div
-                      className={`w-11 h-6 rounded-full p-0.5 transition-all duration-300 flex items-center ${
+                      className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 flex items-center ${
                         isPinActiveForUser || protectWithPin
-                          ? "bg-[var(--gm-primary,#FE540B)] shadow-[0_0_10px_rgba(254,84,11,0.5)] justify-end"
-                          : "bg-zinc-800 border border-white/15 justify-start"
+                          ? "bg-[var(--gm-primary,#FE540B)] justify-end"
+                          : "bg-zinc-800 border border-white/10 justify-start"
                       }`}
                     >
                       <motion.div
                         layout
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                        className="w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center"
-                      >
-                        {(isPinActiveForUser || protectWithPin) && (
-                          <div className="w-2 h-2 rounded-full bg-[var(--gm-primary,#FE540B)]" />
-                        )}
-                      </motion.div>
+                        className="w-4 h-4 rounded-full bg-white shadow-sm"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Verificador de Segurança de Login (Estilo Google reCAPTCHA) */}
+            {/* Verificador de Segurança */}
             <div>
               <SecurityVerifier onVerifyChange={setIsVerified} />
             </div>
 
+            {/* Botão de Entrar (Padrão Forge High-Contrast) */}
             <button
               type="submit"
-              className="gm-btn !bg-gradient-to-r !from-[#FF7A2A] !to-[#FE540B] !text-white !border-none font-bold w-full h-11 sm:h-12 shadow-lg shadow-orange-500/25 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center rounded-xl text-sm sm:text-base mt-1.5 touch-manipulation"
-              disabled={!canSubmit || isLoading}
+              className="w-full h-11 sm:h-12 rounded-xl bg-gradient-to-r from-[#FF7A2A] to-[#FE540B] text-white font-bold text-sm shadow-md hover:brightness-105 active:scale-[0.99] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center mt-1 uppercase tracking-wider"
+              disabled={!canSubmit || isLoading || isGoogleLoading}
             >
               {isLoading ? (
                 <span className="inline-flex items-center gap-2">
@@ -804,19 +838,127 @@ export default function Login() {
             )}
 
             {!isForgotPassword && (
-              <div className="mt-3 pt-3 border-t border-white/10 text-center">
-                <div className="text-xs sm:text-sm text-slate-300/85 mb-2 font-normal">Ainda não tem uma conta?</div>
+              <div className="pt-2 text-center flex flex-col gap-2">
                 <Link
                   to="/register"
-                  className="w-full inline-flex items-center justify-center gap-1.5 h-10 sm:h-11 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition-all font-semibold text-xs sm:text-sm text-white/95 hover:text-white backdrop-blur-md shadow-sm active:scale-[0.99] touch-manipulation"
+                  className="w-full inline-flex items-center justify-center h-10 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition-all font-semibold text-xs text-zinc-300 hover:text-white active:scale-[0.99]"
                 >
-                  Criar nova conta
+                  Ainda não tem conta? <span className="text-white ml-1 font-bold underline">Criar conta</span>
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={handleDirectAdminLogin}
+                  className="w-full inline-flex items-center justify-center gap-2 h-9 rounded-xl border border-amber-500/25 bg-amber-500/10 hover:bg-amber-500/15 text-amber-300 hover:text-amber-200 transition-all font-semibold text-xs active:scale-[0.99] cursor-pointer"
+                >
+                  <ShieldCheck size={14} className="text-amber-400" />
+                  <span>Acesso ADM</span>
+                </button>
               </div>
             )}
           </form>
         </div>
-      </motion.div>
+
+        {/* Rodapé da esquerda: Termos */}
+        <div className="pt-4 text-center text-[11px] text-zinc-500 font-normal">
+          Ao continuar você concorda com nossos{" "}
+          <span className="underline hover:text-zinc-400 cursor-pointer">Termos</span> e{" "}
+          <span className="underline hover:text-zinc-400 cursor-pointer">Política de Privacidade</span>.
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* LADO DIREITO: Fundo Animado Rolando + Visual Hero (Designers Hub) */}
+      {/* ------------------------------------------------------------- */}
+      <div className="hidden lg:flex flex-1 relative h-full overflow-hidden bg-black flex-col justify-between p-10 xl:p-14 2xl:p-16 select-none">
+        {/* Camada do background rolando animado */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <motion.div
+            animate={bgAnim.animate}
+            transition={bgAnim.transition as any}
+            className="w-full h-full will-change-transform scale-[1.08]"
+            style={{ transformOrigin: "center center", width: "100%", height: "100%" }}
+          >
+            {bgInfo.isVideo ? (
+              <video
+                src={bgInfo.url}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+                style={{
+                  objectFit: (bgInfo.fit as any) || "cover",
+                  objectPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
+                }}
+              />
+            ) : (
+              <div
+                className="w-full h-full"
+                style={{
+                  backgroundImage: `url("${bgInfo.url}")`,
+                  backgroundSize: bgInfo.fit || "cover",
+                  backgroundPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
+                  backgroundRepeat: "no-repeat",
+                }}
+              />
+            )}
+          </motion.div>
+
+          {/* Gradientes cinematográficos e vinheta tipo magma */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/25 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0c0d12] via-transparent to-black/60 pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-gradient-to-br from-[#FE540B]/20 via-orange-600/10 to-transparent rounded-full blur-3xl opacity-75 pointer-events-none" />
+        </div>
+
+        {/* Topo do painel direito: Badge */}
+        <div className="relative z-10 flex justify-end w-full">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-zinc-300 text-xs font-medium shadow-lg">
+            <Sparkles size={13} className="text-[#FE540B] animate-pulse" />
+            <span>Vídeo em tempo real</span>
+          </div>
+        </div>
+
+        {/* Rodapé do painel direito: Tipografia de impacto e tags */}
+        <div className="relative z-10 flex items-end justify-between w-full">
+          <div className="max-w-xl">
+            <div className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#FE540B] font-bold mb-2">
+              GM EDIFICAÇÃO • PLATAFORMA
+            </div>
+            <h2 className="text-3xl xl:text-4xl 2xl:text-5xl font-black text-white tracking-tight leading-[1.1] mb-3">
+              Seu estúdio criativo, de volta em um clique.
+            </h2>
+            <p className="text-zinc-300/90 text-sm xl:text-base font-normal leading-relaxed mb-6 max-w-lg">
+              Geração de propostas comerciais, controle financeiro, gestão de clientes e produção gráfica numa única plataforma.
+            </p>
+
+            {/* Tags pills */}
+            <div className="flex flex-wrap items-center gap-2">
+              {["Orçamentos", "Propostas", "Gráfica", "Financeiro", "Clientes", "Contratos"].map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/15 text-white/90 border border-white/10 backdrop-blur-md transition-colors"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Botão de suporte flutuante */}
+          <div className="hidden xl:block">
+            <a
+              href="https://wa.me/5598984242784"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-zinc-300 hover:text-white hover:border-white/30 text-xs font-medium transition-all shadow-lg cursor-pointer"
+            >
+              <HelpCircle size={14} className="text-zinc-400" />
+              <span>Suporte</span>
+            </a>
+          </div>
+        </div>
+      </div>
 
       {showPinVerifyModal && (
         <PinLockModal

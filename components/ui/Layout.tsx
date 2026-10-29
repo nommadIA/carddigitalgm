@@ -40,6 +40,7 @@ import {
   RefreshCw,
   Volume2,
   VolumeX,
+  Crown,
 } from "lucide-react";
 import {
   playNotificationSound,
@@ -63,6 +64,7 @@ import SmartphonePermissionModal from "./SmartphonePermissionModal";
 import NotificationCheckinModal from "../notifications/NotificationCheckinModal";
 import { ToastHost } from "./Toast";
 import BottomNav from "./BottomNav";
+import GoldCrownIcon from "./GoldCrownIcon";
 
 const DEFAULT_NOTIFICATIONS = [
   {
@@ -348,6 +350,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       { to: "/notes", label: "Notas", icon: StickyNote },
       { to: "/financial", label: "Financeiro", icon: Wallet },
       { to: "/minha-bio", label: "Bio", icon: Smartphone },
+      { to: "/planos", label: "Planos", icon: Crown },
       { to: "/configuracoes", label: "Configurações", icon: Settings }
     ],
     []
@@ -481,12 +484,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     let raf = 0;
     let isRunning = false;
 
-    // Constantes de física ultra suave (damping suave, sem solavancos)
-    const SCROLL_STRENGTH = 0.045; // Suave e contínuo ao rolar
-    const MAX_SCROLL_Y = 160;
-    const BASE_DEPTH = 1.04;
-    const DEPTH_GAIN = 0.000015;
-    const MAX_DEPTH_ADD = 0.035;
+    // Constantes de física ultra suave (damping suave, sem solavancos e sem falhas nas bordas)
+    const SCROLL_STRENGTH = 0.015; // Suave e contínuo ao rolar
+    const MAX_SCROLL_Y = 24; // Mantém o deslocamento restrito à margem de sangria (bleed), sem expor bordas
+    const BASE_DEPTH = 1.05;
+    const DEPTH_GAIN = 0.00001;
+    const MAX_DEPTH_ADD = 0.025;
 
     const MOUSE_MAX_X = 14;
     const MOUSE_MAX_Y = 10;
@@ -683,18 +686,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         <button
           type="button"
           onClick={toggleUiSounds}
-          title={`Sons dos Botões: ${uiSoundsActive ? "Ativado (ON)" : "Desativado (OFF)"}`}
-          aria-label={`Sons dos Botões: ${uiSoundsActive ? "Ativado (ON)" : "Desativado (OFF)"}`}
-          className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border ${
-            uiSoundsActive
-              ? "bg-emerald-500/20 text-white border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-              : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white opacity-70"
-          }`}
+          title={uiSoundsActive ? "Sons dos Botões: Ligados" : "Sons dos Botões: Desligados"}
+          aria-label={uiSoundsActive ? "Sons dos Botões Ligados" : "Sons dos Botões Desligados"}
+          className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F]"
         >
           {uiSoundsActive ? (
-            <Volume2 size={18} className="animate-pulse text-white" />
+            <Volume2 size={16} className="text-[#F65A1A]" />
           ) : (
-            <VolumeX size={18} className="text-white" />
+            <VolumeX size={16} className="text-[#8B8B92]" />
           )}
         </button>
       );
@@ -706,47 +705,34 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         onClick={toggleUiSounds}
         title={`Sons dos Botões: clique para ${uiSoundsActive ? "desligar (off)" : "ligar (on)"}`}
         aria-label={`Sons dos Botões: clique para ${uiSoundsActive ? "desligar (off)" : "ligar (on)"}`}
-        className={`w-full py-2.5 px-3 rounded-xl border flex items-center justify-between transition-all duration-300 cursor-pointer select-none group active:scale-[0.98] ${
-          uiSoundsActive
-            ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-400 shadow-[0_0_16px_rgba(16,185,129,0.35)] hover:bg-emerald-500/25"
-            : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-300 opacity-60 hover:opacity-85"
-        }`}
+        className="w-full h-9 px-2.5 rounded-[4px] border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] flex items-center justify-between transition-all duration-120 cursor-pointer select-none group shadow-none"
       >
         <div className="flex items-center gap-2">
           <div
-            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+            className={`w-5 h-5 rounded-[2px] flex items-center justify-center transition-all ${
               uiSoundsActive
-                ? "bg-emerald-500 text-white font-bold shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                : "bg-white/10 text-white"
+                ? "bg-[#F65A1A]/15 text-[#F65A1A]"
+                : "bg-white/5 text-[#8B8B92]"
             }`}
           >
             {uiSoundsActive ? (
-              <Volume2 size={15} className="stroke-[2.5] text-white" />
+              <Volume2 size={13} className="text-[#F65A1A]" />
             ) : (
-              <VolumeX size={15} className="text-white" />
+              <VolumeX size={13} className="text-[#8B8B92]" />
             )}
           </div>
-          <span
-            className={`text-xs tracking-wide uppercase transition-colors ${
-              uiSoundsActive ? "font-black text-emerald-300" : "font-semibold text-slate-400"
-            }`}
-          >
+          <span className="text-[11px] font-mono font-semibold tracking-wider uppercase text-[#F2F2F3]">
             Sons dos Botões
           </span>
         </div>
 
         <div
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase transition-all ${
+          className={`flex items-center justify-center px-2 py-0.5 rounded-[2px] text-[10px] font-mono font-bold tracking-wider uppercase transition-all ${
             uiSoundsActive
-              ? "bg-emerald-500 text-slate-950 shadow-[0_0_10px_rgba(16,185,129,0.7)]"
-              : "bg-black/40 text-slate-500 border border-white/10"
+              ? "bg-[#F65A1A] text-[#0B0B0C]"
+              : "bg-[#18181B] text-[#8B8B92] border border-[#26262A]"
           }`}
         >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              uiSoundsActive ? "bg-slate-950 animate-ping" : "bg-slate-600"
-            }`}
-          />
           {uiSoundsActive ? "ON" : "OFF"}
         </div>
       </button>
@@ -759,28 +745,18 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={handleSyncClick}
       title="Sincronização do App"
       aria-label="Sincronização do App"
-      className={`w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden ${extraBtnClass}`}
+      className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
         width: '36px',
         height: '36px',
         minWidth: '36px',
         minHeight: '36px',
-        maxWidth: '36px',
-        maxHeight: '36px',
-        borderRadius: '10px',
-        aspectRatio: '1 / 1',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0',
-        margin: '0',
-        boxSizing: 'border-box',
-        overflow: 'hidden',
-        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+        borderRadius: '4px',
+        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))",
       }}
     >
       <RefreshCw 
-        size={20} 
+        size={16} 
         className={`text-current shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
       />
     </button>
@@ -792,29 +768,21 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={handleBellClick}
       title="Atualizações e Informações"
       aria-label="Atualizações e Informações"
-      className={`w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden ${extraBtnClass}`}
+      className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
         width: '36px',
         height: '36px',
         minWidth: '36px',
         minHeight: '36px',
-        maxWidth: '36px',
-        maxHeight: '36px',
-        borderRadius: '10px',
-        aspectRatio: '1 / 1',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0',
-        margin: '0',
-        boxSizing: 'border-box',
-        overflow: 'hidden',
-        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+        borderRadius: '4px',
+        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))",
       }}
     >
-      <Bell size={20} className="animate-swing text-current shrink-0" />
+      <Bell size={16} className="text-current shrink-0" />
       {unreadCount > 0 && (
-        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-transparent group-hover:border-white transition-colors" />
+        <span 
+          className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full animate-pulse bg-emerald-400" 
+        />
       )}
     </button>
   );
@@ -825,27 +793,17 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={signOut}
       title="Sair"
       aria-label="Sair"
-      className={`w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden ${extraBtnClass}`}
+      className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
         width: '36px',
         height: '36px',
         minWidth: '36px',
         minHeight: '36px',
-        maxWidth: '36px',
-        maxHeight: '36px',
-        borderRadius: '10px',
-        aspectRatio: '1 / 1',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0',
-        margin: '0',
-        boxSizing: 'border-box',
-        overflow: 'hidden',
-        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+        borderRadius: '4px',
+        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))",
       }}
     >
-      <LogOut size={20} className="text-current shrink-0 group-hover:scale-110 transition-transform" />
+      <LogOut size={16} className="text-current shrink-0" />
     </button>
   );
 
@@ -855,35 +813,25 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={toggleUiSounds}
       title={uiSoundsActive ? "Sons do App: Ativados (toque para desativar)" : "Sons do App: Desativados (toque para ativar)"}
       aria-label={uiSoundsActive ? "Sons do App Ativados" : "Sons do App Desativados"}
-      className={`w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] aspect-square rounded-xl flex items-center justify-center hover:!text-white active:scale-90 transition-all duration-200 relative cursor-pointer bg-transparent border-0 outline-none shrink-0 grow-0 self-center group p-0 overflow-hidden ${extraBtnClass}`}
+      className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
         width: '36px',
         height: '36px',
         minWidth: '36px',
         minHeight: '36px',
-        maxWidth: '36px',
-        maxHeight: '36px',
-        borderRadius: '10px',
-        aspectRatio: '1 / 1',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0',
-        margin: '0',
-        boxSizing: 'border-box',
-        overflow: 'hidden',
+        borderRadius: '4px',
         color: uiSoundsActive
-          ? "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))"
+          ? "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))"
           : "rgba(148, 163, 184, 0.65)",
       }}
     >
       {uiSoundsActive ? (
-        <Volume2 size={20} className="text-current shrink-0 group-hover:scale-110 transition-transform" />
+        <Volume2 size={16} className="text-current shrink-0" />
       ) : (
-        <VolumeX size={20} className="text-current shrink-0 group-hover:scale-110 transition-transform" />
+        <VolumeX size={16} className="text-current shrink-0" />
       )}
       {uiSoundsActive && (
-        <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse border border-transparent group-hover:border-white transition-colors shadow-[0_0_6px_rgba(16,185,129,0.7)]" />
+        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
       )}
     </button>
   );
@@ -898,7 +846,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   );
 
   return (
-    <div className="gm-layout">
+    <div className="gm-layout bg-[#0B0B0C] text-[#F2F2F3]">
       {/* CAMADA DINÂMICA AURORA BEAM GLOW (Quando efeito Aurora ativo na Área de Trabalho) */}
       {isEffectActiveFor("desktop", bgEffect) && getEffectFor("desktop", bgEffect) === "aurora" && (
         <div className="gm-bg-aurora-layer" />
@@ -918,34 +866,42 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* Tutorial Onboarding do Aplicativo */}
       {showTutorial && <AppTutorial onClose={() => setShowTutorial(false)} />}
 
-      {/* MOBILE TOP HEADER - FROSTED GLASS TRANSLUCENT */}
+      {/* MOBILE TOP HEADER - FORGE SOLID INK HEADER */}
       <header 
-        className="fixed top-0 left-0 right-0 w-full h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-black/10 dark:bg-black/10 backdrop-blur-md border-b border-white/10 shadow-none gm-mobile-header select-none"
+        className="fixed top-0 left-0 right-0 w-full h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-[#0B0B0C] border-b border-[#26262A] shadow-none gm-mobile-header select-none"
         style={{
           zIndex: 100,
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          background: "rgba(10, 10, 14, 0.15)",
+          background: "#0B0B0C",
+          borderBottom: "1px solid #26262A",
         }}
       >
         <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center shrink-0">
-              <div className="w-8 h-8 rounded-lg border border-white/15 flex items-center justify-center overflow-hidden shadow-none bg-black/40 !p-0">
+              <div className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center overflow-hidden shadow-none bg-[#18181B] p-1">
                 <img 
                   src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                   alt="Logo CardDigital GM" 
-                  className="w-full h-full object-cover scale-[1.3] transform"
+                  className="w-full h-full object-cover scale-[1.2] transform"
                 />
               </div>
             </div>
-            <div className="flex flex-col leading-tight">
-                <span className="text-lg font-bold text-slate-900 dark:text-white">
-                  CardDigital <span className="text-[var(--gm-primary)] font-black">GM</span>
+            <div className="flex items-center gap-1.5 leading-none">
+              <span 
+                className="text-base font-extrabold text-white tracking-wide select-none flex items-center gap-1.5"
+                style={{ fontFamily: "'Funnel Display', sans-serif" }}
+              >
+                <span className="text-white">CardDigital</span>
+                <span 
+                  className="font-black text-[#FE540B] text-lg inline-block"
+                  style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}
+                >
+                  GM
                 </span>
+              </span>
             </div>
         </div>
 
-        {/* Botões do cabeçalho mobile: caixas quadradas 1:1 com bordas levemente arredondadas e ícones na cor laranja */}
+        {/* Botões do cabeçalho mobile: caixas sólidas Forge com micro-bordas #26262A e ícones laranja */}
         {renderHeaderActionButtons()}
       </header>
 
@@ -953,9 +909,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       <aside
         ref={sidebarRef}
         style={{ width: `${sidebarWidth}px`, minWidth: `${sidebarWidth}px` }}
-        className={`sidebar gm-sidebar ${collapsed ? "collapsed" : ""} hidden md:flex shrink-0 relative`}
+        className={`sidebar gm-sidebar fora ${collapsed ? "collapsed" : ""} hidden md:flex shrink-0 relative`}
       >
-        {/* Toggle Button on the right edge (Seta de expansão fixa: no hover apenas muda cor e leve escala sem sair do lugar) */}
+        {/* Toggle Button on the right edge (Seta de expansão com cápsula escura e chevron laranja igual ao print) */}
         <div
           style={{
             position: "absolute",
@@ -970,7 +926,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           <button
             type="button"
             onClick={toggleSidebar}
-            className="w-5 h-9 rounded-full bg-black/85 border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:bg-[var(--gm-primary)] hover:border-[var(--gm-primary)] hover:scale-105 active:scale-95 transition-all duration-150 shadow-xl backdrop-blur-md cursor-pointer outline-none !m-0 !p-0"
+            className="w-5 h-8 rounded-[4px] bg-[#131315] border border-[#26262A] flex items-center justify-center text-[#F65A1A] active:scale-95 transition-all duration-120 shadow-none hover:bg-[#1B1B1E] hover:border-[#38383F] cursor-pointer outline-none !m-0 !p-0"
             style={{
               transformOrigin: "center center"
             }}
@@ -978,85 +934,109 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             aria-label={collapsed ? "Expandir menu" : "Encolher menu"}
           >
             {collapsed ? (
-              <ChevronRight size={13} className="stroke-[2.5]" />
+              <ChevronRight size={13} className="stroke-[2.5] text-[#F65A1A]" />
             ) : (
-              <ChevronLeft size={13} className="stroke-[2.5]" />
+              <ChevronLeft size={13} className="stroke-[2.5] text-[#F65A1A]" />
             )}
           </button>
         </div>
 
-        <div className="sidebar-inner flex flex-col h-full w-full">
-          {/* Header */}
-          <header className="flex items-center gap-3.5 px-4 py-4 border-b border-white/10 shrink-0">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center overflow-hidden shrink-0 shadow-none bg-black/40 border border-white/15 !p-0">
+        <div className="sidebar-inner flex flex-col h-full w-full bg-[#0B0B0C]">
+          {/* Header exatamente como no print */}
+          <header className="flex items-center gap-2.5 px-4 py-3.5 border-b border-[#26262A] shrink-0 bg-[#0B0B0C]">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0 shadow-none bg-[#18181B] border border-white/10 p-1">
               <img 
                 src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                 alt="Logo Official CardDigital GM" 
-                className="w-full h-full object-cover logo-icon scale-[1.3] transform"
+                className="w-full h-full object-cover logo-icon scale-[1.2] transform"
               />
             </div>
             {!collapsed && (
-              <div className="flex items-center gap-1 leading-none overflow-hidden logo-text">
-                <span className="text-base font-bold text-[var(--gm-menu-title)] truncate">
-                  CardDigital <span className="gm-logo-highlight font-black transition-colors duration-200" style={{ color: "var(--gm-menu-primary, var(--gm-primary, #FE540B))" }}>GM</span>
+              <div className="flex items-center gap-1.5 leading-none overflow-hidden logo-text">
+                <span 
+                  className="font-extrabold text-white text-[15px] tracking-wide select-none flex items-center gap-1.5"
+                  style={{ fontFamily: "'Funnel Display', sans-serif" }}
+                >
+                  <span className="text-white">CardDigital</span>
+                  <span 
+                    className="font-black text-[#FE540B] text-[16px] inline-block tracking-normal"
+                    style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}
+                  >
+                    GM
+                  </span>
                 </span>
               </div>
             )}
           </header>
 
-          {/* Navigation List - Espaçamento enxuto, organizado e uniforme */}
-          <ul className="flex flex-col py-2 px-2 gap-1.5 overflow-y-auto overflow-x-hidden">
-            {filteredNav.map(({ to, label, icon: Icon }) => (
-              <li key={to} className="w-full">
-                <NavLink
-                  to={to}
-                  className={({ isActive }) =>
-                    `sidebar-btn w-full h-10 flex items-center gap-3 px-3 rounded-xl text-[13px] font-medium transition-all duration-200 ${
-                      isActive
-                        ? "active font-semibold text-white bg-white/10 border border-white/10 shadow-sm"
-                        : "text-white/80 hover:text-white hover:bg-white/5"
-                    } ${collapsed ? "justify-center !px-0" : ""}`
-                  }
-                  title={collapsed ? label : undefined}
-                >
-                  <Icon 
-                    size={17} 
-                    className="shrink-0 transition-colors duration-200" 
-                    style={{ color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))" }}
-                  />
-                  {!collapsed && <p className="truncate text-left">{label}</p>}
-                </NavLink>
-              </li>
-            ))}
+          {/* Navigation List - Forge UI */}
+          <ul className="flex-1 flex flex-col py-2 px-1.5 gap-1 justify-evenly overflow-hidden select-none w-full">
+            {filteredNav.map(({ to, label, icon: Icon }) => {
+              return (
+                <li key={to} className="w-full flex items-center relative">
+                  <NavLink
+                    to={to}
+                    className={({ isActive }) =>
+                      `sidebar-btn group relative w-full h-10 flex items-center rounded-[4px] ${
+                        collapsed ? "justify-center !px-0" : "px-3 gap-3"
+                      } transition-all duration-120 ${
+                        isActive
+                          ? "active bg-[#18181B] text-[#F2F2F3] font-bold border-l-2 border-[#F65A1A]"
+                          : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#131315] border-l-2 border-transparent"
+                      }`
+                    }
+                    title={collapsed ? label : undefined}
+                  >
+                    {/* Barra Laranja Fina na Extremidade Esquerda do Item Ativo */}
+                    <span
+                      className="sidebar-window-indicator"
+                      aria-hidden="true"
+                    />
+
+                    {to === "/planos" ? (
+                      <GoldCrownIcon size={18} />
+                    ) : (
+                      <Icon 
+                        size={18} 
+                        className="shrink-0 text-[#F65A1A] stroke-[2] transition-colors duration-120" 
+                      />
+                    )}
+
+                    {!collapsed && (
+                      <p className={`truncate text-left text-[13px] font-mono tracking-wider uppercase font-semibold leading-tight ${to === "/planos" ? "text-amber-300" : ""}`}>
+                        {label}
+                      </p>
+                    )}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
 
-          {/* Footer - Linha de divisão logo abaixo dos 9 botões com visual organizado e centralizado */}
-          <div className="sidebar-footer p-2.5 border-t border-white/10 shrink-0 flex flex-col gap-2">
+          {/* Footer - Forge UI */}
+          <div className="sidebar-footer p-3 border-t border-[#26262A] shrink-0 flex flex-col gap-2 mt-auto w-full bg-[#0B0B0C]">
             {collapsed ? (
               <div className="flex flex-col items-center gap-2 w-full py-1">
                 {renderSyncButton()}
                 {renderBellButton()}
                 {renderLogoutButton()}
-                <div className="w-6 h-[1px] bg-white/10 my-0.5" />
+                <div className="w-6 h-[1px] bg-[#26262A] my-0.5" />
                 {renderSoundToggleButton(true)}
               </div>
             ) : (
-              <div className="flex flex-col gap-2.5 w-full">
-                {/* Linha 1: Fileira com Sincronização do App, Notificações e Sair em 3 caixas proporcionais */}
-                <div className="grid grid-cols-3 gap-2 w-full">
+              <div className="flex flex-col gap-2 w-full">
+                {/* Linha 1: 3 Caixas sólidas Forge com micro-borda hairline #26262A e ícones laranja */}
+                <div className="grid grid-cols-3 gap-1.5 w-full">
                   <button
                     type="button"
                     onClick={handleSyncClick}
                     title="Sincronização do App"
                     aria-label="Sincronização do App"
-                    className="h-10 w-full rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95 group"
-                    style={{
-                      color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
-                    }}
+                    className="h-9 w-full rounded-[4px] flex items-center justify-center transition-all duration-120 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
                   >
                     <RefreshCw 
-                      size={18} 
-                      className={`text-current shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
+                      size={15} 
+                      className={`text-[#F65A1A] shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
                     />
                   </button>
 
@@ -1065,38 +1045,45 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                     onClick={handleBellClick}
                     title="Atualizações e Informações"
                     aria-label="Atualizações e Informações"
-                    className="h-10 w-full rounded-xl flex items-center justify-center transition-all duration-200 relative cursor-pointer border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95 group"
-                    style={{
-                      color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
-                    }}
+                    className="h-9 w-full rounded-[4px] flex items-center justify-center transition-all duration-120 relative cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
                   >
-                    <Bell size={18} className="animate-swing text-current shrink-0" />
+                    <Bell size={15} className="text-[#F65A1A] shrink-0" />
                     {unreadCount > 0 && (
-                      <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-black/40" />
+                      <span 
+                        className="absolute top-1.5 right-2 w-1.5 h-1.5 rounded-full animate-pulse bg-emerald-400" 
+                      />
                     )}
                   </button>
 
                   <button 
                     type="button"
                     onClick={signOut}
-                    title="Sair"
-                    aria-label="Sair"
-                    className="h-10 w-full rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95 group"
-                    style={{
-                      color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
-                    }}
+                    title="Sair da Conta"
+                    aria-label="Sair da Conta"
+                    className="h-9 w-full rounded-[4px] flex items-center justify-center transition-all duration-120 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
                   >
-                    <LogOut size={18} className="text-current shrink-0 group-hover:scale-110 transition-transform" />
+                    <LogOut size={15} className="text-[#F65A1A] shrink-0" />
                   </button>
                 </div>
 
-                {/* Linha 2: Botão grande pegando as extremidades da caixa do menu (Sons dos Botões ON / OFF) */}
+                {/* Linha 2: Botão SONS DOS BOTÕES estilo Forge Spec */}
                 {renderSoundToggleButton(false)}
 
-                <div className="mt-0.5 text-[10px] text-center pointer-events-none tracking-tight leading-none whitespace-nowrap flex items-center justify-center gap-1 text-slate-400">
-                  <span className="text-[10px] text-slate-400 font-normal">Desenvolvido por</span>
-                  <span className="text-[10px] font-bold text-[var(--gm-menu-title)]">CardDigital</span>
-                  <span className="text-[10px] font-bold gm-logo-highlight transition-colors duration-200" style={{ color: "var(--gm-menu-primary, var(--gm-primary, #FE540B))" }}>GM</span>
+                {/* Linha 3: Rodapé com texto 'Desenvolvido por CardDigital GM' */}
+                <div className="pt-0.5 text-[10px] font-mono text-center pointer-events-none tracking-wider leading-none whitespace-nowrap flex items-center justify-center gap-1 text-[#8B8B92] select-none">
+                  <span className="uppercase">Desenvolvido por</span>
+                  <span 
+                    className="font-bold text-[#F2F2F3]"
+                    style={{ fontFamily: "'Funnel Display', sans-serif" }}
+                  >
+                    CardDigital
+                  </span>
+                  <span 
+                    className="font-extrabold text-[#FE540B] inline-block"
+                    style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}
+                  >
+                    GM
+                  </span>
                 </div>
               </div>
             )}
@@ -1106,9 +1093,18 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       <main 
         ref={setMainRefs}
-        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-full min-h-0 overflow-y-auto w-full p-0 scroll-smooth"
+        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-full min-h-0 overflow-y-auto w-full p-0 scroll-smooth relative"
       >
-        <div className="gm-container w-full max-w-[1440px] mx-auto flex flex-col items-stretch px-4 sm:px-8 md:px-10 lg:px-12 xl:px-16 pt-20 md:pt-10 lg:pt-12 pb-[calc(var(--bottom-nav-height,84px)+36px)] md:pb-16">
+        {/* CAMADA DO PLANO DE FUNDO DENTRO DO MAIN: Garante que o backdrop-filter dos containers/cards desfoque o background no Chrome e Safari */}
+        <div className="gm-main-bg-layer" aria-hidden="true" />
+        {isEffectActiveFor("desktop", bgEffect) && getEffectFor("desktop", bgEffect) === "aurora" && (
+          <div className="gm-bg-aurora-layer" style={{ zIndex: 0 }} aria-hidden="true" />
+        )}
+        {isEffectActiveFor("desktop", bgEffect) && getEffectFor("desktop", bgEffect) === "prism" && (
+          <div className="gm-bg-prism-layer" style={{ zIndex: 0 }} aria-hidden="true" />
+        )}
+
+        <div className="gm-container w-full max-w-[1440px] mx-auto flex flex-col items-stretch px-4 sm:px-8 md:px-10 lg:px-12 xl:px-16 pt-20 md:pt-10 lg:pt-12 pb-[calc(var(--bottom-nav-height,84px)+36px)] md:pb-16 relative z-10">
           {children}
         </div>
       </main>
@@ -1132,11 +1128,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   onClick={() => {
                     openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.");
                   }}
-                  className="flex items-center justify-center w-12 h-12 md:w-13 md:h-13 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white border border-white/25 shadow-[0_8px_28px_rgba(37,211,102,0.45)] hover:shadow-[0_12px_36px_rgba(37,211,102,0.65)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer focus:outline-none"
+                  className="gm-floating-whatsapp-btn !p-0 flex items-center justify-center w-12 h-12 md:w-13 md:h-13 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white border border-white/25 shadow-[0_8px_28px_rgba(37,211,102,0.45)] hover:shadow-[0_12px_36px_rgba(37,211,102,0.65)] active:translate-y-0.5 transition-all duration-200 cursor-pointer focus:outline-none"
                   aria-label="Ajuda via WhatsApp"
                   title="Ajuda via WhatsApp"
                 >
-                  <WhatsAppIcon size={26} className="text-white pointer-events-none" />
+                  <WhatsAppIcon size={26} className="text-white shrink-0 pointer-events-none" />
                 </button>
               </motion.div>
             )}
@@ -1167,7 +1163,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 <ChevronUp 
                   size={34} 
                   strokeWidth={2.8} 
-                  className="text-[var(--gm-primary,#FE540B)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] group-hover:scale-125 group-active:scale-90 transition-transform duration-200" 
+                  className="text-[var(--gm-primary,#FE540B)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] group-active:scale-90 transition-transform duration-200" 
                 />
               </button>
 
@@ -1199,7 +1195,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   <ChevronDown 
                     size={34} 
                     strokeWidth={2.8} 
-                    className="text-[var(--gm-primary,#FE540B)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] group-hover:scale-125 group-active:scale-90 transition-transform duration-200" 
+                    className="text-[var(--gm-primary,#FE540B)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)] group-active:scale-90 transition-transform duration-200" 
                   />
                 </button>
               )}
@@ -1232,15 +1228,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       {/* UPDATE DIALOG MODAL (NOTIFICAÇÕES CENTER EXPANDIDO) */}
       {showUpdateModal && (
-        <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-3 sm:p-6 bg-black/75 animate-fade-in" style={{ zIndex: 1000000 }}>
-          <div className="relative w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl gm-push-glass-card rounded-[28px] border border-white/20 p-5 sm:p-7 shadow-[0_30px_90px_rgba(0,0,0,0.85)] flex flex-col gap-4.5 text-white overflow-hidden font-sans max-h-[90vh]">
-            
-            {/* Specular reflection overlay */}
-            <div className="absolute inset-0 pointer-events-none rounded-[28px] bg-gradient-to-b from-white/[0.12] via-transparent to-black/30" />
-            
-            {/* Ambient Glow */}
-            <div className="absolute -top-12 -left-12 w-32 h-32 bg-[var(--gm-primary)]/15 rounded-full blur-3xl pointer-events-none" />
-            
+        <div 
+          className="fixed inset-0 z-[1000000] flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xl animate-fade-in" 
+          style={{ zIndex: 1000000 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowUpdateModal(false);
+          }}
+        >
+          <div className="relative w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl rounded-2xl border border-white/10 apple-glass-refraction gm-modal overflow-hidden p-5 sm:p-7 flex flex-col gap-4.5 text-white font-sans max-h-[90vh]">
             {/* Header */}
             <div className="flex items-center justify-between shrink-0 pb-3.5 border-b border-white/10 relative z-10">
               <div className="flex items-center gap-3">
@@ -1291,14 +1286,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             </button>
 
             {/* Tabs Filter Bar */}
-            <div className="flex items-center gap-1.5 barra border border-white/10 rounded-xl p-1.5 shrink-0 shadow-none relative z-10">
+            <div className="flex items-center gap-1.5 border border-[#26262A] bg-[#131315] rounded-md p-1 shrink-0 shadow-none relative z-10">
               <button
                 type="button"
                 onClick={() => setActiveTab("todas")}
-                className={`py-2 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
+                className={`py-1.5 rounded text-center text-xs font-black uppercase tracking-wider transition-all flex-1 cursor-pointer ${
                   activeTab === "todas"
-                    ? "bg-[var(--gm-primary)] text-white border border-[var(--gm-primary)]/40 shadow-none"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    ? "bg-[#F65A1A] text-[#0B0B0C] border border-[#F65A1A]"
+                    : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E]"
                 }`}
               >
                 Todas
@@ -1306,10 +1301,10 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setActiveTab("nao_lidas")}
-                className={`py-2 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
+                className={`py-1.5 rounded text-center text-xs font-black uppercase tracking-wider transition-all flex-1 cursor-pointer ${
                   activeTab === "nao_lidas"
-                    ? "bg-[var(--gm-primary)] text-white border border-[var(--gm-primary)]/40 shadow-none"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    ? "bg-[#F65A1A] text-[#0B0B0C] border border-[#F65A1A]"
+                    : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E]"
                 }`}
               >
                 Não lidas
@@ -1317,10 +1312,10 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setActiveTab("diretas")}
-                className={`py-2 rounded-lg text-center text-xs font-black transition-all flex-1 cursor-pointer ${
+                className={`py-1.5 rounded text-center text-xs font-black uppercase tracking-wider transition-all flex-1 cursor-pointer ${
                   activeTab === "diretas"
-                    ? "bg-[var(--gm-primary)] text-white border border-[var(--gm-primary)]/40 shadow-none"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    ? "bg-[#F65A1A] text-[#0B0B0C] border border-[#F65A1A]"
+                    : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E]"
                 }`}
               >
                 Diretas

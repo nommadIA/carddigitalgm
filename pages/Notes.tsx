@@ -8,7 +8,6 @@ import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
 import { SignalBottomGradient } from "../components/ui/SignalBottomGradient";
-import { BorderBeam } from "../components/ui/BorderBeam";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -137,7 +136,7 @@ import { openWhatsapp } from "../services/whatsApp";
 import jsPDF from "jspdf";
 
 const cardBase =
-  "relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden transition-all shadow-none";
+  "relative rounded-2xl border border-white/10 glass-card fora gm-card apple-glass-refraction backdrop-blur-2xl shadow-none overflow-hidden transition-all";
 const inputBase =
   "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
 
@@ -1624,11 +1623,53 @@ export default function Notes() {
     return base;
   }, [notes, searchTerm, mainTab, noteTab]);
 
-  const WORKFLOW_STATUSES = [
-    "A FAZER",
-    "PRODUÇÃO",
-    "CONCLUÍDOS",
-    "LIXEIRA",
+  const noteCounts = useMemo(() => {
+    const notDeleted = notes.filter((n) => !n.deleted_at);
+    const deleted = notes.filter((n) => !!n.deleted_at);
+
+    const baseForStatus = notDeleted.filter((n) => {
+      if (mainTab === "NOTE") return (n.type || "note").toLowerCase() === "note";
+      if (mainTab === "PRODUCTION") return (n.type || "note").toLowerCase() === "production";
+      return true;
+    });
+
+    const baseForTrash = deleted.filter((n) => {
+      if (mainTab === "NOTE") return (n.type || "note").toLowerCase() === "note";
+      if (mainTab === "PRODUCTION") return (n.type || "note").toLowerCase() === "production";
+      return true;
+    });
+
+    return {
+      all: notDeleted.length,
+      general: notDeleted.filter((n) => (n.type || "note").toLowerCase() === "note").length,
+      production: notDeleted.filter((n) => (n.type || "note").toLowerCase() === "production").length,
+      aFazer: baseForStatus.filter((n) => {
+        const st = normalizeStatus(n.status || "a fazer");
+        return st === "A FAZER";
+      }).length,
+      producao: baseForStatus.filter((n) => {
+        const st = normalizeStatus(n.status || "a fazer");
+        return st === "PRODUCAO" || st === "EM PRODUCAO";
+      }).length,
+      concluidos: baseForStatus.filter((n) => {
+        const st = normalizeStatus(n.status || "a fazer");
+        return st === "CONCLUIDOS" || st === "CONCLUIDO";
+      }).length,
+      lixeira: baseForTrash.length,
+    };
+  }, [notes, mainTab]);
+
+  const CATEGORY_TABS = [
+    { id: "ALL", label: "TODAS AS NOTAS", icon: FileText, count: noteCounts.all },
+    { id: "NOTE", label: "NOTAS GERAIS", icon: FileText, count: noteCounts.general },
+    { id: "PRODUCTION", label: "NOTAS DE PRODUÇÃO", icon: SlidersHorizontal, count: noteCounts.production },
+  ] as const;
+
+  const STATUS_TABS = [
+    { id: "A FAZER", label: "A FAZER", icon: Clock, count: noteCounts.aFazer, tone: "orange" },
+    { id: "PRODUÇÃO", label: "PRODUÇÃO", icon: RefreshCcw, count: noteCounts.producao, tone: "amber" },
+    { id: "CONCLUÍDOS", label: "CONCLUÍDOS", icon: Check, count: noteCounts.concluidos, tone: "green" },
+    { id: "LIXEIRA", label: "LIXEIRA", icon: Trash2, count: noteCounts.lixeira, tone: "red" },
   ] as const;
 
   return (
@@ -1638,9 +1679,9 @@ export default function Notes() {
       actions={
         <button
           onClick={openNewNote}
-          className="gm-btn group h-12 px-5 fora rounded-2xl border border-white/10 hover:border-[var(--gm-primary)] text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none shrink-0"
+          className="h-10 px-4 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs uppercase tracking-wider font-black flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 shadow-sm active:scale-95"
         >
-          <Plus size={18} className="text-[var(--gm-primary)] transition-transform duration-300 ease-in-out group-hover:rotate-180" />
+          <Plus size={16} strokeWidth={3} className="text-[#0B0B0C]" />
           <span>Criar Nota</span>
         </button>
       }
@@ -1650,50 +1691,128 @@ export default function Notes() {
         <div className="mb-6 space-y-3">
           <SectionDivider label="Filtros e Categorias" />
 
-          {/* Linha 1: Categorias Principais */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {[
-              { id: "ALL", label: "TODAS AS NOTAS" },
-              { id: "NOTE", label: "NOTAS GERAIS" },
-              { id: "PRODUCTION", label: "NOTAS DE PRODUÇÃO" },
-            ].map((tabItem) => {
-              const isActive = mainTab === tabItem.id;
-              return (
-                <button
-                  key={tabItem.id}
-                  type="button"
-                  onClick={() => setMainTab(tabItem.id as any)}
-                  className={`gm-filter-tab fora snap-start shrink-0 px-4 h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border cursor-pointer ${
-                    isActive
-                      ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none"
-                      : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
-                  }`}
-                >
-                  {tabItem.label}
-                </button>
-              );
-            })}
-          </div>
+          {/* Card Contêiner Forge UI para Filtros e Categorias */}
+          <div
+            className="p-3 sm:p-4 rounded-xl gm-card forge-card w-full space-y-3 sm:space-y-3.5 border border-zinc-800"
+            style={{
+              background: "#121215",
+              borderRadius: "14px",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              boxShadow:
+                "inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 8px 30px rgba(0, 0, 0, 0.4)",
+            }}
+          >
+            {/* Linha 1: Categorias Principais (Tipo de Nota) */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--gm-primary)]" />
+                  Tipo de Nota
+                </span>
+                <span className="text-[10px] font-bold text-slate-500">
+                  {noteCounts.all} {noteCounts.all === 1 ? "nota ativa" : "notas ativas"}
+                </span>
+              </div>
 
-          {/* Linha 2: Sub-Tabs de Status / Workflow */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {WORKFLOW_STATUSES.map((t) => {
-              const isActive = noteTab === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setNoteTab(t as any)}
-                  className={`gm-filter-tab fora snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border cursor-pointer ${
-                    isActive
-                      ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none"
-                      : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
-                  }`}
-                >
-                  {t}
-                </button>
-              );
-            })}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
+                {CATEGORY_TABS.map((tabItem) => {
+                  const isActive = mainTab === tabItem.id;
+                  const Icon = tabItem.icon;
+                  return (
+                    <button
+                      key={tabItem.id}
+                      type="button"
+                      onClick={() => setMainTab(tabItem.id as any)}
+                      className={`gm-filter-tab fora w-full h-10 rounded-xl text-[11px] sm:text-xs font-black tracking-tight transition-all uppercase flex items-center justify-between px-3.5 border cursor-pointer ${
+                        isActive
+                          ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/60 shadow-[0_0_15px_rgba(255,125,0,0.18)]"
+                          : "bg-black/35 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white hover:border-white/20"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <Icon size={14} className={isActive ? "text-[var(--gm-primary)] shrink-0" : "text-slate-400 shrink-0"} />
+                        <span className="truncate">{tabItem.label}</span>
+                      </span>
+                      <span
+                        className={`text-[10px] font-black px-2 py-0.5 rounded-full border shrink-0 transition-colors ${
+                          isActive
+                            ? "bg-[var(--gm-primary)]/30 text-[var(--gm-primary)] border-[var(--gm-primary)]/50"
+                            : "bg-white/5 text-slate-400 border-white/10"
+                        }`}
+                      >
+                        {tabItem.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Linha Divisória Fina */}
+            <div className="border-t border-white/5" />
+
+            {/* Linha 2: Status do Fluxo / Lixeira */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  Status do Fluxo
+                </span>
+                {noteTab === "LIXEIRA" && noteCounts.lixeira > 0 && (
+                  <span className="text-[10px] font-bold text-rose-400">
+                    {noteCounts.lixeira} na lixeira
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+                {STATUS_TABS.map((t) => {
+                  const isActive = noteTab === t.id;
+                  const Icon = t.icon;
+                  
+                  let activeClasses = "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/60 shadow-[0_0_15px_rgba(255,125,0,0.18)]";
+                  let badgeActiveClasses = "bg-[var(--gm-primary)]/30 text-[var(--gm-primary)] border-[var(--gm-primary)]/50";
+                  
+                  if (t.tone === "green") {
+                    activeClasses = "bg-emerald-500/20 text-emerald-400 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.18)]";
+                    badgeActiveClasses = "bg-emerald-500/30 text-emerald-300 border-emerald-500/50";
+                  } else if (t.tone === "red") {
+                    activeClasses = "bg-rose-500/20 text-rose-400 border-rose-500/60 shadow-[0_0_15px_rgba(244,63,94,0.18)]";
+                    badgeActiveClasses = "bg-rose-500/30 text-rose-300 border-rose-500/50";
+                  } else if (t.tone === "amber") {
+                    activeClasses = "bg-amber-500/20 text-amber-300 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.18)]";
+                    badgeActiveClasses = "bg-amber-500/30 text-amber-200 border-amber-500/50";
+                  }
+
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setNoteTab(t.id as any)}
+                      className={`gm-filter-tab fora w-full h-9 sm:h-10 rounded-xl text-[11px] sm:text-xs font-black tracking-tight transition-all uppercase flex items-center justify-between px-3 border cursor-pointer ${
+                        isActive
+                          ? activeClasses
+                          : "bg-black/35 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white hover:border-white/20"
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5 sm:gap-2 truncate">
+                        <Icon size={14} className={isActive ? "" : "text-slate-400"} />
+                        <span className="truncate">{t.label}</span>
+                      </span>
+                      <span
+                        className={`text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full border shrink-0 transition-colors ${
+                          isActive
+                            ? badgeActiveClasses
+                            : "bg-white/5 text-slate-400 border-white/10"
+                        }`}
+                      >
+                        {t.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Busca com Visual Padrão Glass Desfocado Apple - Idêntica a Orçamentos */}
@@ -1773,9 +1892,6 @@ export default function Notes() {
                         : ""
                     }`}
                   >
-                    {/* Efeito BorderBeam no card de notas */}
-                    <BorderBeam duration={7} borderWidth={1.2} color="#ffffff" />
-
                     {/* Efeito de Sinalização de Degradê: Canto Inferior Esquerdo -> Canto Inferior Direito (só para com clique ou mouse por cima) */}
                     <SignalBottomGradient
                       active={note.id === highlightedId}
@@ -2518,7 +2634,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyAlign("center");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
                           title="Centralizar"
                         >
                           <AlignCenter size={15} />
@@ -2531,7 +2647,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyAlign("right");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
                           title="Alinhar à Direita"
                         >
                           <AlignRight size={15} />
@@ -2544,7 +2660,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyAlign("justify");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
                           title="Justificar"
                         >
                           <AlignJustify size={15} />
@@ -2559,7 +2675,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyList("bullet");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
                           title="Lista de Marcadores"
                         >
                           <List size={15} />
@@ -2572,7 +2688,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyList("ordered");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
                           title="Lista Numerada"
                         >
                           <ListOrdered size={15} />
@@ -2591,7 +2707,7 @@ export default function Notes() {
                               setColorPickerOpen(false);
                               setFontSelectorOpen(false);
                             }}
-                            className={`py-1.5 px-2.5 rounded-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 min-h-[38px] cursor-pointer ${
+                            className={`py-1.5 px-2.5 rounded-lg transition-all active:scale-95 flex items-center gap-1.5 min-h-[38px] cursor-pointer ${
                               highlighterPickerOpen
                                 ? "bg-[var(--gm-primary,#FE540B)]/25 text-white border border-[var(--gm-primary,#FE540B)]/60 shadow-lg shadow-orange-500/20"
                                 : "bg-white/5 hover:bg-white/15 text-white"
@@ -3437,8 +3553,8 @@ export default function Notes() {
                                           style={{
                                             borderTopWidth: "3px",
                                             borderTopColor: "var(--gm-primary, #FF6900)",
-                                            backdropFilter: "blur(24px) saturate(190%)",
-                                            WebkitBackdropFilter: "blur(24px) saturate(190%)",
+                                            backgroundColor: "#141418",
+                                            boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 30px 70px rgba(0,0,0,0.95)",
                                           }}
                                         >
                                           <div className="flex items-center justify-between pb-3 border-b border-white/10">
@@ -3617,38 +3733,32 @@ export default function Notes() {
 
                 {/* Linha FIXA dos Botões: Fechar e Salvar Nota Lado a Lado 50%/50% */}
                 <div className="w-full grid grid-cols-2 gap-3 pt-0.5">
-                  {/* Botão FECHAR: Fica Laranja no Hover */}
+                  {/* Botão FECHAR: Forge Secondary */}
                   <button
                     type="button"
                     onClick={() => setModalOpen(false)}
-                    className="w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider text-white/90 bg-black/60 hover:bg-[#FF6900] border border-white/15 hover:border-[#FF6900] hover:text-white hover:shadow-[0_0_20px_rgba(255,105,0,0.5)] transition-all flex items-center justify-center cursor-pointer active:scale-95 min-h-[46px]"
+                    className="w-full h-11 rounded-md text-xs font-bold uppercase tracking-wider text-[#F2F2F3] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] transition-all flex items-center justify-center cursor-pointer active:scale-95"
                   >
                     FECHAR
                   </button>
 
-                  {/* Botão SALVAR: Fica Verde no Hover, e Verde por 2 segundos com animação moderna e suave ao clicar */}
+                  {/* Botão SALVAR: Forge Primary */}
                   <button
                     type="button"
                     onClick={() => handleSave(true)}
-                    className={`relative overflow-hidden w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 ease-out border min-h-[46px] cursor-pointer active:scale-95 ${
+                    className={`relative overflow-hidden w-full h-11 rounded-md text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 border cursor-pointer active:scale-95 ${
                       isSaveSuccessActive
-                        ? "bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 border-green-300 text-white shadow-[0_0_30px_rgba(34,197,94,0.75),inset_0_1px_1px_rgba(255,255,255,0.4)] scale-[1.02]"
-                        : "bg-black/60 hover:bg-emerald-600 border-white/15 hover:border-emerald-400 text-white/90 hover:text-white hover:shadow-[0_0_22px_rgba(16,185,129,0.5)]"
+                        ? "bg-emerald-500 border-emerald-500 text-[#0B0B0C] shadow-[0_0_20px_rgba(34,197,94,0.5)]"
+                        : "bg-[#F65A1A] hover:bg-[#FF7A38] border-[#F65A1A] text-[#0B0B0C] shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
                     }`}
                   >
-                    {/* Efeito feixe de luz suave quando ativo */}
-                    {isSaveSuccessActive && (
-                      <div 
-                        className="absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]"
-                      />
-                    )}
                     <Check 
                       size={16} 
-                      className={`shrink-0 transition-all duration-500 ${
-                        isSaveSuccessActive ? "scale-125 text-white stroke-[2.5]" : ""
+                      className={`shrink-0 transition-all duration-300 ${
+                        isSaveSuccessActive ? "scale-125 text-[#0B0B0C] stroke-[3]" : "text-[#0B0B0C] stroke-[2.75]"
                       }`} 
                     />
-                    <span className="transition-all duration-300">
+                    <span className="transition-all duration-300 text-[#0B0B0C] font-black">
                       {isSaveSuccessActive ? "SALVO COM SUCESSO!" : "SALVAR NOTA"}
                     </span>
                   </button>
@@ -3795,79 +3905,78 @@ export default function Notes() {
       {typeof document !== "undefined" &&
         createPortal(
           <AnimatePresence>
-            {/* 1. Caixinha de Configuração e Escolha de Cores do Texto */}
+            {/* 1. Miniatura de Seletor de Cores do Texto */}
             {colorPickerOpen && (
               <div
-                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm select-none"
+                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs select-none pointer-events-auto"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setColorPickerOpen(false);
                 }}
               >
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                  initial={{ opacity: 0, scale: 0.92, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 15 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                  className="relative w-full max-w-[340px] bg-[#111520] border border-white/20 rounded-3xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-4 text-white"
+                  exit={{ opacity: 0, scale: 0.92, y: 10 }}
+                  transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                  className="relative bg-[#0e111a]/98 border border-white/20 rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.95)] backdrop-blur-2xl flex flex-col gap-3 text-white"
+                  style={{ width: "300px", maxWidth: "calc(100vw - 32px)", margin: "auto" }}
                   onMouseDown={(e) => {
                     e.stopPropagation();
                   }}
                 >
-                  {/* Cabeçalho */}
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-[var(--gm-primary,#FE540B)] shrink-0">
-                        <Palette size={18} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black tracking-wide text-white">Cor do Texto</h4>
-                        <p className="text-[10px] text-white/50">Escolha a cor para o texto</p>
-                      </div>
+                  {/* Cabeçalho da Miniatura */}
+                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                    <div className="flex items-center gap-1.5">
+                      <Palette size={14} className="text-[var(--gm-primary,#FE540B)]" />
+                      <span className="text-xs font-black tracking-wide text-white">Cor do Texto</span>
                     </div>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setColorPickerOpen(false);
-                      }}
-                      className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors cursor-pointer"
-                      title="Fechar"
-                    >
-                      <X size={16} />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedTextColor("#ffffff");
+                          applyStyleToSelection({ color: "#ffffff" });
+                          setColorPickerOpen(false);
+                        }}
+                        className="text-[10px] font-bold text-white/70 hover:text-white px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 transition-all cursor-pointer"
+                        title="Redefinir para Branco"
+                      >
+                        Padrão
+                      </button>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setColorPickerOpen(false);
+                        }}
+                        className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/50 hover:text-white transition-colors cursor-pointer"
+                        title="Fechar"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Amostra da cor atual + Botão Redefinir para Padrão */}
-                  <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/5">
-                    <div className="flex items-center gap-2.5">
+                  {/* Amostra da cor atual */}
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/5 text-xs">
+                    <div className="flex items-center gap-2">
                       <span
-                        className="w-5 h-5 rounded-full border-2 border-white/50 shadow-sm shrink-0"
+                        className="w-4 h-4 rounded-full border border-white/40 shadow-xs shrink-0"
                         style={{ backgroundColor: selectedTextColor }}
                       />
-                      <span className="text-xs font-bold text-white/90">
-                        {TEXT_COLORS.find((c) => c.hex.toLowerCase() === selectedTextColor.toLowerCase())?.label || "Personalizada"}
-                      </span>
+                      <span className="font-mono text-[11px] text-white/90 uppercase">{selectedTextColor}</span>
                     </div>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedTextColor("#ffffff");
-                        applyStyleToSelection({ color: "#ffffff" });
-                        setColorPickerOpen(false);
-                      }}
-                      className="text-xs font-bold text-white/70 hover:text-white px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer"
-                      title="Redefinir para Branco"
-                    >
-                      Branco (Padrão)
-                    </button>
+                    <span className="text-[10px] text-white/50 font-medium">
+                      {TEXT_COLORS.find((c) => c.hex.toLowerCase() === selectedTextColor.toLowerCase())?.label || "Personalizada"}
+                    </span>
                   </div>
 
-                  {/* Grid de Cores do Texto - Grandes e fáceis de tocar no Smartphone */}
-                  <div className="grid grid-cols-5 gap-3 py-1">
+                  {/* Grid de Cores Rápidas */}
+                  <div className="grid grid-cols-5 gap-1.5 py-0.5">
                     {TEXT_COLORS.map((col) => {
                       const isActive = selectedTextColor.toLowerCase() === col.hex.toLowerCase();
                       return (
@@ -3881,17 +3990,17 @@ export default function Notes() {
                             applyStyleToSelection({ color: col.hex });
                             setColorPickerOpen(false);
                           }}
-                          className={`w-12 h-12 rounded-2xl border-2 transition-all duration-150 flex items-center justify-center cursor-pointer shadow-md ${
+                          className={`w-9 h-9 rounded-xl border transition-all flex items-center justify-center cursor-pointer shadow-xs ${
                             isActive
-                              ? "scale-105 ring-4 ring-[var(--gm-primary,#FE540B)]/60 border-white shadow-orange-500/40"
-                              : "hover:scale-105 border-white/20 hover:border-white/60 opacity-90 hover:opacity-100"
+                              ? "ring-2 ring-white scale-105 border-white shadow-orange-500/30"
+                              : "border-white/15 hover:border-white/50 hover:scale-105 opacity-90 hover:opacity-100"
                           }`}
                           style={{ backgroundColor: col.hex }}
                           title={col.label}
                         >
                           {isActive && (
                             <Check
-                              size={18}
+                              size={15}
                               className={col.hex === "#ffffff" || col.hex === "#cbd5e1" ? "text-black stroke-[3.5]" : "text-white stroke-[3.5]"}
                             />
                           )}
@@ -3899,84 +4008,111 @@ export default function Notes() {
                       );
                     })}
                   </div>
+
+                  {/* Seletor Livre Hex e Color Picker Customizado */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                    <input
+                      type="color"
+                      value={selectedTextColor}
+                      onChange={(e) => {
+                        setSelectedTextColor(e.target.value);
+                        applyStyleToSelection({ color: e.target.value });
+                      }}
+                      className="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0 p-0 shrink-0"
+                      title="Escolher qualquer cor"
+                    />
+                    <input
+                      type="text"
+                      maxLength={7}
+                      value={selectedTextColor}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedTextColor(val);
+                        if (/^#[0-9A-F]{6}$/i.test(val)) {
+                          applyStyleToSelection({ color: val });
+                        }
+                      }}
+                      placeholder="#FFFFFF"
+                      className="flex-1 h-7 px-2.5 rounded-lg bg-black/60 border border-white/15 text-white font-mono text-xs uppercase outline-none focus:border-[var(--gm-primary,#FE540B)]"
+                    />
+                  </div>
                 </motion.div>
               </div>
             )}
 
-            {/* 2. Caixinha de Configuração do Marcador de Texto */}
+            {/* 2. Miniatura de Seletor de Marcador de Texto */}
             {highlighterPickerOpen && (
               <div
-                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm select-none"
+                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs select-none pointer-events-auto"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setHighlighterPickerOpen(false);
                 }}
               >
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                  initial={{ opacity: 0, scale: 0.92, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 15 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                  className="relative w-full max-w-[340px] bg-[#111520] border border-white/20 rounded-3xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-4 text-white"
+                  exit={{ opacity: 0, scale: 0.92, y: 10 }}
+                  transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                  className="relative bg-[#0e111a]/98 border border-white/20 rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.95)] backdrop-blur-2xl flex flex-col gap-3 text-white"
+                  style={{ width: "300px", maxWidth: "calc(100vw - 32px)", margin: "auto" }}
                   onMouseDown={(e) => {
                     e.stopPropagation();
                   }}
                 >
-                  {/* Cabeçalho */}
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-400 shrink-0">
-                        <Highlighter size={18} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black tracking-wide text-white">Marcador de Texto</h4>
-                        <p className="text-[10px] text-white/50">Realce palavras com cores</p>
-                      </div>
+                  {/* Cabeçalho da Miniatura */}
+                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                    <div className="flex items-center gap-1.5">
+                      <Highlighter size={14} className="text-yellow-400" />
+                      <span className="text-xs font-black tracking-wide text-white">Marcador</span>
                     </div>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setHighlighterPickerOpen(false);
-                      }}
-                      className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors cursor-pointer"
-                      title="Fechar"
-                    >
-                      <X size={16} />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedHighlightColor("");
+                          removeHighlight();
+                          setHighlighterPickerOpen(false);
+                        }}
+                        className="text-[10px] font-bold text-red-400 hover:text-red-300 px-2 py-0.5 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer flex items-center gap-1"
+                        title="Remover marcação"
+                      >
+                        <Eraser size={11} />
+                        <span>Limpar</span>
+                      </button>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setHighlighterPickerOpen(false);
+                        }}
+                        className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/50 hover:text-white transition-colors cursor-pointer"
+                        title="Fechar"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Amostra do marcador + Limpar */}
-                  <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white/[0.04] border border-white/5">
-                    <div className="flex items-center gap-2.5">
+                  {/* Amostra do marcador */}
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/5 text-xs">
+                    <div className="flex items-center gap-2">
                       <span
-                        className="w-5 h-5 rounded-full border-2 border-white/50 shadow-sm shrink-0"
+                        className="w-4 h-4 rounded-full border border-white/40 shadow-xs shrink-0"
                         style={{ backgroundColor: selectedHighlightColor || "transparent" }}
                       />
-                      <span className="text-xs font-bold text-white/90">
-                        {HIGHLIGHT_COLORS.find((c) => c.hex.toLowerCase() === selectedHighlightColor.toLowerCase())?.label || "Sem marcação"}
-                      </span>
+                      <span className="font-mono text-[11px] text-white/90 uppercase">{selectedHighlightColor || "Sem cor"}</span>
                     </div>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedHighlightColor("");
-                        removeHighlight();
-                        setHighlighterPickerOpen(false);
-                      }}
-                      className="text-xs font-bold text-red-400 hover:text-red-300 px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer flex items-center gap-1.5"
-                      title="Remover marcação do texto selecionado"
-                    >
-                      <Eraser size={12} />
-                      <span>Limpar</span>
-                    </button>
+                    <span className="text-[10px] text-white/50 font-medium">
+                      {HIGHLIGHT_COLORS.find((c) => c.hex.toLowerCase() === selectedHighlightColor.toLowerCase())?.label || "Sem marcação"}
+                    </span>
                   </div>
 
                   {/* Grid de 10 Cores de Marcação */}
-                  <div className="grid grid-cols-5 gap-3 py-1">
+                  <div className="grid grid-cols-5 gap-1.5 py-0.5">
                     {HIGHLIGHT_COLORS.map((col) => {
                       const isActive = selectedHighlightColor.toLowerCase() === col.hex.toLowerCase();
                       return (
@@ -3995,16 +4131,16 @@ export default function Notes() {
                             }
                             setHighlighterPickerOpen(false);
                           }}
-                          className={`w-12 h-12 rounded-2xl border-2 transition-all duration-150 flex items-center justify-center cursor-pointer shadow-md ${
+                          className={`w-9 h-9 rounded-xl border transition-all flex items-center justify-center cursor-pointer shadow-xs ${
                             isActive
-                              ? "scale-105 ring-4 ring-yellow-400/60 border-white shadow-yellow-500/40"
-                              : "hover:scale-105 border-white/20 hover:border-white/60 opacity-90 hover:opacity-100"
+                              ? "ring-2 ring-yellow-400 scale-105 border-white shadow-yellow-500/30"
+                              : "border-white/15 hover:border-white/50 hover:scale-105 opacity-90 hover:opacity-100"
                           }`}
                           style={{ backgroundColor: col.hex }}
                           title={col.label}
                         >
                           {isActive && (
-                            <Check size={18} className="text-black stroke-[3.5]" />
+                            <Check size={15} className="text-black stroke-[3.5]" />
                           )}
                         </button>
                       );
@@ -4104,9 +4240,7 @@ export default function Notes() {
               <div
                 className="fixed inset-0 z-[9999999] flex flex-col items-center justify-between p-4 md:p-6 select-none animate-fadeIn"
                 style={{
-                  backgroundColor: "rgba(0, 0, 0, 0.88)",
-                  backdropFilter: "blur(36px) saturate(200%)",
-                  WebkitBackdropFilter: "blur(36px) saturate(200%)",
+                  backgroundColor: "rgba(0, 0, 0, 0.95)",
                 }}
                 onClick={(e) => {
                   if (e.target === e.currentTarget) {
@@ -4187,7 +4321,7 @@ export default function Notes() {
                         setZoomImage({ url: layoutUrls[prevIdx], index: prevIdx });
                         setZoomScale(1);
                       }}
-                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
+                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
                       title="Layout Anterior (Seta Esquerda ←)"
                     >
                       <ChevronLeft size={24} />
@@ -4219,7 +4353,7 @@ export default function Notes() {
                         setZoomImage({ url: layoutUrls[nextIdx], index: nextIdx });
                         setZoomScale(1);
                       }}
-                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
+                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
                       title="Próximo Layout (Seta Direita →)"
                     >
                       <ChevronRight size={24} />

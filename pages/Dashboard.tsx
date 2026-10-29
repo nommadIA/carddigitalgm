@@ -12,14 +12,17 @@ import {
   Wallet,
   FileText,
   UserPlus,
+  User,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { useAuth } from "../store/AuthContext";
+import { useAuth, MASTER_TENANT_ID } from "../store/AuthContext";
 import { pushToast } from "../store/toast";
 import { fetchSettingsSupabase, readSettingsLocal, AppSettings } from "../lib/settings";
+import { readBudgetsLocal, writeBudgetsLocal } from "../lib/budgetsCache";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { generateFullAppSummaryPdf } from "../services/pdfService";
 import { BorderBeam } from "../components/ui/BorderBeam";
+import { ForgeSpecCard } from "../components/ui/ForgeSpecCard";
 
 function formatPhoneBR(value: string) {
   const digits = (value || "").replace(/\D/g, "").slice(0, 11);
@@ -50,14 +53,23 @@ interface BudgetRow {
   status: string;
 }
 
-/* ---------- Estilos reutilizáveis (tokens do tema em --gm-*) ---------- */
+/* ---------- Estilos reutilizáveis Forge UI ---------- */
+const glassCardStyle: React.CSSProperties = {
+  background: "#131315",
+  borderRadius: "8px",
+  border: "1px solid #26262A",
+  boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 4px 20px -2px rgba(0, 0, 0, 0.5)",
+  position: "relative",
+  overflow: "hidden",
+};
+
 const cardBase =
-  "relative rounded-2xl p-6 border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden transition-all shadow-none";
+  "relative rounded-lg p-6 border border-[#26262A] bg-[#131315] gm-card forge-card overflow-hidden transition-all shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_4px_20px_-2px_rgba(0,0,0,0.5)]";
 const inputBase =
-  "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+  "w-full gm-input rounded-md px-4 py-2.5 text-sm text-[#F2F2F3] placeholder-[#8B8B92] focus:outline-none focus:border-[#F65A1A] transition-all border border-[#26262A] bg-[#131315]";
 
 export default function Dashboard() {
-  const { tenantId } = useAuth();
+  const { user, tenantId } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -134,7 +146,14 @@ export default function Dashboard() {
           clientsQuery,
         ]);
 
-        const allBudgets = (budgetsRes.data || []).filter((b: any) => !b.deleted_at);
+        let rawBudgets = budgetsRes.data;
+        if (!rawBudgets || budgetsRes.error) {
+          rawBudgets = readBudgetsLocal(tenantId) || [];
+        } else {
+          writeBudgetsLocal(rawBudgets, tenantId);
+        }
+
+        const allBudgets = (rawBudgets || []).filter((b: any) => !b.deleted_at);
         const mapped: BudgetRow[] = allBudgets.slice(0, 5).map((b: any) => ({
           id: b.id,
           client_name: b.client_name || b.title || b.customer_name || "Cliente",
@@ -184,8 +203,12 @@ export default function Dashboard() {
           ticketMedio: ticketMedio,
           clientesAtivos: totalClientes,
         });
-      } catch (err) {
-        console.error("Erro ao carregar dados do dashboard:", err);
+      } catch (err: any) {
+        const errorMsg = err?.message || String(err);
+        const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("tenant_memberships") || errorMsg.includes("42501");
+        if (!isQuiet) {
+          console.warn("Aviso ao carregar dados do dashboard:", errorMsg);
+        }
       } finally {
         setLoading(false);
       }
@@ -221,10 +244,24 @@ export default function Dashboard() {
     try {
       setSavingClient(true);
       if (tenantId) {
+        let activeUserId = user?.id;
+        try {
+          const { data: authRes } = await supabase.auth.getUser();
+          if (authRes?.user?.id) {
+            activeUserId = authRes.user.id;
+          }
+        } catch {}
+
+        if (!activeUserId) {
+          activeUserId = user?.id || tenantId || MASTER_TENANT_ID;
+        }
+
+        const cleanPhone = newClientPhone.replace(/\D/g, "");
         const { error } = await supabase.from("clients").insert({
           tenant_id: tenantId,
+          user_id: activeUserId,
           name: newClientName.trim(),
-          phone: newClientPhone.trim(),
+          phone: cleanPhone || newClientPhone.trim() || null,
         });
         if (error) throw error;
       }
@@ -294,23 +331,23 @@ export default function Dashboard() {
     const s = status.toUpperCase();
     if (s.includes("APROV") || s.includes("CONCLU")) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="forge-badge forge-badge-nominal">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           APROVADO
         </span>
       );
     }
     if (s.includes("RECUS") || s.includes("CANCEL")) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-red-500/10 text-red-400 border border-red-500/20 uppercase">
+        <span className="forge-badge forge-badge-failed">
           <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
           RECUSADO
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+      <span className="forge-badge forge-badge-live">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FF7A38]" />
         NA FILA
       </span>
     );
@@ -371,172 +408,126 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 2. CARD DO RELÓGIO DIGITAL CENTRALIZADO (COMO NO PRINT DO USUÁRIO) */}
-      <div className="relative rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden shadow-none">
-        {/* Efeito de Feixe de Luz Apple Glass na borda */}
-        <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
-
-        {/* Conteúdo interno do container */}
-        <div className="relative z-10 flex items-center justify-center gap-3 sm:gap-4 text-white">
-          <Clock size={28} className="text-slate-400 shrink-0" />
-          <span className="text-4xl sm:text-5xl md:text-6xl font-black font-mono tracking-widest text-white drop-shadow-md">
-            {now.toLocaleTimeString("pt-BR", { hour12: false })}
-          </span>
+      {/* 2. CARD DO RELÓGIO DIGITAL CENTRALIZADO (FORGE SPEC UI) */}
+      <div className="forge-spec relative overflow-hidden">
+        <BorderBeam duration={6} borderWidth={1.2} color="#f65a1a" />
+        <div className="forge-spec__bar">
+          <span className="forge-spec__id">00</span>
+          <span className="forge-spec__title">SISTEMA · HORA CERTA</span>
+          <span className="forge-spec__status forge-spec__status--live">SYNC</span>
         </div>
-        <div className="relative z-10 mt-2 text-sm sm:text-base font-semibold text-slate-400 tracking-wide">
-          {formatDashboardDate(now)}
+        <div className="forge-spec__body flex flex-col items-center justify-center text-center py-6 sm:py-7">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 text-[#F2F2F3]">
+            <Clock size={28} className="text-[#f65a1a] shrink-0" />
+            <span className="text-4xl sm:text-5xl md:text-6xl font-black font-mono tracking-widest text-[#F2F2F3] drop-shadow-sm">
+              {now.toLocaleTimeString("pt-BR", { hour12: false })}
+            </span>
+          </div>
+          <div className="mt-2 text-xs sm:text-sm font-semibold font-mono tracking-wider text-[#8B8B92] uppercase">
+            {formatDashboardDate(now)}
+          </div>
         </div>
       </div>
 
-      {/* 3. BOTÕES NOVO ORÇAMENTO E EXPORTAR LADO A LADO */}
+      {/* 3. BOTÕES NOVO ORÇAMENTO E EXPORTAR LADO A LADO - TC PILL SYSTEM */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+        {/* BOTÃO PRIMÁRIO: FORGE UI (IDÊNTICO AO BOTÃO GRADE) */}
         <Link
           to="/budgets?new=true"
-          className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden gm-btn group h-14 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer text-white shadow-none"
+          className="forge-btn forge-btn--primary w-full !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 group cursor-pointer shadow-none select-none"
+          title="Novo Orçamento"
+          aria-label="Novo Orçamento"
         >
-          <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
-          <Plus size={18} className="transition-transform duration-300 ease-in-out group-hover:rotate-180 text-[color:var(--gm-primary)] relative z-10" />
-          <span className="relative z-10">NOVO ORÇAMENTO</span>
+          <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
+            <Plus size={15} strokeWidth={2.5} className="w-3.5 h-3.5 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
+          </span>
+          <span className="text-[11.5px] font-semibold">
+            Novo Orçamento
+          </span>
         </Link>
 
+        {/* BOTÃO SECUNDÁRIO: FORGE UI (IDÊNTICO AO BOTÃO LISTAS) */}
         <button
           type="button"
           onClick={handleExport}
           disabled={exporting}
-          className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md overflow-hidden gm-btn group h-14 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer text-white shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
-          title="Exportar relatório consolidado (Orçamentos, Clientes, Notas, Financeiro e Mercado) no papel timbrado"
+          className="forge-btn forge-btn--secondary w-full !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 group cursor-pointer shadow-none select-none disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Exportar Relatório"
+          aria-label="Exportar Relatório"
         >
-          <BorderBeam duration={8} borderWidth={1.2} color="#ffffff" />
           {exporting ? (
-            <>
-              <Loader2 size={18} className="animate-spin text-white relative z-10" />
-              <span className="relative z-10">EXPORTANDO...</span>
-            </>
+            <Loader2 size={14} className="w-3.5 h-3.5 animate-spin shrink-0" />
           ) : (
-            <>
-              <Download size={18} className="transition-transform duration-300 ease-in-out group-hover:scale-110 text-[color:var(--gm-primary)] relative z-10" />
-              <span className="relative z-10">EXPORTAR</span>
-            </>
+            <Download size={14} className="w-3.5 h-3.5 shrink-0 stroke-[2]" />
           )}
+          <span className="text-[11.5px] font-semibold">
+            Exportar Relatório
+          </span>
         </button>
       </div>
 
       {/* SEPARADOR: MÉTRICAS */}
       <SectionDivider label="Métricas gerais" />
 
-      {/* 4. TOP METRIC CARDS WITH DISTINCT ICON BOXES (4 COLUMNS) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-1">
+      {/* 4. TOP METRIC CARDS WITH FORGE-SPEC UI DESIGN */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mt-1">
         {/* CARD 1: FATURADO NO MÊS */}
-        <div className={`p-6 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
-          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
-
-          <div className="flex items-start justify-between relative z-10">
-            <div>
-              <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
-                Faturado no Mês
-              </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-[color:var(--gm-text)] mt-1.5 tracking-tight group-hover:text-[color:var(--gm-primary)] transition-colors">
-                {formatCurrency(stats.faturamentoMensal)}
-              </div>
-            </div>
-            <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
-              <TrendingUp size={20} />
-            </div>
-          </div>
-
-          <div className="h-10 my-1 relative z-10" />
-
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg w-fit border border-emerald-500/20">
-              <ArrowUpRight size={14} />
-              <span>+12,4% este mês</span>
-            </div>
-          </div>
-        </div>
+        <ForgeSpecCard
+          id="01"
+          title="FATURADO · MÊS"
+          status="LIVE"
+          statusLive={true}
+          eyebrow="TOTAL APROVADO / CONCLUÍDO"
+          figure={formatCurrency(stats.faturamentoMensal)}
+          tags={[
+            { label: "+12,4% ESTE MÊS", accent: true, icon: <ArrowUpRight size={13} className="text-[#f65a1a] stroke-[2.5]" /> },
+            { label: "METAS 2026", accent: false }
+          ]}
+        />
 
         {/* CARD 2: ORÇAMENTOS ABERTOS */}
-        <div className={`p-6 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-amber-500/40`}>
-          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
-
-          <div className="flex items-start justify-between relative z-10">
-            <div>
-              <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
-                Orçamentos Abertos
-              </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-[color:var(--gm-text)] mt-1.5 tracking-tight group-hover:text-amber-400 transition-colors">
-                {stats.orcametosAbertos}
-              </div>
-            </div>
-            <div className="w-11 h-11 rounded-xl barra border border-amber-500/25 text-amber-400 flex items-center justify-center shrink-0 shadow-none">
-              <Clock size={20} />
-            </div>
-          </div>
-
-          <div className="h-10 my-1 relative z-10" />
-
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-lg w-fit border border-amber-500/20">
-              <Clock size={14} />
-              <span>{stats.aguardando} em análise</span>
-            </div>
-          </div>
-        </div>
+        <ForgeSpecCard
+          id="02"
+          title="ORÇAMENTOS · ABERTOS"
+          status="FILA"
+          statusLive={true}
+          eyebrow="EM ANÁLISE / AGUARDANDO"
+          figure={stats.orcametosAbertos}
+          unit="ITENS"
+          tags={[
+            { label: `${stats.aguardando} EM ANÁLISE`, accent: true, icon: <Clock size={18} className="text-[#f65a1a] w-[18px] h-[18px]" /> },
+            { label: "PENDENTE", accent: false }
+          ]}
+        />
 
         {/* CARD 3: TICKET MÉDIO */}
-        <div className={`p-6 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-emerald-500/40`}>
-          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
-
-          <div className="flex items-start justify-between relative z-10">
-            <div>
-              <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
-                Ticket Médio
-              </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-[color:var(--gm-text)] mt-1.5 tracking-tight group-hover:text-emerald-400 transition-colors">
-                {formatCurrency(stats.ticketMedio)}
-              </div>
-            </div>
-            <div className="w-11 h-11 rounded-xl barra border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-none">
-              <Wallet size={20} />
-            </div>
-          </div>
-
-          <div className="h-10 my-1 relative z-10" />
-
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg w-fit border border-emerald-500/20">
-              <ArrowUpRight size={14} />
-              <span>+4,1% do alvo</span>
-            </div>
-          </div>
-        </div>
+        <ForgeSpecCard
+          id="03"
+          title="TICKET MÉDIO"
+          status="PROG"
+          statusLive={true}
+          eyebrow="MÉDIA POR CLIENTE"
+          figure={formatCurrency(stats.ticketMedio)}
+          tags={[
+            { label: "+4,1% DO ALVO", accent: true, icon: <ArrowUpRight size={13} className="text-[#f65a1a] stroke-[2.5]" /> },
+            { label: "ACIMA DA META", accent: false }
+          ]}
+        />
 
         {/* CARD 4: CLIENTES ATIVOS */}
-        <div className={`p-6 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-blue-500/40`}>
-          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
-
-          <div className="flex items-start justify-between relative z-10">
-            <div>
-              <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
-                Clientes Ativos
-              </span>
-              <div className="text-2xl sm:text-3xl font-extrabold text-[color:var(--gm-text)] mt-1.5 tracking-tight group-hover:text-blue-400 transition-colors">
-                {stats.clientesAtivos}
-              </div>
-            </div>
-            <div className="w-11 h-11 rounded-xl barra border border-blue-500/25 text-blue-400 flex items-center justify-center shrink-0 shadow-none">
-              <Users size={20} />
-            </div>
-          </div>
-
-          <div className="h-10 my-1 relative z-10" />
-
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-lg w-fit border border-blue-500/20">
-              <Users size={14} />
-              <span>+9 novos esta semana</span>
-            </div>
-          </div>
-        </div>
+        <ForgeSpecCard
+          id="04"
+          title="CLIENTES ATIVOS"
+          status="TOTAL"
+          statusLive={true}
+          eyebrow="BASE CADASTRADA"
+          figure={stats.clientesAtivos}
+          unit="BASE"
+          tags={[
+            { label: "+9 NOVOS ESTA SEMANA", accent: true, icon: <Users size={18} className="text-[#f65a1a] w-[18px] h-[18px]" /> },
+            { label: "CRM ATIVO", accent: false }
+          ]}
+        />
       </div>
 
       {/* SEPARADOR: ORÇAMENTOS RECENTES */}
@@ -544,38 +535,34 @@ export default function Dashboard() {
 
       {/* 4. SECTION: ORÇAMENTOS RECENTES */}
       <div className="space-y-4 mt-1">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl barra border border-[color:var(--gm-primary)]/20 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
-              <FileText size={18} />
-            </div>
-            <h2 className="text-xl font-bold text-[color:var(--gm-text)] tracking-tight">
-              Orçamentos recentes
-            </h2>
+        <div className="forge-spec overflow-hidden">
+          <div className="forge-spec__bar">
+            <span className="forge-spec__id">05</span>
+            <span className="forge-spec__title">ORÇAMENTOS RECENTES</span>
+            <Link
+              to="/budgets"
+              className="forge-btn forge-btn--primary gm-dash-primary-btn !h-7 !py-0 px-2.5 rounded-[4px] text-[11px] font-mono font-bold tracking-wider uppercase inline-flex items-center gap-1.5 cursor-pointer shadow-none group"
+              title="Ver Todos os Orçamentos"
+            >
+              <ArrowUpRight size={13} className="shrink-0 stroke-[2.5]" />
+              <span>VER TODOS</span>
+            </Link>
           </div>
 
-          <Link to="/budgets" className="gm-btn gm-btn-soft h-12 text-xs uppercase tracking-wider shadow-none">
-            <span>Ver Todos</span>
-            <ArrowUpRight size={14} />
-          </Link>
-        </div>
-
-        <div className={`overflow-hidden ${cardBase} !p-0`}>
-          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
           <div className="overflow-x-auto relative z-10">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/10 text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider bg-white/[0.02]">
-                  <th className="px-6 py-4">CLIENTE</th>
-                  <th className="px-6 py-4">SERVIÇO</th>
-                  <th className="px-6 py-4">VALOR</th>
-                  <th className="px-6 py-4 text-right">STATUS</th>
+                <tr className="border-b border-[#26262a] text-xs font-mono font-bold text-[#8b8b92] uppercase tracking-wider bg-white/[0.01]">
+                  <th className="px-6 py-3.5">CLIENTE</th>
+                  <th className="px-6 py-3.5">SERVIÇO</th>
+                  <th className="px-6 py-3.5">VALOR</th>
+                  <th className="px-6 py-3.5 text-right">STATUS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10 text-sm">
+              <tbody className="divide-y divide-[#26262a] text-sm">
                 {recentBudgets.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-xs font-semibold text-[color:var(--gm-text-secondary)]">
+                    <td colSpan={4} className="px-6 py-8 text-center text-xs font-semibold text-[#8b8b92]">
                       Nenhum orçamento emitido ainda. Clique em "Novo Orçamento" para começar.
                     </td>
                   </tr>
@@ -583,29 +570,29 @@ export default function Dashboard() {
                   recentBudgets.map((item) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-white/[0.04] transition-colors cursor-pointer group"
+                      className="hover:bg-white/[0.03] transition-colors cursor-pointer group"
                       onClick={() => navigate(`/budgets`)}
                     >
-                      <td className="px-6 py-4 font-bold text-[color:var(--gm-text)] whitespace-nowrap">
+                      <td className="px-6 py-3.5 font-bold text-[#f2f2f3] whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg barra border border-white/10 flex items-center justify-center text-[color:var(--gm-text-secondary)] font-extrabold text-xs uppercase group-hover:bg-[color:var(--gm-primary)] group-hover:text-white group-hover:border-[color:var(--gm-primary)] transition-colors shadow-none">
+                          <div className="w-7 h-7 rounded-[2px] border border-[#26262a] bg-[#1b1b1e] flex items-center justify-center text-[#8b8b92] font-mono font-bold text-[11px] uppercase group-hover:bg-[#f65a1a] group-hover:text-black group-hover:border-[#f65a1a] transition-colors">
                             {item.client_name.substring(0, 2)}
                           </div>
-                          <span className="text-sm font-semibold text-[color:var(--gm-text)]">
+                          <span className="text-sm font-semibold text-[#f2f2f3]">
                             {item.client_name}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-[color:var(--gm-text-secondary)] font-medium whitespace-nowrap">
+                      <td className="px-6 py-3.5 text-[#8b8b92] font-medium whitespace-nowrap">
                         {item.service_name}
                       </td>
-                      <td className="px-6 py-4 font-bold text-[color:var(--gm-text)] whitespace-nowrap">
+                      <td className="px-6 py-3.5 font-bold text-[#f2f2f3] whitespace-nowrap">
                         {item.total_amount.toLocaleString("pt-BR", {
                           style: "currency",
                           currency: "BRL",
                         })}
                       </td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <td className="px-6 py-3.5 text-right whitespace-nowrap">
                         {getStatusBadge(item.status)}
                       </td>
                     </tr>
@@ -620,68 +607,65 @@ export default function Dashboard() {
       {/* SEPARADOR: AÇÕES RÁPIDAS */}
       <SectionDivider label="Ações rápidas" />
 
-      {/* 5. LOWER SECTION: GRID 2 COLUMNS */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-1 mb-8 sm:mb-12 md:mb-16">
+      {/* 5. LOWER SECTION: GRID 2 COLUMNS (EQUAL SIZES) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-1 mb-8 sm:mb-12 md:mb-16">
         {/* LEFT COLUMN: NOVO CLIENTE */}
-        <div className={`lg:col-span-2 p-6 ${cardBase}`}>
-          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
-          <div className="relative z-10">
-            <div className="flex items-center gap-3.5 mb-5">
-              <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
-                <UserPlus size={20} />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-[color:var(--gm-text)] tracking-tight">
-                  Novo cliente
-                </h2>
-                <p className="text-xs text-[color:var(--gm-text-tertiary)] font-medium">
-                  Cadastre novos contatos rapidamente para emitir orçamentos
-                </p>
-              </div>
-            </div>
-
+        <div className="forge-spec">
+          <div className="forge-spec__bar">
+            <span className="forge-spec__id">06</span>
+            <span className="forge-spec__title">NOVO CLIENTE · CADASTRO</span>
+            <span className="forge-spec__status">RÁPIDO</span>
+          </div>
+          <div className="forge-spec__body">
             <form onSubmit={handleCreateClient} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-[color:var(--gm-text-secondary)] mb-2 block uppercase tracking-wide">
-                  Nome do Cliente
-                </label>
+              <div className="forge-field">
+                <label className="forge-field__label">Nome do Cliente</label>
                 <input
                   type="text"
-                  placeholder="Ex: Studio Marés Design"
+                  placeholder="Ex: Nome ou empresa do cliente"
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
-                  className={inputBase}
+                  className="forge-field__input"
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-[color:var(--gm-text-secondary)] mb-2 block uppercase tracking-wide">
-                  WhatsApp / Telefone
-                </label>
+              <div className="forge-field">
+                <label className="forge-field__label">WhatsApp / Telefone</label>
                 <input
                   type="text"
                   placeholder="(00) 90000-0000"
                   value={newClientPhone}
                   onChange={(e) => setNewClientPhone(formatPhoneBR(e.target.value))}
                   inputMode="tel"
-                  className={inputBase}
+                  className="forge-field__input"
                 />
               </div>
 
               <div className="pt-2">
-                <button type="submit" disabled={savingClient} className="gm-btn h-12 text-xs uppercase tracking-wider shadow-none">
-                  {savingClient ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-                  <span>Cadastrar Cliente</span>
+                <button
+                  type="submit"
+                  disabled={savingClient}
+                  className="forge-btn forge-btn--primary w-full !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-none select-none"
+                >
+                  {savingClient ? (
+                    <Loader2 size={14} className="w-3.5 h-3.5 animate-spin shrink-0" />
+                  ) : (
+                    <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
+                      <Plus size={15} strokeWidth={2.5} className="w-3.5 h-3.5 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
+                    </span>
+                  )}
+                  <span className="text-[11.5px] font-semibold">
+                    Cadastrar Cliente
+                  </span>
                 </button>
               </div>
             </form>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: PALETA DO SISTEMA (CONFORME IMAGEM DE PALETA) */}
-        <div className={`lg:col-span-1 p-6 flex flex-col justify-between ${cardBase}`}>
-          <BorderBeam duration={6} borderWidth={1.2} color="#ffffff" />
-          <div className="relative z-10">
+        {/* RIGHT COLUMN: PALETA DO SISTEMA (EQUAL SIZE TO NOVO CLIENTE) */}
+        <div className={`p-6 flex flex-col justify-between ${cardBase}`} style={glassCardStyle}>
+          <div className="relative z-10 flex flex-col h-full justify-between">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-xl font-bold text-[color:var(--gm-text)] tracking-tight">
@@ -697,7 +681,7 @@ export default function Dashboard() {
             </div>
 
             {/* GRID DE CARDS DA PALETA */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {[
                 { name: "Ink", hex: "#0B0B0C" },
                 { name: "Graphite", hex: "#131315" },

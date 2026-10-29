@@ -15,6 +15,7 @@ export interface SyncNotificationItem {
   amount?: number | string;
   icon?: string;
   sourceDevice?: string;
+  skipInAppToast?: boolean;
 }
 
 export interface SyncBackgroundPayload {
@@ -95,12 +96,16 @@ export function recordAndTriggerNotification(noti: SyncNotificationItem, notifyU
     } catch {}
 
     // 2. Disparar notificação nativa (sistema operacional / service worker / mobile)
+    // Se o tipo for alarme ou tiver skipInAppToast, não gera toast genérico duplo no ToastHost
+    // pois o AlarmToast já cuida da exibição do card rico oficial
+    const shouldShowInAppToast = noti.type !== "alarm" && !noti.skipInAppToast;
+
     triggerRealNotification({
       title: noti.title,
       body: noti.message,
       url: noti.url || "/",
       icon: noti.icon || getUserRegisteredLogo() || undefined,
-      inAppToast: true,
+      inAppToast: shouldShowInAppToast,
     });
   }
 }
@@ -176,9 +181,10 @@ async function sendChannelBroadcast(
  */
 export async function broadcastAppNotification(
   tenantId: string | null | undefined,
-  notiData: Omit<SyncNotificationItem, "id" | "createdAt"> & { id?: string }
+  notiData: Omit<SyncNotificationItem, "id" | "createdAt"> & { id?: string; skipInAppToast?: boolean }
 ) {
   const registeredUserLogo = getUserRegisteredLogo();
+  const isAlarm = notiData.type === "alarm";
   const finalNotification: SyncNotificationItem = {
     id: notiData.id || "notif_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
     title: notiData.title,
@@ -190,6 +196,7 @@ export async function broadcastAppNotification(
     amount: notiData.amount,
     icon: notiData.icon || registeredUserLogo || undefined,
     sourceDevice: DEVICE_SESSION_ID,
+    skipInAppToast: isAlarm || Boolean(notiData.skipInAppToast),
   };
 
   // 1. Grava e dispara localmente

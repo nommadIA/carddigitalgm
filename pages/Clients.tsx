@@ -15,9 +15,10 @@ import ExpandedClientRow from "../components/clients/ExpandedClientRow";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import SafeResponsive from "../components/ui/SafeResponsive";
+import { ForgeSpecCard } from "../components/ui/ForgeSpecCard";
 
 const cardBase =
-  "fora rounded-2xl transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+  "relative rounded-2xl transition-all glass-card cartao-de-vidro fora gm-card apple-glass-refraction backdrop-blur-2xl overflow-hidden";
 const inputBase =
   "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
 
@@ -121,11 +122,11 @@ function VirtualizedClientList({
   softDelete: (id: string) => void;
 }) {
   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-    const base = "w-10 h-10 flex items-center justify-center shrink-0 rounded-xl transition-all duration-200 group barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md cursor-pointer";
-    if (tone === "orange") return `${base} btn-action-edit text-[var(--gm-primary)] hover:border-[var(--gm-primary)] hover:text-white hover:bg-[var(--gm-primary)]`;
-    if (tone === "green") return `${base} btn-whatsapp text-emerald-400 hover:border-emerald-500 hover:text-white hover:bg-emerald-500`;
-    if (tone === "red") return `${base} btn-action-delete text-red-400 hover:border-red-500 hover:text-white hover:bg-red-500`;
-    return `${base} btn-action-neutral text-slate-400 hover:border-white/30 hover:text-white hover:bg-white/10`;
+    const base = "!w-10 !h-10 !min-w-[40px] !max-w-[40px] !p-0 flex items-center justify-center shrink-0 rounded-full transition-all duration-150 group border border-[#1a0e08] shadow-none bg-[#1a0e08] hover:bg-[#b33a0e] cursor-pointer";
+    if (tone === "orange") return `${base} btn-action-edit text-[#f4ecd8] hover:border-[#b33a0e] hover:text-[#f4ecd8] hover:bg-[#b33a0e]`;
+    if (tone === "green") return `${base} btn-whatsapp text-emerald-400 hover:border-emerald-500 hover:text-white hover:bg-emerald-600`;
+    if (tone === "red") return `${base} btn-action-delete text-red-400 hover:border-red-500 hover:text-white hover:bg-red-600`;
+    return `${base} btn-action-neutral text-[#f4ecd8] hover:border-[#b33a0e] hover:text-[#f4ecd8] hover:bg-[#b33a0e]`;
   };
 
   return (
@@ -204,7 +205,7 @@ function VirtualizedClientList({
                         {tab === "LIXEIRA" ? (
                           <>
                             <button className={listBtnClass("green")} title="Restaurar" type="button" onClick={() => restore(c.id)}>
-                              <RotateCcw size={16} />
+                              <RotateCcw size={18} className="shrink-0 text-emerald-400 group-hover:text-white" />
                             </button>
                             <button
                               className={listBtnClass("red")}
@@ -212,13 +213,13 @@ function VirtualizedClientList({
                               type="button"
                               onClick={() => confirmHardDelete(c.id)}
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={18} className="shrink-0 text-red-400 group-hover:text-white" />
                             </button>
                           </>
                         ) : (
                           <>
                             <button className={listBtnClass("orange")} title="Editar" type="button" onClick={() => setEditPageId(c.id)}>
-                              <Pencil size={16} />
+                              <Pencil size={18} className="shrink-0 text-[#f4ecd8] group-hover:text-[#f4ecd8]" />
                             </button>
 
                             <button
@@ -230,7 +231,7 @@ function VirtualizedClientList({
                                 openWhatsApp(wppDigits);
                               }}
                             >
-                              <WhatsAppIcon size={16} />
+                              <WhatsAppIcon size={18} className="shrink-0 text-emerald-400 group-hover:text-white" />
                             </button>
 
                             <button
@@ -244,7 +245,7 @@ function VirtualizedClientList({
                                 setToast(ok ? "Telefone copiado" : "Falha ao copiar");
                               }}
                             >
-                              <Copy size={16} />
+                              <Copy size={18} className="shrink-0 text-[#f4ecd8] group-hover:text-[#f4ecd8]" />
                             </button>
 
                             <button
@@ -258,11 +259,11 @@ function VirtualizedClientList({
                                 setToast(ok ? "E-mail copiado" : "Falha ao copiar");
                               }}
                             >
-                              <Mail size={16} />
+                              <Mail size={18} className="shrink-0 text-[#f4ecd8] group-hover:text-[#f4ecd8]" />
                             </button>
 
                             <button className={listBtnClass("red")} title="Mover para lixeira" type="button" onClick={() => softDelete(c.id)}>
-                              <Trash2 size={16} />
+                              <Trash2 size={18} className="shrink-0 text-red-400 group-hover:text-white" />
                             </button>
                           </>
                         )}
@@ -463,11 +464,9 @@ export default function Clients() {
     alignItems: "center",
     justifyContent: "center",
     fontWeight: 950,
-    color: "rgba(255,255,255,0.9)",
-    background: "rgba(255,255,255,0.04)",
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
-    border: "1px solid rgba(255,255,255,0.12)",
+    color: "#ffffff",
+    background: "#18181b",
+    border: "1px solid rgba(255,255,255,0.08)",
     boxShadow: "none",
     flexShrink: 0,
   };
@@ -484,11 +483,13 @@ export default function Clients() {
         title="Clientes"
         actions={
           <button 
-            className="gm-btn group h-12 px-5 fora rounded-2xl border border-white/10 text-xs sm:text-sm uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 hover:border-[color:var(--gm-primary)] transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md text-white shadow-none" 
+            className="forge-btn forge-btn--primary !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] group cursor-pointer" 
             type="button" 
             onClick={() => setOpenNewPage(true)}
           >
-            <Plus size={18} className="text-[color:var(--gm-primary)] transition-transform duration-300 ease-in-out group-hover:rotate-180" />
+            <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
+              <Plus size={14} strokeWidth={2.5} className="w-3.5 h-3.5 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
+            </span>
             <span>NOVO CLIENTE</span>
           </button>
         }
@@ -496,60 +497,53 @@ export default function Clients() {
         <div className="mb-4 space-y-4">
           <SectionDivider label="Resumo" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
-                    Clientes ativos
-                  </span>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-[color:var(--gm-text)] mt-1.5 tracking-tight group-hover:text-[color:var(--gm-primary)] transition-colors">
-                    {clientSummary.totalAtivos}
-                  </div>
-                </div>
-                <div className="w-11 h-11 rounded-xl barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
-                  <Users size={20} />
-                </div>
-              </div>
-            </div>
+            <ForgeSpecCard
+              id="01"
+              title="CLIENTES ATIVOS"
+              status="TOTAL"
+              statusLive={true}
+              eyebrow="BASE CADASTRADA"
+              figure={clientSummary.totalAtivos}
+              unit="BASE"
+              tags={[
+                { label: "CRM ATIVO", accent: true }
+              ]}
+            />
 
-            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-emerald-500/40`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
-                    Novos nos últimos 30 dias
-                  </span>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1.5 tracking-tight">
-                    {clientSummary.novos30d}
-                  </div>
-                </div>
-                <div className="w-11 h-11 rounded-xl barra border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-none">
-                  <TrendingUp size={20} />
-                </div>
-              </div>
-            </div>
+            <ForgeSpecCard
+              id="02"
+              title="NOVOS · 30 DIAS"
+              status="MÊS"
+              statusLive={true}
+              eyebrow="CRESCIMENTO RECENTE"
+              figure={clientSummary.novos30d}
+              unit="NOVOS"
+              tags={[
+                { label: `+${clientSummary.novos30d} CADASTRADOS`, accent: true }
+              ]}
+            />
 
-            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-blue-500/40`}>
-              <div className="flex items-start justify-between mb-1">
-                <span className="text-xs font-bold text-[color:var(--gm-text-tertiary)] uppercase tracking-wider block">
-                  Cadastros por mês
-                </span>
-                <div className="w-8 h-8 rounded-lg barra border border-blue-500/25 text-blue-400 flex items-center justify-center shrink-0 shadow-none">
-                  <BarChart3 size={16} />
-                </div>
+            <div className="forge-spec">
+              <div className="forge-spec__bar">
+                <span className="forge-spec__id">03</span>
+                <span className="forge-spec__title">CADASTROS POR MÊS</span>
+                <span className="forge-spec__status">HISTÓRICO</span>
               </div>
-              <div className="h-20 relative overflow-hidden w-full">
-                <SafeResponsive height={80}>
-                  <BarChart data={clientSummary.chartData} barSize={16}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" stroke="#666" fontSize={9} tickLine={false} axisLine={false} />
-                    <YAxis hide allowDecimals={false} />
-                    <Tooltip
-                      cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                      contentStyle={{ backgroundColor: "rgba(18, 18, 24, 0.60)", backdropFilter: "blur(16px) saturate(180%)", WebkitBackdropFilter: "blur(16px) saturate(180%)", border: "1px solid rgba(255, 255, 255, 0.12)", borderRadius: "12px", color: "#fff", fontSize: 12, boxShadow: "none" }}
-                    />
-                    <Bar dataKey="value" name="Clientes" radius={[4, 4, 0, 0]} fill="var(--gm-primary)" />
-                  </BarChart>
-                </SafeResponsive>
+              <div className="forge-spec__body !py-3">
+                <div className="h-20 relative overflow-hidden w-full">
+                  <SafeResponsive height={80}>
+                    <BarChart data={clientSummary.chartData} barSize={16}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="name" stroke="#666" fontSize={9} tickLine={false} axisLine={false} />
+                      <YAxis hide allowDecimals={false} />
+                      <Tooltip
+                        cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                        contentStyle={{ backgroundColor: "#141418", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "4px", color: "#fff", fontSize: 12, boxShadow: "none" }}
+                      />
+                      <Bar dataKey="value" name="Clientes" radius={[2, 2, 0, 0]} fill="#f65a1a" />
+                    </BarChart>
+                  </SafeResponsive>
+                </div>
               </div>
             </div>
           </div>
@@ -560,7 +554,7 @@ export default function Clients() {
           <SectionDivider label="Filtros" />
           
           {/* Tabs Ativos / Lixeira - Padrão Cápsulas Orçamentos */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div className="grid grid-cols-2 gap-2 w-full">
             {[
               { key: "ATIVOS", label: "ATIVOS" },
               { key: "LIXEIRA", label: "LIXEIRA" },
@@ -571,10 +565,10 @@ export default function Clients() {
                   key={item.key}
                   type="button"
                   onClick={() => setTab(item.key as any)}
-                  className={`gm-filter-tab fora snap-start shrink-0 w-[110px] h-8 rounded-full text-[11px] font-extrabold tracking-tight transition-all whitespace-nowrap flex items-center justify-center border cursor-pointer ${
+                  className={`gm-filter-tab fora w-full h-9 rounded-xl text-[11px] sm:text-xs font-black tracking-tight transition-all uppercase flex items-center justify-center border cursor-pointer ${
                     active
-                      ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none"
-                      : "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200"
+                      ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none font-black"
+                      : "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white font-bold"
                   }`}
                 >
                   {item.label}
@@ -659,13 +653,11 @@ export default function Clients() {
             transform: "translateX(-50%)",
             zIndex: 99999,
             padding: "10px 18px",
-            borderRadius: 14,
-            background: "rgba(18, 18, 24, 0.50)",
+            borderRadius: 12,
+            background: "#18181b",
             border: "1px solid rgba(255,255,255,0.12)",
-            color: "rgba(255,255,255,0.92)",
-            backdropFilter: "blur(16px) saturate(180%)",
-            WebkitBackdropFilter: "blur(16px) saturate(180%)",
-            boxShadow: "none",
+            color: "#ffffff",
+            boxShadow: "0 8px 30px rgba(0,0,0,0.5)",
             fontWeight: 800,
             fontSize: 13,
           }}

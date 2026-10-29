@@ -13,11 +13,11 @@ import React, {
 import { cn } from "../../lib/utils";
 
 const inputWrapperClassName = cn(
-  "bg-[rgba(16,20,26,0.45)] backdrop-blur-md border border-white/12 has-[:focus-visible]:border-[var(--gm-primary)]/80 has-[:focus-visible]:shadow-[0_0_12px_rgba(255,105,0,0.25)] relative w-full rounded-2xl p-3.5 transition-all duration-200",
+  "bg-[#131315] border border-[#26262A] has-[:focus-visible]:border-[#F65A1A] has-[:focus-visible]:ring-1 has-[:focus-visible]:ring-[#F65A1A]/30 relative w-full rounded-md p-3 transition-all duration-150 text-[#F2F2F3]",
 );
 
 const inputClassName =
-  "w-full bg-transparent outline-none placeholder:text-white/40 text-white font-medium";
+  "w-full bg-transparent outline-none placeholder:text-[#8B8B92] text-[#F2F2F3] font-medium";
 
 export type InputFieldProps = ComponentPropsWithoutRef<"input"> & {
   wrapperClassName?: string;

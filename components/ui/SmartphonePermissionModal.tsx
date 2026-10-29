@@ -333,7 +333,7 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
     <AnimatePresence>
       <div
         id="apple-permission-overlay"
-        className="fixed inset-0 z-[1000002] flex items-center justify-center p-3 sm:p-4 bg-black/70"
+        className="fixed inset-0 z-[1000002] flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xl"
         style={{ zIndex: 1000002 }}
       >
         {/* Backdrop click dismiss */}
@@ -346,15 +346,8 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl gm-push-glass-card border border-white/[0.18] rounded-[32px] p-5 sm:p-7 shadow-[0_30px_90px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.20)] flex flex-col gap-5 text-white overflow-hidden font-sans select-none z-10 max-h-[92vh] overflow-y-auto no-scrollbar"
+          className="relative w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl rounded-2xl p-5 sm:p-7 border border-white/10 fora gm-modal apple-glass-refraction shadow-none overflow-hidden flex flex-col gap-5 text-white font-sans select-none z-10 max-h-[92vh] overflow-y-auto no-scrollbar"
         >
-          {/* Luz de topo estilo specularity Apple */}
-          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
-
-          {/* Brilho de fundo sutil */}
-          <div className="absolute -top-20 -right-20 w-48 h-48 bg-[var(--gm-primary,#FE540B)]/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-orange-600/10 rounded-full blur-3xl pointer-events-none" />
-
           {/* CABEÇALHO */}
           <div className="flex items-center justify-between shrink-0 pb-3.5 border-b border-white/[0.08] relative">
             <div className="flex items-center gap-3">
@@ -449,7 +442,7 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
                       ? `border-[var(--gm-primary,#FE540B)]/60 shadow-[0_0_20px_rgba(254,84,11,0.25)] ring-1 ring-[var(--gm-primary,#FE540B)]/40`
                       : isGranted
                       ? `border-emerald-500/30 hover:border-emerald-500/50`
-                      : `border-white/[0.07] hover:border-white/20`
+                      : `border-white/10 hover:border-white/20 bg-white/[0.03] backdrop-blur-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]`
                   }`}
                 >
                   {/* Linha indicadora de atividade na borda lateral */}

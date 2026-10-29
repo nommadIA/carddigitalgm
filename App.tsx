@@ -24,16 +24,29 @@ import PublicBio from './pages/PublicBio';
 import AuthCallback from './pages/AuthCallback';
 import UpdatePassword from './pages/UpdatePassword';
 import PixCopy from './pages/PixCopy';
+import Plans from './pages/Plans';
 
 import DevicePinGate from './components/auth/DevicePinGate';
 
 const PageLoader = () => null;
 
+const BrandedLoader = () => (
+  <div className="h-screen w-full bg-[#08090d] flex flex-col items-center justify-center gap-4 text-white select-none">
+    <div className="w-12 h-12 rounded-2xl bg-[#FE540B] flex items-center justify-center font-black text-white text-xl shadow-lg shadow-[#FE540B]/30 animate-pulse">
+      GM
+    </div>
+    <div className="flex items-center gap-2.5 text-xs font-bold text-slate-300">
+      <Loader2 size={16} className="animate-spin text-[#FE540B]" />
+      <span>Carregando CardDigital GM...</span>
+    </div>
+  </div>
+);
+
 const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
   const { user, checked } = useAuth();
 
   if (!checked) {
-    return <div className="h-screen w-full bg-[var(--gm-bg)]" />;
+    return <BrandedLoader />;
   }
 
   if (!user) return <Navigate to="/login" replace />;
@@ -51,7 +64,7 @@ const PrivateRoutes = () => {
           initial={{ opacity: 0.9 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.08, ease: [0.16, 1, 0.3, 1] }}
-          className="grid grid-cols-1 w-full max-w-full p-4 sm:px-6 sm:py-6 md:px-8 md:py-8 gap-4 sm:gap-6 box-border will-change-[opacity]"
+          className="grid grid-cols-1 w-full max-w-full gap-4 sm:gap-6 box-border will-change-[opacity]"
         >
           <Suspense fallback={<PageLoader />}>
             <Routes location={location}>
@@ -63,6 +76,7 @@ const PrivateRoutes = () => {
               <Route path="/notes" element={<RouteBoundary title="Anotações"><Notes /></RouteBoundary>} />
               <Route path="/financial" element={<RouteBoundary title="Financeiro"><Financial /></RouteBoundary>} />
               <Route path="/minha-bio" element={<RouteBoundary title="Minha Bio"><Bio /></RouteBoundary>} />
+              <Route path="/planos" element={<RouteBoundary title="Planos"><Plans /></RouteBoundary>} />
               <Route path="/configuracoes" element={<RouteBoundary title="Configurações"><Configuracoes /></RouteBoundary>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
@@ -127,7 +141,7 @@ const AppRoutes = () => {
 
   // Wait for auth to be fully initialized before making routing decisions or redirecting
   if (!checked) {
-    return <div className="h-screen w-full bg-[#050507]" />;
+    return <BrandedLoader />;
   }
 
   // If a user is not logged in and opens the root, redirect directly to the application login page
@@ -141,7 +155,7 @@ const AppRoutes = () => {
   const reserved = [
     'pix', 'login', 'register', 'bio', 'auth', 'update-password', 
     'budgets', 'clients', 'expenses', 'market', 'notes', 'financial', 
-    'minha-bio', 'configuracoes', 'dashboard'
+    'minha-bio', 'configuracoes', 'dashboard', 'planos'
   ];
 
   if (firstSegment && !reserved.includes(firstSegment)) {
