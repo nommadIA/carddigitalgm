@@ -498,7 +498,12 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
     const rgb = hexToRgb(primary);
     if (rgb) {
       root.style.setProperty("--gm-primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+      root.style.setProperty("--color-ember-halo", `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.24)`);
     }
+
+    // Garante sincronia com Forge UI Spec e Botões
+    root.style.setProperty("--color-accent", primary);
+    root.style.setProperty("--color-ember", primary);
 
     // Calcula e aplica a cor de contraste para o texto sobre o primário
     const contrast = getContrastColor(primary);
@@ -583,7 +588,10 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
   let btnIcon = savedBtnDark?.icon || s.button_icon || primary || "#FE540B";
 
   root.setAttribute("data-button-style", btnStyle);
-  if (btnBg) root.style.setProperty("--gm-btn-bg", btnBg);
+  if (btnBg) {
+    root.style.setProperty("--gm-btn-bg", btnBg);
+    root.style.setProperty("--color-ember", btnBg);
+  }
   if (btnBorder) root.style.setProperty("--gm-btn-border", btnBorder);
   if (btnText) root.style.setProperty("--gm-btn-text", btnText);
   else root.style.removeProperty("--gm-btn-text");

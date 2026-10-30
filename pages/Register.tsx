@@ -45,6 +45,10 @@ export default function Register() {
     try {
       await signUpWithEmail(email, password, fullName);
       localStorage.setItem("gm.isNewUser", "true");
+      try {
+        const { registerOrUpdateUser } = await import("../lib/adminUsersService");
+        await registerOrUpdateUser({ email, name: fullName });
+      } catch {}
       setTimeout(() => navigate("/login"), 800);
     } catch (err: any) {
       let msg = err?.message || "Erro ao criar conta.";

@@ -40,8 +40,8 @@
   --color-text: #f2f2f3;
   --color-text-muted: #8b8b92;
   --color-ash-soft: #5a5a60;
-  --color-accent: #f65a1a;
-  --color-ember-halo: rgba(246, 90, 26, 0.24);
+  --color-accent: var(--gm-primary, #FE540B);
+  --color-ember-halo: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.24);
   --space-2xs: 4px;
   --space-xs: 8px;
   --space-md: 16px;
@@ -111,7 +111,7 @@
   --color-border: #26262a;
   --color-text: #f2f2f3;
   --color-text-muted: #8b8b92;
-  --color-accent: #f65a1a;
+  --color-accent: var(--gm-primary, #FE540B);
   --color-edge-highlight: rgba(255, 255, 255, 0.03);
   --space-xs: 8px;
   --space-sm: 12px;
@@ -280,7 +280,7 @@
   --color-border: #26262a;
   --color-text: #f2f2f3;
   --color-text-muted: #8b8b92;
-  --color-accent: #f65a1a;
+  --color-accent: var(--gm-primary, #FE540B);
   --space-sm: 12px;
   --space-lg: 24px;
   --duration-fast: 120ms;
@@ -806,11 +806,11 @@ a[class*="bg-[#F65A1A]"],
 a[class*="bg-[#f65a1a]"],
 a[class*="bg-[var(--gm-primary)]"] {
   --color-ink: #0b0b0c;
-  --color-ember: #f65a1a;
-  --color-spark: #ff7a38;
+  --color-ember: var(--gm-btn-bg, var(--gm-primary, #FE540B));
+  --color-spark: var(--gm-accent, var(--gm-primary, #ff7a38));
   --color-text: #f2f2f3;
   --color-border: #26262a;
-  --color-ember-halo: rgba(246, 90, 26, 0.24);
+  --color-ember-halo: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.24);
   --radius-md: 4px;
   --space-xs: 8px;
   --space-md: 16px;
@@ -875,10 +875,10 @@ a[class*="bg-[#f65a1a]"]:hover,
 a[class*="bg-[var(--gm-primary)]"]:hover,
 .forge-btn--primary:focus-visible,
 .forge-btn-primary:focus-visible {
-  background: #FE540B !important;
-  background-color: #FE540B !important;
-  border-color: rgba(255, 170, 110, 0.65) !important;
-  box-shadow: 0 0 16px rgba(254, 84, 11, 0.6), 0 0 30px rgba(254, 84, 11, 0.28) !important;
+  background: var(--gm-primary, #FE540B) !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  border-color: var(--gm-accent, rgba(255, 170, 110, 0.65)) !important;
+  box-shadow: 0 0 16px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.6), 0 0 30px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.28) !important;
   color: #ffffff !important;
 }
 
@@ -981,8 +981,8 @@ button.primary:active,
 .gm-btn-primary:active,
 .gm-dash-primary-btn:active {
   transform: scale(0.98) !important;
-  background: #FE540B !important;
-  box-shadow: 0 0 20px rgba(254, 84, 11, 0.75), 0 0 36px rgba(254, 84, 11, 0.35) !important;
+  background: var(--gm-primary, #FE540B) !important;
+  box-shadow: 0 0 20px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.75), 0 0 36px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.35) !important;
 }
 
 .forge-btn--primary:active svg,
@@ -8569,9 +8569,9 @@ html.gm-light button.gm-floating-save-btn {
   justify-content: center !important;
   overflow: visible !important;
   border-radius: 4px !important;
-  background-color: #f65a1a !important;
-  background: #f65a1a !important;
-  color: #0b0b0c !important;
+  background-color: var(--gm-btn-bg, var(--gm-primary, #FE540B)) !important;
+  background: var(--gm-btn-bg, var(--gm-primary, #FE540B)) !important;
+  color: var(--gm-btn-text, #0b0b0c) !important;
   border: 1px solid transparent !important;
   box-shadow: none !important;
   font-family: inherit !important;
@@ -10483,12 +10483,12 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 /* 5. Estilos dos Botões Grade e Listas (FORGE UI SYSTEM) */
 /* 5. Estilos dos Botões Grade e Listas (FORGE UI SYSTEM - PADRÃO OFICIAL) */
 .gm-viewmode-btn-active {
-  background: var(--color-ember, #f65a1a) !important;
-  background-color: var(--color-ember, #f65a1a) !important;
+  background: var(--color-ember, var(--gm-btn-bg, var(--gm-primary, #FE540B))) !important;
+  background-color: var(--color-ember, var(--gm-btn-bg, var(--gm-primary, #FE540B))) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  color: #0b0b0c !important;
-  border: 1px solid rgba(254, 84, 11, 0.35) !important;
+  color: var(--gm-btn-text, #0b0b0c) !important;
+  border: 1px solid var(--gm-primary, rgba(254, 84, 11, 0.35)) !important;
   border-radius: 4px !important;
   box-shadow: none !important;
   font-family: inherit !important;
@@ -10506,25 +10506,25 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
     transform 120ms ease !important;
 }
 
-/* Estado normal: Ícone Laranja Claro (#FF7A38), Texto Preto (#0B0B0C) */
+/* Estado normal: Ícone dinâmico */
 .gm-viewmode-btn-active svg {
-  color: #FF7A38 !important;
-  stroke: #FF7A38 !important;
+  color: currentColor !important;
+  stroke: currentColor !important;
   transition: color 140ms ease, stroke 140ms ease !important;
 }
 
 .gm-viewmode-btn-active span {
-  color: #0b0b0c !important;
+  color: inherit !important;
   transition: color 140ms ease !important;
 }
 
-/* Hover ou Clique: "BOTÃO ACENDE" - Fundo Neon (#FE540B), Aura Glow, Ícone e Texto Brancos */
+/* Hover ou Clique: "BOTÃO ACENDE" - Fundo Neon Primário, Aura Glow, Ícone e Texto Brancos */
 .gm-viewmode-btn-active:hover,
 .gm-viewmode-btn-active:focus-visible {
-  background: #FE540B !important;
-  background-color: #FE540B !important;
-  border-color: rgba(255, 170, 110, 0.65) !important;
-  box-shadow: 0 0 16px rgba(254, 84, 11, 0.6), 0 0 30px rgba(254, 84, 11, 0.28) !important;
+  background: var(--gm-primary, #FE540B) !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  border-color: var(--gm-accent, rgba(255, 170, 110, 0.65)) !important;
+  box-shadow: 0 0 16px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.6), 0 0 30px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.28) !important;
   color: #ffffff !important;
 }
 
@@ -10543,8 +10543,8 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 
 .gm-viewmode-btn-active:active {
   transform: scale(0.98) !important;
-  background: #FE540B !important;
-  box-shadow: 0 0 20px rgba(254, 84, 11, 0.75), 0 0 36px rgba(254, 84, 11, 0.35) !important;
+  background: var(--gm-primary, #FE540B) !important;
+  box-shadow: 0 0 20px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.75), 0 0 36px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.35) !important;
 }
 
 /* BOTÃO INATIVO (LISTAS): Fundo grafite, borda discreta, ícone laranja claro, acende no hover */
@@ -11535,7 +11535,7 @@ button.forge-tabs__tab.is-active::after {
   right: 0 !important;
   bottom: -1px !important;
   height: 4px !important;
-  background: #f65a1a !important;
+  background: var(--color-accent, var(--gm-primary, #FE540B)) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
 }
@@ -11545,7 +11545,7 @@ button.forge-tabs__tab.is-active::after {
    - Sólido Graphite #0B0B0C / #131315
    - Micro-borda hairline #26262A
    - Itens de menu com 4px border-radius
-   - Ativo com highlight #18181B + indicador ember #F65A1A
+   - Ativo com highlight #18181B + indicador ember dinâmico
    ========================================================= */
 aside.gm-sidebar,
 .sidebar.gm-sidebar {
@@ -11591,12 +11591,49 @@ aside.gm-sidebar .sidebar-btn:hover:not(.active),
   bottom: 6px !important;
   width: 3px !important;
   border-radius: 0 2px 2px 0 !important;
-  background: #F65A1A !important;
+  background: var(--gm-primary, #FE540B) !important;
   display: none !important;
 }
 
 .sidebar-btn.active .sidebar-window-indicator {
   display: block !important;
+}
+
+/* =========================================================
+   FORGE UI - FORÇA CONSISTÊNCIA DE TEMA GLOBAL
+   ========================================================= */
+.forge-spec__id {
+  background: var(--gm-primary, var(--color-accent, #FE540B)) !important;
+  color: var(--gm-primary-foreground, #0b0b0c) !important;
+}
+
+.forge-spec__status--live {
+  color: var(--gm-primary, var(--color-accent, #FE540B)) !important;
+  border-color: var(--gm-primary, var(--color-accent, #FE540B)) !important;
+}
+
+.forge-spec__tag--accent {
+  color: var(--gm-primary, var(--color-accent, #FE540B)) !important;
+  border-color: var(--gm-primary, var(--color-accent, #FE540B)) !important;
+}
+
+/* Impede inputs aninhados de receber borda dupla */
+.forge-field input,
+.forge-clean-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Garante legibilidade do botão de login mesmo desabilitado */
+button:disabled.login-submit-btn,
+button[disabled].login-submit-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #a1a1aa !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
 }
 
 

@@ -425,6 +425,12 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     setVar("--gm-btn-bg", colors.primary);
     setVar("--gm-btn-border", colors.primary);
     setVar("--gm-btn-icon", colors.primary);
+    setVar("--color-accent", colors.primary);
+    setVar("--color-ember", colors.primary);
+    setVar("--color-spark", colors.accent || colors.primary);
+    if (rgbPrimary) {
+      setVar("--color-ember-halo", `rgba(${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}, 0.24)`);
+    }
 
     // Atualiza a meta tag do navegador móvel
     const metaTheme = document.querySelector('meta[name="theme-color"]');

@@ -1672,11 +1672,11 @@ export default function Budgets() {
         {/* CÁPSULA 1: ORÇAMENTOS (X) */}
         <div className="w-full px-4 py-3 min-h-[44px] rounded-[4px] bg-[#131315] border border-[#26262a] text-[#f2f2f3] font-semibold flex items-center justify-between select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
           <div className="flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-[1px] bg-[#f65a1a]" />
-            <FileText size={16} className="text-[#f65a1a]" />
+            <span className="w-2 h-2 rounded-[1px] bg-[var(--gm-primary,#FE540B)]" />
+            <FileText size={16} className="text-[var(--gm-primary,#FE540B)]" />
             <span className="text-xs font-semibold text-[#f2f2f3] tracking-wider uppercase font-mono">Orçamentos</span>
           </div>
-          <span className="px-2.5 py-0.5 rounded-[2px] bg-[#f65a1a]/15 border border-[#f65a1a]/30 text-[#f65a1a] font-mono font-bold text-xs">
+          <span className="px-2.5 py-0.5 rounded-[2px] bg-[var(--gm-primary,#FE540B)]/15 border border-[var(--gm-primary,#FE540B)]/30 text-[var(--gm-primary,#FE540B)] font-mono font-bold text-xs">
             {filtered.length}
           </span>
         </div>
@@ -1696,7 +1696,7 @@ export default function Budgets() {
           title={selectedMonth !== "TODOS" ? "Clique para exibir todos os orçamentos" : "Filtrado por mês"}
         >
           <div className="flex items-center gap-2.5">
-            <Calendar size={16} className="text-[#f65a1a]" />
+            <Calendar size={16} className="text-[var(--gm-primary,#FE540B)]" />
             <span className="text-xs font-semibold text-[#8b8b92] uppercase font-mono tracking-wider">
               Mês:{" "}
               <strong className="text-[#f2f2f3] font-bold">
@@ -1706,7 +1706,7 @@ export default function Budgets() {
           </div>
 
           {selectedMonth !== "TODOS" ? (
-            <span className="text-xs font-mono font-bold text-[#f65a1a] px-2.5 py-0.5 rounded-[2px] bg-[#f65a1a]/15 border border-[#f65a1a]/30 hover:bg-[#f65a1a]/25 transition-colors">
+            <span className="text-xs font-mono font-bold text-[var(--gm-primary,#FE540B)] px-2.5 py-0.5 rounded-[2px] bg-[var(--gm-primary,#FE540B)]/15 border border-[var(--gm-primary,#FE540B)]/30 hover:bg-[var(--gm-primary,#FE540B)]/25 transition-colors">
               VER TODOS ({totalInCurrentTab})
             </span>
           ) : (

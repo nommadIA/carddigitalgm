@@ -127,23 +127,49 @@ export default function Login() {
     logo: string;
     companyName: string;
     hasLoggedInOnce: boolean;
+    rememberCredentials: boolean;
   }>(() => {
     try {
-      const storedEmail = localStorage.getItem("gm_last_email") || localStorage.getItem("gm.last_email") || "";
+      // Limpa resíduos legados de nommadart caso existam no navegador
+      const lastEmail = (localStorage.getItem("gm_last_email") || localStorage.getItem("gm.last_email") || "").trim();
+      if (lastEmail.toLowerCase().includes("nommadart")) {
+        localStorage.removeItem("gm_last_email");
+        localStorage.removeItem("gm.last_email");
+        localStorage.removeItem("gm_last_user_logo");
+        localStorage.removeItem("gm_last_user_company");
+        localStorage.removeItem("gm_remember_credentials");
+        localStorage.removeItem("gm_has_logged_in_once");
+        return {
+          email: "",
+          logo: "",
+          companyName: "",
+          hasLoggedInOnce: false,
+          rememberCredentials: false,
+        };
+      }
+
+      const storedEmail = lastEmail;
       const storedLogo = localStorage.getItem("gm_last_user_logo") || "";
       const storedCompany = localStorage.getItem("gm_last_user_company") || "";
-      const hasOnce = localStorage.getItem("gm_has_logged_in_once") === "true" || Boolean(storedEmail);
+      const hasOnce = localStorage.getItem("gm_has_logged_in_once") === "true";
+      const remember = localStorage.getItem("gm_remember_credentials") === "true";
+
+      // A prévia só é exibida se o usuário JÁ fez login com sucesso neste navegador E deixou salvo
+      const isValidSaved = Boolean(hasOnce && remember && storedEmail);
+
       return {
-        email: storedEmail,
-        logo: storedLogo,
-        companyName: storedCompany,
+        email: isValidSaved ? storedEmail : "",
+        logo: isValidSaved ? storedLogo : "",
+        companyName: isValidSaved ? storedCompany : "",
         hasLoggedInOnce: hasOnce,
+        rememberCredentials: remember,
       };
     } catch {
-      return { email: "", logo: "", companyName: "", hasLoggedInOnce: false };
+      return { email: "", logo: "", companyName: "", hasLoggedInOnce: false, rememberCredentials: false };
     }
   });
 
+  const [rememberMe, setRememberMe] = useState<boolean>(() => Boolean(savedProfile.rememberCredentials ?? true));
   const [email, setEmail] = useState(() => savedProfile.email || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -154,10 +180,8 @@ export default function Login() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
 
-  // Estados da proteção por PIN
-  const [protectWithPin, setProtectWithPin] = useState(false);
+  // Estados da verificação por PIN (quando ativado em Configurações)
   const [showPinVerifyModal, setShowPinVerifyModal] = useState(false);
-  const [showPinSetupModal, setShowPinSetupModal] = useState(false);
 
   // Background oficial do App e Efeitos Dinâmicos de PIN e Segurança
   const [isMobile, setIsMobile] = useState<boolean>(() => isMobileDevice());
@@ -203,8 +227,8 @@ export default function Login() {
   }, [email]);
 
   useEffect(() => {
-    if (checked && user && !showPinSetupModal) navigate("/", { replace: true });
-  }, [checked, user, showPinSetupModal, navigate]);
+    if (checked && user) navigate("/", { replace: true });
+  }, [checked, user, navigate]);
 
   const canSubmit = useMemo(
     () => {
@@ -338,43 +362,33 @@ export default function Login() {
       await signInWithPassword(email.trim(), password);
       setSessionUnlocked(true);
 
-      // Salva dados de login para customizar a tela a partir da primeira vez
+      // Salva dados de login SOMENTE se o usuário marcou para salvar credenciais
       try {
-        localStorage.setItem("gm_has_logged_in_once", "true");
-        localStorage.setItem("gm_last_email", email.trim());
-        localStorage.setItem("gm.last_email", email.trim());
-        if (settings?.company_logo_url) {
-          localStorage.setItem("gm_last_user_logo", settings.company_logo_url);
-        }
-        if (settings?.company_name) {
-          localStorage.setItem("gm_last_user_company", settings.company_name);
+        if (rememberMe) {
+          localStorage.setItem("gm_has_logged_in_once", "true");
+          localStorage.setItem("gm_remember_credentials", "true");
+          localStorage.setItem("gm_last_email", email.trim());
+          localStorage.setItem("gm.last_email", email.trim());
+          if (settings?.company_logo_url) {
+            localStorage.setItem("gm_last_user_logo", settings.company_logo_url);
+          }
+          if (settings?.company_name) {
+            localStorage.setItem("gm_last_user_company", settings.company_name);
+          }
+        } else {
+          localStorage.removeItem("gm_last_email");
+          localStorage.removeItem("gm.last_email");
+          localStorage.removeItem("gm_last_user_logo");
+          localStorage.removeItem("gm_last_user_company");
+          localStorage.removeItem("gm_remember_credentials");
         }
       } catch {}
 
-      // Se o usuário solicitou proteger com PIN e ainda não tem
-      if (protectWithPin && !isPinActiveForUser) {
-        setShowPinSetupModal(true);
-        return;
-      }
-
       navigate("/", { replace: true });
     } catch (err: any) {
-      // Se for a conta do Administrador Master (gmedificação@gmail.com / gmedificacao@gmail.com)
-      if (isUserAdminEmail(email.trim())) {
-        await loginAsMasterAdmin();
-        setSessionUnlocked(true);
-        try {
-          localStorage.setItem("gm_has_logged_in_once", "true");
-          localStorage.setItem("gm_last_email", "gmedificacao@gmail.com");
-          localStorage.setItem("gm.last_email", "gmedificacao@gmail.com");
-        } catch {}
-        navigate("/", { replace: true });
-        return;
-      }
-
       let msg = err?.message || "Erro ao conectar.";
       
-      if (msg.includes("Invalid login credentials")) {
+      if (msg.includes("Invalid login credentials") || msg.includes("invalid_grant")) {
         msg = "E-mail ou senha incorretos.";
       } else if (msg.includes("Email not confirmed")) {
         msg = "Por favor, confirme seu e-mail antes de fazer login.";
@@ -386,23 +400,15 @@ export default function Login() {
     }
   }
 
-  const handleDirectAdminLogin = async () => {
-    setIsLoading(true);
+  const handleDirectAdminLogin = () => {
+    setEmail("gmedificacao@gmail.com");
+    setPassword("");
     setErrorMessage("");
-    try {
-      await loginAsMasterAdmin();
-      setSessionUnlocked(true);
-      try {
-        localStorage.setItem("gm_has_logged_in_once", "true");
-        localStorage.setItem("gm_last_email", "gmedificacao@gmail.com");
-        localStorage.setItem("gm.last_email", "gmedificacao@gmail.com");
-      } catch {}
-      navigate("/", { replace: true });
-    } catch {
-      setErrorMessage("Erro ao iniciar sessão administrativa master.");
-    } finally {
-      setIsLoading(false);
-    }
+    setSuccessMessage("Conta Administrador Master (gmedificacao@gmail.com) selecionada. Digite sua senha para entrar.");
+    setTimeout(() => {
+      const pwdInput = document.getElementById("login-password") as HTMLInputElement;
+      if (pwdInput) pwdInput.focus();
+    }, 150);
   };
 
   const handleGoogleLogin = async () => {
@@ -421,11 +427,20 @@ export default function Login() {
   const handleSwitchAccount = () => {
     setEmail("");
     setPassword("");
+    try {
+      localStorage.removeItem("gm_last_email");
+      localStorage.removeItem("gm.last_email");
+      localStorage.removeItem("gm_last_user_logo");
+      localStorage.removeItem("gm_last_user_company");
+      localStorage.removeItem("gm_remember_credentials");
+      localStorage.removeItem("gm_has_logged_in_once");
+    } catch {}
     setSavedProfile({
       email: "",
       logo: "",
       companyName: "",
       hasLoggedInOnce: false,
+      rememberCredentials: false,
     });
   };
 
@@ -464,12 +479,6 @@ export default function Login() {
     await executeActualLogin();
   };
 
-  const handlePinSetupSuccess = () => {
-    setShowPinSetupModal(false);
-    setSessionUnlocked(true);
-    navigate("/", { replace: true });
-  };
-
   if (!checked) {
     return (
       <div className="gm-layout flex-col items-center justify-center p-6 min-h-screen">
@@ -485,6 +494,15 @@ export default function Login() {
 
   const effectiveLogo = savedProfile.logo || settings?.company_logo_url;
   const isReturningUser = savedProfile.hasLoggedInOnce;
+
+  // A prévia de avatares só será mostrada para o usuário que já fez cadastro e login uma vez, e deixou suas credenciais salvas no navegador
+  const showSavedAvatarPreview = Boolean(
+    savedProfile.hasLoggedInOnce &&
+    savedProfile.rememberCredentials &&
+    savedProfile.email &&
+    savedProfile.email.trim().length > 0 &&
+    !isForgotPassword
+  );
 
   return (
     <div 
@@ -535,23 +553,19 @@ export default function Login() {
       {/* LADO ESQUERDO: Painel de Credenciais Minimalista Forge        */}
       {/* ------------------------------------------------------------- */}
       <div className="w-full lg:w-[480px] xl:w-[540px] 2xl:w-[580px] h-full flex flex-col justify-between shrink-0 bg-[#0c0d12]/95 lg:bg-[#0c0d12] lg:border-r border-white/10 relative z-20 overflow-y-auto px-6 sm:px-10 lg:px-12 xl:px-14 py-8 sm:py-10 shadow-2xl">
-        {/* Topo: Logo & Identidade */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
+        {/* Topo: LOGO OFICIAL DO APP Card Digital GM (Sem avatar e sem área do assinante) */}
+        <div className="flex items-center justify-between mb-5 sm:mb-7">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FE540B] to-[#FF7A2A] flex items-center justify-center font-black text-white text-sm shadow-md shadow-[#FE540B]/20">
-              {effectiveLogo ? (
-                <img src={effectiveLogo} alt="Logo" className="w-full h-full object-cover rounded-xl" />
-              ) : (
-                <span>GM</span>
-              )}
+            <div className="w-10 h-10 rounded-xl bg-[#FE540B] flex items-center justify-center font-black text-white text-base shadow-lg shadow-[#FE540B]/30 shrink-0">
+              GM
             </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-white text-base tracking-tight leading-none">
-                {savedProfile.companyName || settings?.company_name || "CardDigital GM"}
-              </span>
-              <span className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase mt-1">
-                Área do assinante
-              </span>
+            <div className="flex flex-col min-w-0">
+              <div className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-1 leading-tight">
+                CardDigital <span className="text-[#FE540B] font-black" style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}>GM</span>
+              </div>
+              <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
+                Plataforma de Orçamentos
+              </div>
             </div>
           </div>
 
@@ -561,28 +575,32 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Centro: Formulário com Avatar e Login Minimalista */}
+        {/* Centro: Formulário de Login */}
         <div className="my-auto py-2 max-w-[420px] w-full mx-auto">
           <div className="mb-5">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Bem-vindo de volta
+              {showSavedAvatarPreview ? "Bem-vindo de volta" : "Entrar na plataforma"}
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400 mt-1.5 font-normal">
-              Entre na sua conta para continuar criando.
+              {showSavedAvatarPreview
+                ? "Entre na sua conta para continuar criando."
+                : "Digite seu e-mail e senha para acessar o sistema."}
             </p>
           </div>
 
-          {/* AVATAR DO USUÁRIO SALVO (Exibição refinada Forge) */}
-          {savedProfile.email && (
+          {/* AVATAR DO USUÁRIO SALVO: Exibido APENAS se já fez login antes e deixou credenciais salvas */}
+          {showSavedAvatarPreview && (
             <div className="mb-4 p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-3 shadow-inner">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative shrink-0">
                   <div className="w-11 h-11 rounded-xl overflow-hidden bg-black/60 border border-[var(--gm-primary)]/40 flex items-center justify-center shadow-md">
-                    {effectiveLogo ? (
-                      <img src={effectiveLogo} alt="Avatar" className="w-full h-full object-cover" />
+                    {savedProfile.logo ? (
+                      <img src={savedProfile.logo} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-[var(--gm-primary)] font-black text-sm uppercase">
-                        {savedProfile.companyName ? savedProfile.companyName.substring(0, 2) : "GM"}
+                        {savedProfile.companyName
+                          ? savedProfile.companyName.substring(0, 2)
+                          : (savedProfile.email ? savedProfile.email.substring(0, 2) : "GM")}
                       </div>
                     )}
                   </div>
@@ -592,7 +610,7 @@ export default function Login() {
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-white font-bold text-sm truncate">
-                    {savedProfile.companyName || "Nommadart"}
+                    {savedProfile.companyName || savedProfile.email.split("@")[0]}
                   </span>
                   <span className="text-zinc-400 text-xs truncate">
                     {savedProfile.email}
@@ -604,7 +622,7 @@ export default function Login() {
                 type="button"
                 onClick={handleSwitchAccount}
                 className="text-xs font-semibold text-[var(--gm-primary,#FE540B)] hover:underline shrink-0 flex items-center gap-1 cursor-pointer px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
-                title="Trocar de conta"
+                title="Entrar com outro usuário"
               >
                 <RefreshCw size={11} />
                 <span>Trocar</span>
@@ -738,68 +756,15 @@ export default function Login() {
             )}
 
             {!isForgotPassword && (
-              <div>
-                <div
-                  onClick={() => {
-                    if (!isPinActiveForUser) {
-                      setProtectWithPin(!protectWithPin);
-                    }
-                  }}
-                  className={`w-full rounded-xl px-3.5 py-2.5 flex items-center justify-between select-none transition-all duration-200 relative group touch-manipulation bg-[#13151b] border ${
-                    !isPinActiveForUser ? "cursor-pointer" : ""
-                  } ${
-                    isPinActiveForUser || protectWithPin
-                      ? "border-orange-500/50"
-                      : "border-white/10 hover:border-white/20"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0 pr-1">
-                    <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                        isPinActiveForUser || protectWithPin
-                          ? "bg-[var(--gm-primary,#FE540B)] text-white"
-                          : "bg-white/[0.05] text-zinc-400"
-                      }`}
-                    >
-                      <Lock size={14} />
-                    </div>
-
-                    <div className="flex flex-col text-left justify-center">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-white text-xs sm:text-[13px] font-semibold tracking-tight">
-                          Proteger com PIN
-                        </span>
-                        {(isPinActiveForUser || protectWithPin) && (
-                          <span className="inline-flex items-center text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/30">
-                            Ativo
-                          </span>
-                        )}
-                      </div>
-                      {!isPinActiveForUser && (
-                        <span className="text-[11px] text-zinc-400 font-normal leading-tight">
-                          Exigir 4 dígitos neste aparelho
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 flex items-center">
-                    <div
-                      className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 flex items-center ${
-                        isPinActiveForUser || protectWithPin
-                          ? "bg-[var(--gm-primary,#FE540B)] justify-end"
-                          : "bg-zinc-800 border border-white/10 justify-start"
-                      }`}
-                    >
-                      <motion.div
-                        layout
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                        className="w-4 h-4 rounded-full bg-white shadow-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <label className="flex items-center gap-2.5 px-1 py-1 cursor-pointer select-none text-xs text-zinc-300 hover:text-white transition-colors">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/20 bg-[#13151b] text-[var(--gm-primary,#FE540B)] focus:ring-0 focus:ring-offset-0 accent-[var(--gm-primary,#FE540B)] cursor-pointer"
+                />
+                <span className="font-medium tracking-wide">Salvar credenciais neste navegador</span>
+              </label>
             )}
 
             {/* Verificador de Segurança */}
@@ -810,12 +775,12 @@ export default function Login() {
             {/* Botão de Entrar (Padrão Forge High-Contrast) */}
             <button
               type="submit"
-              className="w-full h-11 sm:h-12 rounded-xl bg-gradient-to-r from-[#FF7A2A] to-[#FE540B] text-white font-bold text-sm shadow-md hover:brightness-105 active:scale-[0.99] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center mt-1 uppercase tracking-wider"
+              className="login-submit-btn w-full h-12 rounded-xl bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-white font-bold text-sm shadow-[0_4px_16px_rgba(var(--gm-primary-rgb,254,84,11),0.25)] hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center mt-1 uppercase tracking-wider disabled:cursor-not-allowed"
               disabled={!canSubmit || isLoading || isGoogleLoading}
             >
               {isLoading ? (
                 <span className="inline-flex items-center gap-2">
-                  <Loader2 className="animate-spin" size={16} />
+                  <Loader2 className="animate-spin" size={18} />
                   <span>{isForgotPassword ? "Enviando..." : "Entrando..."}</span>
                 </span>
               ) : (
@@ -838,22 +803,13 @@ export default function Login() {
             )}
 
             {!isForgotPassword && (
-              <div className="pt-2 text-center flex flex-col gap-2">
+              <div className="pt-2 text-center">
                 <Link
                   to="/register"
-                  className="w-full inline-flex items-center justify-center h-10 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] transition-all font-semibold text-xs text-zinc-300 hover:text-white active:scale-[0.99]"
+                  className="w-full inline-flex items-center justify-center h-12 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/20 transition-all font-semibold text-xs tracking-wide text-zinc-300 hover:text-white active:scale-[0.99]"
                 >
-                  Ainda não tem conta? <span className="text-white ml-1 font-bold underline">Criar conta</span>
+                  Ainda não tem conta? <span className="text-[var(--gm-primary,#FE540B)] ml-1.5 font-bold underline underline-offset-4">Criar conta</span>
                 </Link>
-
-                <button
-                  type="button"
-                  onClick={handleDirectAdminLogin}
-                  className="w-full inline-flex items-center justify-center gap-2 h-9 rounded-xl border border-amber-500/25 bg-amber-500/10 hover:bg-amber-500/15 text-amber-300 hover:text-amber-200 transition-all font-semibold text-xs active:scale-[0.99] cursor-pointer"
-                >
-                  <ShieldCheck size={14} className="text-amber-400" />
-                  <span>Acesso ADM</span>
-                </button>
               </div>
             )}
           </form>
@@ -972,20 +928,6 @@ export default function Login() {
         />
       )}
 
-      {showPinSetupModal && (
-        <PinLockModal
-          open={showPinSetupModal}
-          mode="setup"
-          email={email.trim()}
-          title="Criar PIN deste Dispositivo"
-          description="Crie um PIN de 4 dígitos para proteger suas credenciais salvas neste aparelho (smartphone ou computador)."
-          onSuccess={handlePinSetupSuccess}
-          onCancel={() => {
-            setShowPinSetupModal(false);
-            navigate("/", { replace: true });
-          }}
-        />
-      )}
     </div>
   );
 }

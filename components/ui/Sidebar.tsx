@@ -12,13 +12,14 @@ import {
   StickyNote,
   Crown,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../../store/AuthContext";
 import GoldCrownIcon from "./GoldCrownIcon";
 
 type ThemeMode = "dark" | "light";
 
-const items = [
+const baseItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/budgets", label: "Orçamentos", icon: FileText },
   { to: "/clients", label: "Clientes", icon: Users },
@@ -40,7 +41,22 @@ function applyTheme(mode: ThemeMode) {
 }
 
 export default function Sidebar() {
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
+
+  const items = React.useMemo(() => {
+    if (isAdmin) {
+      const cloned = [...baseItems];
+      // Insere "Gestão Usuários" logo após Planos para o Master ADM
+      const planosIndex = cloned.findIndex((i) => i.to === "/planos");
+      cloned.splice(planosIndex + 1, 0, {
+        to: "/admin/usuarios",
+        label: "Gestão Usuários",
+        icon: ShieldCheck,
+      });
+      return cloned;
+    }
+    return baseItems;
+  }, [isAdmin]);
 
   useEffect(() => {
     applyTheme("dark");
@@ -94,7 +110,7 @@ export default function Sidebar() {
               ) : (
                 <Icon size={19} className="shrink-0 text-[#FE540B] stroke-[2]" />
               )}
-              <span className={`ml-3 truncate ${it.to === "/planos" ? "text-amber-300 font-bold" : ""}`}>{it.label}</span>
+              <span className={`ml-3 truncate ${it.to === "/planos" ? "text-amber-300 font-bold" : it.to === "/admin/usuarios" ? "text-[#FE540B] font-bold" : ""}`}>{it.label}</span>
             </NavLink>
           );
         })}

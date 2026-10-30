@@ -540,7 +540,7 @@ export default function Clients() {
                         cursor={{ fill: "rgba(255,255,255,0.04)" }}
                         contentStyle={{ backgroundColor: "#141418", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "4px", color: "#fff", fontSize: 12, boxShadow: "none" }}
                       />
-                      <Bar dataKey="value" name="Clientes" radius={[2, 2, 0, 0]} fill="#f65a1a" />
+                      <Bar dataKey="value" name="Clientes" radius={[2, 2, 0, 0]} fill="var(--gm-primary, #FE540B)" />
                     </BarChart>
                   </SafeResponsive>
                 </div>

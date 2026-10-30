@@ -25,6 +25,8 @@ import AuthCallback from './pages/AuthCallback';
 import UpdatePassword from './pages/UpdatePassword';
 import PixCopy from './pages/PixCopy';
 import Plans from './pages/Plans';
+import AdminLogin from './pages/AdminLogin';
+import AdminUsersManager from './pages/AdminUsersManager';
 
 import DevicePinGate from './components/auth/DevicePinGate';
 
@@ -77,6 +79,8 @@ const PrivateRoutes = () => {
               <Route path="/financial" element={<RouteBoundary title="Financeiro"><Financial /></RouteBoundary>} />
               <Route path="/minha-bio" element={<RouteBoundary title="Minha Bio"><Bio /></RouteBoundary>} />
               <Route path="/planos" element={<RouteBoundary title="Planos"><Plans /></RouteBoundary>} />
+              <Route path="/admin/usuarios" element={<RouteBoundary title="Gestão de Usuários"><AdminUsersManager /></RouteBoundary>} />
+              <Route path="/admin/users" element={<Navigate to="/admin/usuarios" replace />} />
               <Route path="/configuracoes" element={<RouteBoundary title="Configurações"><Configuracoes /></RouteBoundary>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
@@ -155,7 +159,7 @@ const AppRoutes = () => {
   const reserved = [
     'pix', 'login', 'register', 'bio', 'auth', 'update-password', 
     'budgets', 'clients', 'expenses', 'market', 'notes', 'financial', 
-    'minha-bio', 'configuracoes', 'dashboard', 'planos'
+    'minha-bio', 'configuracoes', 'dashboard', 'planos', 'admin'
   ];
 
   if (firstSegment && !reserved.includes(firstSegment)) {
@@ -186,6 +190,8 @@ const AppRoutes = () => {
           )}
           <Route path="/pix" element={<PixCopy />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/register" element={<Register />} />
           <Route path="/bio/:tenantId" element={<PublicBio />} />
           <Route path="/auth/callback" element={<AuthCallback />} />

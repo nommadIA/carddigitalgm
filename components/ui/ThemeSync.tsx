@@ -24,8 +24,16 @@ export default function ThemeSync({ prefs }: { prefs?: ThemePrefs }) {
     const accent = safeHex(prefs.brand_accent);
     const background = safeHex(prefs.brand_bg);
 
-    if (primary) root.style.setProperty("--gm-primary", primary);
-    if (accent) root.style.setProperty("--gm-accent", accent);
+    if (primary) {
+      root.style.setProperty("--gm-primary", primary);
+      root.style.setProperty("--color-accent", primary);
+      root.style.setProperty("--color-ember", primary);
+      root.style.setProperty("--gm-btn-bg", primary);
+    }
+    if (accent) {
+      root.style.setProperty("--gm-accent", accent);
+      root.style.setProperty("--color-spark", accent);
+    }
     if (background) root.style.setProperty("--gm-bg", background);
 
   }, [prefs?.brand_primary, prefs?.brand_accent, prefs?.brand_bg]);

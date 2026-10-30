@@ -114,16 +114,16 @@ export const AnimatedInputField: React.FC<AnimatedInputFieldProps> = ({
         </div>
       )}
 
-      {/* Caixa de Digitação com o estilo exato Uiverse.io .forge-field__input */}
+      {/* Caixa de Digitação com o padrão Forge Premium (h-12 / 48px, rounded-xl) */}
       <div
         onClick={() => inputRef.current?.focus()}
         className={cn(
-          "w-full h-10 px-3.5 sm:px-4 flex items-center justify-between gap-3 cursor-text",
-          "rounded-[4px] border transition-all duration-[120ms] ease-[cubic-bezier(0.2,0.65,0.25,1)]",
-          "selection:bg-[#f65a1a] selection:text-white",
+          "w-full h-12 px-3.5 sm:px-4 flex items-center justify-between gap-3 cursor-text",
+          "rounded-xl border transition-all duration-[140ms] ease-[cubic-bezier(0.2,0.65,0.25,1)]",
+          "selection:bg-[var(--gm-primary,#FE540B)] selection:text-white",
           isFocused
-            ? "bg-[#131315] border-[#f65a1a] shadow-[0_0_0_2px_rgba(246,90,26,0.24)]"
-            : "bg-[#1b1b1e] border-[#26262a] hover:border-[#2f2f34]"
+            ? "bg-[#101116] border-[var(--gm-primary,#FE540B)] shadow-[0_0_0_2px_rgba(var(--gm-primary-rgb,254,84,11),0.25)]"
+            : "bg-[#14151b] border-white/10 hover:border-white/20"
         )}
       >
         {/* Lado Esquerdo: Ícone + Input */}
@@ -132,7 +132,7 @@ export const AnimatedInputField: React.FC<AnimatedInputFieldProps> = ({
             <div
               className={cn(
                 "shrink-0 transition-colors duration-[120ms]",
-                isFocused ? "text-[#f65a1a]" : "text-[#8b8b92]"
+                isFocused ? "text-[var(--gm-primary,#FE540B)]" : "text-[#8b8b92]"
               )}
             >
               {icon}
@@ -154,10 +154,10 @@ export const AnimatedInputField: React.FC<AnimatedInputFieldProps> = ({
               autoComplete={autoComplete}
               disabled={disabled}
               className={cn(
-                "w-full h-full bg-transparent text-[#f2f2f3] text-[14px] font-medium leading-none",
-                "focus:outline-none focus:ring-0 border-none p-0 tracking-normal",
+                "forge-clean-input !bg-transparent !border-0 !border-none !outline-none !shadow-none !p-0 !m-0 !ring-0",
+                "w-full h-full text-[#f2f2f3] text-[14px] font-medium leading-normal",
                 "placeholder:text-[#5a5a60] placeholder:font-normal placeholder:text-[14px]",
-                "selection:bg-[#f65a1a] selection:text-white",
+                "selection:bg-[var(--gm-primary,#FE540B)] selection:text-white",
                 type === "password" && value.length > 0 && "tracking-widest"
               )}
             />
@@ -169,7 +169,7 @@ export const AnimatedInputField: React.FC<AnimatedInputFieldProps> = ({
                 <motion.span
                   animate={{ opacity: [0, 1, 0] }}
                   transition={{ repeat: Infinity, duration: 0.8 }}
-                  className="inline-block w-[2px] h-3.5 bg-[#f65a1a]/80 ml-0.5 rounded-sm"
+                  className="inline-block w-[2px] h-3.5 bg-[var(--gm-primary,#FE540B)] ml-0.5 rounded-sm"
                 />
               </div>
             )}

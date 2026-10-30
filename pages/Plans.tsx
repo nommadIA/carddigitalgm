@@ -265,14 +265,24 @@ export default function Plans() {
             {/* Ações do Topo / Acesso ADM */}
             <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
               {isAdmin && (
-                <button
-                  type="button"
-                  onClick={handleOpenAdminEdit}
-                  className="py-3 px-5 rounded bg-[#f65a1a] hover:bg-[#ff6f33] text-[#09090b] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#f65a1a]/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border border-[#f65a1a]"
-                >
-                  <Settings size={16} />
-                  <span>Configurar Planos & Preços (ADM)</span>
-                </button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={handleOpenAdminEdit}
+                    className="py-3 px-4 rounded bg-[#f65a1a] hover:bg-[#ff6f33] text-[#09090b] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#f65a1a]/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border border-[#f65a1a]"
+                  >
+                    <Settings size={15} />
+                    <span>Configurar Planos & Preços (ADM)</span>
+                  </button>
+
+                  <a
+                    href="/admin/usuarios"
+                    className="py-3 px-4 rounded bg-[#1b1b1e] hover:bg-[#25252a] text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-[#2f2f34] hover:border-amber-500/40 transition-all cursor-pointer shadow-sm"
+                  >
+                    <Users size={15} className="text-amber-400" />
+                    <span>Gerenciar Usuários & Liberações</span>
+                  </a>
+                </div>
               )}
             </div>
           </div>

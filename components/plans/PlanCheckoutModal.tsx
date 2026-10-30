@@ -116,7 +116,22 @@ export default function PlanCheckoutModal({
     }
   };
 
-  const handleOpenWhatsappReceipt = () => {
+  const handleOpenWhatsappReceipt = async () => {
+    try {
+      const { recordPaymentActivationRequest } = await import("../../lib/adminUsersService");
+      if (user?.email) {
+        await recordPaymentActivationRequest({
+          email: user.email,
+          name: user.full_name || undefined,
+          planId: selectedPlanId,
+          tenantId: tenantId || undefined,
+          gateway: method,
+        });
+      }
+    } catch (e) {
+      console.warn("Erro ao registrar solicitacao de ativacao:", e);
+    }
+
     const text = `Olá! Gostaria de confirmar o pagamento da minha assinatura no aplicativo CardDigital GM:\n\n` +
       `📦 *Plano Escolhido:* ${plan.name}\n` +
       `💰 *Valor:* ${CURRENCY_FORMATTER.format(effectivePrice)}\n` +
