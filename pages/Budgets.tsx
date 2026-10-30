@@ -240,19 +240,19 @@ function VirtualizedBudgetList({
     <div className="flex flex-col gap-2 w-full pb-10">
       {/* CABEÇALHO DO MODO LISTA NO DESKTOP */}
       <div className="hidden lg:block w-full overflow-x-auto no-scrollbar">
-        <div className="flex items-center justify-between gap-4 min-w-[940px] xl:min-w-0 w-full px-4 py-2 text-xs font-black uppercase tracking-wider select-none bg-white/[0.02] border border-white/5 rounded-xl backdrop-blur-sm">
-          <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center min-w-[1260px] xl:min-w-0 w-full px-4 py-2 text-xs font-black uppercase tracking-wider select-none bg-white/[0.02] border border-white/5 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3 w-[330px] xl:w-[350px] shrink-0">
             <span className="w-7 text-center text-slate-400">EXP.</span>
-            <span className="w-28 text-left text-[var(--gm-primary)] font-black">EMISSÃO</span>
+            <span className="w-24 text-left text-[var(--gm-primary)] font-black">EMISSÃO</span>
             <span className="text-left text-[var(--gm-primary)] font-black">CLIENTE</span>
           </div>
-          <div className="text-center flex-1">
+          <div className="text-left w-[470px] shrink-0 pl-8">
             <span className="text-[var(--gm-primary)] font-black">STATUS DO ORÇAMENTO</span>
           </div>
-          <div className="text-center shrink-0 w-36">
+          <div className="text-left w-[240px] shrink-0 pl-16">
             <span className="text-[var(--gm-primary)] font-black">VALOR TOTAL</span>
           </div>
-          <div className="text-right shrink-0 pr-1 min-w-[170px]">
+          <div className="ml-auto text-right pr-2 min-w-[170px]">
             <span className="text-[var(--gm-primary)] font-black">AÇÕES</span>
           </div>
         </div>
@@ -297,9 +297,9 @@ function VirtualizedBudgetList({
 
             {/* LINHA PRINCIPAL DA BARRA EM UMA LINHA SÓ */}
             <div className="w-full overflow-x-auto no-scrollbar">
-              <div className="flex items-center justify-between gap-3 sm:gap-4 min-w-[940px] xl:min-w-0 w-full min-h-0 py-0.5">
-                {/* IDENTIFICAÇÃO: EXPANSÃO + EMISSÃO + CLIENTE (EM UMA LINHA SÓ) */}
-                <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 min-w-0">
+              <div className="flex items-center min-w-[1260px] xl:min-w-0 w-full min-h-0 py-0.5">
+                {/* IDENTIFICAÇÃO: EXPANSÃO + EMISSÃO + CLIENTE (COLUNA FIXA) */}
+                <div className="flex items-center gap-2.5 sm:gap-3 w-[330px] xl:w-[350px] shrink-0 min-w-0">
                   {/* SETA DE EXPANSÃO DESTACADA */}
                   <button
                     type="button"
@@ -335,12 +335,12 @@ function VirtualizedBudgetList({
                     </span>
                   </div>
 
-                  <span className="text-white/20 text-xs select-none">•</span>
+                  <span className="text-white/20 text-xs select-none shrink-0">•</span>
 
                   {/* CLIENTE: DRA. VANESSA CARLA */}
                   <div
                     onClick={() => toggleRow(r.id)}
-                    className="flex items-center gap-1.5 min-w-0 max-w-[190px] sm:max-w-[240px] xl:max-w-[300px] cursor-pointer select-none"
+                    className="flex items-center gap-1.5 min-w-0 flex-1 cursor-pointer select-none"
                     title={`Cliente: ${clientDisplayName}`}
                   >
                     <span className="text-[10px] sm:text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider shrink-0">
@@ -352,8 +352,8 @@ function VirtualizedBudgetList({
                   </div>
                 </div>
 
-                {/* CÁPSULAS DE STATUS */}
-                <div className="flex items-center justify-center gap-1.5 shrink-0 px-1">
+                {/* CÁPSULAS DE STATUS - ALINHADAS À ESQUERDA (MANTENDO O ESPAÇO COMPACTO ENTRE ELAS) */}
+                <div className="flex items-center justify-start gap-1.5 w-[470px] shrink-0 pl-8">
                   {STATUS_OPTIONS.map((opt) => {
                     const isActive = currentStatus === opt.value;
                     const activeCls = pillClass(opt.value);
@@ -377,10 +377,10 @@ function VirtualizedBudgetList({
                   })}
                 </div>
 
-                {/* VALOR: R$ 450,00 TOTAL */}
+                {/* VALOR TOTAL - AFASTADO PARA A DIREITA E ALINHADO À ESQUERDA */}
                 <div
                   onClick={() => toggleRow(r.id)}
-                  className="flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer select-none"
+                  className="flex items-center justify-start gap-1.5 w-[240px] shrink-0 pl-16 whitespace-nowrap cursor-pointer select-none"
                   title="Valor Total"
                 >
                   <span className="text-[10px] sm:text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
@@ -395,7 +395,7 @@ function VirtualizedBudgetList({
                 </div>
 
                 {/* BOTÕES DE AÇÃO DISTRIBUÍDOS HORIZONTALMENTE EM UMA LINHA SÓ */}
-                <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap justify-end shrink-0">
+                <div className="ml-auto flex items-center gap-1 sm:gap-1.5 flex-nowrap justify-end shrink-0 pr-2">
                   {tab !== "LIXEIRA" ? (
                     <>
                       {(isConcluido || tab === "CONCLUIDOS") ? (

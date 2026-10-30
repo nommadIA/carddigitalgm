@@ -8,7 +8,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import "./index.css"; // Ensure CSS is imported
 import { supabase } from "./lib/supabase";
-import { fetchSettingsSupabase, applySettingsToDOM, readSettingsLocal } from "./lib/settings";
+import { fetchSettingsSupabase, applySettingsToDOM, readSettingsLocal, DEFAULT_SETTINGS } from "./lib/settings";
 
 declare global {
   interface Window {
@@ -20,15 +20,20 @@ declare global {
 }
 
 async function bootReal() {
-  // 1) aplica cache local (tema/fonte) imediato para evitar flash
+  // 1) Aplica cache local ou DEFAULT_SETTINGS oficial do ADM imediatamente
   const cached = readSettingsLocal();
-  if (cached) applySettingsToDOM(cached);
+  if (cached) {
+    applySettingsToDOM(cached);
+  } else {
+    applySettingsToDOM(DEFAULT_SETTINGS, false);
+  }
 
-  // 2) Tenta carregar dados mínimos na splash
+  // 2) Sincroniza personalização oficial do Master Admin (gmedificacao@gmail.com)
   try {
     const res = await supabase.auth.getSession().catch(() => null);
     const session = res?.data?.session;
     const user = session?.user;
+    const tid = typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null;
 
     if (user) {
       const name = user.user_metadata?.full_name || user.user_metadata?.name || "";
@@ -37,8 +42,12 @@ async function bootReal() {
       window.__GM_SPLASH_SET_USER__?.(name, avatarUrl);
       window.__GM_SPLASH_STATUS__?.("Sincronizando preferências…");
 
-      // Puxa settings remotos em paralelo para agilizar
-      fetchSettingsSupabase().then(settings => {
+      fetchSettingsSupabase(tid).then(settings => {
+        if (settings) applySettingsToDOM(settings);
+      }).catch(() => {});
+    } else {
+      // Mesmo deslogado (telas de login e registro), carrega a personalização oficial do Master Admin
+      fetchSettingsSupabase(null).then(settings => {
         if (settings) applySettingsToDOM(settings);
       }).catch(() => {});
     }

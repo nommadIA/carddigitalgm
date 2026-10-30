@@ -97,6 +97,11 @@ export type AppSettings = {
 
 export const DEFAULT_REMINDER_TIMES = ["09:00", "13:00", "17:00"];
 
+export const MASTER_TENANT_ID = "6f4ee596-eb5e-415f-9189-d571ad85ed95";
+export const MASTER_RECORD_ID = "dd5ab0ff-3e7c-4031-9b14-c6a6eb66922f";
+export const MASTER_ADMIN_EMAIL = "gmedificacao@gmail.com";
+export const MASTER_ADMIN_OWNER_ID = "64a22c15-806c-4ad3-ac1c-c1628f02bba5";
+
 const LOCAL_KEY = "gm.settings.cache.v1";
 
 /**
@@ -302,35 +307,79 @@ export const DEFAULT_GM_BIO_CONFIG: Record<string, any> = {
 
 /**
  * ✅ DEFAULT com shape certo (inclui timbrado_url e bio completa)
- * Mantém também chaves antigas por compatibilidade.
  */
-export const DEFAULT_SETTINGS: AppSettings & any = {
+export const DEFAULT_THEME_COLORS = {
+  bg: "#0B0B0C",
+  primary: "#FE540B",
+  accent: "#FF7A38",
+  button: "#FE540B",
+  icon: "#FE540B",
+  title: "#FFFFFF",
+  subtitle: "#E2E8F0",
+  menu_bg: "#131315",
+  menu_primary: "#FE540B",
+  menu_icon: "#FE540B",
+  menu_button: "#FE540B",
+  menu_title: "#FFFFFF",
+  menu_subtitle: "#E2E8F0",
+};
+
+export const DEFAULT_BUTTON_CONFIG = {
+  bg: "#FE540B",
+  border: "#FE540B",
+  icon: "#FFFFFF",
+  text: "#FFFFFF",
+  style: "solid",
+};
+
+/**
+ * 🔒 Ativos Privados Exclusivos do Master Admin (gmedificacao@gmail.com)
+ * NUNCA são clonados para novos usuários. Novos usuários recebem somente o tema de cores.
+ */
+export const MASTER_ADMIN_DEFAULT_ASSETS = {
   company_name: "GM edificação",
   pix_type: "CNPJ",
   pix_key: "carddigitalgm@gmail.com",
-  brand_primary: "#FE540B",
-  brand_accent: "#FF7A38",
-  brand_bg: "#0B0B0C",
-  font_family: "Space Grotesk",
   avatar_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.jpg?t=1790426179060",
   company_logo_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.jpg?t=1790426179060",
   website_logo_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/bio/logo_1790345925228_lq174s.svg",
   timbrado_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/timbrados/64a22c15-806c-4ad3-ac1c-c1628f02bba5/timbrado_a4.jpg",
-  theme_presets: [],
   app_background_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/background_1787217210889.jpg?t=1787217210889",
+  mobile_app_background_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/background_1787213992954.webp?t=1787213992954",
+};
+
+/**
+ * ✅ DEFAULT_SETTINGS para novos usuários:
+ * - TEMA DE CORES: Laranja oficial (#FE540B / #FF7A38) e Obsidian escuro
+ * - ATIVOS PRIVADOS: Limpos (sem papel de parede, sem timbrado, sem logo e sem nome do ADM)
+ */
+export const DEFAULT_SETTINGS: AppSettings & any = {
+  company_name: "",
+  pix_type: "CPF",
+  pix_key: "",
+  brand_primary: "#FE540B",
+  brand_accent: "#FF7A38",
+  brand_bg: "#0B0B0C",
+  font_family: "Space Grotesk",
+  avatar_url: null,
+  company_logo_url: null,
+  website_logo_url: null,
+  timbrado_url: null,
+  theme_presets: [],
+  app_background_url: null,
   app_background_fit: "cover",
-  app_background_opacity: 1,
+  app_background_opacity: 0,
   app_background_pos_x: "50%",
   app_background_pos_y: "50%",
-  app_background_scale: 1.05,
+  app_background_scale: 1,
   app_background_blur: 0,
   
-  mobile_app_background_url: "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/background_1787213992954.webp?t=1787213992954",
+  mobile_app_background_url: null,
   mobile_app_background_fit: "cover",
-  mobile_app_background_opacity: 1,
+  mobile_app_background_opacity: 0,
   mobile_app_background_pos_x: "50%",
   mobile_app_background_pos_y: "50%",
-  mobile_app_background_scale: 1.05,
+  mobile_app_background_scale: 1,
   mobile_app_background_blur: 0,
 
   app_scale: 1.0,
@@ -342,10 +391,18 @@ export const DEFAULT_SETTINGS: AppSettings & any = {
   button_icon: "#FFFFFF",
   budget_approved_reminder_enabled: false,
   budget_approved_reminder_times: DEFAULT_REMINDER_TIMES,
-  bio_config: DEFAULT_GM_BIO_CONFIG,
+  bio_config: {
+    color: "#FE540B",
+    theme_colors_dark: DEFAULT_THEME_COLORS,
+    button_config_dark: DEFAULT_BUTTON_CONFIG,
+    button_style: "solid",
+    button_bg: "#FE540B",
+    button_border: "#FE540B",
+    button_text: "#FFFFFF",
+    button_icon: "#FFFFFF",
+  },
 
-  // compat antigos (se algum código ainda usar)
-  primary_color: "#FF7B17",
+  primary_color: "#FE540B",
   background_url: "",
   logo_url: "",
 };
@@ -519,11 +576,11 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
   const tenantLocalBtn = tid && typeof localStorage !== "undefined" ? JSON.parse(localStorage.getItem(`gm_button_dark_${tid}`) || "null") : null;
   const savedBtnDark = tenantBtn || tenantLocalBtn;
 
-  let btnStyle = savedBtnDark?.style || s.button_style || "vazado";
-  let btnBg = savedBtnDark?.bg ?? (s.button_bg || "transparent");
-  let btnBorder = savedBtnDark?.border || s.button_border || primary || "#FF7B17";
+  let btnStyle = savedBtnDark?.style || s.button_style || "solid";
+  let btnBg = savedBtnDark?.bg ?? (s.button_bg || "#FE540B");
+  let btnBorder = savedBtnDark?.border || s.button_border || primary || "#FE540B";
   let btnText = savedBtnDark?.text || s.button_text || "#FFFFFF";
-  let btnIcon = savedBtnDark?.icon || s.button_icon || primary || "#FF7B17";
+  let btnIcon = savedBtnDark?.icon || s.button_icon || primary || "#FE540B";
 
   root.setAttribute("data-button-style", btnStyle);
   if (btnBg) root.style.setProperty("--gm-btn-bg", btnBg);
@@ -684,85 +741,85 @@ async function withTimeout<T>(p: Promise<T>, ms = 3000): Promise<T> {
 }
 
 function mergeWithFallbacks(data: any): AppSettings {
-  const isGM = !data?.company_name || String(data?.company_name).toLowerCase().includes("gm");
-  const fallbackBio = isGM ? DEFAULT_GM_BIO_CONFIG : {};
-  
+  const isMaster = Boolean(
+    data?.tenant_id === MASTER_TENANT_ID ||
+    data?.owner === MASTER_ADMIN_OWNER_ID ||
+    data?.id === MASTER_RECORD_ID
+  );
+
   const rawBio = (data?.bio_config && typeof data.bio_config === "object") ? data.bio_config : {};
-  const mergedBio = {
-    ...fallbackBio,
-    ...rawBio,
-    title: rawBio.title || (isGM ? DEFAULT_GM_BIO_CONFIG.title : (data?.company_name || "")),
-    title_mobile: rawBio.title_mobile || rawBio.title || (isGM ? DEFAULT_GM_BIO_CONFIG.title_mobile : ""),
-    title_font: rawBio.title_font || (isGM ? DEFAULT_GM_BIO_CONFIG.title_font : "syne"),
-    title_font_mobile: rawBio.title_font_mobile || rawBio.title_font || (isGM ? DEFAULT_GM_BIO_CONFIG.title_font_mobile : "syne"),
-    title_size: rawBio.title_size || (isGM ? DEFAULT_GM_BIO_CONFIG.title_size : "36 pt"),
-    title_size_mobile: rawBio.title_size_mobile || rawBio.title_size || (isGM ? DEFAULT_GM_BIO_CONFIG.title_size_mobile : "26 pt"),
-    title_color: rawBio.title_color || (isGM ? DEFAULT_GM_BIO_CONFIG.title_color : "#FFFFFF"),
-    hero_title: rawBio.hero_title || rawBio.title || (isGM ? DEFAULT_GM_BIO_CONFIG.hero_title : ""),
-    hero_title_mobile: rawBio.hero_title_mobile || rawBio.hero_title || rawBio.title_mobile || rawBio.title || (isGM ? DEFAULT_GM_BIO_CONFIG.hero_title_mobile : ""),
-    description: rawBio.description || (isGM ? DEFAULT_GM_BIO_CONFIG.description : ""),
-    description_mobile: rawBio.description_mobile || rawBio.description || (isGM ? DEFAULT_GM_BIO_CONFIG.description_mobile : ""),
-    description_font: rawBio.description_font || (isGM ? DEFAULT_GM_BIO_CONFIG.description_font : "syne"),
-    description_font_mobile: rawBio.description_font_mobile || rawBio.description_font || (isGM ? DEFAULT_GM_BIO_CONFIG.description_font_mobile : "syne"),
-    description_size: rawBio.description_size || (isGM ? DEFAULT_GM_BIO_CONFIG.description_size : "18 pt"),
-    description_size_mobile: rawBio.description_size_mobile || rawBio.description_size || (isGM ? DEFAULT_GM_BIO_CONFIG.description_size_mobile : "16 pt"),
-    description_bold: rawBio.description_bold !== undefined ? rawBio.description_bold : (isGM ? DEFAULT_GM_BIO_CONFIG.description_bold : true),
-    description_bold_mobile: rawBio.description_bold_mobile !== undefined ? rawBio.description_bold_mobile : (isGM ? DEFAULT_GM_BIO_CONFIG.description_bold_mobile : true),
-    description_color: rawBio.description_color || (isGM ? DEFAULT_GM_BIO_CONFIG.description_color : "#E4E4E7"),
-    show_banners: isGM ? true : (rawBio.show_banners !== undefined ? rawBio.show_banners : true),
-    show_nav_links: rawBio.show_nav_links !== undefined ? rawBio.show_nav_links : false,
-    banner_img_url_1: rawBio.banner_img_url_1 || (isGM ? DEFAULT_GM_BIO_CONFIG.banner_img_url_1 : ""),
-    mobile_banner_img_url_1: rawBio.mobile_banner_img_url_1 || (isGM ? DEFAULT_GM_BIO_CONFIG.mobile_banner_img_url_1 : ""),
-    contact_banner_img_url: rawBio.contact_banner_img_url || (isGM ? DEFAULT_GM_BIO_CONFIG.contact_banner_img_url : ""),
-    about_banner_url: rawBio.about_banner_url || (isGM ? DEFAULT_GM_BIO_CONFIG.about_banner_url : ""),
-    website_logo_url: rawBio.website_logo_url || data?.website_logo_url || (isGM ? DEFAULT_GM_BIO_CONFIG.website_logo_url : ""),
-    logo_url: rawBio.logo_url || (isGM ? DEFAULT_GM_BIO_CONFIG.logo_url : ""),
-    show_about: rawBio.show_about !== undefined ? rawBio.show_about : true,
-    about_title: rawBio.about_title || (isGM ? DEFAULT_GM_BIO_CONFIG.about_title : "SOBRE A GM EDIFICAÇÃO"),
-    about_description: rawBio.about_description || (isGM ? DEFAULT_GM_BIO_CONFIG.about_description : ""),
-    about_highlight: rawBio.about_highlight || (isGM ? DEFAULT_GM_BIO_CONFIG.about_highlight : ""),
-    about_btn_text: rawBio.about_btn_text || (isGM ? DEFAULT_GM_BIO_CONFIG.about_btn_text : "Fale Conosco"),
-    about_btn_link: rawBio.about_btn_link || (isGM ? DEFAULT_GM_BIO_CONFIG.about_btn_link : "https://wa.me/5598988402049"),
-    about_title_font: rawBio.about_title_font || (isGM ? DEFAULT_GM_BIO_CONFIG.about_title_font : "funnel"),
-    about_title_size: rawBio.about_title_size || (isGM ? DEFAULT_GM_BIO_CONFIG.about_title_size : "30 pt"),
-    about_title_bold: rawBio.about_title_bold !== undefined ? rawBio.about_title_bold : true,
-    about_desc_font: rawBio.about_desc_font || (isGM ? DEFAULT_GM_BIO_CONFIG.about_desc_font : "ui"),
-    about_desc_size: rawBio.about_desc_size || (isGM ? DEFAULT_GM_BIO_CONFIG.about_desc_size : "16 pt"),
-    about_highlight_font: rawBio.about_highlight_font || (isGM ? DEFAULT_GM_BIO_CONFIG.about_highlight_font : "ui"),
-    about_highlight_size: rawBio.about_highlight_size || (isGM ? DEFAULT_GM_BIO_CONFIG.about_highlight_size : "16 pt"),
-    about_highlight_bold: rawBio.about_highlight_bold !== undefined ? rawBio.about_highlight_bold : true,
-    button_style: rawBio.button_style || (isGM ? DEFAULT_GM_BIO_CONFIG.button_style : "solid"),
-    button_bg: rawBio.button_bg || (isGM ? DEFAULT_GM_BIO_CONFIG.button_bg : "#FE540B"),
-    button_border: rawBio.button_border || (isGM ? DEFAULT_GM_BIO_CONFIG.button_border : "#FE540B"),
-    button_text: rawBio.button_text || (isGM ? DEFAULT_GM_BIO_CONFIG.button_text : "#FFFFFF"),
-    button_icon: rawBio.button_icon || (isGM ? DEFAULT_GM_BIO_CONFIG.button_icon : "#FFFFFF"),
-    custom_links: (rawBio.custom_links && rawBio.custom_links.length > 0) ? rawBio.custom_links : (isGM ? DEFAULT_GM_BIO_CONFIG.custom_links : []),
-    portfolio_items: (rawBio.portfolio_items && rawBio.portfolio_items.length > 0) ? rawBio.portfolio_items : (isGM ? DEFAULT_GM_BIO_CONFIG.portfolio_items : []),
-    portfolio_title: rawBio.portfolio_title || (isGM ? DEFAULT_GM_BIO_CONFIG.portfolio_title : "Portfólio"),
-    whatsapp: rawBio.whatsapp || (isGM ? DEFAULT_GM_BIO_CONFIG.whatsapp : ""),
-    instagram: rawBio.instagram || (isGM ? DEFAULT_GM_BIO_CONFIG.instagram : ""),
-    website: rawBio.website || (isGM ? DEFAULT_GM_BIO_CONFIG.website : ""),
-    email: rawBio.email || (isGM ? DEFAULT_GM_BIO_CONFIG.email : ""),
-    address: rawBio.address || (isGM ? DEFAULT_GM_BIO_CONFIG.address : ""),
-    pix_key: rawBio.pix_key || (isGM ? DEFAULT_GM_BIO_CONFIG.pix_key : ""),
-    pix_type: rawBio.pix_type || (isGM ? DEFAULT_GM_BIO_CONFIG.pix_type : "CNPJ"),
-    chat_balloon_enabled: rawBio.chat_balloon_enabled !== undefined ? rawBio.chat_balloon_enabled : true,
-    chat_balloon_show_qrcode: rawBio.chat_balloon_show_qrcode !== undefined ? rawBio.chat_balloon_show_qrcode : true,
-    chat_balloon_qr_link: rawBio.chat_balloon_qr_link || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_qr_link : ""),
-    chat_balloon_qr_msg: rawBio.chat_balloon_qr_msg || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_qr_msg : ""),
-    chat_balloon_bg_color: rawBio.chat_balloon_bg_color || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_bg_color : "#FE540B"),
-    chat_balloon_text_color: rawBio.chat_balloon_text_color || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_text_color : "#FFFFFF"),
-    chat_balloon_text: rawBio.chat_balloon_text || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_text : ""),
-    chat_balloon_button_text: rawBio.chat_balloon_button_text || (isGM ? DEFAULT_GM_BIO_CONFIG.chat_balloon_button_text : "Abrir chat"),
+  const rawThemeColors = rawBio?.theme_colors_dark || {};
+  const rawBtnDark = rawBio?.button_config_dark || {};
+
+  // ✅ SOMENTE O TEMA DE CORES: Laranja do ADM (#FE540B / #FF7A38) por padrão para novos usuários
+  const mergedThemeColors = {
+    ...DEFAULT_THEME_COLORS,
+    ...rawThemeColors,
+    primary: rawThemeColors.primary || "#FE540B",
+    accent: rawThemeColors.accent || "#FF7A38",
+    button: rawThemeColors.button || "#FE540B",
+    icon: rawThemeColors.icon || "#FE540B",
+    menu_icon: rawThemeColors.menu_icon || "#FE540B",
+    menu_button: rawThemeColors.menu_button || "#FE540B",
+    menu_primary: rawThemeColors.menu_primary || "#FE540B",
+    bg: rawThemeColors.bg || "#0B0B0C",
+    menu_bg: rawThemeColors.menu_bg || "#131315",
+    title: rawThemeColors.title || "#FFFFFF",
+    subtitle: rawThemeColors.subtitle || "#CBD5E1",
   };
 
-  // ✅ ISOLAMENTO ESTRITO: O app possui suas próprias configurações e o website bio possui as suas
+  const mergedBtnDark = {
+    ...DEFAULT_BUTTON_CONFIG,
+    ...rawBtnDark,
+    bg: rawBtnDark.bg || "#FE540B",
+    border: rawBtnDark.border || "#FE540B",
+    icon: rawBtnDark.icon || "#FFFFFF",
+    text: rawBtnDark.text || "#FFFFFF",
+    style: rawBtnDark.style || "solid",
+  };
+
+  const mergedBio = {
+    ...(isMaster ? DEFAULT_GM_BIO_CONFIG : {}),
+    ...rawBio,
+    theme_colors_dark: mergedThemeColors,
+    button_config_dark: mergedBtnDark,
+    color: rawBio.color || "#FE540B",
+    button_style: rawBio.button_style || "solid",
+    button_bg: rawBio.button_bg || "#FE540B",
+    button_border: rawBio.button_border || "#FE540B",
+    button_text: rawBio.button_text || "#FFFFFF",
+    button_icon: rawBio.button_icon || "#FFFFFF",
+  };
+
   const rawPlans = data?.app_plans_config || data?.bio_config?.plans_config;
+
   const settings: AppSettings = { 
     ...DEFAULT_SETTINGS, 
     ...(data || {}),
+
+    // ✅ TEMA DE CORES: Somente as cores e botões têm como padrão o laranja oficial do ADM
+    brand_primary: data?.brand_primary || "#FE540B",
+    brand_accent: data?.brand_accent || "#FF7A38",
+    brand_bg: data?.brand_bg || "#0B0B0C",
+    button_style: data?.button_style || "solid",
+    button_bg: data?.button_bg || "#FE540B",
+    button_border: data?.button_border || "#FE540B",
+    button_text: data?.button_text || "#FFFFFF",
+    button_icon: data?.button_icon || "#FFFFFF",
+
+    // 🔒 ATIVOS PRIVADOS DO ADM (Papel de parede, timbrado, logos, nome da empresa):
+    // NUNCA CLONADOS para novos usuários! Ficam estritamente restritos ao Master Admin.
+    company_name: isMaster ? (data?.company_name || MASTER_ADMIN_DEFAULT_ASSETS.company_name) : (data?.company_name || ""),
+    company_logo_url: data?.company_logo_url ?? (isMaster ? MASTER_ADMIN_DEFAULT_ASSETS.company_logo_url : null),
+    avatar_url: data?.avatar_url ?? (isMaster ? MASTER_ADMIN_DEFAULT_ASSETS.avatar_url : null),
+    website_logo_url: data?.website_logo_url ?? (isMaster ? MASTER_ADMIN_DEFAULT_ASSETS.website_logo_url : null),
+    timbrado_url: data?.timbrado_url ?? (isMaster ? MASTER_ADMIN_DEFAULT_ASSETS.timbrado_url : null),
+    app_background_url: data?.app_background_url ?? (isMaster ? MASTER_ADMIN_DEFAULT_ASSETS.app_background_url : null),
+    mobile_app_background_url: data?.mobile_app_background_url ?? (isMaster ? MASTER_ADMIN_DEFAULT_ASSETS.mobile_app_background_url : null),
+    app_background_opacity: data?.app_background_opacity !== undefined ? data.app_background_opacity : (isMaster ? 1 : 0),
+    mobile_app_background_opacity: data?.mobile_app_background_opacity !== undefined ? data.mobile_app_background_opacity : (isMaster ? 1 : 0),
+
     app_plans_config: (rawPlans && typeof rawPlans === "object") ? rawPlans : null,
-    company_name: data?.company_name || (isGM ? "GM edificação" : ""),
     bio_config: mergedBio
   };
 
@@ -814,10 +871,9 @@ export function invalidateSettingsMemoryCache() {
 }
 
 /**
- * ✅ FIX PRINCIPAL:
- * - Se pedir por tenantId e não existir registro, tenta buscar por owner.
- * - Se achar por owner (tenant_id null), MIGRA/CLONA para o tenant automaticamente.
- * Isso resolve o erro do timbrado no PDF sem você refazer upload.
+ * ✅ FETCH SETTINGS:
+ * - Novos usuários recebem estritamente o TEMA DE CORES oficial (laranja do ADM #FE540B).
+ * - Papel de parede, timbrado, logo e nome da empresa NUNCA são clonados para outras contas.
  */
 export async function fetchSettingsSupabase(tenantId?: string | null): Promise<AppSettings | null> {
   const cacheKey = tenantId || "default";
@@ -827,7 +883,7 @@ export async function fetchSettingsSupabase(tenantId?: string | null): Promise<A
     return memorySettingsCache.data;
   }
 
-  // 2) Deduplicação de chamadas simultâneas (evita disparar 4 requests repetidos ao Supabase)
+  // 2) Deduplicação de chamadas simultâneas
   if (settingsInFlight.has(cacheKey)) {
     return settingsInFlight.get(cacheKey)!;
   }
@@ -837,7 +893,7 @@ export async function fetchSettingsSupabase(tenantId?: string | null): Promise<A
       const { data: sess } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
       const owner = sess.session?.user?.id;
 
-      // 1) tenta direto pelo tenant
+      // 1) Tenta direto pelo tenant do usuário
       if (tenantId) {
         const { data: byTenant, error: errTenant } = await withTimeout<any>(
           supabase.from("app_settings").select("*").eq("tenant_id", tenantId).maybeSingle() as any,
@@ -846,124 +902,76 @@ export async function fetchSettingsSupabase(tenantId?: string | null): Promise<A
           return { data: null, error: err };
         });
 
-      if (errTenant) {
-        const errorMsg = errTenant?.message || String(errTenant);
-        const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("Timeout") || errorMsg.includes("Tempo limite") || errorMsg.includes("tenant_memberships") || errorMsg.includes("42501");
-        if (!isQuiet) {
-          console.warn("fetchSettings warn (tenant):", errorMsg);
-        }
-        const local = readSettingsLocal(tenantId);
-        if (local) return local;
-      } else if (byTenant) {
-        const merged = mergeWithFallbacks(byTenant);
-        writeSettingsLocal(merged, tenantId);
-        return merged;
-      }
-
-      // 2) fallback: tenta por owner (seleciona o registro ativo, ignorando duplicatas antigas vazias)
-      if (owner) {
-        const { data: ownerRows, error: errOwner } = await withTimeout<any>(
-          supabase.from("app_settings").select("*").eq("owner", owner).order("updated_at", { ascending: false }) as any,
-          4000
-        ).catch((err) => {
-          return { data: null, error: err };
-        });
-
-        if (errOwner) {
-          const errorMsg = errOwner?.message || String(errOwner);
-          const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("Timeout") || errorMsg.includes("Tempo limite") || errorMsg.includes("tenant_memberships") || errorMsg.includes("42501");
-          if (!isQuiet) {
-            console.warn("fetchSettings warn (owner):", errorMsg);
-          }
-          const local = readSettingsLocal(tenantId);
-          if (local) return local;
-          return DEFAULT_SETTINGS;
-        }
-
-        const byOwner = Array.isArray(ownerRows)
-          ? ownerRows.find((r: any) => r.id !== "19609c6b-85a3-4fb1-a40a-18250554fc62" && (r.website_logo_url || r.company_logo_url || (r.bio_config && Object.keys(r.bio_config).length > 2))) || ownerRows[0]
-          : ownerRows;
-
-        if (byOwner) {
-          // 3) migra/clona para o tenant (sem id/created_at/updated_at)
-          const clone: any = { ...(byOwner as any) };
-          delete clone.id;
-          delete clone.created_at;
-          delete clone.updated_at;
-
-          clone.tenant_id = tenantId;
-          clone.owner = owner;
-
-          let migrated: any = null;
-          let errUpsert: any = null;
-          try {
-            const res = await supabase
-              .from("app_settings")
-              .upsert(clone, { onConflict: "tenant_id" })
-              .select("*")
-              .single();
-            migrated = res.data;
-            errUpsert = res.error;
-          } catch (err) {
-            errUpsert = err;
-          }
-
-          if (errUpsert) {
-            console.error("settings migrate error:", errUpsert);
-            const fallbackOwner = mergeWithFallbacks(byOwner);
-            writeSettingsLocal(fallbackOwner, tenantId);
-            return fallbackOwner;
-          }
-
-          const merged = mergeWithFallbacks(migrated);
+        if (!errTenant && byTenant) {
+          const merged = mergeWithFallbacks(byTenant);
           writeSettingsLocal(merged, tenantId);
           return merged;
         }
+
+        // 2) Fallback por owner
+        if (owner) {
+          const { data: ownerRows, error: errOwner } = await withTimeout<any>(
+            supabase.from("app_settings").select("*").eq("owner", owner).order("updated_at", { ascending: false }) as any,
+            4000
+          ).catch((err) => {
+            return { data: null, error: err };
+          });
+
+          if (!errOwner && ownerRows) {
+            const byOwner = Array.isArray(ownerRows)
+              ? ownerRows.find((r: any) => r.id !== "19609c6b-85a3-4fb1-a40a-18250554fc62" && (r.website_logo_url || r.company_logo_url || (r.bio_config && Object.keys(r.bio_config).length > 2))) || ownerRows[0]
+              : ownerRows;
+
+            if (byOwner) {
+              const clone: any = { ...(byOwner as any) };
+              delete clone.id;
+              delete clone.created_at;
+              delete clone.updated_at;
+
+              clone.tenant_id = tenantId;
+              clone.owner = owner;
+
+              try {
+                const res = await supabase
+                  .from("app_settings")
+                  .upsert(clone, { onConflict: "tenant_id" })
+                  .select("*")
+                  .single();
+                if (res.data) {
+                  const merged = mergeWithFallbacks(res.data);
+                  writeSettingsLocal(merged, tenantId);
+                  return merged;
+                }
+              } catch {}
+
+              const fallbackOwner = mergeWithFallbacks(byOwner);
+              writeSettingsLocal(fallbackOwner, tenantId);
+              return fallbackOwner;
+            }
+          }
+        }
+
+        // 3) NOVO USUÁRIO: Não possui personalização ainda.
+        // Aplica SOMENTE o tema de cores oficial (laranja #FE540B), sem clonar papel de parede, timbrado, logo ou nome.
+        const defaultForNewUser = mergeWithFallbacks({ tenant_id: tenantId, owner: owner });
+        writeSettingsLocal(defaultForNewUser, tenantId);
+        return defaultForNewUser;
       }
 
+      // (Sem tenantId ou tela deslogada)
+      const merged = mergeWithFallbacks(DEFAULT_SETTINGS);
+      writeSettingsLocal(merged, null);
+      return merged;
+    } catch (e: any) {
+      const errorMsg = e?.message || String(e);
+      const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("Timeout") || errorMsg.includes("Tempo limite") || errorMsg.includes("tenant_memberships") || errorMsg.includes("42501");
+      if (!isQuiet) {
+        console.warn("fetchSettings warn:", errorMsg);
+      }
       const local = readSettingsLocal(tenantId);
       if (local) return local;
       return DEFAULT_SETTINGS;
     }
-
-    // (sem tenantId) busca pelo registro ativo mais recente
-    let q = supabase.from("app_settings").select("*").order("updated_at", { ascending: false });
-
-    if (owner) q = q.eq("owner", owner);
-    else q = q.is("tenant_id", null);
-
-    const { data: rowsData, error } = await withTimeout<any>(q as any, 4000).catch((err) => {
-      return { data: null, error: err };
-    });
-
-    if (error) {
-      const errorMsg = error?.message || String(error);
-      const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("Timeout") || errorMsg.includes("Tempo limite");
-      if (!isQuiet) {
-        console.warn("fetchSettings warn:", errorMsg);
-      }
-      const local = readSettingsLocal(null);
-      if (local) return local;
-      return DEFAULT_SETTINGS;
-    }
-
-    const data = Array.isArray(rowsData) 
-      ? rowsData.find((r: any) => r.id !== "19609c6b-85a3-4fb1-a40a-18250554fc62" && (r.website_logo_url || r.company_logo_url || (r.bio_config && Object.keys(r.bio_config).length > 2))) || rowsData[0]
-      : rowsData;
-
-    const merged = mergeWithFallbacks(data);
-    writeSettingsLocal(merged, null);
-    return merged;
-  } catch (e: any) {
-    const errorMsg = e?.message || String(e);
-    const isQuiet = errorMsg.includes("Failed to fetch") || errorMsg.includes("Timeout") || errorMsg.includes("Tempo limite") || errorMsg.includes("tenant_memberships") || errorMsg.includes("42501");
-    if (!isQuiet) {
-      console.warn("fetchSettings warn:", errorMsg);
-    }
-    const local = readSettingsLocal(tenantId);
-    if (local) return local;
-    return DEFAULT_SETTINGS;
-  }
   })();
 
   settingsInFlight.set(cacheKey, promise);
@@ -1029,14 +1037,20 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
   }
 
   // Removemos chaves de colunas virtuais/dinâmicas para enviar ao Supabase sem gerar aviso PGRST204 de coluna ausente
-  const dbPayload = { ...payload };
-  delete (dbPayload as any).button_config_light;
-  delete (dbPayload as any).button_config_dark;
-  delete (dbPayload as any).button_bg;
-  delete (dbPayload as any).button_border;
-  delete (dbPayload as any).button_text;
-  delete (dbPayload as any).button_icon;
-  delete (dbPayload as any).button_style;
+  const dbPayload: any = { ...payload };
+  delete dbPayload.button_config_light;
+  delete dbPayload.button_config_dark;
+  delete dbPayload.button_bg;
+  delete dbPayload.button_border;
+  delete dbPayload.button_text;
+  delete dbPayload.button_icon;
+  delete dbPayload.button_style;
+
+  // CRUCIAL: Se owner não estiver definido na sessão atual, NUNCA envie owner: null no update!
+  // Isso previne o erro 23502 (null value in column "owner" violates not-null constraint)
+  if (!owner || dbPayload.owner === null || dbPayload.owner === undefined) {
+    delete dbPayload.owner;
+  }
 
   let dbData: any = null;
 
@@ -1073,6 +1087,12 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
 
   if (existingRecordId) {
     // 1) UPDATE direto pelo id (100% seguro contra erro 42P10 de ON CONFLICT)
+    // Garante que owner não seja enviado como null para não violar a restrição NOT NULL
+    delete dbPayload.id;
+    if (!owner) {
+      delete dbPayload.owner;
+    }
+
     let updateRes = await supabase
       .from("app_settings")
       .update(dbPayload)
@@ -1081,11 +1101,12 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
       .maybeSingle();
 
     // Se falhou por ausência da coluna app_plans_config, retenta sem a coluna (já salvo dentro de bio_config)
-    if (updateRes.error && (dbPayload as any).app_plans_config) {
+    if (updateRes.error && dbPayload.app_plans_config) {
       const errMsg = String(updateRes.error.message || "");
       if (errMsg.includes("app_plans_config") || updateRes.error.code === "PGRST204" || updateRes.error.code === "42703") {
         const cleanPayload = { ...dbPayload };
-        delete (cleanPayload as any).app_plans_config;
+        delete cleanPayload.app_plans_config;
+        if (!owner) delete cleanPayload.owner;
         updateRes = await supabase
           .from("app_settings")
           .update(cleanPayload)
@@ -1098,29 +1119,59 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
     if (!updateRes.error && updateRes.data) {
       dbData = updateRes.data;
     } else if (updateRes.error) {
-      console.warn("Aviso no update de app_settings:", updateRes.error);
+      // Se deu erro de NOT NULL em owner ou outro erro, retenta limpando owner
       const fallbackPayload = { ...dbPayload };
-      delete (fallbackPayload as any).app_plans_config;
-      const upsertFallback = await supabase
+      delete fallbackPayload.app_plans_config;
+      delete fallbackPayload.owner;
+
+      const retryUpdate = await supabase
         .from("app_settings")
-        .upsert({ ...fallbackPayload, id: existingRecordId })
+        .update(fallbackPayload)
+        .eq("id", existingRecordId)
         .select("*")
         .maybeSingle();
-      if (!upsertFallback.error && upsertFallback.data) {
-        dbData = upsertFallback.data;
+
+      if (!retryUpdate.error && retryUpdate.data) {
+        dbData = retryUpdate.data;
+      } else {
+        const upsertFallback = await supabase
+          .from("app_settings")
+          .upsert({ ...fallbackPayload, id: existingRecordId })
+          .select("*")
+          .maybeSingle();
+        if (!upsertFallback.error && upsertFallback.data) {
+          dbData = upsertFallback.data;
+        } else {
+          console.warn("Aviso no update de app_settings:", retryUpdate.error || updateRes.error);
+        }
       }
     }
   } else {
     // 2) INSERT novo registro se ainda não existir
+    // Se owner não estiver na sessão, tenta recuperar de qualquer registro existente para satisfazer constraint
+    if (!dbPayload.owner) {
+      try {
+        const { data: anyRow } = await supabase
+          .from("app_settings")
+          .select("owner")
+          .not("owner", "is", null)
+          .limit(1)
+          .maybeSingle();
+        if (anyRow?.owner) {
+          dbPayload.owner = anyRow.owner;
+        }
+      } catch {}
+    }
+
     let insertRes = await supabase
       .from("app_settings")
       .insert(dbPayload)
       .select("*")
       .maybeSingle();
 
-    if (insertRes.error && (dbPayload as any).app_plans_config) {
+    if (insertRes.error && dbPayload.app_plans_config) {
       const cleanPayload = { ...dbPayload };
-      delete (cleanPayload as any).app_plans_config;
+      delete cleanPayload.app_plans_config;
       insertRes = await supabase
         .from("app_settings")
         .insert(cleanPayload)
@@ -1133,7 +1184,7 @@ export async function upsertSettingsSupabase(tenantId: string | null, patch: Par
     } else {
       // Se falhou insert (possível race condition ou constraint), tenta upsert
       const cleanPayload = { ...dbPayload };
-      delete (cleanPayload as any).app_plans_config;
+      delete cleanPayload.app_plans_config;
       const upsertRes = await supabase
         .from("app_settings")
         .upsert(cleanPayload, { onConflict: "tenant_id" })

@@ -408,29 +408,51 @@ export function getUserSubscription(tenantId?: string | null, userEmail?: string
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.planId) {
+        let daysLeft: number | "ilimitado" = parsed.daysRemaining ?? 7;
+        let isActive = parsed.isActive !== false;
+
+        if (parsed.expiresAt) {
+          const expiresDate = new Date(parsed.expiresAt);
+          const diffMs = expiresDate.getTime() - Date.now();
+          const calculatedDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+          daysLeft = Math.max(0, calculatedDays);
+          isActive = daysLeft > 0;
+        }
+
         return {
           planId: parsed.planId,
           planName: PLANS_DATA[parsed.planId as PlanId]?.name || "Criador",
-          isActive: true,
+          isActive,
           isSuperAdmin: false,
           expiresAt: parsed.expiresAt || null,
-          daysRemaining: parsed.daysRemaining || 30,
+          daysRemaining: daysLeft,
           activatedAt: parsed.activatedAt || new Date().toISOString()
         };
       }
     }
   } catch {}
 
-  // Padrão para novos usuários em teste: Plano Criador (Intermediário - 30 dias de cortesia)
-  return {
+  // Padrão para novos usuários em teste: Plano Criador (7 dias de teste grátis)
+  const activatedDate = new Date();
+  const trialExpiresDate = new Date();
+  trialExpiresDate.setDate(activatedDate.getDate() + 7);
+
+  const initialTrialState: UserSubscriptionState = {
     planId: "intermediario",
-    planName: "Criador (Período de Testes)",
+    planName: "Criador (Teste 7 Dias)",
     isActive: true,
     isSuperAdmin: false,
-    expiresAt: null,
-    daysRemaining: 30,
-    activatedAt: new Date().toISOString()
+    expiresAt: trialExpiresDate.toISOString(),
+    daysRemaining: 7,
+    activatedAt: activatedDate.toISOString()
   };
+
+  try {
+    const tid = tenantId || "default";
+    localStorage.setItem(`${STORAGE_PLAN_KEY}_${tid}`, JSON.stringify(initialTrialState));
+  } catch {}
+
+  return initialTrialState;
 }
 
 /**
@@ -462,6 +484,54 @@ export function setUserSubscription(
   } catch {}
 
   return state;
+}
+
+export type FeatureKey =
+  | "budgets"
+  | "clients"
+  | "expenses"
+  | "market"
+  | "notes"
+  | "financial"
+  | "bio"
+  | "pdf_timbrado"
+  | "whatsapp"
+  | "alarms";
+
+/**
+ * Verifica se o usuário tem permissão para acessar determinado recurso do app
+ */
+export function checkFeatureAccess(subscription: UserSubscriptionState, feature: FeatureKey): {
+  allowed: boolean;
+  requiredPlan: PlanId;
+  reason?: string;
+} {
+  if (subscription.isSuperAdmin || subscription.planId === "adm") {
+    return { allowed: true, requiredPlan: "basico" };
+  }
+
+  if (!subscription.isActive || (typeof subscription.daysRemaining === "number" && subscription.daysRemaining <= 0)) {
+    return {
+      allowed: false,
+      requiredPlan: "intermediario",
+      reason: "Seu período de teste de 7 dias expirou. Escolha um plano para continuar utilizando."
+    };
+  }
+
+  const currentPlan = subscription.planId;
+
+  // Recursos que exigem Plano Criador ou superior
+  if (["expenses", "market", "financial", "pdf_timbrado", "whatsapp"].includes(feature)) {
+    if (currentPlan === "basico") {
+      return {
+        allowed: false,
+        requiredPlan: "intermediario",
+        reason: "Este recurso está disponível a partir do Plano Criador."
+      };
+    }
+  }
+
+  return { allowed: true, requiredPlan: "basico" };
 }
 
 /**
