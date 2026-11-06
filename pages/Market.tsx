@@ -1735,7 +1735,7 @@ const Market = () => {
                             </div>
                             <h3 className="text-2xl font-black text-white mb-2.5">Finalizar Compra?</h3>
                             <p className="text-slate-300 mb-6 text-base leading-relaxed">
-                                Deseja finalizar esta lista no valor de <span className="text-[#F65A1A] font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
+                                Deseja finalizar esta lista no valor de <span className="text-[var(--gm-primary,#FE540B)] font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
                                 O valor será deduzido do seu saldo de mercado.
                             </p>
                             
@@ -1743,9 +1743,9 @@ const Market = () => {
                                 <button 
                                     onClick={handleFinalize}
                                     disabled={finalizing}
-                                    className="w-full h-12 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                                    className="w-full h-12 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                                 >
-                                    {finalizing ? <Loader2 size={18} className="animate-spin text-[#0B0B0C]" /> : <Check size={18} className="text-[#0B0B0C] stroke-[3]" />}
+                                    {finalizing ? <Loader2 size={18} className="animate-spin text-current" /> : <Check size={18} className="text-current stroke-[3]" />}
                                     SIM, FINALIZAR AGORA
                                 </button>
                                 <button 
@@ -1779,12 +1779,12 @@ const Market = () => {
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="p-7 text-center">
-                            <div className="w-16 h-16 bg-[#F65A1A]/10 border border-[#F65A1A]/20 rounded-xl flex items-center justify-center mx-auto mb-5 shadow-none">
-                                <Trash2 size={28} className="text-[#F65A1A]" />
+                            <div className="w-16 h-16 bg-[var(--gm-primary,#FE540B)]/10 border border-[var(--gm-primary,#FE540B)]/20 rounded-xl flex items-center justify-center mx-auto mb-5 shadow-none">
+                                <Trash2 size={28} className="text-[var(--gm-primary,#FE540B)]" />
                             </div>
                             <h3 className="text-2xl font-extrabold text-white mb-2.5">Zerar Saldo?</h3>
                             <p className="text-slate-300 text-base mb-6 leading-relaxed">
-                                Tem certeza que deseja zerar o seu saldo disponível de <span className="text-[#F65A1A] font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
+                                Tem certeza que deseja zerar o seu saldo disponível de <span className="text-[var(--gm-primary,#FE540B)] font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
                                 <br/>Esta ação não pode ser desfeita.
                             </p>
                             
@@ -1798,9 +1798,9 @@ const Market = () => {
                                 <button 
                                     onClick={handleResetBalance}
                                     disabled={resettingBalance}
-                                    className="flex-1 h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] disabled:opacity-50"
+                                    className="flex-1 h-11 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] disabled:opacity-50"
                                 >
-                                    {resettingBalance ? <Loader2 size={18} className="animate-spin text-[#0B0B0C] mx-auto" /> : "Zerar"}
+                                    {resettingBalance ? <Loader2 size={18} className="animate-spin text-current mx-auto" /> : "Zerar"}
                                 </button>
                             </div>
                         </div>
@@ -1826,10 +1826,10 @@ const Market = () => {
                     openWhatsapp("", shareData.message);
                     setShareData(null);
                   }}
-                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#F65A1A]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
+                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
                 >
                   <div className="shrink-0">
-                    <WhatsAppIcon size={22} className="text-[#F65A1A]" />
+                    <WhatsAppIcon size={22} className="text-[#25D366]" />
                   </div>
                   <div className="text-left">
                     <p className="font-bold text-[#F2F2F3] leading-tight">WhatsApp</p>
@@ -1842,10 +1842,10 @@ const Market = () => {
                     window.open(`mailto:?subject=${shareData.title}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#F65A1A]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
+                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
                 >
                   <div className="shrink-0">
-                    <Mail size={22} className="text-[#F65A1A]" />
+                    <Mail size={22} className="text-[var(--gm-primary,#FE540B)]" />
                   </div>
                   <div className="text-left">
                     <p className="font-bold text-[#F2F2F3] leading-tight">E-mail</p>
@@ -1863,10 +1863,10 @@ const Market = () => {
                       alert("Erro ao copiar texto.");
                     }
                   }}
-                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#F65A1A]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
+                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
                 >
                   <div className="shrink-0">
-                    <Copy size={22} className="text-[#F65A1A]" />
+                    <Copy size={22} className="text-[var(--gm-primary,#FE540B)]" />
                   </div>
                   <div className="text-left">
                     <p className="font-bold text-[#F2F2F3] leading-tight">Copiar Texto</p>
@@ -1889,10 +1889,10 @@ const Market = () => {
                         }
                       }
                     }}
-                    className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#F65A1A]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
+                    className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
                   >
                     <div className="shrink-0">
-                      <Share2 size={22} className="text-[#F65A1A]" />
+                      <Share2 size={22} className="text-[var(--gm-primary,#FE540B)]" />
                     </div>
                     <div className="text-left">
                       <p className="font-bold text-[#F2F2F3] leading-tight">Outros Aplicativos</p>

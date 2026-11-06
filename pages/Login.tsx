@@ -803,7 +803,21 @@ export default function Login() {
             )}
 
             {!isForgotPassword && (
-              <div className="pt-2 text-center">
+              <div className="pt-2 space-y-2 text-center">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsLoading(true);
+                    await loginAsMasterAdmin();
+                    navigate("/");
+                  }}
+                  className="w-full h-11 rounded-xl border border-[#F65A1A]/40 bg-[#F65A1A]/10 hover:bg-[#F65A1A]/20 text-[#FF7A38] hover:text-white font-mono font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-[0.99]"
+                  title="Testar demonstração completa sem precisar de senha"
+                >
+                  <Sparkles size={14} className="text-[#F65A1A]" />
+                  <span>Entrar Modo Demonstração (Acesso Completo)</span>
+                </button>
+
                 <Link
                   to="/register"
                   className="w-full inline-flex items-center justify-center h-12 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/20 transition-all font-semibold text-xs tracking-wide text-zinc-300 hover:text-white active:scale-[0.99]"

@@ -688,12 +688,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           onClick={toggleUiSounds}
           title={uiSoundsActive ? "Sons dos Botões: Ligados" : "Sons dos Botões: Desligados"}
           aria-label={uiSoundsActive ? "Sons dos Botões Ligados" : "Sons dos Botões Desligados"}
-          className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F]"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] active:scale-95 shadow-none"
         >
           {uiSoundsActive ? (
-            <Volume2 size={16} className="text-[#F65A1A]" />
+            <Volume2 size={18} className="text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))]" />
           ) : (
-            <VolumeX size={16} className="text-[#8B8B92]" />
+            <VolumeX size={18} className="text-[#8B8B92]" />
           )}
         </button>
       );
@@ -705,31 +705,31 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         onClick={toggleUiSounds}
         title={`Sons dos Botões: clique para ${uiSoundsActive ? "desligar (off)" : "ligar (on)"}`}
         aria-label={`Sons dos Botões: clique para ${uiSoundsActive ? "desligar (off)" : "ligar (on)"}`}
-        className="w-full h-9 px-2.5 rounded-[4px] border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] flex items-center justify-between transition-all duration-120 cursor-pointer select-none group shadow-none"
+        className="w-full h-11 px-3.5 rounded-lg border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] flex items-center justify-between transition-all duration-120 cursor-pointer select-none group shadow-none"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <div
-            className={`w-5 h-5 rounded-[2px] flex items-center justify-center transition-all ${
+            className={`w-7 h-7 rounded-[4px] flex items-center justify-center transition-all ${
               uiSoundsActive
-                ? "bg-[#F65A1A]/15 text-[#F65A1A]"
+                ? "bg-[var(--gm-menu-icon,var(--gm-primary,#FE540B))]/15 text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))]"
                 : "bg-white/5 text-[#8B8B92]"
             }`}
           >
             {uiSoundsActive ? (
-              <Volume2 size={13} className="text-[#F65A1A]" />
+              <Volume2 size={16} className="text-current" />
             ) : (
-              <VolumeX size={13} className="text-[#8B8B92]" />
+              <VolumeX size={16} className="text-[#8B8B92]" />
             )}
           </div>
-          <span className="text-[11px] font-mono font-semibold tracking-wider uppercase text-[#F2F2F3]">
+          <span className="text-[12px] font-mono font-semibold tracking-wider uppercase text-[#F2F2F3]">
             Sons dos Botões
           </span>
         </div>
 
         <div
-          className={`flex items-center justify-center px-2 py-0.5 rounded-[2px] text-[10px] font-mono font-bold tracking-wider uppercase transition-all ${
+          className={`flex items-center justify-center px-2.5 py-1 rounded-[3px] text-[11px] font-mono font-bold tracking-wider uppercase transition-all ${
             uiSoundsActive
-              ? "bg-[#F65A1A] text-[#0B0B0C]"
+              ? "bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-[#0B0B0C]"
               : "bg-[#18181B] text-[#8B8B92] border border-[#26262A]"
           }`}
         >
@@ -745,18 +745,18 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={handleSyncClick}
       title="Sincronização do App"
       aria-label="Sincronização do App"
-      className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
-        width: '36px',
-        height: '36px',
-        minWidth: '36px',
-        minHeight: '36px',
-        borderRadius: '4px',
-        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))",
+        width: '44px',
+        height: '44px',
+        minWidth: '44px',
+        minHeight: '44px',
+        borderRadius: '8px',
+        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
       }}
     >
       <RefreshCw 
-        size={16} 
+        size={18} 
         className={`text-current shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
       />
     </button>
@@ -768,20 +768,20 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={handleBellClick}
       title="Atualizações e Informações"
       aria-label="Atualizações e Informações"
-      className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
-        width: '36px',
-        height: '36px',
-        minWidth: '36px',
-        minHeight: '36px',
-        borderRadius: '4px',
-        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))",
+        width: '44px',
+        height: '44px',
+        minWidth: '44px',
+        minHeight: '44px',
+        borderRadius: '8px',
+        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
       }}
     >
-      <Bell size={16} className="text-current shrink-0" />
+      <Bell size={18} className="text-current shrink-0" />
       {unreadCount > 0 && (
         <span 
-          className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full animate-pulse bg-emerald-400" 
+          className="absolute top-2 right-2.5 w-2 h-2 rounded-full animate-pulse bg-emerald-400 ring-2 ring-[#131315]" 
         />
       )}
     </button>
@@ -793,17 +793,17 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={signOut}
       title="Sair"
       aria-label="Sair"
-      className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
-        width: '36px',
-        height: '36px',
-        minWidth: '36px',
-        minHeight: '36px',
-        borderRadius: '4px',
-        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))",
+        width: '44px',
+        height: '44px',
+        minWidth: '44px',
+        minHeight: '44px',
+        borderRadius: '8px',
+        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
       }}
     >
-      <LogOut size={16} className="text-current shrink-0" />
+      <LogOut size={18} className="text-current shrink-0" />
     </button>
   );
 
@@ -926,7 +926,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           <button
             type="button"
             onClick={toggleSidebar}
-            className="w-5 h-8 rounded-[4px] bg-[#131315] border border-[#26262A] flex items-center justify-center text-[#F65A1A] active:scale-95 transition-all duration-120 shadow-none hover:bg-[#1B1B1E] hover:border-[#38383F] cursor-pointer outline-none !m-0 !p-0"
+            className="w-5 h-8 rounded-[4px] bg-[#131315] border border-[#26262A] flex items-center justify-center text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))] active:scale-95 transition-all duration-120 shadow-none hover:bg-[#1B1B1E] hover:border-[#38383F] cursor-pointer outline-none !m-0 !p-0"
             style={{
               transformOrigin: "center center"
             }}
@@ -934,9 +934,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             aria-label={collapsed ? "Expandir menu" : "Encolher menu"}
           >
             {collapsed ? (
-              <ChevronRight size={13} className="stroke-[2.5] text-[#F65A1A]" />
+              <ChevronRight size={13} className="stroke-[2.5] text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))]" />
             ) : (
-              <ChevronLeft size={13} className="stroke-[2.5] text-[#F65A1A]" />
+              <ChevronLeft size={13} className="stroke-[2.5] text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))]" />
             )}
           </button>
         </div>
@@ -981,13 +981,13 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                         collapsed ? "justify-center !px-0" : "px-3 gap-3"
                       } transition-all duration-120 ${
                         isActive
-                          ? "active bg-[#18181B] text-[#F2F2F3] font-bold border-l-2 border-[#F65A1A]"
+                          ? "active bg-[#18181B] text-[#F2F2F3] font-bold border-l-2 border-[var(--gm-menu-primary,var(--gm-primary,#FE540B))]"
                           : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#131315] border-l-2 border-transparent"
                       }`
                     }
                     title={collapsed ? label : undefined}
                   >
-                    {/* Barra Laranja Fina na Extremidade Esquerda do Item Ativo */}
+                    {/* Barra de destaque na extremidade esquerda do item ativo */}
                     <span
                       className="sidebar-window-indicator"
                       aria-hidden="true"
@@ -998,7 +998,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                     ) : (
                       <Icon 
                         size={18} 
-                        className="shrink-0 text-[#F65A1A] stroke-[2] transition-colors duration-120" 
+                        className="shrink-0 text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] stroke-[2] transition-colors duration-120" 
                       />
                     )}
 
@@ -1013,30 +1013,30 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             })}
           </ul>
 
-          {/* Footer - Forge UI */}
-          <div className="sidebar-footer p-3 border-t border-[#26262A] shrink-0 flex flex-col gap-2 mt-auto w-full bg-[#0B0B0C]">
+          {/* Footer - Forge UI Ampliado e Espaçoso */}
+          <div className="sidebar-footer p-4 border-t border-[#26262A] shrink-0 flex flex-col gap-3 mt-auto w-full bg-[#0B0B0C]">
             {collapsed ? (
-              <div className="flex flex-col items-center gap-2 w-full py-1">
+              <div className="flex flex-col items-center gap-2.5 w-full py-1">
                 {renderSyncButton()}
                 {renderBellButton()}
                 {renderLogoutButton()}
-                <div className="w-6 h-[1px] bg-[#26262A] my-0.5" />
+                <div className="w-7 h-[1px] bg-[#26262A] my-1" />
                 {renderSoundToggleButton(true)}
               </div>
             ) : (
-              <div className="flex flex-col gap-2 w-full">
-                {/* Linha 1: 3 Caixas sólidas Forge com micro-borda hairline #26262A e ícones laranja */}
-                <div className="grid grid-cols-3 gap-1.5 w-full">
+              <div className="flex flex-col gap-3 w-full">
+                {/* Linha 1: 3 Caixas sólidas Forge ampliadas (h-11 / 44px) com cantos rounded-lg e ícones nítidos */}
+                <div className="grid grid-cols-3 gap-2 w-full">
                   <button
                     type="button"
                     onClick={handleSyncClick}
                     title="Sincronização do App"
                     aria-label="Sincronização do App"
-                    className="h-9 w-full rounded-[4px] flex items-center justify-center transition-all duration-120 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
+                    className="h-11 w-full rounded-lg flex items-center justify-center transition-all duration-120 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
                   >
                     <RefreshCw 
-                      size={15} 
-                      className={`text-[#F65A1A] shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
+                      size={18} 
+                      className={`text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
                     />
                   </button>
 
@@ -1045,12 +1045,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                     onClick={handleBellClick}
                     title="Atualizações e Informações"
                     aria-label="Atualizações e Informações"
-                    className="h-9 w-full rounded-[4px] flex items-center justify-center transition-all duration-120 relative cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
+                    className="h-11 w-full rounded-lg flex items-center justify-center transition-all duration-120 relative cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
                   >
-                    <Bell size={15} className="text-[#F65A1A] shrink-0" />
+                    <Bell size={18} className="text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] shrink-0" />
                     {unreadCount > 0 && (
                       <span 
-                        className="absolute top-1.5 right-2 w-1.5 h-1.5 rounded-full animate-pulse bg-emerald-400" 
+                        className="absolute top-2 right-2.5 w-2 h-2 rounded-full animate-pulse bg-emerald-400 ring-2 ring-[#131315]" 
                       />
                     )}
                   </button>
@@ -1060,26 +1060,26 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                     onClick={signOut}
                     title="Sair da Conta"
                     aria-label="Sair da Conta"
-                    className="h-9 w-full rounded-[4px] flex items-center justify-center transition-all duration-120 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
+                    className="h-11 w-full rounded-lg flex items-center justify-center transition-all duration-120 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
                   >
-                    <LogOut size={15} className="text-[#F65A1A] shrink-0" />
+                    <LogOut size={18} className="text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] shrink-0" />
                   </button>
                 </div>
 
-                {/* Linha 2: Botão SONS DOS BOTÕES estilo Forge Spec */}
+                {/* Linha 2: Botão SONS DOS BOTÕES estilo Forge Spec ampliado */}
                 {renderSoundToggleButton(false)}
 
-                {/* Linha 3: Rodapé com texto 'Desenvolvido por CardDigital GM' */}
-                <div className="pt-0.5 text-[10px] font-mono text-center pointer-events-none tracking-wider leading-none whitespace-nowrap flex items-center justify-center gap-1 text-[#8B8B92] select-none">
-                  <span className="uppercase">Desenvolvido por</span>
+                {/* Linha 3: Rodapé com texto 'Desenvolvido por CardDigital GM' ampliado e legível */}
+                <div className="pt-1.5 pb-0.5 text-[11px] sm:text-[11.5px] font-mono text-center pointer-events-none tracking-wider leading-none whitespace-nowrap flex items-center justify-center gap-1.5 text-[#8B8B92] select-none">
+                  <span className="uppercase tracking-widest text-[10.5px]">Desenvolvido por</span>
                   <span 
-                    className="font-bold text-[#F2F2F3]"
+                    className="font-bold text-[#F2F2F3] text-[12px]"
                     style={{ fontFamily: "'Funnel Display', sans-serif" }}
                   >
                     CardDigital
                   </span>
                   <span 
-                    className="font-extrabold text-[#FE540B] inline-block"
+                    className="font-extrabold text-[#FE540B] inline-block text-[12px]"
                     style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}
                   >
                     GM
@@ -1292,7 +1292,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 onClick={() => setActiveTab("todas")}
                 className={`py-1.5 rounded text-center text-xs font-black uppercase tracking-wider transition-all flex-1 cursor-pointer ${
                   activeTab === "todas"
-                    ? "bg-[#F65A1A] text-[#0B0B0C] border border-[#F65A1A]"
+                    ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-primary,#FE540B)] font-black"
                     : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E]"
                 }`}
               >
@@ -1303,7 +1303,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 onClick={() => setActiveTab("nao_lidas")}
                 className={`py-1.5 rounded text-center text-xs font-black uppercase tracking-wider transition-all flex-1 cursor-pointer ${
                   activeTab === "nao_lidas"
-                    ? "bg-[#F65A1A] text-[#0B0B0C] border border-[#F65A1A]"
+                    ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-primary,#FE540B)] font-black"
                     : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E]"
                 }`}
               >
@@ -1314,7 +1314,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 onClick={() => setActiveTab("diretas")}
                 className={`py-1.5 rounded text-center text-xs font-black uppercase tracking-wider transition-all flex-1 cursor-pointer ${
                   activeTab === "diretas"
-                    ? "bg-[#F65A1A] text-[#0B0B0C] border border-[#F65A1A]"
+                    ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-primary,#FE540B)] font-black"
                     : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E]"
                 }`}
               >

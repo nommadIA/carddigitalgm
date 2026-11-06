@@ -96,11 +96,11 @@ export default function Sidebar() {
                 }`
               }
             >
-              {/* Barra laranja na borda esquerda do item ativo */}
+              {/* Barra dinâmica na borda esquerda do item ativo */}
               <span
                 className={`sidebar-window-indicator ${
                   location.pathname === it.to || (it.to !== "/" && location.pathname.startsWith(it.to))
-                    ? "!opacity-100 !bg-[#FE540B]"
+                    ? "!opacity-100 !bg-[var(--gm-menu-primary,var(--gm-primary,#FE540B))]"
                     : "!opacity-0 pointer-events-none"
                 }`}
                 aria-hidden="true"
@@ -108,9 +108,9 @@ export default function Sidebar() {
               {it.to === "/planos" ? (
                 <GoldCrownIcon size={19} />
               ) : (
-                <Icon size={19} className="shrink-0 text-[#FE540B] stroke-[2]" />
+                <Icon size={19} className="shrink-0 text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] stroke-[2]" />
               )}
-              <span className={`ml-3 truncate ${it.to === "/planos" ? "text-amber-300 font-bold" : it.to === "/admin/usuarios" ? "text-[#FE540B] font-bold" : ""}`}>{it.label}</span>
+              <span className={`ml-3 truncate ${it.to === "/planos" ? "text-amber-300 font-bold" : it.to === "/admin/usuarios" ? "text-[var(--gm-primary,#FE540B)] font-bold" : ""}`}>{it.label}</span>
             </NavLink>
           );
         })}

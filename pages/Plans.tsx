@@ -228,13 +228,13 @@ export default function Plans() {
           {/* Efeito Glow Ember Forge de fundo */}
           <div 
             className="absolute -right-20 -top-20 w-96 h-96 rounded-full pointer-events-none opacity-20 blur-3xl"
-            style={{ background: "radial-gradient(circle, #f65a1a 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, var(--gm-primary, #FE540B) 0%, transparent 70%)" }}
           />
 
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex flex-col gap-3 max-w-2xl">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#1b1b1e] text-[#f65a1a] border border-[#2f2f34]">
+                <span className="px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#1b1b1e] text-[var(--gm-primary,#FE540B)] border border-[#2f2f34]">
                   GM Edificação • Planos Oficiais
                 </span>
                 <span className="px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-white/5 text-zinc-400 border border-white/10">
@@ -252,7 +252,7 @@ export default function Plans() {
 
               <div className="flex items-center gap-3 pt-2 text-xs font-mono text-zinc-400 flex-wrap">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#f65a1a]" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--gm-primary,#FE540B)]" />
                   Planos mensais
                 </span>
                 <span className="text-zinc-600">•</span>
@@ -269,7 +269,7 @@ export default function Plans() {
                   <button
                     type="button"
                     onClick={handleOpenAdminEdit}
-                    className="py-3 px-4 rounded bg-[#f65a1a] hover:bg-[#ff6f33] text-[#09090b] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#f65a1a]/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border border-[#f65a1a]"
+                    className="py-3 px-4 rounded bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#09090b)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[var(--gm-primary,#FE540B)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))]"
                   >
                     <Settings size={15} />
                     <span>Configurar Planos & Preços (ADM)</span>
@@ -299,11 +299,11 @@ export default function Plans() {
           }}
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-[#1b1b1e] border border-[#2f2f34] text-[#f65a1a] flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-lg bg-[#1b1b1e] border border-[#2f2f34] text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
               {subscription.isSuperAdmin ? (
                 <Award size={24} className="text-amber-400" />
               ) : (
-                <CheckCircle2 size={24} className="text-[#f65a1a]" />
+                <CheckCircle2 size={24} className="text-[var(--gm-primary,#FE540B)]" />
               )}
             </div>
 
@@ -332,7 +332,7 @@ export default function Plans() {
                     {subscription.expiresAt ? (
                       <>Fim do período: <strong className="text-zinc-200">{new Date(subscription.expiresAt).toLocaleDateString("pt-BR")}</strong> • </>
                     ) : null}
-                    <strong className="text-[#f65a1a]">
+                    <strong className="text-[var(--gm-primary,#FE540B)]">
                       {subscription.daysRemaining === "ilimitado" ? "Acesso Ilimitado" : `${subscription.daysRemaining} dias restantes`}
                     </strong>
                   </>
@@ -348,7 +348,7 @@ export default function Plans() {
               className="py-2.5 px-4 rounded border border-[#2f2f34] bg-[#18181b] hover:bg-[#202024] text-zinc-200 hover:text-white font-mono text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2"
             >
               <span>Gerenciar assinatura</span>
-              <ArrowRight size={14} className="text-[#f65a1a]" />
+              <ArrowRight size={14} className="text-[var(--gm-primary,#FE540B)]" />
             </button>
           </div>
         </div>
@@ -469,16 +469,16 @@ export default function Plans() {
 
           {/* 2. PLANO CRIADOR (INTERMEDIÁRIO - CARD PRINCIPAL / MAIS POPULAR) */}
           <div 
-            className="flex flex-col justify-between p-6 sm:p-8 rounded-xl border-2 border-[#f65a1a] relative overflow-hidden transition-all duration-200 shadow-[0_16px_50px_-10px_rgba(246,90,26,0.3)] scale-[1.02] z-10"
+            className="flex flex-col justify-between p-6 sm:p-8 rounded-xl border-2 border-[var(--gm-primary,#FE540B)] relative overflow-hidden transition-all duration-200 shadow-[0_16px_50px_-10px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] scale-[1.02] z-10"
             style={{
               background: "#161619",
-              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 50px -10px rgba(246, 90, 26, 0.25)"
+              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 50px -10px rgba(var(--gm-primary-rgb,246,90,26), 0.25)"
             }}
           >
             {/* Tag Flutuante Mais Escolhido */}
             <div className="absolute top-4 right-4">
-              <span className="px-2.5 py-1 rounded text-[10px] font-mono font-black uppercase tracking-wider bg-[#f65a1a] text-[#09090b] flex items-center gap-1 shadow-md">
-                <Sparkles size={11} className="text-[#09090b]" />
+              <span className="px-2.5 py-1 rounded text-[10px] font-mono font-black uppercase tracking-wider bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#09090b)] flex items-center gap-1 shadow-md">
+                <Sparkles size={11} className="text-current" />
                 <span>Mais Escolhido</span>
               </span>
             </div>
@@ -486,7 +486,7 @@ export default function Plans() {
             <div className="flex flex-col gap-6">
               {/* Header do Card */}
               <div className="flex flex-col gap-1.5 pr-24">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#f65a1a]">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
                   MAIS ESPAÇO PARA CRIAR
                 </span>
                 <h3 className="text-2xl sm:text-3xl font-black text-[#f2f2f3] tracking-tight">
@@ -513,9 +513,9 @@ export default function Plans() {
               <button
                 type="button"
                 onClick={() => handleOpenCheckout("intermediario")}
-                className="w-full py-4 px-4 rounded border border-[#f65a1a] bg-[#f65a1a] hover:bg-[#ff6f33] text-[#09090b] font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.35)]"
+                className="w-full py-4 px-4 rounded border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#09090b)] font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.35)]"
               >
-                <Check size={18} className="text-[#09090b] stroke-[3]" />
+                <Check size={18} className="text-current stroke-[3]" />
                 <span>
                   {subscription.planId === "intermediario" ? "Seu plano atual" : "Assinar Criador"}
                 </span>
@@ -527,8 +527,8 @@ export default function Plans() {
               <div className="w-full h-[1px] bg-white/10 my-1" />
 
               {/* Cota Destaque */}
-              <div className="flex items-baseline gap-2.5 bg-[#0e0e10] p-3 rounded border border-[#f65a1a]/30 shadow-inner">
-                <span className="text-3xl font-black text-[#f65a1a] font-mono">
+              <div className="flex items-baseline gap-2.5 bg-[#0e0e10] p-3 rounded border border-[var(--gm-primary,#FE540B)]/30 shadow-inner">
+                <span className="text-3xl font-black text-[var(--gm-primary,#FE540B)] font-mono">
                   {PLANS_DATA.intermediario.quotaLabel}
                 </span>
                 <div className="flex flex-col">
@@ -539,13 +539,13 @@ export default function Plans() {
 
               {/* Checklist de Recursos */}
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#f65a1a]">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
                   Tudo Liberado no Criador
                 </span>
                 <ul className="flex flex-col gap-2.5 text-xs text-white">
                   {PLANS_DATA.intermediario.features.map((feat) => (
                     <li key={feat} className="flex items-start gap-2.5">
-                      <Check size={15} className="text-[#f65a1a] shrink-0 mt-0.5 stroke-[3]" />
+                      <Check size={15} className="text-[var(--gm-primary,#FE540B)] shrink-0 mt-0.5 stroke-[3]" />
                       <span className="leading-snug font-medium">{feat}</span>
                     </li>
                   ))}
@@ -556,7 +556,7 @@ export default function Plans() {
             {/* Rodapé com badges */}
             <div className="border-t border-[#26262a] pt-4 mt-6 flex items-center justify-between text-xs font-mono text-zinc-300">
               <span className="flex items-center gap-1.5 text-white">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#f65a1a] animate-pulse shadow-sm shadow-[#f65a1a]/50" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary,#FE540B)] animate-pulse shadow-sm shadow-[var(--gm-primary,#FE540B)]/50" />
                 Pix Instantâneo & Cartão
               </span>
               <span className="text-emerald-400 font-bold">Liberação na hora</span>
@@ -658,7 +658,7 @@ export default function Plans() {
           style={{ background: "#121215" }}
         >
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#f65a1a]">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
               PROCESSO SIMPLES & SEGURO
             </span>
             <h3 className="text-lg sm:text-2xl font-black text-[#f2f2f3] tracking-tight">
@@ -671,7 +671,7 @@ export default function Plans() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-[#18181b] border border-[#26262a] flex flex-col gap-2">
-              <span className="text-xs font-mono font-black text-[#f65a1a]">01. ESCOLHA O PLANO</span>
+              <span className="text-xs font-mono font-black text-[var(--gm-primary,#FE540B)]">01. ESCOLHA O PLANO</span>
               <h4 className="text-sm font-bold text-white">Selecione seu ritmo</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Clique no botão de assinatura do plano Essencial, Criador ou Profissional de acordo com a sua demanda mensal de orçamentos.
@@ -679,7 +679,7 @@ export default function Plans() {
             </div>
 
             <div className="p-4 rounded-lg bg-[#18181b] border border-[#26262a] flex flex-col gap-2">
-              <span className="text-xs font-mono font-black text-[#f65a1a]">02. PAGAMENTO INSTANTÂNEO</span>
+              <span className="text-xs font-mono font-black text-[var(--gm-primary,#FE540B)]">02. PAGAMENTO INSTANTÂNEO</span>
               <h4 className="text-sm font-bold text-white">Pix ou Cartão</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Pague diretamente com QR Code Pix com valor automático ou utilize seu cartão de crédito com faturamento mensal protegido.
@@ -687,7 +687,7 @@ export default function Plans() {
             </div>
 
             <div className="p-4 rounded-lg bg-[#18181b] border border-[#26262a] flex flex-col gap-2">
-              <span className="text-xs font-mono font-black text-[#f65a1a]">03. LIBERAÇÃO IMEDIATA</span>
+              <span className="text-xs font-mono font-black text-[var(--gm-primary,#FE540B)]">03. LIBERAÇÃO IMEDIATA</span>
               <h4 className="text-sm font-bold text-white">Comece a produzir</h4>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Seu plano é validado e todas as funcionalidades correspondentes ficam prontas para você fechar propostas e gerenciar clientes.
@@ -726,7 +726,7 @@ export default function Plans() {
             className="w-full p-5 sm:p-6 flex items-center justify-between text-left hover:bg-white/[0.02] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded bg-[#18181b] border border-[#2f2f34] text-[#f65a1a] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded bg-[#18181b] border border-[#2f2f34] text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
                 <Layers size={18} />
               </div>
               <div>
@@ -738,7 +738,7 @@ export default function Plans() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 font-mono text-xs text-[#f65a1a]">
+            <div className="flex items-center gap-2 font-mono text-xs text-[var(--gm-primary,#FE540B)]">
               <span>{isCompareOpen ? "Ocultar comparativo" : "Ver comparativo"}</span>
               {isCompareOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </div>
@@ -751,7 +751,7 @@ export default function Plans() {
                   <tr className="border-b border-[#26262a] text-zinc-400 font-mono text-[11px] uppercase">
                     <th className="py-3 px-2">Recurso / Módulo</th>
                     <th className="py-3 px-2 text-center text-sky-400">Essencial</th>
-                    <th className="py-3 px-2 text-center text-[#f65a1a] font-bold">Criador (Popular)</th>
+                    <th className="py-3 px-2 text-center text-[var(--gm-primary,#FE540B)] font-bold">Criador (Popular)</th>
                     <th className="py-3 px-2 text-center text-emerald-400">Profissional</th>
                   </tr>
                 </thead>
@@ -759,7 +759,7 @@ export default function Plans() {
                   <tr>
                     <td className="py-3 px-2 font-bold text-white">Cota Mensal de Orçamentos</td>
                     <td className="py-3 px-2 text-center">15 / mês</td>
-                    <td className="py-3 px-2 text-center font-bold text-[#f65a1a]">100 / mês</td>
+                    <td className="py-3 px-2 text-center font-bold text-[var(--gm-primary,#FE540B)]">100 / mês</td>
                     <td className="py-3 px-2 text-center font-bold text-emerald-400">Ilimitados (∞)</td>
                   </tr>
                   <tr>
@@ -771,37 +771,37 @@ export default function Plans() {
                   <tr>
                     <td className="py-3 px-2 font-bold text-white">Papel Timbrado A4 Oficial</td>
                     <td className="py-3 px-2 text-center"><X size={15} className="mx-auto text-zinc-600" /></td>
-                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[#f65a1a]" /></td>
+                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[var(--gm-primary,#FE540B)]" /></td>
                     <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-emerald-400" /></td>
                   </tr>
                   <tr>
                     <td className="py-3 px-2 font-bold text-white">Envio no WhatsApp em 1 clique</td>
                     <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-sky-400" /></td>
-                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[#f65a1a]" /></td>
+                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[var(--gm-primary,#FE540B)]" /></td>
                     <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-emerald-400" /></td>
                   </tr>
                   <tr>
                     <td className="py-3 px-2 font-bold text-white">Controle de Despesas & Categorias</td>
                     <td className="py-3 px-2 text-center"><X size={15} className="mx-auto text-zinc-600" /></td>
-                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[#f65a1a]" /></td>
+                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[var(--gm-primary,#FE540B)]" /></td>
                     <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-emerald-400" /></td>
                   </tr>
                   <tr>
                     <td className="py-3 px-2 font-bold text-white">DRE & Relatórios Analíticos</td>
                     <td className="py-3 px-2 text-center"><X size={15} className="mx-auto text-zinc-600" /></td>
-                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[#f65a1a]" /></td>
+                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[var(--gm-primary,#FE540B)]" /></td>
                     <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-emerald-400" /></td>
                   </tr>
                   <tr>
                     <td className="py-3 px-2 font-bold text-white">Catálogo de Mercado & Materiais</td>
                     <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-sky-400" /></td>
-                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[#f65a1a]" /></td>
+                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[var(--gm-primary,#FE540B)]" /></td>
                     <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-emerald-400" /></td>
                   </tr>
                   <tr>
                     <td className="py-3 px-2 font-bold text-white">Minha Bio / Portfólio Website</td>
                     <td className="py-3 px-2 text-center"><X size={15} className="mx-auto text-zinc-600" /></td>
-                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[#f65a1a]" /></td>
+                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-[var(--gm-primary,#FE540B)]" /></td>
                     <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-emerald-400" /></td>
                   </tr>
                   <tr>
@@ -831,7 +831,7 @@ export default function Plans() {
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#f65a1a]">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
                 SEM COMPLICAÇÃO
               </span>
               <h3 className="text-lg sm:text-2xl font-black text-[#f2f2f3] tracking-tight">
@@ -850,7 +850,7 @@ export default function Plans() {
             >
               <MessageCircle size={15} className="text-[#25D366]" />
               <span>Falar com o suporte</span>
-              <ArrowRight size={14} className="text-[#f65a1a]" />
+              <ArrowRight size={14} className="text-[var(--gm-primary,#FE540B)]" />
             </a>
           </div>
 
@@ -867,7 +867,7 @@ export default function Plans() {
                     <span className="text-xs sm:text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">
                       ► {item.q}
                     </span>
-                    <span className="text-zinc-500 group-hover:text-[#f65a1a] transition-colors shrink-0">
+                    <span className="text-zinc-500 group-hover:text-[var(--gm-primary,#FE540B)] transition-colors shrink-0">
                       {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </span>
                   </button>

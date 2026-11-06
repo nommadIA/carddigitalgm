@@ -882,15 +882,15 @@ a[class*="bg-[var(--gm-primary)]"]:hover,
   color: #ffffff !important;
 }
 
-/* Estado Normal: Ícone Laranja Claro (#FF7A38), Texto Preto (#0b0b0c) */
+/* Estado Normal: Ícone no botão primário acompanha texto e tema dinâmico */
 .forge-btn--primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
 .forge-btn-primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
 .tc-pill-btn-primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
 .gm-dash-primary-btn svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
 button.primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]),
 .btn-primary svg:not(.gm-btn-plus-black):not(.gm-plus-icon-wrapper):not([stroke="#0b0b0c"]):not([stroke="#0B0B0C"]) {
-  color: #FF7A38 !important;
-  stroke: #FF7A38 !important;
+  color: var(--gm-primary-foreground, #0b0b0c) !important;
+  stroke: var(--gm-primary-foreground, #0b0b0c) !important;
   transition: color 140ms ease, stroke 140ms ease !important;
 }
 
@@ -1049,7 +1049,7 @@ button.ghost,
     transform 120ms cubic-bezier(0.2, 0.65, 0.25, 1) !important;
 }
 
-/* Estado Normal: Ícone Laranja Claro (#FF7A38) */
+/* Estado Normal: Ícone Dinâmico no Botão Secundário */
 .forge-btn--secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
 .tc-pill-btn-secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
 button.secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
@@ -1057,8 +1057,8 @@ button.secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-f
 .gm-btn-secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
 .forge-btn-secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
 .gm-btn-outline svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]) {
-  color: #FF7A38 !important;
-  stroke: #FF7A38 !important;
+  color: var(--gm-primary, #FE540B) !important;
+  stroke: var(--gm-primary, #FE540B) !important;
   transition: color 140ms ease, stroke 140ms ease !important;
 }
 
@@ -1147,8 +1147,8 @@ button.secondary:active,
 .gm-btn-icon-square svg:not(.whatsapp-icon),
 .forge-btn-icon-square svg:not(.whatsapp-icon),
 .forge-btn-icon svg:not(.whatsapp-icon) {
-  color: #FF7A38 !important;
-  stroke: #FF7A38 !important;
+  color: var(--gm-primary, #FE540B) !important;
+  stroke: var(--gm-primary, #FE540B) !important;
   transition: color 140ms ease, stroke 140ms ease !important;
 }
 
@@ -1161,8 +1161,8 @@ button.secondary:active,
 .gm-grid-action-btn:hover {
   background: #26262a !important;
   background-color: #26262a !important;
-  border-color: rgba(254, 84, 11, 0.5) !important;
-  box-shadow: 0 0 12px rgba(254, 84, 11, 0.2) !important;
+  border-color: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.5) !important;
+  box-shadow: 0 0 12px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.2) !important;
   color: #ffffff !important;
 }
 
@@ -1358,9 +1358,9 @@ button[class*="w-8"][class*="h-8"] svg {
 .forge-badge-live,
 .forge-badge-running,
 .forge-badge-warning {
-  background: rgba(246, 90, 26, 0.1) !important;
-  border: 1px solid rgba(246, 90, 26, 0.35) !important;
-  color: #FF7A38 !important;
+  background: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.1) !important;
+  border: 1px solid rgba(var(--gm-primary-rgb, 254, 84, 11), 0.35) !important;
+  color: var(--gm-primary, #FE540B) !important;
 }
 .forge-badge-failed,
 .forge-badge-danger {
@@ -1387,13 +1387,13 @@ textarea {
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
 select:focus,
 textarea:focus {
-  border-color: #F65A1A !important;
-  box-shadow: 0 0 0 1px rgba(246, 90, 26, 0.35) !important;
+  border-color: var(--gm-primary, #FE540B) !important;
+  box-shadow: 0 0 0 1px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.35) !important;
   outline: none !important;
 }
 
 /* =========================================================
-   TopBar & Social Icons Hover - Cor Laranja #FE540B
+   TopBar & Social Icons Hover - Cor Dinâmica do Tema
 ========================================================= */
 .topbar-social-link {
   transition: color 0.2s ease, transform 0.2s ease;
@@ -1404,12 +1404,12 @@ textarea:focus {
 .topbar-social-link:hover rect,
 .topbar-social-link:hover circle,
 .topbar-social-link:hover line {
-  color: #FE540B !important;
-  stroke: #FE540B !important;
+  color: var(--gm-primary, #FE540B) !important;
+  stroke: var(--gm-primary, #FE540B) !important;
 }
 .topbar-social-link:hover svg[fill="currentColor"],
 .topbar-social-link:hover path[fill="currentColor"] {
-  fill: #FE540B !important;
+  fill: var(--gm-primary, #FE540B) !important;
 }
 
 /* Links do Topbar */
@@ -1418,14 +1418,14 @@ textarea:focus {
 }
 .topbar-nav-link:hover,
 .topbar-nav-link:hover span {
-  color: #FE540B !important;
+  color: var(--gm-primary, #FE540B) !important;
 }
 
 /* Área de seleção de texto no cabeçalho */
 .selection-orange ::selection,
 .selection-orange::selection {
-  background-color: #FE540B !important;
-  color: #ffffff !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  color: var(--gm-primary-foreground, #ffffff) !important;
 }
 
 /* =========================================================
@@ -2039,17 +2039,17 @@ html.lenis, html.lenis body {
     90px
   );
 
-  --gm-primary: #F65A1A;
-  --gm-primary-rgb: 246, 90, 26;
-  --gm-accent: #FF7A38;
+  --gm-primary: var(--primary, #FE540B);
+  --gm-primary-rgb: 254, 84, 11;
+  --gm-accent: var(--accent, #FF7A38);
   --gm-accent-rgb: 255, 122, 56;
   
   /* Theme Utilities */
-  --gm-primary-10: rgba(246, 90, 26, 0.1);
-  --gm-primary-20: rgba(246, 90, 26, 0.2);
-  --gm-primary-30: rgba(246, 90, 26, 0.3);
-  --gm-accent-10: rgba(255, 122, 56, 0.1);
-  --gm-accent-20: rgba(255, 122, 56, 0.2);
+  --gm-primary-10: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.1);
+  --gm-primary-20: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.2);
+  --gm-primary-30: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.3);
+  --gm-accent-10: rgba(var(--gm-accent-rgb, 255, 122, 56), 0.1);
+  --gm-accent-20: rgba(var(--gm-accent-rgb, 255, 122, 56), 0.2);
 
   /* Dark Mode Default - High Contrast Palette */
   --gm-bg: #0B0B0C;
@@ -8584,10 +8584,10 @@ html.gm-light button.gm-floating-save-btn {
 
 .gm-floating-save-btn:hover,
 button.gm-floating-save-btn:hover {
-  background-color: #ff7a38 !important;
-  background: #ff7a38 !important;
+  background-color: var(--gm-accent, var(--gm-primary-hover, var(--gm-primary, #FE540B))) !important;
+  background: var(--gm-accent, var(--gm-primary-hover, var(--gm-primary, #FE540B))) !important;
   filter: none !important;
-  color: #0b0b0c !important;
+  color: var(--gm-primary-foreground, #0b0b0c) !important;
   box-shadow: none !important;
   transform: none !important;
 }
@@ -9009,8 +9009,8 @@ button:active, .gm-btn:active {
 
 .gm-input:focus, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, select:focus, textarea:focus {
   outline: none;
-  border-color: #f65a1a !important;
-  box-shadow: 0 0 0 2px rgba(246, 90, 26, 0.24) !important;
+  border-color: var(--gm-primary, #FE540B) !important;
+  box-shadow: 0 0 0 2px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.24) !important;
   background-color: #131315 !important;
 }
 
@@ -9551,17 +9551,17 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
 :root,
 [data-theme="dark"],
 .gm-dark {
-  --gm-primary: #FE540B;
-  --gm-accent: #FF7A38;
+  --gm-primary: var(--primary, #FE540B);
+  --gm-accent: var(--accent, #FF7A38);
   --gm-primary-rgb: 254, 84, 11;
   --gm-accent-rgb: 255, 122, 56;
-  --gm-primary-10: rgba(254, 84, 11, 0.1);
-  --gm-primary-20: rgba(254, 84, 11, 0.2);
-  --gm-primary-30: rgba(254, 84, 11, 0.3);
-  --gm-accent-10: rgba(255, 122, 56, 0.1);
-  --gm-accent-20: rgba(255, 122, 56, 0.2);
-  --gm-primary-hover: #FF7A38;
-  --gm-primary-soft: rgba(254, 84, 11, 0.14);
+  --gm-primary-10: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.1);
+  --gm-primary-20: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.2);
+  --gm-primary-30: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.3);
+  --gm-accent-10: rgba(var(--gm-accent-rgb, 255, 122, 56), 0.1);
+  --gm-accent-20: rgba(var(--gm-accent-rgb, 255, 122, 56), 0.2);
+  --gm-primary-hover: var(--gm-accent, var(--gm-primary, #FF7A38));
+  --gm-primary-soft: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.14);
 
   --gm-bg: #0B0B0C;
   --gm-bg-secondary: #131315;
@@ -10573,8 +10573,8 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 }
 
 .gm-viewmode-btn-inactive svg {
-  color: #FF7A38 !important;
-  stroke: #FF7A38 !important;
+  color: var(--gm-primary, #FE540B) !important;
+  stroke: var(--gm-primary, #FE540B) !important;
   transition: color 140ms ease, stroke 140ms ease !important;
 }
 
@@ -10587,8 +10587,8 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 .gm-viewmode-btn-inactive:focus-visible {
   background: #1b1b1e !important;
   background-color: #1b1b1e !important;
-  border-color: rgba(254, 84, 11, 0.5) !important;
-  box-shadow: 0 0 14px rgba(254, 84, 11, 0.22) !important;
+  border-color: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.5) !important;
+  box-shadow: 0 0 14px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.22) !important;
   color: #ffffff !important;
 }
 
@@ -10680,8 +10680,8 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
    Versão Branca (Hover / Clique): Fundo Branco (#FFFFFF), Texto Laranja (#FE540B), SEM CONTORNO OU BORDA
    ========================================================= */
 .site-btn-pill {
-  background-color: #FE540B !important;
-  color: #FFFFFF !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  color: var(--gm-primary-foreground, #FFFFFF) !important;
   border: none !important;
   outline: none !important;
   border-radius: 9999px !important;
@@ -10700,7 +10700,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 .site-btn-pill,
 .site-btn-pill span,
 .site-btn-pill svg {
-  color: #FFFFFF !important;
+  color: var(--gm-primary-foreground, #FFFFFF) !important;
   transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
@@ -10708,7 +10708,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 .site-btn-pill:hover,
 .site-btn-pill:active {
   background-color: #FFFFFF !important;
-  color: #FE540B !important;
+  color: var(--gm-primary, #FE540B) !important;
   border: none !important;
   outline: none !important;
   box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.25) !important;
@@ -10724,7 +10724,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 .site-btn-pill:hover svg,
 .site-btn-pill:active span,
 .site-btn-pill:active svg {
-  color: #FE540B !important;
+  color: var(--gm-primary, #FE540B) !important;
 }
 
 .site-btn-pill:active {

@@ -1961,15 +1961,17 @@ export default function Budgets() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirmId(null)}
-                  className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black"
+                  className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black inline-flex items-center justify-center gap-2"
                 >
-                  Cancelar
+                  <X size={15} />
+                  <span>Cancelar</span>
                 </button>
                 <button
                   onClick={hardDelete}
-                  className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(255,122,0,0.3)]"
+                  className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(var(--gm-primary-rgb,254,84,11),0.3)] inline-flex items-center justify-center gap-2 bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-[var(--gm-primary-foreground,#0b0b0c)]"
                 >
-                  Excluir
+                  <Trash2 size={15} />
+                  <span>Excluir</span>
                 </button>
               </div>
             </div>

@@ -682,16 +682,18 @@ export default function Clients() {
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmId(null)}
-                  className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] text-white backdrop-blur-md cursor-pointer"
+                  className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] text-white backdrop-blur-md cursor-pointer inline-flex items-center justify-center gap-2"
                 >
-                  Cancelar
+                  <X size={15} />
+                  <span>Cancelar</span>
                 </button>
                 <button
                   type="button"
                   onClick={hardDelete}
-                  className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-none bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white backdrop-blur-md cursor-pointer"
+                  className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-none bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-[var(--gm-primary-foreground,#0b0b0c)] hover:brightness-110 backdrop-blur-md cursor-pointer inline-flex items-center justify-center gap-2"
                 >
-                  Excluir
+                  <Trash2 size={15} />
+                  <span>Excluir</span>
                 </button>
               </div>
             </div>

@@ -1141,9 +1141,10 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   <button
                     type="button"
                     onClick={handleAddItem}
-                    className="px-4 py-2 rounded-xl font-bold text-xs bg-black/20 text-slate-300 border border-white/10 hover:bg-white/5 transition-all"
+                    className="px-4 py-2 rounded-xl font-bold text-xs bg-black/20 text-slate-300 border border-white/10 hover:bg-white/5 transition-all inline-flex items-center gap-1.5"
                   >
-                    Adicionar item manual
+                    <Plus size={14} />
+                    <span>Adicionar item manual</span>
                   </button>
                 </div>
               </div>

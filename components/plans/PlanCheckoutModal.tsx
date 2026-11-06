@@ -295,9 +295,9 @@ export default function PlanCheckoutModal({
                 <button
                   type="button"
                   onClick={handleCopyPix}
-                  className="px-3 py-1.5 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
+                  className="px-3 py-1.5 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
                 >
-                  {copied ? <Check size={14} className="text-[#0B0B0C]" /> : <Copy size={14} className="text-[#0B0B0C]" />}
+                  {copied ? <Check size={14} className="text-current" /> : <Copy size={14} className="text-current" />}
                   <span>{copied ? "Copiado!" : "Copiar"}</span>
                 </button>
               </div>
@@ -341,15 +341,15 @@ export default function PlanCheckoutModal({
                   href={externalLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-4 px-5 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] transition-all cursor-pointer active:scale-95"
+                  className="w-full py-4 px-5 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] transition-all cursor-pointer active:scale-95"
                 >
                   <span>Pagar com Cartão de Crédito</span>
-                  <ExternalLink size={16} className="text-[#0B0B0C]" />
+                  <ExternalLink size={16} className="text-current" />
                 </a>
               </div>
             ) : (
               <div className="flex flex-col gap-3 p-4 rounded-xl bg-[#131315] border border-[#26262A] text-center">
-                <div className="w-12 h-12 rounded-md bg-[#F65A1A]/10 border border-[#F65A1A]/20 text-[#F65A1A] flex items-center justify-center mx-auto">
+                <div className="w-12 h-12 rounded-md bg-[var(--gm-primary,#FE540B)]/10 border border-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] flex items-center justify-center mx-auto">
                   <CreditCard size={22} />
                 </div>
                 <h4 className="font-bold text-white text-sm">Pagamento no Cartão via WhatsApp</h4>
@@ -379,7 +379,7 @@ export default function PlanCheckoutModal({
         {/* Botão de Ativação Rápida para o Administrador */}
         {isAdmin && (
           <div className="border-t border-[#26262A] pt-4 flex flex-col gap-2 relative z-10">
-            <div className="flex items-center gap-1.5 text-[11px] font-black text-[#F65A1A] uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 text-[11px] font-black text-[var(--gm-primary,#FE540B)] uppercase tracking-wider">
               <Sparkles size={13} />
               <span>Ação de Administrador Master</span>
             </div>
@@ -387,9 +387,9 @@ export default function PlanCheckoutModal({
               type="button"
               disabled={activating}
               onClick={handleAdminImmediateActivation}
-              className="w-full py-3 px-4 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)]"
+              className="w-full py-3 px-4 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.3)]"
             >
-              <Check size={15} className="text-[#0B0B0C] stroke-[3]" />
+              <Check size={15} className="text-current stroke-[3]" />
               <span>{activating ? "Ativando..." : `Ativar ${plan.name} Imediatamente (Modo ADM)`}</span>
             </button>
           </div>

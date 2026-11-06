@@ -4407,15 +4407,17 @@ export default function Notes() {
                   <div className="flex gap-3 mt-6">
                     <button
                       onClick={() => setDeleteConfirmId(null)}
-                      className="flex-1 px-4 py-3 rounded-xl font-medium text-white/70 hover:text-white barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md transition-colors cursor-pointer"
+                      className="flex-1 px-4 py-3 rounded-xl font-medium text-white/70 hover:text-white barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
                     >
-                      Cancelar
+                      <X size={15} />
+                      <span>Cancelar</span>
                     </button>
                     <button
                       onClick={handleHardDeleteConfirm}
-                      className="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500/80 hover:bg-red-500 text-white border border-red-400/40 backdrop-blur-md transition-all shadow-none cursor-pointer"
+                      className="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500/80 hover:bg-red-500 text-white border border-red-400/40 backdrop-blur-md transition-all shadow-none cursor-pointer inline-flex items-center justify-center gap-2"
                     >
-                      Excluir
+                      <Trash2 size={15} />
+                      <span>Excluir</span>
                     </button>
                   </div>
                 </motion.div>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CardDigital GM Pro — Prévia do Aplicativo</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    :root {
+      --gm-primary: #FE540B;
+      --gm-bg: #0B0B0C;
+      --gm-surface: #131315;
+      --gm-border: #26262A;
+      --gm-text: #F2F2F3;
+    }
+    body {
+      background-color: var(--gm-bg);
+      color: var(--gm-text);
+      font-family: 'Inter', sans-serif;
+    }
+    .font-funnel { font-family: 'Funnel Display', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .forge-card {
+      background: var(--gm-surface);
+      border: 1px solid var(--gm-border);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    .forge-card:hover {
+      border-color: #38383F;
+      transform: translateY(-2px);
+    }
+    .btn-forge {
+      height: 44px;
+      padding: 0 20px;
+      background: var(--gm-primary);
+      color: #0B0B0C;
+      font-weight: 800;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      transition: all 0.16s ease;
+      cursor: pointer;
+    }
+    .btn-forge:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-[#FE540B] selection:text-black">
+
+  <!-- TOP HEADER -->
+  <header class="w-full h-16 border-b border-[#26262A] bg-[#0B0B0C]/90 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between px-6">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-[#18181B] border border-white/10 flex items-center justify-center p-1 font-black text-[#FE540B]">
+        GM
+      </div>
+      <div>
+        <h1 class="font-funnel font-extrabold text-base tracking-wide flex items-center gap-1.5 text-white">
+          CardDigital <span class="text-[#FE540B]">GM Pro</span>
+        </h1>
+        <p class="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">Sistema Comercial & Bio Profissional</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-bold">
+        ● Sistema Ativo & Sincronizado
+      </span>
+      <a href="#modulos" class="btn-forge">Explorar Módulos</a>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="max-w-7xl mx-auto px-6 py-12 md:py-16 text-center flex flex-col items-center gap-6">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-zinc-300">
+      <span class="w-2 h-2 rounded-full bg-[#FE540B] animate-pulse"></span>
+      Versão 31-10 Otimizada & Organizada (Desktop + Smartphone)
+    </div>
+    <h2 class="font-funnel font-black text-3xl sm:text-5xl lg:text-6xl tracking-tight max-w-4xl">
+      Gestão Completa, Orçamentos Inteligentes & Portfólio Digital em Alta Performance
+    </h2>
+    <p class="text-zinc-400 text-sm sm:text-base max-w-2xl leading-relaxed">
+      Aplicativo totalmente otimizado com o padrão <b>Forge Industrial System</b>. Layouts limpos, tipografia padronizada, botões de alto contraste, animações fluidas e suporte multi-dispositivo perfeito.
+    </p>
+
+    <!-- QUICK METRICS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-5xl mt-6">
+      <div class="forge-card p-5 text-left">
+        <span class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Faturamento Total</span>
+        <div class="font-funnel font-black text-2xl sm:text-3xl text-white mt-1">R$ 24.850,00</div>
+        <span class="text-[10px] text-emerald-400 font-bold mt-1 inline-block">↑ +18.4% este mês</span>
+      </div>
+      <div class="forge-card p-5 text-left">
+        <span class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Orçamentos Aprovados</span>
+        <div class="font-funnel font-black text-2xl sm:text-3xl text-white mt-1">42</div>
+        <span class="text-[10px] text-zinc-400 font-bold mt-1 inline-block">8 em produção</span>
+      </div>
+      <div class="forge-card p-5 text-left">
+        <span class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Clientes Ativos</span>
+        <div class="font-funnel font-black text-2xl sm:text-3xl text-white mt-1">128</div>
+        <span class="text-[10px] text-emerald-400 font-bold mt-1 inline-block">12 novos esta semana</span>
+      </div>
+      <div class="forge-card p-5 text-left">
+        <span class="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Despesas do Mês</span>
+        <div class="font-funnel font-black text-2xl sm:text-3xl text-[#FE540B] mt-1">R$ 4.210,00</div>
+        <span class="text-[10px] text-zinc-400 font-bold mt-1 inline-block">Controladas</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULES GRID -->
+  <section id="modulos" class="max-w-7xl mx-auto px-6 py-12 w-full border-t border-[#26262A]">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h3 class="font-funnel font-black text-2xl text-white">Módulos do Sistema</h3>
+        <p class="text-xs text-zinc-400 uppercase tracking-widest mt-1">Todos os recursos integrados e funcionais</p>
+      </div>
+      <span class="text-xs font-mono text-[#FE540B] bg-[#FE540B]/10 px-3 py-1 rounded border border-[#FE540B]/30 font-bold">
+        100% Funcional
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- Module 1 -->
+      <div class="forge-card p-6 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#FE540B]/10 border border-[#FE540B]/30 flex items-center justify-center text-[#FE540B] font-bold mb-4">
+            📊
+          </div>
+          <h4 class="font-funnel font-black text-lg text-white mb-2">Orçamentos & Kanban</h4>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Criação de orçamentos para Agência e Impressão com cálculo automático, descontos, juros, prazos e links de pagamento PIX.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-[#26262A] flex items-center justify-between text-xs font-mono text-zinc-400">
+          <span>Status Dinâmico</span>
+          <span class="text-[#FE540B] font-bold">Ativo</span>
+        </div>
+      </div>
+
+      <!-- Module 2 -->
+      <div class="forge-card p-6 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#FE540B]/10 border border-[#FE540B]/30 flex items-center justify-center text-[#FE540B] font-bold mb-4">
+            👥
+          </div>
+          <h4 class="font-funnel font-black text-lg text-white mb-2">CRM de Clientes</h4>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Gestão completa de clientes com WhatsApp direto, CPF/CNPJ, endereços e histórico de orçamentos vinculados.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-[#26262A] flex items-center justify-between text-xs font-mono text-zinc-400">
+          <span>Banco de Dados</span>
+          <span class="text-emerald-400 font-bold">Sincronizado</span>
+        </div>
+      </div>
+
+      <!-- Module 3 -->
+      <div class="forge-card p-6 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#FE540B]/10 border border-[#FE540B]/30 flex items-center justify-center text-[#FE540B] font-bold mb-4">
+            💰
+          </div>
+          <h4 class="font-funnel font-black text-lg text-white mb-2">Financeiro & Despesas</h4>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Controle de fluxo de caixa, relatórios mensais, despesas pagas/pendentes e balanço financeiro em tempo real.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-[#26262A] flex items-center justify-between text-xs font-mono text-zinc-400">
+          <span>Relatórios PDF</span>
+          <span class="text-[#FE540B] font-bold">Disponível</span>
+        </div>
+      </div>
+
+      <!-- Module 4 -->
+      <div class="forge-card p-6 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#FE540B]/10 border border-[#FE540B]/30 flex items-center justify-center text-[#FE540B] font-bold mb-4">
+            📱
+          </div>
+          <h4 class="font-funnel font-black text-lg text-white mb-2">Minha Bio & Portfólio</h4>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Página de links profissional customizável para divulgação de serviços, portfólio, redes sociais e botões de contato.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-[#26262A] flex items-center justify-between text-xs font-mono text-zinc-400">
+          <span>Subdomínio</span>
+          <span class="text-emerald-400 font-bold">Pronto</span>
+        </div>
+      </div>
+
+      <!-- Module 5 -->
+      <div class="forge-card p-6 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#FE540B]/10 border border-[#FE540B]/30 flex items-center justify-center text-[#FE540B] font-bold mb-4">
+            🛒
+          </div>
+          <h4 class="font-funnel font-black text-lg text-white mb-2">Lista de Mercado</h4>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Gerenciamento de suprimentos e itens de mercado com controle de carteira, quantidades e marcação de compra rápida.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-[#26262A] flex items-center justify-between text-xs font-mono text-zinc-400">
+          <span>Controle</span>
+          <span class="text-[#FE540B] font-bold">Ativo</span>
+        </div>
+      </div>
+
+      <!-- Module 6 -->
+      <div class="forge-card p-6 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-lg bg-[#FE540B]/10 border border-[#FE540B]/30 flex items-center justify-center text-[#FE540B] font-bold mb-4">
+            ⚙️
+          </div>
+          <h4 class="font-funnel font-black text-lg text-white mb-2">Configurações & White Label</h4>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Personalização completa de cores, logotipo, chave PIX, efeitos visuais de fundo (Aurora/Prisma) e segurança com PIN.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-[#26262A] flex items-center justify-between text-xs font-mono text-zinc-400">
+          <span>Personalização</span>
+          <span class="text-emerald-400 font-bold">Completa</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="max-w-7xl mx-auto px-6 py-10 w-full border-t border-[#26262A] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-400">
+    <div class="flex items-center gap-2">
+      <span>CardDigital GM Pro © 2026</span>
+      <span>•</span>
+      <span class="text-white">Forge Industrial System</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span>Versão Otimizada (Desktop + Smartphone)</span>
+    </div>
+  </footer>
+
+</body>
+</html>

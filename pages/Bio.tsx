@@ -3388,9 +3388,10 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={clearTrash}
-                        className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-none"
+                        className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-none inline-flex items-center gap-1.5"
                       >
-                        Esvaziar Lixeira
+                        <Trash2 size={13} />
+                        <span>Esvaziar Lixeira</span>
                       </button>
                     )}
                   </div>
@@ -4123,9 +4124,10 @@ export default function Bio() {
                         <button
                           type="button"
                           onClick={clearPortfolioTrash}
-                          className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-none"
+                          className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-none inline-flex items-center gap-1.5"
                         >
-                          Esvaziar Lixeira
+                          <Trash2 size={13} />
+                          <span>Esvaziar Lixeira</span>
                         </button>
                       )}
                     </div>

@@ -432,17 +432,18 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                         <div className="flex gap-3 pt-2">
                             <button
                                 onClick={onClose}
-                                className="flex-1 h-11 rounded-md font-bold text-xs uppercase tracking-wider bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-[#F2F2F3] transition-all cursor-pointer"
+                                className="flex-1 h-11 rounded-md font-bold text-xs uppercase tracking-wider bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-[#F2F2F3] transition-all cursor-pointer flex items-center justify-center gap-2"
                             >
-                                Cancelar
+                                <X size={16} />
+                                <span>Cancelar</span>
                             </button>
 
                             <button
                                 onClick={onSave}
                                 disabled={saving}
-                                className="flex-1 h-11 rounded-md font-black text-xs uppercase tracking-wider bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] flex items-center justify-center gap-2 transition-all cursor-pointer disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B] disabled:cursor-not-allowed"
+                                className="flex-1 h-11 rounded-md font-black text-xs uppercase tracking-wider bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] flex items-center justify-center gap-2 transition-all cursor-pointer disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B] disabled:cursor-not-allowed shadow-[0_2px_12px_rgba(var(--gm-primary-rgb,254,84,11),0.25)]"
                             >
-                                {saving ? <Loader2 className="animate-spin text-[#0B0B0C]" size={18} /> : <Save size={18} className="text-[#0B0B0C]" />}
+                                {saving ? <Loader2 className="animate-spin text-current" size={18} /> : <Save size={18} className="text-current" />}
                                 <span>{saving ? "Salvando..." : "Salvar"}</span>
                             </button>
                         </div>

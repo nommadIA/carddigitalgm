@@ -536,7 +536,7 @@ export default function NotificationCheckinModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-10 px-6 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-all cursor-pointer"
+            className="h-10 px-6 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] text-xs font-black uppercase tracking-wider shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-all cursor-pointer"
           >
             Concluir Check-in
           </button>

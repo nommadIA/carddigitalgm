@@ -23,6 +23,7 @@ import { SectionDivider } from "../components/ui/SectionDivider";
 import { generateFullAppSummaryPdf } from "../services/pdfService";
 import { BorderBeam } from "../components/ui/BorderBeam";
 import { ForgeSpecCard } from "../components/ui/ForgeSpecCard";
+import { MediaDownloader } from "../components/media/MediaDownloader";
 
 function formatPhoneBR(value: string) {
   const digits = (value || "").replace(/\D/g, "").slice(0, 11);
@@ -66,7 +67,7 @@ const glassCardStyle: React.CSSProperties = {
 const cardBase =
   "relative rounded-lg p-6 border border-[#26262A] bg-[#131315] gm-card forge-card overflow-hidden transition-all shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_4px_20px_-2px_rgba(0,0,0,0.5)]";
 const inputBase =
-  "w-full gm-input rounded-md px-4 py-2.5 text-sm text-[#F2F2F3] placeholder-[#8B8B92] focus:outline-none focus:border-[#F65A1A] transition-all border border-[#26262A] bg-[#131315]";
+  "w-full gm-input rounded-md px-4 py-2.5 text-sm text-[#F2F2F3] placeholder-[#8B8B92] focus:outline-none focus:border-[var(--gm-primary,#FE540B)] transition-all border border-[#26262A] bg-[#131315]";
 
 export default function Dashboard() {
   const { user, tenantId } = useAuth();
@@ -347,7 +348,7 @@ export default function Dashboard() {
     }
     return (
       <span className="forge-badge forge-badge-live">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#FF7A38]" />
+        <span className="w-1.5 h-1.5 rounded-full bg-[var(--gm-accent,var(--gm-primary,#FE540B))]" />
         NA FILA
       </span>
     );
@@ -410,7 +411,7 @@ export default function Dashboard() {
 
       {/* 2. CARD DO RELÓGIO DIGITAL CENTRALIZADO (FORGE SPEC UI) */}
       <div className="forge-spec relative overflow-hidden">
-        <BorderBeam duration={6} borderWidth={1.2} color="#f65a1a" />
+        <BorderBeam duration={6} borderWidth={1.2} color="var(--gm-primary, #FE540B)" />
         <div className="forge-spec__bar">
           <span className="forge-spec__id">00</span>
           <span className="forge-spec__title">SISTEMA · HORA CERTA</span>
@@ -418,7 +419,7 @@ export default function Dashboard() {
         </div>
         <div className="forge-spec__body flex flex-col items-center justify-center text-center py-6 sm:py-7">
           <div className="flex items-center justify-center gap-3 sm:gap-4 text-[#F2F2F3]">
-            <Clock size={28} className="text-[#f65a1a] shrink-0" />
+            <Clock size={28} className="text-[var(--gm-primary,#FE540B)] shrink-0" />
             <span className="text-4xl sm:text-5xl md:text-6xl font-black font-mono tracking-widest text-[#F2F2F3] drop-shadow-sm">
               {now.toLocaleTimeString("pt-BR", { hour12: false })}
             </span>
@@ -604,6 +605,10 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* SEPARADOR: MOTOR DE DOWNLOAD */}
+      <SectionDivider label="Motor de download" />
+      <MediaDownloader />
+
       {/* SEPARADOR: AÇÕES RÁPIDAS */}
       <SectionDivider label="Ações rápidas" />
 
@@ -648,15 +653,20 @@ export default function Dashboard() {
                   className="forge-btn forge-btn--primary w-full !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-none select-none"
                 >
                   {savingClient ? (
-                    <Loader2 size={14} className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <>
+                      <Loader2 size={15} className="w-4 h-4 animate-spin shrink-0" />
+                      <span className="text-[11.5px] font-semibold tracking-wider">CADASTRANDO...</span>
+                    </>
                   ) : (
-                    <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
-                      <Plus size={15} strokeWidth={2.5} className="w-3.5 h-3.5 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
-                    </span>
+                    <>
+                      <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
+                        <Plus size={15} strokeWidth={2.5} className="w-3.5 h-3.5 shrink-0 gm-btn-plus-black" />
+                      </span>
+                      <span className="text-[11.5px] font-semibold tracking-wider">
+                        CADASTRAR CLIENTE
+                      </span>
+                    </>
                   )}
-                  <span className="text-[11.5px] font-semibold">
-                    Cadastrar Cliente
-                  </span>
                 </button>
               </div>
             </form>
@@ -675,7 +685,7 @@ export default function Dashboard() {
                   Paleta de cores oficial do sistema
                 </p>
               </div>
-              <span className="text-[10px] font-mono font-bold text-[#F65A1A] bg-[#F65A1A]/10 px-2.5 py-1 rounded-full border border-[#F65A1A]/30">
+              <span className="text-[10px] font-mono font-bold text-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/10 px-2.5 py-1 rounded-full border border-[var(--gm-primary,#FE540B)]/30">
                 8 CORES
               </span>
             </div>
@@ -687,8 +697,8 @@ export default function Dashboard() {
                 { name: "Graphite", hex: "#131315" },
                 { name: "Slate", hex: "#1B1B1E" },
                 { name: "Filament", hex: "#26262A" },
-                { name: "Ember", hex: "#F65A1A" },
-                { name: "Spark", hex: "#FF7A38" },
+                { name: "Primária", hex: appSettings?.brand_primary || (typeof window !== "undefined" ? getComputedStyle(document.documentElement).getPropertyValue("--gm-primary").trim() : "") || "#FE540B" },
+                { name: "Acento", hex: appSettings?.brand_accent || (typeof window !== "undefined" ? getComputedStyle(document.documentElement).getPropertyValue("--gm-accent").trim() : "") || "#FF7A38" },
                 { name: "Bone", hex: "#F2F2F3" },
                 { name: "Ash", hex: "#8B8B92" },
               ].map((color) => (
@@ -700,7 +710,7 @@ export default function Dashboard() {
                       pushToast({ title: "Cor copiada", message: `Cor ${color.name} (${color.hex}) copiada!`, type: "success" });
                     } catch (e) {}
                   }}
-                  className="rounded-xl overflow-hidden hover:border-[#F65A1A]/70 transition-all cursor-pointer group shadow-none flex flex-col border border-white/10 bg-transparent"
+                  className="rounded-xl overflow-hidden hover:border-[var(--gm-primary,#FE540B)]/70 transition-all cursor-pointer group shadow-none flex flex-col border border-white/10 bg-transparent"
                   title={`Clique para copiar ${color.hex}`}
                 >
                   {/* Bloco Único/Superior com a Cor preenchendo o topo de ponta a ponta */}
@@ -715,7 +725,7 @@ export default function Dashboard() {
 
                   {/* Painel Inferior com Nome e Código Hex integrado sem borda interna duplicada */}
                   <div className="p-2 sm:p-2.5 bg-black/30 flex flex-col justify-center">
-                    <h4 className="text-xs font-bold text-white group-hover:text-[#F65A1A] transition-colors leading-tight">
+                    <h4 className="text-xs font-bold text-white group-hover:text-[var(--gm-primary,#FE540B)] transition-colors leading-tight">
                       {color.name}
                     </h4>
                     <p className="text-[10px] font-mono text-[#8B8B92] uppercase mt-0.5 tracking-wider font-semibold">

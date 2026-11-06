@@ -27,7 +27,7 @@ const cardBase =
 const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
   const base =
     "w-10 h-10 flex items-center justify-center shrink-0 rounded-md transition-all duration-150 border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] cursor-pointer active:scale-95";
-  if (tone === "orange") return `${base} text-[#F65A1A] hover:border-[#F65A1A] hover:text-[#FF7A38]`;
+  if (tone === "orange") return `${base} text-[var(--gm-primary,#FE540B)] hover:border-[var(--gm-primary,#FE540B)] hover:text-[var(--gm-accent,#FF7A38)]`;
   if (tone === "green") return `${base} text-emerald-400 hover:border-emerald-500 hover:text-emerald-300`;
   if (tone === "red") return `${base} text-red-400 hover:border-red-500 hover:text-red-300`;
   return `${base} text-[#8B8B92] hover:border-[#F2F2F3]/40 hover:text-[#F2F2F3]`;
@@ -377,7 +377,7 @@ export default function Financial() {
               <ChevronLeft size={16} />
             </button>
             <div className="px-3 flex items-center gap-2 font-bold text-xs uppercase tracking-wider min-w-[140px] justify-center text-[#F2F2F3]">
-              <Calendar size={14} className="text-[#F65A1A]" />
+              <Calendar size={14} className="text-[var(--gm-primary,#FE540B)]" />
               <span className="capitalize">{selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
             </div>
             <button 
@@ -388,7 +388,7 @@ export default function Financial() {
             </button>
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="ml-1 px-2.5 py-1 text-[10px] uppercase font-black bg-[#1B1B1E] hover:bg-[#F65A1A] text-[#8B8B92] hover:text-[#0B0B0C] border border-[#26262A] rounded-md transition-all h-[26px] flex items-center justify-center cursor-pointer shadow-none"
+              className="ml-1 px-2.5 py-1 text-[10px] uppercase font-black bg-[#1B1B1E] hover:bg-[var(--gm-primary,#FE540B)] text-[#8B8B92] hover:text-[var(--gm-primary-foreground,#0B0B0C)] border border-[#26262A] rounded-md transition-all h-[26px] flex items-center justify-center cursor-pointer shadow-none"
             >
               Hoje
             </button>

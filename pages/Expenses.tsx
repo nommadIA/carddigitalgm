@@ -808,9 +808,9 @@ export default function Expenses() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 right-6 z-[10000] bg-[#131315] border border-[#f65a1a]/50 text-[#f2f2f3] px-5 py-3 rounded-[4px] shadow-2xl flex items-center gap-3 text-sm font-bold font-mono"
+            className="fixed top-6 right-6 z-[10000] bg-[#131315] border border-[var(--gm-primary,#FE540B)]/50 text-[#f2f2f3] px-5 py-3 rounded-[4px] shadow-2xl flex items-center gap-3 text-sm font-bold font-mono"
           >
-            <CheckCircle2 size={18} className="text-[#f65a1a] shrink-0 animate-pulse" />
+            <CheckCircle2 size={18} className="text-[var(--gm-primary,#FE540B)] shrink-0 animate-pulse" />
             <span>{toastMessage}</span>
           </motion.div>
         )}
@@ -848,7 +848,7 @@ export default function Expenses() {
               title="Clique para abrir o seletor de mês e ano"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-[2px] border border-[#f65a1a]/30 bg-[#f65a1a]/15 flex items-center justify-center text-[#f65a1a] shrink-0">
+                <div className="w-7 h-7 rounded-[2px] border border-[var(--gm-primary,#FE540B)]/30 bg-[var(--gm-primary,#FE540B)]/15 flex items-center justify-center text-[var(--gm-primary,#FE540B)] shrink-0">
                   <Calendar size={14} />
                 </div>
                 <div className="flex flex-col items-start text-left select-none leading-tight">
@@ -860,7 +860,7 @@ export default function Expenses() {
                   </span>
                 </div>
               </div>
-              <ChevronDown size={16} className="text-[#8b8b92] group-hover:text-[#f65a1a] transition-all shrink-0 ml-1" />
+              <ChevronDown size={16} className="text-[#8b8b92] group-hover:text-[var(--gm-primary,#FE540B)] transition-all shrink-0 ml-1" />
             </button>
 
             {/* Desktop: Seta Próximo */}
@@ -915,23 +915,23 @@ export default function Expenses() {
             <button
               className={`flex-1 sm:flex-initial h-8 px-3.5 rounded-[3px] text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tab === "active"
-                  ? "bg-[#f65a1a] text-[#0b0b0c] font-bold shadow-none"
+                  ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0b0b0c)] font-bold shadow-none"
                   : "text-[#8b8b92] hover:text-[#f2f2f3] hover:bg-white/5"
               }`}
               onClick={() => setTab("active")}
             >
-              <ListFilter size={14} className={tab === "active" ? "text-[#0b0b0c]" : "text-[#f65a1a]"} />
+              <ListFilter size={14} className={tab === "active" ? "text-[var(--gm-primary-foreground,#0b0b0c)]" : "text-[var(--gm-primary,#FE540B)]"} />
               <span className="truncate">Todas do Mês</span>
             </button>
             <button
               className={`flex-1 sm:flex-initial h-8 px-3.5 rounded-[3px] text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tab === "recurring"
-                  ? "bg-[#f65a1a] text-[#0b0b0c] font-bold shadow-none"
+                  ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0b0b0c)] font-bold shadow-none"
                   : "text-[#8b8b92] hover:text-[#f2f2f3] hover:bg-white/5"
               }`}
               onClick={() => setTab("recurring")}
             >
-              <Repeat size={14} className={tab === "recurring" ? "text-[#0b0b0c]" : "text-[#f65a1a]"} />
+              <Repeat size={14} className={tab === "recurring" ? "text-[var(--gm-primary-foreground,#0b0b0c)]" : "text-[var(--gm-primary,#FE540B)]"} />
               <span className="truncate">Recorrentes</span>
             </button>
             <button
@@ -978,7 +978,7 @@ export default function Expenses() {
             onClick={() => loadExpenses()}
             title="Recarregar despesas"
           >
-            <RotateCcw size={14} className="text-[#f65a1a]" />
+            <RotateCcw size={14} className="text-[var(--gm-primary,#FE540B)]" />
             <span>Atualizar</span>
           </button>
         </div>
@@ -1054,7 +1054,7 @@ export default function Expenses() {
                           {e.description}
                         </span>
                         {e.isRecurring && (
-                          <span className="px-2 py-0.5 rounded-[2px] font-mono text-[9px] font-bold uppercase bg-[#f65a1a]/15 text-[#f65a1a] border border-[#f65a1a]/30 shrink-0 flex items-center gap-1" title="Despesa Recorrente">
+                          <span className="px-2 py-0.5 rounded-[2px] font-mono text-[9px] font-bold uppercase bg-[var(--gm-primary,#FE540B)]/15 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/30 shrink-0 flex items-center gap-1" title="Despesa Recorrente">
                             <Repeat size={10} />
                             Recorrente
                           </span>
@@ -1100,7 +1100,7 @@ export default function Expenses() {
                             type="button"
                             onClick={(ev) => handleOpenEditModal(e, ev)}
                             data-icon-btn="true"
-                            className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] rounded-[4px] flex items-center justify-center shrink-0 transition-all border cursor-pointer active:scale-95 bg-[#1b1b1e] border-[#26262a] text-[#f65a1a] hover:bg-[#26262a] hover:border-[#38383f] shadow-none"
+                            className="w-9 h-9 min-w-[36px] min-h-[36px] max-w-[36px] max-h-[36px] rounded-[4px] flex items-center justify-center shrink-0 transition-all border cursor-pointer active:scale-95 bg-[#1b1b1e] border-[#26262a] text-[var(--gm-primary,#FE540B)] hover:bg-[#26262a] hover:border-[#38383f] shadow-none"
                             title="Editar despesa"
                           >
                             <Pencil size={14} />
@@ -1933,15 +1933,17 @@ export default function Expenses() {
                 <div className="flex gap-2.5">
                   <button
                     onClick={() => setDeleteConfirmId(null)}
-                    className="forge-btn forge-btn--secondary rounded-[4px] flex-1 h-10 text-xs font-semibold cursor-pointer"
+                    className="forge-btn forge-btn--secondary rounded-[4px] flex-1 h-10 text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5"
                   >
-                    Cancelar
+                    <X size={14} />
+                    <span>Cancelar</span>
                   </button>
                   <button
                     onClick={hardDelete}
-                    className="forge-btn bg-red-600 hover:bg-red-500 text-white border border-red-600 rounded-[4px] flex-1 h-10 text-xs font-bold cursor-pointer shadow-none"
+                    className="forge-btn bg-red-600 hover:bg-red-500 text-white border border-red-600 rounded-[4px] flex-1 h-10 text-xs font-bold cursor-pointer shadow-none inline-flex items-center justify-center gap-1.5"
                   >
-                    Excluir
+                    <Trash2 size={14} />
+                    <span>Excluir</span>
                   </button>
                 </div>
               </div>
@@ -2096,7 +2098,7 @@ export default function Expenses() {
                       <button
                         type="button"
                         onClick={() => setShowMonthModal(false)}
-                        className="h-11 px-6 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.3)] shrink-0"
+                        className="h-11 px-6 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.3)] shrink-0"
                       >
                         Fechar
                       </button>
