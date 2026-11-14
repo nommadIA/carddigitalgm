@@ -193,6 +193,16 @@ export default function Login() {
   const lockEffectType = getEffectFor("lockscreen", bgEffect);
 
   useEffect(() => {
+    try {
+      const revokedMsg = sessionStorage.getItem("gm_session_revoked_notice");
+      if (revokedMsg) {
+        setErrorMessage(revokedMsg);
+        sessionStorage.removeItem("gm_session_revoked_notice");
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
     setBgInfo(resolveAppBackground());
     const handleUpdate = () => {
       const mobile = isMobileDevice();
@@ -552,25 +562,25 @@ export default function Login() {
       {/* ------------------------------------------------------------- */}
       {/* LADO ESQUERDO: Painel de Credenciais Minimalista Forge        */}
       {/* ------------------------------------------------------------- */}
-      <div className="w-full lg:w-[480px] xl:w-[540px] 2xl:w-[580px] h-full flex flex-col justify-between shrink-0 bg-[#0c0d12]/95 lg:bg-[#0c0d12] lg:border-r border-white/10 relative z-20 overflow-y-auto px-6 sm:px-10 lg:px-12 xl:px-14 py-8 sm:py-10 shadow-2xl">
+      <div className="w-full lg:w-[480px] xl:w-[540px] 2xl:w-[580px] h-full flex flex-col justify-between shrink-0 bg-[#0B0B0C]/95 lg:bg-[#0B0B0C] lg:border-r border-[#26262A] relative z-20 overflow-y-auto px-6 sm:px-10 lg:px-12 xl:px-14 py-8 sm:py-10 shadow-2xl">
         {/* Topo: LOGO OFICIAL DO APP Card Digital GM (Sem avatar e sem área do assinante) */}
         <div className="flex items-center justify-between mb-5 sm:mb-7">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FE540B] flex items-center justify-center font-black text-white text-base shadow-lg shadow-[#FE540B]/30 shrink-0">
+            <div className="w-10 h-10 rounded-md bg-[#FE540B] flex items-center justify-center font-black text-white text-base shrink-0">
               GM
             </div>
             <div className="flex flex-col min-w-0">
               <div className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-1 leading-tight">
                 CardDigital <span className="text-[#FE540B] font-black" style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}>GM</span>
               </div>
-              <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
+              <div className="text-[11px] font-bold text-[#8B8B92] uppercase tracking-widest mt-0.5">
                 Plataforma de Orçamentos
               </div>
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-mono uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>Conexão Segura</span>
           </div>
         </div>
@@ -581,7 +591,7 @@ export default function Login() {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               {showSavedAvatarPreview ? "Bem-vindo de volta" : "Entrar na plataforma"}
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-1.5 font-normal">
+            <p className="text-xs sm:text-sm text-[#8B8B92] mt-1.5 font-normal">
               {showSavedAvatarPreview
                 ? "Entre na sua conta para continuar criando."
                 : "Digite seu e-mail e senha para acessar o sistema."}
@@ -590,10 +600,10 @@ export default function Login() {
 
           {/* AVATAR DO USUÁRIO SALVO: Exibido APENAS se já fez login antes e deixou credenciais salvas */}
           {showSavedAvatarPreview && (
-            <div className="mb-4 p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-3 shadow-inner">
+            <div className="mb-4 p-3 rounded-md bg-[#131315] border border-[#26262A] flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative shrink-0">
-                  <div className="w-11 h-11 rounded-xl overflow-hidden bg-black/60 border border-[var(--gm-primary)]/40 flex items-center justify-center shadow-md">
+                  <div className="w-11 h-11 rounded-md overflow-hidden bg-[#0B0B0C] border border-[var(--gm-primary)]/40 flex items-center justify-center">
                     {savedProfile.logo ? (
                       <img src={savedProfile.logo} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
@@ -604,7 +614,7 @@ export default function Login() {
                       </div>
                     )}
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#0c0d12] flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#0B0B0C] flex items-center justify-center">
                     <Check size={9} strokeWidth={3} className="text-black" />
                   </div>
                 </div>
@@ -612,7 +622,7 @@ export default function Login() {
                   <span className="text-white font-bold text-sm truncate">
                     {savedProfile.companyName || savedProfile.email.split("@")[0]}
                   </span>
-                  <span className="text-zinc-400 text-xs truncate">
+                  <span className="text-[#8B8B92] text-xs truncate">
                     {savedProfile.email}
                   </span>
                 </div>
@@ -621,7 +631,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={handleSwitchAccount}
-                className="text-xs font-semibold text-[var(--gm-primary,#FE540B)] hover:underline shrink-0 flex items-center gap-1 cursor-pointer px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                className="text-xs font-semibold text-[var(--gm-primary,#FE540B)] hover:underline shrink-0 flex items-center gap-1 cursor-pointer px-2.5 py-1.5 rounded-[4px] hover:bg-[#1B1B1E] transition-colors whitespace-nowrap"
                 title="Entrar com outro usuário"
               >
                 <RefreshCw size={11} />
@@ -636,7 +646,7 @@ export default function Login() {
               type="button"
               onClick={handleGoogleLogin}
               disabled={isLoading || isGoogleLoading}
-              className="w-full h-11 sm:h-12 rounded-xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.99] text-white font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-3 cursor-pointer shadow-sm hover:border-white/25 disabled:opacity-50 disabled:cursor-not-allowed group touch-manipulation mb-3.5"
+              className="w-full h-11 sm:h-12 rounded-[6px] border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#3F3F46] active:scale-[0.99] text-white font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group touch-manipulation mb-3.5"
             >
               {isGoogleLoading ? (
                 <Loader2 size={18} className="animate-spin text-white" />
@@ -667,22 +677,22 @@ export default function Login() {
           {/* DIVISOR FORGE */}
           {!isForgotPassword && (
             <div className="relative my-3 flex items-center justify-center">
-              <div className="border-t border-white/10 w-full" />
-              <span className="bg-[#0c0d12] px-3 text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-zinc-500 shrink-0">
+              <div className="border-t border-[#26262A] w-full" />
+              <span className="bg-[#0B0B0C] px-3 text-[11px] font-mono uppercase tracking-widest text-[#8B8B92] shrink-0">
                 ou com e-mail
               </span>
-              <div className="border-t border-white/10 w-full" />
+              <div className="border-t border-[#26262A] w-full" />
             </div>
           )}
 
           {errorMessage && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-2.5 text-red-200 text-xs sm:text-sm mb-3">
+            <div className="bg-red-500/10 border border-red-500/25 rounded-md p-2.5 text-red-200 text-xs sm:text-sm mb-3">
               {errorMessage}
             </div>
           )}
 
           {successMessage && (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-2.5 text-green-200 text-xs sm:text-sm mb-3">
+            <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-md p-2.5 text-emerald-200 text-xs sm:text-sm mb-3">
               {successMessage}
             </div>
           )}
@@ -775,7 +785,7 @@ export default function Login() {
             {/* Botão de Entrar (Padrão Forge High-Contrast) */}
             <button
               type="submit"
-              className="login-submit-btn w-full h-12 rounded-xl bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-white font-bold text-sm shadow-[0_4px_16px_rgba(var(--gm-primary-rgb,254,84,11),0.25)] hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center mt-1 uppercase tracking-wider disabled:cursor-not-allowed"
+              className="login-submit-btn w-full h-11 sm:h-12 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-white font-bold text-sm hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center mt-1 uppercase tracking-wider disabled:cursor-not-allowed"
               disabled={!canSubmit || isLoading || isGoogleLoading}
             >
               {isLoading ? (
@@ -796,7 +806,7 @@ export default function Login() {
                   setErrorMessage("");
                   setSuccessMessage("");
                 }}
-                className="w-full text-center text-xs sm:text-sm text-slate-300 hover:text-white transition-colors mt-2 py-1 font-medium"
+                className="w-full text-center text-xs sm:text-sm text-[#CBD5E1] hover:text-white transition-colors mt-2 py-1 font-medium cursor-pointer"
               >
                 Voltar para o login
               </button>
@@ -811,7 +821,7 @@ export default function Login() {
                     await loginAsMasterAdmin();
                     navigate("/");
                   }}
-                  className="w-full h-11 rounded-xl border border-[#F65A1A]/40 bg-[#F65A1A]/10 hover:bg-[#F65A1A]/20 text-[#FF7A38] hover:text-white font-mono font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-[0.99]"
+                  className="w-full h-11 rounded-[6px] border border-[#F65A1A]/40 bg-[#F65A1A]/10 hover:bg-[#F65A1A]/20 text-[#FF7A38] hover:text-white font-mono font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
                   title="Testar demonstração completa sem precisar de senha"
                 >
                   <Sparkles size={14} className="text-[#F65A1A]" />
@@ -820,7 +830,7 @@ export default function Login() {
 
                 <Link
                   to="/register"
-                  className="w-full inline-flex items-center justify-center h-12 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/20 transition-all font-semibold text-xs tracking-wide text-zinc-300 hover:text-white active:scale-[0.99]"
+                  className="w-full inline-flex items-center justify-center h-11 sm:h-12 rounded-[6px] border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#3F3F46] transition-colors font-semibold text-xs tracking-wide text-[#CBD5E1] hover:text-white active:scale-[0.99]"
                 >
                   Ainda não tem conta? <span className="text-[var(--gm-primary,#FE540B)] ml-1.5 font-bold underline underline-offset-4">Criar conta</span>
                 </Link>
@@ -883,8 +893,8 @@ export default function Login() {
 
         {/* Topo do painel direito: Badge */}
         <div className="relative z-10 flex justify-end w-full">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-zinc-300 text-xs font-medium shadow-lg">
-            <Sparkles size={13} className="text-[#FE540B] animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[4px] bg-[#131315]/90 border border-[#26262A] text-[#CBD5E1] text-xs font-medium">
+            <Sparkles size={13} className="text-[#FE540B]" />
             <span>Vídeo em tempo real</span>
           </div>
         </div>
@@ -902,12 +912,12 @@ export default function Login() {
               Geração de propostas comerciais, controle financeiro, gestão de clientes e produção gráfica numa única plataforma.
             </p>
 
-            {/* Tags pills */}
+            {/* Tags */}
             <div className="flex flex-wrap items-center gap-2">
               {["Orçamentos", "Propostas", "Gráfica", "Financeiro", "Clientes", "Contratos"].map((tag) => (
                 <span
                   key={tag}
-                  className="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/15 text-white/90 border border-white/10 backdrop-blur-md transition-colors"
+                  className="px-3 py-1 rounded-[4px] text-xs font-semibold bg-[#131315]/90 hover:bg-[#1B1B1E] text-[#CBD5E1] border border-[#26262A] transition-colors"
                 >
                   {tag}
                 </span>
@@ -921,9 +931,9 @@ export default function Login() {
               href="https://wa.me/5598984242784"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-zinc-300 hover:text-white hover:border-white/30 text-xs font-medium transition-all shadow-lg cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-[6px] bg-[#131315]/95 border border-[#26262A] text-[#CBD5E1] hover:text-white hover:border-[#3F3F46] text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
             >
-              <HelpCircle size={14} className="text-zinc-400" />
+              <HelpCircle size={14} className="text-[#8B8B92]" />
               <span>Suporte</span>
             </a>
           </div>

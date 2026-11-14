@@ -285,42 +285,38 @@ export default function PublicBio() {
   // If loading is finished but no data found, display the Page Not Found error layout
   if (!apiLoading && !data) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0c] text-white p-6 relative overflow-y-auto animate-[gm-fade-in_0.5s_ease-out_forwards]">
-        {/* Decorative ambient spots */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#32BCAD]/10 rounded-full blur-[120px] pointer-events-none" />
-
-        <div className="max-w-md w-full fora apple-glass-card border border-white/15 rounded-[2rem] p-6 text-center space-y-6 shadow-2xl backdrop-blur-2xl relative z-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#32BCAD]/10 text-[#32BCAD]">
-            <Sparkles className="w-8 h-8" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0B0C] text-[#F2F2F3] p-6 relative overflow-y-auto animate-[gm-fade-in_0.5s_ease-out_forwards]">
+        <div className="max-w-md w-full bg-[#131315] border border-[#26262A] rounded-lg p-6 text-center space-y-6 shadow-2xl relative z-10">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-md bg-[#32BCAD]/10 border border-[#32BCAD]/25 text-[#32BCAD]">
+            <Sparkles className="w-7 h-7" />
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight">Página não encontrada</h2>
-            <p className="text-slate-400 text-sm leading-relaxed">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Página não encontrada</h2>
+            <p className="text-[#8B8B92] text-sm leading-relaxed">
               Não conseguimos encontrar as configurações públicas correspondentes a este link.
             </p>
           </div>
 
           {/* Help instructions for the administrator (Expandable) */}
-          <details className="bg-[#32BCAD]/5 border border-[#32BCAD]/20 rounded-lg p-4 text-left cursor-pointer group transition-all duration-300 overflow-hidden">
+          <details className="bg-[#0B0B0C] border border-[#26262A] rounded-md p-4 text-left cursor-pointer group transition-colors duration-200 overflow-hidden">
             <summary className="text-xs font-bold uppercase tracking-wider text-[#32BCAD] select-none outline-none list-none flex items-center justify-between">
               <span>Suporte e Diagnóstico Técnico</span>
-              <span className="text-[10px] text-[#32BCAD] group-open:rotate-180 transition-transform duration-200">▼</span>
+              <span className="text-[11px] text-[#32BCAD] group-open:rotate-180 transition-transform duration-200">▼</span>
             </summary>
             
-            <div className="mt-3 space-y-3 pt-3 border-t border-[#32BCAD]/10 cursor-default" onClick={(e) => e.stopPropagation()}>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                O link público requer que as políticas de acesso do Supabase (RLS) do seu projeto permitam leitura pública (SELECT) para a tabela <code className="bg-black/40 text-[#32BCAD] px-1 py-0.5 rounded">app_settings</code>. 
+            <div className="mt-3 space-y-3 pt-3 border-t border-[#26262A] cursor-default" onClick={(e) => e.stopPropagation()}>
+              <p className="text-xs text-[#CBD5E1] leading-relaxed">
+                O link público requer que as políticas de acesso do Supabase (RLS) do seu projeto permitam leitura pública (SELECT) para a tabela <code className="bg-[#131315] border border-[#26262A] text-[#32BCAD] px-1.5 py-0.5 rounded-[4px]">app_settings</code>. 
               </p>
-              <div className="text-xs text-slate-400 space-y-1">
+              <div className="text-xs text-[#8B8B92] space-y-1">
                 <span className="block font-medium">Como resolver no Painel do Supabase:</span>
-                <ol className="list-decimal pl-4 space-y-1 mt-1 text-slate-300">
+                <ol className="list-decimal pl-4 space-y-1 mt-1 text-[#CBD5E1]">
                   <li>Vá no menu <strong className="text-white">SQL Editor</strong> do seu Supabase.</li>
                   <li>Cole e execute o trecho abaixo para liberar o acesso:</li>
                 </ol>
               </div>
-              <pre className="bg-black/60 p-3 rounded-lg text-[10px] text-green-400 overflow-x-auto font-mono select-all">
+              <pre className="bg-[#131315] border border-[#26262A] p-3 rounded-md text-[11px] text-emerald-400 overflow-x-auto font-mono select-all">
 drop policy if exists "settings_select" on public.app_settings;
 
 create policy "settings_select" on public.app_settings
@@ -329,7 +325,7 @@ create policy "settings_select" on public.app_settings
             </div>
           </details>
 
-          <div className="text-[10px] text-slate-500 font-mono">
+          <div className="text-[11px] text-[#8B8B92] font-mono">
             {errorDetails ? `Log do Sistema: ${errorDetails}` : `Link buscado: ${tenantId}`}
           </div>
         </div>

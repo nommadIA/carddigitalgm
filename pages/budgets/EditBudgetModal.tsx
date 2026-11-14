@@ -174,6 +174,16 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
     if (c?.name) setClientName(c.name);
   }, [clientId, clients]);
 
+  // Fecha com Escape
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
   async function onSave() {
     if (!tenantId || !budgetId) return;
 
@@ -244,43 +254,48 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xl animate-fade-in">
-      <div 
-        onClick={(e) => e.stopPropagation()} 
-        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto gm-modal gm-card barra fora border border-white/10 rounded-2xl custom-scrollbar flex flex-col shadow-none"
+    <div
+      className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-[#131315] border border-[#26262A] rounded-lg custom-scrollbar flex flex-col shadow-2xl"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-white/10 sticky top-0 bg-white/5 backdrop-blur-md z-10">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-[#26262A] sticky top-0 bg-[#131315] z-10 shrink-0">
           <div>
             <h2 className="text-xl font-bold text-white">Editar Orçamento</h2>
-            <div className="text-xs text-slate-400 mt-1">
+            <div className="text-xs font-mono text-zinc-400 mt-0.5">
               {budgetId ? `#${budgetId.slice(0, 8)}` : ""}
             </div>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors flex items-center gap-2 font-bold text-sm bg-white/5 border border-white/5"
+            className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] text-zinc-400 hover:text-white border border-[#26262A] transition-colors flex items-center justify-center cursor-pointer shrink-0"
+            title="Fechar"
           >
-            <X size={18} /> Fechar
+            <X size={18} />
           </button>
         </div>
 
         {/* Body */}
         <div className="p-4 sm:p-6 pb-32 sm:pb-8">
             {loading ? (
-            <div className="flex items-center gap-3 text-slate-400 p-4 justify-center h-48">
+            <div className="flex items-center gap-3 text-zinc-400 p-4 justify-center h-48">
                 <Loader2 className="animate-spin" size={24} />
-                Carregando informações...
+                <span>Carregando informações...</span>
             </div>
             ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left: Itens */}
                     <div className="lg:col-span-8 space-y-6">
-                        <div className="bg-zinc-900/40 border border-white/10 rounded-lg p-5 gm-reflection">
+                        <div className="bg-[#0B0B0C] border border-[#26262A] rounded-md p-5">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-white">Itens</h3>
-                            <div className="text-xs text-slate-400">
+                            <div className="text-xs text-zinc-400">
                             Tipo: <b className="text-[var(--gm-primary)]">{budgetType === "print" ? "Comunicação Visual" : "Agência & Design"}</b>
                             </div>
                         </div>
@@ -291,43 +306,43 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
 
                 {/* Right: Dados */}
                 <div className="lg:col-span-4 space-y-6">
-                    <div className="bg-zinc-900/40 border border-white/10 rounded-lg p-5 space-y-5 sticky top-6 gm-reflection">
+                    <div className="bg-[#0B0B0C] border border-[#26262A] rounded-md p-5 space-y-5 sticky top-6">
                         <div>
-                            <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Cliente</label>
+                            <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Cliente</label>
                             <Select
                                 value={clientId}
                                 onChange={(val) => setClientId(String(val))}
-                                className="w-full h-[46px] bg-black/30 border border-white/10 rounded-xl px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                                 options={clients.map(c => ({ value: c.id, label: c.name }))}
                             />
                         </div>
 
                         <div>
-                            <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Título</label>
+                            <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Título</label>
                             <input
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Ex: Identidade Visual"
-                                className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                             />
                         </div>
 
                         {/* Status */}
                         <div>
-                            <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Status</label>
+                            <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Status</label>
                             <StatusPicker value={status as any} onChange={(v: any) => setStatus(v)} />
-                            <div className="mt-2 text-xs text-slate-500">
+                            <div className="mt-2 text-xs text-zinc-400">
                                 Atual: <b className="text-[var(--gm-primary)]">{STATUS_LABEL[status]}</b>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Pagamento</label>
+                                <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Pagamento</label>
                                 <Select
                                     value={paymentMethod}
                                     onChange={(val) => setPaymentMethod(val as any)}
-                                    className="w-full h-[46px] bg-black/30 border border-white/10 rounded-xl px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                    className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                                     options={[
                                         { value: "PIX", label: "PIX" },
                                         { value: "CREDIT", label: "Cartão de Crédito" }
@@ -335,18 +350,18 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                 />
                             </div>
                             {paymentMethod === "CREDIT" && (
-                                <div className="col-span-2 grid grid-cols-2 gap-3 bg-black/20 p-3 rounded-xl border border-white/5 gm-reflection">
+                                <div className="col-span-2 grid grid-cols-2 gap-3 bg-[#131315] p-3.5 rounded-md border border-[#26262A]">
                                     <div>
-                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Parcelas</label>
+                                        <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Parcelas</label>
                                         <Select
                                             value={installments}
                                             onChange={(val) => setInstallments(Number(val))}
-                                            className="w-full h-[46px] bg-black/30 border border-white/10 rounded-xl px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                            className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                                             options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => ({ value: n, label: `${n}x` }))}
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Juros (%)</label>
+                                        <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Juros (%)</label>
                                         <input
                                             type="number"
                                             value={interestRate}
@@ -354,17 +369,17 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                             onFocus={(e) => e.target.select()}
                                             min="0"
                                             max="100"
-                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                            className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 text-white tabular-nums outline-none focus:border-[var(--gm-primary)] transition-colors"
                                         />
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Link de Pagamento (Opcional)</label>
+                                        <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Link de Pagamento (Opcional)</label>
                                         <input
                                             value={paymentLink}
                                             onChange={(e) => setPaymentLink(e.target.value)}
                                             placeholder="https://..."
                                             type="url"
-                                            className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                            className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                                         />
                                     </div>
                                 </div>
@@ -373,19 +388,19 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Prazo (dias)</label>
+                                <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Prazo (dias)</label>
                                 <input
                                     value={deliveryDays}
                                     onChange={(e) => setDeliveryDays(e.target.value)}
                                     onFocus={(e) => e.target.select()}
                                     type="number"
                                     min={0}
-                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                    className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white tabular-nums outline-none focus:border-[var(--gm-primary)] transition-colors"
                                 />
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Desconto (R$)</label>
+                                <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Desconto (R$)</label>
                                 <div className="relative">
                                     <input
                                         value={discountAmount}
@@ -393,9 +408,9 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                         onFocus={(e) => e.target.select()}
                                         type="number"
                                         min={0}
-                                        className="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors pr-12"
+                                        className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white tabular-nums outline-none focus:border-[var(--gm-primary)] transition-colors pr-14"
                                     />
-                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold tabular-nums text-zinc-400 bg-[#1B1B1E] px-1.5 py-0.5 rounded-[4px] border border-[#26262A]">
                                         {discountPercentage.toFixed(1)}%
                                     </div>
                                 </div>
@@ -403,26 +418,26 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                         </div>
 
                         {/* Totais */}
-                        <div className="border-t border-white/10 pt-4 space-y-2">
-                            <div className="flex justify-between text-sm text-slate-400">
+                        <div className="border-t border-[#26262A] pt-4 space-y-2">
+                            <div className="flex justify-between text-sm text-zinc-400">
                                 <span>Subtotal</span>
-                                <b className="text-white">
+                                <b className="text-white tabular-nums">
                                     {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(subtotal)}
                                 </b>
                             </div>
 
                             {discountValue > 0 && (
-                                <div className="flex justify-between text-sm text-green-400">
+                                <div className="flex justify-between text-sm text-emerald-400">
                                     <span>Desconto ({discountPercentage.toFixed(1)}%)</span>
-                                    <b className="font-medium">
+                                    <b className="font-semibold tabular-nums">
                                         -{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(discountValue)}
                                     </b>
                                 </div>
                             )}
 
-                            <div className="flex justify-between text-sm text-slate-400 pt-2">
+                            <div className="flex justify-between items-baseline text-sm text-zinc-400 pt-2">
                                 <span>Total</span>
-                                <b className="text-2xl text-[var(--gm-primary)]">
+                                <b className="text-2xl text-[var(--gm-primary)] tabular-nums">
                                     {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(total)}
                                 </b>
                             </div>
@@ -431,24 +446,26 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                         {/* Actions */}
                         <div className="flex gap-3 pt-2">
                             <button
+                                type="button"
                                 onClick={onClose}
-                                className="flex-1 h-11 rounded-md font-bold text-xs uppercase tracking-wider bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-[#F2F2F3] transition-all cursor-pointer flex items-center justify-center gap-2"
+                                className="flex-1 h-11 rounded-[6px] font-bold text-xs uppercase tracking-wider bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-[#F2F2F3] transition-all cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap shrink-0"
                             >
                                 <X size={16} />
                                 <span>Cancelar</span>
                             </button>
 
                             <button
+                                type="button"
                                 onClick={onSave}
                                 disabled={saving}
-                                className="flex-1 h-11 rounded-md font-black text-xs uppercase tracking-wider bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] flex items-center justify-center gap-2 transition-all cursor-pointer disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B] disabled:cursor-not-allowed shadow-[0_2px_12px_rgba(var(--gm-primary-rgb,254,84,11),0.25)]"
+                                className="flex-1 h-11 rounded-[6px] font-black text-xs uppercase tracking-wider bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] flex items-center justify-center gap-2 transition-all cursor-pointer disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B] disabled:cursor-not-allowed whitespace-nowrap shrink-0"
                             >
                                 {saving ? <Loader2 className="animate-spin text-current" size={18} /> : <Save size={18} className="text-current" />}
                                 <span>{saving ? "Salvando..." : "Salvar"}</span>
                             </button>
                         </div>
 
-                        <div className="text-[10px] text-slate-600 text-center">
+                        <div className="text-[11px] text-zinc-500 text-center">
                             * Lembrete “APROVADO” usa seus 3 horários em Configurações.
                         </div>
 

@@ -153,14 +153,14 @@ export default function BottomNav() {
                 translateYValue.set(0);
               }
             }}
-            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav bg-[#131315] border-t border-[#26262A] border-b-0 border-x-0 !rounded-t-[14px] !rounded-b-none pb-[calc(env(safe-area-inset-bottom,0px)+8px)] shadow-none select-none overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav bg-[#131315] border-t border-[#26262A] border-b-0 border-x-0 !rounded-t-[8px] !rounded-b-none pb-[calc(env(safe-area-inset-bottom,0px)+8px)] shadow-none select-none overflow-hidden"
             style={{
               y: springTranslateY,
               height: heightAnim,
               zIndex: 800,
               "--gm-mobile-nav-height": "76px",
-              borderTopLeftRadius: "14px",
-              borderTopRightRadius: "14px",
+              borderTopLeftRadius: "8px",
+              borderTopRightRadius: "8px",
               borderBottomLeftRadius: "0px",
               borderBottomRightRadius: "0px",
               borderLeft: "none",
@@ -173,8 +173,8 @@ export default function BottomNav() {
             <div
               className="gm-bottom-nav-skirt"
               style={{
-                borderTopLeftRadius: "14px",
-                borderTopRightRadius: "14px",
+                borderTopLeftRadius: "8px",
+                borderTopRightRadius: "8px",
                 borderBottomLeftRadius: "0px",
                 borderBottomRightRadius: "0px",
                 background: "#131315",
@@ -220,10 +220,10 @@ export default function BottomNav() {
                       end={it.to === "/"}
                       ref={isActive ? activeItemRef : undefined}
                       className={({ isActive: navActive }) =>
-                        `shrink-0 snap-start basis-1/5 min-w-[20%] flex flex-col items-center justify-center min-h-[50px] px-1 py-1 rounded-xl transition-all relative group cursor-pointer ${
+                        `shrink-0 snap-start basis-1/5 min-w-[20%] flex flex-col items-center justify-center min-h-[50px] px-1 py-1 rounded-[6px] transition-[color,background-color] duration-150 relative group cursor-pointer ${
                           isActive || navActive
-                            ? "text-white font-black"
-                            : "text-zinc-300 hover:text-white font-medium"
+                            ? "text-white font-bold"
+                            : "text-[#8B8B92] hover:text-white font-medium"
                         }`
                       }
                     >
@@ -231,28 +231,26 @@ export default function BottomNav() {
                         const active = isActive || navActive;
                         return (
                           <>
-                            {/* Ícone na cor dinâmica do tema ou Dourado com animação Gold se for Planos */}
                             {isPlanos ? (
-                              <GoldCrownIcon size={22} className="my-0.5" />
+                              <GoldCrownIcon size={20} className="my-0.5" />
                             ) : (
                               <Icon
-                                size={22}
+                                size={20}
                                 style={{ color: "var(--gm-menu-icon, var(--gm-primary, #FE540B))" }}
-                                className={`transition-all duration-200 ${
+                                className={`transition-opacity duration-150 ${
                                   active
-                                    ? "scale-110 opacity-100 drop-shadow-sm"
-                                    : "opacity-75 group-hover:opacity-100 group-hover:scale-105"
+                                    ? "opacity-100"
+                                    : "opacity-75 group-hover:opacity-100"
                                 }`}
                               />
                             )}
-                            {/* Texto centralizado (Dourado sutil para Planos) */}
                             <span
-                              className={`text-[10px] sm:text-[11px] tracking-tight mt-1 text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-full ${
+                              className={`text-[11px] tracking-tight mt-1 text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-full ${
                                 isPlanos
                                   ? "text-amber-300 font-bold"
                                   : active
-                                  ? "text-white font-black drop-shadow-xs"
-                                  : "text-zinc-300 font-medium opacity-85 group-hover:opacity-100 group-hover:text-white"
+                                  ? "text-white font-bold"
+                                  : "text-[#8B8B92] font-medium group-hover:text-white"
                               }`}
                             >
                               {it.label}
@@ -280,23 +278,18 @@ export default function BottomNav() {
             <button
               type="button"
               onClick={() => setExpanded(true)}
-              className="flex items-center gap-2.5 px-5 py-2.5 rounded-full barra fora text-white font-black text-xs uppercase tracking-wider hover:border-white/30 active:scale-95 transition-all cursor-pointer group shadow-none border border-white/15"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-[6px] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] font-bold text-xs uppercase tracking-wider hover:border-[#3F3F46] active:scale-95 transition-[background-color,border-color,transform] duration-150 cursor-pointer group shadow-lg border border-[#26262A]"
               aria-label="Expandir Menu"
               title="Expandir Menu (Gaveteiro)"
-              style={{
-                backdropFilter: "blur(20px) saturate(180%)",
-                WebkitBackdropFilter: "blur(20px) saturate(180%)",
-              }}
             >
-              {/* Pontinhos em Laranja */}
               <GripHorizontal
-                size={18}
-                className="text-[color:var(--gm-primary)] group-hover:scale-110 transition-transform"
+                size={16}
+                className="text-[color:var(--gm-primary)] shrink-0"
               />
-              <span className="text-white font-black tracking-widest text-[11px]">MENU</span>
+              <span className="text-[#F2F2F3] font-bold tracking-widest text-[11px] whitespace-nowrap">MENU</span>
               <ChevronUp
                 size={15}
-                className="text-[color:var(--gm-primary)] group-hover:-translate-y-0.5 transition-transform"
+                className="text-[color:var(--gm-primary)] shrink-0"
               />
             </button>
           </motion.div>

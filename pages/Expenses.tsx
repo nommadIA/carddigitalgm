@@ -202,6 +202,22 @@ export default function Expenses() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  useEffect(() => {
+    const anyModal = showEditModal || showNewModal || showShareModal || !!deleteConfirmId || showMonthModal;
+    if (!anyModal) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showEditModal) setShowEditModal(false);
+        else if (showNewModal) setShowNewModal(false);
+        else if (showShareModal) setShowShareModal(false);
+        else if (deleteConfirmId) setDeleteConfirmId(null);
+        else if (showMonthModal) setShowMonthModal(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showEditModal, showNewModal, showShareModal, deleteConfirmId, showMonthModal]);
+
   // Auto-align month based on deep-linked expense query
   useEffect(() => {
     const hashQuery = window.location.hash.includes("?") ? window.location.hash.split("?")[1] : "";
@@ -808,9 +824,9 @@ export default function Expenses() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 right-6 z-[10000] bg-[#131315] border border-[var(--gm-primary,#FE540B)]/50 text-[#f2f2f3] px-5 py-3 rounded-[4px] shadow-2xl flex items-center gap-3 text-sm font-bold font-mono"
+            className="fixed top-6 right-6 z-[10000] bg-[#131315] border border-[var(--gm-primary,#FE540B)]/50 text-[#f2f2f3] px-5 py-3 rounded-md shadow-2xl flex items-center gap-3 text-sm font-bold font-mono"
           >
-            <CheckCircle2 size={18} className="text-[var(--gm-primary,#FE540B)] shrink-0 animate-pulse" />
+            <CheckCircle2 size={18} className="text-[var(--gm-primary,#FE540B)] shrink-0" />
             <span>{toastMessage}</span>
           </motion.div>
         )}
@@ -820,23 +836,21 @@ export default function Expenses() {
       <SectionDivider label="Filtros e Período" />
       <div 
         id="expenses-top-controls"
-        className="w-full relative rounded-[4px] border border-[#26262a] bg-[#131315] gm-card overflow-hidden mb-6 p-4 sm:p-5 flex flex-col gap-4 sm:gap-5 transition-all shadow-none"
+        className="w-full relative rounded-lg border border-[#26262a] bg-[#131315] overflow-hidden mb-6 p-4 sm:p-5 flex flex-col gap-4 sm:gap-5"
         style={{ minHeight: "auto", height: "auto" }}
       >
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 relative z-10">
           {/* Mês Selector com Setas de Navegação - Forge UI */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
-            {/* Desktop: Seta Anterior */}
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="hidden sm:flex w-10 h-10 min-w-[40px] min-h-[40px] rounded-[4px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
+              className="hidden sm:flex w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white items-center justify-center transition-colors cursor-pointer shrink-0"
               title="Mês anterior"
             >
               <ChevronLeft size={18} />
             </button>
 
-            {/* Botão Principal do Mês de Referência */}
             <button
               type="button"
               onClick={() => {
@@ -844,15 +858,15 @@ export default function Expenses() {
                 setPickerYear(Number(yearStr) || new Date().getFullYear());
                 setShowMonthModal(true);
               }}
-              className="flex items-center justify-between gap-3 sm:gap-4 bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] hover:border-[#38383f] px-3.5 py-2 rounded-[4px] w-full sm:w-auto sm:min-w-[250px] min-h-[40px] h-10 transition-all cursor-pointer group active:scale-98 shadow-none"
+              className="flex items-center justify-between gap-3 sm:gap-4 bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] hover:border-[#3F3F46] px-3.5 py-2 rounded-[6px] w-full sm:w-auto sm:min-w-[250px] min-h-[40px] h-10 transition-colors cursor-pointer group"
               title="Clique para abrir o seletor de mês e ano"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-[2px] border border-[var(--gm-primary,#FE540B)]/30 bg-[var(--gm-primary,#FE540B)]/15 flex items-center justify-center text-[var(--gm-primary,#FE540B)] shrink-0">
+                <div className="w-7 h-7 rounded-[4px] border border-[var(--gm-primary,#FE540B)]/30 bg-[var(--gm-primary,#FE540B)]/15 flex items-center justify-center text-[var(--gm-primary,#FE540B)] shrink-0">
                   <Calendar size={14} />
                 </div>
                 <div className="flex flex-col items-start text-left select-none leading-tight">
-                  <span className="text-[10px] uppercase font-mono tracking-wider text-[#8b8b92] font-semibold leading-none mb-0.5">
+                  <span className="text-[11px] uppercase font-mono tracking-wider text-[#8b8b92] font-semibold leading-none mb-0.5">
                     Mês de Referência
                   </span>
                   <span className="text-xs sm:text-sm font-bold text-[#f2f2f3] capitalize font-mono leading-none">
@@ -860,7 +874,7 @@ export default function Expenses() {
                   </span>
                 </div>
               </div>
-              <ChevronDown size={16} className="text-[#8b8b92] group-hover:text-[var(--gm-primary,#FE540B)] transition-all shrink-0 ml-1" />
+              <ChevronDown size={16} className="text-[#8b8b92] group-hover:text-[var(--gm-primary,#FE540B)] transition-colors shrink-0 ml-1" />
             </button>
 
             {/* Desktop: Seta Próximo */}
@@ -913,28 +927,37 @@ export default function Expenses() {
           {/* Workflow Tabs: Todas do Mês / Recorrentes / Lixeira no padrão Forge */}
           <div className="flex items-center gap-1 p-1 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] shadow-none w-full sm:w-auto h-10">
             <button
+              type="button"
+              aria-pressed={tab === "active"}
+              data-selected={tab === "active"}
               className={`flex-1 sm:flex-initial h-8 px-3.5 rounded-[3px] text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tab === "active"
-                  ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0b0b0c)] font-bold shadow-none"
+                  ? "bg-[var(--gm-primary,#FE540B)] text-white font-bold shadow-none"
                   : "text-[#8b8b92] hover:text-[#f2f2f3] hover:bg-white/5"
               }`}
               onClick={() => setTab("active")}
             >
-              <ListFilter size={14} className={tab === "active" ? "text-[var(--gm-primary-foreground,#0b0b0c)]" : "text-[var(--gm-primary,#FE540B)]"} />
+              <ListFilter size={14} className={tab === "active" ? "text-white shrink-0" : "text-[var(--gm-primary,#FE540B)] shrink-0"} />
               <span className="truncate">Todas do Mês</span>
             </button>
             <button
+              type="button"
+              aria-pressed={tab === "recurring"}
+              data-selected={tab === "recurring"}
               className={`flex-1 sm:flex-initial h-8 px-3.5 rounded-[3px] text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tab === "recurring"
-                  ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0b0b0c)] font-bold shadow-none"
+                  ? "bg-[var(--gm-primary,#FE540B)] text-white font-bold shadow-none"
                   : "text-[#8b8b92] hover:text-[#f2f2f3] hover:bg-white/5"
               }`}
               onClick={() => setTab("recurring")}
             >
-              <Repeat size={14} className={tab === "recurring" ? "text-[var(--gm-primary-foreground,#0b0b0c)]" : "text-[var(--gm-primary,#FE540B)]"} />
+              <Repeat size={14} className={tab === "recurring" ? "text-white shrink-0" : "text-[var(--gm-primary,#FE540B)] shrink-0"} />
               <span className="truncate">Recorrentes</span>
             </button>
             <button
+              type="button"
+              aria-pressed={tab === "trash"}
+              data-selected={tab === "trash"}
               className={`flex-1 sm:flex-initial h-8 px-3.5 rounded-[3px] text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tab === "trash"
                   ? "bg-red-600 text-white font-bold shadow-none"
@@ -942,7 +965,7 @@ export default function Expenses() {
               }`}
               onClick={() => setTab("trash")}
             >
-              <Trash2 size={14} className="shrink-0" />
+              <Trash2 size={14} className={tab === "trash" ? "text-white shrink-0" : "shrink-0"} />
               <span className="truncate">Lixeira</span>
             </button>
           </div>
@@ -951,30 +974,27 @@ export default function Expenses() {
         {/* Status Containers (Pago / Pendente / Total / Atualizar) Forge Style */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between border-t border-[#26262a] pt-4">
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 items-center">
-            {/* PAGO Container */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] text-emerald-400 font-mono text-xs shadow-none justify-center sm:justify-start min-h-[38px]">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-[4px] border border-[#26262a] bg-[#0B0B0C] text-emerald-400 font-mono text-xs justify-center sm:justify-start min-h-[38px]">
               <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
               <span className="text-[11px] uppercase tracking-wider text-[#8b8b92] font-semibold">PAGO:</span>
-              <span className="font-bold text-[#f2f2f3]">{CURRENCY_FORMATTER.format(totalPago)}</span>
+              <span className="font-bold tabular-nums text-[#f2f2f3]">{CURRENCY_FORMATTER.format(totalPago)}</span>
             </div>
 
-            {/* PENDENTE Container */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] text-red-400 font-mono text-xs shadow-none justify-center sm:justify-start min-h-[38px]">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-[4px] border border-[#26262a] bg-[#0B0B0C] text-red-400 font-mono text-xs justify-center sm:justify-start min-h-[38px]">
               <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
               <span className="text-[11px] uppercase tracking-wider text-[#8b8b92] font-semibold">PENDENTE:</span>
-              <span className="font-bold text-[#f2f2f3]">{CURRENCY_FORMATTER.format(totalPendente)}</span>
+              <span className="font-bold tabular-nums text-[#f2f2f3]">{CURRENCY_FORMATTER.format(totalPendente)}</span>
             </div>
 
-            {/* TOTAL GERAL */}
-            <div className="col-span-2 sm:col-span-1 flex items-center gap-2 px-3 py-2 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] text-[#f2f2f3] font-mono text-xs shadow-none justify-center sm:justify-start min-h-[38px]">
+            <div className="col-span-2 sm:col-span-1 flex items-center gap-2 px-3 py-2 rounded-[4px] border border-[#26262a] bg-[#0B0B0C] text-[#f2f2f3] font-mono text-xs justify-center sm:justify-start min-h-[38px]">
               <span className="text-[11px] uppercase tracking-wider text-[#8b8b92] font-semibold">TOTAL:</span>
-              <span className="font-bold text-[#f2f2f3]">{CURRENCY_FORMATTER.format(totalGeral)}</span>
+              <span className="font-bold tabular-nums text-[#f2f2f3]">{CURRENCY_FORMATTER.format(totalGeral)}</span>
             </div>
           </div>
 
           <button
             type="button"
-            className="forge-btn forge-btn--secondary rounded-[4px] h-9 px-4 text-xs font-semibold cursor-pointer shrink-0"
+            className="forge-btn forge-btn--secondary rounded-[6px] h-9 px-4 text-xs font-semibold cursor-pointer shrink-0 whitespace-nowrap"
             onClick={() => loadExpenses()}
             title="Recarregar despesas"
           >
@@ -986,26 +1006,24 @@ export default function Expenses() {
 
       {/* LISTA DE DESPESAS DIRETA COM EXPANSÃO INLINE ESTILO NOTION */}
       <SectionDivider label="Despesas Cadastradas" className="mt-8 mb-4" />
-      <div className="w-full relative rounded-2xl border border-white/10 apple-glass-refraction gm-card mb-12 flex flex-col overflow-hidden transition-all">
-        {/* Header fixo da tabela (visível no desktop) com cápsula de informação destacada e espaçamento refinado */}
-        <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-4 border-b border-white/10 font-extrabold uppercase tracking-wider text-[11px] bg-black/40 backdrop-blur-xl text-slate-300 relative z-10">
+      <div className="w-full relative rounded-lg border border-[#26262a] bg-[#131315] mb-12 flex flex-col overflow-hidden">
+        <div className="hidden sm:grid grid-cols-[160px_1fr_160px_140px] items-center gap-4 px-6 py-3.5 border-b border-[#26262a] font-mono font-bold uppercase tracking-wider text-[11px] bg-[#0B0B0C] text-[#8b8b92]">
           <div>Vencimento</div>
           <div>Descrição da Despesa</div>
           <div className="text-right">Valor (R$)</div>
           <div className="text-right pr-2">Ações & Status</div>
         </div>
 
-        {/* Conteúdo da Lista Direta (sem barra de rolagem interna ou altura travada) */}
         <div className="w-full">
           {loading ? (
-            <div className="p-16 flex flex-col items-center justify-center gap-3 opacity-60">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500" />
-              <span className="text-sm font-bold text-slate-400">Carregando despesas...</span>
+            <div className="p-16 flex flex-col items-center justify-center gap-3 opacity-70">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[var(--gm-primary,#FE540B)]" />
+              <span className="text-sm font-semibold text-[#8b8b92]">Carregando despesas...</span>
             </div>
           ) : expenses.length === 0 ? (
             <div className="p-16 text-center">
-              <div className="text-xl font-bold text-white mb-1">Nenhuma despesa encontrada</div>
-              <div className="text-sm text-slate-400">
+              <div className="text-lg font-bold text-[#F2F2F3] mb-1">Nenhuma despesa encontrada</div>
+              <div className="text-sm text-[#8b8b92]">
                 {tab === "trash"
                   ? "A lixeira deste mês está vazia."
                   : tab === "recurring"
@@ -1014,7 +1032,7 @@ export default function Expenses() {
               </div>
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-[#26262a]">
               {expenses.map((e) => {
                 const isExpanded = expandedRowId === e.id;
                 return (
@@ -1022,56 +1040,51 @@ export default function Expenses() {
                     key={e.id}
                     className={`transition-colors ${
                       isExpanded
-                        ? "bg-white/[0.06] backdrop-blur-md border-l-4 border-orange-500"
-                        : "hover:bg-white/[0.03]"
+                        ? "bg-[#1B1B1E] border-l-[3px] border-[var(--gm-primary,#FE540B)]"
+                        : "hover:bg-[#1B1B1E]/60"
                     }`}
                   >
-                    {/* Linha Principal da Despesa: Adaptada para Smartphone e Desktop */}
                     <div
                       className="p-4 sm:px-6 sm:py-4 flex flex-col sm:grid sm:grid-cols-[160px_1fr_160px_140px] sm:items-center gap-3 cursor-pointer select-none"
                       onClick={() => handleToggleExpand(e)}
                     >
-                      {/* Vencimento e Status Pill */}
                       <div className="flex items-center justify-between sm:justify-start gap-2">
-                        <div className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
-                          <Calendar size={14} className="text-orange-400 shrink-0" />
+                        <div className="text-xs font-mono font-bold tabular-nums text-[#F2F2F3] flex items-center gap-1.5">
+                          <Calendar size={14} className="text-[var(--gm-primary,#FE540B)] shrink-0" />
                           {e.dueDate ? e.dueDate.split("-").reverse().join("/") : "-"}
                         </div>
                         {e.paid ? (
-                          <span className="px-2 py-0.5 rounded-[2px] font-mono text-[10px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 tracking-wider">
+                          <span className="px-2 py-0.5 rounded-[4px] font-mono text-[11px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 tracking-wider">
                             PAGO
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-[2px] font-mono text-[10px] font-bold uppercase bg-red-500/15 text-red-400 border border-red-500/30 tracking-wider">
+                          <span className="px-2 py-0.5 rounded-[4px] font-mono text-[11px] font-bold uppercase bg-red-500/15 text-red-400 border border-red-500/30 tracking-wider">
                             PENDENTE
                           </span>
                         )}
                       </div>
 
-                      {/* Descrição + Badges de Recorrência/Lembrete */}
                       <div className="flex items-center gap-2 min-w-0 flex-wrap sm:flex-nowrap">
-                        <span className="font-bold text-white text-base sm:text-sm md:text-base truncate">
+                        <span className="font-bold text-[#F2F2F3] text-sm sm:text-base truncate">
                           {e.description}
                         </span>
                         {e.isRecurring && (
-                          <span className="px-2 py-0.5 rounded-[2px] font-mono text-[9px] font-bold uppercase bg-[var(--gm-primary,#FE540B)]/15 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/30 shrink-0 flex items-center gap-1" title="Despesa Recorrente">
-                            <Repeat size={10} />
+                          <span className="px-2 py-0.5 rounded-[4px] font-mono text-[11px] font-semibold uppercase bg-[var(--gm-primary,#FE540B)]/15 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/30 shrink-0 flex items-center gap-1" title="Despesa Recorrente">
+                            <Repeat size={11} />
                             Recorrente
                           </span>
                         )}
                         {(e.reminderTime || e.reminderDate) && (
-                          <span className="px-2 py-0.5 rounded-[2px] font-mono text-[9px] font-bold uppercase bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 shrink-0 flex items-center gap-1" title={`Lembrete: ${e.reminderDate ? e.reminderDate + ' ' : ''}${e.reminderTime}`}>
-                            <Bell size={10} />
+                          <span className="px-2 py-0.5 rounded-[4px] font-mono text-[11px] font-semibold uppercase bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 shrink-0 flex items-center gap-1" title={`Lembrete: ${e.reminderDate ? e.reminderDate + ' ' : ''}${e.reminderTime}`}>
+                            <Bell size={11} />
                             {e.reminderTime}
                           </span>
                         )}
                       </div>
 
-                      {/* Smartphone Layout para Linha Inferior (Valor à esquerda + Ações à direita) / Desktop Grid */}
                       <div className="flex items-center justify-between sm:contents pt-2 sm:pt-0 border-t border-[#26262a] sm:border-0">
-                        {/* Valor Formatado */}
                         <div
-                          className={`text-lg sm:text-base font-extrabold sm:text-right font-mono ${
+                          className={`text-base sm:text-base font-bold tabular-nums sm:text-right font-mono ${
                             e.paid ? "text-emerald-400" : "text-red-400"
                           }`}
                         >
@@ -1148,11 +1161,11 @@ export default function Expenses() {
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.25, ease: "easeInOut" }}
-                          className="overflow-hidden bg-black/40 backdrop-blur-2xl border-t border-b border-orange-500/30 px-6 py-5 shadow-inner"
+                          className="overflow-hidden bg-[#0B0B0C] border-t border-b border-orange-500/30 px-6 py-5"
                         >
-                          <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10 flex-wrap gap-2">
+                          <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#26262A] flex-wrap gap-2">
                             <div className="flex items-center gap-2">
-                              <div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse" />
+                              <div className="w-2 h-2 rounded-[2px] bg-orange-400" />
                               <span className="text-xs font-black uppercase tracking-widest text-orange-400 font-mono">
                                 Propriedades da Despesa
                               </span>
@@ -1161,7 +1174,7 @@ export default function Expenses() {
                               <button
                                 type="button"
                                 onClick={(ev) => handleOpenEditModal(e, ev)}
-                                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 border border-white/10 cursor-pointer"
+                                className="h-8 px-3 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] text-white/80 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 border border-[#26262A] cursor-pointer whitespace-nowrap shrink-0"
                                 title="Abrir em modal completo"
                               >
                                 <Pencil size={12} className="text-orange-400" />
@@ -1171,7 +1184,7 @@ export default function Expenses() {
                                 type="button"
                                 disabled={isSavingInline}
                                 onClick={() => handleSaveInline(e.id)}
-                                className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black transition-all flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer disabled:opacity-50"
+                                className="h-8 px-4 rounded-[6px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                                 title="Salvar Alterações"
                               >
                                 {isSavingInline ? (
@@ -1189,12 +1202,12 @@ export default function Expenses() {
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {/* Descrição */}
                             <div className="flex flex-col gap-1.5 md:col-span-2">
-                              <label className="text-[10px] uppercase font-black tracking-widest text-white/50">
-                                📝 Descrição da Despesa
+                              <label className="text-[11px] uppercase font-bold tracking-wider text-zinc-400">
+                                Descrição da Despesa
                               </label>
                               <input
                                 type="text"
-                                className="bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-bold outline-none focus:border-orange-500/60 transition-colors"
+                                className="bg-[#131315] border border-[#26262A] rounded-[4px] px-3.5 py-2.5 text-sm text-white font-semibold outline-none focus:border-orange-500 transition-colors"
                                 value={editDesc}
                                 onChange={(ev) => setEditDesc(ev.target.value)}
                                 placeholder="Nome da conta, fornecedor..."
@@ -1203,12 +1216,12 @@ export default function Expenses() {
 
                             {/* Valor */}
                             <div className="flex flex-col gap-1.5">
-                              <label className="text-[10px] uppercase font-black tracking-widest text-white/50">
-                                💰 Valor (R$)
+                              <label className="text-[11px] uppercase font-bold tracking-wider text-zinc-400">
+                                Valor (R$)
                               </label>
                               <input
                                 type="text"
-                                className="bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-emerald-400 font-mono font-extrabold outline-none focus:border-emerald-500/60 transition-colors"
+                                className="bg-[#131315] border border-[#26262A] rounded-[4px] px-3.5 py-2.5 text-sm text-emerald-400 font-mono tabular-nums font-extrabold outline-none focus:border-emerald-500 transition-colors"
                                 value={editAmount}
                                 onChange={(ev) => setEditAmount(ev.target.value)}
                                 placeholder="0,00"
@@ -1217,11 +1230,11 @@ export default function Expenses() {
 
                             {/* Vencimento */}
                             <div className="flex flex-col gap-1.5">
-                              <label className="text-[10px] uppercase font-black tracking-widest text-white/50">
-                                📅 Data de Vencimento
+                              <label className="text-[11px] uppercase font-bold tracking-wider text-zinc-400">
+                                Data de Vencimento
                               </label>
                               <GlassDatePicker
-                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-bold outline-none focus:border-orange-500/60 transition-colors flex items-center min-h-[42px]"
+                                className="w-full bg-[#131315] border border-[#26262A] rounded-[4px] px-3.5 py-2.5 text-sm text-white font-semibold outline-none focus:border-orange-500 transition-colors flex items-center min-h-[42px]"
                                 value={editDueDate}
                                 onChange={setEditDueDate}
                                 title="Vencimento"
@@ -1229,9 +1242,9 @@ export default function Expenses() {
                             </div>
 
                             {/* Lembrete / Alerta por Data e Hora */}
-                            <div className="flex flex-col gap-1.5 md:col-span-2 bg-black/30 border border-white/5 p-3.5 rounded-xl">
+                            <div className="flex flex-col gap-1.5 md:col-span-2 bg-[#131315] border border-[#26262A] p-3.5 rounded-md">
                               <div className="flex items-center justify-between">
-                                <label className="text-[10px] uppercase font-black tracking-widest text-yellow-300 flex items-center gap-1.5">
+                                <label className="text-[11px] uppercase font-bold tracking-wider text-yellow-300 flex items-center gap-1.5">
                                   <Bell size={13} className="text-yellow-400" />
                                   Notificação / Lembrete por Data e Hora
                                 </label>
@@ -1249,20 +1262,20 @@ export default function Expenses() {
                               {editReminderEnabled && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                                   <div>
-                                    <span className="text-[10px] text-white/40 block mb-1">Data do Alerta</span>
+                                    <span className="text-[11px] text-zinc-400 block mb-1">Data do Alerta</span>
                                     <GlassDatePicker
-                                      className="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-bold"
+                                      className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 py-1.5 text-xs text-white font-semibold"
                                       value={editReminderDate}
                                       onChange={setEditReminderDate}
                                       title="Data do Alerta"
                                     />
                                   </div>
                                   <div>
-                                    <span className="text-[10px] text-white/40 block mb-1">Horário do Alerta</span>
+                                    <span className="text-[11px] text-zinc-400 block mb-1">Horário do Alerta</span>
                                     <GlassTimePicker
                                       value={editReminderTime}
                                       onChange={setEditReminderTime}
-                                      className="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-bold"
+                                      className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 py-1.5 text-xs text-white font-semibold"
                                       title="Horário do Alerta"
                                     />
                                   </div>
@@ -1275,17 +1288,17 @@ export default function Expenses() {
                               {/* Toggle Recorrente */}
                               <div
                                 onClick={() => setEditIsRecurring(!editIsRecurring)}
-                                className={`flex-1 flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                className={`flex-1 flex items-center justify-between p-3 rounded-md border cursor-pointer transition-all ${
                                   editIsRecurring
                                     ? "bg-orange-500/15 border-orange-500/40 text-orange-300"
-                                    : "bg-black/30 border-white/10 text-white/60 hover:text-white"
+                                    : "bg-[#131315] border-[#26262A] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
-                                  <Repeat size={16} className={editIsRecurring ? "text-orange-400" : "text-white/40"} />
+                                  <Repeat size={16} className={editIsRecurring ? "text-orange-400" : "text-zinc-500"} />
                                   <div className="flex flex-col text-left">
                                     <span className="text-xs font-bold">Despesa Recorrente</span>
-                                    <span className="text-[10px] opacity-70">Repetir automaticamente todo mês</span>
+                                    <span className="text-[11px] opacity-75">Repetir automaticamente todo mês</span>
                                   </div>
                                 </div>
                                 <input
@@ -1299,17 +1312,17 @@ export default function Expenses() {
                               {/* Toggle Status Pago */}
                               <div
                                 onClick={() => setEditPaid(!editPaid)}
-                                className={`flex-1 flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                className={`flex-1 flex items-center justify-between p-3 rounded-md border cursor-pointer transition-all ${
                                   editPaid
                                     ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
-                                    : "bg-black/30 border-white/10 text-white/60 hover:text-white"
+                                    : "bg-[#131315] border-[#26262A] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
-                                  <Check size={16} className={editPaid ? "text-emerald-400" : "text-white/40"} />
+                                  <Check size={16} className={editPaid ? "text-emerald-400" : "text-zinc-500"} />
                                   <div className="flex flex-col text-left">
                                     <span className="text-xs font-bold">Status do Pagamento</span>
-                                    <span className="text-[10px] opacity-70">
+                                    <span className="text-[11px] opacity-75">
                                       {editPaid ? "Conta quitada (Pago)" : "Aguardando pagamento (Pendente)"}
                                     </span>
                                   </div>
@@ -1325,11 +1338,11 @@ export default function Expenses() {
                           </div>
 
                           {/* Botões de Ação da Linha Expandida */}
-                          <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-white/10">
+                          <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[#26262A]">
                             <button
                               type="button"
                               onClick={() => setExpandedRowId(null)}
-                              className="px-4 py-2 rounded-xl text-xs font-bold text-white/60 hover:text-white bg-white/5 hover:bg-white/10 transition-all"
+                              className="h-9 px-4 rounded-[6px] text-xs font-bold text-zinc-300 hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] transition-all cursor-pointer whitespace-nowrap shrink-0"
                             >
                               Cancelar
                             </button>
@@ -1337,7 +1350,7 @@ export default function Expenses() {
                               type="button"
                               disabled={isSavingInline}
                               onClick={() => handleSaveInline(e.id)}
-                              className="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
+                              className="h-9 px-5 rounded-[6px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                             >
                               {isSavingInline ? (
                                 <span>Salvando...</span>
@@ -1364,7 +1377,7 @@ export default function Expenses() {
       <AnimatePresence>
         {showEditModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[1000] bg-black/75 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-sm overflow-y-auto"
             onClick={() => setShowEditModal(false)}
           >
             <motion.div
@@ -1372,20 +1385,20 @@ export default function Expenses() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="w-full max-w-2xl lg:max-w-3xl max-h-[92vh] flex flex-col rounded-2xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0 my-auto gm-modal gm-card glass-card bg-[#131722]/95 backdrop-blur-2xl text-white"
+              className="w-full max-w-2xl lg:max-w-3xl max-h-[92vh] flex flex-col rounded-lg border border-[#26262A] overflow-hidden shadow-2xl relative z-10 p-0 my-auto bg-[#131315] text-white"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header do Modal (Pinned) */}
-              <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-black/40 shrink-0">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[#26262A] bg-[#131315] shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl border border-[color:var(--gm-primary)]/40 bg-[color:var(--gm-primary)]/15 flex items-center justify-center text-[color:var(--gm-primary)] shadow-sm">
+                  <div className="w-10 h-10 rounded-[6px] border border-[color:var(--gm-primary)]/40 bg-[color:var(--gm-primary)]/15 flex items-center justify-center text-[color:var(--gm-primary)]">
                     <Pencil size={18} className="stroke-[2.5]" />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black text-white leading-tight">
+                    <h3 className="text-lg font-black text-white leading-tight">
                       Editar Despesa
                     </h3>
-                    <p className="text-xs text-white/60 font-medium mt-0.5">
+                    <p className="text-xs text-zinc-400 font-medium mt-0.5">
                       Atualize os dados e confirme no botão Salvar Alterações
                     </p>
                   </div>
@@ -1394,7 +1407,7 @@ export default function Expenses() {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+                  className="w-9 h-9 rounded-[4px] flex items-center justify-center text-zinc-400 hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] transition-colors cursor-pointer shrink-0"
                   title="Fechar"
                 >
                   <X size={18} />
@@ -1410,14 +1423,14 @@ export default function Expenses() {
                 className="flex flex-col flex-1 min-h-0 overflow-hidden"
               >
                 {/* Scrollable Form Body */}
-                <div className="overflow-y-auto flex-1 p-5 sm:p-7 md:p-8 space-y-5">
+                <div className="overflow-y-auto flex-1 p-5 sm:p-6 space-y-5">
                   {/* Descrição da Despesa */}
                   <div>
-                    <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                    <label className="text-xs uppercase font-bold tracking-wider text-zinc-300 block mb-2">
                       Descrição da Despesa *
                     </label>
                     <input
-                      className="w-full bg-black/40 border border-white/10 focus:border-orange-500 rounded-2xl px-4 sm:px-5 py-3 text-sm sm:text-base text-white font-bold outline-none transition-all placeholder:text-white/30"
+                      className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] focus:border-orange-500 rounded-[4px] px-4 text-sm text-white font-semibold outline-none transition-all placeholder:text-zinc-600"
                       value={editDesc}
                       onChange={(e) => setEditDesc(e.target.value)}
                       placeholder="Ex: Conta de Luz, Aluguel, Fornecedor..."
@@ -1427,17 +1440,17 @@ export default function Expenses() {
                   </div>
 
                   {/* Valor e Vencimento em 2 Colunas */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
-                      <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                      <label className="text-xs uppercase font-bold tracking-wider text-zinc-300 block mb-2">
                         Valor da Conta (R$) *
                       </label>
                       <div className="relative flex items-center">
-                        <span className="absolute left-4 text-xs font-bold text-white/40 font-mono">
+                        <span className="absolute left-3.5 text-xs font-bold text-zinc-500 font-mono">
                           R$
                         </span>
                         <input
-                          className="w-full bg-black/40 border border-white/10 focus:border-emerald-500 rounded-2xl pl-11 pr-4 py-3 text-base sm:text-lg text-emerald-400 font-mono font-extrabold outline-none transition-all placeholder:text-emerald-400/30"
+                          className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] focus:border-emerald-500 rounded-[4px] pl-10 pr-4 text-base text-emerald-400 font-mono tabular-nums font-extrabold outline-none transition-all placeholder:text-emerald-400/30"
                           value={editAmount}
                           onChange={(e) => setEditAmount(e.target.value)}
                           placeholder="0,00"
@@ -1448,11 +1461,11 @@ export default function Expenses() {
                     </div>
 
                     <div>
-                      <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                      <label className="text-xs uppercase font-bold tracking-wider text-zinc-300 block mb-2">
                         Data de Vencimento *
                       </label>
                       <GlassDatePicker
-                        className="w-full bg-black/40 border border-white/10 focus:border-orange-500 rounded-2xl px-4 sm:px-5 py-3 text-sm sm:text-base text-white font-bold outline-none transition-all flex items-center min-h-[48px]"
+                        className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] focus:border-orange-500 rounded-[4px] px-4 text-sm text-white font-semibold outline-none transition-all flex items-center"
                         value={editDueDate}
                         onChange={setEditDueDate}
                         title="Vencimento"
@@ -1461,23 +1474,23 @@ export default function Expenses() {
                   </div>
 
                   {/* Bloco de Lembrete / Notificação */}
-                  <div className="bg-black/30 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all">
-                    <div className="flex items-center justify-between">
+                  <div className="bg-[#0B0B0C] border border-[#26262A] rounded-md p-4 space-y-3.5 transition-all">
+                    <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-400">
+                        <div className="w-8 h-8 rounded-[6px] bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-400 shrink-0">
                           <Bell size={16} />
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-extrabold text-white block">
+                          <span className="text-xs sm:text-sm font-bold text-white block">
                             Notificação / Lembrete de Pagamento
                           </span>
-                          <span className="text-[11px] text-white/40 block">
+                          <span className="text-[11px] text-zinc-400 block">
                             Receba aviso sonoro e visual no horário programado
                           </span>
                         </div>
                       </div>
 
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
                         <input
                           type="checkbox"
                           checked={editReminderEnabled}
@@ -1489,13 +1502,13 @@ export default function Expenses() {
                     </div>
 
                     {editReminderEnabled && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#26262A]">
                         <div>
-                          <label className="text-[11px] font-bold text-white/60 block mb-1.5">
+                          <label className="text-[11px] font-bold text-zinc-400 block mb-1.5">
                             Data do Alerta
                           </label>
                           <GlassDatePicker
-                            className="w-full bg-black/50 border border-white/10 focus:border-yellow-500 rounded-xl px-4 py-2.5 text-sm text-white font-bold"
+                            className="w-full h-10 bg-[#131315] border border-[#26262A] focus:border-yellow-500 rounded-[4px] px-3.5 text-sm text-white font-semibold"
                             value={editReminderDate}
                             onChange={setEditReminderDate}
                             title="Data do Alerta"
@@ -1503,13 +1516,13 @@ export default function Expenses() {
                         </div>
 
                         <div>
-                          <label className="text-[11px] font-bold text-white/60 block mb-1.5">
+                          <label className="text-[11px] font-bold text-zinc-400 block mb-1.5">
                             Horário do Alerta
                           </label>
                           <GlassTimePicker
                             value={editReminderTime}
                             onChange={setEditReminderTime}
-                            className="w-full bg-black/50 border border-white/10 focus:border-yellow-500 rounded-xl px-4 py-2.5 text-sm text-white font-bold"
+                            className="w-full h-10 bg-[#131315] border border-[#26262A] focus:border-yellow-500 rounded-[4px] px-3.5 text-sm text-white font-semibold"
                             title="Horário do Alerta"
                           />
                         </div>
@@ -1522,17 +1535,17 @@ export default function Expenses() {
                     {/* Despesa Recorrente */}
                     <div
                       onClick={() => setEditIsRecurring(!editIsRecurring)}
-                      className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
+                      className={`p-4 rounded-md border cursor-pointer transition-all flex items-center justify-between ${
                         editIsRecurring
                           ? "bg-orange-500/15 border-orange-500/40 text-orange-300"
-                          : "bg-black/30 border-white/10 text-white/60 hover:text-white"
+                          : "bg-[#0B0B0C] border-[#26262A] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <Repeat size={18} className={editIsRecurring ? "text-orange-400" : "text-white/40"} />
+                        <Repeat size={18} className={editIsRecurring ? "text-orange-400" : "text-zinc-500"} />
                         <div>
                           <span className="text-xs sm:text-sm font-bold block">Despesa Recorrente</span>
-                          <span className="text-[10px] sm:text-[11px] opacity-70 block">
+                          <span className="text-[11px] opacity-75 block">
                             Repete automaticamente todo mês
                           </span>
                         </div>
@@ -1541,24 +1554,24 @@ export default function Expenses() {
                         type="checkbox"
                         checked={editIsRecurring}
                         onChange={() => {}}
-                        className="w-5 h-5 accent-orange-500 cursor-pointer"
+                        className="w-4 h-4 accent-orange-500 cursor-pointer"
                       />
                     </div>
 
                     {/* Status Pago */}
                     <div
                       onClick={() => setEditPaid(!editPaid)}
-                      className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
+                      className={`p-4 rounded-md border cursor-pointer transition-all flex items-center justify-between ${
                         editPaid
                           ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
-                          : "bg-black/30 border-white/10 text-white/60 hover:text-white"
+                          : "bg-[#0B0B0C] border-[#26262A] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <Check size={18} className={editPaid ? "text-emerald-400" : "text-white/40"} />
+                        <Check size={18} className={editPaid ? "text-emerald-400" : "text-zinc-500"} />
                         <div>
                           <span className="text-xs sm:text-sm font-bold block">Status do Pagamento</span>
-                          <span className="text-[10px] sm:text-[11px] opacity-70 block">
+                          <span className="text-[11px] opacity-75 block">
                             {editPaid ? "Conta quitada (Pago)" : "Aguardando pagamento (Pendente)"}
                           </span>
                         </div>
@@ -1567,25 +1580,25 @@ export default function Expenses() {
                         type="checkbox"
                         checked={editPaid}
                         onChange={() => {}}
-                        className="w-5 h-5 accent-emerald-500 cursor-pointer"
+                        className="w-4 h-4 accent-emerald-500 cursor-pointer"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Ações do Modal Pinned com BOTÃO DE SALVAR ALTERAÇÕES */}
-                <div className="flex items-center justify-end gap-2.5 p-4 sm:px-6 sm:py-3.5 border-t border-[#26262a] bg-[#131315] shrink-0">
+                {/* Ações do Modal Pinned com BOTÃO DE SALVAR ALTERAÇÕES EM DESTAQUE */}
+                <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-[#26262A] bg-[#131315] shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowEditModal(false)}
-                    className="forge-btn forge-btn--secondary rounded-[4px] h-10 px-5 text-xs font-semibold cursor-pointer"
+                    className="forge-btn forge-btn--secondary rounded-[6px] h-10 px-5 text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={isSavingInline}
-                    className="forge-btn forge-btn--primary rounded-[4px] h-10 px-6 text-xs font-semibold cursor-pointer disabled:opacity-50"
+                    className="forge-btn forge-btn--primary rounded-[6px] h-10 px-6 text-xs font-semibold cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                   >
                     {isSavingInline ? (
                       <div className="flex items-center gap-2">
@@ -1610,7 +1623,7 @@ export default function Expenses() {
       <AnimatePresence>
         {showNewModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/60 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[1000] bg-black/75 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-sm overflow-y-auto"
             onClick={() => setShowNewModal(false)}
           >
             <motion.div
@@ -1618,20 +1631,20 @@ export default function Expenses() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="w-full max-w-2xl lg:max-w-3xl max-h-[92vh] flex flex-col rounded-2xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0 my-auto gm-modal gm-card glass-card bg-[#131722]/95 backdrop-blur-2xl text-white"
+              className="w-full max-w-2xl lg:max-w-3xl max-h-[92vh] flex flex-col rounded-lg border border-[#26262A] overflow-hidden shadow-2xl relative z-10 p-0 my-auto bg-[#131315] text-white"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header do Modal (Pinned) */}
-              <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-black/40 shrink-0">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[#26262A] bg-[#131315] shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl border border-[color:var(--gm-primary)]/40 bg-[color:var(--gm-primary)]/15 flex items-center justify-center text-[color:var(--gm-primary)] shadow-sm">
+                  <div className="w-10 h-10 rounded-[6px] border border-[color:var(--gm-primary)]/40 bg-[color:var(--gm-primary)]/15 flex items-center justify-center text-[color:var(--gm-primary)]">
                     <Plus size={20} className="stroke-[2.5]" />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black text-white leading-tight">
+                    <h3 className="text-lg font-black text-white leading-tight">
                       Cadastrar Nova Despesa
                     </h3>
-                    <p className="text-xs text-white/60 font-medium mt-0.5">
+                    <p className="text-xs text-zinc-400 font-medium mt-0.5">
                       Preencha os detalhes da conta para acompanhamento financeiro
                     </p>
                   </div>
@@ -1640,7 +1653,7 @@ export default function Expenses() {
                 <button
                   type="button"
                   onClick={() => setShowNewModal(false)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+                  className="w-9 h-9 rounded-[4px] flex items-center justify-center text-zinc-400 hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] transition-colors cursor-pointer shrink-0"
                   title="Fechar"
                 >
                   <X size={18} />
@@ -1650,14 +1663,14 @@ export default function Expenses() {
               {/* Formulário com Grade Espaçosa & Pinned Action Bar */}
               <form onSubmit={handleCreateNew} className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 {/* Scrollable Form Body */}
-                <div className="overflow-y-auto flex-1 p-5 sm:p-7 md:p-8 space-y-5">
+                <div className="overflow-y-auto flex-1 p-5 sm:p-6 space-y-5">
                 {/* Descrição da Despesa */}
                 <div>
-                  <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                  <label className="text-xs uppercase font-bold tracking-wider text-zinc-300 block mb-2">
                     Descrição da Despesa *
                   </label>
                   <input
-                    className="w-full bg-black/40 border border-white/10 focus:border-orange-500 rounded-2xl px-4 sm:px-5 py-3 text-sm sm:text-base text-white font-bold outline-none transition-all placeholder:text-white/30"
+                    className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] focus:border-orange-500 rounded-[4px] px-4 text-sm text-white font-semibold outline-none transition-all placeholder:text-zinc-600"
                     value={newDesc}
                     onChange={(e) => setNewDesc(e.target.value)}
                     placeholder="Ex: Conta de Luz, Internet Fibra, Fornecedor de Alvenaria..."
@@ -1666,17 +1679,17 @@ export default function Expenses() {
                 </div>
 
                 {/* Valor e Vencimento em 2 Colunas */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                   <div>
-                    <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                    <label className="text-xs uppercase font-bold tracking-wider text-zinc-300 block mb-2">
                       Valor da Conta (R$) *
                     </label>
                     <div className="relative flex items-center">
-                      <span className="absolute left-4 text-xs font-bold text-white/40 font-mono">
+                      <span className="absolute left-3.5 text-xs font-bold text-zinc-500 font-mono">
                         R$
                       </span>
                       <input
-                        className="w-full bg-black/40 border border-white/10 focus:border-emerald-500 rounded-2xl pl-11 pr-4 py-3 text-base sm:text-lg text-emerald-400 font-mono font-extrabold outline-none transition-all placeholder:text-emerald-400/30"
+                        className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] focus:border-emerald-500 rounded-[4px] pl-10 pr-4 text-base text-emerald-400 font-mono tabular-nums font-extrabold outline-none transition-all placeholder:text-emerald-400/30"
                         value={newAmount}
                         onChange={(e) => setNewAmount(e.target.value)}
                         placeholder="0,00"
@@ -1686,11 +1699,11 @@ export default function Expenses() {
                   </div>
 
                   <div>
-                    <label className="text-xs uppercase font-extrabold tracking-wider text-slate-300 block mb-2">
+                    <label className="text-xs uppercase font-bold tracking-wider text-zinc-300 block mb-2">
                       Data de Vencimento *
                     </label>
                     <GlassDatePicker
-                      className="w-full bg-black/40 border border-white/10 focus:border-orange-500 rounded-2xl px-4 sm:px-5 py-3 text-sm sm:text-base text-white font-bold outline-none transition-all flex items-center min-h-[48px]"
+                      className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] focus:border-orange-500 rounded-[4px] px-4 text-sm text-white font-semibold outline-none transition-all flex items-center"
                       value={newDueDate}
                       onChange={setNewDueDate}
                       title="Vencimento"
@@ -1699,22 +1712,22 @@ export default function Expenses() {
                 </div>
 
                 {/* Bloco de Lembrete / Notificação */}
-                <div className="bg-black/30 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all">
-                  <div className="flex items-center justify-between">
+                <div className="bg-[#0B0B0C] border border-[#26262A] rounded-md p-4 space-y-3.5 transition-all">
+                  <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-400 shrink-0">
+                      <div className="w-8 h-8 rounded-[6px] bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center text-yellow-400 shrink-0">
                         <Bell size={16} />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-xs sm:text-sm font-extrabold text-white">
+                        <span className="text-xs sm:text-sm font-bold text-white">
                           Ativar Lembrete / Alerta Programado
                         </span>
-                        <span className="text-[11px] text-white/50">
+                        <span className="text-[11px] text-zinc-400">
                           Receba aviso no sistema e smartphone antes do vencimento
                         </span>
                       </div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
                       <input
                         type="checkbox"
                         checked={newReminderEnabled}
@@ -1726,26 +1739,26 @@ export default function Expenses() {
                   </div>
 
                   {newReminderEnabled && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#26262A]">
                       <div>
-                        <span className="text-xs font-bold text-white/60 block mb-1.5">
+                        <span className="text-[11px] font-bold text-zinc-400 block mb-1.5">
                           Data do Alerta
                         </span>
                         <GlassDatePicker
-                          className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white font-bold"
+                          className="w-full h-10 bg-[#131315] border border-[#26262A] rounded-[4px] px-3.5 text-sm text-white font-semibold"
                           value={newReminderDate}
                           onChange={setNewReminderDate}
                           title="Data do Alerta"
                         />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-white/60 block mb-1.5">
+                        <span className="text-[11px] font-bold text-zinc-400 block mb-1.5">
                           Horário do Alerta
                         </span>
                         <GlassTimePicker
                           value={newReminderTime}
                           onChange={setNewReminderTime}
-                          className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white font-bold"
+                          className="w-full h-10 bg-[#131315] border border-[#26262A] rounded-[4px] px-3.5 text-sm text-white font-semibold"
                           title="Horário do Alerta"
                         />
                       </div>
@@ -1757,19 +1770,19 @@ export default function Expenses() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div
                     onClick={() => setNewIsRecurring(!newIsRecurring)}
-                    className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all select-none ${
+                    className={`flex items-center justify-between p-4 rounded-md border cursor-pointer transition-all select-none ${
                       newIsRecurring
-                        ? "bg-orange-500/15 border-orange-500/40 text-orange-300 shadow-sm"
-                        : "bg-black/30 border-white/10 text-white/70 hover:text-white hover:border-white/20"
+                        ? "bg-orange-500/15 border-orange-500/40 text-orange-300"
+                        : "bg-[#0B0B0C] border-[#26262A] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${newIsRecurring ? 'bg-orange-500/20 text-orange-400' : 'bg-white/5 text-white/40'}`}>
+                      <div className={`w-8 h-8 rounded-[6px] flex items-center justify-center ${newIsRecurring ? 'bg-orange-500/20 text-orange-400' : 'bg-[#1B1B1E] text-zinc-500'}`}>
                         <Repeat size={16} />
                       </div>
                       <div className="flex flex-col">
                         <span className="text-xs sm:text-sm font-bold">Despesa Recorrente</span>
-                        <span className="text-[11px] opacity-70">Lança automaticamente todo mês</span>
+                        <span className="text-[11px] opacity-75">Lança automaticamente todo mês</span>
                       </div>
                     </div>
                     <input
@@ -1782,19 +1795,19 @@ export default function Expenses() {
 
                   <div
                     onClick={() => setNewPaid(!newPaid)}
-                    className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all select-none ${
+                    className={`flex items-center justify-between p-4 rounded-md border cursor-pointer transition-all select-none ${
                       newPaid
-                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-sm"
-                        : "bg-black/30 border-white/10 text-white/70 hover:text-white hover:border-white/20"
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                        : "bg-[#0B0B0C] border-[#26262A] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${newPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/40'}`}>
+                      <div className={`w-8 h-8 rounded-[6px] flex items-center justify-center ${newPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#1B1B1E] text-zinc-500'}`}>
                         <Check size={16} />
                       </div>
                       <div className="flex flex-col">
                         <span className="text-xs sm:text-sm font-bold">Status do Pagamento</span>
-                        <span className="text-[11px] opacity-70">
+                        <span className="text-[11px] opacity-75">
                           {newPaid ? "Conta quitada (Pago)" : "Aguardando pagamento"}
                         </span>
                       </div>
@@ -1810,17 +1823,17 @@ export default function Expenses() {
                 </div>
 
                 {/* Ações do Modal Pinned */}
-                <div className="flex items-center justify-end gap-2.5 p-4 sm:px-6 sm:py-3.5 border-t border-[#26262a] bg-[#131315] shrink-0">
+                <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-[#26262A] bg-[#131315] shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowNewModal(false)}
-                    className="forge-btn forge-btn--secondary rounded-[4px] h-10 px-5 text-xs font-semibold cursor-pointer"
+                    className="forge-btn forge-btn--secondary rounded-[6px] h-10 px-5 text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="forge-btn forge-btn--primary rounded-[4px] h-10 px-6 text-xs font-semibold cursor-pointer"
+                    className="forge-btn forge-btn--primary rounded-[6px] h-10 px-6 text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0"
                   >
                     <Plus size={15} />
                     <span>Cadastrar Despesa</span>
@@ -1836,7 +1849,7 @@ export default function Expenses() {
       <AnimatePresence>
         {showShareModal && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[1000] bg-black/75 flex items-center justify-center p-4 sm:p-6 md:p-8 backdrop-blur-sm overflow-y-auto"
             onClick={() => setShowShareModal(false)}
           >
             <motion.div
@@ -1844,17 +1857,17 @@ export default function Expenses() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="w-full max-w-2xl rounded-2xl border border-white/15 overflow-hidden shadow-2xl relative z-10 p-0 my-auto gm-modal gm-card glass-card bg-[#131722]/85 backdrop-blur-2xl text-white"
+              className="w-full max-w-2xl rounded-lg border border-[#26262A] overflow-hidden shadow-2xl relative z-10 p-0 my-auto bg-[#131315] text-white"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-white/10 bg-black/40">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[#26262A] bg-[#131315]">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl border border-emerald-500/40 bg-emerald-500/15 flex items-center justify-center text-emerald-400 shadow-sm">
+                  <div className="w-10 h-10 rounded-[6px] border border-emerald-500/40 bg-emerald-500/15 flex items-center justify-center text-emerald-400">
                     <Share2 size={18} />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-black text-white">Relatório Mensal de Despesas</h3>
-                    <p className="text-xs text-white/60 font-medium mt-0.5">
+                    <h3 className="text-lg font-black text-white">Relatório Mensal de Despesas</h3>
+                    <p className="text-xs text-zinc-400 font-medium mt-0.5">
                       Copie o resumo formatado ou envie diretamente para o WhatsApp
                     </p>
                   </div>
@@ -1862,15 +1875,15 @@ export default function Expenses() {
                 <button
                   type="button"
                   onClick={() => setShowShareModal(false)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors cursor-pointer"
+                  className="w-9 h-9 rounded-[4px] flex items-center justify-center text-zinc-400 hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] transition-colors cursor-pointer shrink-0"
                   title="Fechar"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="p-6 sm:p-8 space-y-5">
-                <div className="bg-black/50 border border-white/10 rounded-2xl p-5 text-xs sm:text-sm font-mono text-white/90 whitespace-pre-wrap max-h-[340px] overflow-y-auto leading-relaxed shadow-inner">
+              <div className="p-6 space-y-5">
+                <div className="bg-[#0B0B0C] border border-[#26262A] rounded-md p-5 text-xs sm:text-sm font-mono text-zinc-200 whitespace-pre-wrap max-h-[340px] overflow-y-auto leading-relaxed">
                   {generateReportText()}
                 </div>
 
@@ -1878,7 +1891,7 @@ export default function Expenses() {
                   <button
                     type="button"
                     onClick={handleCopyReport}
-                    className="forge-btn forge-btn--secondary rounded-[4px] h-10 px-5 text-xs font-semibold cursor-pointer"
+                    className="forge-btn forge-btn--secondary rounded-[6px] h-10 px-5 text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0"
                   >
                     {copiedReport ? (
                       <>
@@ -1896,7 +1909,7 @@ export default function Expenses() {
                   <button
                     type="button"
                     onClick={handleSendWhatsApp}
-                    className="forge-btn forge-btn--primary rounded-[4px] h-10 px-5 text-xs font-semibold cursor-pointer"
+                    className="forge-btn forge-btn--primary rounded-[6px] h-10 px-5 text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0"
                   >
                     <MessageSquare size={15} />
                     <span>Enviar para WhatsApp</span>
@@ -1912,35 +1925,37 @@ export default function Expenses() {
       <AnimatePresence>
         {deleteConfirmId && (
           <div
-            className="fixed inset-0 z-[1000] bg-black/85 flex items-center justify-center p-4 backdrop-blur-md"
+            className="fixed inset-0 z-[1000] bg-black/75 flex items-center justify-center p-4 backdrop-blur-sm"
             onClick={() => setDeleteConfirmId(null)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-sm rounded-[4px] overflow-hidden border border-[#26262a] bg-[#131315] text-[#f2f2f3]"
+              className="w-full max-w-sm rounded-lg overflow-hidden border border-[#26262A] bg-[#131315] text-[#f2f2f3] shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6 text-center">
-                <div className="w-14 h-14 bg-red-500/10 rounded-[4px] flex items-center justify-center mx-auto mb-4 border border-red-500/20">
-                  <Trash2 size={24} className="text-red-500" />
+                <div className="w-12 h-12 bg-red-500/10 rounded-md flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                  <Trash2 size={22} className="text-red-500" />
                 </div>
-                <h3 className="text-xl font-extrabold text-white mb-2">Excluir Definitivamente?</h3>
+                <h3 className="text-lg font-extrabold text-white mb-2">Excluir Definitivamente?</h3>
                 <p className="text-[#8b8b92] text-xs mb-5 leading-relaxed font-mono">
                   Esta ação não pode ser desfeita. A despesa será removida permanentemente do sistema.
                 </p>
                 <div className="flex gap-2.5">
                   <button
+                    type="button"
                     onClick={() => setDeleteConfirmId(null)}
-                    className="forge-btn forge-btn--secondary rounded-[4px] flex-1 h-10 text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5"
+                    className="forge-btn forge-btn--secondary rounded-[6px] flex-1 h-10 text-xs font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
                   >
                     <X size={14} />
                     <span>Cancelar</span>
                   </button>
                   <button
+                    type="button"
                     onClick={hardDelete}
-                    className="forge-btn bg-red-600 hover:bg-red-500 text-white border border-red-600 rounded-[4px] flex-1 h-10 text-xs font-bold cursor-pointer shadow-none inline-flex items-center justify-center gap-1.5"
+                    className="forge-btn bg-red-600 hover:bg-red-500 text-white border border-red-600 rounded-[6px] flex-1 h-10 text-xs font-bold cursor-pointer shadow-none inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
                   >
                     <Trash2 size={14} />
                     <span>Excluir</span>
@@ -1958,7 +1973,7 @@ export default function Expenses() {
           <AnimatePresence>
             {showMonthModal && (
               <div
-                className="fixed inset-0 z-[99999] bg-black/60 flex items-center justify-center p-3 sm:p-5 overflow-hidden"
+                className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-hidden"
                 style={{
                   position: "fixed",
                   top: 0,
@@ -1979,18 +1994,18 @@ export default function Expenses() {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.94, opacity: 0 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="w-full max-w-[420px] sm:max-w-md rounded-2xl border border-white/15 fora gm-modal apple-glass-refraction shadow-none relative z-10 overflow-hidden flex flex-col m-auto h-[84dvh] min-h-[580px] max-h-[760px] sm:h-auto sm:min-h-0 sm:max-h-[90dvh] text-white"
+                  className="w-full max-w-[420px] sm:max-w-md rounded-lg border border-[#26262A] bg-[#131315] shadow-2xl relative z-10 overflow-hidden flex flex-col m-auto h-[84dvh] min-h-[580px] max-h-[760px] sm:h-auto sm:min-h-0 sm:max-h-[90dvh] text-white"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Header do Modal */}
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-black/40 shrink-0">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-[#26262A] bg-[#131315] shrink-0">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl border border-[color:var(--gm-primary)]/40 bg-[color:var(--gm-primary)]/15 flex items-center justify-center text-[color:var(--gm-primary)] shrink-0 shadow-sm">
+                      <div className="w-10 h-10 rounded-[6px] border border-[color:var(--gm-primary)]/40 bg-[color:var(--gm-primary)]/15 flex items-center justify-center text-[color:var(--gm-primary)] shrink-0">
                         <Calendar size={18} />
                       </div>
                       <div>
                         <h3 className="text-base sm:text-lg font-black text-white leading-tight">Mês de Referência</h3>
-                        <p className="text-xs text-white/60 font-medium leading-none mt-1">
+                        <p className="text-xs text-zinc-400 font-medium leading-none mt-1">
                           Selecione o mês para filtrar despesas
                         </p>
                       </div>
@@ -1998,7 +2013,7 @@ export default function Expenses() {
                     <button
                       type="button"
                       onClick={() => setShowMonthModal(false)}
-                      className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors cursor-pointer shrink-0 border border-white/10"
+                      className="w-9 h-9 rounded-[4px] flex items-center justify-center text-zinc-400 hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] transition-colors cursor-pointer shrink-0 border border-[#26262A]"
                       title="Fechar"
                     >
                       <X size={18} />
@@ -2007,21 +2022,21 @@ export default function Expenses() {
 
                   <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3 sm:gap-4 overflow-y-auto">
                     {/* Seletor de Ano */}
-                    <div className="barra flex items-center justify-between bg-white/[0.03] border border-white/10 rounded-2xl p-2 sm:p-2.5 shrink-0">
+                    <div className="flex items-center justify-between bg-[#0B0B0C] border border-[#26262A] rounded-md p-2 sm:p-2.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => setPickerYear((y) => y - 1)}
-                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
+                        className="w-10 h-10 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] text-white flex items-center justify-center transition-all cursor-pointer border border-[#26262A] active:scale-95"
                         title="Ano anterior"
                       >
                         <ChevronLeft size={18} />
                       </button>
                       <div className="flex items-center gap-2.5">
-                        <span className="text-2xl sm:text-3xl font-black text-white tracking-wider font-mono">
+                        <span className="text-2xl sm:text-3xl font-black text-white tracking-wider font-mono tabular-nums">
                           {pickerYear}
                         </span>
                         {pickerYear === new Date().getFullYear() && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-orange-500/20 text-orange-400 border border-orange-500/40 tracking-wider">
+                          <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-black uppercase bg-orange-500/20 text-orange-400 border border-orange-500/40 tracking-wider">
                             Atual
                           </span>
                         )}
@@ -2029,14 +2044,14 @@ export default function Expenses() {
                       <button
                         type="button"
                         onClick={() => setPickerYear((y) => y + 1)}
-                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-95 shadow-sm"
+                        className="w-10 h-10 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] text-white flex items-center justify-center transition-all cursor-pointer border border-[#26262A] active:scale-95"
                         title="Próximo ano"
                       >
                         <ChevronRight size={18} />
                       </button>
                     </div>
 
-                    {/* Grade de 12 Meses - Tamanho ampliado e expansão vertical confortável no smartphone */}
+                    {/* Grade de 12 Meses */}
                     <div className="grid grid-cols-3 gap-2 sm:gap-2.5 flex-1 items-stretch">
                       {MONTHS_LIST.map((mItem) => {
                         const itemMonthKey = `${pickerYear}-${mItem.value}`;
@@ -2054,23 +2069,23 @@ export default function Expenses() {
                               setShowMonthModal(false);
                               showToast(`Mês alterado para ${mItem.name} de ${pickerYear}`);
                             }}
-                            className={`relative p-2 sm:p-2.5 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 sm:gap-1.5 cursor-pointer h-full min-h-[66px] sm:min-h-[60px] active:scale-95 ${
+                            className={`relative p-2 sm:p-2.5 rounded-md border text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer h-full min-h-[66px] sm:min-h-[60px] active:scale-95 ${
                               isSelected
-                                ? "bg-orange-500/25 border-orange-500 text-white font-black shadow-md shadow-orange-500/25 scale-[1.02]"
-                                : "bg-black/40 border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 font-bold"
+                                ? "bg-orange-500/20 border-orange-500 text-white font-black"
+                                : "bg-[#0B0B0C] border-[#26262A] text-zinc-300 hover:text-white hover:bg-[#1B1B1E] hover:border-[#3F3F46] font-bold"
                             }`}
                           >
-                            <span className={`text-[10px] sm:text-[11px] uppercase font-mono tracking-wider leading-none ${isSelected ? "text-orange-400 font-black" : "text-white/50"}`}>
+                            <span className={`text-[11px] uppercase font-mono tabular-nums tracking-wider leading-none ${isSelected ? "text-orange-400 font-black" : "text-zinc-500"}`}>
                               {mItem.value} • {mItem.short}
                             </span>
                             <span className="text-xs sm:text-sm font-black truncate max-w-full leading-tight">
                               {mItem.name}
                             </span>
                             {isSelected && (
-                              <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-orange-500 shadow-sm" />
+                              <div className="absolute top-2 right-2 w-2 h-2 rounded-[2px] bg-orange-500" />
                             )}
                             {isCurrentRealMonth && !isSelected && (
-                              <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400" title="Mês atual" />
+                              <div className="absolute top-2 right-2 w-2 h-2 rounded-[2px] bg-emerald-400" title="Mês atual" />
                             )}
                           </button>
                         );
@@ -2078,7 +2093,7 @@ export default function Expenses() {
                     </div>
 
                     {/* Botões Rápidos no Rodapé do Modal */}
-                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10 shrink-0">
+                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#26262A] shrink-0">
                       <button
                         type="button"
                         onClick={() => {
@@ -2089,7 +2104,7 @@ export default function Expenses() {
                           setShowMonthModal(false);
                           showToast("Mês atual selecionado!");
                         }}
-                        className="h-11 px-4 rounded-md bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] border border-[#26262A] text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-none"
+                        className="h-10 px-4 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] text-[#F2F2F3] border border-[#26262A] text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0"
                       >
                         <Clock size={15} className="text-emerald-400 shrink-0" />
                         <span>Mês Atual</span>
@@ -2098,7 +2113,7 @@ export default function Expenses() {
                       <button
                         type="button"
                         onClick={() => setShowMonthModal(false)}
-                        className="h-11 px-6 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.3)] shrink-0"
+                        className="h-10 px-6 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] text-xs font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 whitespace-nowrap"
                       >
                         Fechar
                       </button>

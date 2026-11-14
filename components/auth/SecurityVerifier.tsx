@@ -91,14 +91,14 @@ export default function SecurityVerifier({
       {/* Container único, minimalista e sem efeito glass */}
       <div
         onClick={status === "idle" ? handleStartChallenge : () => hiddenInputRef.current?.focus()}
-        className={`w-full rounded-2xl px-4 py-3 flex flex-col justify-center select-none transition-all duration-200 relative overflow-hidden bg-[#151922] border ${
+        className={`w-full rounded-lg px-4 py-3 flex flex-col justify-center select-none transition-colors relative overflow-hidden bg-[#131315] border ${
           status === "idle"
-            ? "border-white/10 hover:border-white/20 cursor-pointer"
+            ? "border-[#26262A] hover:border-[#3F3F46] cursor-pointer"
             : status === "inputting"
             ? "border-[#4285F4]/70"
             : status === "success"
             ? "border-emerald-500/40 bg-[#111c17]"
-            : "border-white/10"
+            : "border-[#26262A]"
         }`}
         style={{ minHeight: "52px" }}
       >
@@ -145,7 +145,7 @@ export default function SecurityVerifier({
                   animate={{ rotateY: isFlipping ? 180 : 0 }}
                   transition={{ duration: 0.35 }}
                   title="Clique no código para gerar outro"
-                  className="h-8 sm:h-8.5 px-2.5 rounded-lg bg-black/60 border border-white/20 hover:border-[#4285F4] flex items-center justify-center gap-1 cursor-pointer shadow-inner transition-colors group relative"
+                  className="h-8 px-2.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] hover:border-[#4285F4] flex items-center justify-center gap-1 cursor-pointer transition-colors group relative"
                 >
                   {targetCode.split("").map((c, i) => {
                     const colors = ["#4285F4", "#EA4335", "#FBBC05", "#34A853"];
@@ -159,7 +159,7 @@ export default function SecurityVerifier({
                       </span>
                     );
                   })}
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-zinc-300 bg-black/80 px-2 py-0.5 rounded pointer-events-none whitespace-nowrap">
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[11px] text-[#CBD5E1] bg-[#0B0B0C] border border-[#26262A] px-2 py-0.5 rounded-[4px] pointer-events-none whitespace-nowrap">
                     Clique p/ trocar
                   </div>
                 </motion.div>
@@ -176,12 +176,12 @@ export default function SecurityVerifier({
                     return (
                       <div
                         key={idx}
-                        className={`w-7 sm:w-7.5 h-8 sm:h-8.5 rounded-md flex items-center justify-center font-mono font-bold text-sm sm:text-base transition-all ${
+                        className={`w-7 sm:w-8 h-8 rounded-[4px] flex items-center justify-center font-mono font-bold text-sm sm:text-base transition-colors ${
                           char
-                            ? "bg-blue-500/20 border-2 border-[#4285F4] text-white shadow-sm shadow-blue-500/30"
+                            ? "bg-blue-500/20 border-2 border-[#4285F4] text-white"
                             : isCurrent
-                            ? "bg-black/50 border-2 border-white/50 text-white animate-pulse"
-                            : "bg-black/30 border border-white/15 text-zinc-500"
+                            ? "bg-[#0B0B0C] border-2 border-white/60 text-white"
+                            : "bg-[#0B0B0C] border border-[#26262A] text-[#8B8B92]"
                         } ${isShaking ? "border-red-500 bg-red-500/20" : ""}`}
                       >
                         {char}
@@ -248,7 +248,7 @@ export default function SecurityVerifier({
           <div className="flex flex-col items-center justify-center shrink-0 pl-2">
             <div className="flex items-center gap-1">
               <svg
-                className="w-4.5 h-4.5 shrink-0"
+                className="w-4 h-4 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -270,11 +270,11 @@ export default function SecurityVerifier({
                   fill="#EA4335"
                 />
               </svg>
-              <span className="text-[10px] font-semibold text-white/90 tracking-wider uppercase">
+              <span className="text-[11px] font-semibold text-white/90 tracking-wider uppercase">
                 reCAPTCHA
               </span>
             </div>
-            <div className="text-[9px] text-zinc-400 font-normal mt-0.5 select-none space-x-1">
+            <div className="text-[11px] text-[#8B8B92] font-normal mt-0.5 select-none space-x-1">
               <a
                 href="https://policies.google.com/privacy"
                 target="_blank"

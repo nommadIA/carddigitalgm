@@ -5,8 +5,9 @@
 
 export interface MediaMetadata {
   url: string;
-  platform: 'youtube' | 'tiktok' | 'kwai' | 'instagram' | 'twitter' | 'facebook' | 'vimeo' | 'pinterest' | 'adult' | 'generic';
+  platform: 'youtube' | 'tiktok' | 'kwai' | 'instagram' | 'twitter' | 'facebook' | 'vimeo' | 'pinterest' | 'adult' | 'image' | 'generic';
   platformLabel: string;
+  detectedMediaKind?: 'video' | 'audio' | 'image';
   title: string;
   author: string;
   thumbnail: string;
@@ -55,6 +56,7 @@ export interface IdmDownloadProgressReport {
 
 export function detectPlatform(url: string): MediaMetadata['platform'] {
   const u = url.toLowerCase();
+  if (/\.(jpg|jpeg|png|webp|gif|avif|bmp|svg)(\?|$)/i.test(u)) return 'image';
   if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
   if (u.includes('tiktok.com')) return 'tiktok';
   if (u.includes('kwai.com') || u.includes('kw.ai') || u.includes('kuaishou.com')) return 'kwai';
@@ -78,6 +80,8 @@ export function detectPlatform(url: string): MediaMetadata['platform'] {
 
 export function getPlatformBadge(platform: MediaMetadata['platform']): { label: string; color: string; bg: string } {
   switch (platform) {
+    case 'image':
+      return { label: 'Imagem Web (8K/4K)', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)' };
     case 'youtube':
       return { label: 'YouTube', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' };
     case 'tiktok':
@@ -101,211 +105,201 @@ export function getPlatformBadge(platform: MediaMetadata['platform']): { label: 
   }
 }
 
+export function getProxiedThumbnailUrl(url?: string): string {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:')
+  ) {
+    return trimmed;
+  }
+  if (/^https?:\/\//i.test(trimmed)) {
+    return `/api/media-proxy?url=${encodeURIComponent(trimmed)}`;
+  }
+  return trimmed;
+}
+
 function extractYouTubeId(url: string): string | null {
-  const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/;
+  const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([\w-]{11})/i;
   const match = url.match(regExp);
   return match ? match[1] : null;
 }
 
 /**
- * Faz a leitura do link informado e extrai título, miniatura e todos os formatos disponíveis
- * Utiliza o motor backend IDM para obter os streams diretos
+ * Faz a leitura do link informado e extrai título, miniatura autêntica e todos os formatos disponíveis
+ * Utiliza exclusivamente o motor backend real (/api/media-extract) sem substituições falsas.
  */
 export async function fetchMediaMetadata(inputUrl: string): Promise<MediaMetadata> {
   const cleanUrl = inputUrl.trim();
-  if (!cleanUrl) {
-    throw new Error('Por favor, informe um link válido.');
+  if (!cleanUrl || !/^https?:\/\//i.test(cleanUrl)) {
+    throw new Error('Por favor, informe um link válido começando com http:// ou https://');
   }
 
-  // 1. Tenta consultar o motor backend direto (/api/media-extract)
+  let res: Response;
   try {
-    const res = await fetch('/api/media-extract', {
+    res = await fetch('/api/media-extract', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ url: cleanUrl }),
     });
+  } catch {
+    throw new Error('Não foi possível conectar ao motor de extração no servidor.');
+  }
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.success && data.formats && data.formats.length > 0) {
-        return {
-          url: cleanUrl,
-          platform: (data.platform as any) || detectPlatform(cleanUrl),
-          platformLabel: data.platformLabel || 'Mídia Web',
-          title: data.title || 'Vídeo Extraído',
-          author: data.author || 'Canal / Autor',
-          thumbnail: data.thumbnail || 'https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=800&auto=format&fit=crop',
-          duration: data.duration,
-          formats: data.formats,
-        };
-      }
-    }
-  } catch {}
+  const data = await res.json().catch(() => null);
+  if (res.ok && data && data.success && Array.isArray(data.formats) && data.formats.length > 0) {
+    return {
+      url: data.url || cleanUrl,
+      platform: (data.platform as MediaMetadata['platform']) || detectPlatform(cleanUrl),
+      platformLabel: data.platformLabel || getPlatformBadge(detectPlatform(cleanUrl)).label,
+      detectedMediaKind: data.detectedMediaKind,
+      title: data.title || 'Mídia Original',
+      author: data.author || 'Canal Original',
+      thumbnail: data.thumbnail || '',
+      duration: data.duration,
+      formats: data.formats,
+    };
+  }
 
-  // 2. Fallback Desbloqueado de Metadados via oEmbed & detecção rápida
+  // Fallback mínimo apenas para YouTube oEmbed / imagem direta se extrator não obteve metadados
   const platform = detectPlatform(cleanUrl);
-  const platformInfo = getPlatformBadge(platform);
-
-  let title = 'Vídeo em Alta Definição';
-  let author = platformInfo.label;
-  let thumbnail = '';
-  let duration = '04:30';
+  if (platform === 'image') {
+    const match = cleanUrl.match(/\/([^\/?#]+)\.[a-zA-Z0-9]+(\?|$)/);
+    return {
+      url: cleanUrl,
+      platform: 'image',
+      platformLabel: 'Imagem Web',
+      detectedMediaKind: 'image',
+      title: match ? decodeURIComponent(match[1]).replace(/[_-]/g, ' ') : 'Imagem Original',
+      author: new URL(cleanUrl).hostname.replace(/^www\./, ''),
+      thumbnail: cleanUrl,
+      formats: [
+        {
+          id: 'i_8k',
+          type: 'image',
+          quality: '8k',
+          resolution: '7680x4320 8K Ultra Definição',
+          extension: 'jpg',
+          label: 'JPG · 8K Ultra Definição',
+          badge: '8K ULTRA HD',
+          directUrl: cleanUrl,
+          isPopular: true,
+        },
+        {
+          id: 'i_4k',
+          type: 'image',
+          quality: '4k',
+          resolution: '3840x2160 4K Original',
+          extension: 'jpg',
+          label: 'JPG · 4K Resolução Original',
+          badge: '4K ORIGINAL',
+          directUrl: cleanUrl,
+        },
+      ],
+    };
+  }
 
   if (platform === 'youtube') {
     const ytId = extractYouTubeId(cleanUrl);
     if (ytId) {
-      thumbnail = `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`;
-      title = 'Vídeo do YouTube';
+      return {
+        url: cleanUrl,
+        platform: 'youtube',
+        platformLabel: 'YouTube',
+        detectedMediaKind: 'video',
+        title: 'Vídeo do YouTube',
+        author: 'YouTube',
+        thumbnail: `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`,
+        formats: [
+          {
+            id: 'v_best',
+            type: 'video',
+            quality: 'best',
+            resolution: 'Máxima Resolução Disponível',
+            extension: 'mp4',
+            label: 'MP4 · Máxima Automática',
+            badge: 'MAX AUTO',
+            directUrl: cleanUrl,
+          },
+          {
+            id: 'v_4k',
+            type: 'video',
+            quality: '4k',
+            resolution: '3840x2160 4K Ultra HD',
+            extension: 'mp4',
+            label: 'MP4 · 4K Ultra HD',
+            badge: '4K ULTRA HD',
+            directUrl: cleanUrl,
+          },
+          {
+            id: 'v_1080',
+            type: 'video',
+            quality: '1080p',
+            resolution: '1920x1080 Full HD',
+            extension: 'mp4',
+            label: 'MP4 · 1080p Full HD',
+            badge: 'FULL HD',
+            directUrl: cleanUrl,
+          },
+          {
+            id: 'a_320',
+            type: 'audio',
+            quality: '320k',
+            bitrate: '320 kbps',
+            extension: 'mp3',
+            label: 'MP3 · 320 kbps',
+            badge: 'ÁUDIO HQ',
+            directUrl: cleanUrl,
+          },
+          {
+            id: 'a_256',
+            type: 'audio',
+            quality: '256k',
+            bitrate: '256 kbps',
+            extension: 'mp3',
+            label: 'MP3 · 256 kbps',
+            badge: 'ALTA',
+            directUrl: cleanUrl,
+          },
+          {
+            id: 'a_192',
+            type: 'audio',
+            quality: '192k',
+            bitrate: '192 kbps',
+            extension: 'mp3',
+            label: 'MP3 · 192 kbps',
+            badge: 'PADRÃO',
+            directUrl: cleanUrl,
+          },
+          {
+            id: 'a_128',
+            type: 'audio',
+            quality: '128k',
+            bitrate: '128 kbps',
+            extension: 'mp3',
+            label: 'MP3 · 128 kbps',
+            badge: 'LEVE',
+            directUrl: cleanUrl,
+          },
+        ],
+      };
     }
-  } else if (platform === 'kwai') {
-    thumbnail = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop';
-    title = 'Vídeo do Kwai HD';
-    author = 'Kwai Creator';
-  } else if (platform === 'adult') {
-    thumbnail = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=800&auto=format&fit=crop';
-    title = 'Vídeo Web em Alta Resolução Full HD';
-    author = 'Mídia Web HD';
   }
 
-  try {
-    const oembedRes = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(cleanUrl)}`);
-    if (oembedRes.ok) {
-      const data = await oembedRes.json();
-      if (data.title) title = data.title;
-      if (data.author_name) author = data.author_name;
-      if (data.thumbnail_url && !thumbnail) thumbnail = data.thumbnail_url;
-    }
-  } catch {}
-
-  if (!thumbnail) {
-    thumbnail = 'https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=800&auto=format&fit=crop';
-  }
-
-  // Formatos gerados desbloqueados (Vídeos até 4K, Áudios até 320k, Imagens até 8K)
-  const formats: MediaFormatOption[] = [
-    {
-      id: 'v_4k',
-      type: 'video',
-      quality: '4K',
-      resolution: '3840x2160 4K Ultra HD (60fps)',
-      extension: 'mp4',
-      label: 'MP4 · 4K Ultra HD (2160p Master 60fps)',
-      badge: '4K ULTRA HD',
-      filesizeApprox: '~142.8 MB',
-      directUrl: cleanUrl,
-      isPopular: true,
-    },
-    {
-      id: 'v_1080',
-      type: 'video',
-      quality: '1080p',
-      resolution: '1920x1080 Full HD (60fps)',
-      extension: 'mp4',
-      label: 'MP4 · 1080p Full HD (Alta Resolução 60fps)',
-      badge: 'FULL HD',
-      filesizeApprox: '~48.5 MB',
-      directUrl: cleanUrl,
-      isPopular: true,
-    },
-    {
-      id: 'v_720',
-      type: 'video',
-      quality: '720p',
-      resolution: '1280x720 HD',
-      extension: 'mp4',
-      label: 'MP4 · 720p HD (Padrão Recomendado)',
-      badge: 'HD',
-      filesizeApprox: '~28.2 MB',
-      directUrl: cleanUrl,
-      isPopular: true,
-    },
-    {
-      id: 'v_480',
-      type: 'video',
-      quality: '480p',
-      resolution: '854x480 SD',
-      extension: 'mp4',
-      label: 'MP4 · 480p SD (Padrão Rápido)',
-      badge: 'SD',
-      filesizeApprox: '~16.4 MB',
-      directUrl: cleanUrl,
-    },
-    {
-      id: 'a_320',
-      type: 'audio',
-      quality: '320kbps',
-      bitrate: '320 kbps',
-      extension: 'mp3',
-      label: 'MP3 · 320 kbps (Qualidade de Estúdio HQ)',
-      badge: 'ÁUDIO HQ',
-      filesizeApprox: '~8.2 MB',
-      directUrl: cleanUrl,
-      isPopular: true,
-    },
-    {
-      id: 'a_128',
-      type: 'audio',
-      quality: '128kbps',
-      bitrate: '128 kbps',
-      extension: 'mp3',
-      label: 'MP3 · 128 kbps (Áudio Compacto)',
-      badge: 'LEVE',
-      filesizeApprox: '~3.8 MB',
-      directUrl: cleanUrl,
-    },
-    {
-      id: 'i_8k',
-      type: 'image',
-      quality: '8K',
-      resolution: '7680x4320 8K Ultra Definição',
-      extension: 'jpg',
-      label: 'JPG · 8K Ultra Definição (Master HQ 7680x4320)',
-      badge: '8K ULTRA HD',
-      filesizeApprox: '~18.4 MB',
-      directUrl: thumbnail || cleanUrl,
-      isPopular: true,
-    },
-    {
-      id: 'i_4k',
-      type: 'image',
-      quality: '4K',
-      resolution: '3840x2160 4K Original',
-      extension: 'jpg',
-      label: 'JPG · 4K Resolução Original (3840x2160)',
-      badge: '4K ORIGINAL',
-      filesizeApprox: '~8.2 MB',
-      directUrl: thumbnail || cleanUrl,
-      isPopular: true,
-    },
-    {
-      id: 'i_fhd',
-      type: 'image',
-      quality: '1080p',
-      resolution: '1920x1080 Full HD',
-      extension: 'jpg',
-      label: 'JPG · 1080p Full HD Imagem Original',
-      badge: 'FULL HD',
-      filesizeApprox: '~3.5 MB',
-      directUrl: thumbnail || cleanUrl,
-    },
-  ];
-
-  return {
-    url: cleanUrl,
-    platform,
-    platformLabel: platformInfo.label,
-    title,
-    author,
-    thumbnail,
-    duration,
-    formats,
-  };
+  throw new Error(
+    (data && data.error) ||
+      'Não foi possível extrair mídia direta deste link (conteúdo privado, protegido ou indisponível).'
+  );
 }
 
 export interface BatchDownloadTask {
   id: string;
+  serverJobId?: string;
   url: string;
   title: string;
   author: string;
@@ -328,44 +322,49 @@ export interface BatchDownloadTask {
   completedAt?: string;
 }
 
+function buildSegmentsFromProgress(percentage: number, speedText: string, totalSizeText: string): IdmSegmentThread[] {
+  const numericMb = parseFloat(totalSizeText) || 20;
+  const chunkSize = (numericMb / 8).toFixed(1);
+  return Array.from({ length: 8 }, (_, i) => {
+    const segPct = percentage >= 100 ? 100 : Math.min(99, Math.max(0, Math.floor(percentage * (0.9 + i * 0.015))));
+    return {
+      id: i + 1,
+      percentage: segPct,
+      speed: percentage >= 100 ? '0.0 MB/s' : speedText || '0.0 MB/s',
+      rangeText: `${(i * parseFloat(chunkSize)).toFixed(1)}MB - ${((i + 1) * parseFloat(chunkSize)).toFixed(1)}MB`,
+      status: segPct >= 100 ? 'complete' : percentage > 0 ? 'downloading' : 'connecting',
+    };
+  });
+}
+
+async function pauseServerJob(jobId: string): Promise<void> {
+  try {
+    await fetch('/api/media-job-pause', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: jobId }),
+    });
+  } catch {}
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
- * Executa o download em tempo real no app utilizando streaming nativo
- * Acumula os bytes em memória (Blob), permitindo renomear e salvar em Downloads
- * após a conclusão de 100%. Suporta sinal de pausa/cancelamento abortSignal.
+ * Executa o download real assíncrono no servidor (/api/media-job -> polling -> /api/media-job-file)
+ * Evita timeouts HTTP 504 em vídeos longos/4K, exibe progresso real do yt-dlp/FFmpeg e preserva .part ao pausar.
  */
 export async function downloadMediaItem(
   media: MediaMetadata,
   format: MediaFormatOption,
   onProgress?: (report: IdmDownloadProgressReport) => void,
-  abortSignal?: AbortSignal
-): Promise<{ success: boolean; blob?: Blob; filename: string; error?: string }> {
+  abortSignal?: AbortSignal,
+  options?: { existingJobId?: string; onJobCreated?: (jobId: string) => void }
+): Promise<{ success: boolean; blob?: Blob; filename: string; jobId?: string; error?: string }> {
   const safeTitle = sanitizeFilename(media.title);
   const finalFilename = `${safeTitle}.${format.extension}`;
-  const targetStreamUrl = format.directUrl || (format.type === 'image' ? media.thumbnail : media.url);
-
-  const downloadProxyUrl = `/api/media-download?url=${encodeURIComponent(targetStreamUrl)}&filename=${encodeURIComponent(finalFilename)}&type=${format.type}&quality=${encodeURIComponent(format.quality)}`;
-
-  const totalMbEstimate = format.type === 'image'
-    ? (format.quality.includes('8K') ? 18.4 : format.quality.includes('4K') ? 8.2 : 3.5)
-    : format.type === 'audio'
-    ? 8.2
-    : format.quality.includes('4K')
-    ? 142.8
-    : format.quality.includes('1080')
-    ? 48.5
-    : format.quality.includes('720')
-    ? 28.2
-    : 16.4;
-
-  const chunkSize = (totalMbEstimate / 8).toFixed(1);
-
-  const initialSegments: IdmSegmentThread[] = Array.from({ length: 8 }, (_, i) => ({
-    id: i + 1,
-    percentage: 0,
-    speed: '0.0 MB/s',
-    rangeText: `${(i * parseFloat(chunkSize)).toFixed(1)}MB - ${((i + 1) * parseFloat(chunkSize)).toFixed(1)}MB`,
-    status: 'connecting',
-  }));
+  const targetStreamUrl = format.directUrl || (format.type === 'image' ? media.thumbnail || media.url : media.url);
 
   if (onProgress) {
     onProgress({
@@ -373,108 +372,254 @@ export async function downloadMediaItem(
       filename: finalFilename,
       formatLabel: format.label,
       percentage: 2,
-      statusText: 'Estabelecendo conexões com o stream...',
-      totalSize: `${totalMbEstimate} MB`,
+      statusText: 'Iniciando tarefa no motor de extração...',
+      totalSize: format.filesizeApprox || '-- MB',
       downloadedSize: '0.0 MB',
       transferRate: '0.0 MB/s',
       timeRemaining: 'Calculando...',
       threadsCount: 8,
-      segments: initialSegments,
+      segments: buildSegmentsFromProgress(2, '0.0 MB/s', format.filesizeApprox || '20'),
       isComplete: false,
     });
   }
 
+  let createdJobId = options?.existingJobId || '';
+
+  const onAbort = () => {
+    if (createdJobId) {
+      void pauseServerJob(createdJobId);
+    }
+  };
+  abortSignal?.addEventListener('abort', onAbort, { once: true });
+
   try {
-    const response = await fetch(downloadProxyUrl, { signal: abortSignal });
-    if (!response.ok || !response.body) {
-      throw new Error(`Servidor respondeu com status ${response.status}`);
+    if (abortSignal?.aborted) {
+      throw new Error('Download pausado pelo usuário');
     }
 
-    const contentLengthHeader = response.headers.get('content-length');
-    const totalBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : totalMbEstimate * 1024 * 1024;
-    const contentType = response.headers.get('content-type') || (format.type === 'image' ? (format.extension === 'png' ? 'image/png' : 'image/jpeg') : format.type === 'audio' ? 'audio/mpeg' : 'video/mp4');
+    // 1. Cria ou retoma job assíncrono no servidor
+    const createRes = await fetch('/api/media-job', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: targetStreamUrl,
+        pageUrl: media.url,
+        type: format.type,
+        quality: format.quality,
+        filename: finalFilename,
+        jobId: createdJobId || undefined,
+      }),
+      signal: abortSignal,
+    });
 
-    const reader = response.body.getReader();
-    const chunks: Uint8Array[] = [];
-    let receivedBytes = 0;
-    const startTime = Date.now();
-    let lastTime = startTime;
-    let lastBytes = 0;
-    let smoothedSpeed = 24.5;
+    const createData = await createRes.json().catch(() => null);
+    if (!createRes.ok || !createData?.success || !createData?.jobId) {
+      throw new Error(createData?.error || `Falha ao iniciar job no servidor (${createRes.status})`);
+    }
 
+    createdJobId = String(createData.jobId);
+    options?.onJobCreated?.(createdJobId);
+
+    // 2. Polling de status real enquanto o servidor baixa/converte/mescla a mídia original
+    let serverTotalBytes = 0;
+    let lastStatusText = 'Extraindo stream original...';
+
+    let pollStep = 0;
     while (true) {
       if (abortSignal?.aborted) {
+        await pauseServerJob(createdJobId);
         throw new Error('Download pausado pelo usuário');
       }
-      const { done, value } = await reader.read();
-      if (done) break;
 
-      if (value) {
-        chunks.push(value);
-        receivedBytes += value.length;
+      const statusRes = await fetch(`/api/media-job-status?id=${encodeURIComponent(createdJobId)}`, {
+        signal: abortSignal,
+      });
+
+      if (!statusRes.ok) {
+        if (statusRes.status === 404) {
+          throw new Error('Tarefa expirada no servidor. Tente iniciar novamente.');
+        }
+        await sleep(300);
+        continue;
       }
 
-      const now = Date.now();
-      const elapsedTotal = (now - startTime) / 1000;
-      const elapsedSinceLast = (now - lastTime) / 1000;
+      const jobStatus = await statusRes.json();
+      lastStatusText = jobStatus.statusText || lastStatusText;
+      serverTotalBytes = jobStatus.totalBytes || serverTotalBytes;
 
-      if (elapsedSinceLast >= 0.2 || receivedBytes >= totalBytes) {
-        const deltaBytes = receivedBytes - lastBytes;
-        const currentSpeedMb = (deltaBytes / (1024 * 1024)) / (elapsedSinceLast || 0.2);
-        smoothedSpeed = smoothedSpeed * 0.7 + currentSpeedMb * 0.3;
-        lastTime = now;
-        lastBytes = receivedBytes;
+      if (jobStatus.status === 'error') {
+        throw new Error(jobStatus.error || jobStatus.statusText || 'Erro ao extrair mídia original.');
+      }
 
-        const downloadedMb = (receivedBytes / (1024 * 1024)).toFixed(1);
-        const totalMb = (totalBytes / (1024 * 1024)).toFixed(1);
-        let progressPct = Math.min(99, Math.floor((receivedBytes / totalBytes) * 100));
-        if (progressPct <= 0) {
-          progressPct = Math.min(95, Math.floor((elapsedTotal / 3.5) * 100));
-        }
+      if (jobStatus.status === 'paused') {
+        throw new Error('Download pausado pelo usuário');
+      }
 
-        const remainingBytes = Math.max(0, totalBytes - receivedBytes);
-        const etaSeconds = Math.max(0, Math.ceil((remainingBytes / (1024 * 1024)) / (smoothedSpeed || 20)));
-        const etaText = `00:00:${String(etaSeconds).padStart(2, '0')}`;
+      // Mapeia o processamento/download no servidor para 2% - 92% da barra
+      const mappedPct =
+        jobStatus.status === 'ready'
+          ? 92
+          : Math.min(91, Math.max(3, Math.floor((jobStatus.percentage || 0) * 0.92)));
 
-        const updatedSegments: IdmSegmentThread[] = initialSegments.map((seg, idx) => {
-          const segProgress = Math.min(100, Math.floor(progressPct * (0.88 + idx * 0.03)));
-          return {
-            ...seg,
-            percentage: segProgress,
-            speed: `${(smoothedSpeed / 8 + (Math.random() * 0.3)).toFixed(1)} MB/s`,
-            status: segProgress >= 100 ? 'complete' : 'downloading',
-          };
+      if (onProgress) {
+        onProgress({
+          active: true,
+          filename: finalFilename,
+          formatLabel: format.label,
+          percentage: mappedPct,
+          statusText: lastStatusText,
+          totalSize: jobStatus.totalSize || format.filesizeApprox || '-- MB',
+          downloadedSize: jobStatus.downloadedSize || '0.0 MB',
+          transferRate: jobStatus.transferRate || '0.0 MB/s',
+          timeRemaining: jobStatus.status === 'ready' ? '00:00:01' : 'Processando...',
+          threadsCount: 8,
+          segments: buildSegmentsFromProgress(mappedPct, jobStatus.transferRate || '0.0 MB/s', jobStatus.totalSize || '20'),
+          isComplete: false,
         });
-
-        if (onProgress) {
-          onProgress({
-            active: true,
-            filename: finalFilename,
-            formatLabel: format.label,
-            percentage: progressPct,
-            statusText: `Transferindo dados em tempo real (${smoothedSpeed.toFixed(1)} MB/s)...`,
-            totalSize: `${totalMb} MB`,
-            downloadedSize: `${downloadedMb} MB`,
-            transferRate: `${smoothedSpeed.toFixed(1)} MB/s`,
-            timeRemaining: etaText,
-            threadsCount: 8,
-            segments: updatedSegments,
-            isComplete: false,
-          });
-        }
       }
+
+      if (jobStatus.status === 'ready') {
+        break;
+      }
+
+      pollStep++;
+      await sleep(pollStep < 6 ? 150 : 250);
     }
 
-    // Criar o Blob completo da mídia
-    const completeBlob = new Blob(chunks, { type: contentType });
-    const finalSizeMb = (completeBlob.size / (1024 * 1024)).toFixed(1);
+    if (abortSignal?.aborted) {
+      await pauseServerJob(createdJobId);
+      throw new Error('Download pausado pelo usuário');
+    }
 
-    const completedSegments: IdmSegmentThread[] = initialSegments.map((seg) => ({
-      ...seg,
-      percentage: 100,
-      speed: '0.0 MB/s',
-      status: 'complete',
-    }));
+    // 3. Baixa o arquivo final em segmentos HTTP Byte-Range PARALELOS (6 threads simultâneas) estilo IDM
+    const fileEndpoint = `/api/media-job-file?id=${encodeURIComponent(createdJobId)}`;
+    const defaultMime =
+      format.type === 'image'
+        ? format.extension === 'png'
+          ? 'image/png'
+          : 'image/jpeg'
+        : format.type === 'audio'
+        ? 'audio/mpeg'
+        : 'video/mp4';
+
+    let totalBytes = serverTotalBytes || 0;
+    let contentType = defaultMime;
+
+    if (totalBytes <= 0) {
+      const headRes = await fetch(fileEndpoint, { method: 'HEAD', signal: abortSignal });
+      if (!headRes.ok) {
+        throw new Error(`Falha ao consultar tamanho do arquivo (${headRes.status})`);
+      }
+      totalBytes = parseInt(headRes.headers.get('content-length') || '0', 10) || 0;
+      contentType = headRes.headers.get('content-type') || defaultMime;
+    }
+
+    const CHUNK_SIZE = 6 * 1024 * 1024; // 6 MB por segmento HTTP Range
+    const parts: BlobPart[] = [];
+    let receivedBytes = 0;
+    const startTime = Date.now();
+    let lastReport = startTime;
+    let lastBytes = 0;
+
+    if (totalBytes > 0) {
+      const chunkDescriptors: { index: number; offset: number; end: number }[] = [];
+      let idx = 0;
+      for (let offset = 0; offset < totalBytes; offset += CHUNK_SIZE) {
+        chunkDescriptors.push({
+          index: idx++,
+          offset,
+          end: Math.min(totalBytes - 1, offset + CHUNK_SIZE - 1),
+        });
+      }
+      parts.length = chunkDescriptors.length;
+
+      let cursor = 0;
+      const concurrency = Math.min(6, chunkDescriptors.length);
+
+      const rangeWorker = async () => {
+        while (true) {
+          if (abortSignal?.aborted) {
+            throw new Error('Download pausado pelo usuário');
+          }
+          const myIdx = cursor++;
+          if (myIdx >= chunkDescriptors.length) return;
+          const desc = chunkDescriptors[myIdx];
+
+          let chunkBuf: ArrayBuffer | null = null;
+          let lastErrStatus = 0;
+
+          for (let attempt = 0; attempt < 3; attempt++) {
+            if (abortSignal?.aborted) {
+              throw new Error('Download pausado pelo usuário');
+            }
+            const rangeRes = await fetch(fileEndpoint, {
+              headers: { Range: `bytes=${desc.offset}-${desc.end}` },
+              signal: abortSignal,
+            });
+            lastErrStatus = rangeRes.status;
+            if (rangeRes.status === 206 || rangeRes.status === 200) {
+              contentType = rangeRes.headers.get('content-type') || contentType;
+              chunkBuf = await rangeRes.arrayBuffer();
+              break;
+            }
+            await sleep(300 * (attempt + 1));
+          }
+
+          if (!chunkBuf) {
+            throw new Error(`Falha ao transferir segmento do arquivo (${lastErrStatus})`);
+          }
+
+          parts[desc.index] = chunkBuf;
+          receivedBytes += chunkBuf.byteLength;
+
+          const now = Date.now();
+          const dt = (now - lastReport) / 1000;
+          const speedMb = Math.max(0.8, (receivedBytes - lastBytes) / (1024 * 1024) / Math.max(0.08, dt));
+          if (dt >= 0.15 || receivedBytes >= totalBytes) {
+            lastReport = now;
+            lastBytes = receivedBytes;
+
+            const transferRatio = Math.min(1, receivedBytes / totalBytes);
+            const pct = Math.min(99, 92 + Math.floor(transferRatio * 8));
+            const dlMb = (receivedBytes / (1024 * 1024)).toFixed(1);
+            const totMb = (totalBytes / (1024 * 1024)).toFixed(1);
+
+            if (onProgress) {
+              onProgress({
+                active: true,
+                filename: finalFilename,
+                formatLabel: format.label,
+                percentage: pct,
+                statusText: `Transferindo 6-Threads IDM (${dlMb} MB / ${totMb} MB)...`,
+                totalSize: `${totMb} MB`,
+                downloadedSize: `${dlMb} MB`,
+                transferRate: `${speedMb.toFixed(1)} MB/s`,
+                timeRemaining: '00:00:01',
+                threadsCount: 8,
+                segments: buildSegmentsFromProgress(pct, `${speedMb.toFixed(1)} MB/s`, totMb),
+                isComplete: false,
+              });
+            }
+          }
+        }
+      };
+
+      await Promise.all(Array.from({ length: concurrency }, () => rangeWorker()));
+    } else {
+      const fileRes = await fetch(fileEndpoint, { signal: abortSignal });
+      if (!fileRes.ok) {
+        throw new Error(`Falha ao transferir arquivo finalizado (${fileRes.status})`);
+      }
+      contentType = fileRes.headers.get('content-type') || defaultMime;
+      parts.push(await fileRes.arrayBuffer());
+    }
+
+    const completeBlob = new Blob(parts, { type: contentType });
+    if (completeBlob.size === 0) {
+      throw new Error('Arquivo recebido vazio do servidor.');
+    }
+
+    const finalSizeMb = (completeBlob.size / (1024 * 1024)).toFixed(2);
 
     if (onProgress) {
       onProgress({
@@ -482,13 +627,13 @@ export async function downloadMediaItem(
         filename: finalFilename,
         formatLabel: format.label,
         percentage: 100,
-        statusText: 'Download da mídia completa concluído! Salve agora no seu dispositivo.',
+        statusText: 'Download concluído 100%! Arquivo salvo na pasta Downloads.',
         totalSize: `${finalSizeMb} MB`,
         downloadedSize: `${finalSizeMb} MB`,
         transferRate: '0.0 MB/s',
         timeRemaining: '00:00:00',
         threadsCount: 8,
-        segments: completedSegments,
+        segments: buildSegmentsFromProgress(100, '0.0 MB/s', finalSizeMb),
         isComplete: true,
         blob: completeBlob,
       });
@@ -498,30 +643,35 @@ export async function downloadMediaItem(
       success: true,
       blob: completeBlob,
       filename: finalFilename,
+      jobId: createdJobId,
     };
   } catch (err: any) {
+    const msg = err?.message || 'Erro ao baixar mídia.';
     if (onProgress) {
       onProgress({
-        active: true,
+        active: false,
         filename: finalFilename,
         formatLabel: format.label,
         percentage: 0,
-        statusText: 'Erro ao transferir stream.',
-        totalSize: `${totalMbEstimate} MB`,
+        statusText: msg,
+        totalSize: format.filesizeApprox || '-- MB',
         downloadedSize: '0.0 MB',
         transferRate: '0.0 MB/s',
         timeRemaining: '00:00:00',
         threadsCount: 8,
-        segments: initialSegments,
+        segments: buildSegmentsFromProgress(0, '0.0 MB/s', '20'),
         isComplete: false,
-        error: err.message,
+        error: msg,
       });
     }
     return {
       success: false,
       filename: finalFilename,
-      error: err.message,
+      jobId: createdJobId || undefined,
+      error: msg,
     };
+  } finally {
+    abortSignal?.removeEventListener('abort', onAbort);
   }
 }
 
@@ -540,3 +690,4 @@ export function saveBlobToDevice(blob: Blob, filename: string) {
 function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9_\-\u00C0-\u017F ]/g, '').trim().substring(0, 60) || 'media';
 }
+

@@ -242,6 +242,15 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
+
   const currentHex = isTransparent ? "transparent" : hsvToHex(hsv.h, hsv.s, hsv.v);
   const rgbValues = hsvToRgb(hsv.h, hsv.s, hsv.v);
 
@@ -249,26 +258,23 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md select-none animate-in fade-in duration-150"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-sm select-none animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="relative rounded-2xl bg-[#1e1e24] border border-white/20 shadow-[0_30px_70px_rgba(0,0,0,0.95)] backdrop-blur-2xl flex flex-col text-white animate-in zoom-in-95 duration-150 overflow-hidden select-text"
+        className="relative rounded-lg bg-[#131315] border border-[#26262A] shadow-2xl flex flex-col text-white animate-in zoom-in-95 duration-150 overflow-hidden select-text"
         style={{ width: "350px", maxWidth: "calc(100vw - 32px)", margin: "auto" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ========================================================
-            BARRA DE ABAS SUPERIOR (ESTILO ADOBE: Cor | Amostras | Degradês)
-        ======================================================== */}
-        <div className="flex items-center justify-between border-b border-white/10 bg-[#16161b] px-3 pt-2">
+        <div className="flex items-center justify-between border-b border-[#26262A] bg-[#0B0B0C] px-3 pt-2">
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setActiveTab("cor")}
-              className={`px-3 py-1.5 text-xs font-bold rounded-t-lg transition-colors cursor-pointer border-t border-x ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-t-[4px] transition-colors cursor-pointer border-t border-x ${
                 activeTab === "cor"
-                  ? "bg-[#1e1e24] text-white border-white/20 border-b-transparent -mb-[1px]"
-                  : "bg-transparent text-slate-400 hover:text-white border-transparent"
+                  ? "bg-[#131315] text-white border-[#26262A] border-b-transparent -mb-[1px]"
+                  : "bg-transparent text-[#8B8B92] hover:text-white border-transparent"
               }`}
             >
               Cor
@@ -276,10 +282,10 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab("amostras")}
-              className={`px-3 py-1.5 text-xs font-bold rounded-t-lg transition-colors cursor-pointer border-t border-x ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-t-[4px] transition-colors cursor-pointer border-t border-x ${
                 activeTab === "amostras"
-                  ? "bg-[#1e1e24] text-white border-white/20 border-b-transparent -mb-[1px]"
-                  : "bg-transparent text-slate-400 hover:text-white border-transparent"
+                  ? "bg-[#131315] text-white border-[#26262A] border-b-transparent -mb-[1px]"
+                  : "bg-transparent text-[#8B8B92] hover:text-white border-transparent"
               }`}
             >
               Amostras
@@ -287,10 +293,10 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab("degrades")}
-              className={`px-3 py-1.5 text-xs font-bold rounded-t-lg transition-colors cursor-pointer border-t border-x ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-t-[4px] transition-colors cursor-pointer border-t border-x ${
                 activeTab === "degrades"
-                  ? "bg-[#1e1e24] text-white border-white/20 border-b-transparent -mb-[1px]"
-                  : "bg-transparent text-slate-400 hover:text-white border-transparent"
+                  ? "bg-[#131315] text-white border-[#26262A] border-b-transparent -mb-[1px]"
+                  : "bg-transparent text-[#8B8B92] hover:text-white border-transparent"
               }`}
             >
               Degradês
@@ -300,34 +306,27 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 -mt-1 rounded-lg bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
+            className="w-7 h-7 -mt-1 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center justify-center text-[#8B8B92] hover:text-white transition-colors cursor-pointer"
             title="Fechar"
+            aria-label="Fechar"
           >
             <X size={15} />
           </button>
         </div>
 
-        {/* ========================================================
-            CORPO DO PAINEL DE CORES
-        ======================================================== */}
         <div className="p-4 flex flex-col gap-3.5">
-          {/* Header com título e ícone duplo sobreposto do Adobe */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Ícone clássico Adobe de Amostras Sobrepostas (Primeiro plano vs Fundo) */}
               <div className="relative w-8 h-8 shrink-0">
-                {/* Quadrado do fundo (secundário) */}
                 <div
-                  className="absolute bottom-0 right-0 w-5 h-5 rounded-sm border border-white/40 shadow-sm"
+                  className="absolute bottom-0 right-0 w-5 h-5 rounded-[4px] border border-white/40"
                   style={{
-                    backgroundColor:
-                      companionColor === "transparent" ? "#334155" : companionColor,
+                    backgroundColor: companionColor === "transparent" ? "#334155" : companionColor,
                   }}
                   title="Cor secundária"
                 />
-                {/* Quadrado do primeiro plano (ativo) */}
                 <div
-                  className="absolute top-0 left-0 w-5 h-5 rounded-sm border-2 border-white shadow-md z-10"
+                  className="absolute top-0 left-0 w-5 h-5 rounded-[4px] border-2 border-white z-10"
                   style={{
                     backgroundColor: isTransparent ? "transparent" : currentHex,
                   }}
@@ -337,21 +336,20 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
 
               <div className="flex flex-col">
                 <span className="text-xs font-black text-white uppercase tracking-wider">{title}</span>
-                <span className="text-[10px] text-slate-400 font-mono">
+                <span className="text-[11px] text-[#8B8B92] font-mono">
                   {isTransparent ? "Transparente" : currentHex}
                 </span>
               </div>
             </div>
 
-            {/* Alternador de transparência (se permitido) */}
             {allowTransparent && onToggleTransparent && (
               <button
                 type="button"
                 onClick={() => onToggleTransparent(!isTransparent)}
-                className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                className={`text-[11px] font-bold px-2.5 py-1 rounded-[6px] border transition-colors cursor-pointer ${
                   isTransparent
-                    ? "bg-amber-500/25 border-amber-500/60 text-amber-300 shadow-sm"
-                    : "bg-white/5 border-white/15 text-slate-300 hover:text-white"
+                    ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
+                    : "bg-[#1B1B1E] border-[#26262A] text-[#CBD5E1] hover:text-white"
                 }`}
               >
                 {isTransparent ? "Transparente ✓" : "Tornar Transparente"}
@@ -426,10 +424,8 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
                 </div>
               </div>
 
-              {/* Informações Numéricas e Campo HEX */}
               <div className="grid grid-cols-2 gap-2 pt-1">
-                {/* Campo HEX */}
-                <div className="flex items-center gap-1.5 px-3 h-10 rounded-xl bg-black/70 border-2 border-white/20 focus-within:border-[var(--gm-primary)]">
+                <div className="flex items-center gap-1.5 px-3 h-10 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] focus-within:border-[var(--gm-primary)]">
                   <span className="text-xs font-mono text-[var(--gm-primary)] font-black">#</span>
                   <input
                     type="text"
@@ -441,8 +437,7 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
                   />
                 </div>
 
-                {/* Valores RGB */}
-                <div className="flex items-center justify-around px-2 py-1.5 rounded-xl bg-black/50 border border-white/10 text-[10px] font-mono text-slate-300">
+                <div className="flex items-center justify-around px-2 py-1.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-[11px] font-mono text-[#CBD5E1] tabular-nums">
                   <span>R:{rgbValues.r}</span>
                   <span>G:{rgbValues.g}</span>
                   <span>B:{rgbValues.b}</span>
@@ -451,19 +446,15 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
             </div>
           )}
 
-          {/* ========================================================
-              ABA 2: AMOSTRAS (SWATCHES RÁPIDAS)
-          ======================================================== */}
           {activeTab === "amostras" && (
             <div className="flex flex-col gap-2.5 animate-in fade-in duration-150">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+              <span className="text-[11px] font-bold text-[#8B8B92] uppercase tracking-wide">
                 Amostras Otimizadas de Contraste
               </span>
 
               <div className="grid grid-cols-5 gap-2.5 py-1 justify-items-center max-h-[220px] overflow-y-auto">
                 {swatches.map((item) => {
-                  const isSelected =
-                    !isTransparent && currentHex.toUpperCase() === item.hex.toUpperCase();
+                  const isSelected = !isTransparent && currentHex.toUpperCase() === item.hex.toUpperCase();
                   return (
                     <button
                       key={item.hex}
@@ -473,15 +464,11 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
                         const newHsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
                         setHsv(newHsv);
                         setInputText(item.hex);
-                        if (isTransparent && onToggleTransparent) {
-                          onToggleTransparent(false);
-                        }
+                        if (isTransparent && onToggleTransparent) onToggleTransparent(false);
                         onChange(item.hex);
                       }}
-                      className={`rounded-xl border transition-all flex items-center justify-center cursor-pointer shadow-xs ${
-                        isSelected
-                          ? "ring-2 ring-white scale-105 border-white shadow-orange-500/30"
-                          : "border-white/15 hover:border-white/50 hover:scale-105 opacity-90 hover:opacity-100"
+                      className={`rounded-[6px] border transition-transform flex items-center justify-center cursor-pointer ${
+                        isSelected ? "ring-2 ring-white scale-105 border-white" : "border-[#26262A] hover:border-white/50 hover:scale-105"
                       }`}
                       style={{ width: "44px", height: "44px", backgroundColor: item.hex }}
                       title={`${item.name} (${item.hex})`}
@@ -489,11 +476,7 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
                       {isSelected && (
                         <Check
                           size={16}
-                          className={
-                            item.hex === "#FFFFFF" || item.hex === "#F8FAFC"
-                              ? "text-black stroke-[3.5]"
-                              : "text-white stroke-[3.5]"
-                          }
+                          className={item.hex === "#FFFFFF" || item.hex === "#F8FAFC" ? "text-black stroke-[3.5]" : "text-white stroke-[3.5]"}
                         />
                       )}
                     </button>
@@ -503,12 +486,9 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
             </div>
           )}
 
-          {/* ========================================================
-              ABA 3: DEGRADÊS & TONS PRÉ-CONFIGURADOS
-          ======================================================== */}
           {activeTab === "degrades" && (
             <div className="flex flex-col gap-2.5 animate-in fade-in duration-150">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+              <span className="text-[11px] font-bold text-[#8B8B92] uppercase tracking-wide">
                 Tons Recomendados para QR Codes
               </span>
 
@@ -531,20 +511,18 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
                       const newHsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
                       setHsv(newHsv);
                       setInputText(item.hex);
-                      if (isTransparent && onToggleTransparent) {
-                        onToggleTransparent(false);
-                      }
+                      if (isTransparent && onToggleTransparent) onToggleTransparent(false);
                       onChange(item.hex);
                     }}
-                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 transition-all cursor-pointer text-left"
+                    className="p-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                   >
                     <span
-                      className="w-6 h-6 rounded-lg border border-white/30 shrink-0 shadow-xs"
+                      className="w-6 h-6 rounded-[4px] border border-white/30 shrink-0"
                       style={{ backgroundColor: item.hex }}
                     />
                     <div className="flex flex-col min-w-0">
                       <span className="text-[11px] font-bold text-white truncate">{item.name}</span>
-                      <span className="text-[9px] text-slate-400 font-mono">{item.hex}</span>
+                      <span className="text-[11px] text-[#8B8B92] font-mono">{item.hex}</span>
                     </div>
                   </button>
                 ))}
@@ -552,11 +530,10 @@ export const AdobeStyleColorPicker: React.FC<AdobeStyleColorPickerProps> = ({
             </div>
           )}
 
-          {/* Botão de Fechar / Concluir */}
           <button
             type="button"
             onClick={onClose}
-            className="w-full h-10 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center mt-1"
+            className="w-full h-10 rounded-[6px] bg-[var(--gm-primary)] hover:brightness-110 text-[#0B0B0C] font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center mt-1"
           >
             Concluir
           </button>
@@ -727,21 +704,19 @@ export const EmbeddedAdobeColorPicker: React.FC<EmbeddedAdobeColorPickerProps> =
       ];
 
   return (
-    <div className="rounded-2xl bg-black/60 border border-white/12 p-3.5 sm:p-4 flex flex-col justify-between gap-3 shadow-inner h-full transition-all">
-      {/* 1. CABEÇALHO DO BLOCO: TÍTULO, AMOSTRA SOBREPOSTA E HEX AMPLIADO (LINHA ÚNICA ALINHADA) */}
-      <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10 min-h-[50px]">
+    <div className="rounded-lg bg-[#131315] border border-[#26262A] p-3.5 sm:p-4 flex flex-col justify-between gap-3 h-full">
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-[#26262A] min-h-[50px]">
         <div className="flex items-center gap-3 min-w-0">
-          {/* Amostras sobrepostas clássicas Adobe */}
           <div className="relative w-8 h-8 shrink-0">
             <div
-              className="absolute bottom-0 right-0 w-5 h-5 rounded-md border border-white/30 shadow-xs"
+              className="absolute bottom-0 right-0 w-5 h-5 rounded-[4px] border border-white/30"
               style={{
                 background: companionColor === "transparent" ? "repeating-conic-gradient(#475569 0% 25%, #1e293b 0% 50%) 50% / 6px 6px" : companionColor,
               }}
               title="Cor Secundária"
             />
             <div
-              className="absolute top-0 left-0 w-5 h-5 rounded-md border-2 border-white shadow-sm z-10"
+              className="absolute top-0 left-0 w-5 h-5 rounded-[4px] border-2 border-white z-10"
               style={{
                 background: isTransparent ? "repeating-conic-gradient(#475569 0% 25%, #1e293b 0% 50%) 50% / 6px 6px" : currentHex,
               }}
@@ -753,30 +728,28 @@ export const EmbeddedAdobeColorPicker: React.FC<EmbeddedAdobeColorPickerProps> =
             <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider truncate">
               {title}
             </span>
-            <span className="text-[11px] text-slate-400 font-mono font-medium truncate">
+            <span className="text-[11px] text-[#8B8B92] font-mono font-medium truncate">
               {isTransparent ? "Transparente" : currentHex}
             </span>
           </div>
         </div>
 
-        {/* Controles de Direita: Alternador Transparente + Input HEX Ampliado */}
         <div className="flex items-center gap-2 shrink-0">
           {allowTransparent && onToggleTransparent && (
             <button
               type="button"
               onClick={() => onToggleTransparent(!isTransparent)}
-              className={`h-11 px-3 sm:px-3.5 rounded-xl border text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center justify-center ${
+              className={`h-10 px-3 rounded-[6px] border text-xs font-black transition-colors cursor-pointer whitespace-nowrap flex items-center justify-center ${
                 isTransparent
-                  ? "bg-amber-500/25 border-amber-500/60 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.2)]"
-                  : "bg-white/5 border-white/15 text-slate-300 hover:text-white hover:bg-white/10"
+                  ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
+                  : "bg-[#1B1B1E] border-[#26262A] text-[#CBD5E1] hover:text-white hover:bg-[#26262A]"
               }`}
             >
               {isTransparent ? "Transp. ✓" : "Transparente"}
             </button>
           )}
 
-          {/* Campo HEX Ampliado com Maior Destaque e Tipografia Forte */}
-          <div className="flex items-center gap-1.5 px-3.5 h-11 rounded-xl bg-black/80 border-2 border-white/20 focus-within:border-[var(--gm-primary)] focus-within:ring-2 focus-within:ring-[var(--gm-primary)]/20 shadow-inner transition-all">
+          <div className="flex items-center gap-1.5 px-3 h-10 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] focus-within:border-[var(--gm-primary)] transition-colors">
             <span className="text-sm font-mono text-[var(--gm-primary)] font-black select-none">#</span>
             <input
               type="text"
@@ -785,14 +758,13 @@ export const EmbeddedAdobeColorPicker: React.FC<EmbeddedAdobeColorPickerProps> =
               value={displayHex}
               onChange={(e) => handleHexInputChange(e.target.value)}
               placeholder="FE540B"
-              className="w-20 sm:w-24 bg-transparent text-white font-mono text-sm sm:text-base uppercase outline-none font-black tracking-wider disabled:opacity-40"
+              className="w-20 sm:w-24 bg-transparent text-white font-mono text-xs sm:text-sm uppercase outline-none font-black tracking-wider disabled:opacity-40"
             />
           </div>
         </div>
       </div>
 
-      {/* 2. ABAS SUPERIORES ESTILO ADOBE (Segmented Control) */}
-      <div className="flex items-center justify-between p-1 rounded-xl bg-black/40 border border-white/10">
+      <div className="flex items-center justify-between p-1 rounded-md bg-[#0B0B0C] border border-[#26262A]">
         <div className="flex items-center gap-1">
           {[
             { id: "cor", label: "Espectro" },
@@ -803,10 +775,8 @@ export const EmbeddedAdobeColorPicker: React.FC<EmbeddedAdobeColorPickerProps> =
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                activeTab === tab.id
-                  ? "bg-white/20 text-white shadow-xs"
-                  : "text-slate-400 hover:text-white"
+              className={`px-2.5 py-1 text-[11px] font-bold rounded-[4px] transition-colors cursor-pointer ${
+                activeTab === tab.id ? "bg-[#26262A] text-white" : "text-[#8B8B92] hover:text-white"
               }`}
             >
               {tab.label}
@@ -814,24 +784,21 @@ export const EmbeddedAdobeColorPicker: React.FC<EmbeddedAdobeColorPickerProps> =
           ))}
         </div>
 
-        <span className="text-[10px] font-mono text-slate-400 pr-1.5 hidden sm:inline">
+        <span className="text-[11px] font-mono text-[#8B8B92] pr-1.5 hidden sm:inline tabular-nums">
           {isTransparent ? "ALFA: 0%" : `R:${rgbValues.r} G:${rgbValues.g} B:${rgbValues.b}`}
         </span>
       </div>
 
-      {/* 3. CONTEÚDO DA ABA ATIVA */}
       {activeTab === "cor" && (
         <div className="flex flex-col gap-2.5">
-          {/* Espectro 2D + Barra de Matiz */}
           <div className="flex items-stretch gap-2.5">
-            {/* Quadrado 2D de Saturação x Brilho */}
             <div
               ref={satValRef}
               onPointerDown={(e) => {
                 isDraggingSatVal.current = true;
                 updateSatValFromEvent(e.clientX, e.clientY);
               }}
-              className="relative flex-1 h-[155px] rounded-xl overflow-hidden cursor-crosshair border border-white/15 shadow-inner touch-none"
+              className="relative flex-1 h-[155px] rounded-md overflow-hidden cursor-crosshair border border-[#26262A] touch-none"
               style={{
                 background: isTransparent
                   ? "repeating-conic-gradient(#334155 0% 25%, #1e293b 0% 50%) 50% / 12px 12px"
@@ -840,30 +807,17 @@ export const EmbeddedAdobeColorPicker: React.FC<EmbeddedAdobeColorPickerProps> =
             >
               {!isTransparent ? (
                 <>
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: "linear-gradient(to right, #ffffff, transparent)",
-                    }}
-                  />
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: "linear-gradient(to top, #000000, transparent)",
-                    }}
-                  />
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to right, #ffffff, transparent)" }} />
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to top, #000000, transparent)" }} />
                   <div
                     className="absolute w-4 h-4 rounded-full border-2 border-white shadow-[0_0_4px_rgba(0,0,0,0.9)] -translate-x-1/2 -translate-y-1/2 pointer-events-none ring-1 ring-black/40"
-                    style={{
-                      left: `${hsv.s}%`,
-                      top: `${100 - hsv.v}%`,
-                    }}
+                    style={{ left: `${hsv.s}%`, top: `${100 - hsv.v}%` }}
                   />
                 </>
               ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-black/50 backdrop-blur-xs">
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-black/60">
                   <span className="text-[11px] font-black text-amber-300">Fundo Transparente Ativo</span>
-                  <p className="text-[9px] text-slate-300 mt-0.5">Clique na barra ou abaixo para cor sólida</p>
+                  <p className="text-[11px] text-[#CBD5E1] mt-0.5">Clique na barra ou abaixo para cor sólida</p>
                 </div>
               )}
             </div>
@@ -916,10 +870,10 @@ export const EmbeddedAdobeColorPicker: React.FC<EmbeddedAdobeColorPickerProps> =
                       onChange(item.hex);
                     }
                   }}
-                  className={`flex-1 h-7 rounded-lg border transition-all flex items-center justify-center cursor-pointer shadow-xs ${
+                  className={`flex-1 h-7 rounded-[4px] border transition-colors flex items-center justify-center cursor-pointer ${
                     isSelected
-                      ? "ring-2 ring-white scale-105 border-white shadow-sm"
-                      : "border-white/20 hover:border-white/50 hover:scale-105 opacity-90 hover:opacity-100"
+                      ? "ring-2 ring-white border-white"
+                      : "border-[#26262A] hover:border-white/60 opacity-90 hover:opacity-100"
                   }`}
                   style={{
                     background:
@@ -966,10 +920,10 @@ export const EmbeddedAdobeColorPicker: React.FC<EmbeddedAdobeColorPickerProps> =
                     }
                     onChange(item.hex);
                   }}
-                  className={`w-10 h-10 rounded-xl border transition-all flex items-center justify-center cursor-pointer shadow-xs ${
+                  className={`w-10 h-10 rounded-[6px] border transition-colors flex items-center justify-center cursor-pointer ${
                     isSelected
-                      ? "ring-2 ring-white scale-105 border-white shadow-orange-500/30"
-                      : "border-white/20 hover:border-white/50 hover:scale-105 opacity-90 hover:opacity-100"
+                      ? "ring-2 ring-white border-white"
+                      : "border-[#26262A] hover:border-white/60 opacity-90 hover:opacity-100"
                   }`}
                   style={{ backgroundColor: item.hex }}
                   title={`${item.name} (${item.hex})`}
@@ -1017,10 +971,10 @@ export const EmbeddedAdobeColorPicker: React.FC<EmbeddedAdobeColorPickerProps> =
                   }
                   onChange(item.hex);
                 }}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 transition-all cursor-pointer text-left"
+                className="p-2 rounded-[6px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] flex items-center gap-2 transition-colors cursor-pointer text-left"
               >
                 <span
-                  className="w-5 h-5 rounded-md border border-white/30 shrink-0 shadow-xs"
+                  className="w-5 h-5 rounded-[4px] border border-[#26262A] shrink-0"
                   style={{ backgroundColor: item.hex }}
                 />
                 <span className="text-[11px] font-bold text-white truncate">{item.name}</span>

@@ -37,6 +37,15 @@ export const WhatsAppSelectorModal: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen]);
+
   const getSystemDetails = () => {
     const ua = navigator.userAgent.toLowerCase();
     const isAndroid = ua.includes('android');
@@ -89,95 +98,86 @@ export const WhatsAppSelectorModal: React.FC = () => {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
-          {/* Blur backdrop overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/80"
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm"
           />
 
-          {/* Dialog popup */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="relative w-full max-w-sm overflow-hidden rounded-lg border border-white/10 text-left text-white shadow-lg"
-            style={{
-              background: 'linear-gradient(135deg, rgba(22, 28, 38, 0.96) 0%, rgba(13, 17, 23, 0.98) 100%)',
-              backdropFilter: 'blur(24px)',
-              boxShadow: '0 10px 50px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(34, 197, 94, 0.05)',
-            }}
+            exit={{ opacity: 0, scale: 0.96, y: 10 }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-sm overflow-hidden rounded-lg border border-[#26262A] bg-[#131315] text-left text-[#F2F2F3] shadow-2xl gm-modal"
           >
-            {/* Top Close */}
             <button
+              type="button"
               onClick={() => setIsOpen(false)}
-              className="absolute right-4 top-4 text-white/40 hover:text-white p-1 rounded-full hover:bg-white/5 transition-all z-10"
+              aria-label="Fechar"
+              className="absolute right-4 top-4 w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center transition-colors z-10 cursor-pointer"
             >
               <X size={16} />
             </button>
 
-            {/* Content body */}
             <div className="p-6">
-              {/* Icon & Title */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-[var(--gm-primary)]/10 flex items-center justify-center border border-[var(--gm-primary)]/20 shrink-0">
-                  <WhatsAppIcon size={26} className="text-[var(--gm-primary)]" />
+              <div className="flex items-center gap-3 mb-4 pr-10">
+                <div className="w-11 h-11 rounded-md bg-[var(--gm-primary)]/10 flex items-center justify-center border border-[var(--gm-primary)]/25 shrink-0">
+                  <WhatsAppIcon size={24} className="text-[var(--gm-primary)]" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-extrabold tracking-tight text-white">
+                  <h3 className="text-xl font-bold tracking-tight text-[#F2F2F3]">
                     Enviar Mensagem
                   </h3>
-                  <p className="text-base text-slate-300 font-medium">Múltiplos aplicativos detectados</p>
+                  <p className="text-[13px] text-[#8B8B92] font-medium">Múltiplos aplicativos detectados</p>
                 </div>
               </div>
 
-              {/* Explanatory text */}
-              <p className="text-base text-slate-200 leading-relaxed mb-5">
-                Detectamos que você pode ter mais de um WhatsApp instalado (como o 
-                <strong className="text-emerald-400"> Pessoal</strong> e o 
-                <strong className="text-sky-400"> Business</strong>) no seu dispositivo ou PC. Escolha o mensageiro de destino:
+              <p className="text-sm text-[#CBD5E1] leading-relaxed mb-5">
+                Detectamos que você pode ter mais de um WhatsApp instalado (
+                <strong className="text-emerald-400">Pessoal</strong> e{' '}
+                <strong className="text-sky-400">Business</strong>). Escolha o mensageiro de destino:
               </p>
 
-              {/* Action grid options */}
-              <div className="space-y-3">
-                {/* 1. Standard WhatsApp option */}
+              <div className="space-y-2.5">
                 <button
+                  type="button"
                   onClick={() => handleSelectApp('personal')}
-                  className="w-full flex items-center gap-3.5 p-3.5 rounded-xl border border-white/5 bg-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left group"
+                  className="w-full flex items-center gap-3.5 p-3.5 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:border-emerald-500/40 hover:bg-[#1B1B1E] transition-colors text-left group cursor-pointer"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-all shrink-0">
-                    <Smartphone size={20} className="text-emerald-400" />
+                  <div className="w-10 h-10 rounded-[4px] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/25 shrink-0">
+                    <Smartphone size={18} className="text-emerald-400" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
+                    <h4 className="text-sm font-bold text-[#F2F2F3] group-hover:text-emerald-400 transition-colors">
                       WhatsApp Padrão
                     </h4>
-                    <p className="text-xs text-slate-400 mt-0.5">Conta pessoal, contatos gerais ou web app</p>
+                    <p className="text-xs text-[#8B8B92] mt-0.5">Conta pessoal, contatos gerais ou web app</p>
                   </div>
                 </button>
 
-                {/* 2. Business WhatsApp option */}
                 <button
+                  type="button"
                   onClick={() => handleSelectApp('business')}
-                  className="w-full flex items-center gap-3.5 p-3.5 rounded-xl border border-white/5 bg-white/5 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all text-left group"
+                  className="w-full flex items-center gap-3.5 p-3.5 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:border-sky-500/40 hover:bg-[#1B1B1E] transition-colors text-left group cursor-pointer"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20 group-hover:bg-sky-500/20 transition-all shrink-0">
-                    <Building2 size={20} className="text-sky-400" />
+                  <div className="w-10 h-10 rounded-[4px] bg-sky-500/10 flex items-center justify-center border border-sky-500/25 shrink-0">
+                    <Building2 size={18} className="text-sky-400" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white group-hover:text-sky-400 transition-colors">
+                    <h4 className="text-sm font-bold text-[#F2F2F3] group-hover:text-sky-400 transition-colors">
                       WhatsApp Business
                     </h4>
-                    <p className="text-xs text-slate-400 mt-0.5">Conta comercial de negócios (ideal para orçamentos)</p>
+                    <p className="text-xs text-[#8B8B92] mt-0.5">Conta comercial de negócios (ideal para orçamentos)</p>
                   </div>
                 </button>
               </div>
 
-              {/* Checkbox Remember choice */}
-              <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
+              <div className="mt-5 pt-4 border-t border-[#26262A] flex items-center justify-between">
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <div className="relative">
                     <input
@@ -186,18 +186,17 @@ export const WhatsAppSelectorModal: React.FC = () => {
                       checked={remember}
                       onChange={(e) => setRemember(e.target.checked)}
                     />
-                    <div className="w-4 h-4 rounded border border-white/20 bg-black/40 peer-checked:bg-[var(--gm-primary)] peer-checked:border-[var(--gm-primary)] flex items-center justify-center transition-all">
-                      {remember && <Check size={10} className="text-white stroke-[3]" />}
+                    <div className="w-4 h-4 rounded-[3px] border border-[#3F3F46] bg-[#0B0B0C] peer-checked:bg-[var(--gm-primary)] peer-checked:border-[var(--gm-primary)] flex items-center justify-center transition-colors">
+                      {remember && <Check size={11} className="text-[#0B0B0C] stroke-[3]" />}
                     </div>
                   </div>
-                  <span className="text-xs text-slate-300 font-medium">Lembrar escolha para futuros envios</span>
+                  <span className="text-xs text-[#CBD5E1] font-medium">Lembrar escolha para futuros envios</span>
                 </label>
               </div>
 
-              {/* Info footer */}
-              <p className="text-xs text-slate-400 leading-snug mt-3.5 flex items-start gap-1.5">
-                <HelpCircle size={14} className="shrink-0 mt-0.5 text-slate-400" />
-                No PC, se selecionada uma opção, abrirá o aplicativo padrão ou o WhatsApp Web integrado.
+              <p className="text-xs text-[#8B8B92] leading-snug mt-3.5 flex items-start gap-1.5">
+                <HelpCircle size={14} className="shrink-0 mt-0.5 text-[#8B8B92]" />
+                No PC, abrirá o aplicativo padrão ou o WhatsApp Web integrado.
               </p>
             </div>
           </motion.div>

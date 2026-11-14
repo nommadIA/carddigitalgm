@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth, MASTER_TENANT_ID } from "../../store/AuthContext";
 import { Client } from "../../types";
-import { X, User, Phone, Mail, FileText, MapPin } from "lucide-react";
+import { X, User, Phone, Mail, FileText, MapPin, Check, Loader2 } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -144,6 +144,15 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
     }
   }, [open, clientToEdit]);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
   const canSave = useMemo(() => {
     const okName = name.trim().length >= 2;
     const okWpp = onlyDigits(whatsapp).length >= 10;
@@ -197,15 +206,15 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-xl p-4 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto animate-fade-in"
       onClick={onClose}
     >
       <div 
-        className="fora gm-modal apple-glass-refraction w-full max-w-2xl lg:max-w-3xl rounded-2xl border border-white/15 overflow-hidden shadow-none relative z-10 p-0 my-auto flex flex-col max-h-[92vh]"
+        className="w-full max-w-2xl lg:max-w-3xl rounded-lg border border-[#26262A] bg-[#131315] overflow-hidden shadow-2xl relative z-10 p-0 my-auto flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header com estilo frosted glass */}
-        <div className="barra px-6 py-5 border-b border-white/10 flex items-start justify-between gap-4 bg-white/[0.02] backdrop-blur-md shrink-0">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-[#26262A] flex items-start justify-between gap-4 bg-[#0B0B0C] shrink-0">
           <div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-tight flex items-center gap-2.5">
               <User className="text-[var(--gm-primary)] shrink-0" size={22} />
@@ -218,7 +227,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
 
           <button
             type="button"
-            className="fora rounded-xl p-2.5 text-slate-400 hover:text-white border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md transition-all shrink-0 cursor-pointer"
+            className="w-8 h-8 rounded-[4px] flex items-center justify-center text-slate-400 hover:text-white border border-[#26262A] bg-[#1B1B1E] hover:border-[#3F3F46] transition-all shrink-0 cursor-pointer"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -226,11 +235,11 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
             }}
             title="Fechar"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Formulário com scroll inteligente e estilo glassmorphism nos campos */}
+        {/* Formulário */}
         <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -239,7 +248,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 Nome <span className="text-[var(--gm-primary)]">*</span>
               </label>
               <input
-                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Nome completo ou Razão Social"
@@ -252,7 +261,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 WhatsApp (obrigatório) <span className="text-[var(--gm-primary)]">*</span>
               </label>
               <input
-                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none tabular-nums"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(formatWhatsappBR(e.target.value))}
                 placeholder="(98) 9xxxx-xxxx"
@@ -269,7 +278,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 Telefone fixo / recado (opcional)
               </label>
               <input
-                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none tabular-nums"
                 value={phone}
                 onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
                 placeholder="(98) xxxx-xxxx"
@@ -283,7 +292,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 E-mail (opcional)
               </label>
               <input
-                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="cliente@exemplo.com"
@@ -299,7 +308,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 CPF / CNPJ (opcional)
               </label>
               <input
-                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none tabular-nums"
                 value={cpfCnpj}
                 onChange={(e) => setCpfCnpj(e.target.value)}
                 placeholder="000.000.000-00 ou 00.000.000/0001-00"
@@ -312,7 +321,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 Endereço completo (opcional)
               </label>
               <input
-                className="gm-input barra w-full rounded-xl px-4 py-3 text-sm bg-white/[0.02] backdrop-blur-md border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Rua, número, bairro, cidade - UF"
@@ -321,22 +330,23 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
           </div>
 
           {/* Rodapé do modal */}
-          <div className="barra pt-4 mt-6 border-t border-white/10 flex items-center justify-end gap-3 bg-transparent">
+          <div className="pt-4 mt-6 border-t border-[#26262A] flex items-center justify-end gap-3 bg-transparent">
             <button
               type="button"
-              className="h-10 px-5 rounded-md text-xs font-bold uppercase tracking-wider text-[#F2F2F3] border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] transition-all cursor-pointer"
+              className="h-10 px-5 rounded-[6px] text-xs font-bold uppercase tracking-wider text-[#F2F2F3] border border-[#26262A] bg-[#1B1B1E] hover:bg-[#26262A] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[background-color,transform] duration-150 cursor-pointer whitespace-nowrap"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onClose();
               }}
             >
-              Cancelar
+              <X size={14} className="shrink-0" />
+              <span>Cancelar</span>
             </button>
 
             <button
               type="button"
-              className="h-10 px-6 rounded-md text-xs font-black uppercase tracking-wider text-[#0B0B0C] bg-[#F65A1A] hover:bg-[#FF7A38] border border-[#F65A1A] transition-all shadow-[0_1px_3px_rgba(0,0,0,0.3)] disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B] disabled:cursor-not-allowed cursor-pointer"
+              className="h-10 px-6 rounded-[6px] text-xs font-black uppercase tracking-wider text-[#0B0B0C] bg-[#F65A1A] hover:bg-[#FF7A38] border border-[#F65A1A] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[background-color,border-color,transform] duration-150 shadow-[0_1px_3px_rgba(0,0,0,0.3)] disabled:bg-[#18181B] disabled:border-[#26262A] disabled:text-[#52525B] disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
               disabled={!canSave}
               onClick={(e) => {
                 e.preventDefault();
@@ -344,7 +354,12 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 handleSave();
               }}
             >
-              {saving ? "Salvando..." : (clientToEdit ? "Atualizar Cliente" : "Salvar Cliente")}
+              {saving ? (
+                <Loader2 size={14} className="animate-spin shrink-0" />
+              ) : (
+                <Check size={14} strokeWidth={2.8} className="shrink-0" />
+              )}
+              <span>{saving ? "Salvando..." : (clientToEdit ? "Atualizar Cliente" : "Salvar Cliente")}</span>
             </button>
           </div>
         </div>

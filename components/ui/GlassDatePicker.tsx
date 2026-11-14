@@ -309,7 +309,7 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
           <button
             type="button"
             onClick={handleClear}
-            className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all active:scale-95 cursor-pointer"
+            className="p-1 rounded-[4px] text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E] transition-colors active:scale-95 cursor-pointer"
             title="Limpar data"
           >
             <X size={14} />
@@ -322,10 +322,10 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
             e.stopPropagation();
             if (!disabled) setIsOpen(!isOpen);
           }}
-          className={`p-1.5 rounded-lg transition-all active:scale-95 cursor-pointer ${
+          className={`p-1.5 rounded-[4px] transition-colors active:scale-95 cursor-pointer ${
             isOpen
-              ? 'text-[var(--gm-primary,#FF6900)] bg-white/15 ring-1 ring-[var(--gm-primary,#FF6900)]/50'
-              : 'text-white/60 hover:text-white hover:bg-white/10'
+              ? 'text-[var(--gm-primary,#FF6900)] bg-[#1B1B1E] ring-1 ring-[var(--gm-primary,#FF6900)]/50'
+              : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'
           }`}
           title={isOpen ? 'Fechar calendário' : 'Abrir calendário'}
         >
@@ -352,7 +352,7 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: dropdownPos.placement === 'top' ? 12 : -12, scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-                className="fixed z-[10000060] w-76 max-w-[92vw] bg-[#121418]/98 border border-white/20 rounded-2xl p-4 space-y-3.5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] text-left backdrop-blur-2xl glass-datepicker-dropdown"
+                className="fixed z-[10000060] w-[290px] max-w-[92vw] bg-[#131315] border border-[#26262A] rounded-lg p-4 space-y-3.5 shadow-[0_24px_56px_rgba(0,0,0,0.92)] text-left glass-datepicker-dropdown"
                 style={{
                   top: `${dropdownPos.top}px`,
                   left: `${dropdownPos.left}px`,
@@ -362,7 +362,7 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header with title & close */}
-                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <div className="flex items-center justify-between pb-2 border-b border-[#26262A]">
                   <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-[var(--gm-primary,#FF6900)]">
                     <CalendarIcon size={13} className="text-[var(--gm-primary,#FF6900)]" />
                     {title}
@@ -373,7 +373,7 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                       e.stopPropagation();
                       setIsOpen(false);
                     }}
-                    className="text-white/50 hover:text-white p-1 rounded-md hover:bg-white/10 transition-all cursor-pointer"
+                    className="w-7 h-7 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-[#8B8B92] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                     title="Fechar calendário"
                   >
                     <X size={14} />
@@ -381,22 +381,22 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                 </div>
 
                 {/* Calendar Navigation */}
-                <div className="flex items-center justify-between px-1.5 py-1 bg-black/40 border border-white/10 rounded-xl">
+                <div className="flex items-center justify-between px-1.5 py-1 bg-[#0B0B0C] border border-[#26262A] rounded-md">
                   <button 
                     type="button"
                     onClick={handlePrevMonth}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+                    className="w-7 h-7 rounded-[4px] flex items-center justify-center text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E] transition-colors cursor-pointer active:scale-95"
                     title="Mês anterior"
                   >
                     <ChevronLeft size={16} />
                   </button>
                   <span className="text-xs font-extrabold text-white tracking-wider uppercase">
-                    {monthsNames[month]} <span className="text-[var(--gm-primary,#FF6900)] font-mono font-bold">{year}</span>
+                    {monthsNames[month]} <span className="text-[var(--gm-primary,#FF6900)] font-mono font-bold tabular-nums">{year}</span>
                   </span>
                   <button 
                     type="button"
                     onClick={handleNextMonth}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+                    className="w-7 h-7 rounded-[4px] flex items-center justify-center text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E] transition-colors cursor-pointer active:scale-95"
                     title="Próximo mês"
                   >
                     <ChevronRight size={16} />
@@ -408,7 +408,7 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                   {/* Weekday labels */}
                   <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
                     {weekDays.map((d, index) => (
-                      <span key={index} className="text-[10px] font-black text-white/40 font-mono">
+                      <span key={index} className="text-[11px] font-bold text-[#8B8B92] font-mono">
                         {d}
                       </span>
                     ))}
@@ -427,14 +427,14 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                           onClick={(e) => {
                             if (isCurrentMonth) handleDaySelect(e, day);
                           }}
-                          className={`h-7.5 w-7.5 mx-auto rounded-lg text-xs font-black font-mono flex items-center justify-center transition-all cursor-pointer ${
+                          className={`h-8 w-8 mx-auto rounded-[4px] text-xs font-bold font-mono tabular-nums flex items-center justify-center transition-colors cursor-pointer ${
                             isCurrentMonth 
                               ? selected
-                                ? 'bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/40 scale-105 ring-2 ring-white/30'
+                                ? 'bg-[var(--gm-primary,#FF6900)] text-[#0B0B0C] font-black'
                                 : today
-                                ? 'border border-orange-500/80 text-orange-400 hover:bg-orange-500/20 font-extrabold'
-                                : 'text-white/85 hover:bg-white/10 hover:text-white'
-                              : 'opacity-20 pointer-events-none text-white/30'
+                                ? 'border border-[var(--gm-primary,#FF6900)] text-[var(--gm-primary,#FF6900)] hover:bg-[var(--gm-primary,#FF6900)]/15 font-extrabold'
+                                : 'text-[#F2F2F3] hover:bg-[#1B1B1E] hover:text-white'
+                              : 'opacity-20 pointer-events-none text-[#8B8B92]'
                           }`}
                         >
                           {day}
@@ -445,11 +445,11 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                 </div>
 
                 {/* Action footer: Hoje, Limpar, Fechar */}
-                <div className="pt-2.5 border-t border-white/10 flex items-center justify-between gap-2">
+                <div className="pt-2.5 border-t border-[#26262A] flex items-center justify-between gap-2">
                   <button
                     type="button"
                     onClick={handleTodayClick}
-                    className="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 transition-all text-center cursor-pointer active:scale-95"
+                    className="px-3 py-1.5 rounded-[6px] text-[11px] font-bold uppercase tracking-wider text-[var(--gm-primary,#FF6900)] hover:bg-[var(--gm-primary,#FF6900)]/15 bg-[var(--gm-primary,#FF6900)]/10 border border-[var(--gm-primary,#FF6900)]/30 transition-colors text-center cursor-pointer active:scale-95 whitespace-nowrap"
                   >
                     Hoje
                   </button>
@@ -457,7 +457,7 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                     <button
                       type="button"
                       onClick={handleClear}
-                      className="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-all text-center cursor-pointer active:scale-95"
+                      className="px-3 py-1.5 rounded-[6px] text-[11px] font-bold uppercase tracking-wider text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-colors text-center cursor-pointer active:scale-95 whitespace-nowrap"
                     >
                       Limpar
                     </button>
@@ -468,7 +468,7 @@ export const GlassDatePicker: React.FC<GlassDatePickerProps> = ({
                       e.stopPropagation();
                       setIsOpen(false);
                     }}
-                    className="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-center ml-auto cursor-pointer active:scale-95"
+                    className="px-3 py-1.5 rounded-[6px] text-[11px] font-bold uppercase tracking-wider text-[#CBD5E1] hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] transition-colors text-center ml-auto cursor-pointer active:scale-95 whitespace-nowrap"
                   >
                     Fechar
                   </button>

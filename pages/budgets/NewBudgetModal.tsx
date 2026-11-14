@@ -260,9 +260,9 @@ const overlay: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "rgba(10, 10, 14, 0.48)",
-  backdropFilter: "blur(20px) saturate(180%)",
-  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  background: "rgba(0, 0, 0, 0.75)",
+  backdropFilter: "blur(4px)",
+  WebkitBackdropFilter: "blur(4px)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -273,9 +273,7 @@ const fullScreenContainer: React.CSSProperties = {
   position: "fixed",
   inset: 0,
   zIndex: 1000000,
-  background: "rgba(10, 10, 14, 0.65)",
-  backdropFilter: "blur(20px) saturate(180%)",
-  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+  background: "#0B0B0C",
   color: "#f4f4f5",
   display: "flex",
   flexDirection: "column",
@@ -286,14 +284,12 @@ const topBar: React.CSSProperties = {
   position: "sticky",
   top: 0,
   zIndex: 50,
-  background: "rgba(18, 18, 22, 0.55)",
-  borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
-  padding: "16px 24px",
+  background: "#131315",
+  borderBottom: "1px solid #26262A",
+  padding: "14px 24px",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  backdropFilter: "blur(20px) saturate(180%)",
-  WebkitBackdropFilter: "blur(20px) saturate(180%)",
   boxShadow: "none",
 };
 
@@ -311,48 +307,46 @@ const sectionTitle: React.CSSProperties = {
   fontWeight: 800,
   textTransform: "uppercase",
   letterSpacing: "0.05em",
-  color: "#94a3b8",
+  color: "#a1a1aa",
   marginBottom: 16,
   marginTop: 32,
 };
 
 const card: React.CSSProperties = {
-  background: "rgba(24, 24, 27, 0.75)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
-  borderRadius: 16,
+  background: "#131315",
+  border: "1px solid #26262A",
+  borderRadius: 8,
   padding: 24,
-  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
+  boxShadow: "none",
 };
 
 const labelTop: React.CSSProperties = {
   display: "block",
   fontSize: 11,
   fontWeight: 700,
-  color: "#94a3b8",
+  color: "#a1a1aa",
   marginBottom: 6,
   textTransform: "uppercase",
-  letterSpacing: "0.025em",
+  letterSpacing: "0.04em",
 };
 
 const inputBig: React.CSSProperties = {
   width: "100%",
-  background: "rgba(0, 0, 0, 0.4)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
-  borderRadius: 10,
-  padding: "12px 14px",
+  background: "#0B0B0C",
+  border: "1px solid #26262A",
+  borderRadius: 4,
+  padding: "11px 14px",
   color: "#FFFFFF",
   fontSize: 15,
   fontWeight: 500,
   outline: "none",
-  transition: "all 0.2s",
+  transition: "border-color 0.15s",
 };
 
 const itemRow: React.CSSProperties = {
-  background: "rgba(24, 24, 27, 0.6)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
-  borderRadius: 14,
+  background: "#131315",
+  border: "1px solid #26262A",
+  borderRadius: 8,
   padding: 20,
   marginBottom: 16,
   position: "relative",
@@ -430,6 +424,18 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
   const itemsEndRef = React.useRef<HTMLDivElement | null>(null);
   const lastDescRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        if (!budgetToEditId) resetForm();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose, budgetToEditId]);
 
   const resetForm = () => {
     setStep("pick");
@@ -833,49 +839,56 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
     return createPortal(
       <div style={overlay} onClick={onClose}>
         <div
-          className="w-full max-w-[800px] p-8 md:p-10 rounded-2xl gm-modal apple-glass-card fora border border-white/15 text-white shadow-none backdrop-blur-2xl animate-fade-in"
+          className="w-full max-w-[800px] p-6 sm:p-8 rounded-lg bg-[#131315] border border-[#26262A] text-white shadow-2xl animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex justify-between items-start mb-8">
+          <div className="flex justify-between items-start mb-7">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">Novo Orçamento</h2>
-              <p className="text-base font-medium text-slate-300">Selecione o modelo de proposta ideal para este projeto.</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1.5">Novo Orçamento</h2>
+              <p className="text-sm sm:text-base font-medium text-zinc-400">Selecione o modelo de proposta ideal para este projeto.</p>
             </div>
-            <button onClick={onClose} className="p-2.5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <X size={22} />
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-400 hover:text-white transition-colors flex items-center justify-center cursor-pointer shrink-0"
+              title="Fechar"
+            >
+              <X size={18} />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <button
-              className="group relative p-6 rounded-xl border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
+              type="button"
+              className="group relative p-6 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 cursor-pointer"
               onClick={() => applyTemplate("agency")}
             >
-              <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
-                <Palette size={28} />
+              <div className="w-12 h-12 rounded-[6px] bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30">
+                <Palette size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
+                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
                   Agência & Design
                 </h3>
-                <p className="text-sm text-slate-300 mt-2 leading-relaxed font-medium">
+                <p className="text-sm text-zinc-400 mt-1.5 leading-relaxed font-medium">
                   Orçamentos baseados em serviços, artes digitais e criação.
                 </p>
               </div>
             </button>
 
             <button
-              className="group relative p-6 rounded-xl border border-white/10 bg-zinc-800/60 hover:bg-zinc-800 hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 shadow-lg cursor-pointer"
+              type="button"
+              className="group relative p-6 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 cursor-pointer"
               onClick={() => applyTemplate("print")}
             >
-              <div className="w-14 h-14 rounded-xl bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30 group-hover:scale-110 transition-transform">
-                <Printer size={28} />
+              <div className="w-12 h-12 rounded-[6px] bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30">
+                <Printer size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
+                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
                   Impressão & Gráfica
                 </h3>
-                <p className="text-sm text-slate-300 mt-2 leading-relaxed font-medium">
+                <p className="text-sm text-zinc-400 mt-1.5 leading-relaxed font-medium">
                   Cálculo de Lonas (m²) e Materiais Gráficos (Panfletos, Cartões).
                 </p>
               </div>
@@ -894,8 +907,13 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             {!budgetToEditId && (
-              <button onClick={() => setStep("pick")} className="text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-white/10">
-                <ArrowLeft size={22} />
+              <button
+                type="button"
+                onClick={() => setStep("pick")}
+                className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center shrink-0"
+                title="Voltar"
+              >
+                <ArrowLeft size={18} />
               </button>
             )}
             <div className="flex items-center gap-2">
@@ -905,7 +923,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                 </h2>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-[4px] border ${
                       kind === "agency"
                         ? "border-[var(--gm-primary)]/30 text-[var(--gm-primary)] bg-[var(--gm-primary)]/10"
                         : "border-[var(--gm-accent)]/30 text-[var(--gm-accent)] bg-[var(--gm-accent)]/10"
@@ -915,13 +933,23 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   </span>
                 </div>
               </div>
-              {loadingData && <span className="text-[10px] text-slate-400 animate-pulse ml-2 font-medium">Carregando...</span>}
+              {loadingData && (
+                <span className="text-[11px] text-zinc-400 ml-2 font-medium inline-flex items-center gap-1.5">
+                  <Loader2 size={13} className="animate-spin" />
+                  <span>Carregando...</span>
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        <button onClick={() => { onClose(); if (!budgetToEditId) resetForm(); }} className="p-2 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-colors cursor-pointer">
-          <X size={22} />
+        <button
+          type="button"
+          onClick={() => { onClose(); if (!budgetToEditId) resetForm(); }}
+          className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center shrink-0"
+          title="Fechar"
+        >
+          <X size={18} />
         </button>
       </div>
 
@@ -931,11 +959,11 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
             {/* 01. CLIENTE */}
           <div style={{ ...card, position: "relative", zIndex: 40 }}>
             {/* Header com título e botão de alternância */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3 gap-2">
               <div className="flex items-center gap-2">
                 <span style={labelTop} className="!mb-0">01. Cliente</span>
                 {clientId && !showQuickClient && (
-                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="text-[11px] uppercase font-bold px-2 py-0.5 rounded-[4px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     Selecionado
                   </span>
                 )}
@@ -945,7 +973,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                 <button
                   type="button"
                   onClick={() => setShowQuickClient(true)}
-                  className="forge-btn forge-btn--primary !h-[32px] !text-[11px] !px-3"
+                  className="forge-btn forge-btn--primary !h-8 !text-[11px] !px-3 rounded-[6px] whitespace-nowrap shrink-0"
                   title="Cadastrar cliente rápido sem sair da proposta"
                 >
                   <span className="gm-btn-plus-black">
@@ -957,7 +985,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                 <button
                   type="button"
                   onClick={() => setShowQuickClient(false)}
-                  className="forge-btn forge-btn--secondary !h-[32px] !text-[11px] !px-3"
+                  className="forge-btn forge-btn--secondary !h-8 !text-[11px] !px-3 rounded-[6px] whitespace-nowrap shrink-0"
                 >
                   <ArrowLeft size={13} />
                   <span>VOLTAR P/ SELEÇÃO</span>
@@ -967,7 +995,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
             {/* Banner de feedback de sucesso */}
             {quickClientSuccess && (
-              <div className="mb-4 px-3.5 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+              <div className="mb-4 px-3.5 py-2.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
                 <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
                 <span>{quickClientSuccess}</span>
               </div>
@@ -984,20 +1012,20 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   if (found) setClientName(found.name);
                 }}
                 disabled={loadingClients || loadingData}
-                className="cursor-pointer hover:bg-white/5 focus:bg-black/40 focus:border-[var(--gm-primary)]"
+                className="cursor-pointer hover:bg-[#1B1B1E] focus:border-[var(--gm-primary)]"
                 placeholder={loadingClients ? "Carregando clientes..." : "Selecione o cliente..."}
                 options={clients.map((c) => ({ value: c.id, label: c.name }))}
                 searchable={true}
               />
             ) : (
               /* Formulário Rápido de Cadastro */
-              <div className="p-4 rounded-xl bg-black/50 border border-white/10 flex flex-col gap-3">
-                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div className="p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-col gap-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#26262A]">
                   <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
                     <UserPlus size={14} className="text-[var(--gm-primary)]" />
                     <span>Cadastro Rápido de Cliente</span>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/20">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-[4px] bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/20">
                     RÁPIDO
                   </span>
                 </div>
@@ -1152,33 +1180,33 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
             <div className="space-y-4">
               {items.map((item, idx) => (
-                <div key={item.id} style={itemRow} className="group hover:border-white/10 transition-colors">
-                  <div className="flex justify-between items-start mb-4 border-b border-white/5 pb-3">
+                <div key={item.id} style={itemRow} className="group hover:border-[#3F3F46] transition-colors">
+                  <div className="flex justify-between items-start mb-4 border-b border-[#26262A] pb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-white/10 text-xs font-bold flex items-center justify-center text-slate-300">
+                      <div className="w-6 h-6 rounded-[4px] bg-[#1B1B1E] border border-[#26262A] text-xs font-bold tabular-nums flex items-center justify-center text-zinc-300">
                         {idx + 1}
                       </div>
 
                       {kind === "print" && (
-                        <div className="flex bg-black/40 rounded-xl p-1 border border-white/10 gap-1">
+                        <div className="flex bg-[#0B0B0C] rounded-[6px] p-1 border border-[#26262A] gap-1">
                           <button
                             type="button"
                             onClick={() => updateItem(item.id, { isAreaCalc: true })}
-                            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 group ${
-                              item.isAreaCalc ? "bg-[var(--gm-primary)] text-white shadow-md" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                            className={`px-3.5 py-1.5 text-xs font-bold rounded-[4px] transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                              item.isAreaCalc ? "bg-[var(--gm-primary)] text-[#0B0B0C]" : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E]"
                             }`}
                           >
-                            <Calculator size={14} className={item.isAreaCalc ? "animate-pulse" : "group-hover:rotate-12 transition-transform"} />
+                            <Calculator size={14} />
                             Comunicação Visual
                           </button>
                           <button
                             type="button"
                             onClick={() => updateItem(item.id, { isAreaCalc: false })}
-                            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 group ${
-                              !item.isAreaCalc ? "bg-white/10 text-white shadow-md" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                            className={`px-3.5 py-1.5 text-xs font-bold rounded-[4px] transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                              !item.isAreaCalc ? "bg-[#1B1B1E] text-white border border-[#3F3F46]" : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E]"
                             }`}
                           >
-                            <Tag size={14} className={!item.isAreaCalc ? "animate-pulse" : "group-hover:-rotate-12 transition-transform"} />
+                            <Tag size={14} />
                             Materiais Gráficos
                           </button>
                         </div>
@@ -1186,8 +1214,10 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => removeItem(item.id)}
-                      className="text-red-500/50 hover:text-red-500 p-1 rounded hover:bg-red-500/10 transition-colors"
+                      className="w-8 h-8 rounded-[4px] text-red-400/70 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center transition-colors cursor-pointer"
+                      title="Remover item"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -1213,22 +1243,24 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 items-end">
                     <div>
                       <label style={labelTop}>
-                        <Brush size={10} className="inline mr-1" /> Arte Inclusa?
+                        <Brush size={11} className="inline mr-1" /> Arte Inclusa?
                       </label>
-                      <div className="flex bg-black/40 rounded-lg p-1 border border-white/10 h-[42px] items-center">
+                      <div className="flex bg-[#0B0B0C] rounded-[4px] p-1 border border-[#26262A] h-[42px] items-center">
                         <button
+                          type="button"
                           onClick={() => updateItem(item.id, { artworkIncluded: true })}
-                          className={`flex-1 h-full rounded text-xs font-bold transition-all ${
-                            item.artworkIncluded ? "bg-[var(--gm-accent)] text-white" : "text-slate-500 hover:text-slate-300"
+                          className={`flex-1 h-full rounded-[3px] text-xs font-bold transition-all cursor-pointer ${
+                            item.artworkIncluded ? "bg-[var(--gm-accent)] text-[#0B0B0C]" : "text-zinc-400 hover:text-white"
                           }`}
                         >
                           Sim
                         </button>
-                        <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
+                        <div className="w-[1px] h-4 bg-[#26262A] mx-1"></div>
                         <button
+                          type="button"
                           onClick={() => updateItem(item.id, { artworkIncluded: false })}
-                          className={`flex-1 h-full rounded text-xs font-bold transition-all ${
-                            !item.artworkIncluded ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300"
+                          className={`flex-1 h-full rounded-[3px] text-xs font-bold transition-all cursor-pointer ${
+                            !item.artworkIncluded ? "bg-[#1B1B1E] text-white" : "text-zinc-400 hover:text-white"
                           }`}
                         >
                           Não
@@ -1316,10 +1348,10 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
                     <div className={`${kind === "print" && item.isAreaCalc ? "col-span-12" : "col-span-12 sm:col-span-5"} flex justify-end items-center h-[50px]`}>
                       <div className="text-right">
-                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total do Item</div>
-                        <div className="text-xl font-bold text-white">{money(item.total)}</div>
+                        <div className="text-[11px] text-zinc-400 uppercase font-bold tracking-wider">Total do Item</div>
+                        <div className="text-xl font-bold tabular-nums text-white">{money(item.total)}</div>
                         {kind === "print" && item.isAreaCalc && (
-                          <div className="text-[10px] text-slate-500">
+                          <div className="text-[11px] text-zinc-400 tabular-nums">
                             {((item.width * item.height) / 10000).toFixed(2)} m² total
                           </div>
                         )}
@@ -1349,10 +1381,10 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                       : "CREDIT";
 
                   const pill = (active: boolean) =>
-                    `p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+                    `p-4 rounded-md border flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                       active
-                        ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/50 shadow-md"
-                        : "bg-black/30 text-slate-400 border-white/10 hover:bg-white/5 hover:text-white"
+                        ? "bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border-[var(--gm-primary)]/50"
+                        : "bg-[#0B0B0C] text-zinc-400 border-[#26262A] hover:bg-[#1B1B1E] hover:text-white"
                     }`;
 
                   return (
@@ -1367,7 +1399,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                           }}
                           className={pill(preset === "PIX")}
                         >
-                          <Wallet size={24} />
+                          <Wallet size={22} />
                           <span className="font-bold text-sm">PIX</span>
                         </button>
 
@@ -1379,13 +1411,13 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                           }}
                           className={pill(preset === "CREDIT")}
                         >
-                          <CreditCard size={24} />
+                          <CreditCard size={22} />
                           <span className="font-bold text-sm">Cartão de crédito</span>
                         </button>
                       </div>
 
                       {paymentMethod === "CREDIT" && (
-                        <div className="flex flex-col gap-3 animate-fade-in bg-black/20 p-4 rounded-xl border border-white/5">
+                        <div className="flex flex-col gap-3 animate-fade-in bg-[#0B0B0C] p-4 rounded-md border border-[#26262A]">
                           <div className="grid grid-cols-2 gap-3 items-end">
                             <div>
                               <label style={labelTop}>Parcelas</label>
@@ -1435,9 +1467,9 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                         onChange={(e) => setDiscountAmount(Number(e.target.value))}
                         onFocus={(e) => e.target.select()}
                         placeholder="0"
-                        className="pr-12"
+                        className="pr-14 tabular-nums"
                       />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 bg-white/10 px-1.5 py-0.5 rounded border border-white/10">
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold tabular-nums text-zinc-400 bg-[#1B1B1E] px-1.5 py-0.5 rounded-[4px] border border-[#26262A]">
                         {discountPercentage.toFixed(1)}%
                       </div>
                     </div>
@@ -1447,6 +1479,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                     <input
                       type="number"
                       style={inputBig}
+                      className="tabular-nums"
                       value={validityDays}
                       onChange={(e) => setValidityDays(Number(e.target.value))}
                       onFocus={(e) => e.target.select()}
@@ -1458,6 +1491,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                     <input
                       type="number"
                       style={inputBig}
+                      className="tabular-nums"
                       value={deliveryDays}
                       onChange={(e) => setDeliveryDays(Number(e.target.value))}
                       onFocus={(e) => e.target.select()}
@@ -1467,27 +1501,27 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                 </div>
               </div>
 
-              <div className="flex-1 md:border-l md:border-white/10 md:pl-8 flex flex-col justify-center gap-3">
-                <div className="flex justify-between text-sm text-slate-400">
+              <div className="flex-1 md:border-l md:border-[#26262A] md:pl-8 flex flex-col justify-center gap-3">
+                <div className="flex justify-between text-sm text-zinc-400">
                   <span className="font-medium">Subtotal</span>
-                  <span className="text-white font-bold">{money(subtotal)}</span>
+                  <span className="text-white font-bold tabular-nums">{money(subtotal)}</span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-sm text-emerald-400 font-semibold">
                     <span>Desconto ({discountPercentage.toFixed(1)}%)</span>
-                    <span>-{money(discountAmount)}</span>
+                    <span className="tabular-nums">-{money(discountAmount)}</span>
                   </div>
                 )}
                 {paymentMethod === "CREDIT" && interestRate > 0 && (
                   <div className="flex justify-between text-sm text-[var(--gm-primary)] font-semibold">
                     <span>Juros ({interestRate}%)</span>
-                    <span>+{money(totalFinal - (subtotal - discountAmount))}</span>
+                    <span className="tabular-nums">+{money(totalFinal - (subtotal - discountAmount))}</span>
                   </div>
                 )}
-                <div className="border-t border-white/10 pt-4 mt-2">
+                <div className="border-t border-[#26262A] pt-4 mt-2">
                   <div className="text-right">
-                    <span className="text-xs text-slate-400 uppercase font-bold tracking-widest block mb-1">Total Final</span>
-                    <span className="text-3xl font-extrabold text-[var(--gm-primary)]">{money(totalFinal)}</span>
+                    <span className="text-xs text-zinc-400 uppercase font-bold tracking-widest block mb-1">Total Final</span>
+                    <span className="text-3xl font-extrabold tabular-nums text-[var(--gm-primary)]">{money(totalFinal)}</span>
                   </div>
                 </div>
               </div>
@@ -1501,7 +1535,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
       {/* 04. AÇÕES */}
       <div
-        className={`p-3.5 sm:p-5 rounded-2xl bg-[#18181b]/95 backdrop-blur-xl border border-white/20 text-white flex flex-row items-center justify-between gap-3 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`p-3.5 sm:p-5 rounded-lg bg-[#131315] border border-[#26262A] text-white flex flex-row items-center justify-between gap-3 shadow-2xl z-50 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         style={{
@@ -1516,26 +1550,27 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
         }}
       >
         {/* Drag Handle Visual */}
-        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-white/20 rounded-full" />
+        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1 bg-[#26262A] rounded-full" />
 
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center shrink-0">
-            <CheckCircle2 size={26} className="text-emerald-400" />
+            <CheckCircle2 size={24} className="text-emerald-400" />
           </div>
           <div>
             <div className="text-white font-bold text-sm sm:text-base leading-tight">
               {budgetToEditId ? "Atualizar Proposta?" : "Pronto para finalizar?"}
             </div>
-            <div className="hidden sm:block text-slate-400 text-[10px] uppercase tracking-wider font-medium mt-0.5">
+            <div className="hidden sm:block text-zinc-400 text-[11px] uppercase tracking-wider font-medium mt-0.5">
               Confira os valores antes de salvar
             </div>
           </div>
         </div>
 
         <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); handleSave(); }}
           disabled={saving}
-          className="forge-btn forge-btn--primary !h-[38px] !px-4 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center gap-2 shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group shadow-none"
+          className="forge-btn forge-btn--primary !h-10 !px-5 !rounded-[6px] text-xs font-semibold uppercase tracking-[0.05em] flex items-center gap-2 shrink-0 whitespace-nowrap cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group shadow-none"
         >
           {saving ? (
             "Salvando..."

@@ -232,7 +232,7 @@ function InteractiveSocialIcon({
   itemKey,
   label,
   theme,
-  sizeClass = "w-5.5 h-5.5 sm:w-6 sm:h-6",
+  sizeClass = "w-5 h-5 sm:w-6 sm:h-6",
   fallbackIcon: FallbackIcon,
   disableScale = false,
   instant = false,
@@ -327,12 +327,12 @@ function TopBarSocialIcon({
         <img 
           src={hovered ? customUrls.orange : (isLight ? customUrls.black : customUrls.white)}
           alt={item.title}
-          className="w-5.5 h-5.5 sm:w-6 sm:h-6 object-contain transition-transform duration-200 pointer-events-none"
+          className="w-5 h-5 sm:w-6 sm:h-6 object-contain transition-transform duration-200 pointer-events-none"
           onError={() => setImgError(true)}
         />
       ) : (
         <IconComp 
-          className={`w-5.5 h-5.5 sm:w-6 sm:h-6 transition-colors duration-200 ${isLight ? 'text-zinc-900' : 'text-white'} group-hover:!text-[#FE540B]`} 
+          className={`w-5 h-5 sm:w-6 sm:h-6 transition-colors duration-200 ${isLight ? 'text-zinc-900' : 'text-white'} group-hover:!text-[#FE540B]`} 
           size={24}
           strokeWidth={isWhatsapp ? undefined : 2.2}
           style={{ 
@@ -1385,11 +1385,43 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     }
   }, [selectedProduct]);
 
-  // Escape key listener to close cart or product detail modal
+  // Escape key listener to dismiss active BioRenderer overlays from top to bottom
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key !== "Escape") return;
+      if (customAlert) {
+        setCustomAlert(null);
+        return;
+      }
+      if (portfolioLightbox) {
+        setPortfolioLightbox(null);
+        return;
+      }
+      if (zoomedImage) {
+        setZoomedImage(null);
+        return;
+      }
+      if (isLoginOpen) {
+        setIsLoginOpen(false);
+        return;
+      }
+      if (showAppRedirectScreen) {
+        setShowAppRedirectScreen(false);
+        return;
+      }
+      if (isChatWidgetOpen) {
+        setIsChatWidgetOpen(false);
+        return;
+      }
+      if (isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+        return;
+      }
+      if (isCartOpen) {
         setIsCartOpen(false);
+        return;
+      }
+      if (selectedProduct) {
         setSelectedProduct(null);
       }
     };
@@ -1397,7 +1429,17 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [setSelectedProduct, setIsCartOpen]);
+  }, [
+    customAlert,
+    portfolioLightbox,
+    zoomedImage,
+    isLoginOpen,
+    showAppRedirectScreen,
+    isChatWidgetOpen,
+    isMobileMenuOpen,
+    isCartOpen,
+    selectedProduct
+  ]);
 
   // Dynamically update favicon and Open Graph meta tags with client's general app logo and name
   useEffect(() => {
@@ -2618,7 +2660,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             : `flex ${asPreview ? 'absolute' : 'fixed'} right-2.5 sm:right-4 md:right-5 top-1/2 -translate-y-1/2 z-[9999] flex flex-col items-center pointer-events-none transition-all duration-300`
         }
       >
-        <div className="flex flex-col items-center gap-1.5 p-1 sm:p-1.5 rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-xl border border-white/20 shadow-[0_8px_30px_rgba(0,0,0,0.6)] transition-all duration-300 pointer-events-auto">
+        <div className="flex flex-col items-center gap-1.5 p-1 sm:p-1.5 rounded-lg bg-[#131315]/95 hover:bg-[#1B1B1E] border border-[#26262A] shadow-lg transition-all duration-300 pointer-events-auto">
           {/* Seta para Cima */}
           <button
             type="button"
@@ -3906,7 +3948,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 e.stopPropagation();
                                 setIsLogoModalOpen(true);
                               }}
-                              className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FE540B] text-white text-[10px] font-bold shadow-md cursor-pointer shrink-0 z-50"
+                              className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] bg-[#FE540B] text-white text-[11px] font-bold shadow-md cursor-pointer shrink-0 z-50"
                             >
                               <Edit3 className="w-3 h-3" />
                               <span>Logo</span>
@@ -3928,11 +3970,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           <button
                             type="button"
                             onClick={handleOpenCustomerArea}
-                            className={`group h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer border ${
+                            className={`group h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-[6px] flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer border whitespace-nowrap shrink-0 ${
                               activeView === 'customer'
                                 ? 'bg-[#FE540B] text-white border-[#FE540B] shadow-md'
                                 : theme === 'dark' || theme === 'glass'
-                                  ? 'bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-[#FE540B]/40 hover:text-[#FE540B]' 
+                                  ? 'bg-[#1B1B1E] hover:bg-[#26262A] text-white border-[#26262A] hover:border-[#FE540B]/40 hover:text-[#FE540B]' 
                                   : 'bg-black/5 hover:bg-black/10 text-slate-800 border-black/10 hover:text-[#FE540B]'
                             }`}
                             title="Área do Cliente"
@@ -3945,7 +3987,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                           <button 
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-                            className={`group min-w-[42px] min-h-[42px] flex items-center justify-center p-2 rounded-xl hover:opacity-90 transition-all focus:outline-none cursor-pointer z-40 relative ${isWebsiteLayout ? (theme === 'dark' || theme === 'glass' ? 'text-white hover:text-[#FE540B]' : 'text-zinc-900 hover:text-[#FE540B]') : (theme === 'dark' || theme === 'glass' ? 'text-white hover:text-[#FE540B]' : 'text-slate-900 hover:text-[#FE540B]')}`}
+                            className={`group min-w-[42px] min-h-[42px] flex items-center justify-center p-2 rounded-[6px] hover:opacity-90 transition-all focus:outline-none cursor-pointer z-40 relative ${isWebsiteLayout ? (theme === 'dark' || theme === 'glass' ? 'text-white hover:text-[#FE540B]' : 'text-zinc-900 hover:text-[#FE540B]') : (theme === 'dark' || theme === 'glass' ? 'text-white hover:text-[#FE540B]' : 'text-slate-900 hover:text-[#FE540B]')}`}
                             aria-label="Abrir menu de navegação"
                           >
                             {isMobileMenuOpen ? (
@@ -3958,7 +4000,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                         {/* Hamburger Slide Down Dropdown Menu */}
                         {isMobileMenuOpen && (
-                          <div className={`absolute top-full inset-x-0 z-50 flex flex-col p-6 space-y-2 shadow-2xl animate-in slide-in-from-top-4 duration-300 border-b ${isWebsiteLayout ? (theme === 'dark' || theme === 'glass' ? 'bg-[#0a0a0c]/98 backdrop-blur-2xl border-white/10 text-white' : 'bg-white/98 backdrop-blur-2xl border-zinc-200 text-zinc-900') : (theme === 'dark' || theme === 'glass' ? 'bg-zinc-950/98 backdrop-blur-2xl border-white/10 text-white' : 'bg-white border-zinc-100')}`}>
+                          <div className={`absolute top-full inset-x-0 z-50 flex flex-col p-6 space-y-2 shadow-2xl animate-in slide-in-from-top-4 duration-300 border-b ${isWebsiteLayout ? (theme === 'dark' || theme === 'glass' ? 'bg-[#131315] border-[#26262A] text-white' : 'bg-white border-zinc-200 text-zinc-900') : (theme === 'dark' || theme === 'glass' ? 'bg-[#131315] border-[#26262A] text-white' : 'bg-white border-zinc-100')}`}>
                             <button 
                               onClick={() => {
                                 handleDesktopNavClick("inicio");
@@ -4582,12 +4624,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   {/* Form Container (Col 1-7 or 1-12) */}
                   <div className={`w-full ${bio.address ? "lg:col-span-7" : "lg:col-span-8 lg:col-start-3"} transition-all duration-300 ${
                     isWebsiteLayout || theme === 'glass' || theme === 'dark'
-                      ? 'apple-glass-card p-6 sm:p-8 md:p-10 rounded-[2.5rem]'
-                      : 'p-6 sm:p-8 md:p-10 rounded-[2.5rem] border border-zinc-200/80 bg-white/70 backdrop-blur-xl shadow-lg'
+                      ? 'bg-[#131315] border border-[#26262A] p-6 sm:p-8 md:p-10 rounded-lg shadow-lg'
+                      : 'p-6 sm:p-8 md:p-10 rounded-lg border border-zinc-200 bg-white shadow-lg'
                   }`}>
                     <div className="mb-6 flex items-center gap-3.5">
                       <div 
-                        className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-md shrink-0 bg-[#25D366] border border-white/20"
+                        className="w-11 h-11 rounded-md flex items-center justify-center shadow-md shrink-0 bg-[#25D366] border border-white/20"
                       >
                         <img 
                           src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
@@ -4628,7 +4670,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 href={lastWhatsappUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-full sm:w-auto px-6 py-3.5 rounded-full font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg transition-all active:scale-95 cursor-pointer"
+                                className="w-full sm:w-auto px-6 py-3.5 rounded-[6px] font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                               >
                                 <img 
                                   src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/ICONES%20SVG/ICONES%20COR%20BRANCA/Whatsapp%20branco.svg" 
@@ -4641,7 +4683,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                             <a 
                               href={`mailto:${submittedEmail}?subject=${encodeURIComponent(contactSubject || 'Contato pelo site')}&body=${encodeURIComponent(`Nome: ${contactName}\nEmail: ${contactEmail}\nTelefone: ${contactPhone}\n\nMensagem:\n${contactMessage}`)}`}
-                              className="w-full sm:w-auto px-6 py-3.5 rounded-full font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 shadow-md transition-all active:scale-95 cursor-pointer"
+                              className="w-full sm:w-auto px-6 py-3.5 rounded-[6px] font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-[#1B1B1E] hover:bg-[#26262A] text-white border border-[#26262A] shadow-md transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                             >
                               <Send className="w-4 h-4" />
                               <span>Enviar também por E-mail</span>
@@ -4652,7 +4694,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             <button 
                               type="button" 
                               onClick={() => { setContactSuccess(false); setNeedsActivation(false); }}
-                              className="site-btn-pill px-8 py-3 text-xs sm:text-sm uppercase tracking-wider cursor-pointer"
+                              className="px-8 py-3 rounded-[6px] text-white font-black text-xs sm:text-sm uppercase tracking-wider cursor-pointer transition-all hover:brightness-110"
                               style={{ backgroundColor: brandColor || "#FE540B" }}
                             >
                               Enviar outra mensagem
@@ -4662,7 +4704,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       ) : (
                         <>
                           {contactError && (
-                            <div className="bg-red-500/15 border border-red-500/30 rounded-2xl p-4 text-red-300 text-xs sm:text-sm font-bold animate-pulse">
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-md p-4 text-red-400 text-xs sm:text-sm font-bold">
                               {contactError}
                             </div>
                           )}
@@ -4679,10 +4721,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               placeholder="Como podemos te chamar?"
                               value={contactName}
                               onChange={(e) => setContactName(e.target.value)}
-                              className={`w-full px-4 sm:px-5 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl ${
+                              className={`w-full px-4 py-3 text-sm sm:text-base border focus:outline-none transition-all duration-200 rounded-[4px] ${
                                 isWebsiteLayout || theme === 'glass' || theme === 'dark'
-                                  ? 'apple-glass-input'
-                                  : 'backdrop-blur-xl bg-white/70 border-black/10 focus:border-black/30 text-slate-900 placeholder-zinc-400 shadow-sm focus:ring-2 focus:ring-black/10'
+                                  ? 'bg-[#0B0B0C] border-[#26262A] focus:border-[#FE540B] text-white placeholder-zinc-500'
+                                  : 'bg-white border-zinc-300 focus:border-[#FE540B] text-slate-900 placeholder-zinc-400 shadow-sm'
                               }`}
                             />
                           </div>
@@ -4700,10 +4742,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 placeholder="seu@email.com"
                                 value={contactEmail}
                                 onChange={(e) => setContactEmail(e.target.value)}
-                                className={`w-full px-4 sm:px-5 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl ${
+                                className={`w-full px-4 py-3 text-sm sm:text-base border focus:outline-none transition-all duration-200 rounded-[4px] ${
                                   isWebsiteLayout || theme === 'glass' || theme === 'dark'
-                                    ? 'apple-glass-input'
-                                    : 'backdrop-blur-xl bg-white/70 border-black/10 focus:border-black/30 text-slate-900 placeholder-zinc-400 shadow-sm focus:ring-2 focus:ring-black/10'
+                                    ? 'bg-[#0B0B0C] border-[#26262A] focus:border-[#FE540B] text-white placeholder-zinc-500'
+                                    : 'bg-white border-zinc-300 focus:border-[#FE540B] text-slate-900 placeholder-zinc-400 shadow-sm'
                                 }`}
                               />
                             </div>
@@ -4719,10 +4761,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 value={contactPhone}
                                 onChange={(e) => setContactPhone(formatPhoneNumber(e.target.value))}
                                 maxLength={15}
-                                className={`w-full px-4 sm:px-5 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl ${
+                                className={`w-full px-4 py-3 text-sm sm:text-base border focus:outline-none transition-all duration-200 rounded-[4px] tabular-nums ${
                                   isWebsiteLayout || theme === 'glass' || theme === 'dark'
-                                    ? 'apple-glass-input'
-                                    : 'backdrop-blur-xl bg-white/70 border-black/10 focus:border-black/30 text-slate-900 placeholder-zinc-400 shadow-sm focus:ring-2 focus:ring-black/10'
+                                    ? 'bg-[#0B0B0C] border-[#26262A] focus:border-[#FE540B] text-white placeholder-zinc-500'
+                                    : 'bg-white border-zinc-300 focus:border-[#FE540B] text-slate-900 placeholder-zinc-400 shadow-sm'
                                 }`}
                               />
                               <span className="block text-[11px] text-zinc-400/80 mt-1 font-medium">Sugestão: (98) 98750-5041</span>
@@ -4740,10 +4782,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               placeholder="Orçamento, Dúvida ou Parceria"
                               value={contactSubject}
                               onChange={(e) => setContactSubject(e.target.value)}
-                              className={`w-full px-4 sm:px-5 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 rounded-2xl ${
+                              className={`w-full px-4 py-3 text-sm sm:text-base border focus:outline-none transition-all duration-200 rounded-[4px] ${
                                 isWebsiteLayout || theme === 'glass' || theme === 'dark'
-                                  ? 'apple-glass-input'
-                                  : 'backdrop-blur-xl bg-white/70 border-black/10 focus:border-black/30 text-slate-900 placeholder-zinc-400 shadow-sm focus:ring-2 focus:ring-black/10'
+                                  ? 'bg-[#0B0B0C] border-[#26262A] focus:border-[#FE540B] text-white placeholder-zinc-500'
+                                  : 'bg-white border-zinc-300 focus:border-[#FE540B] text-slate-900 placeholder-zinc-400 shadow-sm'
                               }`}
                             />
                           </div>
@@ -4760,10 +4802,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               placeholder="Escreva sua mensagem com detalhes sobre o que precisa..."
                               value={contactMessage}
                               onChange={(e) => setContactMessage(e.target.value)}
-                              className={`w-full px-4 sm:px-5 py-3.5 text-sm sm:text-base border focus:outline-none transition-all duration-300 resize-none rounded-2xl leading-relaxed ${
+                              className={`w-full px-4 py-3 text-sm sm:text-base border focus:outline-none transition-all duration-200 resize-none rounded-[4px] leading-relaxed ${
                                 isWebsiteLayout || theme === 'glass' || theme === 'dark'
-                                  ? 'apple-glass-input'
-                                  : 'backdrop-blur-xl bg-white/70 border-black/10 focus:border-black/30 text-slate-900 placeholder-zinc-400 shadow-sm focus:ring-2 focus:ring-black/10'
+                                  ? 'bg-[#0B0B0C] border-[#26262A] focus:border-[#FE540B] text-white placeholder-zinc-500'
+                                  : 'bg-white border-zinc-300 focus:border-[#FE540B] text-slate-900 placeholder-zinc-400 shadow-sm'
                               }`}
                             />
                           </div>
@@ -4799,14 +4841,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   {/* Side Card: Map & Location (Col 8-12) */}
                   {bio.address && (
                     <div className="w-full lg:col-span-5 flex flex-col gap-5">
-                      <div className={`p-6 sm:p-8 rounded-[2.5rem] border transition-all duration-300 ${
+                      <div className={`p-6 sm:p-8 rounded-lg border transition-all duration-300 ${
                         isWebsiteLayout || theme === 'glass' || theme === 'dark'
-                          ? 'apple-glass-card border-white/10'
-                          : 'border-zinc-200/80 bg-white/70 backdrop-blur-xl shadow-lg'
+                          ? 'bg-[#131315] border-[#26262A]'
+                          : 'border-zinc-200 bg-white shadow-lg'
                       }`}>
                         <div className="flex items-center gap-3 mb-4">
                           <div 
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md shrink-0"
+                            className="w-10 h-10 rounded-md flex items-center justify-center text-white shadow-md shrink-0"
                             style={{ backgroundColor: brandColor || '#FE540B' }}
                           >
                             <MapPin className="w-5 h-5" />
@@ -4823,17 +4865,17 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           {bio.address}
                         </p>
 
-                        <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 shadow-md relative z-0 mb-4 bg-zinc-900 group/map">
+                        <div className="w-full aspect-[4/3] rounded-md overflow-hidden border border-[#26262A] shadow-md relative z-0 mb-4 bg-zinc-900 group/map">
                           <iframe
                             title="Localização Comercial"
                             src={`https://maps.google.com/maps?q=${encodeURIComponent(bio.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                            className="w-full h-full border-0 rounded-2xl pointer-events-none sm:pointer-events-auto"
+                            className="w-full h-full border-0 rounded-md pointer-events-none sm:pointer-events-auto"
                             allowFullScreen={false}
                             loading="lazy"
                           />
                           {/* Dica para mobile sem travar a rolagem vertical do site */}
                           <div className="sm:hidden absolute inset-0 pointer-events-none flex items-end justify-center p-3">
-                            <span className="px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-bold text-white/90 border border-white/15 shadow">
+                            <span className="px-3 py-1.5 rounded-[4px] bg-[#0B0B0C]/95 text-[11px] font-bold text-white/90 border border-[#26262A] shadow">
                               📍 Toque no botão abaixo para abrir a rota
                             </span>
                           </div>
@@ -4843,7 +4885,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           href={bio.address_url ? bio.address_url : `https://maps.google.com/?q=${encodeURIComponent(bio.address)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white transition-all border border-white/15 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                          className="w-full py-3 px-4 rounded-[6px] text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-[#1B1B1E] hover:bg-[#26262A] text-white transition-all border border-[#26262A] cursor-pointer shadow-sm"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           <span>Abrir no Google Maps</span>
@@ -4851,8 +4893,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       </div>
 
                       {/* Commitment / Security Badge */}
-                      <div className="p-5 rounded-2xl bg-gradient-to-r from-white/5 to-white/[0.02] border border-white/10 flex items-center gap-3.5 text-white/90">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                      <div className="p-5 rounded-lg bg-[#131315] border border-[#26262A] flex items-center gap-3.5 text-white/90">
+                        <div className="w-10 h-10 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
                           <CheckCircle2 className="w-5 h-5" />
                         </div>
                         <div>
@@ -5467,7 +5509,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           </AnimatePresence>
 
           {/* 6. Admin Area / Login Footer Trigger */}
-          <footer className="relative z-20 w-full shrink-0 mt-0 py-12 sm:py-16 bg-black/90 backdrop-blur-xl border-t border-white/10 text-center space-y-6 px-4 sm:px-6">
+          <footer className="relative z-20 w-full shrink-0 mt-0 py-12 sm:py-16 bg-[#0B0B0C] border-t border-[#26262A] text-center space-y-6 px-4 sm:px-6">
             <div className="max-w-5xl mx-auto px-6 space-y-6">
               <EditableItem
                 isEditMode={isLiveEditMode && !previewAsVisitor}
@@ -5479,7 +5521,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   <span className={theme === 'dark' || theme === 'glass' ? "text-white font-extrabold" : "text-zinc-900 font-extrabold"}>
                     {companyName ? companyName.toUpperCase() : "GM EDIFICAÇÃO"}®
                   </span>{' '}
-                  <span style={{ color: brandColor || "#FE540B" }} className="font-extrabold">2026</span>
+                  <span style={{ color: brandColor || "#FE540B" }} className="font-extrabold tabular-nums">2026</span>
                 </div>
               </EditableItem>
               <div className="flex flex-col items-center gap-3">
@@ -5499,7 +5541,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         });
                       }
                     }}
-                    className="w-full sm:w-[240px] h-11 inline-flex items-center justify-center gap-2 transition-colors cursor-pointer px-4 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-sm shadow-md text-xs sm:text-sm font-black"
+                    className="w-full sm:w-[240px] h-11 inline-flex items-center justify-center gap-2 transition-colors cursor-pointer px-4 rounded-[6px] border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#3F3F46] shadow-md text-xs sm:text-sm font-black whitespace-nowrap"
                     title="Acessar Painel do Administrador"
                   >
                     <ShieldCheck className="w-4 h-4 text-[#FE540B] shrink-0" style={{ color: brandColor || "#FE540B" }} />
@@ -5530,7 +5572,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         setIsLoginOpen(true);
                       }
                     }}
-                    className="w-full sm:w-[240px] h-11 inline-flex items-center justify-center gap-2 transition-colors cursor-pointer px-4 rounded-full border border-white/15 bg-black/40 hover:bg-white/10 backdrop-blur-sm shadow-md text-xs sm:text-sm font-black"
+                    className="w-full sm:w-[240px] h-11 inline-flex items-center justify-center gap-2 transition-colors cursor-pointer px-4 rounded-[6px] border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#3F3F46] shadow-md text-xs sm:text-sm font-black whitespace-nowrap"
                     title="Modo Editor Visual"
                   >
                     <Lock className="w-4 h-4 text-[#FE540B] shrink-0" />
@@ -5565,28 +5607,30 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
       {/* WEBSITE LOGIN MODAL OVERLAY */}
       {isLoginOpen && (
-        <div className="fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/80 animate-fade-in" onClick={() => setIsLoginOpen(false)}>
+        <div className="fixed inset-0 z-[170] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in" onClick={() => setIsLoginOpen(false)}>
           <div 
-            className={`w-full max-w-md rounded-[2rem] border overflow-hidden shadow-lg flex flex-col ${
-              theme === 'glass'
-                ? 'bg-[#0a0b10]/65 backdrop-blur-3xl border-white/12 text-white shadow-[0_24px_50px_-12px_rgba(0,0,0,0.6)]'
-                : theme === 'dark'
-                  ? 'bg-[#0e0e11] border-zinc-800 text-white'
-                  : 'bg-white border-slate-200 text-slate-900'
+            className={`w-full max-w-md rounded-lg border overflow-hidden shadow-2xl flex flex-col ${
+              theme === 'dark' || theme === 'glass'
+                ? 'bg-[#131315] border-[#26262A] text-white'
+                : 'bg-white border-slate-200 text-slate-900'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="p-5 flex items-center justify-between border-b" style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+            <div className="p-5 flex items-center justify-between border-b" style={{ borderColor: theme === 'glass' || theme === 'dark' ? '#26262A' : 'rgba(0,0,0,0.08)' }}>
               <div className="flex items-center gap-2">
                 <Lock className="w-5 h-5" style={{ color: brandColor }} />
                 <span className="font-extrabold text-sm tracking-wide uppercase">Login do Administrador</span>
               </div>
               <button 
                 onClick={() => setIsLoginOpen(false)}
-                className="p-1.5 rounded-full hover:bg-slate-500/10 transition-colors cursor-pointer"
+                className={`w-8 h-8 rounded-[4px] flex items-center justify-center transition-colors cursor-pointer border ${
+                  theme === 'dark' || theme === 'glass'
+                    ? 'bg-[#1B1B1E] border-[#26262A] hover:border-[#3F3F46] text-zinc-400 hover:text-white'
+                    : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-600'
+                }`}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -5595,13 +5639,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               <p className="text-xs text-slate-400">Entre com as suas credenciais para gerenciar a sua Bio CardDigital GM.</p>
               
               {loginError && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-200 text-xs">
+                <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3 text-red-300 text-xs">
                   {loginError}
                 </div>
               )}
 
               {loginSuccess && (
-                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-green-200 text-xs">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-md p-3 text-green-300 text-xs">
                   {loginSuccess}
                 </div>
               )}
@@ -5618,12 +5662,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     placeholder="seu-email@dominio.com"
-                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm border focus:outline-none transition-all focus-border-brand ${
-                      theme === 'glass'
-                        ? 'bg-white/5 border-white/10 text-white focus:bg-white/10'
-                        : theme === 'dark' 
-                          ? 'bg-zinc-900 border-zinc-800 text-white' 
-                          : 'bg-slate-50 border-slate-200 text-slate-900'
+                    className={`w-full pl-10 pr-4 h-11 rounded-[4px] text-sm border focus:outline-none transition-all focus-border-brand ${
+                      theme === 'glass' || theme === 'dark'
+                        ? 'bg-[#0B0B0C] border-[#26262A] text-white focus:border-[#FE540B]'
+                        : 'bg-slate-50 border-slate-200 text-slate-900'
                     }`}
                   />
                 </div>
@@ -5641,18 +5683,16 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="Sua senha..."
-                    className={`w-full pl-10 pr-10 py-3 rounded-xl text-sm border focus:outline-none transition-all focus-border-brand ${
-                      theme === 'glass'
-                        ? 'bg-white/5 border-white/10 text-white focus:bg-white/10'
-                        : theme === 'dark' 
-                          ? 'bg-zinc-900 border-zinc-800 text-white' 
-                          : 'bg-slate-50 border-slate-200 text-slate-900'
+                    className={`w-full pl-10 pr-10 h-11 rounded-[4px] text-sm border focus:outline-none transition-all focus-border-brand ${
+                      theme === 'glass' || theme === 'dark'
+                        ? 'bg-[#0B0B0C] border-[#26262A] text-white focus:border-[#FE540B]'
+                        : 'bg-slate-50 border-slate-200 text-slate-900'
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowLoginPassword(!showLoginPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-[4px] flex items-center justify-center text-slate-400 hover:text-white transition-colors"
                   >
                     {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -5662,7 +5702,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
               <button
                 type="submit"
                 disabled={loginLoading}
-                className="w-full flex items-center justify-center p-3.5 rounded-xl text-white font-bold transition-all shadow-md hover:brightness-110 active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                className="w-full flex items-center justify-center h-11 rounded-[6px] text-white font-bold transition-all shadow-md hover:brightness-110 active:scale-[0.98] cursor-pointer disabled:opacity-50"
                 style={{ backgroundColor: brandColor }}
               >
                 {loginLoading ? (
@@ -5678,23 +5718,17 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
       {/* PWA / MOBILE APP LAUNCH REDIRECT MODAL */}
       {showAppRedirectScreen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/85 animate-fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
           <div 
-            className={`w-full max-w-md rounded-[2.5rem] border p-8 flex flex-col items-center text-center shadow-lg relative ${
-              theme === 'glass'
-                ? 'bg-[#0a0b10]/80 backdrop-blur-3xl border-white/12 text-white shadow-[0_24px_50px_-12px_rgba(0,0,0,0.8)]'
-                : theme === 'dark'
-                  ? 'bg-[#0d0e12] border-zinc-800 text-white'
-                  : 'bg-white border-slate-200 text-slate-900'
+            className={`w-full max-w-md rounded-lg border p-8 flex flex-col items-center text-center shadow-2xl relative ${
+              theme === 'glass' || theme === 'dark'
+                ? 'bg-[#131315] border-[#26262A] text-white'
+                : 'bg-white border-slate-200 text-slate-900'
             }`}
           >
-            {/* Ambient background glow matching CardDigital GM */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#FE540B]/10 rounded-full blur-[60px] pointer-events-none" />
-
-            {/* Glowing Logo Icon */}
+            {/* Logo Icon */}
             <div className="relative mb-6">
-              <div className="absolute inset-0 bg-[#FE540B]/20 rounded-lg blur-md scale-105" />
-              <div className="relative w-20 h-20 rounded-lg border border-white/10 bg-[#0c0d12] flex items-center justify-center p-2.5 overflow-hidden">
+              <div className="relative w-20 h-20 rounded-lg border border-[#26262A] bg-[#0B0B0C] flex items-center justify-center p-2.5 overflow-hidden">
                 {(data as any)?.logo_url ? (
                   <img 
                     src={(data as any).logo_url} 
@@ -5711,18 +5745,18 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
             {/* Title */}
             <h3 className="text-xl font-extrabold tracking-tight mb-2 text-white">
-              Acesso Autorizado! 🚀
+              Acesso Autorizado!
             </h3>
             <p className="text-sm font-semibold opacity-80 mb-6 font-funnel uppercase tracking-wider" style={{ color: "#FE540B" }}>
               {(data as any)?.title || "CardDigital GM"}
             </p>
 
             {/* Content text */}
-            <div className="space-y-4 mb-8 text-xs sm:text-sm leading-relaxed text-left bg-white/5 dark:bg-black/25 p-5 rounded-[1.5rem] border border-white/5 text-slate-300">
+            <div className="space-y-4 mb-8 text-xs sm:text-sm leading-relaxed text-left bg-[#0B0B0C] p-5 rounded-md border border-[#26262A] text-slate-300">
               <p className="font-semibold text-center text-white">
                 Como você está acessando de um celular, recomendamos usar o aplicativo instalado:
               </p>
-              <div className="space-y-2 mt-3 text-[11px] opacity-80 border-t border-white/5 pt-3">
+              <div className="space-y-2 mt-3 text-[11px] opacity-80 border-t border-[#26262A] pt-3">
                 <div className="flex items-start gap-2">
                   <span className="text-[#FE540B] font-bold">1.</span>
                   <span>Se o aplicativo já está instalado no seu smartphone, toque no botão abaixo para tentar abri-lo diretamente ou abra pelo ícone de atalho na sua tela inicial.</span>
@@ -5738,10 +5772,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             <div className="w-full space-y-3">
               <button
                 onClick={() => {
-                  // Direct standard web link opening, triggering installed PWA deep-linking on supported browsers
                   window.location.href = window.location.origin + "/";
                 }}
-                className="w-full py-4 px-6 rounded-lg text-white font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3.5 px-6 rounded-[6px] text-white font-black transition-all hover:brightness-110 active:scale-[0.98] shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                 style={{ backgroundColor: "#FE540B" }}
               >
                 <ExternalLink className="w-5 h-5" />
@@ -5753,9 +5786,9 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   setShowAppRedirectScreen(false);
                   navigate("/");
                 }}
-                className={`w-full py-3.5 px-6 rounded-lg text-xs font-bold transition-all border hover:bg-white/5 active:scale-[0.98] cursor-pointer ${
+                className={`w-full py-3 px-6 rounded-[6px] text-xs font-bold transition-all border active:scale-[0.98] cursor-pointer ${
                   theme === 'glass' || theme === 'dark'
-                    ? 'border-white/10 text-white/70 hover:text-white'
+                    ? 'bg-[#1B1B1E] border-[#26262A] hover:border-[#3F3F46] text-zinc-300 hover:text-white'
                     : 'border-slate-200 text-slate-600 hover:text-slate-900 bg-slate-50'
                 }`}
               >
@@ -5784,25 +5817,27 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
         const isMainPng = isPngImage(activeImageUrl);
 
         return (
-          <div className="fixed inset-0 z-[150] flex items-start md:items-center justify-center p-4 bg-black/80 overflow-y-auto py-6 sm:py-10 animate-fade-in" onClick={() => setSelectedProduct(null)}>
+          <div className="fixed inset-0 z-[150] flex items-start md:items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto py-6 sm:py-10 animate-fade-in" onClick={() => setSelectedProduct(null)}>
             <div 
-              className={`w-full max-w-lg md:max-w-[1200px] lg:max-w-[1400px] xl:max-w-[1500px] rounded-[2rem] border overflow-hidden md:overflow-visible shadow-lg flex flex-col h-auto md:max-h-none ${
-                theme === 'glass'
-                  ? 'bg-[#0a0b10]/65 backdrop-blur-3xl border-white/12 text-white shadow-[0_24px_50px_-12px_rgba(0,0,0,0.6)]'
-                  : theme === 'dark' 
-                    ? 'bg-[#0f0f12] border-zinc-800/80 text-white' 
-                    : 'bg-white border-slate-200 text-slate-900'
+              className={`w-full max-w-lg md:max-w-[1200px] lg:max-w-[1400px] xl:max-w-[1500px] rounded-lg border overflow-hidden md:overflow-visible shadow-2xl flex flex-col h-auto md:max-h-none ${
+                theme === 'glass' || theme === 'dark'
+                  ? 'bg-[#131315] border-[#26262A] text-white'
+                  : 'bg-white border-slate-200 text-slate-900'
               }`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="p-5 flex items-center justify-between border-b shrink-0" style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+              <div className="p-5 flex items-center justify-between border-b shrink-0" style={{ borderColor: theme === 'glass' || theme === 'dark' ? '#26262A' : 'rgba(0,0,0,0.08)' }}>
                 <span className="text-sm font-bold tracking-wider opacity-85">Detalhes do produto</span>
                 <button 
                   onClick={() => setSelectedProduct(null)}
-                  className="p-1.5 rounded-full hover:bg-slate-500/10 transition-colors cursor-pointer"
+                  className={`w-8 h-8 rounded-[4px] flex items-center justify-center transition-colors cursor-pointer border ${
+                    theme === 'glass' || theme === 'dark'
+                      ? 'bg-[#1B1B1E] border-[#26262A] hover:border-[#3F3F46] text-zinc-400 hover:text-white'
+                      : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-600'
+                  }`}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
@@ -5817,10 +5852,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   >
                     <div className="w-full max-w-[280px] sm:max-w-[360px] md:max-w-[380px] lg:max-w-[420px] xl:max-w-[450px] mx-auto flex flex-col space-y-5">
                       <div 
-                        className="relative w-full aspect-square rounded-[24px] overflow-hidden border flex items-center justify-center p-3 group shadow-[0_12px_32px_-8px_rgba(0,0,0,0.5)] transition-all duration-300" 
+                        className="relative w-full aspect-square rounded-lg overflow-hidden border flex items-center justify-center p-3 group shadow-[0_12px_32px_-8px_rgba(0,0,0,0.5)] transition-all duration-300" 
                         style={{ 
                           backgroundColor: '#ffffff', 
-                          borderColor: theme === 'glass' ? 'rgba(255,255,255,0.1)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' 
+                          borderColor: theme === 'glass' || theme === 'dark' ? '#26262A' : 'rgba(0,0,0,0.08)' 
                         }}
                       >
                         {activeImageUrl ? (
@@ -5840,7 +5875,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         {activeImageUrl && (
                           <button
                             onClick={() => setZoomedImage(activeImageUrl)}
-                            className="absolute bottom-4 right-4 p-2.5 rounded-full bg-black/75 hover:bg-black/90 text-white border border-white/10 transition-all hover:scale-110 active:scale-95 shadow-xl flex items-center justify-center cursor-pointer z-20 group"
+                            className="absolute bottom-4 right-4 w-9 h-9 rounded-[4px] bg-[#131315]/90 hover:bg-[#1B1B1E] text-white border border-[#26262A] transition-all shadow-xl flex items-center justify-center cursor-pointer z-20 group"
                             title="Ver imagem ampliada"
                           >
                             <ZoomIn className="w-5 h-5" style={{ color: brandColor || '#ff6900' }} />
@@ -5852,13 +5887,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           <>
                             <button 
                               onClick={() => setActiveImageIndex(prev => (prev - 1 + productImages.length) % productImages.length)}
-                              className="absolute left-3.5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/70 text-white hover:bg-black/95 transition-colors shadow-lg z-10 cursor-pointer"
+                              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-[4px] bg-[#131315]/85 text-white hover:bg-[#1B1B1E] border border-[#26262A] transition-colors shadow-lg z-10 cursor-pointer flex items-center justify-center"
                             >
                               <ChevronLeft className="w-5 h-5" />
                             </button>
                             <button 
                               onClick={() => setActiveImageIndex(prev => (prev + 1) % productImages.length)}
-                              className="absolute right-3.5 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/70 text-white hover:bg-black/95 transition-colors shadow-lg z-10 cursor-pointer"
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-[4px] bg-[#131315]/85 text-white hover:bg-[#1B1B1E] border border-[#26262A] transition-colors shadow-lg z-10 cursor-pointer flex items-center justify-center"
                             >
                               <ChevronRight className="w-5 h-5" />
                             </button>
@@ -5933,12 +5968,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       
                       {(selectedProductOption?.price || selectedProduct.price) && (
                         <div className="space-y-1.5 animate-in fade-in duration-300">
-                          <div className="text-3xl font-black tracking-tight" style={{ color: brandColor || '#ff6900' }}>
+                          <div className="text-3xl font-black tracking-tight tabular-nums" style={{ color: brandColor || '#ff6900' }}>
                             {selectedProductOption ? selectedProductOption.price : selectedProduct.price}
                           </div>
                           {selectedProductOption && (
-                            <div className="text-xs font-bold tracking-wide text-zinc-400 flex items-center gap-1.5 bg-white/5 py-1 px-2.5 rounded-lg border border-white/5 w-fit">
-                              <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: brandColor || '#ff6900' }} />
+                            <div className="text-xs font-bold tracking-wide text-zinc-400 flex items-center gap-1.5 bg-[#0B0B0C] py-1 px-2.5 rounded-[4px] border border-[#26262A] w-fit">
+                              <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: brandColor || '#ff6900' }} />
                               Opção selecionada: <span className="text-white font-black">{selectedProductOption.quantity}</span>
                             </div>
                           )}
@@ -5957,10 +5992,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   key={opt.id}
                                   type="button"
                                   onClick={() => setSelectedProductOption(opt)}
-                                  className={`p-3.5 rounded-lg border text-left transition-all relative flex flex-col justify-between cursor-pointer group ${
+                                  className={`p-3.5 rounded-md border text-left transition-all relative flex flex-col justify-between cursor-pointer group ${
                                     isSelected 
                                       ? 'text-white' 
-                                      : 'border-white/5 bg-zinc-900/40 hover:bg-zinc-900/80 hover:border-white/10 text-zinc-300'
+                                      : 'border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[#3F3F46] text-zinc-300'
                                   }`}
                                   style={isSelected ? { 
                                     borderColor: brandColor, 
@@ -5968,12 +6003,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     boxShadow: `0 0 0 1px ${brandColor}, 0 0 12px ${brandColor}25`
                                   } : undefined}
                                 >
-                                  <span className="text-[10px] font-semibold tracking-wide block opacity-50 mb-1 group-hover:opacity-75 transition-opacity">Qtd / opção</span>
+                                  <span className="text-[11px] font-semibold tracking-wide block opacity-55 mb-1 group-hover:opacity-80 transition-opacity">Qtd / opção</span>
                                   <span className="text-sm font-black block truncate leading-tight mb-2 text-white">{opt.quantity}</span>
-                                  <span className="text-xs font-bold block mt-auto" style={{ color: isSelected ? (brandColor || '#ff6900') : '#a1a1aa' }}>{opt.price}</span>
+                                  <span className="text-xs font-bold block mt-auto tabular-nums" style={{ color: isSelected ? (brandColor || '#ff6900') : '#a1a1aa' }}>{opt.price}</span>
                                   {isSelected && (
                                     <span 
-                                      className="absolute top-3.5 right-3.5 w-2 h-2 rounded-full animate-pulse" 
+                                      className="absolute top-3.5 right-3.5 w-2 h-2 rounded-full" 
                                       style={{ backgroundColor: brandColor || '#ff6900' }} 
                                     />
                                   )}
@@ -5995,22 +6030,22 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     </div>
 
                     {/* Bottom Area inside Right Column: Quantity and Buttons */}
-                    <div className="space-y-5 pt-5 border-t" style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                    <div className="space-y-5 pt-5 border-t" style={{ borderColor: theme === 'glass' || theme === 'dark' ? '#26262A' : 'rgba(0,0,0,0.08)' }}>
                       
                       {/* Quantity Selector */}
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-bold opacity-80 tracking-wide">Quantidade</span>
-                        <div className="flex items-center gap-1.5 bg-black/10 dark:bg-white/5 rounded-full p-1 border" style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                        <div className="flex items-center gap-1.5 bg-[#0B0B0C] rounded-[6px] p-1 border border-[#26262A]">
                           <button 
                             onClick={() => setProductQuantity(prev => Math.max(1, prev - 1))}
-                            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-lg transition-colors font-bold cursor-pointer"
+                            className="w-8 h-8 rounded-[4px] flex items-center justify-center hover:bg-[#1B1B1E] text-lg transition-colors font-bold cursor-pointer"
                           >
                             <Minus className="w-4 h-4" />
                           </button>
-                          <span className="w-12 text-center font-bold text-sm">{productQuantity}</span>
+                          <span className="w-12 text-center font-bold text-sm tabular-nums">{productQuantity}</span>
                           <button 
                             onClick={() => setProductQuantity(prev => prev + 1)}
-                            className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-lg transition-colors font-bold cursor-pointer"
+                            className="w-8 h-8 rounded-[4px] flex items-center justify-center hover:bg-[#1B1B1E] text-lg transition-colors font-bold cursor-pointer"
                           >
                             <Plus className="w-4 h-4" />
                           </button>
@@ -6085,14 +6120,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
       {/* Zoomed Image Lightbox Overlay */}
       {zoomedImage && (
         <div 
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 animate-fade-in cursor-zoom-out"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in cursor-zoom-out"
           onClick={() => setZoomedImage(null)}
         >
           <button 
             onClick={() => setZoomedImage(null)}
-            className="absolute top-5 right-5 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer z-10 shadow-lg"
+            className="absolute top-5 right-5 w-9 h-9 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors cursor-pointer z-10 shadow-lg flex items-center justify-center"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
           
           <div className="relative max-w-4xl max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
@@ -6114,7 +6149,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
           {/* Top panel with details / close button */}
           <div className="absolute top-0 inset-x-0 p-5 flex items-center justify-between z-30 bg-gradient-to-b from-black/60 to-transparent">
             {portfolioLightbox.images.length > 1 ? (
-              <span className="text-white/80 font-mono text-sm bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full">
+              <span className="text-white/90 font-mono text-sm bg-[#131315]/90 border border-[#26262A] px-3 py-1.5 rounded-[4px] tabular-nums">
                 {portfolioLightbox.currentIndex + 1} / {portfolioLightbox.images.length}
               </span>
             ) : (
@@ -6127,7 +6162,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                   e.stopPropagation();
                   setLightboxFit(prev => prev === "cover" ? "contain" : "cover");
                 }}
-                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium text-xs sm:text-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-lg flex items-center gap-2 border border-white/5"
+                className="px-4 py-2 rounded-[6px] bg-[#131315]/90 hover:bg-[#1B1B1E] text-white font-medium text-xs sm:text-sm transition-all duration-200 cursor-pointer shadow-lg flex items-center gap-2 border border-[#26262A] whitespace-nowrap"
                 title={lightboxFit === "cover" ? "Ajustar à tela (Ver imagem inteira)" : "Preencher tela (Fullscreen sem bordas)"}
               >
                 {lightboxFit === "cover" ? (
@@ -6145,10 +6180,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
               <button 
                 onClick={() => setPortfolioLightbox(null)}
-                className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-lg flex items-center justify-center border border-white/5"
+                className="w-9 h-9 rounded-[4px] bg-[#131315]/90 hover:bg-[#1B1B1E] text-white transition-all duration-200 cursor-pointer shadow-lg flex items-center justify-center border border-[#26262A]"
                 title="Fechar (Esc)"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -6169,10 +6204,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     return { ...prev, currentIndex: prevIdx };
                   });
                 }}
-                className="absolute left-4 sm:left-6 md:left-10 p-3 sm:p-4 rounded-full bg-black/40 hover:bg-black/60 hover:scale-110 active:scale-90 border border-white/10 text-white transition-all cursor-pointer z-30 shadow-lg flex items-center justify-center"
+                className="absolute left-4 sm:left-6 md:left-10 w-11 h-11 sm:w-12 sm:h-12 rounded-[6px] bg-[#131315]/85 hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-all cursor-pointer z-30 shadow-lg flex items-center justify-center"
                 title="Imagem Anterior (Seta Esquerda)"
               >
-                <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+                <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7" />
               </button>
             )}
 
@@ -6184,7 +6219,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 className={`select-none pointer-events-none animate-scale-up transition-all duration-300 ${
                   lightboxFit === 'cover' 
                     ? 'w-full h-full object-cover shadow-lg' 
-                    : 'max-w-full max-h-[80vh] object-contain rounded-lg sm:rounded-xl shadow-lg'
+                    : 'max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg'
                 }`} 
               />
             </div>
@@ -6200,10 +6235,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     return { ...prev, currentIndex: nextIdx };
                   });
                 }}
-                className="absolute right-4 sm:right-6 md:right-10 p-3 sm:p-4 rounded-full bg-black/40 hover:bg-black/60 hover:scale-110 active:scale-90 border border-white/10 text-white transition-all cursor-pointer z-30 shadow-lg flex items-center justify-center"
+                className="absolute right-4 sm:right-6 md:right-10 w-11 h-11 sm:w-12 sm:h-12 rounded-[6px] bg-[#131315]/85 hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-all cursor-pointer z-30 shadow-lg flex items-center justify-center"
                 title="Próxima Imagem (Seta Direita)"
               >
-                <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+                <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7" />
               </button>
             )}
           </div>
@@ -6245,29 +6280,27 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             setCheckoutStep("cart");
             setIsCartOpen(true);
           }}
-          className={`fixed bottom-6 right-20 z-[140] flex items-center gap-2 px-5 py-4 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform font-bold text-white cursor-pointer group`}
+          className={`fixed bottom-6 right-20 z-[140] flex items-center gap-2 px-5 py-3.5 rounded-[6px] shadow-lg hover:brightness-110 active:scale-95 transition-all font-bold text-white cursor-pointer group`}
           style={{ backgroundColor: brandColor }}
         >
           <div className="relative">
-            <ShoppingBag className="w-6 h-6" />
-            <span className="absolute -top-2.5 -right-2.5 bg-red-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black shadow-md border border-white/10 group-hover:animate-pulse">
+            <ShoppingBag className="w-5 h-5" />
+            <span className="absolute -top-2.5 -right-2.5 bg-red-600 text-white text-[11px] min-w-[20px] h-5 px-1 rounded-[4px] flex items-center justify-center font-black shadow-md border border-white/10 tabular-nums">
               {cartTotalItems}
             </span>
           </div>
-          <span className="hidden sm:inline-block text-sm ml-1">{formatPrice(cartTotalPrice)}</span>
+          <span className="hidden sm:inline-block text-sm ml-1 tabular-nums">{formatPrice(cartTotalPrice)}</span>
         </button>
       )}
 
       {/* Shopping Cart Drawer / Modal */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-[160] flex justify-end pointer-events-none animate-fade-in" onClick={() => setIsCartOpen(false)}>
+        <div className="fixed inset-0 z-[160] flex justify-end bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setIsCartOpen(false)}>
           <div 
-            className={`w-[88%] sm:w-full max-w-md h-full flex flex-col shadow-lg pointer-events-auto relative pl-[6px] animate-in slide-in-from-right duration-300 ${
-              theme === 'glass'
-                ? 'bg-[#0a0b10]/65 backdrop-blur-3xl border-l border-white/12 text-white shadow-[-10px_0_40px_rgba(0,0,0,0.5)]'
-                : theme === 'dark' 
-                  ? 'bg-[#0e0e11] text-white border-l border-zinc-800' 
-                  : 'bg-white text-slate-900 border-l border-slate-200'
+            className={`w-[88%] sm:w-full max-w-md h-full flex flex-col shadow-2xl pointer-events-auto relative pl-[6px] animate-in slide-in-from-right duration-300 ${
+              theme === 'glass' || theme === 'dark'
+                ? 'bg-[#131315] text-white border-l border-[#26262A]'
+                : 'bg-white text-slate-900 border-l border-slate-200'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -6284,26 +6317,30 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             {/* Render Scroll Buttons pinned to the left edge of the drawer */}
             {renderScrollButtons(true)}
             {/* Drawer Header */}
-            <div className="p-5 flex items-center justify-between border-b" style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+            <div className="p-5 flex items-center justify-between border-b" style={{ borderColor: theme === 'glass' || theme === 'dark' ? '#26262A' : 'rgba(0,0,0,0.08)' }}>
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5" style={{ color: brandColor }} />
                 <h3 className="font-extrabold text-lg">Seu Carrinho</h3>
-                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold" style={{ color: brandColor, backgroundColor: `${brandColor}15` }}>
+                <span className="text-xs px-2 py-0.5 rounded-[4px] font-bold tabular-nums" style={{ color: brandColor, backgroundColor: `${brandColor}15` }}>
                   {cartTotalItems} {cartTotalItems === 1 ? 'item' : 'itens'}
                 </span>
               </div>
               <button 
                 onClick={() => setIsCartOpen(false)}
-                className="p-1.5 rounded-full hover:bg-slate-500/10 transition-colors cursor-pointer"
+                className={`w-8 h-8 rounded-[4px] flex items-center justify-center transition-colors cursor-pointer border ${
+                  theme === 'glass' || theme === 'dark'
+                    ? 'bg-[#1B1B1E] border-[#26262A] hover:border-[#3F3F46] text-zinc-400 hover:text-white'
+                    : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-600'
+                }`}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Content area: Cart items list OR checkout form */}
             {cart.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-slate-500/10 flex items-center justify-center opacity-40">
+                <div className="w-16 h-16 rounded-md bg-slate-500/10 flex items-center justify-center opacity-40">
                   <ShoppingBag className="w-8 h-8" />
                 </div>
                 <div className="space-y-1">
@@ -6312,7 +6349,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 </div>
                 <button 
                   onClick={() => setIsCartOpen(false)}
-                  className="px-6 py-2.5 rounded-full text-xs font-bold text-white transition-all shadow-md hover:brightness-110 cursor-pointer"
+                  className="px-6 py-2.5 rounded-[6px] text-xs font-bold text-white transition-all shadow-md hover:brightness-110 cursor-pointer"
                   style={{ backgroundColor: brandColor }}
                 >
                   Continuar Navegando
@@ -6324,23 +6361,23 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 <div className="px-5 pt-4 pb-2 flex gap-2">
                   <button 
                     onClick={() => setCheckoutStep("cart")}
-                    className={`flex-1 py-2 text-xs font-black rounded-xl transition-all cursor-pointer border ${
+                    className={`flex-1 py-2 text-xs font-black rounded-[6px] transition-all cursor-pointer border ${
                       checkoutStep === "cart" 
-                        ? theme === 'glass' ? 'bg-white/15 border-white/15 text-white' : 'bg-black/5 dark:bg-white/10' 
+                        ? theme === 'glass' || theme === 'dark' ? 'bg-[#1B1B1E] border-[#3F3F46] text-white' : 'bg-black/5' 
                         : 'border-transparent opacity-50 hover:opacity-80'
                     }`}
-                    style={checkoutStep === "cart" && theme !== 'glass' ? { borderColor: brandColor, color: brandColor } : undefined}
+                    style={checkoutStep === "cart" && theme !== 'glass' && theme !== 'dark' ? { borderColor: brandColor, color: brandColor } : undefined}
                   >
                     1. Carrinho
                   </button>
                   <button 
                     onClick={() => setCheckoutStep("checkout")}
-                    className={`flex-1 py-2 text-xs font-black rounded-xl transition-all cursor-pointer border ${
+                    className={`flex-1 py-2 text-xs font-black rounded-[6px] transition-all cursor-pointer border ${
                       checkoutStep === "checkout" 
-                        ? theme === 'glass' ? 'bg-white/15 border-white/15 text-white' : 'bg-black/5 dark:bg-white/10' 
+                        ? theme === 'glass' || theme === 'dark' ? 'bg-[#1B1B1E] border-[#3F3F46] text-white' : 'bg-black/5' 
                         : 'border-transparent opacity-50 hover:opacity-80'
                     }`}
-                    style={checkoutStep === "checkout" && theme !== 'glass' ? { borderColor: brandColor, color: brandColor } : undefined}
+                    style={checkoutStep === "checkout" && theme !== 'glass' && theme !== 'dark' ? { borderColor: brandColor, color: brandColor } : undefined}
                   >
                     2. Dados de Entrega
                   </button>
@@ -6356,20 +6393,18 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         return (
                           <div 
                             key={idx}
-                            className={`flex gap-4 p-4 rounded-lg border transition-all ${
-                              theme === 'glass'
-                                ? 'bg-white/5 border-white/10 text-white'
-                                : theme === 'dark' 
-                                  ? 'bg-zinc-900/60 border-zinc-800' 
-                                  : 'bg-slate-50 border-slate-200/60'
+                            className={`flex gap-4 p-4 rounded-md border transition-all ${
+                              theme === 'glass' || theme === 'dark'
+                                ? 'bg-[#0B0B0C] border-[#26262A] text-white'
+                                : 'bg-slate-50 border-slate-200/60'
                             }`}
                           >
                             {/* Product Thumbnail */}
                             <div 
-                              className="w-20 h-20 rounded-lg overflow-hidden shrink-0 border flex items-center justify-center p-1" 
+                              className="w-20 h-20 rounded-md overflow-hidden shrink-0 border flex items-center justify-center p-1" 
                               style={{ 
-                                backgroundColor: theme === 'glass' ? 'rgba(255,255,255,0.02)' : theme === 'dark' ? `${brandColor}08` : '#ffffff', 
-                                borderColor: theme === 'glass' ? 'rgba(255,255,255,0.08)' : theme === 'dark' ? `${brandColor}15` : 'rgba(0,0,0,0.05)' 
+                                backgroundColor: theme === 'glass' || theme === 'dark' ? '#131315' : '#ffffff', 
+                                borderColor: theme === 'glass' || theme === 'dark' ? '#26262A' : 'rgba(0,0,0,0.05)' 
                               }}
                             >
                               {item.product.image_url ? (
@@ -6386,11 +6421,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               <div className="flex items-start justify-between gap-1">
                                 <div className="min-w-0">
                                   <h4 className="font-extrabold text-sm sm:text-base truncate pr-1">{item.product.name}{optionLabel}</h4>
-                                  <p className="text-[11px] opacity-60 mt-0.5">Unitário: {formatPrice(itemPriceParsed)}</p>
+                                  <p className="text-[11px] opacity-60 mt-0.5 tabular-nums">Unitário: {formatPrice(itemPriceParsed)}</p>
                                 </div>
                                 <button 
                                   onClick={() => removeFromCart(item.product.id, item.selectedOption?.id)}
-                                  className="text-red-500 hover:text-red-600 transition-colors p-1 cursor-pointer shrink-0"
+                                  className="text-red-500 hover:text-red-400 transition-colors p-1 cursor-pointer shrink-0"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -6398,21 +6433,21 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               
                               <div className="flex items-end justify-between mt-2">
                                 <div className="flex flex-col">
-                                  <span className="text-[10px] uppercase font-bold tracking-wider opacity-50">Subtotal</span>
-                                  <span className="text-sm font-black" style={{ color: brandColor }}>{formatPrice(itemTotal)}</span>
+                                  <span className="text-[11px] uppercase font-bold tracking-wider opacity-55">Subtotal</span>
+                                  <span className="text-sm font-black tabular-nums" style={{ color: brandColor }}>{formatPrice(itemTotal)}</span>
                                 </div>
                                 
-                                <div className="flex items-center gap-2 bg-black/15 dark:bg-white/10 rounded-full p-1 border" style={{ borderColor: theme === 'glass' ? 'rgba(255,255,255,0.12)' : theme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)' }}>
+                                <div className="flex items-center gap-1.5 bg-[#131315] rounded-[4px] p-1 border border-[#26262A]">
                                   <button 
                                     onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.selectedOption?.id)}
-                                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-sm font-bold cursor-pointer"
+                                    className="w-7 h-7 rounded-[4px] flex items-center justify-center hover:bg-[#1B1B1E] text-sm font-bold cursor-pointer"
                                   >
                                     <Minus className="w-3.5 h-3.5" />
                                   </button>
-                                  <span className="w-6 text-center font-black text-xs">{item.quantity}</span>
+                                  <span className="w-6 text-center font-black text-xs tabular-nums">{item.quantity}</span>
                                   <button 
                                     onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.selectedOption?.id)}
-                                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 text-sm font-bold cursor-pointer"
+                                    className="w-7 h-7 rounded-[4px] flex items-center justify-center hover:bg-[#1B1B1E] text-sm font-bold cursor-pointer"
                                   >
                                     <Plus className="w-3.5 h-3.5" />
                                   </button>
@@ -6622,7 +6657,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     <span className="text-slate-800 dark:text-slate-100 text-base font-extrabold uppercase">PAGAR VIA PIX</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20">Imediato</span>
+                                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-[4px] bg-emerald-500/15 text-emerald-400">Imediato</span>
                                     {isPixExpanded ? (
                                       <ChevronUp className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                                     ) : (
@@ -6633,7 +6668,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                                 {/* Accordion Body */}
                                 {isPixExpanded && (
-                                  <div className="p-5 border-t border-slate-100 dark:border-white/5 bg-slate-100/30 dark:bg-white/5 text-center space-y-4 animate-slide-down">
+                                  <div className="p-5 border-t border-slate-100 dark:border-[#26262A] bg-slate-100/30 dark:bg-[#0B0B0C] text-center space-y-4 animate-slide-down">
                                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 text-left leading-relaxed">
                                       Escaneie o código QR ou clique para copiar a chave Pix abaixo. Efetue a transferência e anexe o comprovante na finalização do pedido!
                                     </p>
@@ -6647,7 +6682,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                       />
                                     </div>
 
-                                    <div className="bg-black/5 dark:bg-black/30 p-4 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-1.5 text-left">
+                                    <div className="bg-black/5 dark:bg-[#131315] p-4 rounded-md border border-slate-200/50 dark:border-[#26262A] space-y-1.5 text-left">
                                       <div className="text-[11px] uppercase font-black text-slate-500 dark:text-slate-400 tracking-wider">Chave Copia e Cola / Chave PIX:</div>
                                       <div className="text-sm font-mono font-black break-all select-all text-slate-800 dark:text-slate-100" style={{ color: brandColor }}>
                                         {pixKey}
@@ -6657,7 +6692,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     <button 
                                       type="button"
                                       onClick={handleCopyPix}
-                                      className="w-full flex items-center justify-center py-3.5 px-4 rounded-xl text-sm font-black transition-all duration-300 hover:shadow-md hover:brightness-110 cursor-pointer text-white border-0 shadow-sm"
+                                      className="w-full flex items-center justify-center py-3.5 px-4 rounded-[6px] text-sm font-black transition-all duration-300 hover:shadow-md hover:brightness-110 cursor-pointer text-white border-0 shadow-sm"
                                       style={{ 
                                         background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
                                         backgroundSize: '300% 300%',
@@ -6676,7 +6711,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                             {/* Credit Card Accordion */}
                             {cardUrl && (
-                              <div className="rounded-lg border overflow-hidden shadow-sm transition-all duration-300 border-slate-200 dark:border-white/10 bg-white/5 dark:bg-black/10">
+                              <div className="rounded-lg border overflow-hidden shadow-sm transition-all duration-300 border-slate-200 dark:border-[#26262A] bg-white/5 dark:bg-[#0B0B0C]">
                                 {/* Accordion Header */}
                                 <button
                                   type="button"
@@ -6685,13 +6720,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                   style={{ borderLeft: `4px solid ${brandColor || '#FE540B'}` }}
                                 >
                                   <div className="flex items-center gap-2.5">
-                                    <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${brandColor || '#FE540B'}20` }}>
+                                    <div className="p-1.5 rounded-md" style={{ backgroundColor: `${brandColor || '#FE540B'}20` }}>
                                       <CreditCard className="w-5 h-5" style={{ color: brandColor || '#FE540B' }} />
                                     </div>
                                     <span className="text-slate-800 dark:text-slate-100 text-base font-extrabold uppercase">PAGAR COM CARTÃO</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${brandColor || '#FE540B'}20`, color: brandColor || '#FE540B' }}>Cartão de Crédito</span>
+                                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-[4px]" style={{ backgroundColor: `${brandColor || '#FE540B'}20`, color: brandColor || '#FE540B' }}>Cartão de Crédito</span>
                                     {isCardExpanded ? (
                                       <ChevronUp className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                                     ) : (
@@ -6702,7 +6737,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                                 {/* Accordion Body */}
                                 {isCardExpanded && (
-                                  <div className="p-5 border-t border-slate-100 dark:border-white/5 bg-slate-100/30 dark:bg-white/5 text-center space-y-4 animate-slide-down">
+                                  <div className="p-5 border-t border-slate-100 dark:border-[#26262A] bg-slate-100/30 dark:bg-[#0B0B0C] text-center space-y-4 animate-slide-down">
                                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 text-left leading-relaxed">
                                       Clique no botão abaixo para abrir a página de pagamento seguro e efetuar o pagamento via Cartão de Crédito.
                                     </p>
@@ -6711,7 +6746,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                       href={cardUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="w-full flex items-center justify-center py-4 px-4 rounded-xl text-sm font-black text-white transition-all duration-300 hover:shadow-lg border-0 shadow-md"
+                                      className="w-full flex items-center justify-center py-4 px-4 rounded-[6px] text-sm font-black text-white transition-all duration-300 hover:shadow-lg border-0 shadow-md"
                                       style={{ 
                                         backgroundColor: brandColor,
                                         boxShadow: `0 4px 12px ${brandColor}40`
@@ -6734,11 +6769,11 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                 </div>
 
                 {/* Drawer Footer with Cart totals & WhatsApp Checkout action */}
-                <div className="p-6 border-t space-y-4 shrink-0 bg-black/10 dark:bg-black/40" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)' }}>
-                  <div className="space-y-2 border-b pb-3" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                <div className="p-6 border-t space-y-4 shrink-0 bg-[#0B0B0C]" style={{ borderColor: theme === 'dark' || theme === 'glass' ? '#26262A' : 'rgba(0,0,0,0.12)' }}>
+                  <div className="space-y-2 border-b pb-3" style={{ borderColor: theme === 'dark' || theme === 'glass' ? '#26262A' : 'rgba(0,0,0,0.06)' }}>
                     <div className="flex items-center justify-between text-xs opacity-75">
                       <span>Subtotal dos itens:</span>
-                      <span className="font-bold">{formatPrice(cartTotalPrice)}</span>
+                      <span className="font-bold tabular-nums">{formatPrice(cartTotalPrice)}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs opacity-75">
                       <span>Entrega:</span>
@@ -6748,13 +6783,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                   <div className="flex items-center justify-between pt-1">
                     <span className="font-extrabold text-sm uppercase tracking-wide opacity-80">Total do Pedido:</span>
-                    <span className="text-2xl font-black tracking-tight" style={{ color: brandColor }}>{formatPrice(cartTotalPrice)}</span>
+                    <span className="text-2xl font-black tracking-tight tabular-nums" style={{ color: brandColor }}>{formatPrice(cartTotalPrice)}</span>
                   </div>
 
                   {checkoutStep === "cart" ? (
                     <button 
                       onClick={() => setCheckoutStep("checkout")}
-                      className="w-full flex items-center justify-center p-4 rounded-lg text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                      className="w-full flex items-center justify-center p-4 rounded-[6px] text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
                       style={{ backgroundColor: brandColor }}
                     >
                       Avançar para Entrega
@@ -6765,7 +6800,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       <button 
                         type="button"
                         onClick={handleCheckoutDirectPayment}
-                        className="w-full flex items-center justify-center p-4 rounded-xl text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                        className="w-full flex items-center justify-center p-4 rounded-[6px] text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
                         style={{ backgroundColor: brandColor }}
                       >
                         <CreditCard className="w-5 h-5 mr-2" />
@@ -6775,7 +6810,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                       <button 
                         type="button"
                         onClick={handleCheckoutWhatsApp}
-                        className="w-full flex items-center justify-center p-3 rounded-xl text-white font-black text-xs sm:text-sm transition-all shadow hover:brightness-110 active:scale-[0.98] cursor-pointer bg-green-600 hover:bg-green-700"
+                        className="w-full flex items-center justify-center p-3 rounded-[6px] text-white font-black text-xs sm:text-sm transition-all shadow hover:brightness-110 active:scale-[0.98] cursor-pointer bg-green-600 hover:bg-green-700"
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />
                         Finalizar e Enviar via WhatsApp
@@ -6930,7 +6965,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                     /* Modal Caixa de Diálogo Aberta no Meio da Tela com Fundo Translúcido Seguro */
                     <div 
                       key="chat-dialog-modal-wrapper"
-                      className={`hidden md:flex ${asPreview && previewMode === 'smartphone' ? 'absolute' : 'fixed'} inset-0 z-[200] items-center justify-center p-4 sm:p-6 bg-black/65 backdrop-blur-sm pointer-events-auto`}
+                      className={`hidden md:flex ${asPreview && previewMode === 'smartphone' ? 'absolute' : 'fixed'} inset-0 z-[200] items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-sm pointer-events-auto`}
                       onClick={() => setIsChatWidgetOpen(false)}
                     >
                       <motion.div 
@@ -6939,13 +6974,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.88, y: 20, transition: { duration: 0.15, ease: "easeInOut" } }}
                         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                        className="w-full max-w-[340px] sm:max-w-[380px] h-[480px] sm:h-[520px] max-h-[85vh] rounded-[2.2rem] sm:rounded-[2.6rem] shadow-[0_25px_70px_rgba(0,0,0,0.65)] border border-white/20 flex flex-col justify-between overflow-hidden bg-[#FBF7F4] relative z-10"
+                        className="w-full max-w-[340px] sm:max-w-[380px] h-[480px] sm:h-[520px] max-h-[85vh] rounded-lg shadow-[0_25px_70px_rgba(0,0,0,0.65)] border border-[#26262A] flex flex-col justify-between overflow-hidden bg-[#FBF7F4] relative z-10"
                         style={{ fontFamily: "Inter, sans-serif" }}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {/* Header com estilo Join.chat */}
                         <div 
-                          className="px-6 py-4.5 sm:px-7 sm:py-5 flex items-center justify-between shadow-sm shrink-0"
+                          className="px-6 py-4 sm:px-7 sm:py-5 flex items-center justify-between shadow-sm shrink-0"
                           style={{ 
                             backgroundColor: brandThemeColor,
                             color: bio.chat_balloon_text_color || "#FFFFFF"
@@ -6955,8 +6990,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                             <span className="text-sm font-black tracking-wide">
                               {bio.chat_balloon_title || "Chat CardDigital GM"}
                             </span>
-                            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold opacity-90 mt-0.5">
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold opacity-90 mt-0.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                               Atendimento Online
                             </span>
                           </div>
@@ -6966,7 +7001,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               e.stopPropagation();
                               setIsChatWidgetOpen(false);
                             }}
-                            className="w-8 h-8 flex items-center justify-center rounded-full bg-black/15 hover:bg-black/25 transition-all cursor-pointer"
+                            className="w-8 h-8 flex items-center justify-center rounded-[4px] bg-black/15 hover:bg-black/25 transition-all cursor-pointer"
                             style={{ color: bio.chat_balloon_text_color || "#FFFFFF" }}
                             title="Fechar Chat"
                           >
@@ -6999,7 +7034,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                             {/* Balão de fala */}
                             <div 
-                              className="relative bg-white text-slate-800 p-4 sm:p-5 rounded-[1.3rem] rounded-tl-none shadow-[0_10px_25px_-5px_rgba(0,0,0,0.08)] border border-slate-100/70 text-xs sm:text-sm font-medium leading-relaxed max-w-[220px] sm:max-w-[260px]"
+                              className="relative bg-white text-slate-800 p-4 sm:p-5 rounded-lg rounded-tl-none shadow-[0_10px_25px_-5px_rgba(0,0,0,0.08)] border border-slate-100/70 text-xs sm:text-sm font-medium leading-relaxed max-w-[220px] sm:max-w-[260px]"
                             >
                               <div className="absolute left-[-5px] top-4 w-2.5 h-2.5 bg-white rotate-45 border-l border-t border-slate-100/70" />
                               <div className="space-y-1.5 text-slate-700 whitespace-pre-wrap">
@@ -7008,7 +7043,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 ) : (
                                   <>
                                     <div className="flex items-center gap-1 font-bold text-slate-900 text-sm">
-                                      Olá <span className="animate-bounce">👋</span>
+                                      Olá <span>👋</span>
                                     </div>
                                     <div className="text-slate-600 font-medium">
                                       Sou Denis, como posso te ajudar hoje?
@@ -7020,21 +7055,21 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           </div>
 
                           {/* Mensagem de canal direto */}
-                          <div className="px-3.5 py-2.5 rounded-xl bg-orange-50/80 border border-orange-200/50 text-[11px] text-zinc-600 text-center font-medium">
+                          <div className="px-3.5 py-2.5 rounded-md bg-orange-50/80 border border-orange-200/50 text-[11px] text-zinc-600 text-center font-medium">
                             💬 Canal de atendimento oficial com resposta imediata.
                           </div>
 
                           {/* QR Code opcional em telas maiores */}
                           {bio.chat_balloon_show_qrcode !== false && qrUrl && (
-                            <div className="hidden sm:flex flex-col items-center justify-center p-3 bg-white rounded-2xl border border-slate-100 shadow-xs">
-                              <div className="w-[110px] h-[110px] bg-white p-1 rounded-xl">
+                            <div className="hidden sm:flex flex-col items-center justify-center p-3 bg-white rounded-md border border-slate-100 shadow-xs">
+                              <div className="w-[110px] h-[110px] bg-white p-1 rounded-md">
                                 <img 
                                   src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}`}
                                   alt="WhatsApp QR Code"
                                   className="w-full h-full object-contain select-none pointer-events-none"
                                 />
                               </div>
-                              <span className="text-[10px] font-semibold text-slate-500 mt-1">Escaneie o código com a câmera</span>
+                              <span className="text-[11px] font-semibold text-slate-500 mt-1">Escaneie o código com a câmera</span>
                             </div>
                           )}
 
@@ -7052,7 +7087,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 }
                                 window.open(qrUrl, "_blank");
                               }}
-                              className="w-full py-4 px-6 rounded-full font-black text-xs sm:text-sm flex items-center justify-center gap-2 border-[2px] border-slate-950 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-lg text-white"
+                              className="w-full py-3.5 px-6 rounded-[6px] font-black text-xs sm:text-sm flex items-center justify-center gap-2 border-2 border-slate-950 transition-all duration-200 hover:brightness-110 active:scale-[0.98] cursor-pointer shadow-lg text-white"
                               style={{ 
                                 backgroundColor: brandThemeColor,
                                 color: bio.chat_balloon_text_color || "#FFFFFF"
@@ -7075,18 +7110,18 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
       {/* Elegant Custom Alert Modal */}
       {customAlert && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 animate-fade-in" onClick={() => setCustomAlert(null)}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in" onClick={() => setCustomAlert(null)}>
           <div 
-            className={`w-full max-w-sm rounded-[2rem] border overflow-hidden shadow-lg p-6 flex flex-col items-center text-center gap-4 animate-scale-up ${
-              theme === 'dark' 
-                ? 'bg-zinc-950 border-zinc-800 text-white' 
+            className={`w-full max-w-sm rounded-lg border overflow-hidden shadow-2xl p-6 flex flex-col items-center text-center gap-4 animate-scale-up ${
+              theme === 'dark' || theme === 'glass'
+                ? 'bg-[#131315] border-[#26262A] text-white' 
                 : 'bg-white border-slate-200 text-slate-900'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Elegant Header with Warn Icon */}
-            <div className="w-14 h-14 rounded-full flex items-center justify-center bg-amber-500/10 border border-amber-500/20 text-amber-500 animate-pulse">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            {/* Header with Warn Icon */}
+            <div className="w-12 h-12 rounded-md flex items-center justify-center bg-amber-500/10 border border-amber-500/20 text-amber-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
@@ -7102,7 +7137,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
             
             <button
               onClick={() => setCustomAlert(null)}
-              className="w-full py-3 px-4 rounded-xl text-white font-bold text-sm shadow-md transition-all hover:brightness-110 active:scale-[0.98] cursor-pointer"
+              className="w-full py-3 px-4 rounded-[6px] text-white font-bold text-sm shadow-md transition-all hover:brightness-110 active:scale-[0.98] cursor-pointer"
               style={{ backgroundColor: brandColor }}
             >
               Entendido

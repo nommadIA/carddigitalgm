@@ -206,7 +206,7 @@ const Market = () => {
   const [isListening, setIsListening] = useState(false);
   const [processingVoice, setProcessingVoice] = useState(false);
 
-  // Lock body scroll when any modal is open
+  // Lock body scroll & Escape key dismissal when any modal is open
   useEffect(() => {
     const isAnyModalOpen = topUpModalOpen || showFinalizeConfirm || showResetConfirm || showDeleteHistoryConfirm || showDeleteListConfirm || !!shareData;
     if (isAnyModalOpen) {
@@ -214,8 +214,20 @@ const Market = () => {
     } else {
       document.body.style.overflow = 'unset';
     }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (topUpModalOpen) setTopUpModalOpen(false);
+        else if (showFinalizeConfirm) setShowFinalizeConfirm(false);
+        else if (showResetConfirm) setShowResetConfirm(false);
+        else if (showDeleteHistoryConfirm) setShowDeleteHistoryConfirm(null);
+        else if (showDeleteListConfirm) setShowDeleteListConfirm(null);
+        else if (shareData) setShareData(null);
+      }
+    };
+    if (isAnyModalOpen) window.addEventListener('keydown', onKeyDown);
     return () => {
       document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [topUpModalOpen, showFinalizeConfirm, showResetConfirm, showDeleteHistoryConfirm, showDeleteListConfirm, shareData]);
 
@@ -1024,33 +1036,41 @@ const Market = () => {
        <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
        <SectionDivider label="Resumo Financeiro" />
        <Grid cols={1}>
-           <div className="relative rounded-2xl border border-white/10 apple-glass-refraction gm-card p-0 overflow-hidden">
-              <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
+           <div className="relative rounded-lg border border-[#26262A] bg-[#131315] p-0 overflow-hidden">
+              <div className="p-5 sm:p-6 flex flex-col md:flex-row justify-between items-center gap-5 relative z-10">
                  <div>
-                    <p className="text-xs opacity-70 uppercase tracking-widest font-bold mb-1 text-slate-400">Saldo Disponível</p>
-                    <div className="flex items-center justify-center sm:justify-start gap-4">
-                        <div className="text-4xl font-black tracking-tight text-[var(--gm-primary)]">
+                    <p className="text-[11px] font-mono uppercase tracking-[0.14em] font-semibold mb-1.5 text-[#8B8B92]">Saldo Disponível</p>
+                    <div className="flex items-center justify-center sm:justify-start gap-3.5">
+                        <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums text-[var(--gm-primary)]">
                             {CURRENCY_FORMATTER.format(availableBalanceDisplay)}
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={() => setTopUpModalOpen(true)} className="gm-btn gm-btn-icon gm-btn-soft shadow-none border border-white/10" title="Adicionar Saldo">
-                                <Plus size={22} />
+                            <button
+                              type="button"
+                              onClick={() => setTopUpModalOpen(true)}
+                              className="w-10 h-10 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-[#F2F2F3] flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                              title="Adicionar Saldo"
+                              aria-label="Adicionar Saldo"
+                            >
+                                <Plus size={18} />
                             </button>
                             {walletBalance > 0 && (
-                                <button 
-                                    onClick={() => setShowResetConfirm(true)} 
-                                    className="h-10 w-10 rounded-xl bg-[var(--gm-primary)] hover:brightness-110 text-white transition-all flex items-center justify-center shrink-0 shadow-none border border-[var(--gm-primary)]/30 cursor-pointer"
+                                <button
+                                    type="button"
+                                    onClick={() => setShowResetConfirm(true)}
+                                    className="h-10 w-10 rounded-[6px] bg-[#1B1B1E] hover:bg-red-500/15 text-[#F2F2F3] hover:text-red-400 transition-colors flex items-center justify-center shrink-0 border border-[#26262A] hover:border-red-500/40 cursor-pointer"
                                     title="Zerar Saldo"
+                                    aria-label="Zerar Saldo"
                                 >
-                                    <Trash2 size={18} className="text-white" />
+                                    <Trash2 size={16} />
                                 </button>
                             )}
                         </div>
                      </div>
                  </div>
-                 <div className="text-center md:text-right barra p-4 rounded-xl border border-white/10 min-w-[180px] shadow-none">
-                     <p className="text-xs opacity-70 uppercase tracking-widest font-bold mb-1 text-slate-400">Total da Lista</p>
-                     <div className="text-2xl font-bold text-white">{CURRENCY_FORMATTER.format(totalListValue)}</div>
+                 <div className="text-center md:text-right bg-[#0B0B0C] px-5 py-4 rounded-md border border-[#26262A] min-w-[190px]">
+                     <p className="text-[11px] font-mono uppercase tracking-[0.14em] font-semibold mb-1 text-[#8B8B92]">Total da Lista</p>
+                     <div className="text-2xl font-bold tabular-nums text-[#F2F2F3]">{CURRENCY_FORMATTER.format(totalListValue)}</div>
                  </div>
               </div>
            </div>
@@ -1060,16 +1080,16 @@ const Market = () => {
 
        {showHistory ? (
            <Grid cols={1}>
-               <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-6 overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_32px_0_rgba(0,0,0,0.25)]">
-                   <div className="text-lg font-bold text-white mb-5 relative z-10">Histórico de Gastos Mensais</div>
+               <div className="relative rounded-lg border border-[#26262A] bg-[#131315] p-5 sm:p-6 overflow-hidden">
+                   <div className="text-lg font-bold text-[#F2F2F3] mb-5">Histórico de Gastos Mensais</div>
                    {historyLoading ? (
                        <div className="flex justify-center py-12">
-                           <Loader2 size={32} className="animate-spin text-slate-500" />
+                           <Loader2 size={28} className="animate-spin text-[#8B8B92]" />
                        </div>
                    ) : history.length === 0 ? (
-                       <div className="text-center opacity-60 py-12 border border-dashed border-white/10 rounded-xl bg-black/20">
-                           <History size={48} className="mb-4 opacity-50 mx-auto" />
-                           <p>Nenhum histórico de gastos encontrado.</p>
+                       <div className="text-center text-[#8B8B92] py-12 border border-dashed border-[#26262A] rounded-md bg-[#0B0B0C]">
+                           <History size={40} className="mb-3 opacity-60 mx-auto" />
+                           <p className="text-sm">Nenhum histórico de gastos encontrado.</p>
                        </div>
                    ) : (
                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1077,72 +1097,75 @@ const Market = () => {
                                const [year, month] = h.month.split("-");
                                const monthName = new Date(Number(year), Number(month) - 1).toLocaleString('pt-BR', { month: 'long' });
                                return (
-                                   <div key={h.month} className="p-5 rounded-2xl gm-card fora border border-white/10 hover:border-[var(--gm-primary)]/40 transition-all flex flex-col relative shadow-none">
-                                       <div className="flex justify-between items-start mb-2 pr-14">
-                                           <div className="flex items-center gap-2 text-slate-400">
+                                   <div key={h.month} className="p-5 rounded-lg bg-[#0B0B0C] border border-[#26262A] hover:border-[#3F3F46] transition-colors flex flex-col relative">
+                                       <div className="flex justify-between items-start mb-2 pr-12">
+                                           <div className="flex items-center gap-2 text-[#8B8B92]">
                                                <button
+                                                   type="button"
                                                    onClick={(e) => {
                                                        e.stopPropagation();
                                                        toggleMonth(h.month);
                                                    }}
-                                                   className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-[var(--gm-primary)]"
+                                                   className="w-8 h-8 flex items-center justify-center hover:bg-[#1B1B1E] rounded-[4px] transition-colors text-[var(--gm-primary)] cursor-pointer"
                                                >
-                                                   <ChevronDown size={18} className={`transition-transform duration-300 ${expandedMonths.has(h.month) ? "rotate-180" : ""}`} />
+                                                   <ChevronDown size={16} className={`transition-transform duration-150 ${expandedMonths.has(h.month) ? "rotate-180" : ""}`} />
                                                </button>
-                                               <Calendar size={16} />
-                                               <span className="text-sm font-bold uppercase tracking-widest text-slate-200">{monthName} {year}</span>
+                                               <Calendar size={15} />
+                                               <span className="text-xs font-bold uppercase tracking-wider text-[#F2F2F3]">{monthName} {year}</span>
                                            </div>
-                                           <div className="text-xs barra border border-white/10 px-2.5 py-1 rounded-lg font-bold text-slate-300 shadow-none">{h.count} compras</div>
+                                           <div className="text-[11px] font-mono bg-[#1B1B1E] border border-[#26262A] px-2.5 py-1 rounded-[4px] font-semibold text-[#F2F2F3] whitespace-nowrap">{h.count} compras</div>
                                        </div>
-                                       <div className="text-3xl font-black text-white mb-4">
+                                       <div className="text-2xl sm:text-3xl font-black tabular-nums text-[#F2F2F3] mb-4">
                                            {CURRENCY_FORMATTER.format(h.total)}
                                        </div>
                                        
                                        {/* Lista detalhada das compras do mês */}
                                        {expandedMonths.has(h.month) && (
-                                           <div className="flex flex-col gap-2 mt-2 pt-4 border-t border-white/10">
-                                               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Relação de Compras</h4>
+                                           <div className="flex flex-col gap-2 mt-2 pt-4 border-t border-[#26262A]">
+                                               <h4 className="text-[11px] font-mono font-semibold text-[#8B8B92] uppercase tracking-wider mb-1">Relação de Compras</h4>
                                            {h.lists.map(list => (
-                                               <div key={list.id} className="flex flex-col bg-black/30 p-3.5 rounded-xl border border-white/5 relative group shadow-none">
+                                               <div key={list.id} className="flex flex-col bg-[#131315] p-3.5 rounded-md border border-[#26262A] relative group">
                                                    <div className="flex justify-between items-center pr-20">
                                                        <div className="flex flex-col">
-                                                           <span className="text-white/90 font-bold text-sm">{new Date(list.created_at).toLocaleDateString('pt-BR')}</span>
-                                                           <span className="text-xs text-slate-400 mt-0.5">{list.note || 'Compra no mercado'}</span>
+                                                           <span className="text-[#F2F2F3] font-bold text-sm tabular-nums">{new Date(list.created_at).toLocaleDateString('pt-BR')}</span>
+                                                           <span className="text-xs text-[#8B8B92] mt-0.5">{list.note || 'Compra no mercado'}</span>
                                                        </div>
-                                                       <span className="font-black text-[var(--gm-primary)] text-base">{CURRENCY_FORMATTER.format(Math.abs(list.amount))}</span>
+                                                       <span className="font-bold tabular-nums text-[var(--gm-primary)] text-base">{CURRENCY_FORMATTER.format(Math.abs(list.amount))}</span>
                                                    </div>
                                                    
                                                    {list.items && list.items.length > 0 && (
-                                                       <div className="mt-3 pt-3 border-t border-white/5 flex flex-col gap-1.5">
+                                                       <div className="mt-3 pt-3 border-t border-[#26262A] flex flex-col gap-1.5">
                                                            {list.items.map((item: any, idx: number) => (
-                                                               <div key={idx} className="flex justify-between items-center text-xs text-slate-300">
+                                                               <div key={idx} className="flex justify-between items-center text-xs text-[#8B8B92]">
                                                                    <span>{item.quantity}x {item.name}</span>
-                                                                   <span className="font-medium text-slate-200">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
+                                                                   <span className="font-medium tabular-nums text-[#F2F2F3]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
                                                                </div>
                                                            ))}
                                                        </div>
                                                    )}
 
-                                                   <div className="absolute right-2 top-3 flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                   <div className="absolute right-2.5 top-3 flex items-center gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                        <button 
+                                                           type="button"
                                                            onClick={(e) => {
                                                                e.stopPropagation();
                                                                handleShareList(list);
                                                            }}
-                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-white transition-colors border border-[var(--gm-primary)]/20 shadow-none"
+                                                           className="w-8 h-8 flex items-center justify-center rounded-[4px] bg-[#1B1B1E] text-[var(--gm-primary)] hover:bg-[var(--gm-primary)] hover:text-[#0B0B0C] transition-colors border border-[#26262A] cursor-pointer"
                                                            title="Compartilhar esta compra"
                                                        >
                                                            <Share2 size={14} />
                                                        </button>
                                                        <button 
+                                                           type="button"
                                                            onClick={(e) => {
                                                                e.stopPropagation();
                                                                setShowDeleteListConfirm(list.id);
                                                            }}
-                                                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--gm-primary)] text-white hover:brightness-110 transition-colors shadow-none border border-[var(--gm-primary)]/30 cursor-pointer"
+                                                           className="w-8 h-8 flex items-center justify-center rounded-[4px] bg-[#1B1B1E] text-red-400 hover:bg-red-500/20 transition-colors border border-[#26262A] hover:border-red-500/40 cursor-pointer"
                                                            title="Excluir esta compra"
                                                        >
-                                                           <Trash2 size={14} className="text-white" />
+                                                           <Trash2 size={14} />
                                                        </button>
                                                    </div>
                                                </div>
@@ -1151,14 +1174,15 @@ const Market = () => {
                                        )}
 
                                         <button 
+                                            type="button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setShowDeleteHistoryConfirm(h.month);
                                             }}
-                                            className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--gm-primary)] text-white hover:brightness-110 transition-colors z-20 shadow-none border border-[var(--gm-primary)]/30 cursor-pointer"
+                                            className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-[4px] bg-[#1B1B1E] text-red-400 hover:bg-red-500/20 hover:border-red-500/40 transition-colors z-20 border border-[#26262A] cursor-pointer"
                                             title="Excluir este mês"
                                         >
-                                            <Trash2 size={18} className="text-white" />
+                                            <Trash2 size={15} />
                                         </button>
                                    </div>
                                );
@@ -1170,13 +1194,13 @@ const Market = () => {
        ) : (
            <Grid cols={1} className="gap-6">
                 {/* Add Item Form */}
-                <div className="gm-card fora p-6 rounded-2xl border border-white/10 !overflow-visible !contain-none relative z-30 shadow-none">
+                <div className="p-6 rounded-lg bg-[#131315] border border-[#26262A] !overflow-visible !contain-none relative z-30 shadow-none">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                         <div className="text-lg font-bold text-white flex items-center gap-2">
                             <span>Adicionar Item</span>
                         </div>
                         {voiceStatusText && (
-                            <div className="text-xs px-3 py-1.5 rounded-lg bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 font-bold flex items-center gap-2 animate-pulse">
+                            <div className="text-xs px-3 py-1.5 rounded-[4px] bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 font-bold flex items-center gap-2 animate-pulse">
                                 <span className="inline-block w-2 h-2 rounded-full bg-[var(--gm-primary)]"></span>
                                 {voiceStatusText}
                             </div>
@@ -1185,7 +1209,7 @@ const Market = () => {
 
                     <div className="flex flex-col gap-5">
                         {/* 4 Voice Commands Section */}
-                        <div className="w-full barra p-4 rounded-xl border border-white/10">
+                        <div className="w-full bg-[#0B0B0C] p-4 rounded-md border border-[#26262A]">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                                 <span className="text-xs uppercase tracking-wider font-bold text-slate-300 flex items-center gap-1.5">
                                     <Mic size={15} className="text-[var(--gm-primary)]" />
@@ -1358,17 +1382,17 @@ const Market = () => {
                                     <label className="gm-label mb-1.5 flex items-center justify-between">
                                         <span>Produto (1. Alimento / Item)</span>
                                         {voiceStep === 'product' && (
-                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">● Etapa 1 Ativa</span>
+                                            <span className="text-[11px] text-[var(--gm-primary)] font-bold">● Etapa 1 Ativa</span>
                                         )}
                                     </label>
                                     <div className="relative">
                                         <input 
                                             ref={nameInputRef}
                                             type="text"
-                                            className={`gm-input w-full h-12 pr-10 rounded-xl shadow-none bg-black/30 transition-all ${
+                                            className={`w-full h-11 px-3.5 pr-10 rounded-[4px] bg-[#0B0B0C] text-[#F2F2F3] placeholder-[#8B8B92] border transition-colors outline-none ${
                                                 voiceStep === 'product' 
-                                                    ? 'border-[var(--gm-primary)] ring-1 ring-[var(--gm-primary)]/50' 
-                                                    : 'border-white/10'
+                                                    ? 'border-[var(--gm-primary)]' 
+                                                    : 'border-[#26262A] focus:border-[var(--gm-primary)]'
                                             }`} 
                                             value={newItemName} 
                                             onChange={e => handleProductNameChange(e.target.value)}
@@ -1390,32 +1414,31 @@ const Market = () => {
                                                     setVoiceStep('product');
                                                     nameInputRef.current?.focus();
                                                 }}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-[4px] flex items-center justify-center text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E] cursor-pointer"
                                                 title="Apagar produto e retornar à etapa 1"
                                             >
-                                                <X size={16} />
+                                                <X size={15} />
                                             </button>
                                         )}
                                     </div>
 
-                                    {/* Modal de Sugestões flutuante fora do card com Glass Blur */}
                                     {showProductSuggestions && newItemName.trim().length > 0 && productSuggestions.length > 0 && (
-                                        <div className="absolute left-0 right-0 top-full mt-2 fora border border-white/15 rounded-xl z-[9999] p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar shadow-none">
-                                            <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-[var(--gm-primary)] uppercase barra rounded-lg flex items-center justify-between mb-1 border border-white/10">
+                                        <div className="absolute left-0 right-0 top-full mt-2 bg-[#131315] border border-[#26262A] rounded-md z-[9999] p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar shadow-xl">
+                                            <div className="px-3 py-1.5 text-[11px] font-mono font-bold tracking-wider text-[var(--gm-primary)] uppercase bg-[#0B0B0C] rounded-[4px] flex items-center justify-between mb-1 border border-[#26262A]">
                                                 <span>Sugestões de Alimentos</span>
-                                                <span className="text-[9px] text-slate-400 font-normal">Toque para selecionar</span>
+                                                <span className="text-[11px] text-[#8B8B92] font-normal">Toque para selecionar</span>
                                             </div>
                                             {productSuggestions.map((suggestion) => (
                                                 <button
                                                     key={suggestion}
                                                     type="button"
-                                                    className="w-full text-left px-3.5 py-2.5 text-sm text-slate-100 hover:bg-white/10 hover:text-white transition-all rounded-lg flex items-center justify-between group cursor-pointer border border-transparent hover:border-white/10 shadow-none"
+                                                    className="w-full text-left px-3 py-2 text-sm text-[#F2F2F3] hover:bg-[#1B1B1E] transition-colors rounded-[4px] flex items-center justify-between group cursor-pointer border border-transparent hover:border-[#26262A]"
                                                     onClick={() => selectSuggestion(suggestion)}
                                                 >
-                                                    <span className="font-medium group-hover:translate-x-1 transition-transform flex items-center gap-2">
-                                                        <span className="text-[var(--gm-primary)]">🛒</span> {suggestion}
+                                                    <span className="font-medium flex items-center gap-2">
+                                                        {suggestion}
                                                     </span>
-                                                    <span className="text-[10px] text-[var(--gm-primary)] font-bold bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-md border border-[var(--gm-primary)]/20">
+                                                    <span className="text-[11px] text-[var(--gm-primary)] font-semibold bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25">
                                                         Selecionar
                                                     </span>
                                                 </button>
@@ -1428,7 +1451,7 @@ const Market = () => {
                                     <label className="gm-label mb-1.5 flex items-center justify-between">
                                         <span>Preço / Valor (2/3)</span>
                                         {(voiceStep === 'price' || voiceStep === 'value') && (
-                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">● Etapa 2/3</span>
+                                            <span className="text-[11px] text-[var(--gm-primary)] font-bold">● Etapa 2/3</span>
                                         )}
                                     </label>
                                     <div className="relative flex items-center">
@@ -1437,10 +1460,10 @@ const Market = () => {
                                             ref={priceInputRef}
                                             type="text" 
                                             inputMode="decimal"
-                                            className={`gm-input h-12 w-full !pl-11 pr-3 font-bold text-base md:text-lg text-white rounded-xl shadow-none bg-black/30 transition-all ${
+                                            className={`h-11 w-full !pl-10 pr-3 font-bold tabular-nums text-base text-[#F2F2F3] rounded-[4px] bg-[#0B0B0C] border transition-colors outline-none ${
                                                 voiceStep === 'price' || voiceStep === 'value'
-                                                    ? 'border-[var(--gm-primary)] ring-1 ring-[var(--gm-primary)]/50' 
-                                                    : 'border-white/10'
+                                                    ? 'border-[var(--gm-primary)]' 
+                                                    : 'border-[#26262A] focus:border-[var(--gm-primary)]'
                                             }`} 
                                             value={newItemPrice} 
                                             onChange={handlePriceChange}
@@ -1462,15 +1485,15 @@ const Market = () => {
                                     <label className="gm-label mb-1.5 flex items-center justify-between">
                                         <span>Qtd (4)</span>
                                         {voiceStep === 'quantity' && (
-                                            <span className="text-[10px] text-[var(--gm-primary)] font-bold animate-pulse">● Etapa 4</span>
+                                            <span className="text-[11px] text-[var(--gm-primary)] font-bold">● Etapa 4</span>
                                         )}
                                     </label>
                                     <input 
                                         ref={qtyInputRef}
-                                        className={`gm-input text-center h-12 w-full font-bold rounded-xl shadow-none bg-black/30 transition-all ${
+                                        className={`text-center h-11 w-full font-bold tabular-nums text-[#F2F2F3] rounded-[4px] bg-[#0B0B0C] border transition-colors outline-none ${
                                             voiceStep === 'quantity' 
-                                                ? 'border-[var(--gm-primary)] ring-1 ring-[var(--gm-primary)]/50' 
-                                                : 'border-white/10'
+                                                ? 'border-[var(--gm-primary)]' 
+                                                : 'border-[#26262A] focus:border-[var(--gm-primary)]'
                                         }`} 
                                         type="text" 
                                         inputMode="numeric"
@@ -1491,11 +1514,11 @@ const Market = () => {
                                 </div>
 
                                 <button 
-                                    className="forge-btn forge-btn--primary !h-[38px] w-full md:w-auto !px-6 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50" 
+                                    className="forge-btn forge-btn--primary !h-[44px] w-full md:w-auto !px-5 !rounded-[6px] text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 disabled:opacity-50" 
                                     onClick={handleAddItem} 
                                     disabled={addingItem}
                                 >
-                                    {addingItem ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} className="stroke-[2.5]" />}
+                                    {addingItem ? <Loader2 size={14} className="animate-spin" /> : <Plus size={15} className="stroke-[2.5]" />}
                                     <span>Adicionar</span>
                                 </button>
                             </div>
@@ -1503,46 +1526,47 @@ const Market = () => {
                     </div>
                 </div>
 
-                <div className="gm-card fora rounded-2xl border border-white/10 overflow-hidden shadow-none mt-8 p-0">
-                    <div className="barra p-5 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="text-lg font-bold text-white">Itens na Lista ({cartItems.length})</div>
+                <div className="bg-[#131315] rounded-lg border border-[#26262A] overflow-hidden mt-6 p-0">
+                    <div className="bg-[#131315] p-5 border-b border-[#26262A] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="text-lg font-bold text-[#F2F2F3]">Itens na Lista ({cartItems.length})</div>
                         {cartItems.length > 0 && (
                             <button 
-                                className="forge-btn forge-btn--primary !h-[38px] !px-6 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                                className="forge-btn forge-btn--primary !h-[40px] !px-5 !rounded-[6px] text-xs font-semibold uppercase tracking-wider flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0 disabled:opacity-50"
                                 onClick={() => setShowFinalizeConfirm(true)}
                                 disabled={finalizing}
                             >
-                                {finalizing ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} className="stroke-[2.5]" />}
-                                <span>FINALIZAR LISTA</span>
+                                {finalizing ? <Loader2 size={14} className="animate-spin" /> : <Check size={15} className="stroke-[2.5]" />}
+                                <span>Finalizar Lista</span>
                             </button>
                         )}
                     </div>
                     {cartItems.length === 0 ? (
-                        <div className="text-center opacity-60 py-12 flex flex-col items-center border border-dashed border-white/10 rounded-xl bg-black/20 m-6">
-                            <ShoppingCart size={48} className="mb-4 opacity-50 text-slate-400" />
-                            <p className="text-slate-300">Sua lista de compras está vazia.</p>
+                        <div className="text-center text-[#8B8B92] py-12 flex flex-col items-center border border-dashed border-[#26262A] rounded-md bg-[#0B0B0C] m-5">
+                            <ShoppingCart size={40} className="mb-3 opacity-50 text-[#8B8B92]" />
+                            <p className="text-sm text-[#8B8B92]">Sua lista de compras está vazia.</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-white/5">
+                        <div className="divide-y divide-[#26262A]">
                             {cartItems.map(item => (
-                                <div key={item.id} className="flex flex-col sm:flex-row justify-between sm:items-center py-4 px-6 hover:bg-white/[0.03] transition-colors gap-4">
+                                <div key={item.id} className="flex flex-col sm:flex-row justify-between sm:items-center py-4 px-5 hover:bg-[#1B1B1E] transition-colors gap-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-md bg-[#131315] border border-[#26262A] flex items-center justify-center font-bold text-slate-300 text-sm flex-shrink-0 shadow-none">
+                                        <div className="w-10 h-10 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center font-bold tabular-nums text-[#F2F2F3] text-sm flex-shrink-0">
                                             {item.quantity}x
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="font-bold text-base text-white truncate">{item.name}</div>
-                                            <div className="text-xs text-slate-400 mt-0.5">Unitário: {CURRENCY_FORMATTER.format(item.unit_price)}</div>
+                                            <div className="font-bold text-base text-[#F2F2F3] truncate">{item.name}</div>
+                                            <div className="text-xs text-[#8B8B92] mt-0.5 tabular-nums">Unitário: {CURRENCY_FORMATTER.format(item.unit_price)}</div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-between sm:justify-end gap-6">
-                                        <span className="font-bold text-xl text-[var(--gm-primary)]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
+                                    <div className="flex items-center justify-between sm:justify-end gap-5">
+                                        <span className="font-bold text-lg tabular-nums text-[var(--gm-primary)]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
                                         <button 
+                                            type="button"
                                             onClick={() => handleRemoveItem(item.id)} 
-                                            className="h-10 w-10 rounded-md bg-[#131315] hover:bg-[#1B1B1E] text-slate-300 hover:text-red-400 border border-[#26262A] hover:border-red-500/40 transition-all flex items-center justify-center shrink-0 shadow-sm cursor-pointer active:scale-95"
+                                            className="h-9 w-9 rounded-[4px] bg-[#1B1B1E] hover:bg-red-500/15 text-[#8B8B92] hover:text-red-400 border border-[#26262A] hover:border-red-500/40 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
                                             title="Remover item"
                                         >
-                                            <Trash2 size={16} />
+                                            <Trash2 size={15} />
                                         </button>
                                     </div>
                                 </div>
@@ -1561,30 +1585,40 @@ const Market = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/70 backdrop-blur-md" 
+                    className="absolute inset-0 bg-black/75 backdrop-blur-sm" 
                 />
                 <motion.div 
-                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    initial={{ scale: 0.96, opacity: 0, y: 12 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    className="gm-modal fora border border-white/12 relative w-full max-w-sm rounded-2xl p-7 shadow-none overflow-hidden" 
+                    exit={{ scale: 0.96, opacity: 0, y: 12 }}
+                    transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                    className="bg-[#131315] border border-[#26262A] relative w-full max-w-sm rounded-lg p-6 shadow-2xl overflow-hidden z-10" 
                     onClick={e => e.stopPropagation()}
                 >
-                    <div className="absolute top-0 left-0 w-full h-1 bg-[var(--gm-primary)]"></div>
+                    <div className="flex justify-end -mt-1 -mr-1 mb-2">
+                        <button
+                            type="button"
+                            onClick={() => setTopUpModalOpen(false)}
+                            className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center transition-colors cursor-pointer"
+                            aria-label="Fechar"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
                     
                     <div className="flex flex-col items-center text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 flex items-center justify-center text-[var(--gm-primary)] mb-5 shadow-none">
-                            <Wallet size={30} />
+                        <div className="w-14 h-14 rounded-lg bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/25 flex items-center justify-center text-[var(--gm-primary)] mb-4">
+                            <Wallet size={26} />
                         </div>
                         
-                        <h3 className="text-2xl font-black text-white mb-1.5">Adicionar Saldo</h3>
-                        <p className="text-sm text-slate-400 mb-6">Insira o valor para recarregar sua carteira.</p>
+                        <h3 className="text-xl font-bold text-[#F2F2F3] mb-1">Adicionar Saldo</h3>
+                        <p className="text-xs text-[#8B8B92] mb-5">Insira o valor para recarregar sua carteira.</p>
                         
-                        <div className="relative w-full mb-6">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-[var(--gm-primary)]">R$</span>
+                        <div className="relative w-full mb-5">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[var(--gm-primary)]">R$</span>
                             <input 
                                 type="number" 
-                                className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-14 pr-6 text-3xl font-black text-white focus:outline-none focus:border-[var(--gm-primary)] transition-all text-center shadow-none" 
+                                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] py-3.5 pl-12 pr-4 text-2xl font-bold tabular-nums text-[#F2F2F3] focus:outline-none focus:border-[var(--gm-primary)] transition-colors text-center" 
                                 value={topUpAmount} 
                                 onChange={e => setTopUpAmount(e.target.value)} 
                                 onFocus={(e) => e.target.select()}
@@ -1593,19 +1627,27 @@ const Market = () => {
                             />
                         </div>
                         
-                        <div className="grid grid-cols-1 gap-3 w-full">
+                        <div className="flex flex-col gap-2.5 w-full">
                             <button 
-                                className="w-full h-12 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] transition-all cursor-pointer active:scale-95 disabled:opacity-50" 
+                                className="w-full h-11 rounded-[6px] bg-[var(--gm-primary,#FE540B)] hover:brightness-110 text-[#0B0B0C] border border-[var(--gm-primary,#FE540B)] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.96] transition-[filter,transform] duration-150 cursor-pointer whitespace-nowrap disabled:opacity-50" 
                                 onClick={handleTopUp}
                                 disabled={toppingUp}
                             >
-                                {toppingUp ? <Loader2 size={20} className="animate-spin text-[#0B0B0C] mx-auto" /> : "CONFIRMAR RECARGA"}
+                                {toppingUp ? (
+                                    <Loader2 size={16} className="animate-spin text-[#0B0B0C] shrink-0" />
+                                ) : (
+                                    <>
+                                        <Check size={15} strokeWidth={2.8} className="text-[#0B0B0C] shrink-0" />
+                                        <span>Confirmar Recarga</span>
+                                    </>
+                                )}
                             </button>
                             <button 
-                                className="w-full h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95" 
+                                className="w-full h-10 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#1B1B1E] hover:bg-[#26262A] text-[#F2F2F3] text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.96] transition-[background-color,border-color,transform] duration-150 cursor-pointer whitespace-nowrap" 
                                 onClick={() => setTopUpModalOpen(false)}
                             >
-                                CANCELAR
+                                <X size={14} className="shrink-0" />
+                                <span>Cancelar</span>
                             </button>
                         </div>
                     </div>
@@ -1621,37 +1663,38 @@ const Market = () => {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/70 backdrop-blur-md"
+                                className="absolute inset-0 bg-black/75 backdrop-blur-sm"
                             />
                             <motion.div 
-                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                initial={{ scale: 0.96, opacity: 0, y: 12 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                                className="gm-card fora w-full max-w-sm rounded-2xl overflow-hidden border border-white/12 relative z-10 animate-fade-in shadow-none p-0"
+                                exit={{ scale: 0.96, opacity: 0, y: 12 }}
+                                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                                className="bg-[#131315] w-full max-w-sm rounded-lg overflow-hidden border border-[#26262A] relative z-10 shadow-2xl p-6"
                                 onClick={e => e.stopPropagation()}
                             >
-                                <div className="p-7 text-center">
-                                    <div className="w-16 h-16 bg-[#F65A1A]/10 border border-[#F65A1A]/20 rounded-xl flex items-center justify-center mx-auto mb-5 shadow-none">
-                                        <Trash2 size={28} className="text-[#F65A1A]" />
+                                <div className="text-center">
+                                    <div className="w-12 h-12 bg-[var(--gm-primary,#FE540B)]/10 border border-[var(--gm-primary,#FE540B)]/25 rounded-md flex items-center justify-center mx-auto mb-4">
+                                        <Trash2 size={22} className="text-[var(--gm-primary,#FE540B)]" />
                                     </div>
-                                    <h3 className="text-2xl font-extrabold text-white mb-2.5">Excluir Compra?</h3>
-                                    <p className="text-slate-300 text-base mb-6 leading-relaxed">
+                                    <h3 className="text-lg font-bold text-[#F2F2F3] mb-2">Excluir Compra?</h3>
+                                    <p className="text-[#8B8B92] text-sm mb-6 leading-relaxed">
                                         Tem certeza que deseja excluir esta compra específica do histórico? Esta ação não pode ser desfeita.
                                     </p>
                                     
                                     <div className="flex gap-3">
                                         <button 
-                                            className="flex-1 h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
+                                            className="flex-1 h-10 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#1B1B1E] hover:bg-[#26262A] text-[#F2F2F3] text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap"
                                             onClick={() => setShowDeleteListConfirm(null)}
                                         >
                                             Voltar
                                         </button>
                                         <button 
-                                            className="flex-1 h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] disabled:opacity-50"
+                                            className="flex-1 h-10 rounded-[6px] bg-red-600 hover:bg-red-500 text-white border border-red-600 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
                                             onClick={() => handleDeleteList(showDeleteListConfirm)}
                                             disabled={historyLoading}
                                         >
-                                            {historyLoading ? <Loader2 className="animate-spin text-[#0B0B0C] mx-auto" size={18} /> : "Excluir"}
+                                            {historyLoading ? <Loader2 className="animate-spin text-white mx-auto" size={16} /> : "Excluir"}
                                         </button>
                                     </div>
                                 </div>
@@ -1668,40 +1711,39 @@ const Market = () => {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/70 backdrop-blur-md"
+                                className="absolute inset-0 bg-black/75 backdrop-blur-sm"
                                 onClick={() => setShowDeleteHistoryConfirm(null)}
                             />
                             <motion.div 
-                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                initial={{ scale: 0.96, opacity: 0, y: 12 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                                className="gm-card fora w-full max-w-sm rounded-2xl overflow-hidden border border-white/12 relative z-10 animate-fade-in shadow-none p-0"
+                                exit={{ scale: 0.96, opacity: 0, y: 12 }}
+                                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                                className="bg-[#131315] w-full max-w-sm rounded-lg overflow-hidden border border-[#26262A] relative z-10 shadow-2xl p-6"
                                 onClick={e => e.stopPropagation()}
                             >
-                                <div className="p-7 text-center">
-                                    <div className="w-16 h-16 bg-[#F65A1A]/10 border border-[#F65A1A]/20 rounded-xl flex items-center justify-center mx-auto mb-5 shadow-none">
-                                        <Trash2 size={28} className="text-[#F65A1A]" />
+                                <div className="text-center">
+                                    <div className="w-12 h-12 bg-[var(--gm-primary,#FE540B)]/10 border border-[var(--gm-primary,#FE540B)]/25 rounded-md flex items-center justify-center mx-auto mb-4">
+                                        <Trash2 size={22} className="text-[var(--gm-primary,#FE540B)]" />
                                     </div>
-                                    <h2 className="text-2xl font-extrabold text-white mb-2.5">Excluir Histórico?</h2>
-                                    <p className="text-slate-300 text-base mb-6 leading-relaxed">
-                                        Deseja excluir permanentemente todo o histórico de gastos deste mês? 
-                                        <br />
-                                        Esta ação não pode ser desfeita.
+                                    <h2 className="text-lg font-bold text-[#F2F2F3] mb-2">Excluir Histórico?</h2>
+                                    <p className="text-[#8B8B92] text-sm mb-6 leading-relaxed">
+                                        Deseja excluir permanentemente todo o histórico de gastos deste mês? Esta ação não pode ser desfeita.
                                     </p>
                                     
                                     <div className="flex gap-3">
                                         <button 
-                                            className="flex-1 h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
+                                            className="flex-1 h-10 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#1B1B1E] hover:bg-[#26262A] text-[#F2F2F3] text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap"
                                             onClick={() => setShowDeleteHistoryConfirm(null)}
                                         >
                                             Voltar
                                         </button>
                                         <button 
-                                            className="flex-1 h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(246,90,26,0.3)] disabled:opacity-50"
+                                            className="flex-1 h-10 rounded-[6px] bg-red-600 hover:bg-red-500 text-white border border-red-600 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
                                             onClick={() => handleDeleteHistoryMonth(showDeleteHistoryConfirm)}
                                             disabled={historyLoading}
                                         >
-                                            {historyLoading ? <Loader2 className="animate-spin text-[#0B0B0C] mx-auto" size={18} /> : "Excluir"}
+                                            {historyLoading ? <Loader2 className="animate-spin text-white mx-auto" size={16} /> : "Excluir"}
                                         </button>
                                     </div>
                                 </div>
@@ -1718,41 +1760,40 @@ const Market = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/70 backdrop-blur-md"
+                        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
                     />
                     <motion.div 
-                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        initial={{ scale: 0.96, opacity: 0, y: 12 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="gm-modal fora border border-white/12 relative w-full max-w-sm rounded-2xl p-7 shadow-none overflow-hidden"
+                        exit={{ scale: 0.96, opacity: 0, y: 12 }}
+                        transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                        className="bg-[#131315] border border-[#26262A] relative w-full max-w-sm rounded-lg p-6 shadow-2xl overflow-hidden z-10"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="absolute top-0 left-0 w-full h-1 bg-[#F65A1A]"></div>
-                        
                         <div className="flex flex-col items-center text-center">
-                            <div className="w-16 h-16 bg-[#F65A1A]/10 border border-[#F65A1A]/20 rounded-xl flex items-center justify-center mb-5 text-[#F65A1A] shadow-none">
-                                <ShoppingCart size={30} />
+                            <div className="w-12 h-12 bg-[var(--gm-primary,#FE540B)]/10 border border-[var(--gm-primary,#FE540B)]/25 rounded-md flex items-center justify-center mb-4 text-[var(--gm-primary,#FE540B)]">
+                                <ShoppingCart size={24} />
                             </div>
-                            <h3 className="text-2xl font-black text-white mb-2.5">Finalizar Compra?</h3>
-                            <p className="text-slate-300 mb-6 text-base leading-relaxed">
-                                Deseja finalizar esta lista no valor de <span className="text-[var(--gm-primary,#FE540B)] font-bold">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
+                            <h3 className="text-lg font-bold text-[#F2F2F3] mb-2">Finalizar Compra?</h3>
+                            <p className="text-[#8B8B92] mb-6 text-sm leading-relaxed">
+                                Deseja finalizar esta lista no valor de <span className="text-[var(--gm-primary,#FE540B)] font-bold tabular-nums">{CURRENCY_FORMATTER.format(totalListValue)}</span>?
                                 O valor será deduzido do seu saldo de mercado.
                             </p>
                             
-                            <div className="grid grid-cols-1 gap-3 w-full">
+                            <div className="flex flex-col gap-2.5 w-full">
                                 <button 
                                     onClick={handleFinalize}
                                     disabled={finalizing}
-                                    className="w-full h-12 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                                    className="w-full h-11 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
                                 >
-                                    {finalizing ? <Loader2 size={18} className="animate-spin text-current" /> : <Check size={18} className="text-current stroke-[3]" />}
-                                    SIM, FINALIZAR AGORA
+                                    {finalizing ? <Loader2 size={16} className="animate-spin text-current" /> : <Check size={16} className="text-current stroke-[2.5]" />}
+                                    <span>Sim, Finalizar Agora</span>
                                 </button>
                                 <button 
                                     onClick={() => setShowFinalizeConfirm(false)}
-                                    className="w-full h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
+                                    className="w-full h-10 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#1B1B1E] hover:bg-[#26262A] text-[#F2F2F3] text-xs font-semibold uppercase tracking-wider flex items-center justify-center transition-colors cursor-pointer whitespace-nowrap"
                                 >
-                                    CANCELAR
+                                    Cancelar
                                 </button>
                             </div>
                         </div>
@@ -1769,38 +1810,39 @@ const Market = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/70 backdrop-blur-md"
+                        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
                     />
                     <motion.div 
-                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                        initial={{ scale: 0.96, opacity: 0, y: 12 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="gm-card fora w-full max-w-sm rounded-2xl overflow-hidden border border-white/12 relative z-10 animate-fade-in shadow-none p-0"
+                        exit={{ scale: 0.96, opacity: 0, y: 12 }}
+                        transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                        className="bg-[#131315] w-full max-w-sm rounded-lg overflow-hidden border border-[#26262A] relative z-10 shadow-2xl p-6"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="p-7 text-center">
-                            <div className="w-16 h-16 bg-[var(--gm-primary,#FE540B)]/10 border border-[var(--gm-primary,#FE540B)]/20 rounded-xl flex items-center justify-center mx-auto mb-5 shadow-none">
-                                <Trash2 size={28} className="text-[var(--gm-primary,#FE540B)]" />
+                        <div className="text-center">
+                            <div className="w-12 h-12 bg-[var(--gm-primary,#FE540B)]/10 border border-[var(--gm-primary,#FE540B)]/25 rounded-md flex items-center justify-center mx-auto mb-4">
+                                <Trash2 size={22} className="text-[var(--gm-primary,#FE540B)]" />
                             </div>
-                            <h3 className="text-2xl font-extrabold text-white mb-2.5">Zerar Saldo?</h3>
-                            <p className="text-slate-300 text-base mb-6 leading-relaxed">
-                                Tem certeza que deseja zerar o seu saldo disponível de <span className="text-[var(--gm-primary,#FE540B)] font-bold">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
-                                <br/>Esta ação não pode ser desfeita.
+                            <h3 className="text-lg font-bold text-[#F2F2F3] mb-2">Zerar Saldo?</h3>
+                            <p className="text-[#8B8B92] text-sm mb-6 leading-relaxed">
+                                Tem certeza que deseja zerar o seu saldo disponível de <span className="text-[var(--gm-primary,#FE540B)] font-bold tabular-nums">{CURRENCY_FORMATTER.format(walletBalance)}</span>?
+                                Esta ação não pode ser desfeita.
                             </p>
                             
                             <div className="flex gap-3">
                                 <button 
                                     onClick={() => setShowResetConfirm(false)}
-                                    className="flex-1 h-11 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm active:scale-95"
+                                    className="flex-1 h-10 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#1B1B1E] hover:bg-[#26262A] text-[#F2F2F3] text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap"
                                 >
                                     Cancelar
                                 </button>
                                 <button 
                                     onClick={handleResetBalance}
                                     disabled={resettingBalance}
-                                    className="flex-1 h-11 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] disabled:opacity-50"
+                                    className="flex-1 h-10 rounded-[6px] bg-red-600 hover:bg-red-500 text-white border border-red-600 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
                                 >
-                                    {resettingBalance ? <Loader2 size={18} className="animate-spin text-current mx-auto" /> : "Zerar"}
+                                    {resettingBalance ? <Loader2 size={16} className="animate-spin text-current mx-auto" /> : "Zerar"}
                                 </button>
                             </div>
                         </div>
@@ -1811,29 +1853,34 @@ const Market = () => {
 
         {/* Share Options Modal */}
         {shareData && (
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={() => setShareData(null)}>
-            <div className="gm-modal fora border border-white/12 rounded-2xl w-full max-w-md overflow-hidden animate-slide-up shadow-none" onClick={e => e.stopPropagation()}>
-              <div className="p-5 border-b border-white/10 flex justify-between items-center barra">
-                <h3 className="text-xl font-extrabold text-white">Compartilhar {shareData.title}</h3>
-                <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white">
-                  <X size={20} />
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
+            <div className="bg-[#131315] border border-[#26262A] rounded-lg w-full max-w-md overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="p-5 border-b border-[#26262A] flex justify-between items-center bg-[#131315]">
+                <h3 className="text-base font-bold text-[#F2F2F3]">Compartilhar {shareData.title}</h3>
+                <button
+                  type="button"
+                  onClick={() => setShareData(null)}
+                  className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center transition-colors cursor-pointer"
+                  aria-label="Fechar"
+                >
+                  <X size={16} />
                 </button>
               </div>
               
-              <div className="p-5 space-y-3">
+              <div className="p-5 space-y-2.5">
                 <button 
                   onClick={() => {
                     openWhatsapp("", shareData.message);
                     setShareData(null);
                   }}
-                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
+                  className="w-full h-auto justify-start px-4 gap-3 py-3 bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/50 rounded-md transition-colors flex items-center cursor-pointer"
                 >
                   <div className="shrink-0">
-                    <WhatsAppIcon size={22} className="text-[#25D366]" />
+                    <WhatsAppIcon size={20} className="text-[#25D366]" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-[#F2F2F3] leading-tight">WhatsApp</p>
-                    <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Enviar diretamente para um contato</p>
+                    <p className="font-bold text-sm text-[#F2F2F3] leading-tight">WhatsApp</p>
+                    <p className="text-xs text-[#8B8B92] leading-tight mt-0.5">Enviar diretamente para um contato</p>
                   </div>
                 </button>
 
@@ -1842,14 +1889,14 @@ const Market = () => {
                     window.open(`mailto:?subject=${shareData.title}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                     setShareData(null);
                   }}
-                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
+                  className="w-full h-auto justify-start px-4 gap-3 py-3 bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/50 rounded-md transition-colors flex items-center cursor-pointer"
                 >
                   <div className="shrink-0">
-                    <Mail size={22} className="text-[var(--gm-primary,#FE540B)]" />
+                    <Mail size={20} className="text-[var(--gm-primary,#FE540B)]" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-[#F2F2F3] leading-tight">E-mail</p>
-                    <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Enviar por correio eletrônico</p>
+                    <p className="font-bold text-sm text-[#F2F2F3] leading-tight">E-mail</p>
+                    <p className="text-xs text-[#8B8B92] leading-tight mt-0.5">Enviar por correio eletrônico</p>
                   </div>
                 </button>
 
@@ -1863,14 +1910,14 @@ const Market = () => {
                       alert("Erro ao copiar texto.");
                     }
                   }}
-                  className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
+                  className="w-full h-auto justify-start px-4 gap-3 py-3 bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/50 rounded-md transition-colors flex items-center cursor-pointer"
                 >
                   <div className="shrink-0">
-                    <Copy size={22} className="text-[var(--gm-primary,#FE540B)]" />
+                    <Copy size={20} className="text-[var(--gm-primary,#FE540B)]" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-[#F2F2F3] leading-tight">Copiar Texto</p>
-                    <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Copiar para colar em outro lugar</p>
+                    <p className="font-bold text-sm text-[#F2F2F3] leading-tight">Copiar Texto</p>
+                    <p className="text-xs text-[#8B8B92] leading-tight mt-0.5">Copiar para colar em outro lugar</p>
                   </div>
                 </button>
 
@@ -1889,14 +1936,14 @@ const Market = () => {
                         }
                       }
                     }}
-                    className="w-full h-auto !justify-start !pl-4 gap-3 py-3.5 bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/40 rounded-md shadow-sm transition-all flex items-center cursor-pointer active:scale-[0.99]"
+                    className="w-full h-auto justify-start px-4 gap-3 py-3 bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/50 rounded-md transition-colors flex items-center cursor-pointer"
                   >
                     <div className="shrink-0">
-                      <Share2 size={22} className="text-[var(--gm-primary,#FE540B)]" />
+                      <Share2 size={20} className="text-[var(--gm-primary,#FE540B)]" />
                     </div>
                     <div className="text-left">
-                      <p className="font-bold text-[#F2F2F3] leading-tight">Outros Aplicativos</p>
-                      <p className="text-[11px] text-slate-400 leading-tight mt-0.5">Compartilhar via menu do sistema</p>
+                      <p className="font-bold text-sm text-[#F2F2F3] leading-tight">Outros Aplicativos</p>
+                      <p className="text-xs text-[#8B8B92] leading-tight mt-0.5">Compartilhar via menu do sistema</p>
                     </div>
                   </button>
                 )}

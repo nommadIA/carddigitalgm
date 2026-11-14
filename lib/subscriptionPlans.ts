@@ -345,9 +345,17 @@ export async function savePlansConfig(tenantId: string | null, config: Partial<P
     const existingBio = (currentSettings?.bio_config && typeof currentSettings.bio_config === "object")
       ? currentSettings.bio_config
       : {};
+    const existingPlansObj = ((currentSettings as any)?.app_plans_config && typeof (currentSettings as any).app_plans_config === "object")
+      ? (currentSettings as any).app_plans_config
+      : {};
+
+    const mergedPlansConfig = {
+      ...existingPlansObj,
+      ...updated,
+    };
 
     const payload = {
-      app_plans_config: updated,
+      app_plans_config: mergedPlansConfig,
       bio_config: {
         ...existingBio,
         plans_config: updated,

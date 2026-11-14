@@ -169,35 +169,50 @@ export default function NotificationCheckinModal({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const isGranted = diagnostics.permission === "granted";
 
   return (
-    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto no-scrollbar bg-black/50 backdrop-blur-xl animate-fade-in">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto no-scrollbar bg-black/75 backdrop-blur-sm animate-fade-in"
+    >
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        transition={{ duration: 0.2 }}
-        className="relative w-full max-w-4xl lg:max-w-5xl rounded-2xl border border-white/10 fora gm-modal apple-glass-refraction shadow-none overflow-hidden p-5 sm:p-7 md:p-8 text-slate-100 flex flex-col max-h-[92vh]"
+        exit={{ opacity: 0, scale: 0.96, y: 10 }}
+        transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+        className="relative w-full max-w-4xl rounded-lg border border-[#26262A] bg-[#131315] gm-modal shadow-2xl overflow-hidden p-5 sm:p-6 text-[#F2F2F3] flex flex-col max-h-[92vh]"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10 shrink-0 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] shadow-sm shrink-0">
-              <Radio size={24} className="animate-pulse" />
+        <div className="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-[#26262A] shrink-0 relative z-10">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-md bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] shrink-0">
+              <Radio size={20} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wider">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
                   Check-in de Notificações
                 </h3>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-[4px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
                   4 Estados
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-400 font-medium">
+              <p className="text-xs text-[#8B8B92] mt-0.5">
                 Auditoria e teste em tempo real: Aberto, Minimizado, Segundo Plano e Fechado
               </p>
             </div>
@@ -206,19 +221,20 @@ export default function NotificationCheckinModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-xl border border-white/10 bg-white/[0.03] hover:border-white/25 flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer"
+            aria-label="Fechar"
+            className="w-9 h-9 rounded-[4px] border border-[#26262A] bg-[#1B1B1E] hover:bg-[#26262A] hover:border-[#3F3F46] flex items-center justify-center text-[#8B8B92] hover:text-white transition-colors cursor-pointer shrink-0"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
         {/* Scrollable Content Body */}
         <div className="overflow-y-auto no-scrollbar space-y-5 pr-0.5 flex-1 relative z-10 text-left">
           
-          {/* PAINEL DE SAÚDE DO SISTEMA (RADAR DIAGNÓSTICO) */}
-          <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden space-y-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
-            <div className="flex items-center justify-between relative z-10">
-              <span className="text-[11px] font-black uppercase tracking-widest text-[var(--gm-primary)] flex items-center gap-2">
+          {/* PAINEL DE SAÚDE DO SISTEMA */}
+          <div className="relative rounded-md p-4 sm:p-5 border border-[#26262A] bg-[#0B0B0C] space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--gm-primary)] flex items-center gap-2">
                 <ShieldCheck size={15} />
                 Status do Ecossistema no Dispositivo
               </span>
@@ -226,55 +242,51 @@ export default function NotificationCheckinModal({
                 <button
                   type="button"
                   onClick={handleRequestPermission}
-                  className="text-[10.5px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg bg-[var(--gm-primary)] text-white hover:brightness-110 active:scale-95 transition-all shadow-none cursor-pointer"
+                  className="text-[11px] font-black uppercase tracking-wider px-3 h-8 rounded-[4px] bg-[var(--gm-primary)] text-[#0B0B0C] hover:brightness-110 active:scale-95 transition-colors cursor-pointer"
                 >
                   Permitir no Navegador
                 </button>
               )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 relative z-10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {/* Permissão */}
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-1.5">
-                <span className="text-[9.5px] font-semibold text-slate-400 uppercase tracking-wider">Permissão SO</span>
+              <div className="p-3 rounded-[4px] bg-[#131315] border border-[#26262A] flex flex-col gap-1.5">
+                <span className="text-[11px] font-semibold text-[#8B8B92] uppercase tracking-wider">Permissão SO</span>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      isGranted ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
+                    className={`w-2 h-2 rounded-full ${
+                      isGranted ? "bg-emerald-400" : "bg-amber-400"
                     }`}
                   />
-                  <span className="text-xs sm:text-sm font-black text-white">
+                  <span className="text-xs sm:text-sm font-bold text-white">
                     {isGranted ? "Concedida" : diagnostics.permission === "denied" ? "Bloqueada" : "Pendente"}
                   </span>
                 </div>
               </div>
 
               {/* Service Worker */}
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-1.5">
-                <span className="text-[9.5px] font-semibold text-slate-400 uppercase tracking-wider">Service Worker</span>
+              <div className="p-3 rounded-[4px] bg-[#131315] border border-[#26262A] flex flex-col gap-1.5">
+                <span className="text-[11px] font-semibold text-[#8B8B92] uppercase tracking-wider">Service Worker</span>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      diagnostics.serviceWorkerReady ? "bg-emerald-400 animate-pulse" : "bg-emerald-400"
-                    }`}
-                  />
-                  <span className="text-xs sm:text-sm font-black text-white">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="text-xs sm:text-sm font-bold text-white">
                     {diagnostics.serviceWorkerSupported ? "Ativo (v6)" : "Indisponível"}
                   </span>
                 </div>
               </div>
 
               {/* Som e Áudio */}
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-1.5">
-                <span className="text-[9.5px] font-semibold text-slate-400 uppercase tracking-wider">Toque Sonoro</span>
+              <div className="p-3 rounded-[4px] bg-[#131315] border border-[#26262A] flex flex-col gap-1.5">
+                <span className="text-[11px] font-semibold text-[#8B8B92] uppercase tracking-wider">Toque Sonoro</span>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`w-2.5 h-2.5 rounded-full ${
+                      className={`w-2 h-2 rounded-full ${
                         !diagnostics.soundMuted ? "bg-emerald-400" : "bg-amber-400"
                       }`}
                     />
-                    <span className="text-xs sm:text-sm font-black text-white truncate max-w-[80px]">
+                    <span className="text-xs sm:text-sm font-bold text-white truncate max-w-[80px]">
                       {!diagnostics.soundMuted ? "Ligado" : "Mudo"}
                     </span>
                   </div>
@@ -282,19 +294,19 @@ export default function NotificationCheckinModal({
                     type="button"
                     onClick={() => playNotificationSound()}
                     title="Testar som"
-                    className="text-slate-400 hover:text-white p-1 hover:bg-white/10 rounded-lg transition-all"
+                    className="text-[#8B8B92] hover:text-white p-1.5 hover:bg-[#1B1B1E] rounded-[4px] transition-colors cursor-pointer"
                   >
                     <Volume2 size={15} />
                   </button>
                 </div>
               </div>
 
-              {/* Modo de Tela (PWA / Navegador) */}
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex flex-col gap-1.5">
-                <span className="text-[9.5px] font-semibold text-slate-400 uppercase tracking-wider">Ambiente</span>
+              {/* Modo de Tela */}
+              <div className="p-3 rounded-[4px] bg-[#131315] border border-[#26262A] flex flex-col gap-1.5">
+                <span className="text-[11px] font-semibold text-[#8B8B92] uppercase tracking-wider">Ambiente</span>
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                  <span className="text-xs sm:text-sm font-black text-white truncate">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="text-xs sm:text-sm font-bold text-white truncate">
                     {diagnostics.isStandalone ? "PWA Standalone" : diagnostics.isIOS ? "iOS Safari" : "Web Desktop"}
                   </span>
                 </div>
@@ -302,222 +314,214 @@ export default function NotificationCheckinModal({
             </div>
           </div>
 
-          {/* OS 4 CARDS DE CHECK-IN / TESTE (EXPANDIDOS EM GRID 2 COLUNAS) */}
-          <div className="space-y-3 pt-1">
-            <h4 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          {/* OS 4 CARDS DE CHECK-IN */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#CBD5E1] flex items-center gap-2">
               <Layers size={15} className="text-[var(--gm-primary)]" />
-              Executar Testes Práticos por Estado (Horizontalmente Expandido)
+              Testes Práticos por Estado
             </h4>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* ESTADO 1: APP ABERTO */}
-              <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
-                <div className="space-y-1.5 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {/* ESTADO 1 */}
+              <div className="rounded-md p-4 sm:p-5 border border-[#26262A] bg-[#0B0B0C] flex flex-col justify-between gap-4">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                      <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                      <span className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
                         1. App Aberto
                       </span>
                     </div>
-                    <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 uppercase shrink-0">
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-[4px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase shrink-0">
                       Primeiro Plano
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Dispara banner de alerta Apple Glass na tela, áudio sonoro e vibração do smartphone, atualizando o sino instantaneamente.
+                  <p className="text-xs text-[#8B8B92] leading-relaxed">
+                    Dispara banner de alerta na tela, áudio sonoro e vibração do smartphone, atualizando o sino instantaneamente.
                   </p>
                 </div>
 
-                <div className="pt-1 relative z-10">
-                  <button
-                    type="button"
-                    onClick={handleTest1}
-                    disabled={testState1 === "running"}
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 active:scale-[0.98] border border-white/15 text-xs font-bold text-white flex items-center justify-center gap-2 transition-all cursor-pointer shadow-none"
-                  >
-                    {testState1 === "success" ? (
-                      <>
-                        <Check size={15} className="text-emerald-400 stroke-[3]" />
-                        <span>Disparado com Sucesso!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play size={14} className="text-[var(--gm-primary)] fill-[var(--gm-primary)]" />
-                        <span>Testar em Primeiro Plano</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleTest1}
+                  disabled={testState1 === "running"}
+                  className="w-full h-10 px-4 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-xs font-bold uppercase tracking-wider text-[#F2F2F3] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  {testState1 === "success" ? (
+                    <>
+                      <Check size={15} className="text-emerald-400 stroke-[2.5]" />
+                      <span>Disparado com Sucesso</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} className="text-[var(--gm-primary)] fill-[var(--gm-primary)]" />
+                      <span>Testar em Primeiro Plano</span>
+                    </>
+                  )}
+                </button>
               </div>
 
-              {/* ESTADO 2: APP MINIMIZADO */}
-              <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
-                <div className="space-y-1.5 relative z-10">
+              {/* ESTADO 2 */}
+              <div className="rounded-md p-4 sm:p-5 border border-[#26262A] bg-[#0B0B0C] flex flex-col justify-between gap-4">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
-                      <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                      <span className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
                         2. App Minimizado
                       </span>
                     </div>
-                    <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25 uppercase shrink-0">
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-[4px] bg-amber-500/15 text-amber-400 border border-amber-500/30 uppercase shrink-0">
                       Janela Oculta
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className="text-xs text-[#8B8B92] leading-relaxed">
                     Testa se o sistema operacional exibe o balão/banner nativo fora do navegador enquanto a janela estiver minimizada.
                   </p>
                 </div>
 
-                <div className="pt-1 relative z-10">
-                  <button
-                    type="button"
-                    onClick={handleTest2}
-                    disabled={testState2 === "countdown"}
-                    className={`w-full px-4 py-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-none ${
-                      testState2 === "countdown"
-                        ? "bg-amber-500/20 border-amber-500/40 text-amber-300 animate-pulse"
-                        : testState2 === "success"
-                        ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                        : "bg-white/10 hover:bg-white/15 border-white/15 text-white active:scale-[0.98]"
-                    }`}
-                  >
-                    {testState2 === "countdown" ? (
-                      <>
-                        <Clock size={15} className="animate-spin" />
-                        <span>Minimize a janela ({countdown2}s)...</span>
-                      </>
-                    ) : testState2 === "success" ? (
-                      <>
-                        <Check size={15} className="text-emerald-400 stroke-[3]" />
-                        <span>Notificação Entregue!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play size={14} className="text-amber-400 fill-amber-400" />
-                        <span>Testar Minimizado (5s)</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleTest2}
+                  disabled={testState2 === "countdown"}
+                  className={`w-full h-10 px-4 rounded-[6px] border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+                    testState2 === "countdown"
+                      ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                      : testState2 === "success"
+                      ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
+                      : "bg-[#1B1B1E] hover:bg-[#26262A] border-[#26262A] hover:border-[#3F3F46] text-[#F2F2F3]"
+                  }`}
+                >
+                  {testState2 === "countdown" ? (
+                    <>
+                      <Clock size={15} className="animate-spin" />
+                      <span>Minimize a janela ({countdown2}s)...</span>
+                    </>
+                  ) : testState2 === "success" ? (
+                    <>
+                      <Check size={15} className="text-emerald-400 stroke-[2.5]" />
+                      <span>Notificação Entregue</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} className="text-amber-400 fill-amber-400" />
+                      <span>Testar Minimizado (5s)</span>
+                    </>
+                  )}
+                </button>
               </div>
 
-              {/* ESTADO 3: SEGUNDO PLANO */}
-              <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
-                <div className="space-y-1.5 relative z-10">
+              {/* ESTADO 3 */}
+              <div className="rounded-md p-4 sm:p-5 border border-[#26262A] bg-[#0B0B0C] flex flex-col justify-between gap-4">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-400 shrink-0" />
-                      <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">
+                      <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0" />
+                      <span className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
                         3. Em Segundo Plano
                       </span>
                     </div>
-                    <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/25 uppercase shrink-0">
-                      Tela Bloqueada / Aba Oculta
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-[4px] bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase shrink-0">
+                      Aba Oculta
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className="text-xs text-[#8B8B92] leading-relaxed">
                     O Service Worker gerencia a sincronização de alarmes e dispara mesmo com o smartphone bloqueado ou em outra aba.
                   </p>
                 </div>
 
-                <div className="pt-1 relative z-10">
-                  <button
-                    type="button"
-                    onClick={handleTest3}
-                    disabled={testState3 === "countdown"}
-                    className={`w-full px-4 py-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-none ${
-                      testState3 === "countdown"
-                        ? "bg-blue-500/20 border-blue-500/40 text-blue-300 animate-pulse"
-                        : testState3 === "success"
-                        ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                        : "bg-white/10 hover:bg-white/15 border-white/15 text-white active:scale-[0.98]"
-                    }`}
-                  >
-                    {testState3 === "countdown" ? (
-                      <>
-                        <Smartphone size={15} className="animate-pulse" />
-                        <span>Bloqueie a tela do celular ({countdown3}s)...</span>
-                      </>
-                    ) : testState3 === "success" ? (
-                      <>
-                        <Check size={15} className="text-emerald-400 stroke-[3]" />
-                        <span>Disparo Concluído!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play size={14} className="text-blue-400 fill-blue-400" />
-                        <span>Testar 2º Plano (8s)</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleTest3}
+                  disabled={testState3 === "countdown"}
+                  className={`w-full h-10 px-4 rounded-[6px] border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+                    testState3 === "countdown"
+                      ? "bg-blue-500/20 border-blue-500/40 text-blue-300"
+                      : testState3 === "success"
+                      ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
+                      : "bg-[#1B1B1E] hover:bg-[#26262A] border-[#26262A] hover:border-[#3F3F46] text-[#F2F2F3]"
+                  }`}
+                >
+                  {testState3 === "countdown" ? (
+                    <>
+                      <Smartphone size={15} />
+                      <span>Bloqueie a tela do celular ({countdown3}s)...</span>
+                    </>
+                  ) : testState3 === "success" ? (
+                    <>
+                      <Check size={15} className="text-emerald-400 stroke-[2.5]" />
+                      <span>Disparo Concluído</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} className="text-blue-400 fill-blue-400" />
+                      <span>Testar 2º Plano (8s)</span>
+                    </>
+                  )}
+                </button>
               </div>
 
-              {/* ESTADO 4: APP FECHADO / PUSH */}
-              <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex flex-col justify-between gap-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
-                <div className="space-y-1.5 relative z-10">
+              {/* ESTADO 4 */}
+              <div className="rounded-md p-4 sm:p-5 border border-[#26262A] bg-[#0B0B0C] flex flex-col justify-between gap-4">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shrink-0" />
-                      <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">
+                      <span className="w-2 h-2 rounded-full bg-purple-400 shrink-0" />
+                      <span className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
                         4. App Fechado / Push
                       </span>
                     </div>
-                    <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/25 uppercase shrink-0">
+                    <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-[4px] bg-purple-500/15 text-purple-400 border border-purple-500/30 uppercase shrink-0">
                       App Encerrado
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    O protocolo Web Push (FCM / APNs) acorda o Service Worker mesmo se o app estiver totalmente encerrado pelo usuário.
+                  <p className="text-xs text-[#8B8B92] leading-relaxed">
+                    O protocolo Web Push (FCM / APNs) acorda o Service Worker mesmo se o app estiver totalmente encerrado.
                   </p>
                   {pushStatusMessage && (
-                    <p className="text-[11px] text-purple-300 italic pt-0.5">{pushStatusMessage}</p>
+                    <p className="text-[11px] text-purple-300 pt-0.5">{pushStatusMessage}</p>
                   )}
                 </div>
 
-                <div className="pt-1 relative z-10">
-                  <button
-                    type="button"
-                    onClick={handleTest4}
-                    disabled={testState4 === "running"}
-                    className="w-full px-4 py-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 active:scale-[0.98] border border-purple-500/40 text-xs font-bold text-purple-200 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-none"
-                  >
-                    <Wifi size={14} className="text-purple-400" />
-                    <span>Testar Push Remoto & SW</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleTest4}
+                  disabled={testState4 === "running"}
+                  className="w-full h-10 px-4 rounded-[6px] bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-xs font-bold uppercase tracking-wider text-purple-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <Wifi size={14} className="text-purple-400" />
+                  <span>Testar Push Remoto & SW</span>
+                </button>
               </div>
             </div>
           </div>
 
-          {/* DICA ESPECIAL PARA IPHONE APPLE (iOS) */}
-          <div className="relative rounded-2xl p-4 sm:p-5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex items-start gap-3.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_4px_16px_0_rgba(0,0,0,0.2)]">
-            <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0 text-white relative z-10">
+          {/* DICA IPHONE */}
+          <div className="rounded-md p-4 sm:p-5 border border-[#26262A] bg-[#0B0B0C] flex items-start gap-3.5">
+            <div className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center shrink-0 text-white">
               <Apple size={18} />
             </div>
-            <div className="space-y-1 text-left relative z-10">
-              <h5 className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">
-                Instruções Importantes para Apple iPhone (iOS)
+            <div className="space-y-1 text-left">
+              <h5 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
+                Instruções para Apple iPhone (iOS)
               </h5>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                No iOS 16.4 ou superior, para receber alertas em segundo plano com o app fechado, a Apple exige que você toque no botão <strong>Compartilhar</strong> (ícone do quadrado com a seta para cima no Safari) e escolha <strong>"Adicionar à Tela de Início"</strong>. Feito isso, abra pelo ícone instalado e autorize as notificações!
+              <p className="text-xs text-[#8B8B92] leading-relaxed">
+                No iOS 16.4 ou superior, para receber alertas em segundo plano com o app fechado, toque no botão <strong className="text-[#CBD5E1]">Compartilhar</strong> no Safari e escolha <strong className="text-[#CBD5E1]">"Adicionar à Tela de Início"</strong>. Depois, abra pelo ícone instalado e autorize as notificações.
               </p>
             </div>
           </div>
 
-          {/* RESUMO DOS ALARMES ATIVOS */}
+          {/* RESUMO DOS ALARMES */}
           {alarmsHealth.activeCount > 0 && (
-            <div className="relative rounded-xl p-3.5 border border-white/10 bg-white/[0.03] backdrop-blur-xl overflow-hidden flex items-center justify-between text-xs shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
-              <div className="flex items-center gap-2 relative z-10">
+            <div className="rounded-md p-3.5 border border-[#26262A] bg-[#0B0B0C] flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2">
                 <Clock size={15} className="text-[var(--gm-primary)]" />
-                <span className="text-slate-300 font-medium">
-                  {alarmsHealth.activeCount} alarme(s) de orçamentos e prazos agendados no sistema.
+                <span className="text-[#CBD5E1] font-medium">
+                  {alarmsHealth.activeCount} alarme(s) agendados no sistema.
                 </span>
               </div>
               {alarmsHealth.nextUpcoming && (
-                <span className="text-[10px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 relative z-10">
+                <span className="text-[11px] font-mono font-bold uppercase text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-[4px] border border-emerald-500/25 tabular-nums">
                   Próximo: {alarmsHealth.nextUpcoming.time}
                 </span>
               )}
@@ -527,16 +531,16 @@ export default function NotificationCheckinModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="pt-4 mt-4 border-t border-white/10 flex items-center justify-between shrink-0 relative z-10">
-          <span className="text-[10.5px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
-            <Info size={13} />
-            Check-in Automático Realtime CardDigital GM
+        <div className="pt-4 mt-4 border-t border-[#26262A] flex items-center justify-between gap-3 shrink-0 relative z-10">
+          <span className="text-[11px] text-[#8B8B92] font-semibold uppercase tracking-wider flex items-center gap-1.5">
+            <Info size={14} />
+            Check-in Realtime CardDigital GM
           </span>
 
           <button
             type="button"
             onClick={onClose}
-            className="h-10 px-6 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] text-xs font-black uppercase tracking-wider shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-all cursor-pointer"
+            className="h-10 px-5 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[#0B0B0C] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] text-xs font-black uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap"
           >
             Concluir Check-in
           </button>

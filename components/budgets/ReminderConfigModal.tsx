@@ -125,49 +125,68 @@ export default function ReminderConfigModal({
     setTimeout(() => setSavedToast(null), 4000);
   }
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xl animate-fade-in">
-      <div className="relative border border-white/10 rounded-2xl w-full max-w-md fora gm-modal apple-glass-refraction shadow-none overflow-hidden animate-slide-up">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        className="relative border border-[#26262A] rounded-lg w-full max-w-md bg-[#131315] gm-modal shadow-2xl overflow-hidden"
+      >
         {/* Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black/30">
-          <div className="flex items-center gap-3">
+        <div className="p-5 border-b border-[#26262A] flex items-center justify-between gap-3 bg-[#0B0B0C]/60">
+          <div className="flex items-center gap-3 min-w-0">
             <div
-              className={`w-3 h-3 rounded-full ${remindersEnabled ? "bg-[var(--gm-accent)] shadow-[0_0_10px_rgba(var(--gm-accent-rgb),0.8)]" : "bg-red-500"} animate-pulse`}
+              className={`w-2.5 h-2.5 rounded-full shrink-0 ${remindersEnabled ? "bg-[var(--gm-accent)]" : "bg-red-500"}`}
             />
-            <div>
-              <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+            <div className="min-w-0">
+              <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
                 Lembretes Automáticos
               </h3>
-              <p className="text-xs text-slate-300 font-medium mt-0.5">Alertas e notificações para orçamentos aprovados</p>
+              <p className="text-xs text-[#8B8B92] mt-0.5">Alertas e notificações para orçamentos aprovados</p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="text-white/50 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10"
+            aria-label="Fechar"
+            className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-[#8B8B92] hover:text-white flex items-center justify-center transition-colors shrink-0 cursor-pointer"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-5 sm:p-6 space-y-5">
           {/* Status Control */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
+          <div className="flex items-center justify-between p-4 rounded-md bg-[#0B0B0C] border border-[#26262A]">
             <div>
               <div className="text-sm font-bold text-white uppercase tracking-wider">
                 Status APROVADO
               </div>
-              <div className="text-xs text-slate-300 mt-1 font-mono uppercase">
+              <div className="text-xs text-[#8B8B92] mt-1 font-mono uppercase">
                 Auto-disparo: {remindersEnabled ? "Ativado" : "Desativado"}
               </div>
             </div>
             <button
               type="button"
-              className={`h-8 px-4 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+              className={`h-8 px-3.5 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                 remindersEnabled
-                  ? "bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] border border-[var(--gm-accent)]/30"
-                  : "bg-white/5 text-white/40 border border-white/10"
+                  ? "bg-[var(--gm-accent)]/20 text-[var(--gm-accent)] border border-[var(--gm-accent)]/40"
+                  : "bg-[#1B1B1E] text-[#8B8B92] border border-[#26262A]"
               }`}
               onClick={() => setRemindersEnabled(!remindersEnabled)}
             >
@@ -176,10 +195,10 @@ export default function ReminderConfigModal({
           </div>
 
           {permissionStatus === "denied" && (
-            <div className="p-4 rounded-xl bg-red-500/5 border border-dashed border-red-500/30 flex flex-col gap-3">
+            <div className="p-4 rounded-md bg-red-500/10 border border-red-500/30 flex flex-col gap-3">
               <div className="flex items-start gap-3">
                 <BellOff size={16} className="text-red-400 shrink-0 mt-0.5" />
-                <div className="text-[10px] text-red-200/60 leading-relaxed font-mono uppercase">
+                <div className="text-xs text-red-200/80 leading-relaxed">
                   <span className="font-bold text-red-400 block mb-1">
                     Erro: Permissão Negada
                   </span>
@@ -190,8 +209,9 @@ export default function ReminderConfigModal({
               </div>
               {isIframe && (
                 <button
+                  type="button"
                   onClick={handleOpenNewTab}
-                  className="h-8 w-full rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-200 text-[10px] font-bold uppercase tracking-widest transition-colors border border-red-500/30"
+                  className="h-9 w-full rounded-[6px] bg-red-500/20 hover:bg-red-500/30 text-red-200 text-xs font-bold uppercase tracking-wider transition-colors border border-red-500/30 cursor-pointer"
                 >
                   Iniciar Nova Instância
                 </button>
@@ -200,34 +220,27 @@ export default function ReminderConfigModal({
           )}
 
           {!pushStatus.ok && (
-            <div className="p-3 rounded-xl bg-[var(--gm-primary)]/5 border border-dashed border-[var(--gm-primary)]/20 flex items-start gap-3">
-              <Clock
-                size={14}
-                className="text-[var(--gm-primary)] shrink-0 mt-0.5"
-              />
-              <div className="text-[9px] text-[var(--gm-primary)]/60 font-mono uppercase leading-tight">
-                <span className="text-[var(--gm-primary)] font-bold">
-                  Aviso:
-                </span>{" "}
+            <div className="p-3.5 rounded-md bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/25 flex items-start gap-3">
+              <Clock size={15} className="text-[var(--gm-primary)] shrink-0 mt-0.5" />
+              <div className="text-xs text-[#CBD5E1] leading-snug">
+                <span className="text-[var(--gm-primary)] font-bold">Aviso: </span>
                 {pushStatus.reason}
-                <br />
-                <span className="opacity-50 mt-1 block">
-                  Os lembretes locais (com o app aberto) continuarão funcionando
-                  normalmente.
+                <span className="text-[#8B8B92] mt-1 block">
+                  Os lembretes locais (com o app aberto) continuarão funcionando normalmente.
                 </span>
               </div>
             </div>
           )}
 
-          {/* Time Controls - Hardware Grid */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Time Controls */}
+          <div className="grid grid-cols-3 gap-3">
             {[
               { label: "CH 01", val: rem1, set: setRem1 },
               { label: "CH 02", val: rem2, set: setRem2 },
               { label: "CH 03", val: rem3, set: setRem3 },
             ].map((ch, idx) => (
-              <div key={idx} className="space-y-2">
-                <label className="text-[9px] uppercase font-mono tracking-widest text-white/30 block text-center">
+              <div key={idx} className="space-y-1.5">
+                <label className="text-[11px] uppercase font-mono font-bold tracking-widest text-[#8B8B92] block text-center">
                   {ch.label}
                 </label>
                 <div className="relative group">
@@ -235,47 +248,44 @@ export default function ReminderConfigModal({
                     value={ch.val}
                     onChange={ch.set}
                     disabled={!remindersEnabled}
-                    className="w-full h-12 bg-black/40 border border-white/10 rounded-lg flex items-center justify-center text-center text-sm font-mono text-white focus:border-[var(--gm-primary)] transition-all disabled:opacity-30"
+                    className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] flex items-center justify-center text-center text-sm font-mono text-white focus:border-[var(--gm-primary)] transition-colors disabled:opacity-40"
                   />
-                  <div className="absolute inset-0 pointer-events-none border border-white/5 rounded-lg group-hover:border-white/10 transition-colors" />
                 </div>
               </div>
             ))}
           </div>
 
           {savedToast && (
-            <div className="bg-[var(--gm-accent)]/5 border border-dashed border-[var(--gm-accent)]/30 text-[var(--gm-accent)] text-[9px] font-mono uppercase p-3 rounded-xl text-center animate-pulse">
+            <div className="bg-[var(--gm-accent)]/10 border border-[var(--gm-accent)]/30 text-[var(--gm-accent)] text-xs font-mono font-bold uppercase p-3 rounded-[4px] text-center">
               {savedToast}
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="pt-4 space-y-3">
-            <div className="text-[9px] text-white/20 text-center px-4 font-mono uppercase tracking-wider">
-              Nota: Instalação PWA recomendada para execução em segundo plano.
+          <div className="pt-2 space-y-3">
+            <div className="text-[11px] text-[#8B8B92] text-center px-2 font-mono uppercase tracking-wider">
+              Instalação PWA recomendada para segundo plano.
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <button
-                className="h-11 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3)] cursor-pointer"
+                type="button"
+                className="h-10 rounded-[6px] bg-[var(--gm-primary,#F65A1A)] hover:brightness-110 text-[#0B0B0C] border border-[var(--gm-primary,#F65A1A)] text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 onClick={handleSave}
               >
-                <Save size={16} className="text-[#0B0B0C]" />
+                <Save size={15} className="text-[#0B0B0C]" />
                 <span>Salvar</span>
               </button>
 
               <button
-                className="h-11 rounded-md border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-none"
+                className="h-10 rounded-[6px] border border-[#26262A] bg-[#1B1B1E] hover:bg-[#26262A] text-[#F2F2F3] text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 onClick={handleTestNotification}
                 type="button"
               >
-                <Bell size={16} className="text-[#F65A1A]" />
+                <Bell size={15} className="text-[var(--gm-primary,#F65A1A)]" />
                 <span>Testar</span>
               </button>
             </div>
-
-            {/* Espaço vazio garantido no final para visualização limpa do background */}
-            <div className="w-full h-16 sm:h-4 pointer-events-none select-none" aria-hidden="true" />
           </div>
         </div>
       </div>

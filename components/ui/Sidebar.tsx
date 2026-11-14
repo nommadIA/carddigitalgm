@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   FileText,
@@ -42,6 +42,7 @@ function applyTheme(mode: ThemeMode) {
 
 export default function Sidebar() {
   const { signOut, isAdmin } = useAuth();
+  const location = useLocation();
 
   const items = React.useMemo(() => {
     if (isAdmin) {
@@ -66,14 +67,14 @@ export default function Sidebar() {
     <div className="gm-sidebar">
       <div className="mb-6 px-1">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-[#FF5A1A] flex items-center justify-center font-black text-white text-base shadow-md shadow-[#FF5A1A]/30 shrink-0">
+          <div className="w-9 h-9 rounded-[6px] bg-[#FE540B] flex items-center justify-center font-black text-[#0B0B0C] text-base shrink-0">
             GM
           </div>
           <div className="flex flex-col min-w-0">
             <div className="text-sm font-extrabold tracking-tight text-white flex items-center gap-1 truncate">
               CardDigital <span className="text-[#FE540B] font-black" style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}>GM</span>
             </div>
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+            <div className="text-[11px] font-bold text-[#8B8B92] uppercase tracking-widest">
               Forge System
             </div>
           </div>
@@ -83,32 +84,32 @@ export default function Sidebar() {
       <nav className="gm-nav flex flex-col gap-1 select-none" aria-label="Menu">
         {items.map((it) => {
           const Icon = it.icon;
+          const itemActive = location.pathname === it.to || (it.to !== "/" && location.pathname.startsWith(it.to));
           return (
             <NavLink
               key={it.to}
               to={it.to}
               title={it.label}
               className={({ isActive }) =>
-                `flex items-center px-4 py-2.5 rounded-lg text-sm font-bold relative transition-colors ${
+                `flex items-center px-3.5 py-2.5 rounded-[6px] text-sm font-semibold relative transition-colors whitespace-nowrap ${
                   isActive
-                    ? "text-white font-extrabold"
-                    : "text-[#b4b7c2] hover:text-white hover:bg-white/[0.04]"
+                    ? "text-white font-bold bg-[#18181B]"
+                    : "text-[#8B8B92] hover:text-white hover:bg-[#131315]"
                 }`
               }
             >
-              {/* Barra dinâmica na borda esquerda do item ativo */}
               <span
                 className={`sidebar-window-indicator ${
-                  location.pathname === it.to || (it.to !== "/" && location.pathname.startsWith(it.to))
+                  itemActive
                     ? "!opacity-100 !bg-[var(--gm-menu-primary,var(--gm-primary,#FE540B))]"
                     : "!opacity-0 pointer-events-none"
                 }`}
                 aria-hidden="true"
               />
               {it.to === "/planos" ? (
-                <GoldCrownIcon size={19} />
+                <GoldCrownIcon size={18} />
               ) : (
-                <Icon size={19} className="shrink-0 text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] stroke-[2]" />
+                <Icon size={18} className="shrink-0 text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] stroke-[1.75]" />
               )}
               <span className={`ml-3 truncate ${it.to === "/planos" ? "text-amber-300 font-bold" : it.to === "/admin/usuarios" ? "text-[var(--gm-primary,#FE540B)] font-bold" : ""}`}>{it.label}</span>
             </NavLink>
@@ -116,9 +117,9 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="gm-sidebar-footer mt-auto pt-6 border-t border-[#222222]">
+      <div className="gm-sidebar-footer mt-auto pt-4 border-t border-[#26262A]">
         <button
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+          className="w-full h-10 flex items-center justify-center gap-2 px-3 rounded-[6px] border border-[#26262A] bg-[#131315] hover:bg-[#1F1315] hover:border-red-500/50 text-xs font-bold uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors cursor-pointer"
           onClick={signOut}
           type="button"
           title="Sair"

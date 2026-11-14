@@ -191,13 +191,13 @@ export default function ExpandedBudgetRow({
   const installmentValue = installments > 1 && total > 0 ? total / installments : null;
 
   return (
-    <div className="p-5 sm:p-6 bg-[#0e0e11]/90 border-t border-white/10 text-sm text-slate-200 animate-fade-in flex flex-col gap-6 select-text">
+    <div className="p-5 sm:p-6 bg-[#0B0B0C] border-t border-[#26262A] text-sm text-[#CBD5E1] animate-fade-in flex flex-col gap-5 select-text">
       {/* 1. TOPO: IDENTIFICAÇÃO, STATUS, DATAS E PRAZOS */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#26262A]">
         <div className="flex items-center gap-3 flex-wrap">
           {/* Badge de Status */}
           <span
-            className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-[4px] text-xs font-bold uppercase tracking-wider border flex items-center gap-1.5 ${
               isConcluido
                 ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                 : isAprovado
@@ -207,12 +207,12 @@ export default function ExpandedBudgetRow({
                 : "bg-amber-500/15 text-amber-400 border-amber-500/30"
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
             {isConcluido ? "Concluído" : isAprovado ? "Aprovado" : isCancelado ? "Cancelado" : "Aguardando"}
           </span>
 
           {/* Tipo de Serviço */}
-          <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-white/5 border border-white/10 text-slate-300">
+          <span className="px-2.5 py-1 rounded-[4px] text-xs font-semibold bg-[#131315] border border-[#26262A] text-[#CBD5E1]">
             {data.type === "print" ? "Impressão Digital" : "Agência / Serviços"}
           </span>
         </div>
@@ -246,7 +246,7 @@ export default function ExpandedBudgetRow({
       {/* 2. DADOS DO CLIENTE E CONDIÇÕES */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Card do Cliente */}
-        <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 flex flex-col gap-2.5">
+        <div className="p-4 rounded-md bg-[#131315] border border-[#26262A] flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[var(--gm-primary)]">
             <User size={15} />
             <span>Dados do Cliente</span>
@@ -306,7 +306,7 @@ export default function ExpandedBudgetRow({
         </div>
 
         {/* Card de Pagamento & Faturamento */}
-        <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 flex flex-col justify-between gap-3">
+        <div className="p-4 rounded-md bg-[#131315] border border-[#26262A] flex flex-col justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[var(--gm-primary)] mb-2">
               <CreditCard size={15} />
@@ -376,7 +376,7 @@ export default function ExpandedBudgetRow({
         </div>
 
         {items.length === 0 ? (
-          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 text-slate-400 text-xs italic text-center">
+          <div className="p-4 rounded-md bg-[#131315] border border-[#26262A] text-[#8B8B92] text-xs italic text-center">
             Nenhum item discriminado individualmente. O valor total refere-se ao serviço descrito no título.
           </div>
         ) : (
@@ -402,10 +402,10 @@ export default function ExpandedBudgetRow({
               return (
                 <div
                   key={item.id || idx}
-                  className="p-3.5 sm:p-4 rounded-xl bg-white/[0.025] hover:bg-white/[0.04] transition-colors border border-white/10 flex flex-col sm:flex-row sm:items-start justify-between gap-3"
+                  className="p-3.5 sm:p-4 rounded-md bg-[#131315] hover:bg-[#1B1B1E] transition-colors border border-[#26262A] flex flex-col sm:flex-row sm:items-start justify-between gap-3"
                 >
                   <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <span className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-[var(--gm-primary)] shrink-0 mt-0.5">
+                    <span className="w-6 h-6 rounded-[4px] bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center font-bold text-xs text-[var(--gm-primary)] shrink-0 mt-0.5 tabular-nums">
                       {idx + 1}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -415,7 +415,7 @@ export default function ExpandedBudgetRow({
 
                       {/* Medidas / Cálculo por Área */}
                       {isArea && (
-                        <div className="flex items-center gap-2 mt-2 flex-wrap text-xs font-mono text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md w-fit">
+                        <div className="flex items-center gap-2 mt-2 flex-wrap text-xs font-mono text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-[4px] w-fit tabular-nums">
                           <span>
                             Dimensões: {width} × {height} cm ({areaM2.toFixed(2)} m²)
                           </span>
@@ -428,11 +428,11 @@ export default function ExpandedBudgetRow({
                   </div>
 
                   {/* Quantidade, Valor Unitário e Subtotal do Item */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-white/5 pt-2 sm:pt-0 shrink-0 text-right">
-                    <div className="text-xs text-slate-400">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 border-[#26262A] pt-2 sm:pt-0 shrink-0 text-right">
+                    <div className="text-xs text-[#8B8B92] tabular-nums">
                       {qty} un. × {CURRENCY_FORMATTER.format(unitPrice || (isArea && pricePerM2 ? areaM2 * pricePerM2 : 0))}
                     </div>
-                    <div className="text-base font-extrabold text-white sm:mt-1">
+                    <div className="text-base font-extrabold text-white sm:mt-1 tabular-nums">
                       {CURRENCY_FORMATTER.format(itemTotal)}
                     </div>
                   </div>
@@ -444,19 +444,19 @@ export default function ExpandedBudgetRow({
       </div>
 
       {/* 4. QUADRO RESUMO FINANCEIRO & VALOR TOTAL */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-white/[0.04] to-black/40 border border-white/12 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-lg bg-[#131315] border border-[#26262A] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Valores Secundários (Subtotal, Desconto) */}
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-4 sm:gap-6 text-xs">
           <div>
-            <div className="text-slate-400 uppercase font-black tracking-wider mb-0.5">Subtotal</div>
-            <div className="font-bold text-slate-200 text-sm sm:text-base">
+            <div className="text-[#8B8B92] uppercase font-black tracking-wider mb-0.5">Subtotal</div>
+            <div className="font-bold text-[#F2F2F3] text-sm sm:text-base tabular-nums">
               {CURRENCY_FORMATTER.format(subtotal || total)}
             </div>
           </div>
 
           <div>
-            <div className="text-slate-400 uppercase font-black tracking-wider mb-0.5">Desconto</div>
-            <div className={`font-bold text-sm sm:text-base ${discount > 0 ? "text-red-400" : "text-slate-400"}`}>
+            <div className="text-[#8B8B92] uppercase font-black tracking-wider mb-0.5">Desconto</div>
+            <div className={`font-bold text-sm sm:text-base tabular-nums ${discount > 0 ? "text-red-400" : "text-[#8B8B92]"}`}>
               {discount > 0 ? `- ${CURRENCY_FORMATTER.format(discount)}` : "R$ 0,00"}
               {discountPercent ? ` (${discountPercent}%)` : ""}
             </div>
@@ -464,18 +464,18 @@ export default function ExpandedBudgetRow({
         </div>
 
         {/* VALOR TOTAL EM DESTAQUE */}
-        <div className="sm:text-right border-t sm:border-t-0 border-white/10 pt-3 sm:pt-0">
+        <div className="sm:text-right border-t sm:border-t-0 border-[#26262A] pt-3 sm:pt-0">
           <div className="text-[var(--gm-primary)] text-xs uppercase font-black tracking-widest mb-1">
             Valor Total do Orçamento
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-[var(--gm-primary)] drop-shadow-[0_0_12px_rgba(254,84,11,0.35)]">
+          <div className="text-2xl sm:text-3xl font-black text-[var(--gm-primary)] tabular-nums">
             {CURRENCY_FORMATTER.format(total)}
           </div>
         </div>
       </div>
 
       {/* 5. AÇÕES RÁPIDAS DA EXPANSÃO */}
-      <div className="flex flex-col gap-2 pt-3 w-full">
+      <div className="flex flex-col gap-2 pt-2 w-full">
         {(tab === "CONCLUIDOS" || isConcluido) ? (
           /* CONCLUÍDOS: 4 BOTÕES (2 EM CIMA DE 2 BOTÕES), SEM LEMBRETES E SEM EDITAR */
           <div className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full">
@@ -484,7 +484,7 @@ export default function ExpandedBudgetRow({
               <button
                 type="button"
                 onClick={onDuplicate}
-                className="h-11 sm:h-12 px-3 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/90 text-white shadow-[0_0_14px_rgba(246,90,26,0.35)] transition-all cursor-pointer border border-[var(--gm-primary)] active:scale-[0.98]"
+                className="h-11 px-3 rounded-[6px] text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 bg-[var(--gm-primary)] hover:brightness-110 text-[#0B0B0C] transition-colors cursor-pointer border border-[var(--gm-primary)] active:scale-[0.98] whitespace-nowrap"
                 title="Usar este orçamento como modelo para criar um novo"
               >
                 <Copy size={16} className="shrink-0" />
@@ -496,7 +496,7 @@ export default function ExpandedBudgetRow({
               <button
                 type="button"
                 onClick={onPdf}
-                className="h-11 sm:h-12 px-3 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 hover:border-white/20 transition-all cursor-pointer active:scale-[0.98]"
+                className="h-11 px-3 rounded-[6px] text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-[#1B1B1E] hover:bg-[#26262A] text-[#F2F2F3] hover:text-white border border-[#26262A] hover:border-[#3F3F46] transition-colors cursor-pointer active:scale-[0.98] whitespace-nowrap"
                 title="Visualizar ou gerar arquivo PDF oficial do orçamento"
               >
                 <FileText size={16} className="text-[var(--gm-primary)] shrink-0" />
@@ -509,7 +509,7 @@ export default function ExpandedBudgetRow({
               <button
                 type="button"
                 onClick={onShare}
-                className="h-11 sm:h-12 px-3 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/40 transition-all cursor-pointer active:scale-[0.98]"
+                className="h-11 px-3 rounded-[6px] text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/45 transition-colors cursor-pointer active:scale-[0.98] whitespace-nowrap"
                 title="Compartilhar orçamento via WhatsApp"
               >
                 <WhatsAppIcon size={16} className="shrink-0" />
@@ -521,7 +521,7 @@ export default function ExpandedBudgetRow({
               <button
                 type="button"
                 onClick={onDelete}
-                className="h-11 sm:h-12 px-3 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/25 hover:border-red-500/40 transition-all cursor-pointer active:scale-[0.98]"
+                className="h-11 px-3 rounded-[6px] text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/45 transition-colors cursor-pointer active:scale-[0.98] whitespace-nowrap"
                 title="Mover para a lixeira"
               >
                 <Trash2 size={16} className="shrink-0" />
@@ -535,7 +535,7 @@ export default function ExpandedBudgetRow({
               <button
                 type="button"
                 onClick={onRestore}
-                className="h-9 px-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer"
+                className="h-9 px-3 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 hover:border-emerald-500/45 transition-colors cursor-pointer whitespace-nowrap"
                 title="Restaurar este orçamento"
               >
                 <RotateCcw size={14} />
@@ -546,7 +546,7 @@ export default function ExpandedBudgetRow({
               <button
                 type="button"
                 onClick={onConfirmHardDelete}
-                className="h-9 px-3 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/40 transition-all cursor-pointer"
+                className="h-9 px-3 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/25 hover:border-red-500/45 transition-colors cursor-pointer whitespace-nowrap"
                 title="Excluir este orçamento definitivamente"
               >
                 <Trash2 size={14} />
@@ -562,7 +562,7 @@ export default function ExpandedBudgetRow({
                 <button
                   type="button"
                   onClick={onPdf}
-                  className="h-10 sm:h-11 px-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 hover:border-white/20 transition-all cursor-pointer truncate"
+                  className="h-10 sm:h-11 px-2 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-[#1B1B1E] hover:bg-[#26262A] text-[#F2F2F3] hover:text-white border border-[#26262A] hover:border-[#3F3F46] transition-colors cursor-pointer truncate"
                   title="Visualizar ou gerar arquivo PDF oficial do orçamento"
                 >
                   <FileText size={15} className="text-[var(--gm-primary)] shrink-0" />
@@ -574,7 +574,7 @@ export default function ExpandedBudgetRow({
                 <button
                   type="button"
                   onClick={onShare}
-                  className="h-10 sm:h-11 px-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer truncate"
+                  className="h-10 sm:h-11 px-2 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 border border-emerald-500/25 hover:border-emerald-500/45 transition-colors cursor-pointer truncate"
                   title="Compartilhar orçamento via WhatsApp"
                 >
                   <WhatsAppIcon size={16} className="shrink-0" />
@@ -586,7 +586,7 @@ export default function ExpandedBudgetRow({
                 <button
                   type="button"
                   onClick={onEdit}
-                  className="h-10 sm:h-11 px-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-[var(--gm-primary)]/10 hover:bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] hover:text-white border border-[var(--gm-primary)]/25 hover:border-[var(--gm-primary)]/50 transition-all cursor-pointer truncate"
+                  className="h-10 sm:h-11 px-2 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-[var(--gm-primary)]/10 hover:bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] hover:text-white border border-[var(--gm-primary)]/25 hover:border-[var(--gm-primary)]/50 transition-colors cursor-pointer truncate"
                   title="Editar orçamento"
                 >
                   <Pencil size={15} className="shrink-0" />
@@ -602,7 +602,7 @@ export default function ExpandedBudgetRow({
                   <button
                     type="button"
                     onClick={onReminder}
-                    className="h-9 px-3 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-white/[0.03] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+                    className="h-9 px-3 rounded-[6px] text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-[#131315] hover:bg-[#1B1B1E] text-[#CBD5E1] hover:text-white border border-[#26262A] hover:border-[#3F3F46] transition-colors cursor-pointer whitespace-nowrap"
                     title="Configurar lembretes"
                   >
                     <Bell size={14} className="text-amber-400 shrink-0" />
@@ -613,7 +613,7 @@ export default function ExpandedBudgetRow({
                   <button
                     type="button"
                     onClick={onDelete}
-                    className="h-9 px-3 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-red-500/[0.06] hover:bg-red-500/15 text-red-400 hover:text-red-300 border border-red-500/15 hover:border-red-500/30 transition-all cursor-pointer"
+                    className="h-9 px-3 rounded-[6px] text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 bg-red-500/[0.06] hover:bg-red-500/15 text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/35 transition-colors cursor-pointer whitespace-nowrap"
                     title="Mover para a lixeira"
                   >
                     <Trash2 size={14} className="shrink-0" />

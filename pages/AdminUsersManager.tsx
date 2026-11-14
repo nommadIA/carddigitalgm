@@ -84,6 +84,24 @@ export default function AdminUsersManager() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!approvalModalUser && !extendModalUser && !deleteModalUser) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (deleteModalUser) {
+        setDeleteModalUser(null);
+        return;
+      }
+      if (extendModalUser) {
+        setExtendModalUser(null);
+        return;
+      }
+      if (approvalModalUser) setApprovalModalUser(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [approvalModalUser, extendModalUser, deleteModalUser]);
+
   // Estatísticas e contadores
   const stats = useMemo(() => {
     const total = usersList.length;
@@ -302,7 +320,7 @@ export default function AdminUsersManager() {
             className="w-10 h-10 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] hover:border-[var(--gm-primary,#FE540B)] flex items-center justify-center text-[#8b8b92] hover:text-white transition-all cursor-pointer shadow-sm group"
             title="Voltar ao Dashboard"
           >
-            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+            <ArrowLeft size={16} className="transition-transform" />
           </Link>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
@@ -499,7 +517,7 @@ export default function AdminUsersManager() {
           </div>
 
           <span className="text-xs font-mono uppercase px-2 py-0.5 rounded-[2px] border border-[#26262a] bg-[#1b1b1e] text-emerald-400 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>SINCRONIZADO</span>
           </span>
         </div>
@@ -553,9 +571,9 @@ export default function AdminUsersManager() {
                       }`}
                     >
                       {/* Usuário / Empresa */}
-                      <td className="py-5 sm:py-6 px-4 sm:px-6 text-left">
+                      <td className="py-6 sm:py-7 px-4 sm:px-6 text-left">
                         <div className="flex items-center gap-3.5">
-                          <div className={`w-10 h-10 rounded-[4px] flex items-center justify-center font-mono font-bold text-xs shrink-0 border ${
+                          <div className={`w-11 h-11 rounded-[4px] flex items-center justify-center font-mono font-bold text-xs shrink-0 border ${
                             isMaster
                               ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0b0b0c)] border-[var(--gm-primary,#FE540B)] shadow-sm"
                               : isPending
@@ -568,7 +586,7 @@ export default function AdminUsersManager() {
                             <div className="font-bold text-[#f2f2f3] text-sm truncate flex items-center gap-2">
                               <span>{u.name}</span>
                               {isMaster && (
-                                <span className="px-1.5 py-0.5 rounded-[2px] text-[10px] font-mono font-bold uppercase bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/40">
+                                <span className="px-1.5 py-0.5 rounded-[2px] text-[11px] font-mono font-bold uppercase bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/40">
                                    MASTER ADM
                                 </span>
                               )}
@@ -589,7 +607,7 @@ export default function AdminUsersManager() {
                       </td>
 
                       {/* Data de Criação */}
-                      <td className="py-5 sm:py-6 px-4 text-[#8b8b92] font-mono text-xs whitespace-nowrap text-left">
+                      <td className="py-6 sm:py-7 px-4 text-[#8b8b92] font-mono text-xs whitespace-nowrap text-left tabular-nums">
                         <div className="flex items-center gap-2">
                           <Calendar size={14} className="text-zinc-500 shrink-0" />
                           <span>{formattedDate}</span>
@@ -597,7 +615,7 @@ export default function AdminUsersManager() {
                       </td>
 
                       {/* Status */}
-                      <td className="py-5 sm:py-6 px-4 whitespace-nowrap text-left">
+                      <td className="py-6 sm:py-7 px-4 whitespace-nowrap text-left tabular-nums">
                         {isMaster && (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-mono font-bold uppercase bg-[var(--gm-primary,#FE540B)]/10 border border-[var(--gm-primary,#FE540B)]/30 text-[var(--gm-primary,#FE540B)]">
                             <ShieldCheck size={14} />
@@ -607,7 +625,7 @@ export default function AdminUsersManager() {
 
                         {isPending && (
                           <div className="inline-flex flex-col gap-1">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-mono font-bold uppercase bg-amber-500/20 border border-amber-500/50 text-amber-300 animate-pulse">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-xs font-mono font-bold uppercase bg-amber-500/20 border border-amber-500/50 text-amber-300">
                               <AlertCircle size={14} />
                               <span>SOLICITOU LIBERAÇÃO</span>
                             </span>
@@ -642,7 +660,7 @@ export default function AdminUsersManager() {
                       </td>
 
                       {/* Plano */}
-                      <td className="py-5 sm:py-6 px-4 whitespace-nowrap text-left">
+                      <td className="py-6 sm:py-7 px-4 whitespace-nowrap text-left">
                         <div className="flex flex-col">
                           <span className="font-bold text-[#f2f2f3] text-sm">
                             {isPending && u.requestedPlanId 
@@ -656,7 +674,7 @@ export default function AdminUsersManager() {
                       </td>
 
                       {/* Ações Administrativas (ALINHADO À ESQUERDA) */}
-                      <td className="py-5 sm:py-6 px-4 sm:px-6 whitespace-nowrap text-left">
+                      <td className="py-6 sm:py-7 px-4 sm:px-6 whitespace-nowrap text-left">
                         <div className="flex items-center justify-start gap-2">
                           {!isMaster && (
                             <>
@@ -664,7 +682,7 @@ export default function AdminUsersManager() {
                               <button
                                 type="button"
                                 onClick={() => handleOpenApprovalModal(u)}
-                                className={`h-[38px] px-3.5 rounded-[4px] text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 border ${
+                                className={`h-10 px-4 rounded-[4px] text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-sm active:scale-95 border ${
                                   isPending
                                     ? "bg-amber-500 hover:bg-amber-400 text-black border-amber-500 shadow-amber-500/20"
                                     : "bg-[#1b1b1e] hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:border-emerald-500/60"
@@ -679,10 +697,10 @@ export default function AdminUsersManager() {
                               <button
                                 type="button"
                                 onClick={() => handleOpenExtendModal(u)}
-                                className="h-[38px] px-3.5 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] hover:border-[var(--gm-primary,#FE540B)]/50 text-xs font-mono font-bold text-[#f2f2f3] flex items-center gap-1.5 transition-all cursor-pointer shadow-sm group active:scale-95"
+                                className="h-10 px-3.5 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] hover:border-[var(--gm-primary,#FE540B)]/50 text-xs font-mono font-bold text-[#f2f2f3] flex items-center gap-1.5 transition-all cursor-pointer shadow-sm group active:scale-95"
                                 title="Estender período de teste"
                               >
-                                <Plus size={14} className="text-[var(--gm-primary,#FE540B)] animate-pulse group-hover:rotate-90 transition-transform duration-200" />
+                                <Plus size={14} className="text-[var(--gm-primary,#FE540B)] group-hover:rotate-90 transition-transform duration-200 shrink-0" />
                                 <span>Teste</span>
                               </button>
 
@@ -690,7 +708,7 @@ export default function AdminUsersManager() {
                               <button
                                 type="button"
                                 onClick={() => handleContactWhatsApp(u)}
-                                className="h-[38px] px-2.5 rounded-[4px] bg-[#16171a] hover:bg-[#25D366]/15 text-[#8b8b92] hover:text-[#25D366] border border-[#26262a] hover:border-[#25D366]/50 flex items-center justify-center transition-all cursor-pointer shadow-sm group active:scale-95"
+                                className="w-10 h-10 rounded-[4px] bg-[#16171a] hover:bg-[#25D366]/20 text-[#25D366] border border-[#26262a] hover:border-[#25D366]/50 flex items-center justify-center transition-all cursor-pointer shadow-sm group active:scale-95 shrink-0"
                                 title="Contatar no WhatsApp Oficial"
                               >
                                 <WhatsAppIcon size={16} className="text-[#25D366] group-hover:scale-110 transition-transform duration-200" />
@@ -701,7 +719,7 @@ export default function AdminUsersManager() {
                                 <button
                                   type="button"
                                   onClick={() => handleConfirmExpireUser(u)}
-                                  className="w-[38px] h-[38px] rounded-[4px] bg-[#1b1b1e] hover:bg-amber-500/20 text-[#8b8b92] hover:text-amber-400 border border-[#26262a] hover:border-amber-500/40 flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
+                                  className="w-10 h-10 rounded-[4px] bg-[#1b1b1e] hover:bg-amber-500/20 text-[#8b8b92] hover:text-amber-400 border border-[#26262a] hover:border-amber-500/40 flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
                                   title="Pausar / Expirar Acesso"
                                 >
                                   <AlertTriangle size={15} />
@@ -712,7 +730,7 @@ export default function AdminUsersManager() {
                               <button
                                 type="button"
                                 onClick={() => setDeleteModalUser(u)}
-                                className="w-[38px] h-[38px] rounded-[4px] bg-[#1b1b1e] hover:bg-rose-500/20 text-[#8b8b92] hover:text-rose-400 border border-[#26262a] hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
+                                className="w-10 h-10 rounded-[4px] bg-[#1b1b1e] hover:bg-rose-500/20 text-[#8b8b92] hover:text-rose-400 border border-[#26262a] hover:border-rose-500/40 flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
                                 title="Excluir Usuário"
                               >
                                 <Trash2 size={15} />
@@ -740,12 +758,18 @@ export default function AdminUsersManager() {
 
       {/* MODAL 1: LIBERAR ACESSO / APROVAR PLANO */}
       {approvalModalUser && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div
+          className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+          onClick={() => setApprovalModalUser(null)}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
+            role="dialog"
+            aria-modal="true"
             style={{ maxWidth: "560px", width: "100%" }}
-            className="bg-[#131315] border border-[#26262a] rounded-[6px] shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden text-[#f2f2f3]"
+            className="bg-[#131315] border border-[#26262a] rounded-lg shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden text-[#f2f2f3]"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Top Bar Forge Spec */}
             <div className="forge-spec__bar bg-[#121316] border-b border-[#26262a] px-4 py-3 flex items-center justify-between">
@@ -760,9 +784,10 @@ export default function AdminUsersManager() {
               <button
                 type="button"
                 onClick={() => setApprovalModalUser(null)}
-                className="w-7 h-7 rounded-[3px] bg-[#1b1b1e] hover:bg-[#26262a] text-[#8b8b92] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] text-[#8b8b92] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Fechar"
               >
-                <X size={14} />
+                <X size={15} />
               </button>
             </div>
 
@@ -925,12 +950,18 @@ export default function AdminUsersManager() {
 
       {/* MODAL 2: ESTENDER PERÍODO DE TESTE */}
       {extendModalUser && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div
+          className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+          onClick={() => setExtendModalUser(null)}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
+            role="dialog"
+            aria-modal="true"
             style={{ maxWidth: "520px", width: "100%" }}
-            className="bg-[#131315] border border-[#26262a] rounded-[6px] shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden text-[#f2f2f3]"
+            className="bg-[#131315] border border-[#26262a] rounded-lg shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden text-[#f2f2f3]"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Top Bar Forge Spec */}
             <div className="forge-spec__bar bg-[#121316] border-b border-[#26262a] px-4 py-3 flex items-center justify-between">
@@ -945,9 +976,10 @@ export default function AdminUsersManager() {
               <button
                 type="button"
                 onClick={() => setExtendModalUser(null)}
-                className="w-7 h-7 rounded-[3px] bg-[#1b1b1e] hover:bg-[#26262a] text-[#8b8b92] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] text-[#8b8b92] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Fechar"
               >
-                <X size={14} />
+                <X size={15} />
               </button>
             </div>
 
@@ -1060,12 +1092,18 @@ export default function AdminUsersManager() {
 
       {/* MODAL 3: EXCLUIR USUÁRIO */}
       {deleteModalUser && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div
+          className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+          onClick={() => setDeleteModalUser(null)}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
+            role="dialog"
+            aria-modal="true"
             style={{ maxWidth: "480px", width: "100%" }}
-            className="bg-[#131315] border border-rose-500/40 rounded-[6px] shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden text-[#f2f2f3]"
+            className="bg-[#131315] border border-rose-500/40 rounded-lg shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden text-[#f2f2f3]"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Top Bar Forge Spec */}
             <div className="forge-spec__bar bg-[#121316] border-b border-[#26262a] px-4 py-3 flex items-center justify-between">
@@ -1080,9 +1118,10 @@ export default function AdminUsersManager() {
               <button
                 type="button"
                 onClick={() => setDeleteModalUser(null)}
-                className="w-7 h-7 rounded-[3px] bg-[#1b1b1e] hover:bg-[#26262a] text-[#8b8b92] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] text-[#8b8b92] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Fechar"
               >
-                <X size={14} />
+                <X size={15} />
               </button>
             </div>
 

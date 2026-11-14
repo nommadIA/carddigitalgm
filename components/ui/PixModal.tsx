@@ -49,72 +49,93 @@ export default function PixModal({
     }
   }, [open, total, orcamentoId, settings]);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
   if (!open || !settings) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-xl flex items-center justify-center p-4 animate-fade-in">
-      <div className="fora gm-modal rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-white/10">
-        <div className="flex items-center justify-between mb-5 border-b border-white/10 pb-3">
-          <h3 className="text-white font-extrabold text-2xl sm:text-3xl tracking-tight">Pagamento Pix</h3>
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[1000] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        className="gm-modal bg-[#131315] rounded-lg w-full max-w-sm p-6 shadow-2xl border border-[#26262A]"
+      >
+        <div className="flex items-center justify-between mb-5 border-b border-[#26262A] pb-3.5">
+          <h3 className="text-[#F2F2F3] font-bold text-xl tracking-tight">Pagamento Pix</h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center transition-colors cursor-pointer"
             aria-label="Fechar"
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
 
         {!settings.pix_key ? (
           <div className="text-center py-6">
-            <p className="text-slate-100 font-bold text-lg mb-2">Chave Pix não configurada.</p>
-            <p className="text-base text-slate-300">Vá em Configurações para adicionar sua chave.</p>
+            <p className="text-[#F2F2F3] font-bold text-base mb-1.5">Chave Pix não configurada.</p>
+            <p className="text-[13px] text-[#8B8B92]">Vá em Configurações para adicionar sua chave.</p>
           </div>
         ) : (
           <>
-            <div className="flex flex-col items-center justify-center bg-white p-4 rounded-xl shadow-inner">
+            <div className="flex flex-col items-center justify-center bg-white p-4 rounded-md border border-[#26262A]">
               {qr ? (
                 <img
                   src={qr}
                   alt="QR Pix"
-                  className="w-full h-auto max-w-[220px]"
+                  className="w-full h-auto max-w-[210px]"
                 />
               ) : (
-                <div className="w-48 h-48 flex items-center justify-center text-slate-600 font-bold">
-                    Gerando QR...
+                <div className="w-48 h-48 flex items-center justify-center text-slate-600 font-bold text-sm">
+                  Gerando QR...
                 </div>
               )}
             </div>
 
             <div className="mt-4 text-center">
-               <p className="text-slate-300 text-sm font-extrabold uppercase tracking-wide">Valor a Pagar</p>
-               <p className="text-3xl font-black text-white mt-0.5">R$ {total.toFixed(2)}</p>
+              <p className="text-[#8B8B92] text-xs font-bold uppercase tracking-wider">Valor a Pagar</p>
+              <p className="text-3xl font-black text-white mt-0.5 tabular-nums">R$ {total.toFixed(2)}</p>
             </div>
 
             <button
               type="button"
-              className={`w-full mt-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${copied ? 'bg-green-600 text-white' : 'btn-primary'}`}
+              className={`w-full h-11 mt-5 rounded-[6px] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+                copied
+                  ? "bg-emerald-600 text-white border border-emerald-500"
+                  : "bg-[var(--gm-primary,#F65A1A)] hover:brightness-110 text-[#0B0B0C] border border-[var(--gm-primary,#F65A1A)]"
+              }`}
               onClick={async () => {
                 if (!payload) return;
                 const ok = await copyText(payload);
-                if(ok) {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
+                if (ok) {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
                 } else {
-                    alert("Erro ao copiar. Tente manualmente abaixo.");
+                  alert("Erro ao copiar. Tente manualmente abaixo.");
                 }
               }}
             >
-              {copied ? <Check size={20} /> : <Copy size={20} />}
-              {copied ? "Copiado!" : "Copiar 'Copia e Cola'"}
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              <span>{copied ? "Copiado!" : "Copiar 'Copia e Cola'"}</span>
             </button>
 
             <div className="mt-4">
-               <p className="text-xs text-slate-500 mb-1 text-center">Código do Pagamento:</p>
-               <div className="text-[10px] text-slate-400 break-all bg-black/30 border border-white/5 rounded-lg p-2 font-mono leading-tight">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8B8B92] mb-1.5 text-center">Código do Pagamento</p>
+              <div className="text-[11px] text-[#8B8B92] break-all bg-[#0B0B0C] border border-[#26262A] rounded-[4px] p-2.5 font-mono leading-snug">
                 {payload}
-               </div>
+              </div>
             </div>
           </>
         )}

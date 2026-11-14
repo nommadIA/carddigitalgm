@@ -80,7 +80,7 @@ export const AnimatedTabs = ({
   return (
     <div
       className={cn(
-        "relative mx-auto flex w-fit items-center rounded-full border border-white/[0.08] bg-[#121215] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
+        "relative mx-auto flex w-fit items-center rounded-[6px] border border-white/[0.08] bg-[#121215] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
         className
       )}
     >
@@ -93,7 +93,7 @@ export const AnimatedTabs = ({
             type="button"
             onClick={() => handleSelect(tab.key)}
             className={cn(
-              "relative flex h-8 items-center rounded-full px-3.5 text-xs font-black uppercase tracking-wider transition-colors duration-200 cursor-pointer select-none",
+              "relative flex h-8 items-center justify-center rounded-[6px] px-3.5 text-xs font-black uppercase tracking-wider transition-[color,transform] duration-150 active:scale-[0.96] cursor-pointer select-none",
               isActive
                 ? "text-zinc-950 font-black"
                 : "text-zinc-400 hover:text-white",
@@ -102,7 +102,7 @@ export const AnimatedTabs = ({
             {isActive && (
               <motion.div
                 layoutId="active-tab-background"
-                className="absolute inset-0 rounded-full bg-white shadow-[0_2px_12px_rgba(255,255,255,0.25)]"
+                className="absolute inset-0 rounded-[6px] bg-white shadow-[0_2px_12px_rgba(255,255,255,0.25)]"
                 initial={false}
                 transition={{
                   type: "spring",
@@ -111,7 +111,7 @@ export const AnimatedTabs = ({
                 }}
               />
             )}
-            <span className="relative z-10 flex items-center gap-1.5">
+            <span className="relative z-10 flex items-center justify-center gap-1.5">
               {tab.dotColor && (
                 <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", tab.dotColor)} />
               )}

@@ -85,6 +85,15 @@ export function OrderPaymentModal({
     }
   }, [isOpen, order]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !order) return null;
 
   const totalAmount = order.total || 0;
@@ -256,30 +265,30 @@ export function OrderPaymentModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 bg-black/80 animate-in fade-in duration-200 overflow-y-auto gm-customer-modal-overlay"
+      className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto gm-customer-modal-overlay"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-xl sm:max-w-2xl fora border border-white/12 rounded-[2.25rem] p-6 sm:p-8 shadow-2xl relative my-auto max-h-[92vh] flex flex-col text-white overflow-hidden gm-customer-modal-container"
+        className="w-full max-w-xl sm:max-w-2xl bg-[#131315] border border-[#26262A] rounded-lg p-5 sm:p-6 shadow-2xl relative my-auto max-h-[92vh] flex flex-col text-white overflow-hidden gm-customer-modal-container"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+        <div className="flex items-center justify-between pb-4 border-b border-[#26262A] shrink-0 gap-3">
           <div className="flex items-center gap-3">
             <div 
-              className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-lg"
+              className="w-10 h-10 rounded-md flex items-center justify-center text-white shrink-0"
               style={{ backgroundColor: brandColor }}
             >
-              <ShieldCheck className="w-6 h-6" />
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg sm:text-xl font-black text-white">Pagamento Seguro</h3>
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-lg font-extrabold text-white">Pagamento Seguro</h3>
+                <span className="text-[11px] uppercase font-bold px-2 py-0.5 rounded-[4px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 whitespace-nowrap">
                   <Lock className="w-3 h-3" /> SSL 256-bit
                 </span>
               </div>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-zinc-400 tabular-nums mt-0.5">
                 Pedido <strong className="text-white">#{order.order_number}</strong> • Total a pagar: <strong className="text-white">{formatBRL(totalAmount)}</strong>
               </p>
             </div>
@@ -288,33 +297,33 @@ export function OrderPaymentModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer"
+            className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"
             aria-label="Fechar"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Security Banner */}
-        <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/8 flex items-center justify-between text-xs text-zinc-400 shrink-0">
+        <div className="mt-4 p-3 rounded-md bg-[#0B0B0C] border border-[#26262A] flex items-center justify-between text-xs text-zinc-400 shrink-0">
           <span className="flex items-center gap-2 font-medium">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
             Ambiente 100% protegido com Criptografia de Ponta a Ponta
           </span>
-          <span className="text-[10px] uppercase font-bold text-zinc-500 hidden sm:inline">
+          <span className="text-[11px] uppercase font-bold text-zinc-500 hidden sm:inline whitespace-nowrap">
             PCI-DSS Nível 1
           </span>
         </div>
 
-        {/* Payment Methods Selector (Pills) */}
-        <div className="grid grid-cols-2 gap-2 mt-4 p-1.5 rounded-2xl bg-black/40 border border-white/10 shrink-0">
+        {/* Payment Methods Selector */}
+        <div className="grid grid-cols-2 gap-1.5 mt-4 p-1 rounded-md bg-[#0B0B0C] border border-[#26262A] shrink-0">
           <button
             type="button"
             onClick={() => setSelectedMethod("pix")}
-            className={`py-3.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-[4px] text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
               selectedMethod === "pix"
-                ? "bg-white text-zinc-950 shadow-md scale-[1.01]"
-                : "text-zinc-400 hover:text-white hover:bg-white/5"
+                ? "bg-white text-zinc-950"
+                : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E]"
             }`}
           >
             <div className="w-4 h-4 flex items-center justify-center">
@@ -329,10 +338,10 @@ export function OrderPaymentModal({
           <button
             type="button"
             onClick={() => setSelectedMethod("card")}
-            className={`py-3.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-[4px] text-xs sm:text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
               selectedMethod === "card"
-                ? "bg-white text-zinc-950 shadow-md scale-[1.01]"
-                : "text-zinc-400 hover:text-white hover:bg-white/5"
+                ? "bg-white text-zinc-950"
+                : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E]"
             }`}
           >
             <CreditCard className="w-4 h-4 text-orange-400" />
@@ -347,8 +356,8 @@ export function OrderPaymentModal({
           {/* ============================================================== */}
           {selectedMethod === "pix" && (
             <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="p-5 rounded-3xl bg-[#14151e] border border-white/10 text-center space-y-4">
-                <div className="flex items-center justify-between text-xs text-zinc-400 pb-2 border-b border-white/10">
+              <div className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] text-center space-y-4">
+                <div className="flex items-center justify-between text-xs text-zinc-400 pb-2 border-b border-[#26262A]">
                   <span className="font-bold uppercase tracking-wider text-teal-400">QR Code Pix Imediato</span>
                   <span className="flex items-center gap-1 text-emerald-400">
                     <Clock className="w-3.5 h-3.5" /> Aprovação em 5 segundos
@@ -356,7 +365,7 @@ export function OrderPaymentModal({
                 </div>
 
                 {/* QR Code Frame */}
-                <div className="bg-white p-3.5 rounded-2xl inline-block shadow-2xl border-4 border-teal-500/20">
+                <div className="bg-white p-3 rounded-md inline-block border-2 border-teal-500/30">
                   <img 
                     src={qrCodeUrl} 
                     alt="QR Code Pix"
@@ -368,23 +377,23 @@ export function OrderPaymentModal({
                   <p className="text-xs text-zinc-400">
                     Abra o app do seu banco, escolha <strong>Pagar com Pix</strong> e aponte a câmera para o QR Code acima.
                   </p>
-                  <p className="text-sm font-black text-white">
+                  <p className="text-sm font-extrabold text-white tabular-nums">
                     Valor Exato: <span style={{ color: brandColor }}>{formatBRL(totalAmount)}</span>
                   </p>
                 </div>
 
                 {/* Chave Copia e Cola */}
-                <div className="p-3.5 rounded-2xl bg-black/50 border border-white/10 text-left space-y-2">
+                <div className="p-3.5 rounded-md bg-[#131315] border border-[#26262A] text-left space-y-2">
                   <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
                     Código Pix Copia e Cola:
                   </span>
-                  <div className="font-mono text-xs text-zinc-300 break-all select-all bg-black/40 p-2.5 rounded-xl border border-white/5 max-h-20 overflow-y-auto">
+                  <div className="font-mono text-xs text-zinc-300 break-all select-all bg-[#0B0B0C] p-2.5 rounded-[4px] border border-[#26262A] max-h-20 overflow-y-auto">
                     {pixCode}
                   </div>
                   <button
                     type="button"
                     onClick={handleCopyPix}
-                    className="w-full h-12 rounded-xl text-white font-black text-xs sm:text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:scale-98"
+                    className="w-full h-11 rounded-[6px] text-white font-bold text-xs sm:text-sm tracking-wide transition-opacity flex items-center justify-center gap-2 cursor-pointer hover:opacity-90"
                     style={{ backgroundColor: brandColor }}
                   >
                     {copiedPix ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
@@ -394,21 +403,21 @@ export function OrderPaymentModal({
               </div>
 
               {/* Upload Comprovante Box */}
-              <div className="p-5 rounded-3xl bg-[#14151e] border border-white/10 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <div className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                     <Upload className="w-4 h-4 text-teal-400" />
                     Já fez o Pix? Anexe seu comprovante
                   </span>
                   {receiptSent && (
-                    <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                    <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-[4px] border border-emerald-500/20 flex items-center gap-1 whitespace-nowrap">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Enviado
                     </span>
                   )}
                 </div>
 
                 {receiptSent ? (
-                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm space-y-3">
+                  <div className="p-4 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm space-y-3">
                     <p className="font-bold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Comprovante recebido com sucesso!
                     </p>
@@ -419,7 +428,7 @@ export function OrderPaymentModal({
                       <button
                         type="button"
                         onClick={handleNotifyWhatsapp}
-                        className="w-full py-3 px-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+                        className="w-full py-2.5 px-3 rounded-[6px] bg-green-600 hover:bg-green-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
                       >
                         <MessageCircle className="w-4 h-4" />
                         <span>Avisar o Lojista no WhatsApp Agora</span>
@@ -428,7 +437,7 @@ export function OrderPaymentModal({
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <label className="block border-2 border-dashed border-white/15 hover:border-white/30 rounded-2xl p-4 text-center cursor-pointer transition-all bg-black/20 hover:bg-black/40">
+                    <label className="block border-2 border-dashed border-[#26262A] hover:border-[#3F3F46] rounded-md p-4 text-center cursor-pointer transition-colors bg-[#131315] hover:bg-[#1B1B1E]">
                       <input 
                         type="file" 
                         accept="image/*,application/pdf" 
@@ -437,7 +446,7 @@ export function OrderPaymentModal({
                       />
                       {receiptPreview ? (
                         <div className="space-y-2">
-                          <img src={receiptPreview} alt="Comprovante" className="h-28 mx-auto rounded-lg object-contain border border-white/10" />
+                          <img src={receiptPreview} alt="Comprovante" className="h-28 mx-auto rounded-[4px] object-contain border border-[#26262A]" />
                           <p className="text-xs text-emerald-400 font-bold">Imagem selecionada: {receiptFile?.name}</p>
                           <span className="text-[11px] text-zinc-400 underline">Clique para trocar</span>
                         </div>
@@ -455,7 +464,7 @@ export function OrderPaymentModal({
                         type="button"
                         onClick={handleUploadReceipt}
                         disabled={uploadingReceipt}
-                        className="w-full h-12 rounded-xl text-white font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer bg-emerald-600 hover:bg-emerald-500 shadow-lg"
+                        className="w-full h-11 rounded-[6px] text-white font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer bg-emerald-600 hover:bg-emerald-500"
                       >
                         {uploadingReceipt ? (
                           <>
@@ -476,32 +485,30 @@ export function OrderPaymentModal({
             </div>
           )}
 
-          {/* ============================================================== */}
-          {/* TAB: CARTÃO DE CRÉDITO                                          */}
-          {/* ============================================================== */}
+          {/* TAB: CARTÃO DE CRÉDITO */}
           {selectedMethod === "card" && (
             <div className="space-y-4 animate-in fade-in duration-200">
               {cardSuccess ? (
-                <div className="p-6 rounded-3xl bg-[#14151e] border border-emerald-500/30 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
-                    <CheckCircle2 className="w-8 h-8" />
+                <div className="p-6 rounded-md bg-[#0B0B0C] border border-emerald-500/30 text-center space-y-4">
+                  <div className="w-14 h-14 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+                    <CheckCircle2 className="w-7 h-7" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-black text-white">Pagamento Confirmado no Cartão!</h4>
+                    <h4 className="text-lg font-extrabold text-white">Pagamento Confirmado no Cartão!</h4>
                     <p className="text-xs sm:text-sm text-zinc-400 max-w-sm mx-auto mt-1">
                       A transação foi autenticada e aprovada pelo gateway. Seu pedido já está sendo processado.
                     </p>
                   </div>
-                  <div className="p-3 rounded-2xl bg-black/40 border border-white/5 inline-flex items-center gap-3 text-xs text-zinc-300">
+                  <div className="p-3 rounded-md bg-[#131315] border border-[#26262A] inline-flex items-center gap-3 text-xs text-zinc-300 tabular-nums">
                     <span>Pedido #{order.order_number}</span>
                     <span>•</span>
                     <span className="font-bold text-emerald-400">{formatBRL(totalAmount)}</span>
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleProcessCardPayment} className="p-5 sm:p-6 rounded-3xl bg-[#14151e] border border-white/10 space-y-4">
-                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                    <span className="text-xs font-black uppercase tracking-wider text-orange-400">
+                <form onSubmit={handleProcessCardPayment} className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#26262A]">
+                    <span className="text-xs font-bold uppercase tracking-wider text-orange-400">
                       Dados do Cartão
                     </span>
                     <span className="text-[11px] font-bold text-zinc-400 flex items-center gap-1">
@@ -511,26 +518,26 @@ export function OrderPaymentModal({
 
                   {/* Número do Cartão */}
                   <div>
-                    <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                       <span>Número do Cartão</span>
                       <span className="text-[11px] text-orange-400 font-bold">{cardBrand}</span>
                     </label>
                     <div className="relative flex items-center">
-                      <CreditCard className="w-5 h-5 text-zinc-500 absolute left-4 pointer-events-none" />
+                      <CreditCard className="w-4 h-4 text-zinc-500 absolute left-3.5 pointer-events-none" />
                       <input 
                         type="text" 
                         required
                         placeholder="0000 0000 0000 0000"
                         value={cardNumber}
                         onChange={handleCardNumberChange}
-                        className="w-full h-13 pl-12 pr-4 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-sm sm:text-base font-semibold focus:outline-none focus:border-[#FE540B]"
+                        className="w-full h-11 pl-10 pr-4 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-mono text-sm font-semibold focus:outline-none focus:border-[#FE540B] tabular-nums"
                       />
                     </div>
                   </div>
 
                   {/* Nome do Titular */}
                   <div>
-                    <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-1.5">
+                    <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
                       Nome impresso no Cartão
                     </label>
                     <input 
@@ -539,14 +546,14 @@ export function OrderPaymentModal({
                       placeholder="EX: JOAO S SILVA"
                       value={cardHolder}
                       onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
-                      className="w-full h-13 px-4 rounded-xl bg-black/40 border border-white/10 text-white text-sm font-semibold focus:outline-none focus:border-[#FE540B]"
+                      className="w-full h-11 px-3.5 rounded-[4px] bg-[#131315] border border-[#26262A] text-white text-sm font-semibold focus:outline-none focus:border-[#FE540B]"
                     />
                   </div>
 
                   {/* Validade e CVV */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-1.5">
+                      <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
                         Validade (MM/AA)
                       </label>
                       <input 
@@ -555,11 +562,11 @@ export function OrderPaymentModal({
                         placeholder="MM/AA"
                         value={cardExpiry}
                         onChange={handleExpiryChange}
-                        className="w-full h-13 px-4 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-sm font-semibold focus:outline-none focus:border-[#FE540B]"
+                        className="w-full h-11 px-3.5 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-mono text-sm font-semibold focus:outline-none focus:border-[#FE540B] tabular-nums"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                      <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                         <span>CVV</span>
                         <Lock className="w-3 h-3 text-zinc-500" />
                       </label>
@@ -570,23 +577,23 @@ export function OrderPaymentModal({
                         placeholder="123"
                         value={cardCvv}
                         onChange={handleCvvChange}
-                        className="w-full h-13 px-4 rounded-xl bg-black/40 border border-white/10 text-white font-mono text-sm font-semibold focus:outline-none focus:border-[#FE540B]"
+                        className="w-full h-11 px-3.5 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-mono text-sm font-semibold focus:outline-none focus:border-[#FE540B] tabular-nums"
                       />
                     </div>
                   </div>
 
                   {/* Parcelamento */}
                   <div>
-                    <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-1.5">
+                    <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
                       Número de Parcelas
                     </label>
                     <select
                       value={cardInstallments}
                       onChange={(e) => setCardInstallments(Number(e.target.value))}
-                      className="w-full h-13 px-4 rounded-xl bg-black/40 border border-white/10 text-white text-sm font-semibold focus:outline-none focus:border-[#FE540B] cursor-pointer"
+                      className="w-full h-11 px-3.5 rounded-[4px] bg-[#131315] border border-[#26262A] text-white text-sm font-semibold focus:outline-none focus:border-[#FE540B] cursor-pointer"
                     >
                       {installments.map((inst) => (
-                        <option key={inst.installments} value={inst.installments} className="bg-zinc-900 text-white">
+                        <option key={inst.installments} value={inst.installments} className="bg-[#131315] text-white">
                           {inst.formattedText}
                         </option>
                       ))}
@@ -597,12 +604,12 @@ export function OrderPaymentModal({
                   <button
                     type="submit"
                     disabled={cardProcessing}
-                    className="w-full h-14 rounded-full text-white font-black text-sm sm:text-base tracking-wide transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:scale-98 mt-2"
+                    className="w-full h-12 rounded-[6px] text-white font-bold text-sm tracking-wide transition-opacity flex items-center justify-center gap-2 cursor-pointer hover:opacity-90 mt-2 tabular-nums"
                     style={{ backgroundColor: brandColor }}
                   >
                     {cardProcessing ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                         <span>Validando com Operadora com Segurança...</span>
                       </>
                     ) : (
@@ -633,12 +640,12 @@ export function OrderPaymentModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="pt-4 border-t border-white/10 mt-4 flex items-center justify-between gap-3 shrink-0">
+        <div className="pt-4 border-t border-[#26262A] mt-4 flex items-center justify-between gap-3 shrink-0">
           {companyWhatsapp && (
             <button
               type="button"
               onClick={handleNotifyWhatsapp}
-              className="px-4 py-2.5 rounded-xl text-xs font-black text-green-400 bg-green-600/10 hover:bg-green-600/20 border border-green-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 rounded-[6px] text-xs font-bold text-green-400 bg-green-600/10 hover:bg-green-600/20 border border-green-500/20 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
             >
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">Avisar Loja no</span> WhatsApp
@@ -648,7 +655,7 @@ export function OrderPaymentModal({
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto px-6 py-2.5 rounded-xl text-xs font-black text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+            className="ml-auto px-5 py-2 rounded-[6px] text-xs font-bold text-zinc-300 hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] transition-colors cursor-pointer whitespace-nowrap"
           >
             Fechar
           </button>

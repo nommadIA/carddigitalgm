@@ -381,9 +381,11 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     menu_button: string;
   }) => {
     const root = document.documentElement;
+    const body = document.body;
 
     const setVar = (name: string, val: string) => {
       root.style.setProperty(name, val);
+      if (body) body.style.setProperty(name, val);
     };
 
     setVar("--gm-primary", colors.primary);
@@ -393,6 +395,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     const rgbPrimary = hexToRgb(colors.primary);
     if (rgbPrimary) {
       setVar("--gm-primary-rgb", `${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}`);
+      setVar("--color-ember-halo", `rgba(${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}, 0.24)`);
     }
     setVar("--gm-primary-foreground", getContrastColor(colors.primary));
 
@@ -428,9 +431,6 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     setVar("--color-accent", colors.primary);
     setVar("--color-ember", colors.primary);
     setVar("--color-spark", colors.accent || colors.primary);
-    if (rgbPrimary) {
-      setVar("--color-ember-halo", `rgba(${rgbPrimary.r}, ${rgbPrimary.g}, ${rgbPrimary.b}, 0.24)`);
-    }
 
     // Atualiza a meta tag do navegador móvel
     const metaTheme = document.querySelector('meta[name="theme-color"]');
@@ -511,9 +511,6 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     activePresetRef.current = preset;
     setActiveThemeId(preset.id);
     setHoveredThemeId(null);
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("gm_selected_theme_id", preset.id);
-    }
 
     const currentConfig = {
       primary: preset.primary,
@@ -531,6 +528,17 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
       menu_button: preset.primary,
     };
     currentConfigRef.current = currentConfig;
+
+    if (typeof localStorage !== "undefined") {
+      try {
+        localStorage.setItem("gm_selected_theme_id", preset.id);
+        localStorage.setItem("gm_colors_dark", JSON.stringify(currentConfig));
+        const tid = localStorage.getItem("tenant_id");
+        if (tid) {
+          localStorage.setItem(`gm_colors_dark_${tid}`, JSON.stringify(currentConfig));
+        }
+      } catch {}
+    }
 
     // 2. Atualiza os estados React locais
     setBrandPrimary(preset.primary);
@@ -662,42 +670,37 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
       
       {/* BANNER PRINCIPAL DE HEADER COM RESET E STATUS */}
       <div 
-        className="p-6 sm:p-7 rounded-2xl border transition-all duration-300 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, ${activeTheme.primary}12 0%, rgba(18, 18, 22, 0.85) 60%)`,
-          borderColor: "rgba(255, 255, 255, 0.12)"
-        }}
+        className="p-5 sm:p-6 rounded-lg border transition-all duration-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden bg-[#131315] border-[#26262A]"
       >
         <div className="flex items-center gap-4 relative z-10">
           <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-lg font-black text-xl transition-all duration-300"
+            className="w-11 h-11 rounded-md flex items-center justify-center shrink-0 font-black text-xl transition-all duration-200 border border-[#26262A]"
             style={{ 
               backgroundColor: brandPrimary || activeTheme.primary, 
-              color: "#FFFFFF",
-              boxShadow: `0 8px 24px -4px ${brandPrimary || activeTheme.primary}60`
+              color: "#FFFFFF"
             }}
           >
-            <Palette className="w-6 h-6" />
+            <Palette className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span 
-                className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 drop-shadow-xs transition-colors duration-300"
+                className="text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 transition-colors duration-200"
                 style={{ color: brandPrimary || activeTheme.primary }}
               >
                 <Sparkles size={14} /> Temas Globais de Cores (1-Clique)
               </span>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full font-extrabold bg-white/10 border border-white/20 text-zinc-300">
+              <span className="text-[11px] px-2 py-0.5 rounded-[4px] font-bold bg-[#0B0B0C] border border-[#26262A] text-zinc-300 whitespace-nowrap">
                 10 Paletas Harmonizadas Prontas
               </span>
             </div>
-            <p className="text-xs text-zinc-300 font-medium mt-1">
+            <p className="text-xs text-zinc-400 font-medium mt-1">
               Clique em qualquer tema abaixo para transformar menus, botões, ícones e telas em tempo real.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0 relative z-10">
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto shrink-0 relative z-10">
           {/* BOTÃO AJUSTAR MATIZ (ESPECTRO) */}
           <button
             type="button"
@@ -707,50 +710,45 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
               title: "Ajustar Matiz do Tema",
               subtitle: "Arraste a barra de espectro para mudar o tom de cor principal do tema em tempo real.",
             })}
-            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0"
             title="Abrir barra de espectro de matiz"
           >
-            <Sliders size={15} className="text-[var(--gm-primary)]" /> Ajustar Matiz (Espectro)
+            <Sliders size={14} className="text-[var(--gm-primary)]" /> Ajustar Matiz (Espectro)
           </button>
 
           {/* RESET DE CORES */}
           <button
             type="button"
             onClick={resetToDefaultOrange}
-            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0"
             title="Restaurar padrão Laranja Oficial"
           >
-            <RotateCcw size={15} /> Resetar Padrão
+            <RotateCcw size={14} /> Resetar Padrão
           </button>
         </div>
       </div>
 
       {/* MENSAGENS DE CONFIRMAÇÃO */}
       {savedSuccess && (
-        <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
+        <div className="p-3.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center justify-center gap-2 animate-in fade-in duration-200">
           <CheckCircle2 size={16} /> Prévia em tempo real: Tema &ldquo;{savedSuccess}&rdquo; aplicado! Clique em &ldquo;Salvar Alterações&rdquo; no rodapé para gravar em definitivo.
         </div>
       )}
 
       {resetSuccess && (
-        <div className="p-3.5 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 text-xs font-black flex items-center justify-center gap-2 animate-in fade-in duration-200">
+        <div className="p-3.5 rounded-md bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-bold flex items-center justify-center gap-2 animate-in fade-in duration-200">
           <RotateCcw size={16} /> Prévia redefinida para o padrão Laranja CardDigital! Clique em &ldquo;Salvar Alterações&rdquo; para confirmar.
         </div>
       )}
 
       {/* SEÇÃO PRINCIPAL: OS 10 TEMAS E PALETAS PRONTAS (1-CLIQUE) */}
       <div 
-        className="p-6 sm:p-8 rounded-3xl border transition-all duration-300 space-y-6 shadow-2xl"
-        style={{
-          background: "rgba(18, 18, 22, 0.65)",
-          borderColor: "rgba(255, 255, 255, 0.12)",
-          backdropFilter: "blur(20px)"
-        }}
+        className="p-5 sm:p-6 rounded-lg border transition-all duration-200 space-y-5 bg-[#131315] border-[#26262A]"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#26262A] pb-4">
           <div>
-            <h2 className="text-base sm:text-lg font-extrabold uppercase tracking-wider text-white flex items-center gap-2.5">
-              <Sparkles className="w-5 h-5 text-[var(--gm-primary)]" /> 
+            <h2 className="text-base font-extrabold uppercase tracking-wider text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[var(--gm-primary)]" /> 
               Selecione o Tema de Cores do Aplicativo (10 Opções)
             </h2>
             <p className="text-xs text-zinc-400 font-medium mt-1">
@@ -759,19 +757,18 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
           </div>
 
           <div 
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-bold self-start sm:self-auto transition-all duration-300 shadow-md"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[4px] border text-xs font-bold self-start sm:self-auto transition-colors duration-200 bg-[#0B0B0C]"
             style={{
-              background: `linear-gradient(135deg, ${currentDisplayTheme.primary}22, rgba(20, 20, 24, 0.8))`,
               borderColor: `${currentDisplayTheme.primary}60`
             }}
           >
             <span className="text-zinc-300">{hoveredThemeId ? "Prévia (Hover):" : "Tema Ativo:"}</span>
             <span 
-              className="w-2.5 h-2.5 rounded-full animate-pulse shadow-sm"
+              className="w-2 h-2 rounded-full"
               style={{ backgroundColor: currentDisplayTheme.primary }}
             />
             <span 
-              className="uppercase font-black tracking-wide"
+              className="uppercase font-extrabold tracking-wide"
               style={{ color: currentDisplayTheme.primary }}
             >
               {currentDisplayTheme.name}
@@ -797,118 +794,95 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                 onPointerEnter={() => handlePreviewThemeHover(preset)}
                 onTouchStart={() => handlePreviewThemeHover(preset)}
                 onMouseLeave={handleRevertThemePreview}
-                className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3 text-left relative overflow-hidden group hover:scale-[1.02] active:scale-[0.99] ${
+                className={`p-3.5 rounded-md border transition-colors duration-200 cursor-pointer flex flex-col justify-between gap-3 text-left relative overflow-hidden group ${
                   isSelected
-                    ? "ring-2 shadow-2xl"
+                    ? "bg-[#0B0B0C]"
                     : isHovered
-                    ? "ring-1 shadow-xl"
-                    : "hover:border-white/30 hover:shadow-lg"
+                    ? "bg-[#1B1B1E]"
+                    : "bg-[#0B0B0C] hover:border-[#3F3F46]"
                 }`}
                 style={{
-                  background: isSelected 
-                    ? `radial-gradient(circle at top left, ${preset.primary}28 0%, rgba(18, 18, 22, 0.95) 85%)`
-                    : isHovered
-                    ? `radial-gradient(circle at top left, ${preset.primary}20 0%, rgba(22, 22, 28, 0.92) 85%)`
-                    : "rgba(18, 18, 22, 0.65)",
-                  borderColor: isSelected ? preset.primary : isHovered ? `${preset.primary}90` : "rgba(255, 255, 255, 0.12)",
-                  boxShadow: isSelected 
-                    ? `0 0 28px -4px ${preset.primary}50, inset 0 1px 0 rgba(255, 255, 255, 0.2)` 
-                    : isHovered
-                    ? `0 0 20px -4px ${preset.primary}40, inset 0 1px 0 rgba(255, 255, 255, 0.1)`
-                    : undefined,
-                  backdropFilter: "blur(16px)",
+                  borderColor: isSelected ? preset.primary : isHovered ? `${preset.primary}90` : "#26262A",
                 }}
               >
                 {/* Indicador de Seleção Ativa com Ícone */}
                 {isSelected && (
                   <div 
-                    className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full text-white flex items-center justify-center shadow-lg animate-in zoom-in duration-150 z-10"
+                    className="absolute top-2.5 right-2.5 w-5 h-5 rounded-[4px] text-white flex items-center justify-center animate-in zoom-in duration-150 z-10"
                     style={{ 
-                      backgroundColor: preset.primary,
-                      boxShadow: `0 0 12px ${preset.primary}80`
+                      backgroundColor: preset.primary
                     }}
                     title="Tema Ativo Selecionado"
                   >
-                    <Check size={12} strokeWidth={3.5} />
+                    <Check size={12} strokeWidth={3} className="text-white" />
                   </div>
                 )}
 
                 {/* Indicador de Prévia no Hover */}
                 {!isSelected && isHovered && (
                   <div 
-                    className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold text-white uppercase tracking-wider animate-pulse shadow-md z-10"
+                    className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-[4px] text-[11px] font-bold text-white uppercase tracking-wider z-10"
                     style={{ backgroundColor: preset.primary }}
                   >
                     PRÉVIA
                   </div>
                 )}
 
-                {/* Topo do Card: Amostras Apple (3 Cápsulas/Pills Circulares) e Badge Apple */}
-                <div className="flex items-center justify-between w-full pr-5">
-                  <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-full border border-white/10 backdrop-blur-md">
+                {/* Topo do Card: Amostras e Badge */}
+                <div className="flex items-center justify-between w-full pr-6">
+                  <div className="flex items-center gap-1.5 bg-[#131315] p-1 rounded-[4px] border border-[#26262A]">
                     {/* Amostra 1: Primária */}
                     <span 
-                      className="w-4 h-4 rounded-full border border-white/50 shadow-sm transition-transform group-hover:scale-110" 
-                      style={{ 
-                        backgroundColor: preset.primary,
-                        boxShadow: `0 0 10px ${preset.primary}90`
-                      }} 
+                      className="w-3.5 h-3.5 rounded-full border border-white/40" 
+                      style={{ backgroundColor: preset.primary }} 
                       title={`Primária: ${preset.primary}`}
                     />
                     {/* Amostra 2: Acento */}
                     <span 
-                      className="w-4 h-4 rounded-full border border-white/40 shadow-xs" 
-                      style={{ 
-                        backgroundColor: preset.accent,
-                        boxShadow: `0 0 6px ${preset.accent}60`
-                      }} 
+                      className="w-3.5 h-3.5 rounded-full border border-white/30" 
+                      style={{ backgroundColor: preset.accent }} 
                       title={`Acento: ${preset.accent}`}
                     />
                     {/* Amostra 3: Fundo/Superfície */}
                     <span 
-                      className="w-4 h-4 rounded-full border border-white/30 shadow-xs" 
-                      style={{ 
-                        backgroundColor: preset.bg,
-                        boxShadow: `inset 0 0 4px rgba(255,255,255,0.2)`
-                      }} 
+                      className="w-3.5 h-3.5 rounded-full border border-white/25" 
+                      style={{ backgroundColor: preset.bg }} 
                       title={`Fundo: ${preset.bg}`}
                     />
                   </div>
                   <span 
-                    className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border backdrop-blur-sm transition-all"
+                    className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-[4px] border whitespace-nowrap"
                     style={{ 
-                      backgroundColor: `${preset.primary}25`,
+                      backgroundColor: `${preset.primary}20`,
                       color: "#FFFFFF",
-                      borderColor: `${preset.primary}60`,
-                      textShadow: "0 1px 2px rgba(0,0,0,0.6)"
+                      borderColor: `${preset.primary}50`
                     }}
                   >
                     {preset.badge}
                   </span>
                 </div>
 
-                {/* Nome do Tema (Clean e Moderno) */}
+                {/* Nome do Tema */}
                 <div className="pt-0.5">
                   <h3 className="text-[13px] font-bold transition-colors leading-tight text-white truncate">
                     {preset.name}
                   </h3>
                 </div>
 
-                {/* Faixa Gradiente Ilustrativa da Paleta com Brilho Apple */}
+                {/* Faixa Gradiente Ilustrativa da Paleta */}
                 <div 
-                  className="w-full h-1.5 rounded-full opacity-90 group-hover:opacity-100 transition-all shadow-inner"
+                  className="w-full h-1.5 rounded-[4px] opacity-90 group-hover:opacity-100 transition-opacity"
                   style={{
-                    background: `linear-gradient(90deg, ${preset.primary} 0%, ${preset.accent} 50%, ${preset.menuBg} 100%)`,
-                    boxShadow: `0 0 8px ${preset.primary}40`
+                    background: `linear-gradient(90deg, ${preset.primary} 0%, ${preset.accent} 50%, ${preset.menuBg} 100%)`
                   }}
                 />
 
                 {/* Ações: Código HEX em 1 linha e Botão Ajustar abaixo */}
-                <div className="pt-2 border-t border-white/10 flex flex-col gap-2 w-full">
+                <div className="pt-2 border-t border-[#26262A] flex flex-col gap-2 w-full">
                   {/* Linha Única HEX */}
-                  <div className="w-full py-1.5 px-2.5 rounded-lg bg-black/40 border border-white/10 flex items-center justify-between text-[11px] font-mono font-bold text-slate-200">
-                    <span className="text-slate-400 text-[10px] font-sans font-semibold">HEX</span>
-                    <span className="text-white font-extrabold tracking-wide">{preset.primary}</span>
+                  <div className="w-full py-1.5 px-2.5 rounded-[4px] bg-[#131315] border border-[#26262A] flex items-center justify-between text-[11px] font-mono font-bold text-slate-200 tabular-nums">
+                    <span className="text-zinc-400 text-[11px] font-sans font-semibold">HEX</span>
+                    <span className="text-white font-bold tracking-wide">{preset.primary}</span>
                   </div>
 
                   {/* Botão de Ajustar Abaixo */}
@@ -925,7 +899,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                         themeId: preset.id,
                       });
                     }}
-                    className="w-full py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-sans font-bold text-[11px] flex items-center justify-center gap-1.5 border border-white/15 hover:border-[var(--gm-primary)] transition-all cursor-pointer shadow-xs"
+                    className="w-full py-2 px-3 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] text-white font-sans font-bold text-xs flex items-center justify-center gap-1.5 border border-[#26262A] hover:border-[var(--gm-primary)] transition-colors cursor-pointer whitespace-nowrap"
                     title="Ajustar com espectro"
                   >
                     <Sliders size={13} style={{ color: preset.primary }} />
@@ -940,27 +914,22 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
 
       {/* PALETA DE AMOSTRAS DO TEMA ATIVO (RESUMO VISUAL EM TEMPO REAL COM AJUSTE DE COR) */}
       <div 
-        className="p-6 sm:p-7 rounded-3xl border space-y-5 shadow-2xl transition-all duration-300"
-        style={{
-          background: "rgba(18, 18, 22, 0.65)",
-          borderColor: "rgba(255, 255, 255, 0.12)",
-          backdropFilter: "blur(20px)"
-        }}
+        className="p-5 sm:p-6 rounded-lg border space-y-5 transition-colors duration-200 bg-[#131315] border-[#26262A]"
       >
-        <div className="flex items-start justify-between flex-wrap gap-2">
+        <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
-              <Layers className="w-6 h-6 text-[var(--gm-primary)]" />
-              Palette & Amostras Ativas
+            <h3 className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-2">
+              <Layers className="w-5 h-5 text-[var(--gm-primary)]" />
+              Paleta e Amostras Ativas
             </h3>
-            <p className="text-xs text-slate-300 font-medium mt-0.5">
+            <p className="text-xs text-zinc-400 font-medium mt-0.5">
               Distribuição harmônica das cores ativas no sistema em tempo real. Clique em qualquer card para ajustar a cor com o espectro.
             </p>
           </div>
           <span 
-            className="text-xs font-mono font-bold px-3.5 py-1 rounded-full border tracking-wider transition-colors duration-300"
+            className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-[4px] border tracking-wider transition-colors duration-200 tabular-nums whitespace-nowrap"
             style={{
-              backgroundColor: `${brandPrimary || activeTheme.primary}20`,
+              backgroundColor: `${brandPrimary || activeTheme.primary}18`,
               color: "#FFFFFF",
               borderColor: `${brandPrimary || activeTheme.primary}50`
             }}
@@ -970,7 +939,7 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
         </div>
 
         {/* GRID DE CARDS DA PALETA COM PRÉVIA INSTANTÂNEA E ALTO CONTRASTE */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { name: "Canvas / Fundo", hex: hoveredThemeId ? currentDisplayTheme.bg : (brandBg || activeTheme.bg), desc: "Fundo Geral", field: "brandBg" },
             { name: "Menu Surface", hex: hoveredThemeId ? currentDisplayTheme.menuBg : (menuBg || activeTheme.menuBg), desc: "Fundo Sidebar", field: "menuBg" },
@@ -990,29 +959,28 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                 subtitle: "Arraste a barra de espectro para escolher a cor desejada.",
                 field: item.field,
               })}
-              className="rounded-2xl border border-white/15 overflow-hidden transition-all duration-300 flex flex-col relative group hover:border-[var(--gm-primary)] cursor-pointer shadow-lg hover:scale-[1.02]"
-              style={{ background: "rgba(18, 18, 22, 0.65)" }}
+              className="rounded-md border border-[#26262A] overflow-hidden transition-colors duration-200 flex flex-col relative group hover:border-[var(--gm-primary)] cursor-pointer bg-[#0B0B0C]"
               title="Clique para ajustar com a barra de espectro"
             >
               {/* Bloco Superior com a Cor Solid */}
               <div
-                className="h-16 sm:h-20 w-full transition-all duration-300 relative flex items-center justify-center"
+                className="h-16 sm:h-20 w-full transition-colors duration-200 relative flex items-center justify-center"
                 style={{ backgroundColor: item.hex }}
               >
                 {(item.hex.toUpperCase() === "#F2F2F3" || item.hex.toUpperCase() === "#FFFFFF") && (
                   <div className="absolute inset-0 border border-slate-300/40 pointer-events-none" />
                 )}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 px-3 py-1 rounded-lg text-[11px] font-bold text-white flex items-center gap-1.5 backdrop-blur-md shadow-md">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-[#0B0B0C]/90 border border-[#26262A] px-2.5 py-1 rounded-[4px] text-[11px] font-bold text-white flex items-center gap-1.5">
                   <Palette size={12} /> Ajustar
                 </div>
               </div>
 
               {/* Painel Inferior do Card com Nome e Código Hex */}
-              <div className="p-3 border-t border-white/10 flex flex-col justify-center bg-zinc-900/80">
+              <div className="p-3 border-t border-[#26262A] flex flex-col justify-center bg-[#0B0B0C]">
                 <h4 className="text-xs font-bold text-white leading-tight truncate">
                   {item.name}
                 </h4>
-                <p className="text-[11px] font-mono font-bold text-slate-300 uppercase mt-0.5 tracking-wider">
+                <p className="text-[11px] font-mono font-bold text-zinc-400 uppercase mt-0.5 tracking-wider tabular-nums">
                   {item.hex}
                 </p>
               </div>
@@ -1021,22 +989,15 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
         </div>
       </div>
 
-
-
       {/* SEÇÃO DA TIPOGRAFIA (FAMÍLIA DE FONTE) */}
       <div 
-        className="p-6 rounded-2xl border space-y-4 shadow-xl"
-        style={{
-          background: "rgba(18, 18, 22, 0.65)",
-          borderColor: "rgba(255, 255, 255, 0.12)",
-          backdropFilter: "blur(20px)"
-        }}
+        className="p-5 sm:p-6 rounded-lg border space-y-4 bg-[#131315] border-[#26262A]"
       >
         <label className="text-xs font-extrabold uppercase tracking-wider text-[var(--gm-primary)] flex items-center gap-2">
           <Type className="w-4 h-4" /> Tipografia Principal do Aplicativo
         </label>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
           {[
             "Inter",
             "Space Grotesk",
@@ -1059,17 +1020,12 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
                 onMouseLeave={() => setPreviewFont(null)}
                 onTouchStart={() => setPreviewFont(font)}
                 onTouchEnd={() => setPreviewFont(null)}
-                className={`flex items-center justify-center p-3 rounded-xl border transition-all h-12 cursor-pointer ${
+                className={`flex items-center justify-center p-3 rounded-[6px] border transition-colors h-11 cursor-pointer ${
                   isActive
-                    ? "border-[var(--gm-primary)] text-[var(--gm-primary)] font-bold ring-2 ring-[var(--gm-primary)]/20"
-                    : "border-white/10 hover:border-white/20 text-slate-200"
+                    ? "border-[var(--gm-primary)] text-[var(--gm-primary)] font-bold bg-[#1B1B1E]"
+                    : "border-[#26262A] hover:border-[#3F3F46] text-zinc-200 bg-[#0B0B0C] hover:bg-[#1B1B1E]"
                 }`}
-                style={{ 
-                  fontFamily: font,
-                  background: isActive 
-                    ? `linear-gradient(145deg, ${brandPrimary || activeTheme.primary}18, rgba(18, 18, 22, 0.9))`
-                    : "rgba(18, 18, 22, 0.5)"
-                }}
+                style={{ fontFamily: font }}
               >
                 <span className="text-xs font-semibold truncate">
                   {font}

@@ -33,11 +33,11 @@ import DevicePinGate from './components/auth/DevicePinGate';
 const PageLoader = () => null;
 
 const BrandedLoader = () => (
-  <div className="h-screen w-full bg-[#08090d] flex flex-col items-center justify-center gap-4 text-white select-none">
-    <div className="w-12 h-12 rounded-2xl bg-[#FE540B] flex items-center justify-center font-black text-white text-xl shadow-lg shadow-[#FE540B]/30 animate-pulse">
+  <div className="h-screen w-full bg-[#0B0B0C] flex flex-col items-center justify-center gap-4 text-white select-none">
+    <div className="w-12 h-12 rounded-lg bg-[#FE540B] flex items-center justify-center font-black text-[#0B0B0C] text-xl border border-[#FE540B]">
       GM
     </div>
-    <div className="flex items-center gap-2.5 text-xs font-bold text-slate-300">
+    <div className="flex items-center gap-2.5 text-xs font-bold text-[#CBD5E1]">
       <Loader2 size={16} className="animate-spin text-[#FE540B]" />
       <span>Carregando CardDigital GM...</span>
     </div>

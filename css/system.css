@@ -210,44 +210,42 @@ body {
   background: #131315 !important;
   border-radius: 8px !important;
   border: 1px solid #26262A !important;
-  box-shadow: 
+  box-shadow:
     0 4px 20px -2px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.05) !important;
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04) !important;
   contain: none !important;
-  overflow: hidden;
   position: relative;
-  transition: all .18s ease;
+  transition: background-color 160ms cubic-bezier(.16, 1, .3, 1), border-color 160ms cubic-bezier(.16, 1, .3, 1);
   color: #F2F2F3;
+}
+
+.gm-modal,
+.gm-modal-content,
+.gm-note-modal,
+[role="dialog"] {
+  overflow-x: hidden;
 }
 
 aside.gm-sidebar,
 .gm-sidebar {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background: #131315 !important;
-  border-top-left-radius: 0px !important;
-  border-bottom-left-radius: 0px !important;
-  border-top-right-radius: 12px !important;
-  border-bottom-right-radius: 12px !important;
+  background: #0B0B0C !important;
+  border-radius: 0 !important;
   border-left: none !important;
   border-right: 1px solid #26262A !important;
   border-top: none !important;
   border-bottom: none !important;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: none !important;
   contain: none !important;
 }
 
 .card:hover,
 .gm-card:hover,
 .gm-budget-card:hover,
-.gm-dashboard-card:hover,
-.barra:hover,
-.fora:hover {
+.gm-dashboard-card:hover {
   background: #17171A !important;
   border-color: #3F3F46 !important;
-  box-shadow: 
-    0 6px 24px -2px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 .gm-card-header {
@@ -325,209 +323,145 @@ button.gm-btn,
   box-sizing: border-box;
 }
 
-/* Modificadores de Tamanho de Botão */
+/* =========================================================
+   4) BOTÕES FORGE SÓLIDOS & PADRÕES DE TAMANHO (4px - 6px)
+   - LG: 48px | MD: 40px | SM: 32px | Square Icon: 1:1
+   - Zero 999px pill hijack; alinhado a DESIGN.md
+========================================================= */
+button.gm-btn,
+.gm-btn {
+  height: 40px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+  line-height: 1;
+  outline: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
 .gm-btn-lg,
 .btn-lg,
-button.lg,
-a.gm-btn-lg,
-button[class*="h-12"]:not([class*="w-"]):not(.rounded-full):not([class*="rounded-2xl"]):not([class*="rounded-xl"]):not([class*="!p-0"]):not(.gm-floating-save-btn):not(.gm-floating-whatsapp-btn),
-button[class*="h-13"]:not([class*="w-"]):not(.rounded-full):not([class*="rounded-2xl"]):not([class*="rounded-xl"]):not([class*="!p-0"]):not(.gm-floating-save-btn):not(.gm-floating-whatsapp-btn),
-a[class*="h-12"]:not([class*="w-"]):not(.rounded-full),
-a[class*="h-13"]:not([class*="w-"]):not(.rounded-full) {
+.forge-btn--lg {
   height: 48px !important;
   min-height: 48px !important;
   padding: 0 24px !important;
   font-size: 13px !important;
   border-radius: 6px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.05em !important;
-}
-
-.gm-btn-lg span,
-.btn-lg span,
-button[class*="h-12"] span,
-button[class*="h-13"] span,
-a[class*="h-12"] span,
-a[class*="h-13"] span {
-  font-size: 13px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.05em !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
 }
 
 .gm-btn-md,
 .btn-md,
-/* =========================================================
-   TC PILL BUTTON SYSTEM (From Uiverse.io by uiverse-astronaut)
-   Substituição completa da UI e efeitos dos botões do app
-   ========================================================= */
-
-.tc-pill-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 10px !important;
-  height: 48px;
-  padding: 0 26px !important;
-  font-family: var(--font-body, "Inter", system-ui, sans-serif) !important;
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.005em !important;
-  line-height: 1 !important;
-  border-radius: 999px !important;
-  border: 1.5px solid var(--color-ink, #1a0e08) !important;
-  background: var(--color-ink, #1a0e08) !important;
-  color: var(--color-parchment, #f4ecd8) !important;
-  cursor: pointer !important;
-  white-space: nowrap !important;
-  transition:
-    background 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
-    border-color 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
-    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+.forge-btn--md {
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 16px !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
 }
 
-.tc-pill-btn:hover {
-  background: var(--color-clay, #b33a0e) !important;
-  border-color: var(--color-clay, #b33a0e) !important;
-  color: var(--color-parchment, #f4ecd8) !important;
+.gm-btn-sm,
+.btn-sm,
+.forge-btn--sm {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 11px !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
 }
 
-.tc-pill-btn:active {
-  transform: translateY(1px) !important;
-}
-
-.tc-pill-btn:focus-visible {
-  outline: none !important;
-  box-shadow: 0 0 0 2px var(--color-saffron, #f2c545) !important;
-}
-
-.tc-pill-btn__icon {
-  width: 18px;
-  height: 18px;
-  display: block;
-  fill: none !important;
-  stroke: currentColor !important;
-  transition: transform 180ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
-}
-
-.tc-pill-btn:hover .tc-pill-btn__icon {
-  transform: none !important;
-}
-
-/* =========================================================
-   FORGE UI BUTTON SYSTEM (From Uiverse.io by uiverse-astronaut)
-   - Borda arredondada suave (4px)
-   - Cor de Fundo Dinâmica vinculada ao Tema do Sistema
-   - Hover Spark dinâmico
-   - Tipografia Uppercase 14px, Letter-spacing 0.04em, Peso 600
-========================================================= */
 .forge-btn,
-.tc-pill-btn-primary,
 button.primary,
 .btn-primary,
 .gm-btn-primary,
 .forge-btn-primary,
 .forge-btn--primary,
 .gm-btn-primary-white,
-button.primary-white,
-button[class*="bg-[#F65A1A]"],
-button[class*="bg-[#f65a1a]"],
-button[class*="bg-[var(--gm-primary)]"],
-a[class*="bg-[#F65A1A]"],
-a[class*="bg-[#f65a1a]"],
-a[class*="bg-[var(--gm-primary)]"] {
+button.primary-white {
   --color-ink: var(--gm-primary-foreground, #0b0b0c);
   --color-ember: var(--gm-btn-bg, var(--gm-primary, #FE540B));
   --color-spark: var(--gm-accent, #ff7a38);
-  --color-text: #f2f2f3;
-  --color-border: #26262a;
   --color-ember-halo: var(--gm-primary-20, rgba(254, 84, 11, 0.24));
-  --radius-md: 4px;
-  --space-xs: 8px;
-  --space-md: 16px;
-  --duration-fast: 120ms;
-  --ease-out: cubic-bezier(0.2, 0.65, 0.25, 1);
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: var(--space-xs) !important;
-  height: 40px !important;
-  padding: 0 var(--space-md) !important;
-  border-radius: var(--radius-md) !important;
-  border: 1px solid transparent !important;
-  background: var(--color-ember) !important;
-  background-color: var(--color-ember) !important;
-  color: var(--color-ink) !important;
-  font-family: inherit !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.04em !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
-  white-space: nowrap !important;
-  user-select: none !important;
-  box-shadow: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: var(--color-ember);
+  background-color: var(--color-ember);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  box-shadow: none;
   transition:
-    background var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out),
-    border-color var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-fast) var(--ease-out),
-    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+    background-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .forge-btn:focus-visible,
-.tc-pill-btn-primary:focus-visible,
 button.primary:focus-visible,
 .btn-primary:focus-visible,
 .gm-btn-primary:focus-visible,
 .forge-btn-primary:focus-visible,
 .forge-btn--primary:focus-visible {
-  outline: none !important;
-  box-shadow: 0 0 0 2px var(--color-ember-halo, rgba(246, 90, 26, 0.24)) !important;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-ember-halo, rgba(254, 84, 11, 0.28));
 }
 
 .forge-btn--primary,
-.forge-btn-primary {
-  background: var(--color-ember) !important;
-  color: var(--color-ink) !important;
+.forge-btn-primary,
+button.primary,
+.btn-primary,
+.gm-btn-primary {
+  background: var(--gm-btn-bg, var(--gm-primary, #FE540B)) !important;
+  background-color: var(--gm-btn-bg, var(--gm-primary, #FE540B)) !important;
+  color: var(--gm-primary-foreground, #0b0b0c) !important;
+  border-color: var(--gm-btn-border, var(--gm-primary, #FE540B)) !important;
 }
 
 .forge-btn--primary:hover,
 .forge-btn-primary:hover,
-.tc-pill-btn-primary:hover,
 button.primary:hover,
 .btn-primary:hover,
-.gm-btn-primary:hover,
-button[class*="bg-[#F65A1A]"]:hover,
-button[class*="bg-[#f65a1a]"]:hover,
-button[class*="bg-[var(--gm-primary)]"]:hover,
-a[class*="bg-[#F65A1A]"]:hover,
-a[class*="bg-[#f65a1a]"]:hover,
-a[class*="bg-[var(--gm-primary)]"]:hover {
-  background: var(--gm-accent, var(--color-spark, #ff7a38)) !important;
-  background-color: var(--gm-accent, var(--color-spark, #ff7a38)) !important;
-  border-color: transparent !important;
-  color: var(--color-ink, #0b0b0c) !important;
+.gm-btn-primary:hover {
+  background: var(--gm-accent, #ff7a38) !important;
+  background-color: var(--gm-accent, #ff7a38) !important;
+  border-color: var(--gm-accent, #ff7a38) !important;
+  color: var(--gm-primary-foreground, #0b0b0c) !important;
 }
 
-.forge-btn:active,
-.forge-btn--primary:active,
-.tc-pill-btn-primary:active,
-button.primary:active,
-.btn-primary:active,
-.gm-btn-primary:active,
-.forge-btn-primary:active {
-  transform: scale(0.98) !important;
-}
-
-.forge-btn__icon {
-  width: 14px !important;
-  height: 14px !important;
-  flex-shrink: 0 !important;
-}
-
-/* 2. MODELO SECUNDÁRIO FORGE (Slate #1b1b1e com borda #26262a e radius 4px) */
 .forge-btn--secondary,
-.tc-pill-btn-secondary,
 button.secondary,
 .btn-secondary,
 .gm-btn-secondary,
@@ -539,35 +473,35 @@ button.ghost,
 .btn-ghost,
 .gm-btn-ghost,
 .forge-btn-ghost {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  height: 40px !important;
-  padding: 0 16px !important;
-  font-family: inherit !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.04em !important;
-  text-transform: uppercase !important;
-  line-height: 1 !important;
-  border-radius: 4px !important;
-  border: 1px solid #26262a !important;
-  background: #1b1b1e !important;
-  background-color: #1b1b1e !important;
-  color: #f2f2f3 !important;
-  cursor: pointer !important;
-  white-space: nowrap !important;
-  user-select: none !important;
-  box-shadow: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  border-radius: 4px;
+  border: 1px solid #26262a;
+  background: #131315;
+  background-color: #131315;
+  color: #f2f2f3;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  box-shadow: none;
   transition:
-    background 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
-    border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
-    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+    background-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .forge-btn--secondary:hover,
-.tc-pill-btn-secondary:hover,
 button.secondary:hover,
 .btn-secondary:hover,
 .gm-btn-secondary:hover,
@@ -579,13 +513,12 @@ button.ghost:hover,
 .btn-ghost:hover,
 .gm-btn-ghost:hover,
 .forge-btn-ghost:hover {
-  background: #26262a !important;
-  background-color: #26262a !important;
-  border-color: #38383f !important;
-  color: #ffffff !important;
+  background: #1b1b1e;
+  background-color: #1b1b1e;
+  border-color: #3f3f46;
+  color: #ffffff;
 }
 
-/* 3. BOTÕES DE AÇÃO E ÍCONES (Formato Forge 4px) */
 .gm-btn-icon-square,
 .forge-btn-icon-square,
 .forge-btn-icon,
@@ -593,20 +526,21 @@ button.ghost:hover,
 .forge-btn-icon-secondary,
 .gm-budget-action-btn,
 .gm-grid-action-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 4px !important;
-  border: 1px solid #26262a !important;
-  background: #1b1b1e !important;
-  background-color: #1b1b1e !important;
-  color: #f2f2f3 !important;
-  cursor: pointer !important;
-  box-shadow: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1px solid #26262a;
+  background: #131315;
+  background-color: #131315;
+  color: #f2f2f3;
+  cursor: pointer;
+  box-shadow: none;
   transition:
-    background 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
-    border-color 120ms cubic-bezier(0.2, 0.65, 0.25, 1),
-    transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+    background-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .gm-btn-icon-square:hover,
@@ -616,127 +550,45 @@ button.ghost:hover,
 .forge-btn-icon-secondary:hover,
 .gm-budget-action-btn:hover,
 .gm-grid-action-btn:hover {
-  background: #26262a !important;
-  background-color: #26262a !important;
-  border-color: #38383f !important;
-  color: #ffffff !important;
+  background: #1b1b1e;
+  background-color: #1b1b1e;
+  border-color: #3f3f46;
+  color: #ffffff;
 }
 
-/* 4. Cores e tipografia dos textos dentro de botões */
-button span,
-.tc-pill-btn span,
-.gm-btn span,
-.btn span,
-button.primary span,
-button.secondary span,
-button[class*="bg-"] span,
-a[class*="bg-"] span {
-  color: inherit !important;
-  font-family: var(--font-body, "Inter", system-ui, sans-serif) !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.005em !important;
-  text-shadow: none !important;
+.forge-btn--primary:active:not(:disabled),
+.forge-btn--secondary:active:not(:disabled),
+.gm-btn:active:not(:disabled),
+.btn:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
-/* 5. Ícones dentro dos botões (outline sem preenchimento, com animação Astronaut translate(2px, -2px)) */
-button svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-.tc-pill-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-.tc-pill-btn__icon,
-.gm-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-.btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-a.tc-pill-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-button.primary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-button.secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]) {
-  fill: none !important;
-  stroke: currentColor !important;
-  color: inherit !important;
-  transition: transform 180ms cubic-bezier(0.22, 0.61, 0.36, 1) !important;
-}
-
-button:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-.tc-pill-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-.tc-pill-btn:hover .tc-pill-btn__icon,
-.gm-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-.btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
-a.tc-pill-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]) {
-  fill: none !important;
-  stroke: currentColor !important;
-  transform: none !important;
-}
-
-/* 6. Active state universal: scale(0.98) sem deslocamento vertical */
-button:active,
-.tc-pill-btn:active,
-.gm-btn:active,
-.btn:active {
-  transform: scale(0.98) !important;
-}
-
-/* 7. Focus Visible com contorno Saffron #f2c545 */
 button:focus-visible,
-.tc-pill-btn:focus-visible,
 .gm-btn:focus-visible,
 .btn:focus-visible {
-  outline: none !important;
-  box-shadow: 0 0 0 2px var(--color-saffron, #f2c545) !important;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--gm-primary-20, rgba(254, 84, 11, 0.28));
 }
 
-/* 8. Botão Disabled */
 button:disabled,
 button[disabled],
-.tc-pill-btn:disabled,
-.gm-btn:disabled {
-  background: #14100e !important;
-  border-color: #261b16 !important;
-  color: #63534b !important;
+.gm-btn:disabled,
+.forge-btn:disabled {
+  background: #18181b !important;
+  border-color: #26262a !important;
+  color: #52525b !important;
   cursor: not-allowed !important;
-  opacity: 0.55 !important;
+  opacity: 0.6 !important;
   pointer-events: none !important;
   transform: none !important;
   box-shadow: none !important;
 }
 
 button:disabled svg,
-.tc-pill-btn:disabled svg {
-  color: #63534b !important;
-  stroke: #63534b !important;
+.gm-btn:disabled svg {
+  color: #52525b !important;
+  stroke: #52525b !important;
   transform: none !important;
-}
-
-/* 9. Variações de Tamanho Padronizadas com Raio Pill 999px */
-.tc-pill-btn-lg,
-button.lg,
-.gm-btn-lg {
-  height: 48px !important;
-  padding: 0 26px !important;
-  font-size: 1rem !important;
-  border-radius: 999px !important;
-}
-
-.tc-pill-btn-md,
-button.md,
-.gm-btn-md,
-button[class*="h-10"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
-button[class*="h-11"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
-a[class*="h-10"]:not([class*="w-"]):not(.rounded-full),
-a[class*="h-11"]:not([class*="w-"]):not(.rounded-full) {
-  height: 42px !important;
-  padding: 0 22px !important;
-  font-size: 0.9rem !important;
-  border-radius: 999px !important;
-}
-
-.tc-pill-btn-sm,
-button.sm,
-.gm-btn-sm,
-button[class*="h-8"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
-button[class*="h-9"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
-a[class*="h-8"]:not([class*="w-"]):not(.rounded-full),
-a[class*="h-9"]:not([class*="w-"]):not(.rounded-full) {
-  height: 34px !important;
-  padding: 0 16px !important;
-  font-size: 0.8rem !important;
-  border-radius: 999px !important;
 }
 
 /* Protecao Total para Botoes de Acao e Icones (Clientes, Orcamentos, etc) */
@@ -1007,20 +859,10 @@ tbody tr:hover {
 }
 
 /* =========================================================
-   8) Ícones Forge (20px, stroke-width: 1.7)
+   8) Ícones Forge (stroke-width padronizado sem distorcer dimensões)
 ========================================================= */
-svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 1.7;
-  color: var(--text-secondary);
-  transition: .2s;
-}
-
-button:hover svg,
-.gm-btn:hover svg {
-  color: var(--primary);
-  transform: scale(1.05);
+svg.lucide {
+  stroke-width: 1.75;
 }
 
 /* =========================================================
@@ -1101,91 +943,39 @@ nav.gm-top-nav {
 }
 
 /* =========================================================
-   Animações & Transições (13)
+   Animações & Transições (Compositor-only, sem * global)
 ========================================================= */
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: none;
+    transform: translateY(0);
   }
 }
 
 .card,
 .gm-card {
-  animation: fadeUp .4s;
+  animation: fadeUp 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-* {
+button,
+a,
+input,
+select,
+textarea,
+.gm-card,
+.card,
+.forge-spec,
+.gm-modal {
   transition:
-    background .22s cubic-bezier(.22, 1, .36, 1),
-    color .22s cubic-bezier(.22, 1, .36, 1),
-    border-color .22s cubic-bezier(.22, 1, .36, 1),
-    transform .22s cubic-bezier(.22, 1, .36, 1),
-    box-shadow .22s cubic-bezier(.22, 1, .36, 1);
-}
-
-/* =========================================================
-   Padronização e Aumento de Títulos, Subtítulos e Textos dos Modais
-========================================================= */
-.gm-modal h2,
-.gm-modal h3,
-.modal-header h2,
-.modal-header h3,
-.dialog-header h2,
-.dialog-header h3,
-[role="dialog"] h2,
-[role="dialog"] h3 {
-  font-size: 1.625rem !important; /* 26px */
-  font-weight: 800 !important;
-  line-height: 1.25 !important;
-  letter-spacing: -0.02em !important;
-  color: #ffffff !important;
-}
-
-@media (max-width: 640px) {
-  .gm-modal h2,
-  .gm-modal h3,
-  .modal-header h2,
-  .modal-header h3,
-  .dialog-header h2,
-  .dialog-header h3,
-  [role="dialog"] h2,
-  [role="dialog"] h3 {
-    font-size: 1.375rem !important; /* 22px */
-  }
-}
-
-.gm-modal p.modal-subtitle,
-.gm-modal .subtitle,
-.modal-header p,
-.dialog-header p,
-.gm-modal > div > div > p.text-slate-400,
-.gm-modal > div > p.text-slate-400,
-.gm-modal > div > div > p.text-slate-300,
-.gm-modal > div > p.text-slate-300,
-[role="dialog"] .modal-subtitle,
-[role="dialog"] p.text-slate-400,
-[role="dialog"] p.text-slate-300 {
-  font-size: 1.0625rem !important; /* 17px */
-  font-weight: 500 !important;
-  line-height: 1.55 !important;
-  color: #e2e8f0 !important; /* Slate-200 / alto contraste */
-}
-
-@media (max-width: 640px) {
-  .gm-modal p.modal-subtitle,
-  .gm-modal .subtitle,
-  .modal-header p,
-  .dialog-header p,
-  .gm-modal > div > div > p.text-slate-400,
-  .gm-modal > div > p.text-slate-400,
-  [role="dialog"] .modal-subtitle {
-    font-size: 0.9375rem !important; /* 15px */
-  }
+    background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Custom slider track styling for rainbow hue spectrum */
@@ -1304,8 +1094,8 @@ nav.gm-top-nav {
   --gm-mobile-side-padding: 16px;
   --gm-tablet-side-padding: 24px;
 
-  --gm-mobile-radius: 18px;
-  --gm-mobile-modal-radius: 22px;
+  --gm-mobile-radius: 8px;
+  --gm-mobile-modal-radius: 8px;
 
   --gm-touch-size: 44px;
 }
@@ -1356,7 +1146,6 @@ body {
 .flex > *,
 .grid > * {
   min-width: 0;
-  max-width: 100%;
 }
 
 /* ------------------------------------------------------------
@@ -1640,19 +1429,12 @@ textarea,
   .modal,
   .dialog,
   [role="dialog"] {
-
-    width: calc(100vw - 24px) !important;
     max-width: calc(100vw - 24px) !important;
-
-    max-height: calc(
-      100dvh - 24px - env(safe-area-inset-top, 0px)
-    ) !important;
-
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px)) !important;
     min-width: 0 !important;
-
     border-radius: var(--gm-mobile-modal-radius) !important;
-
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   /* Conteúdo interno do modal */
@@ -2030,5 +1812,27 @@ button.gm-floating-whatsapp-btn svg {
   visibility: visible !important;
   flex-shrink: 0 !important;
 }
+
+/* =========================================================================
+   REGRA DE ALINHAMENTO DE ÍCONES EM BOTÕES E LINKS DE MENU
+   Remove margin: 0 auto para que ícone e legenda permaneçam lado a lado sem separação
+   ========================================================================= */
+button svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin),
+.forge-btn svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin),
+.tc-pill-btn svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin),
+.btn svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin),
+a svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin) {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+button:hover svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin),
+.forge-btn:hover svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin),
+.tc-pill-btn:hover svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin),
+.btn:hover svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin),
+a:hover svg:not(.gm-btn-plus-rotate):not(.rotate-90):not(.rotate-180):not(.animate-spin) {
+  transform: none !important;
+}
+
 
 

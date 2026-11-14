@@ -722,20 +722,20 @@ export default function PinLockModal({
     >
       {/* BANNER FLUTUANTE EXCLUSIVO QUANDO EM MODO DE PRÉVIA */}
       {isPreviewMode && (
-        <div className="absolute top-5 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[100000] flex items-center justify-between gap-3.5 px-4 py-2.5 rounded-2xl bg-black/80 border border-emerald-500/40 backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] text-xs animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="absolute top-5 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[100000] flex items-center justify-between gap-3.5 px-4 py-2.5 rounded-lg bg-[#131315] border border-emerald-500/40 shadow-2xl text-xs">
           <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-            <span className="font-extrabold text-white uppercase tracking-wider text-[11px] sm:text-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="font-bold text-white uppercase tracking-wider text-[11px] sm:text-xs">
               Prévia do Bloqueio:
             </span>
-            <span className="text-emerald-400 font-extrabold capitalize bg-emerald-500/15 px-2 py-0.5 rounded-md border border-emerald-500/30 text-[11px]">
+            <span className="text-emerald-400 font-bold capitalize bg-emerald-500/15 px-2 py-0.5 rounded-[4px] border border-emerald-500/30 text-[11px]">
               {lockEffectType === "prism" ? "Refração Prismática 3D" : lockEffectType}
             </span>
           </div>
           <button
             type="button"
             onClick={onCancel || onSuccess}
-            className="px-3 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold transition-all cursor-pointer border border-white/20 text-xs flex items-center gap-1 active:scale-95"
+            className="h-8 px-3 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] text-white font-bold transition-colors cursor-pointer border border-[#26262A] text-xs flex items-center gap-1 active:scale-95 whitespace-nowrap"
           >
             <span>Fechar Prévia</span>
           </button>
@@ -858,7 +858,7 @@ export default function PinLockModal({
           duration: isUnlocking ? 0.6 : 0.35,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="gm-pin-lock-card gm-pin-modal-card gm-pin-card-compact apple-glass-card relative w-full rounded-[24px] sm:rounded-[30px] border border-white/[0.12] p-4 sm:p-5.5 shadow-[0_30px_90px_rgba(0,0,0,0.85),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col items-center text-center overflow-hidden font-sans select-none z-10 m-auto"
+        className="gm-pin-lock-card gm-pin-modal-card gm-pin-card-compact relative w-full rounded-lg border border-[#26262A] p-4 sm:p-5 flex flex-col items-center text-center overflow-hidden font-sans select-none z-10 m-auto"
         style={{
           width: "100%",
           maxWidth: "340px",
@@ -869,11 +869,10 @@ export default function PinLockModal({
           marginTop: "auto",
           marginBottom: "auto",
           alignSelf: "center",
-          background: "#141418",
-          borderRadius: "16px",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
-          boxShadow:
-            "inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 24px 64px -10px rgba(0, 0, 0, 0.85)",
+          background: "#131315",
+          borderRadius: "8px",
+          border: "1px solid #26262A",
+          boxShadow: "0 24px 64px -10px rgba(0, 0, 0, 0.85)",
           position: "relative",
           overflow: "hidden",
         }}
@@ -886,54 +885,48 @@ export default function PinLockModal({
           <button
             type="button"
             onClick={onCancel}
-            className="absolute top-4 right-4 text-zinc-400 hover:text-white w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all cursor-pointer z-20"
+            className="absolute top-4 right-4 text-[#8B8B92] hover:text-white w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center justify-center transition-colors cursor-pointer z-20"
             title="Fechar"
+            aria-label="Fechar"
           >
             <X size={16} />
           </button>
         )}
 
-        {/* ========================================================================= */}
-        {/* FLUXO INTELIGENTE: ESQUECI MEU PIN (REDEFINIÇÃO POR E-MAIL) */}
-        {/* ========================================================================= */}
+        {/* FLUXO ESQUECI MEU PIN */}
         {isForgotView ? (
           <div className="w-full flex flex-col items-center animate-fade-in">
-            {/* Ícone de E-mail de Segurança com a cor predefinida do app */}
-            <div className="w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/15 flex items-center justify-center mb-3 shadow-[0_10px_25px_rgba(0,0,0,0.4)] text-[var(--gm-primary,#FE540B)] shrink-0 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-tr from-[var(--gm-primary,#FE540B)]/20 to-transparent" />
-              <Mail size={24} className="relative z-10 text-[var(--gm-primary,#FE540B)]" />
+            <div className="w-12 h-12 rounded-md bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center mb-3 text-[var(--gm-primary,#FE540B)] shrink-0">
+              <Mail size={22} className="text-[var(--gm-primary,#FE540B)]" />
             </div>
 
-            <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+            <h3 className="text-lg font-bold text-white tracking-tight">
               Redefinir PIN de Acesso
             </h3>
 
-            <p className="text-xs text-zinc-300/80 mt-1 mb-3 px-1 leading-relaxed">
+            <p className="text-xs text-[#CBD5E1] mt-1 mb-3 px-1 leading-relaxed">
               Enviaremos um link e código de autorização seguro para o e-mail cadastrado nesta conta:
             </p>
 
-            {/* E-mail Mascarado */}
-            <div className="w-full py-2 px-3 rounded-xl bg-white/[0.06] border border-white/15 text-xs font-mono text-zinc-200 mb-4 truncate shadow-inner flex items-center justify-center gap-2">
+            <div className="w-full py-2 px-3 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-xs font-mono text-[#F2F2F3] mb-4 truncate flex items-center justify-center gap-2">
               <ShieldCheck size={14} className="text-[var(--gm-primary,#FE540B)] shrink-0" />
               <span className="truncate">{maskEmail(email)}</span>
             </div>
 
-            {/* Feedback de Envio com Sucesso */}
             {resetSentSuccess ? (
               <div className="w-full flex flex-col gap-3 mb-4 animate-fade-in">
-                <div className="p-3 rounded-xl bg-white/[0.06] border border-[var(--gm-primary,#FE540B)]/40 text-left shadow-md">
+                <div className="p-3 rounded-md bg-[#0B0B0C] border border-[var(--gm-primary,#FE540B)]/40 text-left">
                   <div className="flex items-center gap-2 text-[var(--gm-primary,#FE540B)] font-bold text-xs mb-1">
                     <CheckCircle2 size={15} />
-                    <span>Link Enviado com Sucesso!</span>
+                    <span>Link Enviado com Sucesso</span>
                   </div>
-                  <p className="text-[11px] text-zinc-300 leading-relaxed">
+                  <p className="text-[11px] text-[#CBD5E1] leading-relaxed">
                     Verifique sua caixa de entrada e spam. Clique no link recebido para criar seu novo PIN diretamente neste app.
                   </p>
                 </div>
 
-                {/* Formulário de Código de Emergência */}
                 <form onSubmit={handleVerifyEmergencyCode} className="w-full flex flex-col gap-2">
-                  <label className="text-[11px] text-zinc-400 font-medium">
+                  <label className="text-[11px] text-[#8B8B92] font-medium">
                     Ou digite o código de 6 dígitos recebido:
                   </label>
                   <div className="flex gap-2">
@@ -945,11 +938,11 @@ export default function PinLockModal({
                         setEmergencyCodeInput(e.target.value.replace(/\D/g, ""))
                       }
                       placeholder="000000"
-                      className="flex-1 h-11 rounded-xl bg-white/10 border border-white/20 text-center font-mono text-base tracking-widest text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary,#FE540B)] focus:ring-1 focus:ring-[var(--gm-primary,#FE540B)]"
+                      className="flex-1 h-10 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-center font-mono text-base tracking-widest text-white placeholder-[#8B8B92] focus:outline-none focus:border-[var(--gm-primary,#FE540B)]"
                     />
                     <button
                       type="submit"
-                      className="h-11 px-4 rounded-xl bg-[var(--gm-primary,#FE540B)] text-white font-extrabold text-xs uppercase tracking-wider hover:brightness-110 active:scale-98 transition cursor-pointer shadow-md shrink-0"
+                      className="h-10 px-4 rounded-[6px] bg-[var(--gm-primary,#FE540B)] text-[#0B0B0C] font-black text-xs uppercase tracking-wider hover:brightness-110 transition-colors cursor-pointer shrink-0"
                     >
                       Validar
                     </button>
@@ -961,94 +954,89 @@ export default function PinLockModal({
                 type="button"
                 onClick={handleSendResetLink}
                 disabled={isSendingReset}
-                className="w-full h-12 rounded-xl bg-[var(--gm-primary,#FE540B)] text-white font-extrabold text-xs uppercase tracking-wider hover:brightness-110 active:scale-98 transition flex items-center justify-center gap-2 shadow-lg shadow-[var(--gm-primary,#FE540B)]/25 cursor-pointer disabled:opacity-50 mb-4"
+                className="w-full h-11 rounded-[6px] bg-[var(--gm-primary,#FE540B)] text-[#0B0B0C] font-black text-xs uppercase tracking-wider hover:brightness-110 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mb-4"
               >
                 {isSendingReset ? (
                   <>
-                    <Loader2 size={16} className="animate-spin text-white" />
+                    <Loader2 size={16} className="animate-spin text-current" />
                     <span>Enviando Link...</span>
                   </>
                 ) : (
                   <>
-                    <Send size={15} className="text-white" />
+                    <Send size={15} className="text-current" />
                     <span>Enviar Link para o E-mail</span>
                   </>
                 )}
               </button>
             )}
 
-            {/* Mensagem de Erro se houver */}
             {errorMsg && (
-              <div className="text-xs text-rose-400 font-semibold mb-3 flex items-center justify-center gap-1.5 animate-fade-in">
+              <div className="text-xs text-rose-400 font-semibold mb-3 flex items-center justify-center gap-1.5">
                 <AlertCircle size={14} />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            {/* Voltar ao Teclado */}
             <button
               type="button"
               onClick={() => {
                 setIsForgotView(false);
                 setErrorMsg("");
               }}
-              className="text-xs text-zinc-400 hover:text-[var(--gm-primary,#FE540B)] flex items-center justify-center gap-1.5 py-1.5 transition-colors duration-200 cursor-pointer font-medium"
+              className="text-xs text-[#8B8B92] hover:text-[var(--gm-primary,#FE540B)] flex items-center justify-center gap-1.5 py-1.5 transition-colors cursor-pointer font-medium"
             >
               <ArrowLeft size={13} />
               <span>Voltar para digitação do PIN</span>
             </button>
           </div>
         ) : (
-          /* ========================================================================= */
-          /* FLUXO NORMAL: DIGITAÇÃO DO PIN E ESTILO APPLE PREDEFINIDO NO APP */
-          /* ========================================================================= */
           <>
-            {/* CÁPSULA DE STATUS ANIMADA */}
+            {/* CÁPSULA DE STATUS */}
             <AnimatePresence mode="wait">
               {isUnlocking ? (
                 <motion.div
                   key="status-unlocked"
-                  initial={{ opacity: 0, y: -8, scale: 0.85 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/50 mb-3 shadow-[0_0_20px_rgba(254,84,11,0.3)]"
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-[4px] text-[11px] font-bold tracking-wider uppercase bg-[var(--gm-primary,#FE540B)]/15 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/40 mb-3"
                 >
-                  <CheckCircle2 size={13} className="text-[var(--gm-primary,#FE540B)] animate-pulse" />
+                  <CheckCircle2 size={13} className="text-[var(--gm-primary,#FE540B)]" />
                   <span>{currentMode === "change" ? "PIN ATUALIZADO" : "ACESSO AUTORIZADO"}</span>
                 </motion.div>
               ) : isLocking ? (
                 <motion.div
                   key="status-locking"
-                  initial={{ opacity: 0, y: -8, scale: 0.85 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-white/10 text-zinc-300 border border-white/15 mb-3"
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-[4px] text-[11px] font-bold tracking-widest uppercase bg-[#1B1B1E] text-[#CBD5E1] border border-[#26262A] mb-3"
                 >
-                  <Lock size={12} className="text-zinc-300" />
+                  <Lock size={12} className="text-[#CBD5E1]" />
                   <span>APP BLOQUEADO</span>
                 </motion.div>
               ) : currentMode === "change" && changeStep === "verify_current" ? (
                 <motion.div
                   key="status-change-current"
-                  initial={{ opacity: 0, y: -8, scale: 0.85 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-white/10 text-zinc-300 border border-white/15 mb-3"
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-[4px] text-[11px] font-bold tracking-widest uppercase bg-[#1B1B1E] text-[#CBD5E1] border border-[#26262A] mb-3"
                 >
-                  <KeyRound size={12} className="text-zinc-400" />
+                  <KeyRound size={12} className="text-[#8B8B92]" />
                   <span>PASSO 1 DE 2: PIN ATUAL</span>
                 </motion.div>
               ) : currentMode === "change" && changeStep === "create_new" ? (
                 <motion.div
                   key="status-change-new"
-                  initial={{ opacity: 0, y: -8, scale: 0.85 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/40 mb-3"
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-[4px] text-[11px] font-bold tracking-widest uppercase bg-[var(--gm-primary,#FE540B)]/15 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/40 mb-3"
                 >
                   <KeyRound size={12} className="text-[var(--gm-primary,#FE540B)]" />
                   <span>PASSO 2 DE 2: NOVO PIN</span>
@@ -1056,11 +1044,11 @@ export default function PinLockModal({
               ) : currentMode === "change" && changeStep === "confirm_new" ? (
                 <motion.div
                   key="status-change-confirm"
-                  initial={{ opacity: 0, y: -8, scale: 0.85 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/40 mb-3"
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-[4px] text-[11px] font-bold tracking-widest uppercase bg-[var(--gm-primary,#FE540B)]/15 text-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)]/40 mb-3"
                 >
                   <KeyRound size={12} className="text-[var(--gm-primary,#FE540B)]" />
                   <span>CONFIRMAR NOVO PIN</span>
@@ -1126,10 +1114,10 @@ export default function PinLockModal({
                   duration: 0.45,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className={`w-12 h-12 sm:w-13 sm:h-13 rounded-[18px] flex items-center justify-center shrink-0 relative transition-all duration-300 border ${
+                className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 relative transition-colors duration-300 border ${
                   isUnlocking
-                    ? "bg-white/10 border-white/25 shadow-[0_0_30px_rgba(254,84,11,0.45)] text-[var(--gm-primary,#FE540B)]"
-                    : "bg-white/[0.06] border-white/12 shadow-[0_10px_30px_rgba(0,0,0,0.5)] text-[var(--gm-primary,#FE540B)]"
+                    ? "bg-[#1B1B1E] border-[var(--gm-primary,#FE540B)]/50 text-[var(--gm-primary,#FE540B)]"
+                    : "bg-[#1B1B1E] border-[#26262A] text-[var(--gm-primary,#FE540B)]"
                 }`}
                 style={{ width: "48px", height: "48px" }}
               >
@@ -1144,7 +1132,7 @@ export default function PinLockModal({
                     duration: 2.5,
                     ease: "easeInOut",
                   }}
-                  className="absolute inset-0 rounded-[18px] bg-[var(--gm-primary,#FE540B)]/15 blur-md pointer-events-none"
+                  className="absolute inset-0 rounded-md bg-[var(--gm-primary,#FE540B)]/15 blur-md pointer-events-none"
                 />
 
                 {(currentMode === "setup" || (currentMode === "change" && changeStep !== "verify_current")) && !isUnlocking ? (
@@ -1227,9 +1215,9 @@ export default function PinLockModal({
                     : "PIN de Segurança")}
             </h3>
 
-            <p className="text-[11px] sm:text-xs text-zinc-300/80 mt-0.5 mb-2 px-1 leading-snug line-clamp-2">
+            <p className="text-[11px] sm:text-xs text-[#CBD5E1] mt-0.5 mb-2 px-1 leading-snug line-clamp-2">
               {isUnlocking ? (
-                <span className="text-[var(--gm-primary,#FE540B)] font-semibold flex items-center justify-center gap-1.5 animate-pulse">
+                <span className="text-[var(--gm-primary,#FE540B)] font-semibold flex items-center justify-center gap-1.5">
                   <Sparkles size={13} />{" "}
                   {currentMode === "change" ? "Gravando novo PIN..." : "Carregando..."}
                 </span>
@@ -1251,11 +1239,11 @@ export default function PinLockModal({
               )}
             </p>
 
-            {/* 4 PONTOS / BUBBLES DO PIN */}
+            {/* 4 PONTOS DO PIN */}
             <div className="relative mb-2 flex flex-col items-center">
               <motion.div
                 animate={isShaking ? { x: [-12, 12, -9, 9, -4, 4, 0] } : {}}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.35 }}
                 className="flex items-center justify-center gap-2.5 relative z-10"
               >
                 {[0, 1, 2, 3].map((index) => {
@@ -1272,44 +1260,34 @@ export default function PinLockModal({
                             }
                           : {}
                       }
-                      transition={{ delay: index * 0.06, duration: 0.3, ease: "easeOut" }}
-                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 transition-all duration-200 ${
+                      transition={{ delay: index * 0.06, duration: 0.25, ease: "easeOut" }}
+                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 transition-all duration-150 ${
                         isUnlocking
-                          ? "bg-[var(--gm-primary,#FE540B)] border-[var(--gm-primary,#FE540B)] shadow-[0_0_18px_var(--gm-primary,#FE540B)]"
+                          ? "bg-[var(--gm-primary,#FE540B)] border-[var(--gm-primary,#FE540B)]"
                           : filled
-                          ? "bg-[var(--gm-primary,#FE540B)] border-[var(--gm-primary,#FE540B)] scale-110 shadow-[0_0_14px_var(--gm-primary,#FE540B)]"
+                          ? "bg-[var(--gm-primary,#FE540B)] border-[var(--gm-primary,#FE540B)] scale-110"
                           : isShaking
-                          ? "border-rose-500 bg-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.6)]"
+                          ? "border-rose-500 bg-rose-500/30"
                           : "border-white/35 bg-white/5"
                       }`}
                     />
                   );
                 })}
               </motion.div>
-
-              {/* LINHA DE ENERGIA CONECTANDO OS PONTOS NO DESBLOQUEIO */}
-              {isUnlocking && (
-                <motion.div
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ scaleX: 1, opacity: 1 }}
-                  transition={{ duration: 0.45, ease: "easeOut" }}
-                  className="absolute top-1 h-0.5 w-28 bg-[var(--gm-primary,#FE540B)] shadow-[0_0_14px_var(--gm-primary,#FE540B)] rounded-full pointer-events-none"
-                />
-              )}
             </div>
 
             {/* MENSAGEM DE ERRO */}
             {errorMsg && (
-              <div className="text-[11px] text-rose-400 font-semibold mb-1.5 flex items-center justify-center gap-1.5 animate-fade-in">
+              <div className="text-[11px] text-rose-400 font-semibold mb-1.5 flex items-center justify-center gap-1.5">
                 <AlertCircle size={13} />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            {/* TECLADO NUMÉRICO VIRTUAL APPLE GLASS */}
+            {/* TECLADO NUMÉRICO FORGE */}
             <div
-              className={`gm-pin-keypad grid grid-cols-3 gap-2 w-full max-w-[280px] sm:max-w-[304px] transition-all duration-300 ${
-                isUnlocking ? "opacity-25 pointer-events-none scale-95" : "opacity-100"
+              className={`gm-pin-keypad grid grid-cols-3 gap-2 w-full max-w-[280px] sm:max-w-[304px] transition-opacity duration-200 ${
+                isUnlocking ? "opacity-25 pointer-events-none" : "opacity-100"
               }`}
               style={{
                 width: "100%",
@@ -1327,12 +1305,12 @@ export default function PinLockModal({
                   key={num}
                   type="button"
                   onClick={() => handleDigit(num)}
-                  className="gm-pin-key h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] rounded-[14px] bg-white/[0.08] hover:bg-white/[0.15] active:bg-[var(--gm-primary,#FE540B)]/30 border border-white/12 hover:border-white/25 active:scale-95 transition-all text-[19px] sm:text-[20px] font-semibold text-white flex items-center justify-center cursor-pointer shadow-none touch-manipulation select-none"
+                  className="gm-pin-key h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] rounded-md bg-[#1B1B1E] hover:bg-[#26262A] active:bg-[var(--gm-primary,#FE540B)]/30 border border-[#26262A] hover:border-[#3F3F46] active:scale-95 transition-colors text-[19px] sm:text-[20px] font-semibold text-white flex items-center justify-center cursor-pointer shadow-none touch-manipulation select-none tabular-nums"
                   style={{
                     height: "44px",
                     minHeight: "44px",
                     fontSize: "19px",
-                    borderRadius: "14px",
+                    borderRadius: "6px",
                     lineHeight: "1",
                   }}
                 >
@@ -1340,7 +1318,6 @@ export default function PinLockModal({
                 </button>
               ))}
 
-              {/* BOTÃO CANCELAR */}
               <div 
                 className="h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] flex items-center justify-center"
                 style={{ height: "44px", minHeight: "44px" }}
@@ -1349,39 +1326,37 @@ export default function PinLockModal({
                   <button
                     type="button"
                     onClick={onCancel}
-                    className="text-[11px] text-zinc-400 hover:text-white uppercase font-bold tracking-wider transition px-1.5 py-1.5 cursor-pointer touch-manipulation active:scale-95"
+                    className="text-[11px] text-[#8B8B92] hover:text-white uppercase font-bold tracking-wider transition-colors px-1.5 py-1.5 cursor-pointer touch-manipulation active:scale-95"
                   >
                     Cancelar
                   </button>
                 ) : null}
               </div>
 
-              {/* DÍGITO 0 */}
               <button
                 type="button"
                 onClick={() => handleDigit("0")}
-                className="gm-pin-key h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] rounded-[14px] bg-white/[0.08] hover:bg-white/[0.15] active:bg-[var(--gm-primary,#FE540B)]/30 border border-white/12 hover:border-white/25 active:scale-95 transition-all text-[19px] sm:text-[20px] font-semibold text-white flex items-center justify-center cursor-pointer shadow-none touch-manipulation select-none"
+                className="gm-pin-key h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] rounded-md bg-[#1B1B1E] hover:bg-[#26262A] active:bg-[var(--gm-primary,#FE540B)]/30 border border-[#26262A] hover:border-[#3F3F46] active:scale-95 transition-colors text-[19px] sm:text-[20px] font-semibold text-white flex items-center justify-center cursor-pointer shadow-none touch-manipulation select-none tabular-nums"
                 style={{
                   height: "44px",
                   minHeight: "44px",
                   fontSize: "19px",
-                  borderRadius: "14px",
+                  borderRadius: "6px",
                   lineHeight: "1",
                 }}
               >
                 0
               </button>
 
-              {/* BOTÃO APAGAR (BACKSPACE) */}
               <button
                 type="button"
                 onClick={handleDelete}
                 disabled={pin.length === 0}
-                className="gm-pin-key h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] rounded-[14px] bg-white/[0.05] hover:bg-white/[0.12] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 transition-all flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer touch-manipulation select-none"
+                className="gm-pin-key h-[44px] min-h-[44px] sm:h-[48px] sm:min-h-[48px] rounded-md bg-[#1B1B1E] hover:bg-[#26262A] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed border border-[#26262A] transition-colors flex items-center justify-center text-[#CBD5E1] hover:text-white cursor-pointer touch-manipulation select-none"
                 style={{
                   height: "44px",
                   minHeight: "44px",
-                  borderRadius: "14px",
+                  borderRadius: "6px",
                 }}
                 title="Apagar"
               >
@@ -1389,7 +1364,6 @@ export default function PinLockModal({
               </button>
             </div>
 
-            {/* BOTÃO ESQUECI MEU PIN (VISÍVEL NO MODO VERIFY OU NA VERIFICAÇÃO DO PIN ATUAL NO MODO CHANGE) */}
             {((currentMode === "verify") || (currentMode === "change" && changeStep === "verify_current")) && !isUnlocking && (
               <div className="mt-1.5 sm:mt-2 flex items-center justify-center">
                 <button
@@ -1398,15 +1372,14 @@ export default function PinLockModal({
                     setIsForgotView(true);
                     setErrorMsg("");
                   }}
-                  className="text-xs hover:scale-105 text-zinc-400 hover:text-[var(--gm-primary,#FE540B)] font-medium no-underline hover:no-underline transition-all duration-200 cursor-pointer bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent border-0 outline-none p-1 select-none shadow-none touch-manipulation"
+                  className="text-xs text-[#8B8B92] hover:text-[var(--gm-primary,#FE540B)] font-medium transition-colors cursor-pointer bg-transparent border-0 outline-none p-1 select-none shadow-none touch-manipulation"
                 >
                   Esqueci meu PIN
                 </button>
               </div>
             )}
 
-            {/* DICA DE TECLADO FÍSICO (SOMENTE NO DESKTOP) */}
-            <p className="text-[9.5px] text-zinc-400/80 mt-1 select-none hidden sm:block">
+            <p className="text-[11px] text-[#8B8B92] mt-1 select-none hidden sm:block">
               Você também pode digitar pelo teclado numérico
             </p>
           </>

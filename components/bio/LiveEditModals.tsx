@@ -44,31 +44,41 @@ function ModalWrapper({
   children: React.ReactNode;
   maxWidth?: string;
 }) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 animate-fade-in overflow-y-auto"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className={`w-full ${maxWidth} max-h-[90vh] rounded-[2rem] fora border border-white/10 text-white shadow-2xl flex flex-col overflow-hidden my-auto animate-scale-in`}
+        className={`w-full ${maxWidth} max-h-[90vh] rounded-lg bg-[#131315] border border-[#26262A] text-white shadow-2xl flex flex-col overflow-hidden my-auto animate-scale-in`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#161722]">
+        <div className="p-5 border-b border-[#26262A] flex items-center justify-between shrink-0 bg-[#131315] gap-3">
           <div>
-            <h3 className="text-base sm:text-lg font-black tracking-tight flex items-center gap-2 text-white">
+            <h3 className="text-base sm:text-lg font-extrabold tracking-tight flex items-center gap-2 text-white">
               {title}
             </h3>
-            {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-xs text-zinc-400 mt-0.5">{subtitle}</p>}
           </div>
           <button 
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"
+            aria-label="Fechar"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -207,14 +217,14 @@ export function HeroEditModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Desktop Banner */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-400">
+              <div className="flex items-center justify-between text-xs text-zinc-400">
                 <span>Versão Computador (Desktop)</span>
               </div>
-              <div className="relative aspect-video rounded-xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center group">
+              <div className="relative aspect-video rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center group">
                 {bannerDesktop ? (
                   <img src={bannerDesktop} alt="Banner Desktop" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="text-center p-3 text-slate-500 text-xs">
+                  <div className="text-center p-3 text-zinc-500 text-xs">
                     <ImageIcon className="w-6 h-6 mx-auto mb-1 opacity-50" />
                     Sem imagem definida
                   </div>
@@ -234,20 +244,20 @@ export function HeroEditModal({
                   setBannerDesktop(e.target.value);
                   onUpdate({ banner_img_url_1: e.target.value });
                 }}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none focus:border-[#FE540B]"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 py-1.5 text-xs text-zinc-200 outline-none focus:border-[#FE540B]"
               />
             </div>
 
             {/* Mobile Banner */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-400">
+              <div className="flex items-center justify-between text-xs text-zinc-400">
                 <span>Versão Celular (Opcional)</span>
               </div>
-              <div className="relative aspect-video rounded-xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center group">
+              <div className="relative aspect-video rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center group">
                 {bannerMobile || bannerDesktop ? (
                   <img src={bannerMobile || bannerDesktop} alt="Banner Mobile" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="text-center p-3 text-slate-500 text-xs">
+                  <div className="text-center p-3 text-zinc-500 text-xs">
                     <ImageIcon className="w-6 h-6 mx-auto mb-1 opacity-50" />
                     Usa o desktop por padrão
                   </div>
@@ -267,7 +277,7 @@ export function HeroEditModal({
                   setBannerMobile(e.target.value);
                   onUpdate({ mobile_banner_img_url_1: e.target.value });
                 }}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none focus:border-[#FE540B]"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 py-1.5 text-xs text-zinc-200 outline-none focus:border-[#FE540B]"
               />
             </div>
           </div>
@@ -275,7 +285,7 @@ export function HeroEditModal({
 
         {/* Hero Title */}
         <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
             Título Principal
           </label>
           <input
@@ -286,25 +296,25 @@ export function HeroEditModal({
               onUpdate({ hero_title: e.target.value });
             }}
             placeholder="Ex: GM edificação"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Hero Description & Controls */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
               Texto de Apresentação / Slogan
             </label>
             {/* Formatting Toolbar */}
-            <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/10">
+            <div className="flex items-center gap-1 bg-[#0B0B0C] p-1 rounded-[4px] border border-[#26262A]">
               <button
                 type="button"
                 onClick={() => {
                   setDescBold(!descBold);
                   onUpdate({ description_bold: !descBold });
                 }}
-                className={`p-1.5 rounded transition-colors ${descBold ? 'bg-[#FE540B] text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`p-1.5 rounded-[4px] transition-colors cursor-pointer ${descBold ? 'bg-[#FE540B] text-white' : 'text-zinc-400 hover:text-white'}`}
                 title="Negrito"
               >
                 <Bold className="w-3.5 h-3.5" />
@@ -315,19 +325,19 @@ export function HeroEditModal({
                   setDescItalic(!descItalic);
                   onUpdate({ description_italic: !descItalic });
                 }}
-                className={`p-1.5 rounded transition-colors ${descItalic ? 'bg-[#FE540B] text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`p-1.5 rounded-[4px] transition-colors cursor-pointer ${descItalic ? 'bg-[#FE540B] text-white' : 'text-zinc-400 hover:text-white'}`}
                 title="Itálico"
               >
                 <Italic className="w-3.5 h-3.5" />
               </button>
-              <div className="w-px h-3.5 bg-white/20 mx-0.5" />
+              <div className="w-px h-3.5 bg-[#26262A] mx-0.5" />
               <button
                 type="button"
                 onClick={() => {
                   setDescAlign("left");
                   onUpdate({ description_align: "left" });
                 }}
-                className={`p-1.5 rounded transition-colors ${descAlign === "left" ? 'bg-[#FE540B] text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`p-1.5 rounded-[4px] transition-colors cursor-pointer ${descAlign === "left" ? 'bg-[#FE540B] text-white' : 'text-zinc-400 hover:text-white'}`}
                 title="Alinhar à esquerda"
               >
                 <AlignLeft className="w-3.5 h-3.5" />
@@ -338,7 +348,7 @@ export function HeroEditModal({
                   setDescAlign("center");
                   onUpdate({ description_align: "center" });
                 }}
-                className={`p-1.5 rounded transition-colors ${descAlign === "center" ? 'bg-[#FE540B] text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`p-1.5 rounded-[4px] transition-colors cursor-pointer ${descAlign === "center" ? 'bg-[#FE540B] text-white' : 'text-zinc-400 hover:text-white'}`}
                 title="Centralizar"
               >
                 <AlignCenter className="w-3.5 h-3.5" />
@@ -349,7 +359,7 @@ export function HeroEditModal({
                   setDescAlign("right");
                   onUpdate({ description_align: "right" });
                 }}
-                className={`p-1.5 rounded transition-colors ${descAlign === "right" ? 'bg-[#FE540B] text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`p-1.5 rounded-[4px] transition-colors cursor-pointer ${descAlign === "right" ? 'bg-[#FE540B] text-white' : 'text-zinc-400 hover:text-white'}`}
                 title="Alinhar à direita"
               >
                 <AlignRight className="w-3.5 h-3.5" />
@@ -365,20 +375,20 @@ export function HeroEditModal({
               onUpdate({ description: e.target.value });
             }}
             placeholder="Apresente sua empresa de forma impactante..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl p-3.5 text-sm text-slate-200 outline-none focus:border-[#FE540B] leading-relaxed"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] p-3.5 text-sm text-zinc-200 outline-none focus:border-[#FE540B] leading-relaxed"
           />
 
           {/* Size & Font selectors */}
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="text-[11px] text-slate-400 block mb-1">Tamanho do Texto</label>
+              <label className="text-[11px] text-zinc-400 block mb-1">Tamanho do Texto</label>
               <select
                 value={descSize}
                 onChange={(e) => {
                   setDescSize(e.target.value);
                   onUpdate({ description_size: e.target.value });
                 }}
-                className="w-full bg-[#1c1d28] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-2.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
               >
                 <option value="12 pt">Pequeno (12 pt)</option>
                 <option value="14 pt">Médio (14 pt)</option>
@@ -388,14 +398,14 @@ export function HeroEditModal({
               </select>
             </div>
             <div>
-              <label className="text-[11px] text-slate-400 block mb-1">Fonte da Apresentação</label>
+              <label className="text-[11px] text-zinc-400 block mb-1">Fonte da Apresentação</label>
               <select
                 value={descFont}
                 onChange={(e) => {
                   setDescFont(e.target.value);
                   onUpdate({ description_font: e.target.value });
                 }}
-                className="w-full bg-[#1c1d28] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-2.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
               >
                 <option value="ui">Inter / Padrão</option>
                 <option value="modern">Plus Jakarta Sans</option>
@@ -410,7 +420,7 @@ export function HeroEditModal({
 
         {/* Hero CTA Button */}
         <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
             Botão de Ação Principal
           </label>
           <input
@@ -421,23 +431,23 @@ export function HeroEditModal({
               onUpdate({ hero_button_label: e.target.value });
             }}
             placeholder="Ex: Conheça nossos Serviços"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-sm text-white outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Footer actions */}
-        <div className="pt-3 border-t border-white/10 flex justify-end gap-2">
+        <div className="pt-3 border-t border-[#26262A] flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-300 text-xs font-bold transition-colors cursor-pointer"
           >
             Fechar
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="px-5 py-2 rounded-xl bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors shadow-lg cursor-pointer"
+            className="px-5 py-2 rounded-[6px] bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors cursor-pointer"
           >
             Aplicar Alterações
           </button>
@@ -507,22 +517,22 @@ export function LogoModal({
       <div className="space-y-5">
         
         {/* Logo preview and upload */}
-        <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-black/30 border border-white/10 gap-4">
-          <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center p-2 shadow-inner group">
+        <div className="flex flex-col items-center justify-center p-6 rounded-md bg-[#0B0B0C] border border-[#26262A] gap-4">
+          <div className="relative w-24 h-24 rounded-md overflow-hidden bg-[#131315] border border-[#26262A] flex items-center justify-center p-2 group">
             {logo ? (
               <img src={logo} alt="Logo da Empresa" className="w-full h-full object-contain" />
             ) : (
-              <ImageIcon className="w-10 h-10 text-slate-500" />
+              <ImageIcon className="w-10 h-10 text-zinc-500" />
             )}
 
             <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer">
               <Upload className="w-5 h-5 mb-1 text-[#FE540B]" />
-              <span className="text-[10px] font-bold">{uploading ? "Enviando..." : "Substituir"}</span>
+              <span className="text-[11px] font-bold">{uploading ? "Enviando..." : "Substituir"}</span>
               <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
             </label>
           </div>
 
-          <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-colors cursor-pointer">
+          <label className="inline-flex items-center gap-2 px-4 py-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-white text-xs font-bold transition-colors cursor-pointer">
             <Upload className="w-4 h-4 text-[#FE540B]" />
             <span>{uploading ? "Carregando..." : "Fazer Upload de Logo"}</span>
             <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
@@ -531,7 +541,7 @@ export function LogoModal({
 
         {/* Company Name */}
         <div className="space-y-1.5">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
             Nome da Empresa / Marca
           </label>
           <input
@@ -542,13 +552,13 @@ export function LogoModal({
               onUpdate({ company_name: e.target.value });
             }}
             placeholder="Ex: GM edificação"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Direct URL */}
         <div className="space-y-1.5">
-          <label className="text-[11px] text-slate-400">Ou cole o link direto da imagem:</label>
+          <label className="text-[11px] text-zinc-400">Ou cole o link direto da imagem:</label>
           <input
             type="text"
             value={logo}
@@ -557,23 +567,23 @@ export function LogoModal({
               onUpdate({ website_logo_url: e.target.value, logo_url: e.target.value });
             }}
             placeholder="https://..."
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 py-1.5 text-xs text-zinc-200 outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-white/10 flex justify-end gap-2">
+        <div className="pt-3 border-t border-[#26262A] flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-300 text-xs font-bold transition-colors cursor-pointer"
           >
             Fechar
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="px-5 py-2 rounded-xl bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors shadow-lg cursor-pointer"
+            className="px-5 py-2 rounded-[6px] bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors cursor-pointer"
           >
             Salvar
           </button>
@@ -644,50 +654,50 @@ export function ThemeColorsModal({
         
         {/* Brand Color */}
         <div className="space-y-3">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
             Cor Principal da Marca (Destaque)
           </label>
-          <div className="grid grid-cols-4 sm:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-4 gap-2">
             {presetColors.map((c) => (
               <button
                 key={c.hex}
                 type="button"
                 onClick={() => handleColorChange(c.hex)}
-                className={`flex items-center gap-2 p-2 rounded-xl border transition-all text-xs font-medium cursor-pointer ${
+                className={`flex items-center gap-2 p-2 rounded-[6px] border transition-colors text-xs font-medium cursor-pointer ${
                   activeColor.toLowerCase() === c.hex.toLowerCase()
-                    ? "border-white bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.15)] text-white font-bold"
-                    : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    ? "border-white bg-[#1B1B1E] text-white font-bold"
+                    : "border-[#26262A] bg-[#0B0B0C] text-zinc-300 hover:bg-[#1B1B1E]"
                 }`}
               >
-                <span className="w-4 h-4 rounded-full shrink-0 shadow" style={{ backgroundColor: c.hex }} />
+                <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: c.hex }} />
                 <span className="truncate">{c.name}</span>
               </button>
             ))}
           </div>
 
           <div className="flex items-center gap-2 pt-1">
-            <span className="text-xs text-slate-400">Personalizado:</span>
+            <span className="text-xs text-zinc-400">Personalizado:</span>
             <input
               type="color"
               value={activeColor}
               onChange={(e) => handleColorChange(e.target.value)}
-              className="w-8 h-8 rounded-lg bg-transparent cursor-pointer border border-white/20"
+              className="w-8 h-8 rounded-[4px] bg-transparent cursor-pointer border border-[#26262A]"
             />
             <input
               type="text"
               value={activeColor}
               onChange={(e) => handleColorChange(e.target.value)}
-              className="w-28 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono uppercase"
+              className="w-28 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-2.5 py-1 text-xs text-white font-mono uppercase"
             />
           </div>
         </div>
 
         {/* Theme */}
         <div className="space-y-3">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
             Modo de Exibição do Site
           </label>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2.5">
             {[
               { key: "dark", label: "Escuro (Dark)", desc: "Fundo preto e grafite profundo" },
               { key: "glass", label: "Vidro Fosco", desc: "Efeito translúcido sofisticado" },
@@ -697,14 +707,14 @@ export function ThemeColorsModal({
                 key={t.key}
                 type="button"
                 onClick={() => handleThemeChange(t.key)}
-                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                className={`p-3 rounded-md border text-left transition-colors cursor-pointer ${
                   activeTheme === t.key
                     ? "border-[#FE540B] bg-[#FE540B]/10 text-white font-bold"
-                    : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    : "border-[#26262A] bg-[#0B0B0C] text-zinc-300 hover:bg-[#1B1B1E]"
                 }`}
               >
                 <div className="text-xs font-bold">{t.label}</div>
-                <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">{t.desc}</div>
+                <div className="text-[11px] text-zinc-400 mt-0.5 leading-tight">{t.desc}</div>
               </button>
             ))}
           </div>
@@ -712,10 +722,10 @@ export function ThemeColorsModal({
 
         {/* Button Style */}
         <div className="space-y-3">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
             Estilo dos Botões
           </label>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2.5">
             {[
               { key: "vazado", label: "Vazado", desc: "Borda colorida e fundo translúcido" },
               { key: "solid", label: "Sólido", desc: "Cor cheia com alto contraste" },
@@ -728,25 +738,25 @@ export function ThemeColorsModal({
                   setActiveBtnStyle(b.key);
                   onUpdate({ button_style: b.key });
                 }}
-                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                className={`p-3 rounded-md border text-left transition-colors cursor-pointer ${
                   activeBtnStyle === b.key
                     ? "border-[#FE540B] bg-[#FE540B]/10 text-white font-bold"
-                    : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    : "border-[#26262A] bg-[#0B0B0C] text-zinc-300 hover:bg-[#1B1B1E]"
                 }`}
               >
                 <div className="text-xs font-bold">{b.label}</div>
-                <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">{b.desc}</div>
+                <div className="text-[11px] text-zinc-400 mt-0.5 leading-tight">{b.desc}</div>
               </button>
             ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-white/10 flex justify-end">
+        <div className="pt-3 border-t border-[#26262A] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors shadow-lg cursor-pointer"
+            className="px-5 py-2 rounded-[6px] bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors cursor-pointer"
           >
             Concluir
           </button>
@@ -823,7 +833,7 @@ export function ContactsModal({
         
         {/* WhatsApp */}
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
             <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
             WhatsApp (com DDD)
           </label>
@@ -835,13 +845,13 @@ export function ContactsModal({
               onUpdate({ whatsapp: e.target.value });
             }}
             placeholder="Ex: 11999998888"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Instagram */}
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
             <Instagram className="w-3.5 h-3.5 text-pink-400" />
             Instagram (Usuário ou Link)
           </label>
@@ -853,13 +863,13 @@ export function ContactsModal({
               onUpdate({ instagram: e.target.value });
             }}
             placeholder="Ex: @gmedificacao ou link completo"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Email */}
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
             <Mail className="w-3.5 h-3.5 text-sky-400" />
             E-mail de Contato
           </label>
@@ -871,13 +881,13 @@ export function ContactsModal({
               onUpdate({ email: e.target.value });
             }}
             placeholder="Ex: contato@empresa.com"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Telefone */}
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
             <Phone className="w-3.5 h-3.5 text-amber-400" />
             Telefone Comercial
           </label>
@@ -889,13 +899,13 @@ export function ContactsModal({
               onUpdate({ phone: e.target.value });
             }}
             placeholder="Ex: (11) 4002-8922"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Telegram */}
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
             <Send className="w-3.5 h-3.5 text-blue-400" />
             Telegram
           </label>
@@ -907,13 +917,13 @@ export function ContactsModal({
               onUpdate({ telegram: e.target.value });
             }}
             placeholder="Ex: @usuario ou link"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Endereço */}
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-red-400" />
             Endereço Físico
           </label>
@@ -925,23 +935,23 @@ export function ContactsModal({
               onUpdate({ address: e.target.value });
             }}
             placeholder="Ex: Av. Paulista, 1000 - São Paulo, SP"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-white/10 flex justify-end gap-2">
+        <div className="pt-3 border-t border-[#26262A] flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-300 text-xs font-bold transition-colors cursor-pointer"
           >
             Fechar
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="px-5 py-2 rounded-xl bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors shadow-lg cursor-pointer"
+            className="px-5 py-2 rounded-[6px] bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors cursor-pointer"
           >
             Salvar Contatos
           </button>
@@ -1030,12 +1040,12 @@ export function ProductModal({
         
         {/* Images */}
         <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
             Fotos do Produto / Serviço
           </label>
           <div className="flex items-center gap-3 overflow-x-auto pb-2">
             {images.filter(Boolean).map((img, idx) => (
-              <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0 group">
+              <div key={idx} className="relative w-20 h-20 rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A] shrink-0 group">
                 <img src={img} alt="Foto" className="w-full h-full object-cover" />
                 <button
                   type="button"
@@ -1047,9 +1057,9 @@ export function ProductModal({
               </div>
             ))}
 
-            <label className="w-20 h-20 rounded-xl border-2 border-dashed border-white/20 hover:border-[#FE540B] flex flex-col items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0">
+            <label className="w-20 h-20 rounded-md border-2 border-dashed border-[#26262A] hover:border-[#FE540B] flex flex-col items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0">
               <Plus className="w-5 h-5 mb-1" />
-              <span className="text-[10px] font-bold">{uploading ? "..." : "Adicionar"}</span>
+              <span className="text-[11px] font-bold">{uploading ? "..." : "Adicionar"}</span>
               <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
             </label>
           </div>
@@ -1057,53 +1067,53 @@ export function ProductModal({
 
         {/* Name */}
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Nome do Serviço / Produto</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">Nome do Serviço / Produto</label>
           <input
             type="text"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex: Criação de Identidade Visual"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Price */}
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Preço ou Condição</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">Preço ou Condição</label>
           <input
             type="text"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             placeholder="Ex: R$ 850,00 ou Sob Consulta"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-sm text-emerald-400 font-bold outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-sm text-emerald-400 font-bold outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Description */}
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Descrição Detalhada</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">Descrição Detalhada</label>
           <textarea
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Descreva o que está incluso, prazos ou especificações..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] p-3 text-xs text-zinc-200 outline-none focus:border-[#FE540B]"
           />
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-white/10 flex justify-end gap-2">
+        <div className="pt-3 border-t border-[#26262A] flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-300 text-xs font-bold transition-colors cursor-pointer"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-5 py-2 rounded-xl bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors shadow-lg cursor-pointer"
+            className="px-5 py-2 rounded-[6px] bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors cursor-pointer"
           >
             {productToEdit ? "Salvar Alterações" : "Adicionar Produto"}
           </button>
@@ -1296,13 +1306,13 @@ export function PortfolioModal({
       <form onSubmit={handleSubmit} className="space-y-5">
         
         {/* Seletor de Versão: COMPUTADOR vs SMARTPHONE (Regra 1) */}
-        <div className="grid grid-cols-2 p-1 bg-black/50 border border-white/10 rounded-2xl">
+        <div className="grid grid-cols-2 p-1 bg-[#0B0B0C] border border-[#26262A] rounded-md">
           <button
             type="button"
             onClick={() => setTab("desktop")}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 py-2 rounded-[4px] font-bold text-xs sm:text-sm transition-colors cursor-pointer ${
               tab === "desktop"
-                ? "bg-[#FE540B] text-white shadow-md"
+                ? "bg-[#FE540B] text-white"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -1312,9 +1322,9 @@ export function PortfolioModal({
           <button
             type="button"
             onClick={() => setTab("smartphone")}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 py-2 rounded-[4px] font-bold text-xs sm:text-sm transition-colors cursor-pointer ${
               tab === "smartphone"
-                ? "bg-[#FE540B] text-white shadow-md"
+                ? "bg-[#FE540B] text-white"
                 : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -1323,14 +1333,11 @@ export function PortfolioModal({
           </button>
         </div>
 
-        {/* ========================================================= */}
-        {/* ABA 1: VERSÃO COMPUTADOR (DESKTOP)                        */}
-        {/* ========================================================= */}
+        {/* ABA 1: VERSÃO COMPUTADOR (DESKTOP) */}
         {tab === "desktop" && (
           <div className="space-y-4 animate-in fade-in duration-200">
-            {/* Title Desktop */}
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
                 Título do Projeto (Desktop) *
               </label>
               <input
@@ -1338,13 +1345,12 @@ export function PortfolioModal({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex: Fachada Residencial Alto Padrão"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
               />
             </div>
 
-            {/* Description Desktop */}
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
                 Descrição do Projeto (Desktop)
               </label>
               <textarea
@@ -1352,14 +1358,13 @@ export function PortfolioModal({
                 value={desc}
                 onChange={(e) => setDesc(e.target.value)}
                 placeholder="Detalhes técnicos, materiais e conceito para visualização no computador..."
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE540B]"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] p-3 text-xs text-zinc-200 outline-none focus:border-[#FE540B]"
               />
             </div>
 
-            {/* Banner Principal Desktop (16:9 widescreen) */}
-            <div className="space-y-2 pt-2 border-t border-white/10">
+            <div className="space-y-2 pt-2 border-t border-[#26262A]">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
                   Banner Principal Desktop (Topo Widescreen 16:9)
                 </label>
                 {mainBannerDesktop && (
@@ -1374,11 +1379,11 @@ export function PortfolioModal({
               </div>
 
               {mainBannerDesktop ? (
-                <div className="relative aspect-video max-h-48 rounded-xl overflow-hidden bg-black/40 border border-white/10">
+                <div className="relative aspect-video max-h-48 rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A]">
                   <img src={mainBannerDesktop} alt="Banner Principal Desktop" className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center aspect-video max-h-40 rounded-xl border-2 border-dashed border-white/15 hover:border-[#FE540B] bg-white/[0.02] cursor-pointer transition-colors p-4 text-center">
+                <label className="flex flex-col items-center justify-center aspect-video max-h-40 rounded-md border-2 border-dashed border-[#26262A] hover:border-[#FE540B] bg-[#0B0B0C] cursor-pointer transition-colors p-4 text-center">
                   <Upload className="w-5 h-5 text-zinc-400 mb-1" />
                   <span className="text-xs text-zinc-300 font-bold">
                     {uploadingBannerDesktop ? "Enviando..." : "Enviar Banner Principal Desktop (1920x600 ou 16:9)"}
@@ -1388,14 +1393,13 @@ export function PortfolioModal({
               )}
             </div>
 
-            {/* Banners Internos Desktop (Galeria / Layers) */}
-            <div className="space-y-2 pt-2 border-t border-white/10">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+            <div className="space-y-2 pt-2 border-t border-[#26262A]">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">
                 Imagens da Galeria Desktop ({desktopImages.length})
               </label>
               <div className="flex items-center gap-3 overflow-x-auto pb-2">
                 {desktopImages.map((img, idx) => (
-                  <div key={idx} className="relative w-24 h-20 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0 group">
+                  <div key={idx} className="relative w-24 h-20 rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A] shrink-0 group">
                     <img src={img} alt="Projeto Desktop" className="w-full h-full object-cover" />
                     <button
                       type="button"
@@ -1407,9 +1411,9 @@ export function PortfolioModal({
                   </div>
                 ))}
 
-                <label className="w-24 h-20 rounded-xl border-2 border-dashed border-white/20 hover:border-[#FE540B] flex flex-col items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0">
+                <label className="w-24 h-20 rounded-md border-2 border-dashed border-[#26262A] hover:border-[#FE540B] flex flex-col items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0">
                   <Plus className="w-5 h-5 mb-1" />
-                  <span className="text-[10px] font-bold">{uploadingDesktop ? "..." : "Adicionar Foto"}</span>
+                  <span className="text-[11px] font-bold">{uploadingDesktop ? "..." : "Adicionar Foto"}</span>
                   <input type="file" accept="image/*,video/mp4" className="hidden" onChange={handleDesktopImageUpload} disabled={uploadingDesktop} />
                 </label>
               </div>
@@ -1417,12 +1421,9 @@ export function PortfolioModal({
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* ABA 2: VERSÃO SMARTPHONE (CELULAR)                        */}
-        {/* ========================================================= */}
+        {/* ABA 2: VERSÃO SMARTPHONE (CELULAR) */}
         {tab === "smartphone" && (
           <div className="space-y-4 animate-in fade-in duration-200">
-            {/* Title Mobile */}
             <div className="space-y-1">
               <label className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
                 <Smartphone className="w-3.5 h-3.5" />
@@ -1433,14 +1434,13 @@ export function PortfolioModal({
                 value={titleMobile}
                 onChange={(e) => setTitleMobile(e.target.value)}
                 placeholder={title ? `Deixe em branco para usar "${title}"` : "Ex: Fachada Residencial Celular"}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2.5 text-sm text-white font-bold outline-none focus:border-[#FE540B]"
               />
               <p className="text-[11px] text-zinc-400">
                 Se deixado em branco, utiliza o título da versão Desktop automaticamente.
               </p>
             </div>
 
-            {/* Description Mobile */}
             <div className="space-y-1">
               <label className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
                 <Smartphone className="w-3.5 h-3.5" />
@@ -1451,12 +1451,11 @@ export function PortfolioModal({
                 value={descMobile}
                 onChange={(e) => setDescMobile(e.target.value)}
                 placeholder={desc ? "Deixe em branco para usar a mesma descrição do Desktop..." : "Descrição resumida para telas de celular..."}
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-slate-200 outline-none focus:border-[#FE540B]"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] p-3 text-xs text-zinc-200 outline-none focus:border-[#FE540B]"
               />
             </div>
 
-            {/* Banner Principal Smartphone (6:5 ou 9:16 vertical) */}
-            <div className="space-y-2 pt-2 border-t border-white/10">
+            <div className="space-y-2 pt-2 border-t border-[#26262A]">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
                   <Smartphone className="w-3.5 h-3.5" />
@@ -1474,11 +1473,11 @@ export function PortfolioModal({
               </div>
 
               {mainBannerMobile ? (
-                <div className="relative aspect-[6/5] max-h-48 max-w-[200px] rounded-xl overflow-hidden bg-black/40 border border-white/10">
+                <div className="relative aspect-[6/5] max-h-48 max-w-[200px] rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A]">
                   <img src={mainBannerMobile} alt="Banner Principal Smartphone" className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center aspect-[6/5] max-h-40 max-w-[200px] rounded-xl border-2 border-dashed border-white/15 hover:border-[#FE540B] bg-white/[0.02] cursor-pointer transition-colors p-4 text-center">
+                <label className="flex flex-col items-center justify-center aspect-[6/5] max-h-40 max-w-[200px] rounded-md border-2 border-dashed border-[#26262A] hover:border-[#FE540B] bg-[#0B0B0C] cursor-pointer transition-colors p-4 text-center">
                   <Upload className="w-5 h-5 text-zinc-400 mb-1" />
                   <span className="text-xs text-zinc-300 font-bold">
                     {uploadingBannerMobile ? "Enviando..." : "Enviar Banner Smartphone"}
@@ -1488,15 +1487,14 @@ export function PortfolioModal({
               )}
             </div>
 
-            {/* Banners Internos Smartphone (Galeria / Mobile Layers) */}
-            <div className="space-y-2 pt-2 border-t border-white/10">
+            <div className="space-y-2 pt-2 border-t border-[#26262A]">
               <label className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
                 <Smartphone className="w-3.5 h-3.5" />
                 Imagens da Galeria Smartphone ({mobileImages.length})
               </label>
               <div className="flex items-center gap-3 overflow-x-auto pb-2">
                 {mobileImages.map((img, idx) => (
-                  <div key={idx} className="relative w-20 h-24 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0 group">
+                  <div key={idx} className="relative w-20 h-24 rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A] shrink-0 group">
                     <img src={img} alt="Projeto Smartphone" className="w-full h-full object-cover" />
                     <button
                       type="button"
@@ -1508,9 +1506,9 @@ export function PortfolioModal({
                   </div>
                 ))}
 
-                <label className="w-20 h-24 rounded-xl border-2 border-dashed border-white/20 hover:border-[#FE540B] flex flex-col items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0">
+                <label className="w-20 h-24 rounded-md border-2 border-dashed border-[#26262A] hover:border-[#FE540B] flex flex-col items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0">
                   <Plus className="w-5 h-5 mb-1" />
-                  <span className="text-[10px] font-bold">{uploadingMobile ? "..." : "Adicionar Celular"}</span>
+                  <span className="text-[11px] font-bold">{uploadingMobile ? "..." : "Adicionar Celular"}</span>
                   <input type="file" accept="image/*" className="hidden" onChange={handleMobileImageUpload} disabled={uploadingMobile} />
                 </label>
               </div>
@@ -1519,17 +1517,17 @@ export function PortfolioModal({
         )}
 
         {/* Footer */}
-        <div className="pt-4 border-t border-white/10 flex justify-end gap-2.5">
+        <div className="pt-4 border-t border-[#26262A] flex justify-end gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-300 text-xs font-bold transition-colors cursor-pointer"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-6 py-2.5 rounded-xl bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-black uppercase tracking-wider transition-all shadow-lg active:scale-95 cursor-pointer flex items-center gap-2"
+            className="px-5 py-2 rounded-[6px] bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-2"
           >
             <Check className="w-4 h-4 stroke-[3]" />
             <span>{projectToEdit ? "Salvar Alterações do Projeto" : "Concluir e Salvar no Portfólio"}</span>
@@ -1572,14 +1570,14 @@ export function PixEditModal({
       <div className="space-y-4">
         
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Tipo de Chave</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">Tipo de Chave</label>
           <select
             value={pixType}
             onChange={(e) => {
               setPixType(e.target.value);
               onUpdate({ pix_type: e.target.value });
             }}
-            className="w-full bg-[#1b1c27] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2.5 text-xs text-white outline-none focus:border-[#FE540B]"
           >
             <option value="CPF">CPF</option>
             <option value="CNPJ">CNPJ</option>
@@ -1590,7 +1588,7 @@ export function PixEditModal({
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-300">Chave PIX</label>
+          <label className="text-xs font-bold uppercase tracking-wider text-zinc-300">Chave PIX</label>
           <input
             type="text"
             value={pixKey}
@@ -1599,22 +1597,22 @@ export function PixEditModal({
               onUpdate({ pix_key: e.target.value });
             }}
             placeholder="Digite sua chave PIX..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-sm text-white font-mono outline-none focus:border-[#FE540B]"
+            className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3.5 py-2 text-sm text-white font-mono outline-none focus:border-[#FE540B]"
           />
         </div>
 
-        <div className="pt-3 border-t border-white/10 flex justify-end gap-2">
+        <div className="pt-3 border-t border-[#26262A] flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-300 text-xs font-bold transition-colors cursor-pointer"
           >
             Fechar
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="px-5 py-2 rounded-xl bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors shadow-lg cursor-pointer"
+            className="px-5 py-2 rounded-[6px] bg-[#FE540B] hover:bg-[#ff6d29] text-white text-xs font-bold transition-colors cursor-pointer"
           >
             Salvar PIX
           </button>

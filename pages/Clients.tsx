@@ -18,9 +18,9 @@ import SafeResponsive from "../components/ui/SafeResponsive";
 import { ForgeSpecCard } from "../components/ui/ForgeSpecCard";
 
 const cardBase =
-  "relative rounded-2xl transition-all glass-card cartao-de-vidro fora gm-card apple-glass-refraction backdrop-blur-2xl overflow-hidden";
+  "relative rounded-lg transition-all bg-[#131315] border border-[#26262A] hover:border-[#3F3F46] overflow-hidden";
 const inputBase =
-  "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+  "w-full rounded-[4px] px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-[#26262A] shadow-none bg-[#0B0B0C]";
 
 type ClientRow = {
   id: string;
@@ -122,18 +122,18 @@ function VirtualizedClientList({
   softDelete: (id: string) => void;
 }) {
   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "neutral") => {
-    const base = "!w-10 !h-10 !min-w-[40px] !max-w-[40px] !p-0 flex items-center justify-center shrink-0 rounded-full transition-all duration-150 group border border-[#1a0e08] shadow-none bg-[#1a0e08] hover:bg-[#b33a0e] cursor-pointer";
-    if (tone === "orange") return `${base} btn-action-edit text-[#f4ecd8] hover:border-[#b33a0e] hover:text-[#f4ecd8] hover:bg-[#b33a0e]`;
-    if (tone === "green") return `${base} btn-whatsapp text-emerald-400 hover:border-emerald-500 hover:text-white hover:bg-emerald-600`;
-    if (tone === "red") return `${base} btn-action-delete text-red-400 hover:border-red-500 hover:text-white hover:bg-red-600`;
-    return `${base} btn-action-neutral text-[#f4ecd8] hover:border-[#b33a0e] hover:text-[#f4ecd8] hover:bg-[#b33a0e]`;
+    const base = "!w-9 !h-9 !min-w-[36px] !max-w-[36px] !rounded-[4px] !p-0 flex items-center justify-center shrink-0 transition-all duration-150 group border border-[#26262a] shadow-none bg-[#131315] hover:bg-[#1f1f23] cursor-pointer text-[#f2f2f3]";
+    if (tone === "orange") return `${base} btn-action-edit text-[var(--gm-primary,#FE540B)] hover:border-[var(--gm-primary,#FE540B)]/60 hover:text-white hover:bg-[var(--gm-primary,#FE540B)]/20`;
+    if (tone === "green") return `${base} btn-whatsapp text-[#25D366] hover:border-[#25D366]/60 hover:text-white hover:bg-[#25D366]/20`;
+    if (tone === "red") return `${base} btn-action-delete text-rose-400 hover:border-rose-500/60 hover:text-white hover:bg-rose-500/20`;
+    return `${base} btn-action-neutral text-[#8b8b92] hover:border-[#38383f] hover:text-white hover:bg-[#1b1b1e]`;
   };
 
   return (
     <div className={`overflow-hidden ${cardBase}`}>
       <div className="overflow-x-auto">
         <div className="text-sm min-w-full">
-          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/10 font-bold text-xs text-[color:var(--gm-text-tertiary)] uppercase tracking-wider barra bg-transparent">
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-[#26262A] font-bold text-xs text-[#8B8B92] uppercase tracking-wider bg-[#0B0B0C]">
             <div>Avatar</div>
             <div>Cliente</div>
             <div className="text-right">Ações</div>
@@ -153,13 +153,17 @@ function VirtualizedClientList({
                   <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-6 py-4 sm:items-center">
                     <div className="flex justify-between sm:contents">
                       <div className="flex items-center gap-3">
+                        {/* SETA DE EXPANSÃO: QUADRADO LARANJA (IDÊNTICO AO CARD DE ORÇAMENTOS RECENTES NO DASHBOARD) */}
                         <button
+                          type="button"
                           onClick={() => toggleRow(c.id)}
-                          className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--gm-primary)] animate-pulse hover:animate-none"
+                          className="w-7 h-7 min-w-[28px] min-h-[28px] rounded-[4px] bg-[var(--gm-primary,#FE540B)] text-[#0b0b0c] flex items-center justify-center shadow-sm cursor-pointer transition-transform duration-200 hover:brightness-110 active:scale-95 shrink-0"
+                          title={expandedRows.has(c.id) ? "Recolher detalhes" : "Expandir detalhes"}
                         >
                           <ChevronDown
-                            size={18}
-                            className={`transition-transform duration-300 ${expandedRows.has(c.id) ? "rotate-180" : ""}`}
+                            size={15}
+                            strokeWidth={3}
+                            className={`transition-transform duration-300 stroke-[#0b0b0c] ${expandedRows.has(c.id) ? "rotate-180" : ""}`}
                           />
                         </button>
                         <div style={avatarStyle}>
@@ -313,6 +317,15 @@ export default function Clients() {
     const t = setTimeout(() => setToast(null), 1700);
     return () => clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => {
+    if (!deleteConfirmId) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDeleteConfirmId(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [deleteConfirmId]);
 
   useEffect(() => {
     load();
@@ -483,7 +496,7 @@ export default function Clients() {
         title="Clientes"
         actions={
           <button 
-            className="forge-btn forge-btn--primary !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] group cursor-pointer" 
+            className="forge-btn forge-btn--primary !h-[38px] !px-3.5 !rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer" 
             type="button" 
             onClick={() => setOpenNewPage(true)}
           >
@@ -565,10 +578,10 @@ export default function Clients() {
                   key={item.key}
                   type="button"
                   onClick={() => setTab(item.key as any)}
-                  className={`gm-filter-tab fora w-full h-9 rounded-xl text-[11px] sm:text-xs font-black tracking-tight transition-all uppercase flex items-center justify-center border cursor-pointer ${
+                  className={`w-full h-9 rounded-[6px] text-[11px] sm:text-xs font-black tracking-tight transition-all uppercase flex items-center justify-center border cursor-pointer ${
                     active
-                      ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none font-black"
-                      : "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white font-bold"
+                      ? "bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none font-black"
+                      : "bg-[#0B0B0C] border-[#26262A] text-slate-300 hover:bg-[#1B1B1E] hover:text-white font-bold"
                   }`}
                 >
                   {item.label}
@@ -601,7 +614,7 @@ export default function Clients() {
 
         <div className="mb-2 flex items-center justify-between text-xs text-slate-400 px-1">
           <SectionDivider label="Lista de clientes" />
-          <span className="shrink-0 ml-4 px-2.5 py-1 rounded-full bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5 shadow-none backdrop-blur-md">
+          <span className="shrink-0 ml-4 px-2.5 py-1 rounded-[4px] bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5 shadow-none tabular-nums">
             <Users size={13} /> Clientes ({filtered.length})
           </span>
         </div>
@@ -614,8 +627,8 @@ export default function Clients() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="w-full fora rounded-2xl border border-white/10 p-10 sm:p-14 md:p-16 min-h-[220px] sm:min-h-[260px] flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02] backdrop-blur-md shadow-none select-none">
-            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--gm-primary)] shadow-none">
+          <div className="w-full rounded-lg border border-[#26262A] p-10 sm:p-14 md:p-16 min-h-[220px] sm:min-h-[260px] flex flex-col items-center justify-center text-center gap-4 bg-[#131315] shadow-none select-none">
+            <div className="w-12 h-12 rounded-md bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center text-[var(--gm-primary)] shadow-none">
               <Users size={22} />
             </div>
             <p className="text-sm sm:text-base text-slate-200 font-semibold leading-relaxed">
@@ -668,11 +681,11 @@ export default function Clients() {
 
       {/* Hard Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-[1000] bg-black/50 flex items-center justify-center p-4 backdrop-blur-md" onClick={() => setDeleteConfirmId(null)}>
-          <div className={`w-full max-w-sm rounded-[24px] overflow-hidden border border-white/12 shadow-none relative z-10 ${cardBase}`} onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[1000] bg-black/75 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setDeleteConfirmId(null)}>
+          <div className={`w-full max-w-sm rounded-lg overflow-hidden border border-[#26262A] shadow-2xl relative z-10 ${cardBase}`} onClick={e => e.stopPropagation()}>
             <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-none backdrop-blur-md">
-                <Trash2 size={30} className="text-[var(--gm-primary)]" />
+              <div className="w-14 h-14 bg-[var(--gm-primary)]/10 rounded-md flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/25 shadow-none">
+                <Trash2 size={28} className="text-[var(--gm-primary)]" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Excluir Definitivamente?</h3>
               <p className="text-slate-400 text-sm mb-8 leading-relaxed">
@@ -682,7 +695,7 @@ export default function Clients() {
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmId(null)}
-                  className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] text-white backdrop-blur-md cursor-pointer inline-flex items-center justify-center gap-2"
+                  className="flex-1 h-11 rounded-[6px] text-xs uppercase tracking-widest font-black border border-[#26262A] shadow-none bg-[#1B1B1E] hover:bg-[#26262A] text-white cursor-pointer inline-flex items-center justify-center gap-2"
                 >
                   <X size={15} />
                   <span>Cancelar</span>
@@ -690,7 +703,7 @@ export default function Clients() {
                 <button
                   type="button"
                   onClick={hardDelete}
-                  className="flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-none bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-[var(--gm-primary-foreground,#0b0b0c)] hover:brightness-110 backdrop-blur-md cursor-pointer inline-flex items-center justify-center gap-2"
+                  className="flex-1 h-11 rounded-[6px] text-xs uppercase tracking-widest font-black shadow-none bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-[var(--gm-primary-foreground,#0b0b0c)] hover:brightness-110 cursor-pointer inline-flex items-center justify-center gap-2"
                 >
                   <Trash2 size={15} />
                   <span>Excluir</span>

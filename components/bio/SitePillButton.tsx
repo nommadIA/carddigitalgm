@@ -117,7 +117,7 @@ export function SitePillButton({
             e.stopPropagation();
             onEdit();
           }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/85 border border-[#FE540B] text-white text-xs font-bold shadow-lg hover:bg-black hover:scale-105 transition-all cursor-pointer z-50 shrink-0"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] bg-[#131315] border border-[#FE540B] text-white text-xs font-bold shadow-lg hover:bg-[#1B1B1E] transition-all cursor-pointer z-50 shrink-0"
           title={editLabel}
         >
           <Edit3 className="w-3.5 h-3.5 text-[#FE540B]" />

@@ -111,6 +111,15 @@ export function QuickTextEditorModal({
     }
   }, [isOpen, initialText, initialFormatting, elementType]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Insert formatting tag onto current textarea selection
@@ -156,19 +165,19 @@ export function QuickTextEditorModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[220] flex items-center justify-center p-3 sm:p-5 bg-black/75 animate-fade-in overflow-y-auto"
+      className="fixed inset-0 z-[220] flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-sm animate-fade-in overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-2xl max-h-[92vh] rounded-[2rem] fora border border-white/10 text-white shadow-2xl flex flex-col overflow-hidden my-auto animate-scale-in"
+        className="w-full max-w-2xl max-h-[92vh] rounded-lg bg-[#131315] border border-[#26262A] text-white shadow-2xl flex flex-col overflow-hidden my-auto animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#141522]">
+        <div className="px-5 py-4 border-b border-[#26262A] flex items-center justify-between shrink-0 bg-[#131315]">
           <div className="flex items-center gap-3">
             <div 
-              className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg"
-              style={{ backgroundColor: `${brandColor}25`, border: `1px solid ${brandColor}40` }}
+              className="w-10 h-10 rounded-md flex items-center justify-center shrink-0"
+              style={{ backgroundColor: `${brandColor}20`, border: `1px solid ${brandColor}40` }}
             >
               {elementType === "title" && <Type className="w-5 h-5" style={{ color: brandColor }} />}
               {elementType === "description" && <FileText className="w-5 h-5" style={{ color: brandColor }} />}
@@ -177,7 +186,7 @@ export function QuickTextEditorModal({
               {elementType === "footer" && <AlignLeft className="w-5 h-5" style={{ color: brandColor }} />}
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-white flex items-center gap-2">
                 {title}
               </h3>
               <p className="text-xs text-zinc-400 mt-0.5">
@@ -188,9 +197,10 @@ export function QuickTextEditorModal({
           <button 
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"
+            aria-label="Fechar"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -198,13 +208,13 @@ export function QuickTextEditorModal({
         <div className="p-5 sm:p-6 overflow-y-auto space-y-5 custom-scroll">
           
           {/* Rich Formatting Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-2xl bg-white/[0.04] border border-white/10">
+          <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-md bg-[#0B0B0C] border border-[#26262A]">
             {/* Inline Formatting Tools */}
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => insertFormatting("<b>", "</b>", "destaque em negrito")}
-                className="p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
+                className="p-2 rounded-[4px] text-zinc-300 hover:text-white hover:bg-[#1B1B1E] transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
                 title="Negritar trecho selecionado (<b>...</b>)"
               >
                 <Bold className="w-4 h-4 text-[#FE540B]" />
@@ -214,7 +224,7 @@ export function QuickTextEditorModal({
               <button
                 type="button"
                 onClick={() => insertFormatting("<i>", "</i>", "destaque em itálico")}
-                className="p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
+                className="p-2 rounded-[4px] text-zinc-300 hover:text-white hover:bg-[#1B1B1E] transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
                 title="Itálico no trecho selecionado (<i>...</i>)"
               >
                 <Italic className="w-4 h-4 text-amber-400" />
@@ -224,7 +234,7 @@ export function QuickTextEditorModal({
               <button
                 type="button"
                 onClick={() => insertFormatting("<u>", "</u>", "destaque sublinhado")}
-                className="p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
+                className="p-2 rounded-[4px] text-zinc-300 hover:text-white hover:bg-[#1B1B1E] transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
                 title="Sublinhar trecho selecionado (<u>...</u>)"
               >
                 <Underline className="w-4 h-4 text-emerald-400" />
@@ -235,7 +245,7 @@ export function QuickTextEditorModal({
               <button
                 type="button"
                 onClick={() => insertFormatting(`<span style="color: ${brandColor}">`, "</span>", "texto colorido")}
-                className="p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
+                className="p-2 rounded-[4px] text-zinc-300 hover:text-white hover:bg-[#1B1B1E] transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold"
                 title="Colorir trecho com a cor da marca"
               >
                 <Palette className="w-4 h-4" style={{ color: brandColor }} />
@@ -244,11 +254,11 @@ export function QuickTextEditorModal({
             </div>
 
             {/* Align & Block Styles */}
-            <div className="flex items-center gap-1 border-l border-white/10 pl-2">
+            <div className="flex items-center gap-1 border-l border-[#26262A] pl-2">
               <button
                 type="button"
                 onClick={() => setAlign("left")}
-                className={`p-2 rounded-xl transition-all cursor-pointer ${align === "left" ? "bg-[#FE540B] text-white shadow-md" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
+                className={`p-2 rounded-[4px] transition-colors cursor-pointer ${align === "left" ? "bg-[#FE540B] text-white" : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E]"}`}
                 title="Alinhar à Esquerda"
               >
                 <AlignLeft className="w-4 h-4" />
@@ -256,7 +266,7 @@ export function QuickTextEditorModal({
               <button
                 type="button"
                 onClick={() => setAlign("center")}
-                className={`p-2 rounded-xl transition-all cursor-pointer ${align === "center" ? "bg-[#FE540B] text-white shadow-md" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
+                className={`p-2 rounded-[4px] transition-colors cursor-pointer ${align === "center" ? "bg-[#FE540B] text-white" : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E]"}`}
                 title="Centralizar"
               >
                 <AlignCenter className="w-4 h-4" />
@@ -264,7 +274,7 @@ export function QuickTextEditorModal({
               <button
                 type="button"
                 onClick={() => setAlign("right")}
-                className={`p-2 rounded-xl transition-all cursor-pointer ${align === "right" ? "bg-[#FE540B] text-white shadow-md" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}
+                className={`p-2 rounded-[4px] transition-colors cursor-pointer ${align === "right" ? "bg-[#FE540B] text-white" : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E]"}`}
                 title="Alinhar à Direita"
               >
                 <AlignRight className="w-4 h-4" />
@@ -276,17 +286,17 @@ export function QuickTextEditorModal({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Font Family */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <Type className="w-3.5 h-3.5 text-[#FE540B]" />
                 Tipografia
               </label>
               <select
                 value={font}
                 onChange={(e) => setFont(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-white outline-none focus:border-[#FE540B] transition-colors cursor-pointer"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 py-2 text-xs font-semibold text-white outline-none focus:border-[#FE540B] transition-colors cursor-pointer"
               >
                 {FONT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value} className="bg-[#12131b] text-white">
+                  <option key={opt.value} value={opt.value} className="bg-[#131315] text-white">
                     {opt.label}
                   </option>
                 ))}
@@ -295,17 +305,17 @@ export function QuickTextEditorModal({
 
             {/* Font Size */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-[#FE540B]" />
                 Tamanho da Fonte
               </label>
               <select
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-white outline-none focus:border-[#FE540B] transition-colors cursor-pointer"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 py-2 text-xs font-semibold text-white outline-none focus:border-[#FE540B] transition-colors cursor-pointer"
               >
                 {FONT_SIZES.map((s) => (
-                  <option key={s} value={s} className="bg-[#12131b] text-white">
+                  <option key={s} value={s} className="bg-[#131315] text-white">
                     {s}
                   </option>
                 ))}
@@ -314,7 +324,7 @@ export function QuickTextEditorModal({
 
             {/* Overall Text Color */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <Palette className="w-3.5 h-3.5 text-[#FE540B]" />
                 Cor Padrão do Texto
               </label>
@@ -322,7 +332,7 @@ export function QuickTextEditorModal({
                 <button
                   type="button"
                   onClick={() => setShowColorPicker(!showColorPicker)}
-                  className="w-8 h-8 rounded-xl border border-white/20 shadow-inner flex items-center justify-center cursor-pointer transition-transform hover:scale-105 shrink-0"
+                  className="w-8 h-8 rounded-[4px] border border-[#26262A] flex items-center justify-center cursor-pointer shrink-0"
                   style={{ backgroundColor: textColor }}
                   title="Alterar cor padrão"
                 />
@@ -331,7 +341,7 @@ export function QuickTextEditorModal({
                   value={textColor}
                   onChange={(e) => setTextColor(e.target.value)}
                   placeholder="#FFFFFF"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-zinc-200 outline-none focus:border-[#FE540B]"
+                  className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 py-2 text-xs font-mono text-zinc-200 outline-none focus:border-[#FE540B]"
                 />
               </div>
             </div>
@@ -339,7 +349,7 @@ export function QuickTextEditorModal({
 
           {/* Color Presets Drawer */}
           {showColorPicker && (
-            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-wrap items-center gap-2 animate-fade-in">
+            <div className="p-3 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-wrap items-center gap-2 animate-fade-in">
               <span className="text-xs text-zinc-400 mr-2">Cores Rápidas:</span>
               {COLOR_PRESETS.map((cp) => (
                 <button
@@ -349,7 +359,7 @@ export function QuickTextEditorModal({
                     setTextColor(cp.value);
                     setShowColorPicker(false);
                   }}
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold border border-white/10 flex items-center gap-1.5 hover:scale-105 transition-all cursor-pointer"
+                  className="px-2.5 py-1 rounded-[4px] text-xs font-bold border flex items-center gap-1.5 transition-colors cursor-pointer"
                   style={{ backgroundColor: `${cp.value}20`, color: cp.value, borderColor: `${cp.value}50` }}
                 >
                   <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cp.value }} />
@@ -376,7 +386,7 @@ export function QuickTextEditorModal({
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Digite o título..."
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-base text-white font-bold outline-none focus:border-[#FE540B] shadow-inner transition-colors"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-4 py-3 text-base text-white font-bold outline-none focus:border-[#FE540B] transition-colors"
               />
             ) : (
               <textarea
@@ -385,14 +395,14 @@ export function QuickTextEditorModal({
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Digite seu texto formatado aqui..."
-                className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm text-zinc-200 outline-none focus:border-[#FE540B] shadow-inner transition-colors leading-relaxed font-mono resize-y"
+                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] p-4 text-sm text-zinc-200 outline-none focus:border-[#FE540B] transition-colors leading-relaxed font-mono resize-y"
               />
             )}
           </div>
 
           {/* Button-specific settings if editing a Button element */}
           {elementType === "button" && (
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-4">
+            <div className="p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-4">
               <div className="text-xs font-extrabold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
                 <MousePointer className="w-4 h-4 text-[#FE540B]" />
                 Destino do Clique / Ação do Botão
@@ -402,10 +412,10 @@ export function QuickTextEditorModal({
                 <button
                   type="button"
                   onClick={() => setButtonAction("portfolio")}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`p-3 rounded-md border text-left transition-colors cursor-pointer ${
                     buttonAction === "portfolio" 
                       ? "border-[#FE540B] bg-[#FE540B]/15 text-white" 
-                      : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
+                      : "border-[#26262A] bg-[#131315] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                   }`}
                 >
                   <div className="text-xs font-bold text-white">Rolar para o Portfólio</div>
@@ -415,10 +425,10 @@ export function QuickTextEditorModal({
                 <button
                   type="button"
                   onClick={() => setButtonAction("catalog")}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`p-3 rounded-md border text-left transition-colors cursor-pointer ${
                     buttonAction === "catalog" 
                       ? "border-[#FE540B] bg-[#FE540B]/15 text-white" 
-                      : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
+                      : "border-[#26262A] bg-[#131315] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                   }`}
                 >
                   <div className="text-xs font-bold text-white">Rolar para Catálogo</div>
@@ -428,10 +438,10 @@ export function QuickTextEditorModal({
                 <button
                   type="button"
                   onClick={() => setButtonAction("contact")}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`p-3 rounded-md border text-left transition-colors cursor-pointer ${
                     buttonAction === "contact" 
                       ? "border-[#FE540B] bg-[#FE540B]/15 text-white" 
-                      : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
+                      : "border-[#26262A] bg-[#131315] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                   }`}
                 >
                   <div className="text-xs font-bold text-white">Abrir Página de Contato</div>
@@ -441,10 +451,10 @@ export function QuickTextEditorModal({
                 <button
                   type="button"
                   onClick={() => setButtonAction("custom_url")}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`p-3 rounded-md border text-left transition-colors cursor-pointer ${
                     buttonAction === "custom_url" 
                       ? "border-[#FE540B] bg-[#FE540B]/15 text-white" 
-                      : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
+                      : "border-[#26262A] bg-[#131315] text-zinc-400 hover:text-white hover:border-[#3F3F46]"
                   }`}
                 >
                   <div className="text-xs font-bold text-white">Link Personalizado</div>
@@ -460,7 +470,7 @@ export function QuickTextEditorModal({
                     value={buttonUrl}
                     onChange={(e) => setButtonUrl(e.target.value)}
                     placeholder="https://wa.me/... ou https://meusite.com"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
+                    className="w-full bg-[#131315] border border-[#26262A] rounded-[4px] px-3 py-2 text-xs text-white outline-none focus:border-[#FE540B]"
                   />
                 </div>
               )}
@@ -474,19 +484,16 @@ export function QuickTextEditorModal({
                 <Eye className="w-3.5 h-3.5 text-[#FE540B]" />
                 Pré-visualização em Tempo Real
               </span>
-              <span className="text-[10px] text-zinc-500">Exibição exata de como aparecerá no site</span>
+              <span className="text-[11px] text-zinc-500">Exibição exata de como aparecerá no site</span>
             </div>
 
             <div 
-              className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/10 min-h-[100px] flex items-center justify-center overflow-hidden shadow-inner relative"
-              style={{
-                backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(254,84,11,0.05) 0%, transparent 80%)'
-              }}
+              className="p-5 sm:p-6 rounded-md bg-[#0B0B0C] border border-[#26262A] min-h-[100px] flex items-center justify-center overflow-hidden relative"
             >
               {elementType === "button" ? (
                 <button
                   type="button"
-                  className="px-6 py-3.5 rounded-xl font-bold text-white border border-[#FE540B] shadow-[0_0_20px_rgba(254,84,11,0.3)] transition-all"
+                  className="px-6 py-3 rounded-[6px] font-bold text-white border border-[#FE540B] transition-colors"
                   style={{
                     backgroundColor: buttonStyle === "glow" ? "rgba(254,84,11,0.2)" : brandColor,
                     fontFamily: getFontFamily(font),
@@ -515,11 +522,11 @@ export function QuickTextEditorModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 sm:p-5 border-t border-white/10 flex items-center justify-end gap-3 shrink-0 bg-[#141522]">
+        <div className="p-4 sm:p-5 border-t border-[#26262A] flex items-center justify-end gap-2.5 shrink-0 bg-[#131315]">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-white/10 text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-xs font-bold text-zinc-300 hover:text-white transition-colors cursor-pointer whitespace-nowrap"
           >
             Cancelar
           </button>
@@ -527,11 +534,8 @@ export function QuickTextEditorModal({
           <button
             type="button"
             onClick={handleApply}
-            className="px-6 py-2.5 rounded-xl text-xs font-black text-white flex items-center gap-2 shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            style={{
-              backgroundColor: brandColor,
-              boxShadow: `0 4px 15px ${brandColor}40`
-            }}
+            className="px-5 py-2 rounded-[6px] text-xs font-bold text-white flex items-center gap-2 transition-opacity hover:opacity-90 cursor-pointer whitespace-nowrap"
+            style={{ backgroundColor: brandColor }}
           >
             <Check className="w-4 h-4" />
             <span>Salvar Alterações</span>

@@ -77,29 +77,25 @@ export default function Select({
         }
       }}
     >
-      <span className={`truncate pr-2 ${selectedOption ? 'text-[var(--gm-primary)] font-bold' : 'text-slate-400'}`}>
+      <span className={`truncate pr-2 ${selectedOption ? 'text-[var(--gm-primary)] font-bold' : 'text-[#8B8B92]'}`}>
         {selectedOption ? selectedOption.label : placeholder}
       </span>
-      <ChevronDown size={18} className={`shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[var(--gm-primary)]' : 'text-slate-400'}`} />
+      <ChevronDown size={16} className={`shrink-0 transition-transform duration-150 ${isOpen ? 'rotate-180 text-[var(--gm-primary)]' : 'text-[#8B8B92]'}`} />
 
       {isOpen && (
         <div 
-          className="absolute z-[999999] top-[calc(100%+6px)] left-0 w-full max-h-80 overflow-hidden flex flex-col rounded-xl bg-[#18181b] border border-white/20 shadow-2xl"
-          style={{
-            WebkitBackdropFilter: "blur(24px)",
-            backdropFilter: "blur(24px)",
-            padding: 0, // Reset padding for the dropdown
-          }}
+          className="absolute z-[999999] top-[calc(100%+6px)] left-0 w-full max-h-80 overflow-hidden flex flex-col rounded-md bg-[#131315] border border-[#26262A] shadow-2xl"
+          style={{ padding: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
           {searchable && (
-            <div className="p-2.5 border-b border-white/10 shrink-0 bg-black/40">
+            <div className="p-2.5 border-b border-[#26262A] shrink-0 bg-[#0B0B0C]">
               <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--gm-primary)]" />
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--gm-primary)]" />
                 <input
                   ref={searchInputRef}
                   type="text"
-                  className="w-full bg-black/50 border border-white/15 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-[var(--gm-primary)] transition-colors"
+                  className="w-full h-9 bg-[#131315] border border-[#26262A] rounded-[4px] pl-9 pr-3 text-sm text-[#F2F2F3] placeholder-[#8B8B92] focus:outline-none focus:border-[var(--gm-primary)] transition-colors"
                   placeholder="Buscar..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -109,9 +105,9 @@ export default function Select({
               </div>
             </div>
           )}
-          <div className="overflow-y-auto custom-scrollbar flex-1 max-h-60 divide-y divide-white/5">
+          <div className="overflow-y-auto custom-scrollbar flex-1 max-h-60 divide-y divide-[#26262A]">
             {filteredOptions.length === 0 ? (
-              <div className="p-4 text-sm text-slate-400 text-center font-medium">Nenhum resultado encontrado</div>
+              <div className="p-4 text-sm text-[#8B8B92] text-center font-medium">Nenhum resultado encontrado</div>
             ) : (
               filteredOptions.map((opt) => {
                 const isSelected = String(value) === String(opt.value);
@@ -119,7 +115,7 @@ export default function Select({
                   <button
                     key={opt.value}
                     type="button"
-                    className={`w-full text-left px-4 py-3 text-sm transition-colors flex items-center justify-between hover:bg-[var(--gm-primary)]/20 active:bg-[var(--gm-primary)]/30 ${isSelected ? 'bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] font-bold' : 'text-slate-100 hover:text-white'}`}
+                    className={`w-full text-left px-3.5 py-2.5 text-sm transition-colors flex items-center justify-between hover:bg-[#1B1B1E] cursor-pointer ${isSelected ? 'bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] font-bold' : 'text-[#F2F2F3]'}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onChange(opt.value);
@@ -129,7 +125,7 @@ export default function Select({
                   >
                     <span className="truncate pr-2">{opt.label}</span>
                     {isSelected && (
-                      <span className="w-2 h-2 rounded-full bg-[var(--gm-primary)] shrink-0 ml-2" />
+                      <span className="w-2 h-2 rounded-[2px] bg-[var(--gm-primary)] shrink-0 ml-2" />
                     )}
                   </button>
                 );

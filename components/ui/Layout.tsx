@@ -41,6 +41,7 @@ import {
   Volume2,
   VolumeX,
   Crown,
+  Radio,
 } from "lucide-react";
 import {
   playNotificationSound,
@@ -210,6 +211,15 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     setShowUpdateModal(true);
     try { playNotificationSound(); } catch (e) {}
   };
+
+  useEffect(() => {
+    if (!showUpdateModal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowUpdateModal(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showUpdateModal]);
 
   useEffect(() => {
     const isNewUser = localStorage.getItem("gm.isNewUser") === "true";
@@ -688,7 +698,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           onClick={toggleUiSounds}
           title={uiSoundsActive ? "Sons dos Botões: Ligados" : "Sons dos Botões: Desligados"}
           aria-label={uiSoundsActive ? "Sons dos Botões Ligados" : "Sons dos Botões Desligados"}
-          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] active:scale-95 shadow-none"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-[6px] flex items-center justify-center transition-all duration-150 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] active:scale-[0.95] shadow-none"
         >
           {uiSoundsActive ? (
             <Volume2 size={18} className="text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))]" />
@@ -705,11 +715,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         onClick={toggleUiSounds}
         title={`Sons dos Botões: clique para ${uiSoundsActive ? "desligar (off)" : "ligar (on)"}`}
         aria-label={`Sons dos Botões: clique para ${uiSoundsActive ? "desligar (off)" : "ligar (on)"}`}
-        className="w-full h-11 px-3.5 rounded-lg border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] flex items-center justify-between transition-all duration-120 cursor-pointer select-none group shadow-none"
+        className="w-full h-11 px-3 rounded-[6px] border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] flex items-center justify-between gap-2 active:scale-[0.97] transition-[background-color,border-color,transform] duration-150 cursor-pointer select-none group shadow-none"
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 min-w-0">
           <div
-            className={`w-7 h-7 rounded-[4px] flex items-center justify-center transition-all ${
+            className={`w-7 h-7 rounded-[4px] flex items-center justify-center shrink-0 transition-all ${
               uiSoundsActive
                 ? "bg-[var(--gm-menu-icon,var(--gm-primary,#FE540B))]/15 text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))]"
                 : "bg-white/5 text-[#8B8B92]"
@@ -721,13 +731,13 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               <VolumeX size={16} className="text-[#8B8B92]" />
             )}
           </div>
-          <span className="text-[12px] font-mono font-semibold tracking-wider uppercase text-[#F2F2F3]">
+          <span className="text-[11px] font-mono font-semibold tracking-wide uppercase text-[#F2F2F3] truncate whitespace-nowrap text-left">
             Sons dos Botões
           </span>
         </div>
 
         <div
-          className={`flex items-center justify-center px-2.5 py-1 rounded-[3px] text-[11px] font-mono font-bold tracking-wider uppercase transition-all ${
+          className={`flex items-center justify-center px-2 py-1 rounded-[4px] text-[10px] font-mono font-bold tracking-wider uppercase shrink-0 transition-all ${
             uiSoundsActive
               ? "bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-[#0B0B0C]"
               : "bg-[#18181B] text-[#8B8B92] border border-[#26262A]"
@@ -745,19 +755,19 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={handleSyncClick}
       title="Sincronização do App"
       aria-label="Sincronização do App"
-      className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] flex items-center justify-center hover:!text-white active:scale-95 transition-[background-color,border-color,transform] duration-150 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
-        width: '44px',
-        height: '44px',
-        minWidth: '44px',
-        minHeight: '44px',
-        borderRadius: '8px',
+        width: '40px',
+        height: '40px',
+        minWidth: '40px',
+        minHeight: '40px',
+        borderRadius: '6px',
         color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
       }}
     >
       <RefreshCw 
-        size={18} 
-        className={`text-current shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
+        size={17} 
+        className={`text-current shrink-0 transition-transform duration-500 ${isSyncing ? "animate-spin" : "group-hover:rotate-90"}`} 
       />
     </button>
   );
@@ -768,20 +778,20 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={handleBellClick}
       title="Atualizações e Informações"
       aria-label="Atualizações e Informações"
-      className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] flex items-center justify-center hover:!text-white active:scale-95 transition-[background-color,border-color,transform] duration-150 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
-        width: '44px',
-        height: '44px',
-        minWidth: '44px',
-        minHeight: '44px',
-        borderRadius: '8px',
+        width: '40px',
+        height: '40px',
+        minWidth: '40px',
+        minHeight: '40px',
+        borderRadius: '6px',
         color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
       }}
     >
-      <Bell size={18} className="text-current shrink-0" />
+      <Bell size={17} className="text-current shrink-0" />
       {unreadCount > 0 && (
         <span 
-          className="absolute top-2 right-2.5 w-2 h-2 rounded-full animate-pulse bg-emerald-400 ring-2 ring-[#131315]" 
+          className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#131315]" 
         />
       )}
     </button>
@@ -793,17 +803,17 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={signOut}
       title="Sair"
       aria-label="Sair"
-      className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] flex items-center justify-center hover:!text-white active:scale-95 transition-[background-color,border-color,transform] duration-150 cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
-        width: '44px',
-        height: '44px',
-        minWidth: '44px',
-        minHeight: '44px',
-        borderRadius: '8px',
+        width: '40px',
+        height: '40px',
+        minWidth: '40px',
+        minHeight: '40px',
+        borderRadius: '6px',
         color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
       }}
     >
-      <LogOut size={18} className="text-current shrink-0" />
+      <LogOut size={17} className="text-current shrink-0" />
     </button>
   );
 
@@ -813,25 +823,25 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       onClick={toggleUiSounds}
       title={uiSoundsActive ? "Sons do App: Ativados (toque para desativar)" : "Sons do App: Desativados (toque para ativar)"}
       aria-label={uiSoundsActive ? "Sons do App Ativados" : "Sons do App Desativados"}
-      className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-[4px] flex items-center justify-center hover:!text-white active:scale-95 transition-all duration-120 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#38383F] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] flex items-center justify-center hover:!text-white active:scale-95 transition-[background-color,border-color,transform] duration-150 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
       style={{
-        width: '36px',
-        height: '36px',
-        minWidth: '36px',
-        minHeight: '36px',
-        borderRadius: '4px',
+        width: '40px',
+        height: '40px',
+        minWidth: '40px',
+        minHeight: '40px',
+        borderRadius: '6px',
         color: uiSoundsActive
           ? "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))"
-          : "rgba(148, 163, 184, 0.65)",
+          : "#8B8B92",
       }}
     >
       {uiSoundsActive ? (
-        <Volume2 size={16} className="text-current shrink-0" />
+        <Volume2 size={17} className="text-current shrink-0" />
       ) : (
-        <VolumeX size={16} className="text-current shrink-0" />
+        <VolumeX size={17} className="text-current shrink-0" />
       )}
       {uiSoundsActive && (
-        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+        <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-emerald-400 rounded-full" />
       )}
     </button>
   );
@@ -970,19 +980,19 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           </header>
 
           {/* Navigation List - Forge UI */}
-          <ul className="flex-1 flex flex-col py-2 px-1.5 gap-1 justify-evenly overflow-hidden select-none w-full">
+          <ul className="flex-1 flex flex-col py-3 px-2 gap-1 overflow-y-auto no-scrollbar select-none w-full">
             {filteredNav.map(({ to, label, icon: Icon }) => {
               return (
                 <li key={to} className="w-full flex items-center relative">
                   <NavLink
                     to={to}
                     className={({ isActive }) =>
-                      `sidebar-btn group relative w-full h-10 flex items-center rounded-[4px] ${
-                        collapsed ? "justify-center !px-0" : "px-3 gap-3"
-                      } transition-all duration-120 ${
+                      `sidebar-btn group relative w-full h-10 flex items-center rounded-[6px] ${
+                        collapsed ? "justify-center !px-0" : "justify-start text-left px-3 gap-3"
+                      } active:scale-[0.97] transition-[background-color,color,border-color,transform] duration-150 ${
                         isActive
-                          ? "active bg-[#18181B] text-[#F2F2F3] font-bold border-l-2 border-[var(--gm-menu-primary,var(--gm-primary,#FE540B))]"
-                          : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#131315] border-l-2 border-transparent"
+                          ? "active bg-[#18181B] text-[#F2F2F3] font-bold border-l-[3px] border-[var(--gm-menu-primary,var(--gm-primary,#FE540B))]"
+                          : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#131315] border-l-[3px] border-transparent"
                       }`
                     }
                     title={collapsed ? label : undefined}
@@ -998,14 +1008,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                     ) : (
                       <Icon 
                         size={18} 
-                        className="shrink-0 text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] stroke-[2] transition-colors duration-120" 
+                        className="shrink-0 text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] stroke-[1.75] transition-colors duration-150" 
                       />
                     )}
 
                     {!collapsed && (
-                      <p className={`truncate text-left text-[13px] font-mono tracking-wider uppercase font-semibold leading-tight ${to === "/planos" ? "text-amber-300" : ""}`}>
+                      <span className={`truncate text-left text-[13px] font-mono tracking-wider uppercase font-semibold leading-tight whitespace-nowrap ${to === "/planos" ? "text-amber-300" : ""}`}>
                         {label}
-                      </p>
+                      </span>
                     )}
                   </NavLink>
                 </li>
@@ -1013,30 +1023,30 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             })}
           </ul>
 
-          {/* Footer - Forge UI Ampliado e Espaçoso */}
-          <div className="sidebar-footer p-4 border-t border-[#26262A] shrink-0 flex flex-col gap-3 mt-auto w-full bg-[#0B0B0C]">
+          {/* Footer - Forge UI Organizado */}
+          <div className="sidebar-footer p-3.5 border-t border-[#26262A] shrink-0 flex flex-col gap-2.5 mt-auto w-full bg-[#0B0B0C]">
             {collapsed ? (
-              <div className="flex flex-col items-center gap-2.5 w-full py-1">
+              <div className="flex flex-col items-center gap-2 w-full py-1">
                 {renderSyncButton()}
                 {renderBellButton()}
                 {renderLogoutButton()}
-                <div className="w-7 h-[1px] bg-[#26262A] my-1" />
+                <div className="w-7 h-[1px] bg-[#26262A] my-0.5" />
                 {renderSoundToggleButton(true)}
               </div>
             ) : (
-              <div className="flex flex-col gap-3 w-full">
-                {/* Linha 1: 3 Caixas sólidas Forge ampliadas (h-11 / 44px) com cantos rounded-lg e ícones nítidos */}
+              <div className="flex flex-col gap-2.5 w-full">
+                {/* Linha 1: 3 Caixas sólidas Forge */}
                 <div className="grid grid-cols-3 gap-2 w-full">
                   <button
                     type="button"
                     onClick={handleSyncClick}
                     title="Sincronização do App"
                     aria-label="Sincronização do App"
-                    className="h-11 w-full rounded-lg flex items-center justify-center transition-all duration-120 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
+                    className="h-10 w-full rounded-[6px] flex items-center justify-center transition-[background-color,border-color,transform] duration-150 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#3F3F46] active:scale-95 group shadow-none"
                   >
                     <RefreshCw 
-                      size={18} 
-                      className={`text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] shrink-0 transition-transform duration-700 ${isSyncing ? "animate-spin" : "group-hover:rotate-180"}`} 
+                      size={17} 
+                      className={`text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] shrink-0 transition-transform duration-500 ${isSyncing ? "animate-spin" : "group-hover:rotate-90"}`} 
                     />
                   </button>
 
@@ -1045,12 +1055,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                     onClick={handleBellClick}
                     title="Atualizações e Informações"
                     aria-label="Atualizações e Informações"
-                    className="h-11 w-full rounded-lg flex items-center justify-center transition-all duration-120 relative cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
+                    className="h-10 w-full rounded-[6px] flex items-center justify-center transition-[background-color,border-color,transform] duration-150 relative cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#3F3F46] active:scale-95 group shadow-none"
                   >
-                    <Bell size={18} className="text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] shrink-0" />
+                    <Bell size={17} className="text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] shrink-0" />
                     {unreadCount > 0 && (
                       <span 
-                        className="absolute top-2 right-2.5 w-2 h-2 rounded-full animate-pulse bg-emerald-400 ring-2 ring-[#131315]" 
+                        className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#131315]" 
                       />
                     )}
                   </button>
@@ -1060,29 +1070,26 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                     onClick={signOut}
                     title="Sair da Conta"
                     aria-label="Sair da Conta"
-                    className="h-11 w-full rounded-lg flex items-center justify-center transition-all duration-120 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#38383F] active:scale-95 group shadow-none"
+                    className="h-10 w-full rounded-[6px] flex items-center justify-center transition-[background-color,border-color,transform] duration-150 cursor-pointer border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#3F3F46] active:scale-95 group shadow-none"
                   >
-                    <LogOut size={18} className="text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] shrink-0" />
+                    <LogOut size={17} className="text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] shrink-0" />
                   </button>
                 </div>
 
-                {/* Linha 2: Botão SONS DOS BOTÕES estilo Forge Spec ampliado */}
+                {/* Linha 2: Botão SONS DOS BOTÕES estilo Forge */}
                 {renderSoundToggleButton(false)}
 
-                {/* Linha 3: Rodapé com texto 'Desenvolvido por CardDigital GM' ampliado e legível */}
-                <div className="pt-1.5 pb-0.5 text-[11px] sm:text-[11.5px] font-mono text-center pointer-events-none tracking-wider leading-none whitespace-nowrap flex items-center justify-center gap-1.5 text-[#8B8B92] select-none">
-                  <span className="uppercase tracking-widest text-[10.5px]">Desenvolvido por</span>
-                  <span 
-                    className="font-bold text-[#F2F2F3] text-[12px]"
+                {/* Linha 3: Rodapé empilhado sem colisão horizontal */}
+                <div className="pt-1.5 pb-0.5 text-center pointer-events-none select-none flex flex-col items-center gap-0.5">
+                  <span className="text-[11px] font-mono uppercase tracking-widest text-[#8B8B92] leading-tight">
+                    Desenvolvido por
+                  </span>
+                  <span
+                    className="text-[13px] font-extrabold leading-tight flex items-center justify-center gap-1 whitespace-nowrap"
                     style={{ fontFamily: "'Funnel Display', sans-serif" }}
                   >
-                    CardDigital
-                  </span>
-                  <span 
-                    className="font-extrabold text-[#FE540B] inline-block text-[12px]"
-                    style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}
-                  >
-                    GM
+                    <span className="text-[#F2F2F3]">CardDigital</span>
+                    <span className="font-black text-[#FE540B]">GM</span>
                   </span>
                 </div>
               </div>
@@ -1128,11 +1135,11 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                   onClick={() => {
                     openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.");
                   }}
-                  className="gm-floating-whatsapp-btn !p-0 flex items-center justify-center w-12 h-12 md:w-13 md:h-13 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white border border-white/25 shadow-[0_8px_28px_rgba(37,211,102,0.45)] hover:shadow-[0_12px_36px_rgba(37,211,102,0.65)] active:translate-y-0.5 transition-all duration-200 cursor-pointer focus:outline-none"
+                  className="gm-floating-whatsapp-btn !p-0 flex items-center justify-center w-12 h-12 rounded-[6px] bg-[#25D366] hover:bg-[#20ba5a] text-white border border-white/20 shadow-[0_6px_20px_rgba(0,0,0,0.45)] active:scale-[0.95] transition-[background-color,transform] duration-150 cursor-pointer focus:outline-none"
                   aria-label="Ajuda via WhatsApp"
                   title="Ajuda via WhatsApp"
                 >
-                  <WhatsAppIcon size={26} className="text-white shrink-0 pointer-events-none" />
+                  <WhatsAppIcon size={24} className="text-white shrink-0 pointer-events-none" />
                 </button>
               </motion.div>
             )}
@@ -1211,9 +1218,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 transition={{ duration: 0.18 }}
                 className="fixed top-[72px] left-1/2 -translate-x-1/2 z-[10000] pointer-events-none md:hidden"
               >
-                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-950/90 backdrop-blur-xl border border-white/20 text-white text-xs font-bold shadow-2xl">
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-[#131315] border border-[#26262A] text-[#F2F2F3] text-xs font-bold shadow-xl">
                   {pageToast.dir === "left" && <ChevronLeft size={14} className="text-[var(--gm-primary)]" />}
-                  <span className="tracking-tight">{pageToast.label}</span>
+                  <span className="tracking-tight whitespace-nowrap">{pageToast.label}</span>
                   {pageToast.dir === "right" && <ChevronRight size={14} className="text-[var(--gm-primary)]" />}
                 </div>
               </motion.div>
@@ -1229,70 +1236,79 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* UPDATE DIALOG MODAL (NOTIFICAÇÕES CENTER EXPANDIDO) */}
       {showUpdateModal && (
         <div 
-          className="fixed inset-0 z-[1000000] flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xl animate-fade-in" 
+          className="fixed inset-0 z-[1000000] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm animate-fade-in" 
           style={{ zIndex: 1000000 }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowUpdateModal(false);
           }}
         >
-          <div className="relative w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl rounded-2xl border border-white/10 apple-glass-refraction gm-modal overflow-hidden p-5 sm:p-7 flex flex-col gap-4.5 text-white font-sans max-h-[90vh]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-2xl rounded-lg border border-[#26262A] bg-[#131315] gm-modal overflow-hidden p-5 sm:p-6 flex flex-col gap-4 text-[#F2F2F3] font-sans max-h-[90vh]"
+          >
             {/* Header */}
-            <div className="flex items-center justify-between shrink-0 pb-3.5 border-b border-white/10 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl barra border border-white/15 flex items-center justify-center text-zinc-300 relative shadow-none">
-                  <Bell size={20} className={unreadCount > 0 ? "text-[var(--gm-primary)]" : "text-zinc-400"} />
+            <div className="flex items-center justify-between gap-3 shrink-0 pb-3.5 border-b border-[#26262A] relative z-10">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-md bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-[#8B8B92] relative shrink-0">
+                  <Bell size={18} className={unreadCount > 0 ? "text-[var(--gm-primary)]" : "text-[#8B8B92]"} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-black animate-pulse" />
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-400 rounded-full ring-2 ring-[#1B1B1E]" />
                   )}
                 </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-base sm:text-lg tracking-tight text-white mb-0 uppercase">Notificações</h3>
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/10 text-slate-300 border border-white/15">
+                <div className="text-left min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-extrabold text-base sm:text-lg tracking-tight text-white mb-0">
+                      Notificações
+                    </h3>
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-[4px] bg-[#1B1B1E] text-[#8B8B92] border border-[#26262A]">
                       Central Push
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-zinc-400 tracking-wide uppercase">
+                  <span className="text-xs font-semibold text-[#8B8B92] tracking-wide">
                     {unreadCount > 0 ? `${unreadCount} pendentes` : "Tudo em dia"}
                   </span>
                 </div>
               </div>
               <button
                 type="button"
-                className="w-9 h-9 rounded-full barra hover:bg-white/15 flex items-center justify-center transition-all text-zinc-400 hover:text-white border border-white/10 shadow-none cursor-pointer"
+                className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] flex items-center justify-center transition-colors text-[#8B8B92] hover:text-white border border-[#26262A] hover:border-[#3F3F46] shrink-0 cursor-pointer"
                 onClick={() => setShowUpdateModal(false)}
                 title="Fechar Notificações"
+                aria-label="Fechar Notificações"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* Botão de Check-in de Notificações nos 4 Estados (Expandido) */}
+            {/* Botão de Check-in de Notificações nos 4 Estados */}
             <button
               type="button"
               onClick={() => {
                 setShowUpdateModal(false);
                 setShowCheckinModal(true);
               }}
-              className="w-full py-2.5 px-4 rounded-xl border border-[var(--gm-primary)]/35 bg-[var(--gm-primary)]/10 hover:bg-[var(--gm-primary)]/20 text-xs font-black text-white flex items-center justify-between transition-all cursor-pointer shadow-none shrink-0 relative z-10 group"
+              className="w-full py-2.5 px-3.5 rounded-[6px] border border-[var(--gm-primary)]/40 bg-[var(--gm-primary)]/10 hover:bg-[var(--gm-primary)]/15 text-xs font-bold text-[#F2F2F3] flex items-center justify-between gap-2 active:scale-[0.98] transition-[background-color,border-color,transform] duration-150 cursor-pointer shrink-0 relative z-10"
             >
-              <span className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary)] animate-pulse" />
-                <span className="uppercase tracking-wide">Check-in de Notificações (4 Estados)</span>
+              <span className="flex items-center gap-2 min-w-0">
+                <Radio size={15} className="text-[var(--gm-primary)] shrink-0" />
+                <span className="uppercase tracking-wide truncate">Check-in de Notificações (4 Estados)</span>
               </span>
-              <span className="text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold group-hover:scale-105 transition-transform">
+              <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded-[4px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold shrink-0 hidden sm:inline-block">
                 Aberto · Minimizado · 2º Plano · Fechado
               </span>
             </button>
 
             {/* Tabs Filter Bar */}
-            <div className="flex items-center gap-1.5 border border-[#26262A] bg-[#131315] rounded-md p-1 shrink-0 shadow-none relative z-10">
+            <div className="flex items-center gap-1.5 border border-[#26262A] bg-[#0B0B0C] rounded-md p-1 shrink-0 relative z-10">
               <button
                 type="button"
+                aria-pressed={activeTab === "todas"}
+                data-selected={activeTab === "todas"}
                 onClick={() => setActiveTab("todas")}
-                className={`py-1.5 rounded text-center text-xs font-black uppercase tracking-wider transition-all flex-1 cursor-pointer ${
+                className={`h-8 px-3 rounded-[4px] text-center text-xs font-bold uppercase tracking-wider transition-colors flex-1 cursor-pointer whitespace-nowrap ${
                   activeTab === "todas"
-                    ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-primary,#FE540B)] font-black"
+                    ? "bg-[var(--gm-primary,#FE540B)] text-white font-black"
                     : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E]"
                 }`}
               >
@@ -1300,10 +1316,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </button>
               <button
                 type="button"
+                aria-pressed={activeTab === "nao_lidas"}
+                data-selected={activeTab === "nao_lidas"}
                 onClick={() => setActiveTab("nao_lidas")}
-                className={`py-1.5 rounded text-center text-xs font-black uppercase tracking-wider transition-all flex-1 cursor-pointer ${
+                className={`h-8 px-3 rounded-[4px] text-center text-xs font-bold uppercase tracking-wider transition-colors flex-1 cursor-pointer whitespace-nowrap ${
                   activeTab === "nao_lidas"
-                    ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-primary,#FE540B)] font-black"
+                    ? "bg-[var(--gm-primary,#FE540B)] text-white font-black"
                     : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E]"
                 }`}
               >
@@ -1311,10 +1329,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </button>
               <button
                 type="button"
+                aria-pressed={activeTab === "diretas"}
+                data-selected={activeTab === "diretas"}
                 onClick={() => setActiveTab("diretas")}
-                className={`py-1.5 rounded text-center text-xs font-black uppercase tracking-wider transition-all flex-1 cursor-pointer ${
+                className={`h-8 px-3 rounded-[4px] text-center text-xs font-bold uppercase tracking-wider transition-colors flex-1 cursor-pointer whitespace-nowrap ${
                   activeTab === "diretas"
-                    ? "bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-primary,#FE540B)] font-black"
+                    ? "bg-[var(--gm-primary,#FE540B)] text-white font-black"
                     : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#1B1B1E]"
                 }`}
               >
@@ -1324,135 +1344,133 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
             {/* Marcar todas como lidas Button */}
             {unreadCount > 0 && (
-              <div className="flex justify-end shrink-0 px-1 -mt-1 relative z-10">
+              <div className="flex justify-end shrink-0 px-0.5 relative z-10">
                 <button
                   type="button"
                   onClick={markAllAsRead}
-                  className="text-xs font-black text-[var(--gm-primary)] hover:text-orange-400 transition-all uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
+                  className="text-xs font-bold text-[var(--gm-primary)] hover:underline uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Check size={12} className="stroke-[3]" />
+                  <Check size={14} className="stroke-[2.5]" />
                   Marcar todas como lidas
                 </button>
               </div>
             )}
 
             {/* Notifications Feed Viewport */}
-            <div className="overflow-y-auto pr-0.5 space-y-3 max-h-[380px] no-scrollbar text-left flex-1 min-h-[220px] flex flex-col relative z-10">
+            <div className="overflow-y-auto pr-0.5 space-y-2.5 max-h-[380px] no-scrollbar text-left flex-1 min-h-[220px] flex flex-col relative z-10">
               {filteredNotifications.length > 0 ? (
-                <div className="space-y-3 w-full">
+                <div className="space-y-2.5 w-full">
                   {filteredNotifications.map((noti) => (
                     <div
                       key={noti.id}
                       onClick={() => toggleRead(noti.id)}
-                      className={`group relative p-3 border rounded-xl hover:bg-white/5 transition-all flex gap-3 cursor-pointer select-none shadow-none ${
+                      className={`group relative p-3.5 border rounded-md hover:bg-[#1B1B1E] transition-colors flex gap-3 cursor-pointer select-none ${
                         noti.read
-                          ? "barra border-white/5 opacity-70"
-                          : "barra border-white/15 hover:border-[var(--gm-primary)]/40"
+                          ? "bg-[#0B0B0C]/60 border-[#26262A] opacity-75"
+                          : "bg-[#1B1B1E]/60 border-[#3F3F46] hover:border-[var(--gm-primary)]/50"
                       }`}
                     >
-                      {/* Badge Icon / Logo cadastrado do usuário */}
+                      {/* Badge Icon */}
                       <div className="shrink-0 mt-0.5">
                         {noti.icon || appSettings?.company_logo_url ? (
-                          <div className={`w-8 h-8 rounded-lg overflow-hidden border flex items-center justify-center p-0.5 ${
-                            noti.read ? "border-white/10 opacity-70 bg-black/40" : "border-white/20 bg-black/60 shadow-sm"
+                          <div className={`w-8 h-8 rounded-[4px] overflow-hidden border flex items-center justify-center p-0.5 ${
+                            noti.read ? "border-[#26262A] opacity-75 bg-[#0B0B0C]" : "border-[#3F3F46] bg-[#0B0B0C]"
                           }`}>
                             <img
                               src={noti.icon || appSettings?.company_logo_url || ""}
                               alt=""
-                              className="w-full h-full object-contain rounded-md"
+                              className="w-full h-full object-contain rounded-[3px]"
                             />
                           </div>
                         ) : noti.type === "direct" ? (
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
+                          <div className={`w-8 h-8 rounded-[4px] flex items-center justify-center border ${
                             noti.read 
-                              ? "barra border-white/10 text-zinc-500" 
-                              : "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                              ? "bg-[#131315] border-[#26262A] text-[#8B8B92]" 
+                              : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                           }`}>
-                            <MessageSquare size={14} />
+                            <MessageSquare size={15} />
                           </div>
                         ) : noti.type === "update" ? (
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
+                          <div className={`w-8 h-8 rounded-[4px] flex items-center justify-center border ${
                             noti.read
-                              ? "barra border-white/10 text-zinc-500"
-                              : "bg-amber-500/10 border-amber-500/25 text-amber-400"
+                              ? "bg-[#131315] border-[#26262A] text-[#8B8B92]"
+                              : "bg-amber-500/10 border-amber-500/30 text-amber-400"
                           }`}>
-                            <Sparkles size={14} className={noti.read ? "" : "animate-pulse"} />
+                            <Sparkles size={15} />
                           </div>
                         ) : (
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${
+                          <div className={`w-8 h-8 rounded-[4px] flex items-center justify-center border ${
                             noti.read
-                              ? "barra border-white/10 text-zinc-500"
-                              : "bg-orange-500/10 border-orange-500/25 text-orange-400"
+                              ? "bg-[#131315] border-[#26262A] text-[#8B8B92]"
+                              : "bg-orange-500/10 border-orange-500/30 text-orange-400"
                           }`}>
-                            <Clock size={14} />
+                            <Clock size={15} />
                           </div>
                         )}
                       </div>
 
-                      <div className="flex-1 space-y-0.5 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1 pb-1 border-b border-white/10">
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <div className="flex items-center gap-1.5 pb-1 border-b border-[#26262A]">
                           {appSettings?.company_logo_url ? (
-                            <img src={appSettings.company_logo_url} alt={appSettings?.company_name || "Empresa"} className="w-3.5 h-3.5 object-contain rounded shrink-0" />
+                            <img src={appSettings.company_logo_url} alt={appSettings?.company_name || "Empresa"} className="w-4 h-4 object-contain rounded-[3px] shrink-0" />
                           ) : (
-                            <div className="w-3.5 h-3.5 rounded bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] flex items-center justify-center text-[8px] font-black uppercase shrink-0">
+                            <div className="w-4 h-4 rounded-[3px] bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] flex items-center justify-center text-[11px] font-black uppercase shrink-0">
                               {appSettings?.company_name ? appSettings.company_name.substring(0, 2) : "GM"}
                             </div>
                           )}
-                          <span className="text-[10px] font-extrabold text-[var(--gm-primary)] uppercase tracking-wider truncate">
+                          <span className="text-[11px] font-bold text-[var(--gm-primary)] uppercase tracking-wider truncate">
                             {appSettings?.company_name || "GM Edificação"}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <h4 className={`text-[11.5px] font-black tracking-wide ${noti.read ? "text-zinc-300" : "text-white"}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className={`text-[13px] font-bold tracking-tight ${noti.read ? "text-[#CBD5E1]" : "text-white"}`}>
                             {noti.title}
                           </h4>
-                          <span className="text-[8.5px] font-bold text-zinc-400 tracking-normal shrink-0">
+                          <span className="text-[11px] font-mono text-[#8B8B92] shrink-0 tabular-nums">
                             {noti.time}
                           </span>
                         </div>
-                        <p className={`text-[10px] leading-relaxed break-words pr-2 ${noti.read ? "text-zinc-400 font-medium" : "text-zinc-200 font-extrabold"}`}>
+                        <p className={`text-xs leading-relaxed break-words pr-3 ${noti.read ? "text-[#8B8B92]" : "text-[#CBD5E1]"}`}>
                           {noti.message}
                         </p>
                       </div>
 
-                      {/* Unread circle toggle */}
+                      {/* Unread indicator */}
                       {!noti.read && (
-                        <span className="absolute top-3.5 right-3.5 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                        <span className="absolute top-3.5 right-3.5 w-2 h-2 bg-emerald-400 rounded-full" />
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                /* EMPTY STATE - MATCHING SCREENSHOT EXACTLY */
-                <div className="flex flex-col items-center justify-center py-10 px-4 text-center space-y-3 animate-fade-in my-auto mx-auto w-full h-full min-h-[200px]">
-                  <div className="w-14 h-14 rounded-xl barra border border-white/10 flex items-center justify-center text-zinc-400 shadow-none">
-                    <Bell size={24} className="opacity-40" />
+                <div className="flex flex-col items-center justify-center py-10 px-4 text-center space-y-3 my-auto mx-auto w-full h-full min-h-[200px]">
+                  <div className="w-12 h-12 rounded-md bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-[#8B8B92]">
+                    <Bell size={22} />
                   </div>
                   <div className="space-y-1">
-                    <h4 className="text-sm font-black text-white">Tudo em dia!</h4>
-                    <p className="text-[11px] text-zinc-400 font-bold leading-relaxed">Você está em dia com tudo</p>
+                    <h4 className="text-sm font-bold text-white">Tudo em dia</h4>
+                    <p className="text-xs text-[#8B8B92] leading-relaxed">Você não possui notificações nesta aba.</p>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Footer watermark & CTA close */}
-            <div className="shrink-0 border-t border-white/10 pt-3 flex items-center justify-between text-[10px] font-bold text-zinc-400 tracking-wider relative z-10">
-              <span className="flex items-center gap-1">
-                <span className="text-white font-black tracking-normal">CardDigital</span>
-                <span className="text-[var(--gm-primary)] font-black tracking-normal">GM</span>
-                <span className="text-zinc-500 font-medium px-0.5">•</span>
-                <span className="text-zinc-400 lowercase tracking-wide">Notificações</span>
+            {/* Footer */}
+            <div className="shrink-0 border-t border-[#26262A] pt-3.5 flex items-center justify-between text-xs text-[#8B8B92] relative z-10">
+              <span className="flex items-center gap-1.5 font-mono">
+                <span className="text-white font-bold">CardDigital</span>
+                <span className="text-[var(--gm-primary)] font-black">GM</span>
+                <span aria-hidden="true">·</span>
+                <span>Notificações</span>
               </span>
               <button
                 type="button"
-                className="px-3.5 py-1.5 barra border border-white/10 hover:bg-white/15 text-zinc-300 hover:text-white rounded-xl text-[9px] font-black transition-all uppercase tracking-widest shrink-0 shadow-none cursor-pointer"
+                className="h-9 px-4 bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-[#F2F2F3] rounded-[4px] text-xs font-bold transition-colors uppercase tracking-wider shrink-0 cursor-pointer whitespace-nowrap"
                 onClick={() => setShowUpdateModal(false)}
               >
                 Fechar
               </button>
             </div>
-            
           </div>
         </div>
       )}

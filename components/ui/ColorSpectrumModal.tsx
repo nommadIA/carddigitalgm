@@ -248,55 +248,56 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
     setTimeout(() => setCopiedFormat(null), 1800);
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
   if (!isOpen || typeof document === "undefined") return null;
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto animate-fade-in"
       onClick={onClose}
       style={{ zIndex: 99999 }}
     >
-      {/* CONTAINER PRINCIPAL: CAIXA CENTRALIZADA COM EXCELENTE RESPIRO DA TELA */}
       <div
-        className="w-full flex flex-col rounded-2xl md:rounded-3xl border border-white/15 shadow-2xl relative my-auto animate-in zoom-in-95 duration-200 overflow-hidden gm-modal"
+        className="w-full flex flex-col rounded-lg border border-[#26262A] bg-[#131315] shadow-2xl relative my-auto overflow-hidden gm-modal"
         style={{
           width: "100%",
           maxWidth: "680px",
-          maxHeight: "85vh",
-          background: "rgba(18, 18, 22, 0.75)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          borderColor: currentColorHex,
+          maxHeight: "88vh",
+          background: "#131315",
+          borderColor: "#26262A",
           borderWidth: "1px",
           borderStyle: "solid",
-          boxShadow: `0 28px 70px -15px ${currentColorHex}45, 0 0 0 1px rgba(255, 255, 255, 0.12)`,
         }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
+        aria-modal="true"
       >
-        {/* HEADER DO MODAL (COMPACTO E ELEGANTE) */}
+        {/* HEADER DO MODAL */}
         <div 
-          className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 shrink-0"
-          style={{
-            backgroundColor: `${currentColorHex}15`,
-            borderBottomColor: `${currentColorHex}30`
-          }}
+          className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-[#26262A] bg-[#0B0B0C]/60 shrink-0"
         >
-          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             <div 
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 shadow-lg border border-white/25 transition-all duration-200"
+              className="w-10 h-10 rounded-md flex items-center justify-center shrink-0 border border-[#26262A] transition-colors duration-150"
               style={{
                 backgroundColor: currentColorHex,
-                boxShadow: `0 6px 20px -3px ${currentColorHex}80`
               }}
             >
-              <Palette className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-md" />
+              <Palette className="w-5 h-5 text-white drop-shadow" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-white tracking-tight leading-tight truncate">
+              <h2 className="text-lg sm:text-xl font-bold text-[#F2F2F3] tracking-tight leading-tight truncate">
                 {title}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5 leading-snug line-clamp-1">
+              <p className="text-[13px] text-[#8B8B92] mt-0.5 leading-snug line-clamp-1">
                 {subtitle}
               </p>
             </div>
@@ -305,131 +306,121 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 transition-colors shrink-0 cursor-pointer"
+            className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center transition-colors shrink-0 cursor-pointer"
             title="Fechar"
+            aria-label="Fechar"
           >
-            <X className="w-4 h-4 sm:w-5 sm:h-5" />
+            <X size={16} />
           </button>
         </div>
 
-        {/* CORPO DO MODAL: SCROLL SUAVE DEDICADO COM PROPORÇÕES HARMONIOSAS */}
-        <div className="p-4 sm:p-5 lg:p-6 overflow-y-auto flex-1 space-y-5 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-6 items-start custom-scroll max-h-[calc(90vh-130px)] md:max-h-[calc(85vh-130px)]">
+        {/* CORPO DO MODAL */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-5 items-start custom-scroll max-h-[calc(90vh-140px)]">
           
-          {/* ========================================================
-              COLUNA ESQUERDA (DESKTOP lg:col-span-5): PRÉVIAS & CÓDIGOS
-          ======================================================== */}
+          {/* COLUNA ESQUERDA */}
           <div className="lg:col-span-5 space-y-4">
             
-            {/* PRÉVIA VISUAL DE COMPARAÇÃO (NOVA COR VS ORIGINAL) */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+            {/* PRÉVIA VISUAL DE COMPARAÇÃO */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-bold text-[#8B8B92] uppercase tracking-wider">
                 <span>Comparativo de Cor</span>
-                <span className="text-emerald-400 flex items-center gap-1 font-extrabold text-[11px]">
-                  <Sparkles size={11} /> Em Tempo Real
+                <span className="text-emerald-400 flex items-center gap-1 font-bold text-[11px]">
+                  <Sparkles size={12} /> Em Tempo Real
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">
-                {/* Nova Cor */}
-                <div className="rounded-xl border border-white/20 overflow-hidden shadow-lg flex flex-col">
+                <div className="rounded-md border border-[#26262A] overflow-hidden flex flex-col">
                   <div
-                    className="h-20 sm:h-24 lg:h-26 w-full transition-colors duration-150 flex items-center justify-center relative group"
+                    className="h-20 sm:h-24 w-full transition-colors duration-150 flex items-center justify-center relative"
                     style={{ backgroundColor: currentColorHex }}
                   >
-                    <span 
-                      className="text-xs font-mono font-black uppercase px-2.5 py-1 rounded-lg bg-black/70 text-white backdrop-blur-md border border-white/20 shadow-md"
-                    >
+                    <span className="text-xs font-mono font-bold uppercase px-2 py-0.5 rounded-[4px] bg-black/75 text-white border border-white/20">
                       {currentColorHex}
                     </span>
                   </div>
-                  <div className="py-1.5 px-2.5 bg-zinc-900/90 border-t border-white/10 flex items-center justify-between text-[11px]">
-                    <span className="text-white font-bold">Nova Cor</span>
-                    <span className="font-mono text-emerald-400 font-extrabold flex items-center gap-0.5">
-                      <Sparkles size={10} /> ATIVA
-                    </span>
+                  <div className="py-1.5 px-2.5 bg-[#0B0B0C] border-t border-[#26262A] flex items-center justify-between text-[11px]">
+                    <span className="text-[#F2F2F3] font-bold">Nova Cor</span>
+                    <span className="font-mono text-emerald-400 font-bold">ATIVA</span>
                   </div>
                 </div>
 
-                {/* Cor Original */}
-                <div className="rounded-xl border border-white/10 overflow-hidden opacity-90 hover:opacity-100 transition-opacity flex flex-col">
+                <div className="rounded-md border border-[#26262A] overflow-hidden flex flex-col">
                   <div
-                    className="h-20 sm:h-24 lg:h-26 w-full flex items-center justify-center relative"
+                    className="h-20 sm:h-24 w-full flex items-center justify-center relative"
                     style={{ backgroundColor: startingHex }}
                   >
-                    <span className="text-xs font-mono font-bold uppercase px-2.5 py-1 rounded-lg bg-black/70 text-white/90 backdrop-blur-md border border-white/15">
+                    <span className="text-xs font-mono font-bold uppercase px-2 py-0.5 rounded-[4px] bg-black/75 text-white/90 border border-white/15">
                       {startingHex}
                     </span>
                   </div>
-                  <div className="py-1.5 px-2.5 bg-zinc-900/70 border-t border-white/10 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-400 font-medium">Original</span>
+                  <div className="py-1.5 px-2.5 bg-[#0B0B0C] border-t border-[#26262A] flex items-center justify-between text-[11px]">
+                    <span className="text-[#8B8B92] font-medium">Original</span>
                     <button
                       type="button"
                       onClick={handleReset}
                       className="font-bold text-[var(--gm-primary)] hover:underline flex items-center gap-1 cursor-pointer"
                       title="Restaurar cor inicial"
                     >
-                      <RotateCcw size={10} /> Restaurar
+                      <RotateCcw size={11} /> Restaurar
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* CÓDIGOS DE CONVERSÃO FORMATADOS (HEX, RGB, CMYK) COM CLIQUE PARA COPIAR */}
-            <div className="p-3.5 rounded-xl bg-black/50 border border-white/10 space-y-2.5">
+            {/* CÓDIGOS DE CONVERSÃO */}
+            <div className="p-3.5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#8B8B92]">
                   Códigos de Conversão
                 </span>
                 {copiedFormat && (
-                  <span className="text-[10px] font-extrabold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30 animate-in fade-in flex items-center gap-1">
-                    <CheckCircle2 size={11} /> {copiedFormat} Copiado!
+                  <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-[4px] border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 size={12} /> {copiedFormat} Copiado
                   </span>
                 )}
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-                {/* HEX */}
                 <div 
                   onClick={() => handleCopy(currentColorHex, "HEX")}
-                  className="p-2 sm:p-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col justify-between cursor-pointer transition-colors group"
+                  className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] flex flex-col justify-between cursor-pointer transition-colors group"
                   title="Clique para copiar HEX"
                 >
-                  <div className="flex items-center justify-between text-slate-400 text-[9px] font-bold">
+                  <div className="flex items-center justify-between text-[#8B8B92] text-[11px] font-bold">
                     <span>HEX</span>
-                    <Copy size={10} className="opacity-0 group-hover:opacity-100 transition-opacity text-white" />
+                    <Copy size={11} className="opacity-0 group-hover:opacity-100 transition-opacity text-white" />
                   </div>
-                  <span className="font-extrabold text-white text-xs mt-0.5 truncate">
+                  <span className="font-bold text-white text-xs mt-0.5 truncate tabular-nums">
                     {currentColorHex}
                   </span>
                 </div>
 
-                {/* RGB */}
                 <div 
                   onClick={() => handleCopy(`rgb(${currentRgb.r}, ${currentRgb.g}, ${currentRgb.b})`, "RGB")}
-                  className="p-2 sm:p-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col justify-between cursor-pointer transition-colors group"
+                  className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] flex flex-col justify-between cursor-pointer transition-colors group"
                   title="Clique para copiar RGB"
                 >
-                  <div className="flex items-center justify-between text-slate-400 text-[9px] font-bold">
+                  <div className="flex items-center justify-between text-[#8B8B92] text-[11px] font-bold">
                     <span>RGB</span>
-                    <Copy size={10} className="opacity-0 group-hover:opacity-100 transition-opacity text-white" />
+                    <Copy size={11} className="opacity-0 group-hover:opacity-100 transition-opacity text-white" />
                   </div>
-                  <span className="font-extrabold text-white text-xs mt-0.5 truncate">
+                  <span className="font-bold text-white text-xs mt-0.5 truncate tabular-nums">
                     {currentRgb.r}, {currentRgb.g}, {currentRgb.b}
                   </span>
                 </div>
 
-                {/* CMYK */}
                 <div 
                   onClick={() => handleCopy(`${currentCmyk.c}%, ${currentCmyk.m}%, ${currentCmyk.y}%, ${currentCmyk.k}%`, "CMYK")}
-                  className="p-2 sm:p-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col justify-between cursor-pointer transition-colors group"
+                  className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] flex flex-col justify-between cursor-pointer transition-colors group"
                   title="Clique para copiar CMYK"
                 >
-                  <div className="flex items-center justify-between text-slate-400 text-[9px] font-bold">
+                  <div className="flex items-center justify-between text-[#8B8B92] text-[11px] font-bold">
                     <span>CMYK</span>
-                    <Copy size={10} className="opacity-0 group-hover:opacity-100 transition-opacity text-white" />
+                    <Copy size={11} className="opacity-0 group-hover:opacity-100 transition-opacity text-white" />
                   </div>
-                  <span className="font-extrabold text-white text-xs mt-0.5 truncate">
+                  <span className="font-bold text-white text-xs mt-0.5 truncate tabular-nums">
                     {currentCmyk.c}%, {currentCmyk.m}%
                   </span>
                 </div>
@@ -437,25 +428,24 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
             </div>
 
             {/* PALETAS & AMOSTRAS RÁPIDAS */}
-            <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.02] border border-white/10">
-              <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+            <div className="space-y-2 p-3.5 rounded-md bg-[#0B0B0C] border border-[#26262A]">
+              <div className="flex items-center justify-between text-[11px] font-bold text-[#8B8B92] uppercase tracking-wider">
                 <span>Amostras Populares</span>
-                <span className="text-[10px] text-slate-400 font-normal">Toque para selecionar</span>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 {QUICK_SWATCHES.map((swatch) => (
                   <button
                     key={swatch.name}
                     type="button"
                     onClick={() => handleApplyQuickSwatch(swatch.hex)}
-                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 transition-all text-xs font-medium text-slate-200 cursor-pointer group active:scale-95"
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] transition-colors text-[11px] font-medium text-[#F2F2F3] cursor-pointer active:scale-95"
                     title={swatch.name}
                   >
                     <span
-                      className="w-3 h-3 rounded-full border border-white/40 shrink-0 group-hover:scale-110 transition-transform shadow-xs"
+                      className="w-3 h-3 rounded-[2px] border border-white/30 shrink-0"
                       style={{ backgroundColor: swatch.hex }}
                     />
-                    <span className="truncate text-[10px]">{swatch.name}</span>
+                    <span className="truncate">{swatch.name}</span>
                   </button>
                 ))}
               </div>
@@ -463,24 +453,21 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
 
           </div>
 
-          {/* ========================================================
-              COLUNA DIREITA (DESKTOP lg:col-span-7): SLIDERS & CONTROLES
-          ======================================================== */}
-          <div className="lg:col-span-7 space-y-4 flex flex-col justify-between">
-            
+          {/* COLUNA DIREITA */}
+          <div className="lg:col-span-7 space-y-3.5 flex flex-col justify-between">
             <div className="space-y-3.5">
               
-              {/* 1. BARRA DE ESPECTRO DE MATIZ (RAINBOW SPECTRUM SLIDER 0° - 360°) */}
-              <div className="p-3.5 sm:p-4 rounded-xl bg-black/40 border border-white/15 space-y-2 shadow-md">
+              {/* 1. MATIZ */}
+              <div className="p-3.5 sm:p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
+                  <label className="text-xs sm:text-[13px] font-bold text-[#F2F2F3] flex items-center gap-2">
                     <span 
-                      className="w-3.5 h-3.5 rounded-full border border-white shadow-md shrink-0"
+                      className="w-3.5 h-3.5 rounded-[3px] border border-white/40 shrink-0"
                       style={{ backgroundColor: currentColorHex }}
                     />
-                    <span>1. Espectro de Matiz (Tom / Matriz)</span>
+                    <span>1. Espectro de Matiz</span>
                   </label>
-                  <span className="text-xs font-mono font-black text-white bg-white/15 px-2.5 py-0.5 rounded-lg border border-white/20">
+                  <span className="text-xs font-mono font-bold text-[#F2F2F3] bg-[#1B1B1E] px-2.5 py-0.5 rounded-[4px] border border-[#26262A] tabular-nums">
                     {hue}° / 360°
                   </span>
                 </div>
@@ -498,22 +485,22 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 pt-0.5">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-[#8B8B92] pt-0.5">
                   <span>0° Vermelho</span>
                   <span>120° Verde</span>
                   <span>240° Azul</span>
-                  <span>360° Vermelho</span>
+                  <span>360°</span>
                 </div>
               </div>
 
-              {/* 2. SATURAÇÃO (INTENSIDADE 0% A 100%) */}
-              <div className="p-3.5 sm:p-4 rounded-xl bg-black/40 border border-white/15 space-y-2 shadow-md">
+              {/* 2. SATURAÇÃO */}
+              <div className="p-3.5 sm:p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
+                  <label className="text-xs sm:text-[13px] font-bold text-[#F2F2F3] flex items-center gap-2">
                     <Sliders size={14} className="text-[var(--gm-primary)]" />
-                    <span>2. Saturação (Intensidade da Cor)</span>
+                    <span>2. Saturação</span>
                   </label>
-                  <span className="text-xs font-mono font-black text-white bg-white/15 px-2.5 py-0.5 rounded-lg border border-white/20">
+                  <span className="text-xs font-mono font-bold text-[#F2F2F3] bg-[#1B1B1E] px-2.5 py-0.5 rounded-[4px] border border-[#26262A] tabular-nums">
                     {saturation}%
                   </span>
                 </div>
@@ -526,7 +513,7 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
                     value={saturation}
                     onChange={(e) => handleSaturationChange(Number(e.target.value))}
                     onInput={(e) => handleSaturationChange(Number((e.target as HTMLInputElement).value))}
-                    className="custom-range-slider w-full border border-white/15 shadow-inner"
+                    className="custom-range-slider w-full border border-[#26262A]"
                     style={{
                       background: `linear-gradient(to right, hsl(${hue}, 0%, ${lightness}%), hsl(${hue}, 100%, ${lightness}%))`
                     }}
@@ -534,20 +521,20 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 pt-0.5">
-                  <span>Escala de Cinza (0%)</span>
-                  <span>Cor Pura e Vibrante (100%)</span>
+                <div className="flex items-center justify-between text-[11px] font-semibold text-[#8B8B92] pt-0.5">
+                  <span>Cinza (0%)</span>
+                  <span>Pura e Vibrante (100%)</span>
                 </div>
               </div>
 
-              {/* 3. LUMINOSIDADE / BRILHO (CLARO / ESCURO 10% A 90%) */}
-              <div className="p-3.5 sm:p-4 rounded-xl bg-black/40 border border-white/15 space-y-2 shadow-md">
+              {/* 3. LUMINOSIDADE */}
+              <div className="p-3.5 sm:p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
+                  <label className="text-xs sm:text-[13px] font-bold text-[#F2F2F3] flex items-center gap-2">
                     <Sparkles size={14} className="text-[var(--gm-primary)]" />
-                    <span>3. Luminosidade (Claro / Escuro)</span>
+                    <span>3. Luminosidade</span>
                   </label>
-                  <span className="text-xs font-mono font-black text-white bg-white/15 px-2.5 py-0.5 rounded-lg border border-white/20">
+                  <span className="text-xs font-mono font-bold text-[#F2F2F3] bg-[#1B1B1E] px-2.5 py-0.5 rounded-[4px] border border-[#26262A] tabular-nums">
                     {lightness}%
                   </span>
                 </div>
@@ -560,7 +547,7 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
                     value={lightness}
                     onChange={(e) => handleLightnessChange(Number(e.target.value))}
                     onInput={(e) => handleLightnessChange(Number((e.target as HTMLInputElement).value))}
-                    className="custom-range-slider w-full border border-white/15 shadow-inner"
+                    className="custom-range-slider w-full border border-[#26262A]"
                     style={{
                       background: `linear-gradient(to right, #000000, hsl(${hue}, ${saturation}%, 50%), #ffffff)`
                     }}
@@ -568,18 +555,18 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 pt-0.5">
-                  <span>Escuro / Profundo (10%)</span>
+                <div className="flex items-center justify-between text-[11px] font-semibold text-[#8B8B92] pt-0.5">
+                  <span>Escuro (10%)</span>
                   <span>Médio (50%)</span>
-                  <span>Claro / Pastel (90%)</span>
+                  <span>Claro (90%)</span>
                 </div>
               </div>
 
-              {/* 4. ENTRADA MANUAL DIRETA DE CÓDIGO HEX */}
-              <div className="p-3 sm:p-3.5 rounded-xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-300 w-full sm:w-auto">
+              {/* 4. ENTRADA MANUAL HEX */}
+              <div className="p-3.5 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-col sm:flex-row items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#CBD5E1] w-full sm:w-auto">
                   <Hash size={15} className="text-[var(--gm-primary)]" />
-                  <span>Digitar código Hexadecimal:</span>
+                  <span>Código Hexadecimal:</span>
                 </div>
 
                 <div className="relative w-full sm:w-44">
@@ -589,43 +576,42 @@ export const ColorSpectrumModal: React.FC<ColorSpectrumModalProps> = ({
                     value={customHexInput}
                     onChange={(e) => handleDirectHexChange(e.target.value)}
                     placeholder="#FE540B"
-                    className="w-full bg-black/60 border border-white/20 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-mono font-black text-white uppercase text-center focus:outline-none focus:border-[var(--gm-primary)] transition-colors"
+                    className="w-full h-9 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 pr-8 text-xs sm:text-sm font-mono font-bold text-white uppercase text-center focus:outline-none focus:border-[var(--gm-primary)] transition-colors"
                   />
                   <div 
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border border-white/30"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-[3px] border border-white/30"
                     style={{ backgroundColor: currentColorHex }}
                   />
                 </div>
               </div>
 
             </div>
-
           </div>
 
         </div>
 
-        {/* RODAPÉ DO MODAL (ESTILO E TAMANHO HARMONIOSO IGUAL AO MODAL DE NOTAS) */}
-        <div className="px-5 sm:px-6 py-3 sm:py-3.5 border-t border-white/10 bg-white/[0.02] shrink-0 flex flex-col sm:flex-row-reverse items-stretch sm:items-center justify-start sm:justify-end gap-2.5">
+        {/* RODAPÉ DO MODAL */}
+        <div className="px-5 sm:px-6 py-3.5 border-t border-[#26262A] bg-[#0B0B0C]/60 shrink-0 flex flex-col sm:flex-row-reverse items-stretch sm:items-center justify-start sm:justify-end gap-2.5">
           <button
             type="button"
             onClick={() => {
               onApply(currentColorHex);
               onClose();
             }}
-            className="w-full sm:w-auto min-h-[44px] px-6 sm:px-8 py-2.5 rounded-xl sm:rounded-2xl font-black text-sm sm:text-base text-white flex items-center justify-center gap-2 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer select-none order-1 sm:order-2"
+            className="w-full sm:w-auto h-10 px-6 rounded-[6px] font-black text-xs uppercase tracking-wider text-white flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-[filter,transform] duration-150 cursor-pointer select-none order-1 sm:order-2 whitespace-nowrap"
             style={{
               backgroundColor: currentColorHex,
-              boxShadow: `0 8px 24px -4px ${currentColorHex}80`,
+              border: `1px solid ${currentColorHex}`,
             }}
           >
-            <Check size={18} strokeWidth={3} />
+            <Check size={16} strokeWidth={2.5} />
             <span>Aplicar Cor Selecionada</span>
           </button>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto min-h-[40px] px-5 py-2 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/15 text-slate-200 hover:text-white font-bold text-xs sm:text-sm transition-all cursor-pointer text-center select-none order-2 sm:order-1"
+            className="w-full sm:w-auto h-10 px-5 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-[#F2F2F3] font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer text-center select-none order-2 sm:order-1 whitespace-nowrap"
           >
             Cancelar
           </button>

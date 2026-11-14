@@ -136,9 +136,9 @@ import { openWhatsapp } from "../services/whatsApp";
 import jsPDF from "jspdf";
 
 const cardBase =
-  "relative rounded-2xl border border-white/10 glass-card fora gm-card apple-glass-refraction backdrop-blur-2xl shadow-none overflow-hidden transition-all";
+  "relative rounded-lg border border-[#26262A] bg-[#131315] overflow-hidden transition-all";
 const inputBase =
-  "w-full gm-input barra rounded-xl px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-white/10 shadow-none bg-white/[0.02] backdrop-blur-md";
+  "w-full gm-input rounded-[4px] px-4 py-3 text-sm text-[color:var(--gm-text)] placeholder-zinc-500 focus:outline-none focus:border-[color:var(--gm-primary)] transition-all border border-[#26262A] bg-[#0B0B0C]";
 
 function htmlToPlainFormatedText(html: string): string {
   if (!html) return "";
@@ -661,6 +661,44 @@ export default function Notes() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [zoomImage, layoutUrls]);
+
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Unified Escape key dismissal for topmost modal/popover (outside lightbox)
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || zoomImage) return;
+      if (colorPickerOpen) {
+        setColorPickerOpen(false);
+      } else if (highlighterPickerOpen) {
+        setHighlighterPickerOpen(false);
+      } else if (fontSelectorOpen) {
+        setFontSelectorOpen(false);
+      } else if (clocksExpanded) {
+        setClocksExpanded(false);
+      } else if (deleteConfirmId) {
+        setDeleteConfirmId(null);
+      } else if (noteShareData) {
+        setNoteShareData(null);
+      } else if (newNoteModalOpen) {
+        setNewNoteModalOpen(false);
+      } else if (modalOpen) {
+        setModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [
+    zoomImage,
+    colorPickerOpen,
+    highlighterPickerOpen,
+    fontSelectorOpen,
+    clocksExpanded,
+    deleteConfirmId,
+    noteShareData,
+    newNoteModalOpen,
+    modalOpen,
+  ]);
 
   // Auto-Save Configuration State (10, 15, 30 min or disabled)
   const [autoSaveInterval, setAutoSaveInterval] = useState<"disabled" | "10" | "15" | "30">(() => {
@@ -1547,8 +1585,6 @@ export default function Notes() {
     setNoteShareData({ note, message });
   }
 
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
   const handlePdf = async (note: Note) => {
     try {
       let settings: any = null;
@@ -1692,24 +1728,15 @@ export default function Notes() {
           <SectionDivider label="Filtros e Categorias" />
 
           {/* Card Contêiner Forge UI para Filtros e Categorias */}
-          <div
-            className="p-3 sm:p-4 rounded-xl gm-card forge-card w-full space-y-3 sm:space-y-3.5 border border-zinc-800"
-            style={{
-              background: "#121215",
-              borderRadius: "14px",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              boxShadow:
-                "inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 8px 30px rgba(0, 0, 0, 0.4)",
-            }}
-          >
+          <div className="p-3 sm:p-4 rounded-lg bg-[#131315] border border-[#26262A] w-full space-y-3 sm:space-y-3.5">
             {/* Linha 1: Categorias Principais (Tipo de Nota) */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between px-1">
-                <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--gm-primary)]" />
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-sm bg-[var(--gm-primary)]" />
                   Tipo de Nota
                 </span>
-                <span className="text-[10px] font-bold text-slate-500">
+                <span className="text-[11px] font-bold text-zinc-400 tabular-nums">
                   {noteCounts.all} {noteCounts.all === 1 ? "nota ativa" : "notas ativas"}
                 </span>
               </div>
@@ -1722,22 +1749,24 @@ export default function Notes() {
                     <button
                       key={tabItem.id}
                       type="button"
+                      aria-pressed={isActive}
+                      data-selected={isActive}
                       onClick={() => setMainTab(tabItem.id as any)}
-                      className={`gm-filter-tab fora w-full h-10 rounded-xl text-[11px] sm:text-xs font-black tracking-tight transition-all uppercase flex items-center justify-between px-3.5 border cursor-pointer ${
+                      className={`w-full h-10 rounded-[6px] text-xs font-black tracking-tight transition-all uppercase flex items-center justify-between px-3.5 border cursor-pointer whitespace-nowrap ${
                         isActive
-                          ? "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/60 shadow-[0_0_15px_rgba(255,125,0,0.18)]"
-                          : "bg-black/35 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white hover:border-white/20"
+                          ? "bg-[var(--gm-primary)]/15 text-white border-[var(--gm-primary)]/60"
+                          : "bg-[#0B0B0C] border-[#26262A] text-zinc-300 hover:bg-[#1B1B1E] hover:text-white hover:border-[#3F3F46]"
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
-                        <Icon size={14} className={isActive ? "text-[var(--gm-primary)] shrink-0" : "text-slate-400 shrink-0"} />
+                        <Icon size={14} className={isActive ? "text-white shrink-0" : "text-zinc-400 shrink-0"} />
                         <span className="truncate">{tabItem.label}</span>
                       </span>
                       <span
-                        className={`text-[10px] font-black px-2 py-0.5 rounded-full border shrink-0 transition-colors ${
+                        className={`text-[11px] font-black px-2 py-0.5 rounded-[4px] border shrink-0 transition-colors tabular-nums ${
                           isActive
-                            ? "bg-[var(--gm-primary)]/30 text-[var(--gm-primary)] border-[var(--gm-primary)]/50"
-                            : "bg-white/5 text-slate-400 border-white/10"
+                            ? "bg-[var(--gm-primary)]/20 text-white border-[var(--gm-primary)]/50"
+                            : "bg-[#131315] text-zinc-400 border-[#26262A]"
                         }`}
                       >
                         {tabItem.count}
@@ -1749,17 +1778,17 @@ export default function Notes() {
             </div>
 
             {/* Linha Divisória Fina */}
-            <div className="border-t border-white/5" />
+            <div className="border-t border-[#26262A]" />
 
             {/* Linha 2: Status do Fluxo / Lixeira */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between px-1">
-                <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-sm bg-zinc-400" />
                   Status do Fluxo
                 </span>
                 {noteTab === "LIXEIRA" && noteCounts.lixeira > 0 && (
-                  <span className="text-[10px] font-bold text-rose-400">
+                  <span className="text-[11px] font-bold text-rose-400 tabular-nums">
                     {noteCounts.lixeira} na lixeira
                   </span>
                 )}
@@ -1770,40 +1799,42 @@ export default function Notes() {
                   const isActive = noteTab === t.id;
                   const Icon = t.icon;
                   
-                  let activeClasses = "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/60 shadow-[0_0_15px_rgba(255,125,0,0.18)]";
-                  let badgeActiveClasses = "bg-[var(--gm-primary)]/30 text-[var(--gm-primary)] border-[var(--gm-primary)]/50";
+                  let activeClasses = "bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border-[var(--gm-primary)]/60";
+                  let badgeActiveClasses = "bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border-[var(--gm-primary)]/50";
                   
                   if (t.tone === "green") {
-                    activeClasses = "bg-emerald-500/20 text-emerald-400 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.18)]";
-                    badgeActiveClasses = "bg-emerald-500/30 text-emerald-300 border-emerald-500/50";
+                    activeClasses = "bg-emerald-500/15 text-emerald-400 border-emerald-500/50";
+                    badgeActiveClasses = "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
                   } else if (t.tone === "red") {
-                    activeClasses = "bg-rose-500/20 text-rose-400 border-rose-500/60 shadow-[0_0_15px_rgba(244,63,94,0.18)]";
-                    badgeActiveClasses = "bg-rose-500/30 text-rose-300 border-rose-500/50";
+                    activeClasses = "bg-rose-500/15 text-rose-400 border-rose-500/50";
+                    badgeActiveClasses = "bg-rose-500/20 text-rose-300 border-rose-500/40";
                   } else if (t.tone === "amber") {
-                    activeClasses = "bg-amber-500/20 text-amber-300 border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.18)]";
-                    badgeActiveClasses = "bg-amber-500/30 text-amber-200 border-amber-500/50";
+                    activeClasses = "bg-amber-500/15 text-amber-300 border-amber-500/50";
+                    badgeActiveClasses = "bg-amber-500/20 text-amber-200 border-amber-500/40";
                   }
 
                   return (
                     <button
                       key={t.id}
                       type="button"
+                      aria-pressed={isActive}
+                      data-selected={isActive}
                       onClick={() => setNoteTab(t.id as any)}
-                      className={`gm-filter-tab fora w-full h-9 sm:h-10 rounded-xl text-[11px] sm:text-xs font-black tracking-tight transition-all uppercase flex items-center justify-between px-3 border cursor-pointer ${
+                      className={`w-full h-9 sm:h-10 rounded-[6px] text-xs font-black tracking-tight transition-all uppercase flex items-center justify-between px-3 border cursor-pointer whitespace-nowrap ${
                         isActive
                           ? activeClasses
-                          : "bg-black/35 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white hover:border-white/20"
+                          : "bg-[#0B0B0C] border-[#26262A] text-zinc-300 hover:bg-[#1B1B1E] hover:text-white hover:border-[#3F3F46]"
                       }`}
                     >
                       <span className="flex items-center gap-1.5 sm:gap-2 truncate">
-                        <Icon size={14} className={isActive ? "" : "text-slate-400"} />
+                        <Icon size={14} className={isActive ? "text-white shrink-0" : "text-zinc-400 shrink-0"} />
                         <span className="truncate">{t.label}</span>
                       </span>
                       <span
-                        className={`text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full border shrink-0 transition-colors ${
+                        className={`text-[11px] font-black px-1.5 sm:px-2 py-0.5 rounded-[4px] border shrink-0 transition-colors tabular-nums ${
                           isActive
                             ? badgeActiveClasses
-                            : "bg-white/5 text-slate-400 border-white/10"
+                            : "bg-[#131315] text-zinc-400 border-[#26262A]"
                         }`}
                       >
                         {t.count}
@@ -1815,20 +1846,21 @@ export default function Notes() {
             </div>
           </div>
 
-          {/* Busca com Visual Padrão Glass Desfocado Apple - Idêntica a Orçamentos */}
-          <div className="gm-search-apple-glass">
-            <Search className="gm-search-icon" size={18} />
+          {/* Busca Padrão Forge UI */}
+          <div className="relative w-full">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
             <input
               type="text"
               placeholder="Buscar notas por título, conteúdo ou responsável..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-11 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] pl-10 pr-10 text-sm text-white placeholder-zinc-500 outline-none transition-colors"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm("")}
-                className="gm-search-clear gm-search-apple-glass-clear"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 title="Limpar busca"
               >
                 <X size={14} />
@@ -1845,11 +1877,11 @@ export default function Notes() {
         <>
           <SectionDivider label="Minhas Anotações" />
           {filteredNotes.length === 0 ? (
-            <div className="w-full fora rounded-2xl border border-white/10 p-10 sm:p-14 md:p-16 min-h-[220px] sm:min-h-[260px] flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02] backdrop-blur-md shadow-none select-none">
-              <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--gm-primary)] shadow-none">
+            <div className="w-full rounded-lg border border-[#26262A] p-10 sm:p-14 md:p-16 min-h-[220px] sm:min-h-[260px] flex flex-col items-center justify-center text-center gap-4 bg-[#131315] select-none">
+              <div className="w-12 h-12 rounded-md bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center text-[var(--gm-primary)]">
                 <FileText size={22} />
               </div>
-              <p className="text-sm sm:text-base text-slate-200 font-semibold leading-relaxed">
+              <p className="text-sm sm:text-base text-zinc-200 font-semibold leading-relaxed">
                 Nenhuma nota encontrada.
               </p>
             </div>
@@ -1878,431 +1910,426 @@ export default function Notes() {
                     openEdit(note);
                   }}
                 >
-                  <div
-                    id={`note-card-${note.id}`}
-                    onMouseEnter={() => stopSignal(note.id)}
-                    onTouchStart={() => stopSignal(note.id)}
-                    className={`p-6 relative gap-3 flex flex-col transition-all cursor-pointer group hover:scale-[1.01] h-full gm-note-card ${cardBase} hover:border-[var(--gm-primary)]/40 hover:bg-white/[0.05] ${
-                      isExpanded
-                        ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]"
-                        : "overflow-hidden min-h-[280px]"
-                    } ${
-                      note.id === highlightedId
-                        ? "gm-signal-bottom-container"
-                        : ""
-                    }`}
-                  >
-                    {/* Efeito de Sinalização de Degradê: Canto Inferior Esquerdo -> Canto Inferior Direito (só para com clique ou mouse por cima) */}
-                    <SignalBottomGradient
-                      active={note.id === highlightedId}
-                      onDismiss={() => stopSignal(note.id)}
-                    />
-                    {/* Visual de Pinar Nota: sempre no canto superior direito, cor sólida laranja do app somente quando fixada */}
-                    <button
-                      type="button"
-                      onClick={(e) => togglePin(note, e)}
-                      className={`gm-note-pin-btn group/pin ${note.is_pinned ? "pinned" : ""}`}
-                      title={note.is_pinned ? "Desafixar nota" : "Fixar nota no topo"}
+                    <div
+                      id={`note-card-${note.id}`}
+                      onMouseEnter={() => stopSignal(note.id)}
+                      onTouchStart={() => stopSignal(note.id)}
+                      className={`p-5 relative gap-3 flex flex-col transition-all cursor-pointer group h-full gm-note-card ${cardBase} hover:border-[#3F3F46] hover:bg-[#1B1B1E] ${
+                        isExpanded
+                          ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]"
+                          : "overflow-hidden min-h-[280px]"
+                      } ${
+                        note.id === highlightedId
+                          ? "gm-signal-bottom-container"
+                          : ""
+                      }`}
                     >
-                      <Pin
-                        size={15}
-                        className={
-                          note.is_pinned
-                            ? "rotate-[-30deg] transition-transform"
-                            : "rotate-0 transition-transform"
-                        }
+                      {/* Efeito de Sinalização de Degradê: Canto Inferior Esquerdo -> Canto Inferior Direito */}
+                      <SignalBottomGradient
+                        active={note.id === highlightedId}
+                        onDismiss={() => stopSignal(note.id)}
                       />
-                    </button>
+                      {/* Visual de Pinar Nota */}
+                      <button
+                        type="button"
+                        onClick={(e) => togglePin(note, e)}
+                        className={`gm-note-pin-btn group/pin ${note.is_pinned ? "pinned" : ""}`}
+                        title={note.is_pinned ? "Desafixar nota" : "Fixar nota no topo"}
+                      >
+                        <Pin
+                          size={15}
+                          className={
+                            note.is_pinned
+                              ? "rotate-[-30deg] transition-transform"
+                              : "rotate-0 transition-transform"
+                          }
+                        />
+                      </button>
 
-                    {/* Title */}
-                    <div className="flex flex-col gap-1 pr-11">
-                      <h3 className="font-bold text-lg text-white leading-tight mt-1">
-                        {note.title || "Sem título"}
-                      </h3>
+                      {/* Title */}
+                      <div className="flex flex-col gap-1 pr-11">
+                        <h3 className="font-bold text-lg text-white leading-tight mt-1">
+                          {note.title || "Sem título"}
+                        </h3>
 
-                      {(note.delivery_date || note.responsible_name) && (
-                        <div className="flex flex-col gap-0.5 mt-1 text-xs text-white/60">
-                          {note.delivery_date && (
-                            <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                              <Clock size={12} style={{ color: noteColor }} />
-                              {note.delivery_date
-                                .split("-")
-                                .reverse()
-                                .join("/")}{" "}
-                              {note.delivery_time && `às ${note.delivery_time}`}
-                            </div>
-                          )}
-                          {note.responsible_name && (
-                            <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                              <span
-                                style={{ color: noteColor }}
-                                className="uppercase font-bold tracking-widest"
-                              >
-                                Resp:
-                              </span>
-                              {note.responsible_name}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Layouts Thumbnail Preview (up to 6 side-by-side) */}
-                    {(() => {
-                      const cardLayouts = parseLayoutUrls(note.layout_url);
-                      if (cardLayouts.length === 0) return null;
-                      if (cardLayouts.length === 1) {
-                        return (
-                          <div 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setZoomImage({ url: cardLayouts[0], index: 0 });
-                              setZoomScale(1);
-                            }}
-                            className="w-full h-32 rounded-xl overflow-hidden mt-1 shrink-0 relative bg-black/40 border border-white/10 cursor-pointer group/thumb shadow-md"
-                            title="Clique para ampliar miniatura com fundo desfocado"
-                          >
-                            <img
-                              src={cardLayouts[0]}
-                              alt="Layout Thumbnail"
-                              className="w-full h-full object-cover opacity-90 group-hover/thumb:opacity-100 group-hover/thumb:scale-105 transition-all duration-300"
-                            />
-                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                              <span className="px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold flex items-center gap-1">
-                                <ZoomIn size={12} className="text-[var(--gm-primary,#FF6900)]" />
-                                Ampliar
-                              </span>
-                            </div>
+                        {(note.delivery_date || note.responsible_name) && (
+                          <div className="flex flex-col gap-0.5 mt-1 text-xs text-zinc-400">
+                            {note.delivery_date && (
+                              <div className="flex items-center gap-1.5 font-mono text-[11px] tabular-nums">
+                                <Clock size={12} style={{ color: noteColor }} />
+                                {note.delivery_date
+                                  .split("-")
+                                  .reverse()
+                                  .join("/")}{" "}
+                                {note.delivery_time && `às ${note.delivery_time}`}
+                              </div>
+                            )}
+                            {note.responsible_name && (
+                              <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                                <span
+                                  style={{ color: noteColor }}
+                                  className="uppercase font-bold tracking-widest"
+                                >
+                                  Resp:
+                                </span>
+                                {note.responsible_name}
+                              </div>
+                            )}
                           </div>
-                        );
-                      }
-                      return (
-                        <div
-                          className={`w-full mt-1 shrink-0 grid gap-1.5 ${
-                            cardLayouts.length === 2
-                              ? "grid-cols-2 h-28"
-                              : cardLayouts.length === 3
-                                ? "grid-cols-3 h-24"
-                                : cardLayouts.length === 4
-                                  ? "grid-cols-2 grid-rows-2 h-36"
-                                  : "grid-cols-3 grid-rows-2 h-36"
-                          }`}
-                        >
-                          {cardLayouts.map((lUrl, lIdx) => (
-                            <div
-                              key={lIdx}
+                        )}
+                      </div>
+
+                      {/* Layouts Thumbnail Preview (up to 6 side-by-side) */}
+                      {(() => {
+                        const cardLayouts = parseLayoutUrls(note.layout_url);
+                        if (cardLayouts.length === 0) return null;
+                        if (cardLayouts.length === 1) {
+                          return (
+                            <div 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setZoomImage({ url: lUrl, index: lIdx });
+                                setZoomImage({ url: cardLayouts[0], index: 0 });
                                 setZoomScale(1);
                               }}
-                              className="w-full h-full rounded-lg overflow-hidden relative bg-black/40 border border-white/10 group/thumb cursor-pointer shadow-sm"
-                              title={`Clique para ampliar miniatura ${lIdx + 1}`}
+                              className="w-full h-32 rounded-md overflow-hidden mt-1 shrink-0 relative bg-[#0B0B0C] border border-[#26262A] cursor-pointer group/thumb"
+                              title="Clique para ampliar miniatura"
                             >
                               <img
-                                src={lUrl}
-                                alt={`Layout ${lIdx + 1}`}
+                                src={cardLayouts[0]}
+                                alt="Layout Thumbnail"
                                 className="w-full h-full object-cover opacity-90 group-hover/thumb:opacity-100 group-hover/thumb:scale-105 transition-all duration-300"
                               />
-                              <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/75 text-[9px] font-mono text-white/90 border border-white/15 backdrop-blur-sm">
-                                {lIdx + 1}
-                              </span>
-                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                                <ZoomIn size={13} className="text-white drop-shadow-md" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                <span className="px-2.5 py-1 rounded-[4px] bg-[#131315] border border-[#26262A] text-white text-[11px] font-bold flex items-center gap-1">
+                                  <ZoomIn size={12} className="text-[var(--gm-primary,#FF6900)]" />
+                                  Ampliar
+                                </span>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-
-                    {/* Body Preview */}
-                    <div
-                      className={`text-white/70 text-sm overflow-hidden flex-1 relative ${isExpanded ? "" : "max-h-[140px]"}`}
-                    >
-                      <div
-                        className={`markdown-body text-sm leading-relaxed ${isExpanded ? "" : "line-clamp-4"}`}
-                        dangerouslySetInnerHTML={{
-                          __html: note.content || "...",
-                        }}
-                      />
-                    </div>
-
-                    {/* Expand Arrow for long text */}
-                    {isLong && (
-                      <div className="flex justify-center -mt-2 mb-2">
-                        <button
-                          onClick={(e) => toggleExpand(note.id, e)}
-                          className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all transform hover:scale-110"
-                        >
-                          {isExpanded ? (
-                            <ChevronUp size={16} />
-                          ) : (
-                            <ChevronDown size={16} />
-                          )}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Footer: Reminder + Actions */}
-                    <div className="mt-auto pt-4 flex flex-col gap-3 border-t border-white/10 opacity-80 group-hover:opacity-100 transition-opacity relative z-10 w-full">
-                      {/* Text details for high contrast and perfect legibility */}
-                      <div className="flex flex-col gap-1.5 min-w-0 w-full text-left">
-                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-white/50 tracking-wider">
-                          <span>Criado em:</span>
-                          <span className="font-mono text-white/90">
-                            {new Date(note.created_at).toLocaleDateString("pt-BR")}
-                          </span>
-                        </div>
-                        {!normalizeStatus(note.status).includes("CONCLU") && note.reminder_time &&
-                          (() => {
-                            const hasSpace = note.reminder_time.includes(" ");
-                            return (
+                          );
+                        }
+                        return (
+                          <div
+                            className={`w-full mt-1 shrink-0 grid gap-1.5 ${
+                              cardLayouts.length === 2
+                                ? "grid-cols-2 h-28"
+                                : cardLayouts.length === 3
+                                  ? "grid-cols-3 h-24"
+                                  : cardLayouts.length === 4
+                                    ? "grid-cols-2 grid-rows-2 h-36"
+                                    : "grid-cols-3 grid-rows-2 h-36"
+                            }`}
+                          >
+                            {cardLayouts.map((lUrl, lIdx) => (
                               <div
-                                className="flex items-start gap-2 font-bold tracking-wider mt-1 text-[9px]"
-                                title={
-                                  hasSpace
-                                    ? "Lembrete Único"
-                                    : "Lembrete Diário"
-                                }
-                                style={{ color: noteColor }}
+                                key={lIdx}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setZoomImage({ url: lUrl, index: lIdx });
+                                  setZoomScale(1);
+                                }}
+                                className="w-full h-full rounded-[4px] overflow-hidden relative bg-[#0B0B0C] border border-[#26262A] group/thumb cursor-pointer"
+                                title={`Clique para ampliar miniatura ${lIdx + 1}`}
                               >
-                                <div className="mt-0.5 shrink-0">
-                                  {hasSpace ? (
-                                    <Calendar
-                                      size={12}
-                                      className="animate-pulse"
-                                      style={{ color: noteColor }}
-                                    />
-                                  ) : (
-                                    <Clock
-                                      size={12}
-                                      className="animate-pulse"
-                                      style={{ color: noteColor }}
-                                    />
-                                  )}
-                                </div>
-                                <div className="flex flex-col gap-0.5 leading-tight min-w-0 w-full">
-                                  <span className="uppercase text-white/40 tracking-widest font-mono text-[8px]">
-                                    {hasSpace ? "Lembrete Único" : "Lembrete Diário"}
-                                  </span>
-                                  <span className="text-white font-mono tracking-normal text-[10px] break-words">
-                                    {hasSpace ? (
-                                      (() => {
-                                        const [rDate, rTime] =
-                                          note.reminder_time.split(" ");
-                                        if (rDate && rTime) {
-                                          const [y, m, d] = rDate.split("-");
-                                          const formattedTimes = rTime.replace(/,/g, " • ");
-                                          return `${d}/${m}/${y} às ${formattedTimes}`;
-                                        }
-                                        return note.reminder_time;
-                                      })()
-                                    ) : (
-                                      note.reminder_time.replace(/,/g, " • ")
-                                    )}
-                                  </span>
+                                <img
+                                  src={lUrl}
+                                  alt={`Layout ${lIdx + 1}`}
+                                  className="w-full h-full object-cover opacity-90 group-hover/thumb:opacity-100 group-hover/thumb:scale-105 transition-all duration-300"
+                                />
+                                <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-[4px] bg-black/80 text-[11px] font-mono text-white border border-[#26262A] tabular-nums">
+                                  {lIdx + 1}
+                                </span>
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                  <ZoomIn size={13} className="text-white" />
                                 </div>
                               </div>
-                            );
-                          })()}
+                            ))}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Body Preview */}
+                      <div
+                        className={`text-zinc-300 text-sm overflow-hidden flex-1 relative ${isExpanded ? "" : "max-h-[140px]"}`}
+                      >
+                        <div
+                          className={`markdown-body text-sm leading-relaxed ${isExpanded ? "" : "line-clamp-4"}`}
+                          dangerouslySetInnerHTML={{
+                            __html: note.content || "...",
+                          }}
+                        />
                       </div>
 
-                      {/* Action buttons on their own line with generous spacing */}
-                      <div className="flex items-center justify-between gap-2.5 w-full pt-2.5 border-t border-white/10">
-                        {/* Status label / Seletor rápido de status em cápsula Apple Glass Vidro Desfocado */}
-                        {note.status ? (
-                          <div
-                            className="gm-status-apple-glass group shrink-0 select-none"
-                            onClick={(e) => e.stopPropagation()}
-                            title="Alterar status (ao marcar como Concluído, o alarme e lembrete zeram)"
+                      {/* Expand Arrow for long text */}
+                      {isLong && (
+                        <div className="flex justify-center -mt-2 mb-2">
+                          <button
+                            onClick={(e) => toggleExpand(note.id, e)}
+                            className="w-8 h-8 rounded-[6px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer"
+                            title={isExpanded ? "Recolher texto" : "Expandir texto"}
                           >
-                            {/* Ponto indicador luminoso de status */}
-                            <span
-                              className={`gm-status-dot w-2 h-2 rounded-full shrink-0 mr-2 transition-all ${
-                                normalizeStatus(note.status).includes("CONCLU")
-                                  ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                                  : normalizeStatus(note.status).includes("PROD")
-                                  ? "bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]"
-                                  : "bg-[var(--gm-primary)] shadow-[0_0_8px_rgba(255,105,0,0.8)]"
-                              }`}
-                            />
+                            {isExpanded ? (
+                              <ChevronUp size={16} />
+                            ) : (
+                              <ChevronDown size={16} />
+                            )}
+                          </button>
+                        </div>
+                      )}
 
-                            {/* Texto em destaque Apple Glass branco puro */}
-                            <span className="gm-status-text text-[10px] sm:text-[10.5px] font-extrabold uppercase tracking-wider text-white whitespace-nowrap">
-                              {note.status.replace(/_/g, " ")}
+                      {/* Footer: Reminder + Actions */}
+                      <div className="mt-auto pt-4 flex flex-col gap-3 border-t border-[#26262A] relative z-10 w-full">
+                        {/* Text details */}
+                        <div className="flex flex-col gap-1.5 min-w-0 w-full text-left">
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 tracking-wider">
+                            <span>Criado em:</span>
+                            <span className="font-mono text-zinc-200 tabular-nums">
+                              {new Date(note.created_at).toLocaleDateString("pt-BR")}
                             </span>
-
-                            {/* Chevron elegante Apple */}
-                            <ChevronDown
-                              size={12}
-                              className="text-white/70 group-hover:text-white transition-colors ml-2 shrink-0 pointer-events-none"
-                            />
-
-                            {/* Select invisível cobrindo a cápsula para acionamento nativo perfeito */}
-                            <select
-                              value={note.status.toLowerCase()}
-                              onChange={(e) => handleQuickStatusChange(note, e.target.value, e)}
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                              title="Alterar status"
-                            >
-                              <option value="a fazer" className="bg-zinc-900 text-white font-bold py-1">A FAZER</option>
-                              <option value="produção" className="bg-zinc-900 text-white font-bold py-1">PRODUÇÃO</option>
-                              <option value="concluídos" className="bg-zinc-900 text-white font-bold py-1">CONCLUÍDOS</option>
-                            </select>
                           </div>
-                        ) : (
-                          <div />
-                        )}
+                          {!normalizeStatus(note.status).includes("CONCLU") && note.reminder_time &&
+                            (() => {
+                              const hasSpace = note.reminder_time.includes(" ");
+                              return (
+                                <div
+                                  className="flex items-start gap-2 font-bold tracking-wider mt-1 text-[11px]"
+                                  title={
+                                    hasSpace
+                                      ? "Lembrete Único"
+                                      : "Lembrete Diário"
+                                  }
+                                  style={{ color: noteColor }}
+                                >
+                                  <div className="mt-0.5 shrink-0">
+                                    {hasSpace ? (
+                                      <Calendar
+                                        size={12}
+                                        style={{ color: noteColor }}
+                                      />
+                                    ) : (
+                                      <Clock
+                                        size={12}
+                                        style={{ color: noteColor }}
+                                      />
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col gap-0.5 leading-tight min-w-0 w-full">
+                                    <span className="uppercase text-zinc-400 tracking-wider font-mono text-[11px]">
+                                      {hasSpace ? "Lembrete Único" : "Lembrete Diário"}
+                                    </span>
+                                    <span className="text-white font-mono tracking-normal text-[11px] break-words tabular-nums">
+                                      {hasSpace ? (
+                                        (() => {
+                                          const [rDate, rTime] =
+                                            note.reminder_time.split(" ");
+                                          if (rDate && rTime) {
+                                            const [y, m, d] = rDate.split("-");
+                                            const formattedTimes = rTime.replace(/,/g, " • ");
+                                            return `${d}/${m}/${y} às ${formattedTimes}`;
+                                          }
+                                          return note.reminder_time;
+                                        })()
+                                      ) : (
+                                        note.reminder_time.replace(/,/g, " • ")
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                        </div>
 
-                        <div className="flex items-center gap-3 shrink-0 note-actions">
-                          {noteTab === "LIXEIRA" ? (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRestore(note.id);
-                                }}
-                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-emerald-400 hover:text-emerald-300 hover:scale-115 active:scale-95 transition-all outline-none"
-                                title="Restaurar"
+                        {/* Action buttons */}
+                        <div className="flex items-center justify-between gap-2.5 w-full pt-2.5 border-t border-[#26262A]">
+                          {note.status ? (
+                            <div
+                              className="relative inline-flex items-center px-2.5 py-1.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] hover:border-[#3F3F46] group shrink-0 select-none transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                              title="Alterar status (ao marcar como Concluído, o alarme e lembrete zeram)"
+                            >
+                              <span
+                                className={`w-2 h-2 rounded-sm shrink-0 mr-2 ${
+                                  normalizeStatus(note.status).includes("CONCLU")
+                                    ? "bg-emerald-400"
+                                    : normalizeStatus(note.status).includes("PROD")
+                                    ? "bg-sky-400"
+                                    : "bg-[var(--gm-primary)]"
+                                }`}
+                              />
+
+                              <span className="text-[11px] font-extrabold uppercase tracking-wider text-white whitespace-nowrap">
+                                {note.status.replace(/_/g, " ")}
+                              </span>
+
+                              <ChevronDown
+                                size={12}
+                                className="text-zinc-400 group-hover:text-white transition-colors ml-2 shrink-0 pointer-events-none"
+                              />
+
+                              <select
+                                value={note.status.toLowerCase()}
+                                onChange={(e) => handleQuickStatusChange(note, e.target.value, e)}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                title="Alterar status"
                               >
-                                <RefreshCcw size={16} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteConfirmId(note.id);
-                                }}
-                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-red-400 hover:text-red-300 hover:scale-115 active:scale-95 transition-all outline-none"
-                                title="Excluir Definitivamente"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </>
+                                <option value="a fazer" className="bg-zinc-900 text-white font-bold py-1">A FAZER</option>
+                                <option value="produção" className="bg-zinc-900 text-white font-bold py-1">PRODUÇÃO</option>
+                                <option value="concluídos" className="bg-zinc-900 text-white font-bold py-1">CONCLUÍDOS</option>
+                              </select>
+                            </div>
                           ) : (
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleShareClick(note);
-                                }}
-                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-[var(--gm-primary)] hover:opacity-100 hover:scale-115 active:scale-95 transition-all outline-none"
-                                title="Compartilhar Nota"
-                              >
-                                <Share2 size={16} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handlePdf(note);
-                                }}
-                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-[var(--gm-primary)] hover:opacity-100 hover:scale-115 active:scale-95 transition-all outline-none"
-                                title="Baixar / Exportar PDF"
-                              >
-                                <Download size={16} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSoftDelete(note.id);
-                                }}
-                                className="p-1 cursor-pointer bg-transparent border-none shadow-none text-white/50 hover:text-red-400 hover:scale-115 active:scale-95 transition-all outline-none"
-                                title="Mover para Lixeira"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </>
+                            <div />
                           )}
+
+                          <div className="flex items-center gap-2 shrink-0 note-actions">
+                            {noteTab === "LIXEIRA" ? (
+                              <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRestore(note.id);
+                                  }}
+                                  className="w-8 h-8 rounded-[6px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center cursor-pointer text-emerald-400 hover:text-emerald-300 transition-colors"
+                                  title="Restaurar"
+                                >
+                                  <RefreshCcw size={15} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteConfirmId(note.id);
+                                  }}
+                                  className="w-8 h-8 rounded-[6px] bg-[#0B0B0C] hover:bg-red-500/15 border border-[#26262A] hover:border-red-500/40 flex items-center justify-center cursor-pointer text-red-400 hover:text-red-300 transition-colors"
+                                  title="Excluir Definitivamente"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleShareClick(note);
+                                  }}
+                                  className="w-8 h-8 rounded-[6px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center cursor-pointer text-[var(--gm-primary)] transition-colors"
+                                  title="Compartilhar Nota"
+                                >
+                                  <Share2 size={15} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePdf(note);
+                                  }}
+                                  className="w-8 h-8 rounded-[6px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center cursor-pointer text-[var(--gm-primary)] transition-colors"
+                                  title="Baixar / Exportar PDF"
+                                >
+                                  <Download size={15} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSoftDelete(note.id);
+                                  }}
+                                  className="w-8 h-8 rounded-[6px] bg-[#0B0B0C] hover:bg-red-500/15 border border-[#26262A] hover:border-red-500/40 flex items-center justify-center cursor-pointer text-zinc-400 hover:text-red-400 transition-colors"
+                                  title="Mover para Lixeira"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+          )}
+          </>
+        )}
         </div>
-        )}
-        </>
-      )}
-      </div>
 
-      {/* Selection Modal */}
-      {typeof document !== "undefined" &&
-        createPortal(
-          <AnimatePresence>
-            {newNoteModalOpen && (
-              <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/60 backdrop-blur-md"
-                  onClick={() => setNewNoteModalOpen(false)}
-                />
-                <motion.div
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.95, opacity: 0 }}
-                  className={`p-6 sm:p-8 w-full max-w-xl flex flex-col relative z-10 ${cardBase} text-white`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-white mb-1">
-                        Nova Nota
-                      </h2>
-                      <p className="text-sm text-white/60">
-                        Selecione o tipo de nota que deseja criar.
-                      </p>
+        {/* Selection Modal */}
+        {typeof document !== "undefined" &&
+          createPortal(
+            <AnimatePresence>
+              {newNoteModalOpen && (
+                <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+                    onClick={() => setNewNoteModalOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    className={`p-6 sm:p-8 w-full max-w-xl flex flex-col relative z-10 ${cardBase} text-white`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-between items-center mb-6">
+                      <div>
+                        <h2 className="text-xl font-bold text-white mb-1">
+                          Nova Nota
+                        </h2>
+                        <p className="text-sm text-zinc-400">
+                          Selecione o tipo de nota que deseja criar.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setNewNoteModalOpen(false)}
+                        className="w-9 h-9 rounded-[4px] flex items-center justify-center text-zinc-400 hover:text-white border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] transition-colors cursor-pointer"
+                        title="Fechar"
+                      >
+                        <X size={18} />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setNewNoteModalOpen(false)}
-                      className="w-9 h-9 rounded-xl flex items-center justify-center text-white/50 hover:text-white barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.07] backdrop-blur-md transition-colors cursor-pointer"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button
-                      onClick={() => openNewNoteModal("note")}
-                      className="flex flex-col items-start gap-4 p-6 rounded-2xl barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-[var(--gm-primary)]/40 backdrop-blur-md transition-all text-left group cursor-pointer shadow-none"
-                    >
-                      <div className="p-3 bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 backdrop-blur-md rounded-xl group-hover:scale-110 transition-transform">
-                        <Edit2 size={24} />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-white mb-1">Nota</h3>
-                        <p className="text-sm text-white/60">
-                          Anotações e lembretes com alarmes gerais.
-                        </p>
-                      </div>
-                    </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <button
+                        onClick={() => openNewNoteModal("note")}
+                        className="flex flex-col items-start gap-4 p-6 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/50 transition-all text-left group cursor-pointer"
+                      >
+                        <div className="p-3 bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 rounded-md group-hover:scale-105 transition-transform">
+                          <Edit2 size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg text-white mb-1">Nota</h3>
+                          <p className="text-sm text-zinc-400">
+                            Anotações e lembretes com alarmes gerais.
+                          </p>
+                        </div>
+                      </button>
 
-                    <button
-                      onClick={() => openNewNoteModal("production")}
-                      className="flex flex-col items-start gap-4 p-6 rounded-2xl barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-[var(--gm-primary)]/40 backdrop-blur-md transition-all text-left group cursor-pointer shadow-none"
-                    >
-                      <div className="p-3 bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 backdrop-blur-md rounded-xl group-hover:scale-110 transition-transform">
-                        <Palette size={24} />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-white mb-1">
-                          Produção
-                        </h3>
-                        <p className="text-sm text-white/60">
-                          Acompanhamento e prazos de produções.
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>,
-          document.body
-        )}
+                      <button
+                        onClick={() => openNewNoteModal("production")}
+                        className="flex flex-col items-start gap-4 p-6 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/50 transition-all text-left group cursor-pointer"
+                      >
+                        <div className="p-3 bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 rounded-md group-hover:scale-105 transition-transform">
+                          <Palette size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg text-white mb-1">
+                            Produção
+                          </h3>
+                          <p className="text-sm text-zinc-400">
+                            Acompanhamento e prazos de produções.
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>,
+            document.body
+          )}
 
       {/* Editor Modal */}
       {typeof document !== "undefined" &&
@@ -2315,7 +2342,7 @@ export default function Notes() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/80 md:bg-black/70 backdrop-blur-md z-0"
+                  className="absolute inset-0 bg-black/75 backdrop-blur-sm z-0"
                   onClick={() => setModalOpen(false)}
                 />
 
@@ -2326,7 +2353,7 @@ export default function Notes() {
                   animate={{ y: 0, opacity: 1, scale: 1 }}
                   exit={{ y: "100%", opacity: 0, scale: 0.96 }}
                   transition={{ type: "spring", damping: 26, stiffness: 320 }}
-                  className="gm-note-modal relative w-full sm:w-[94%] rounded-none sm:rounded-3xl flex flex-col overflow-hidden border border-white/15 shadow-2xl bg-[#0c0f17]/95 backdrop-blur-2xl text-white z-10 m-auto h-[100dvh] sm:h-auto"
+                  className="gm-note-modal relative w-full sm:w-[94%] rounded-none sm:rounded-lg flex flex-col overflow-hidden border border-[#26262A] shadow-2xl bg-[#131315] text-white z-10 m-auto h-[100dvh] sm:h-auto"
                   style={{
                     width: window.innerWidth >= 768 ? (modalCustomSize.width ? `${modalCustomSize.width}px` : "min(1152px, 94vw)") : "100vw",
                     height: window.innerWidth >= 768 ? (modalCustomSize.height ? `${modalCustomSize.height}px` : undefined) : "100dvh",
@@ -2337,8 +2364,8 @@ export default function Notes() {
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Indicador de puxar estilo iOS no Smartphone */}
-                  <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
+                  {/* Indicador mobile */}
+                  <div className="w-10 h-1 rounded-sm bg-white/20 mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
 
                   {/* Toast Feedback Flutuante no CENTRO da Nota */}
                   <AnimatePresence>
@@ -2350,17 +2377,9 @@ export default function Notes() {
                         transition={{ type: "spring", stiffness: 450, damping: 25 }}
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] pointer-events-none"
                       >
-                        <div 
-                          className="bg-[#0b1b11]/95 text-white font-black text-xs md:text-sm px-7 py-4 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-2xl border-2 border-green-500 flex items-center gap-3 text-center"
-                          style={{
-                            boxShadow: "0 0 45px rgba(34, 197, 94, 0.65), 0 25px 60px rgba(0, 0, 0, 0.95)"
-                          }}
-                        >
-                          <span className="relative flex h-3.5 w-3.5 shrink-0">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-80" />
-                            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-500" />
-                          </span>
-                          <span className="tracking-wide uppercase text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)] font-black text-sm">
+                        <div className="bg-[#0B0B0C] text-white font-black text-xs md:text-sm px-6 py-3.5 rounded-lg shadow-2xl border border-emerald-500/60 flex items-center gap-3 text-center">
+                          <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500 shrink-0" />
+                          <span className="tracking-wide uppercase text-emerald-400 font-black text-sm">
                             {toastMessage}
                           </span>
                         </div>
@@ -2368,9 +2387,9 @@ export default function Notes() {
                     )}
                   </AnimatePresence>
 
-                  {/* Header / Barra de Título Estilo Apple */}
+                  {/* Header / Barra de Título */}
                   <div
-                    className="px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between shrink-0 relative z-20 bg-[#121622]/90 backdrop-blur-xl border-b border-white/10"
+                    className="px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between shrink-0 relative z-20 bg-[#131315] border-b border-[#26262A]"
                     style={{
                       borderBottomColor: `${color}40`,
                     }}
@@ -2378,7 +2397,7 @@ export default function Notes() {
                     <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
                       <input
                         type="text"
-                        className="gm-note-title-input bg-black/35 hover:bg-black/55 focus:bg-black/70 border border-white/10 hover:border-white/20 focus:border-[var(--gm-primary,#FF6900)] rounded-xl outline-none pl-5 sm:pl-6 pr-4 py-2 sm:py-2.5 font-bold text-base sm:text-lg text-white w-full placeholder:text-white/30 tracking-tight transition-all focus:ring-0 focus:outline-none"
+                        className="gm-note-title-input bg-[#0B0B0C] border border-[#26262A] hover:border-[#3F3F46] focus:border-[var(--gm-primary,#FF6900)] rounded-[4px] outline-none px-4 py-2 sm:py-2.5 font-bold text-base sm:text-lg text-white w-full placeholder:text-zinc-500 tracking-tight transition-all focus:ring-0 focus:outline-none"
                         style={{ outline: "none", boxShadow: "none" }}
                         placeholder="Título da nota"
                         value={title}
@@ -2395,8 +2414,8 @@ export default function Notes() {
                       <button
                         type="button"
                         onClick={() => setIsPinned(!isPinned)}
-                        className={`gm-note-modal-pin-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-all cursor-pointer border ${
-                          isPinned ? "pinned" : ""
+                        className={`gm-note-modal-pin-btn w-9 h-9 flex items-center justify-center rounded-[4px] transition-all cursor-pointer border ${
+                          isPinned ? "pinned" : "bg-[#0B0B0C] border-[#26262A] hover:bg-[#1B1B1E] text-zinc-400 hover:text-white"
                         }`}
                         title={isPinned ? "Desafixar nota" : "Fixar nota no topo"}
                       >
@@ -2412,7 +2431,7 @@ export default function Notes() {
                       <button
                         type="button"
                         onClick={() => setModalOpen(false)}
-                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white active:scale-95 transition-all cursor-pointer"
+                        className="w-9 h-9 flex items-center justify-center rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white transition-all cursor-pointer"
                         title="Fechar nota"
                       >
                         <X size={17} />
@@ -2420,41 +2439,45 @@ export default function Notes() {
                     </div>
                   </div>
 
-                  {/* Navegação Superior por Abas (Segmented Control Estilo Apple) */}
-                  <div className="px-3 sm:px-6 py-2 bg-[#090c12]/95 backdrop-blur-md border-b border-white/10 select-none shrink-0 z-20">
-                    <div className="grid grid-cols-3 gap-1 w-full bg-black/40 p-1 rounded-xl border border-white/10">
+                  {/* Navegação Superior por Abas */}
+                  <div className="px-3 sm:px-6 py-2 bg-[#131315] border-b border-[#26262A] select-none shrink-0 z-20">
+                    <div className="grid grid-cols-3 gap-1 w-full bg-[#0B0B0C] p-1 rounded-md border border-[#26262A]">
                       {/* Aba 1: Nota & Texto */}
                       <button
                         type="button"
+                        aria-pressed={editorTab === "note"}
+                        data-selected={editorTab === "note"}
                         onClick={() => setEditorTab("note")}
-                        className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                        className={`py-2 px-2 sm:px-4 rounded-[4px] text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none whitespace-nowrap ${
                           editorTab === "note"
-                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 border border-orange-400/50 ring-1 ring-orange-500/30"
-                            : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white border border-[var(--gm-primary,#FF6900)]"
+                            : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E] border border-transparent"
                         }`}
                       >
-                        <FileText size={14} className="shrink-0" />
+                        <FileText size={14} className={editorTab === "note" ? "shrink-0 text-white" : "shrink-0"} />
                         <span className="truncate">NOTA</span>
                       </button>
 
                       {/* Aba 2: Layouts & Fotos */}
                       <button
                         type="button"
+                        aria-pressed={editorTab === "layouts"}
+                        data-selected={editorTab === "layouts"}
                         onClick={() => setEditorTab("layouts")}
-                        className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                        className={`py-2 px-2 sm:px-4 rounded-[4px] text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none whitespace-nowrap ${
                           editorTab === "layouts"
-                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 border border-orange-400/50 ring-1 ring-orange-500/30"
-                            : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white border border-[var(--gm-primary,#FF6900)]"
+                            : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E] border border-transparent"
                         }`}
                       >
-                        <ImageIcon size={14} className="shrink-0" />
+                        <ImageIcon size={14} className={editorTab === "layouts" ? "shrink-0 text-white" : "shrink-0"} />
                         <span className="truncate">LAYOUTS</span>
                         {layoutUrls.length > 0 && (
                           <span
-                            className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                            className={`text-[11px] font-black px-1.5 py-0.5 rounded-[4px] tabular-nums ${
                               editorTab === "layouts"
-                                ? "bg-black/40 text-white"
-                                : "bg-white/20 text-white"
+                                ? "bg-black/25 text-white"
+                                : "bg-[#1B1B1E] text-white"
                             }`}
                           >
                             {layoutUrls.length}
@@ -2465,17 +2488,19 @@ export default function Notes() {
                       {/* Aba 3: Configurações & Prazos */}
                       <button
                         type="button"
+                        aria-pressed={editorTab === "settings"}
+                        data-selected={editorTab === "settings"}
                         onClick={() => setEditorTab("settings")}
-                        className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none ${
+                        className={`py-2 px-2 sm:px-4 rounded-[4px] text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none whitespace-nowrap ${
                           editorTab === "settings"
-                            ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-lg shadow-orange-500/30 border border-orange-400/50 ring-1 ring-orange-500/30"
-                            : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"
+                            ? "bg-[var(--gm-primary,#FF6900)] text-white border border-[var(--gm-primary,#FF6900)]"
+                            : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E] border border-transparent"
                         }`}
                       >
-                        <Sliders size={14} className="shrink-0" />
+                        <Sliders size={14} className={editorTab === "settings" ? "shrink-0 text-white" : "shrink-0"} />
                         <span className="truncate">CONFIGURAÇÕES</span>
                         {(deliveryDate || deliveryTime) && (
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                          <span className="w-2 h-2 rounded-sm bg-emerald-400 shrink-0" />
                         )}
                       </button>
                     </div>
@@ -2484,7 +2509,7 @@ export default function Notes() {
                   {/* Text Formatting Toolbar (Visível na aba de Nota) */}
                   {editorTab === "note" && (
                     <div
-                      className="flex flex-col gap-2 px-2 md:px-5 py-2 bg-[#090b10] border-b border-white/10 select-none shrink-0 relative z-30"
+                      className="flex flex-col gap-2 px-2 md:px-5 py-2 bg-[#0B0B0C] border-b border-[#26262A] select-none shrink-0 relative z-30"
                       style={{ borderColor: `${color}30` }}
                     >
                       {/* Core Formatting Controls Group */}
@@ -2496,7 +2521,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyBold();
                           }}
-                          className="py-1.5 px-3 rounded-lg hover:bg-white/15 text-white font-extrabold text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="py-1.5 px-3 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white font-extrabold text-sm transition-colors text-center flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Negrito"
                         >
                           B
@@ -2509,7 +2534,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyItalic();
                           }}
-                          className="py-1.5 px-3 rounded-lg hover:bg-white/15 text-white italic font-serif text-sm transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="py-1.5 px-3 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white italic font-serif text-sm transition-colors text-center flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Itálico"
                         >
                           I
@@ -2522,7 +2547,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyUnderline();
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors text-center flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Sublinhar"
                         >
                           <Underline size={15} />
@@ -2535,16 +2560,18 @@ export default function Notes() {
                             e.preventDefault();
                             applyStrikeThrough();
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 text-center flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors text-center flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Tachado"
                         >
                           <Strikethrough size={15} />
                         </button>
 
-                        {/* Cores do Texto Botão (Abre a caixinha de configurações de cores à frente de tudo) */}
+                        {/* Cores do Texto Botão */}
                         <div className="relative shrink-0">
                           <button
                             type="button"
+                            aria-pressed={colorPickerOpen}
+                            data-selected={colorPickerOpen}
                             onMouseDown={(e) => {
                               e.preventDefault();
                               saveCurrentSelection();
@@ -2552,19 +2579,19 @@ export default function Notes() {
                               setHighlighterPickerOpen(false);
                               setFontSelectorOpen(false);
                             }}
-                            className={`py-1.5 px-2.5 rounded-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 min-h-[38px] cursor-pointer ${
+                            className={`py-1.5 px-2.5 rounded-[4px] border transition-colors flex items-center gap-1.5 min-h-[36px] cursor-pointer ${
                               colorPickerOpen
-                                ? "bg-[var(--gm-primary,#FE540B)]/25 text-white border border-[var(--gm-primary,#FE540B)]/60 shadow-lg shadow-orange-500/20"
-                                : "bg-white/5 hover:bg-white/15 text-white"
+                                ? "bg-[var(--gm-primary,#FE540B)]/20 text-white border-[var(--gm-primary,#FE540B)]/60"
+                                : "bg-[#131315] hover:bg-[#1B1B1E] border-[#26262A] text-white"
                             }`}
                             title="Cor do Texto (Abrir configurações de cores)"
                           >
-                            <Palette size={15} className="text-white/80" />
+                            <Palette size={15} className={colorPickerOpen ? "text-white" : "text-zinc-300"} />
                             <span
-                              className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-sm shrink-0"
+                              className="w-3.5 h-3.5 rounded-sm border border-white/40 shrink-0"
                               style={{ backgroundColor: selectedTextColor }}
                             />
-                            <ChevronDown size={11} className="text-white/40" />
+                            <ChevronDown size={11} className={colorPickerOpen ? "text-white" : "text-zinc-400"} />
                           </button>
                         </div>
 
@@ -2572,6 +2599,8 @@ export default function Notes() {
                         <div className="relative shrink-0">
                           <button
                             type="button"
+                            aria-pressed={fontSelectorOpen}
+                            data-selected={fontSelectorOpen}
                             onMouseDown={(e) => {
                               e.preventDefault();
                               saveCurrentSelection();
@@ -2579,16 +2608,16 @@ export default function Notes() {
                               setColorPickerOpen(false);
                               setHighlighterPickerOpen(false);
                             }}
-                            className={`py-1.5 px-3 rounded-lg text-[12px] transition-all tracking-wide hover:scale-105 active:scale-95 font-bold flex items-center justify-center gap-1.5 min-h-[38px] cursor-pointer ${
+                            className={`py-1.5 px-3 rounded-[4px] border text-xs transition-colors font-bold flex items-center justify-center gap-1.5 min-h-[36px] cursor-pointer whitespace-nowrap ${
                               fontSelectorOpen
-                                ? "bg-[var(--gm-primary,#FE540B)]/25 text-white border border-[var(--gm-primary,#FE540B)]/60 shadow-lg shadow-orange-500/20"
-                                : "bg-white/5 hover:bg-white/15 text-white"
+                                ? "bg-[var(--gm-primary,#FE540B)]/20 text-white border-[var(--gm-primary,#FE540B)]/60"
+                                : "bg-[#131315] hover:bg-[#1B1B1E] border-[#26262A] text-white"
                             }`}
                             title="Galeria de Fontes"
                           >
-                            <Type size={13} className="text-white/80" />
+                            <Type size={13} className={fontSelectorOpen ? "text-white" : "text-zinc-300"} />
                             <span>Fontes</span>
-                            <ChevronDown size={12} className="text-white/40" />
+                            <ChevronDown size={12} className={fontSelectorOpen ? "text-white" : "text-zinc-400"} />
                           </button>
                         </div>
 
@@ -2599,11 +2628,11 @@ export default function Notes() {
                             e.preventDefault();
                             cycleFontSize();
                           }}
-                          className="py-1.5 px-3.5 rounded-lg hover:bg-white/15 text-white text-[11px] transition-all tracking-wide hover:scale-105 active:scale-95 bg-white/5 font-semibold flex items-center justify-center gap-1.5 min-h-[38px]"
+                          className="py-1.5 px-3 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white text-[11px] transition-colors font-semibold flex items-center justify-center gap-1.5 min-h-[36px] cursor-pointer whitespace-nowrap"
                           title="Tamanho da Fonte"
                         >
-                          <span className="text-white/60 text-[11px] font-bold">Aa</span>
-                          <span className="font-extrabold text-[10px] bg-white/10 px-1.5 py-0.5 rounded uppercase text-white">
+                          <span className="text-zinc-400 text-[11px] font-bold">Aa</span>
+                          <span className="font-extrabold text-[11px] bg-[#1B1B1E] px-1.5 py-0.5 rounded-[4px] uppercase text-white">
                             {fontSizeMode === "P"
                               ? "Peq"
                               : fontSizeMode === "M"
@@ -2612,7 +2641,7 @@ export default function Notes() {
                           </span>
                         </button>
 
-                        <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
+                        <div className="h-5 w-[1px] bg-[#26262A] mx-1 shrink-0" />
 
                         {/* Align Left */}
                         <button
@@ -2621,7 +2650,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyAlign("left");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all hover:scale-105 active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Alinhar à Esquerda"
                         >
                           <AlignLeft size={15} />
@@ -2634,7 +2663,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyAlign("center");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Centralizar"
                         >
                           <AlignCenter size={15} />
@@ -2647,7 +2676,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyAlign("right");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Alinhar à Direita"
                         >
                           <AlignRight size={15} />
@@ -2660,13 +2689,13 @@ export default function Notes() {
                             e.preventDefault();
                             applyAlign("justify");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Justificar"
                         >
                           <AlignJustify size={15} />
                         </button>
 
-                        <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
+                        <div className="h-5 w-[1px] bg-[#26262A] mx-1 shrink-0" />
 
                         {/* Bullet List */}
                         <button
@@ -2675,7 +2704,7 @@ export default function Notes() {
                             e.preventDefault();
                             applyList("bullet");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Lista de Marcadores"
                         >
                           <List size={15} />
@@ -2688,18 +2717,20 @@ export default function Notes() {
                             e.preventDefault();
                             applyList("ordered");
                           }}
-                          className="p-2.5 rounded-lg hover:bg-white/15 text-white transition-all active:scale-95 bg-white/5 flex items-center justify-center min-h-[38px] min-w-[38px]"
+                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
                           title="Lista Numerada"
                         >
                           <ListOrdered size={15} />
                         </button>
 
-                        <div className="h-5 w-[1px] bg-white/10 mx-1 shrink-0" />
+                        <div className="h-5 w-[1px] bg-[#26262A] mx-1 shrink-0" />
 
                         {/* Highlighter Botão */}
                         <div className="relative shrink-0">
                           <button
                             type="button"
+                            aria-pressed={highlighterPickerOpen}
+                            data-selected={highlighterPickerOpen}
                             onMouseDown={(e) => {
                               e.preventDefault();
                               saveCurrentSelection();
@@ -2707,19 +2738,19 @@ export default function Notes() {
                               setColorPickerOpen(false);
                               setFontSelectorOpen(false);
                             }}
-                            className={`py-1.5 px-2.5 rounded-lg transition-all active:scale-95 flex items-center gap-1.5 min-h-[38px] cursor-pointer ${
+                            className={`py-1.5 px-2.5 rounded-[4px] border transition-colors flex items-center gap-1.5 min-h-[36px] cursor-pointer ${
                               highlighterPickerOpen
-                                ? "bg-[var(--gm-primary,#FE540B)]/25 text-white border border-[var(--gm-primary,#FE540B)]/60 shadow-lg shadow-orange-500/20"
-                                : "bg-white/5 hover:bg-white/15 text-white"
+                                ? "bg-[var(--gm-primary,#FE540B)]/20 text-white border-[var(--gm-primary,#FE540B)]/60"
+                                : "bg-[#131315] hover:bg-[#1B1B1E] border-[#26262A] text-white"
                             }`}
                             title="Marcador de Texto"
                           >
-                            <Highlighter size={15} className="text-white/80" />
+                            <Highlighter size={15} className={highlighterPickerOpen ? "text-white" : "text-zinc-300"} />
                             <span
-                              className="w-3.5 h-3.5 rounded-full border border-white/40 shadow-sm shrink-0"
+                              className="w-3.5 h-3.5 rounded-sm border border-white/40 shrink-0"
                               style={{ backgroundColor: selectedHighlightColor || "transparent" }}
                             />
-                            <ChevronDown size={11} className="text-white/40" />
+                            <ChevronDown size={11} className={highlighterPickerOpen ? "text-white" : "text-zinc-400"} />
                           </button>
                         </div>
                       </div>
@@ -2746,22 +2777,22 @@ export default function Notes() {
                     transition={{ duration: 0.18 }}
                     className="flex flex-col gap-3.5 flex-1 min-h-0"
                   >
-                    {/* Pílulas de Contexto Rápido Apple (Tipo, Status, Prazo, Alarme, Layouts) */}
+                    {/* Contexto Rápido */}
                     <div className="flex items-center justify-between flex-wrap gap-2 px-0.5 py-0.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Tipo da Nota */}
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-white/[0.06] text-white/90 border border-white/10">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-[4px] bg-[#0B0B0C] text-zinc-200 border border-[#26262A]">
                           {noteType === "production" ? "PRODUÇÃO" : "GERAL"}
                         </span>
 
                         {/* Status */}
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-[4px] bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/35">
                           {noteStatus.replace(/_/g, " ")}
                         </span>
 
                         {/* Prazo */}
                         {deliveryDate && (
-                          <span className="inline-flex text-[10px] font-bold text-orange-300 items-center gap-1 bg-orange-500/10 px-2.5 py-1 rounded-lg border border-orange-500/20">
+                          <span className="inline-flex text-[11px] font-bold text-orange-300 items-center gap-1 bg-orange-500/10 px-2.5 py-1 rounded-[4px] border border-orange-500/25 tabular-nums">
                             <Calendar size={11} />
                             {deliveryDate.split("-").reverse().join("/")}
                             {deliveryTime ? ` às ${deliveryTime}` : ""}
@@ -2770,7 +2801,7 @@ export default function Notes() {
 
                         {/* Responsável */}
                         {responsibleName && (
-                          <span className="inline-flex text-[10px] font-bold text-white/70 items-center gap-1 bg-white/[0.04] px-2.5 py-1 rounded-lg border border-white/10 truncate max-w-[130px]">
+                          <span className="inline-flex text-[11px] font-bold text-zinc-300 items-center gap-1 bg-[#0B0B0C] px-2.5 py-1 rounded-[4px] border border-[#26262A] truncate max-w-[140px]">
                             <User size={11} />
                             {responsibleName}
                           </span>
@@ -2782,17 +2813,17 @@ export default function Notes() {
                         id="btn-note-adjust-settings"
                         type="button"
                         onClick={() => setEditorTab("settings")}
-                        className="shrink-0 ml-auto sm:ml-0 flex items-center justify-center gap-2 px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[var(--gm-primary,#FE540B)] to-orange-500 hover:from-orange-500 hover:to-[var(--gm-primary,#FE540B)] !text-white font-bold text-xs sm:text-[13px] tracking-wide shadow-[0_4px_16px_rgba(254,84,11,0.35)] border border-white/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer whitespace-nowrap min-w-[185px]"
+                        className="shrink-0 ml-auto sm:ml-0 flex items-center justify-center gap-2 px-4 py-2 rounded-[6px] bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] font-black text-xs uppercase tracking-wider border border-[#F65A1A] transition-colors cursor-pointer whitespace-nowrap"
                         title="Ajustar configurações e prazos da nota"
                       >
-                        <Sliders size={13} className="shrink-0 !text-white" strokeWidth={2.2} />
-                        <span className="whitespace-nowrap font-bold !text-white">Ajustar configurações</span>
+                        <Sliders size={13} className="shrink-0 text-[#0B0B0C]" strokeWidth={2.5} />
+                        <span className="whitespace-nowrap">Ajustar configurações</span>
                       </button>
                     </div>
 
-                    {/* Prévias compactas de layouts se houver (para visualização rápida no smartphone) */}
+                    {/* Prévias compactas de layouts se houver */}
                     {layoutUrls.length > 0 && (
-                      <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl bg-white/[0.025] border border-white/10 backdrop-blur-md">
+                      <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-md bg-[#0B0B0C] border border-[#26262A]">
                         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
                           {layoutUrls.slice(0, 6).map((url, idx) => (
                             <div
@@ -2801,11 +2832,11 @@ export default function Notes() {
                                 setZoomImage({ url, index: idx });
                                 setZoomScale(1);
                               }}
-                              className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-white/20 shrink-0 cursor-pointer group hover:scale-105 transition-all"
+                              className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-[4px] overflow-hidden border border-[#26262A] hover:border-[#3F3F46] shrink-0 cursor-pointer transition-colors"
                               title={`Ver layout ${idx + 1}`}
                             >
                               <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
-                              <span className="absolute bottom-0 right-0 bg-black/75 text-[9px] font-bold px-1 rounded-tl text-white">
+                              <span className="absolute bottom-0 right-0 bg-black/80 text-[11px] font-mono font-bold px-1 rounded-tl text-white tabular-nums">
                                 #{idx + 1}
                               </span>
                             </div>
@@ -2814,40 +2845,38 @@ export default function Notes() {
                         <button
                           type="button"
                           onClick={() => setEditorTab("layouts")}
-                          className="text-xs font-bold text-[var(--gm-primary,#FF6900)] hover:underline whitespace-nowrap shrink-0 px-2.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-all cursor-pointer"
+                          className="text-xs font-bold text-[var(--gm-primary,#FF6900)] hover:underline whitespace-nowrap shrink-0 px-2.5 py-1.5 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] transition-colors cursor-pointer"
                         >
                           Ver Layouts ({layoutUrls.length}) →
                         </button>
                       </div>
                     )}
 
-                    {/* Apple Notes Writing Card - Sem contorno laranja duplicado ao focar/clicar */}
-                    <div className="gm-note-editor-card flex flex-col flex-1 w-full rounded-2xl bg-white/[0.025] border border-white/10 transition-all p-3.5 sm:p-5 min-h-[280px] shadow-sm">
-                      {/* Barra superior de controle do editor: Desfazer / Refazer e contador */}
-                      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/5 flex-wrap gap-2">
+                    {/* Writing Card */}
+                    <div className="gm-note-editor-card flex flex-col flex-1 w-full rounded-md bg-[#0B0B0C] border border-[#26262A] transition-colors p-3.5 sm:p-5 min-h-[280px]">
+                      {/* Barra superior de controle do editor */}
+                      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#26262A] flex-wrap gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-white/60">Texto da Nota</span>
-                          <span className="text-[10px] text-white/35 font-mono">
+                          <span className="text-xs font-semibold text-zinc-400">Texto da Nota</span>
+                          <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
                             {content ? content.replace(/<[^>]+>/g, "").trim().length : 0} carac.
                           </span>
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                          {/* Botão Desfazer (Undo) - Essencial para Smartphone */}
                           <button
                             type="button"
                             onClick={performUndo}
-                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all active:scale-90 cursor-pointer"
+                            className="p-1.5 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white transition-colors cursor-pointer"
                             title="Desfazer (Undo)"
                           >
                             <Undo2 size={14} />
                           </button>
 
-                          {/* Botão Refazer (Redo) - Essencial para Smartphone */}
                           <button
                             type="button"
                             onClick={performRedo}
-                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all active:scale-90 cursor-pointer"
+                            className="p-1.5 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white transition-colors cursor-pointer"
                             title="Refazer (Redo)"
                           >
                             <Redo2 size={14} />
@@ -2948,19 +2977,19 @@ export default function Notes() {
                     className="flex flex-col gap-4 flex-1 min-h-0"
                   >
                     {/* Card para Adicionar Layouts */}
-                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3">
+                    <div className="p-4 sm:p-5 rounded-md border border-[#26262A] bg-[#0B0B0C] flex flex-col gap-3">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
                           <ImageIcon size={16} className="text-[var(--gm-primary,#FF6900)]" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                          <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
                             Layouts & Anexos
                           </span>
                         </div>
                         <span
-                          className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${
+                          className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-[4px] border tabular-nums ${
                             layoutUrls.length >= 6
-                              ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
-                              : "bg-white/5 text-white/60 border-white/10"
+                              ? "bg-orange-500/20 text-orange-400 border-orange-500/35"
+                              : "bg-[#131315] text-zinc-300 border-[#26262A]"
                           }`}
                         >
                           {layoutUrls.length}/6 layouts
@@ -2996,9 +3025,9 @@ export default function Notes() {
                                   showToast("Layout adicionado!");
                                 }
                               }}
-                              className="bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-3 py-2.5 outline-none focus:border-[var(--gm-primary,#FF6900)] w-full disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                              className="bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-9 pr-3 py-2.5 outline-none focus:border-[var(--gm-primary,#FF6900)] w-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             />
-                            <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={14} />
+                            <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={14} />
                           </div>
 
                           {layoutUrlInput.trim() && (
@@ -3017,7 +3046,7 @@ export default function Notes() {
                                 setLayoutUrlInput("");
                                 showToast("Layout adicionado!");
                               }}
-                              className="bg-[var(--gm-primary,#FF6900)] hover:brightness-110 rounded-xl text-xs font-bold text-white px-4 py-2.5 flex items-center gap-1.5 transition-all shrink-0 cursor-pointer shadow-md shadow-orange-500/20"
+                              className="bg-[#F65A1A] hover:bg-[#FF7A38] rounded-[6px] text-xs font-black text-[#0B0B0C] px-4 py-2.5 flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer whitespace-nowrap"
                             >
                               <Plus size={14} />
                               <span>Adicionar</span>
@@ -3027,7 +3056,7 @@ export default function Notes() {
 
                         {/* Botão de Enviar Imagens do Smartphone */}
                         <label
-                          className={`bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl text-xs font-bold text-white px-4 py-2.5 outline-none cursor-pointer flex items-center justify-center gap-2 transition-all shrink-0 shadow-sm active:scale-95 ${
+                          className={`bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] rounded-[6px] text-xs font-bold text-white px-4 py-2.5 outline-none cursor-pointer flex items-center justify-center gap-2 transition-colors shrink-0 whitespace-nowrap ${
                             uploadingLayout || layoutUrls.length >= 6 ? "opacity-50 pointer-events-none" : ""
                           }`}
                         >
@@ -3085,7 +3114,7 @@ export default function Notes() {
                       </div>
 
                       {layoutUrls.length > 1 && (
-                        <div className="flex items-center justify-between pt-1 text-[11px] text-white/40">
+                        <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
                           <span className="flex items-center gap-1">
                             <Move size={12} /> Toque e arraste para reordenar
                           </span>
@@ -3160,28 +3189,28 @@ export default function Notes() {
                                 setZoomImage({ url, index: idx });
                                 setZoomScale(1);
                               }}
-                              className={`relative flex items-center justify-center rounded-2xl overflow-hidden group shadow-xl bg-black/40 border transition-all duration-300 cursor-pointer select-none aspect-video sm:aspect-auto ${
+                              className={`relative flex items-center justify-center rounded-md overflow-hidden group bg-[#0B0B0C] border transition-all duration-300 cursor-pointer select-none aspect-video sm:aspect-auto ${
                                 isDragOver
-                                  ? "border-[var(--gm-primary,#FF6900)] scale-[1.02] ring-2 ring-orange-500/40"
+                                  ? "border-[var(--gm-primary,#FF6900)] ring-2 ring-orange-500/40"
                                   : isDragged
-                                    ? "opacity-40 border-dashed border-white/40"
-                                    : "border-white/10 hover:border-white/30"
+                                    ? "opacity-40 border-dashed border-zinc-400"
+                                    : "border-[#26262A] hover:border-[#3F3F46]"
                               }`}
                               title="Toque para ampliar com Zoom ou arraste para reorganizar"
                             >
                               <img
                                 src={url}
                                 alt={`Layout ${idx + 1}`}
-                                className="w-full h-full object-cover rounded-2xl transition-transform duration-500 group-hover:scale-105 pointer-events-none max-h-[300px]"
+                                className="w-full h-full object-cover rounded-md transition-transform duration-500 group-hover:scale-105 pointer-events-none max-h-[300px]"
                               />
 
                               {/* Badge Canto Superior Esquerdo: Posição */}
                               <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-20 pointer-events-none">
-                                <span className="w-6 h-6 rounded-lg bg-black/75 backdrop-blur-md text-white/90 text-[10px] font-black flex items-center justify-center border border-white/20 shadow-md">
+                                <span className="px-2 py-0.5 rounded-[4px] bg-black/80 text-white text-[11px] font-mono font-black flex items-center justify-center border border-[#26262A] tabular-nums">
                                   #{idx + 1}
                                 </span>
                                 {idx === 0 && (
-                                  <span className="px-2 py-0.5 rounded-lg bg-[var(--gm-primary,#FF6900)] text-white text-[9px] font-black uppercase shadow-md">
+                                  <span className="px-2 py-0.5 rounded-[4px] bg-[var(--gm-primary,#FF6900)] text-[#0B0B0C] text-[11px] font-black uppercase">
                                     Principal
                                   </span>
                                 )}
@@ -3196,7 +3225,7 @@ export default function Notes() {
                                     setLayoutUrls((prev) => prev.filter((_, i) => i !== idx));
                                     showToast(`Layout ${idx + 1} removido`);
                                   }}
-                                  className="w-7 h-7 rounded-full bg-red-600/90 hover:bg-red-500 text-white flex items-center justify-center transition-all cursor-pointer shadow-lg active:scale-90 backdrop-blur-md"
+                                  className="w-7 h-7 rounded-[4px] bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors cursor-pointer"
                                   title={`Excluir layout ${idx + 1}`}
                                 >
                                   <Trash2 size={13} />
@@ -3204,8 +3233,8 @@ export default function Notes() {
                               </div>
 
                               {/* Overlay com Zoom Indicator */}
-                              <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                                <span className="px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 shadow-xl">
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                <span className="px-3 py-1.5 rounded-[4px] bg-[#131315] border border-[#26262A] text-white text-xs font-bold flex items-center gap-1.5">
                                   <ZoomIn size={13} className="text-[var(--gm-primary,#FF6900)]" />
                                   Ver com Zoom
                                 </span>
@@ -3215,13 +3244,13 @@ export default function Notes() {
                         })}
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center text-center py-12 px-4 text-white/30 gap-3 bg-white/[0.02] rounded-2xl border border-white/10">
-                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40">
+                      <div className="flex flex-col items-center justify-center text-center py-12 px-4 text-zinc-400 gap-3 bg-[#0B0B0C] rounded-md border border-[#26262A]">
+                        <div className="w-12 h-12 rounded-md bg-[#131315] border border-[#26262A] flex items-center justify-center text-zinc-400">
                           <ImageIcon size={22} />
                         </div>
                         <div className="flex flex-col gap-1 max-w-sm">
-                          <span className="text-sm font-bold text-white/70">Nenhum layout adicionado</span>
-                          <span className="text-xs text-white/40">
+                          <span className="text-sm font-bold text-zinc-200">Nenhum layout adicionado</span>
+                          <span className="text-xs text-zinc-400">
                             Adicione links de imagens ou envie fotos do smartphone para acompanhar referências visuais nesta nota.
                           </span>
                         </div>
@@ -3243,10 +3272,10 @@ export default function Notes() {
                     className="flex flex-col gap-4 flex-1 min-h-0"
                   >
                     {/* Card 1: Classificação e Responsável */}
-                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3.5">
-                      <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                    <div className="p-4 sm:p-5 rounded-md border border-[#26262A] bg-[#0B0B0C] flex flex-col gap-3.5">
+                      <div className="flex items-center gap-2 pb-2 border-b border-[#26262A]">
                         <Palette size={15} className="text-[var(--gm-primary,#FF6900)]" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
                           Classificação & Responsável
                         </span>
                       </div>
@@ -3254,7 +3283,7 @@ export default function Notes() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                         {/* Tipo da Nota */}
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-white/60">
+                          <label className="text-xs font-semibold text-zinc-400">
                             Tipo da Nota
                           </label>
                           <div className="relative">
@@ -3264,18 +3293,18 @@ export default function Notes() {
                                 setNoteType(e.target.value as any);
                                 setNoteStatus("a fazer");
                               }}
-                              className="w-full appearance-none bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-all"
+                              className="w-full appearance-none bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-colors"
                             >
                               <option value="note">GERAL</option>
                               <option value="production">PRODUÇÃO</option>
                             </select>
-                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={15} />
                           </div>
                         </div>
 
                         {/* Status */}
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-white/60">
+                          <label className="text-xs font-semibold text-zinc-400">
                             Status
                           </label>
                           <div className="relative">
@@ -3296,7 +3325,7 @@ export default function Notes() {
                                   showToast("Status Concluído: lembrete e alarme zerados!");
                                 }
                               }}
-                              className="w-full appearance-none bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-all"
+                              className="w-full appearance-none bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-colors"
                             >
                               {noteType === "note"
                                 ? NOTE_STATUSES.filter((s) => s !== "LIXEIRA").map((s) => (
@@ -3310,13 +3339,13 @@ export default function Notes() {
                                     </option>
                                   ))}
                             </select>
-                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={15} />
                           </div>
                         </div>
 
                         {/* Responsável */}
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-white/60">
+                          <label className="text-xs font-semibold text-zinc-400">
                             Responsável
                           </label>
                           <div className="relative">
@@ -3325,19 +3354,19 @@ export default function Notes() {
                               placeholder="Nome do responsável"
                               value={responsibleName}
                               onChange={(e) => setResponsibleName(e.target.value)}
-                              className="bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] w-full font-semibold transition-all"
+                              className="bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] w-full font-semibold transition-colors"
                             />
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={15} />
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Card 2: Prazos de Entrega */}
-                    <div className="p-4 sm:p-5 rounded-2xl border border-white/10 bg-white/[0.025] backdrop-blur-md flex flex-col gap-3.5">
-                      <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                    <div className="p-4 sm:p-5 rounded-md border border-[#26262A] bg-[#0B0B0C] flex flex-col gap-3.5">
+                      <div className="flex items-center gap-2 pb-2 border-b border-[#26262A]">
                         <Calendar size={15} className="text-[var(--gm-primary,#FF6900)]" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
                           Prazo & Horário de Entrega
                         </span>
                       </div>
@@ -3345,34 +3374,34 @@ export default function Notes() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         {/* Prazo de Entrega */}
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-white/60">
+                          <label className="text-xs font-semibold text-zinc-400">
                             Data de Entrega
                           </label>
                           <div className="relative">
                             <GlassDatePicker
                               value={deliveryDate}
                               onChange={setDeliveryDate}
-                              className="w-full bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-14 h-[44px] flex items-center outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-all"
+                              className="w-full bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-9 pr-14 h-[44px] flex items-center outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-colors"
                               title="Prazo de Entrega"
                               themeColor={color}
                               placeholder="DD/MM/AAAA"
                             />
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={15} />
                           </div>
                         </div>
 
                         {/* Horário de Entrega */}
                         <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-white/60">
+                          <label className="text-xs font-semibold text-zinc-400">
                             Horário de Entrega
                           </label>
                           <div className="relative">
                             <GlassTimePicker
                               value={deliveryTime}
                               onChange={setDeliveryTime}
-                              className="w-full bg-black/50 border border-white/10 rounded-xl text-sm text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-all"
+                              className="w-full bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-colors"
                             />
-                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={15} />
+                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={15} />
                           </div>
                         </div>
                       </div>
@@ -3381,14 +3410,14 @@ export default function Notes() {
                 )}
               </div>
 
-              {/* Action Bar com Exibidor Sutil de Detalhes Inferiores (DATA, HORÁRIOS, SALVAR AUTO) e Botões Fixos */}
+              {/* Action Bar com Exibidor de Detalhes Inferiores e Botões Fixos */}
               <div
-                className="p-3 md:p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2.5 shrink-0 relative z-20 bg-[#0d1017]"
+                className="p-3 md:p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2.5 shrink-0 relative z-20 bg-[#131315] border-t border-[#26262A]"
                 style={{
-                  borderTop: `1px solid ${color}40`,
+                  borderTopColor: `${color}40`,
                 }}
               >
-                {/* Botão Ocultar / Expandir em Largura Total (Extremidades) */}
+                {/* Botão Ocultar / Expandir */}
                 <button
                   type="button"
                   onClick={() => {
@@ -3398,14 +3427,14 @@ export default function Notes() {
                       localStorage.setItem("gm_note_bottom_details_visible_v1", String(next));
                     } catch (e) {}
                   }}
-                  className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/10 text-white/80 hover:text-white text-xs font-black uppercase tracking-wider flex items-center justify-between gap-2 transition-all cursor-pointer border border-white/10 hover:border-white/20 active:scale-[0.99] min-h-[44px] shadow-sm"
+                  className="w-full py-2.5 sm:py-3 px-4 rounded-md bg-[#0B0B0C] hover:bg-[#1B1B1E] text-zinc-200 hover:text-white text-xs font-black uppercase tracking-wider flex items-center justify-between gap-2 transition-colors cursor-pointer border border-[#26262A] hover:border-[#3F3F46] min-h-[44px]"
                   title={bottomDetailsVisible ? "Ocultar Informações Extras" : "Expandir Informações Extras (Data, Horários e Salvar Auto)"}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     {bottomDetailsVisible ? (
-                      <Eye size={18} className="text-[#FF6900] shrink-0 drop-shadow-[0_0_10px_rgba(255,105,0,0.85)]" strokeWidth={2.4} />
+                      <Eye size={17} className="text-[#FF6900] shrink-0" strokeWidth={2.4} />
                     ) : (
-                      <EyeOff size={18} className="text-zinc-500 shrink-0" strokeWidth={2} />
+                      <EyeOff size={17} className="text-zinc-500 shrink-0" strokeWidth={2} />
                     )}
                     <span className="font-extrabold tracking-wider truncate text-xs">
                       DATA, HORÁRIOS PROGRAMADOS E SALVAR AUTO
@@ -3415,12 +3444,12 @@ export default function Notes() {
                   <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                     {/* Badge da Data Programada */}
                     {reminderDate ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] bg-orange-500/20 text-orange-400 border border-orange-500/35 px-2.5 py-1 rounded-lg font-mono font-bold whitespace-nowrap shadow-sm shadow-orange-500/10">
+                      <span className="inline-flex items-center gap-1 text-[11px] bg-orange-500/15 text-orange-400 border border-orange-500/35 px-2.5 py-1 rounded-[4px] font-mono font-bold whitespace-nowrap tabular-nums">
                         <Calendar size={12} className="shrink-0 text-orange-400" />
                         {reminderDate.split("-").reverse().join("/")}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 font-mono px-1.5 py-0.5 rounded bg-white/[0.02]">
+                      <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400 font-mono px-2 py-0.5 rounded-[4px] bg-[#131315] border border-[#26262A]">
                         Sem data
                       </span>
                     )}
@@ -3430,14 +3459,14 @@ export default function Notes() {
                       const activeTimes = [reminderTime, reminderTime2, reminderTime3].filter(Boolean);
                       if (activeTimes.length > 0) {
                         return (
-                          <span className="inline-flex items-center gap-1 text-[11px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 px-2.5 py-1 rounded-lg font-mono font-bold whitespace-nowrap shadow-sm shadow-green-500/10">
+                          <span className="inline-flex items-center gap-1 text-[11px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 px-2.5 py-1 rounded-[4px] font-mono font-bold whitespace-nowrap tabular-nums">
                             <Clock size={12} className="shrink-0 text-emerald-400" />
                             {activeTimes.join(" • ")}
                           </span>
                         );
                       }
                       return (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 font-mono px-1.5 py-0.5 rounded bg-white/[0.02]">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400 font-mono px-2 py-0.5 rounded-[4px] bg-[#131315] border border-[#26262A]">
                           Sem horário
                         </span>
                       );
@@ -3448,10 +3477,10 @@ export default function Notes() {
                       const isOff = autoSaveInterval === "disabled";
                       return (
                         <span
-                          className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg font-mono font-bold whitespace-nowrap border ${
+                          className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-[4px] font-mono font-bold whitespace-nowrap border tabular-nums ${
                             isOff
-                              ? "bg-white/[0.04] text-zinc-500 border-white/10"
-                              : "bg-blue-500/20 text-blue-400 border-blue-500/35 shadow-sm shadow-blue-500/10"
+                              ? "bg-[#131315] text-zinc-400 border-[#26262A]"
+                              : "bg-blue-500/15 text-blue-400 border-blue-500/35"
                           }`}
                         >
                           Auto: {isOff ? "Off" : `${autoSaveInterval}min`}
@@ -3459,13 +3488,13 @@ export default function Notes() {
                       );
                     })()}
 
-                    <span className="text-white/50 text-[11px] font-bold ml-0.5">
+                    <span className="text-zinc-400 text-[11px] font-bold ml-0.5">
                       {bottomDetailsVisible ? "▲" : "▼"}
                     </span>
                   </div>
                 </button>
 
-                {/* Detalhes Expansíveis Opcionais (DATA, HORÁRIOS e SALVAR AUTO) */}
+                {/* Detalhes Expansíveis Opcionais */}
                 <AnimatePresence>
                   {bottomDetailsVisible && (
                     <motion.div
@@ -3480,17 +3509,16 @@ export default function Notes() {
                         {/* Lembrete Data */}
                         <div className="relative flex-1 w-full">
                           <GlassDatePicker
-                            className="w-full bg-black/60 hover:bg-black/80 border border-white/15 hover:border-white/30 rounded-xl text-[13px] font-bold text-white pl-10 pr-16 py-3 outline-none transition-all flex items-center min-h-[46px] shadow-sm"
+                            className="w-full bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] rounded-[4px] text-[13px] font-bold text-white pl-10 pr-16 py-3 outline-none transition-colors flex items-center min-h-[46px]"
                             value={reminderDate}
                             onChange={setReminderDate}
                             title="Data do Lembrete"
-                            style={{ borderColor: "rgba(255,255,255,0.15)" }}
                             themeColor={color}
                             placeholder="DD/MM/AAAA"
                           />
                           <Calendar
                             size={16}
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none"
+                            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
                           />
                         </div>
 
@@ -3503,14 +3531,14 @@ export default function Notes() {
                               <button
                                 type="button"
                                 onClick={() => setClocksExpanded(!clocksExpanded)}
-                                className="w-full bg-black/60 hover:bg-black/80 border border-white/15 hover:border-white/30 rounded-xl text-[13px] font-black uppercase text-white px-4 py-3 outline-none transition-all flex items-center justify-between min-h-[46px] shadow-sm cursor-pointer"
+                                className="w-full bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] rounded-[4px] text-[13px] font-black uppercase text-white px-4 py-3 outline-none transition-colors flex items-center justify-between min-h-[46px] cursor-pointer"
                               >
                                 <div className="flex items-center gap-2 overflow-hidden">
                                   <Clock
                                     size={17}
-                                    className={`shrink-0 ${hasActiveClocks ? "text-green-400 animate-pulse" : "text-white/70"}`}
+                                    className={`shrink-0 ${hasActiveClocks ? "text-emerald-400" : "text-zinc-400"}`}
                                   />
-                                  <span className="truncate text-white font-black tracking-wide uppercase">
+                                  <span className="truncate text-white font-black tracking-wide uppercase tabular-nums">
                                     {hasActiveClocks
                                       ? [reminderTime, reminderTime2, reminderTime3].filter(Boolean).join(" • ")
                                       : "Horários Programados"}
@@ -3519,28 +3547,25 @@ export default function Notes() {
 
                                 <div className="flex items-center gap-1.5 shrink-0">
                                   {hasActiveClocks && (
-                                    <span 
-                                      className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black bg-green-500 text-black shadow-sm"
-                                    >
+                                    <span className="px-1.5 py-0.5 rounded-[4px] flex items-center justify-center text-[11px] font-black bg-emerald-500 text-[#0B0B0C] tabular-nums">
                                       {activeClocksCount}
                                     </span>
                                   )}
-                                  <ChevronUp size={16} className={`text-white/70 transition-transform ${clocksExpanded ? "rotate-180" : ""}`} />
+                                  <ChevronUp size={16} className={`text-zinc-400 transition-transform ${clocksExpanded ? "rotate-180" : ""}`} />
                                 </div>
                               </button>
 
-                              {/* Modal de Horários / Alertas Apple Style - Renderizado via Portal para nunca ser cortado */}
+                              {/* Modal de Horários / Alertas - Renderizado via Portal */}
                               {typeof document !== "undefined" &&
                                 createPortal(
                                   <AnimatePresence>
                                     {clocksExpanded && (
                                       <div className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 overflow-hidden pointer-events-auto">
-                                        {/* Backdrop transparente/desfocado para fechar ao clicar fora */}
                                         <motion.div
                                           initial={{ opacity: 0 }}
                                           animate={{ opacity: 1 }}
                                           exit={{ opacity: 0 }}
-                                          className="absolute inset-0 bg-black/75 backdrop-blur-md z-0"
+                                          className="absolute inset-0 bg-black/75 backdrop-blur-sm z-0"
                                           onClick={() => setClocksExpanded(false)}
                                         />
 
@@ -3549,27 +3574,25 @@ export default function Notes() {
                                           animate={{ opacity: 1, scale: 1, y: 0 }}
                                           exit={{ opacity: 0, scale: 0.92, y: 15 }}
                                           transition={{ type: "spring", stiffness: 450, damping: 28 }}
-                                          className="relative w-84 max-w-[92vw] bg-[#121418]/98 border border-white/20 rounded-2xl p-5 space-y-4 shadow-[0_30px_70px_rgba(0,0,0,0.95)] text-left z-10"
+                                          className="relative w-84 max-w-[92vw] bg-[#131315] border border-[#26262A] rounded-lg p-5 space-y-4 shadow-2xl text-left z-10"
                                           style={{
                                             borderTopWidth: "3px",
                                             borderTopColor: "var(--gm-primary, #FF6900)",
-                                            backgroundColor: "#141418",
-                                            boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 30px 70px rgba(0,0,0,0.95)",
                                           }}
                                         >
-                                          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                                          <div className="flex items-center justify-between pb-3 border-b border-[#26262A]">
                                             <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-[var(--gm-primary,#FF6900)]">
-                                              <Clock size={15} className={hasActiveClocks ? "animate-pulse text-[var(--gm-primary,#FF6900)]" : "text-[var(--gm-primary,#FF6900)]"} />
+                                              <Clock size={15} className="text-[var(--gm-primary,#FF6900)]" />
                                               Configurar Horários
                                             </span>
                                             <div className="flex items-center gap-2">
-                                              <span className="text-[10px] bg-white/10 border border-white/10 text-white/80 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">
+                                              <span className="text-[11px] bg-[#0B0B0C] border border-[#26262A] text-zinc-300 px-2 py-0.5 rounded-[4px] font-black uppercase tracking-wider">
                                                 Diário
                                               </span>
                                               <button
                                                 type="button"
                                                 onClick={() => setClocksExpanded(false)}
-                                                className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                                                className="w-8 h-8 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                                                 title="Fechar"
                                               >
                                                 <X size={15} />
@@ -3582,14 +3605,14 @@ export default function Notes() {
                                             <div className="flex flex-col gap-1.5">
                                               <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
                                                 <span className="flex items-center gap-1.5">
-                                                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
+                                                  <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: reminderTime ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
                                                   Horário 1
                                                 </span>
                                                 {reminderTime && (
                                                   <button
                                                     type="button"
                                                     onClick={() => setReminderTime("")}
-                                                    className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
+                                                    className="text-red-400 hover:text-red-300 font-bold transition-colors text-[11px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded-[4px] border border-red-900/40 cursor-pointer"
                                                   >
                                                     Limpar
                                                   </button>
@@ -3599,7 +3622,7 @@ export default function Notes() {
                                                 <GlassTimePicker
                                                   value={reminderTime}
                                                   onChange={setReminderTime}
-                                                  className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
+                                                  className="w-full appearance-none bg-[#0B0B0C] border border-[#26262A] hover:border-[#3F3F46] rounded-[4px] text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-[var(--gm-primary)]"
                                                   title="Definir Horário 1"
                                                 />
                                                 <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
@@ -3610,14 +3633,14 @@ export default function Notes() {
                                             <div className="flex flex-col gap-1.5">
                                               <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
                                                 <span className="flex items-center gap-1.5">
-                                                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime2 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
+                                                  <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: reminderTime2 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
                                                   Horário 2
                                                 </span>
                                                 {reminderTime2 && (
                                                   <button
                                                     type="button"
                                                     onClick={() => setReminderTime2("")}
-                                                    className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
+                                                    className="text-red-400 hover:text-red-300 font-bold transition-colors text-[11px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded-[4px] border border-red-900/40 cursor-pointer"
                                                   >
                                                     Limpar
                                                   </button>
@@ -3627,7 +3650,7 @@ export default function Notes() {
                                                 <GlassTimePicker
                                                   value={reminderTime2}
                                                   onChange={setReminderTime2}
-                                                  className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
+                                                  className="w-full appearance-none bg-[#0B0B0C] border border-[#26262A] hover:border-[#3F3F46] rounded-[4px] text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-[var(--gm-primary)]"
                                                   title="Definir Horário 2"
                                                 />
                                                 <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime2 ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
@@ -3638,14 +3661,14 @@ export default function Notes() {
                                             <div className="flex flex-col gap-1.5">
                                               <div className="flex items-center justify-between text-[11px] text-zinc-300 font-extrabold uppercase tracking-wider">
                                                 <span className="flex items-center gap-1.5">
-                                                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: reminderTime3 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
+                                                  <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: reminderTime3 ? 'var(--gm-primary, #FF6900)' : '#52525b' }} />
                                                   Horário 3
                                                 </span>
                                                 {reminderTime3 && (
                                                   <button
                                                     type="button"
                                                     onClick={() => setReminderTime3("")}
-                                                    className="text-red-400 hover:text-red-300 font-bold transition-all text-[10px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded border border-red-900/40 cursor-pointer"
+                                                    className="text-red-400 hover:text-red-300 font-bold transition-colors text-[11px] uppercase tracking-wider bg-red-950/40 px-2 py-0.5 rounded-[4px] border border-red-900/40 cursor-pointer"
                                                   >
                                                     Limpar
                                                   </button>
@@ -3655,7 +3678,7 @@ export default function Notes() {
                                                 <GlassTimePicker
                                                   value={reminderTime3}
                                                   onChange={setReminderTime3}
-                                                  className="w-full appearance-none bg-zinc-900/90 border border-zinc-700/70 hover:border-zinc-500 rounded-xl text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-zinc-400"
+                                                  className="w-full appearance-none bg-[#0B0B0C] border border-[#26262A] hover:border-[#3F3F46] rounded-[4px] text-xs text-white pl-9 pr-3 py-2.5 outline-none focus:border-[var(--gm-primary)]"
                                                   title="Definir Horário 3"
                                                 />
                                                 <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: reminderTime3 ? 'var(--gm-primary, #FF6900)' : '#71717a' }} />
@@ -3663,12 +3686,12 @@ export default function Notes() {
                                             </div>
                                           </div>
 
-                                          {/* Botão Confirmar Limpo */}
-                                          <div className="pt-3 border-t border-white/10 flex items-center gap-2">
+                                          {/* Botões */}
+                                          <div className="pt-3 border-t border-[#26262A] flex items-center gap-2">
                                             <button
                                               type="button"
                                               onClick={() => setClocksExpanded(false)}
-                                              className="flex-1 px-3 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-white transition-all uppercase tracking-wider cursor-pointer"
+                                              className="flex-1 px-3 py-2.5 bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] rounded-[6px] text-xs font-bold text-zinc-200 hover:text-white transition-colors uppercase tracking-wider cursor-pointer whitespace-nowrap"
                                             >
                                               Fechar
                                             </button>
@@ -3679,7 +3702,7 @@ export default function Notes() {
                                                 setClocksExpanded(false);
                                                 showToast("Horários configurados com sucesso!");
                                               }}
-                                              className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-500 border border-green-500/30 active:scale-95 rounded-xl text-xs font-black text-white transition-all uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-green-600/30 cursor-pointer"
+                                              className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/40 rounded-[6px] text-xs font-black text-white transition-colors uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                                             >
                                               <Check size={14} />
                                               Confirmar
@@ -3696,9 +3719,9 @@ export default function Notes() {
                         })()}
                       </div>
 
-                      {/* Linha 2: Salvar Auto - Cápsulas estendendo até a borda direita */}
-                      <div className="w-full flex items-center gap-3 bg-black/40 border border-white/10 p-2.5 rounded-xl">
-                        <span className="text-white/70 font-black uppercase tracking-wider text-[11px] whitespace-nowrap shrink-0">
+                      {/* Linha 2: Salvar Auto */}
+                      <div className="w-full flex items-center gap-3 bg-[#0B0B0C] border border-[#26262A] p-2.5 rounded-md">
+                        <span className="text-zinc-400 font-black uppercase tracking-wider text-[11px] whitespace-nowrap shrink-0">
                           SALVAR AUTO:
                         </span>
                         <div className="flex-1 grid grid-cols-4 gap-1.5">
@@ -3716,10 +3739,10 @@ export default function Notes() {
                                 localStorage.setItem("gm_note_autosave_interval_v1", item.val);
                                 showToast(`Salvamento automático: ${item.label}`);
                               }}
-                              className={`w-full py-1.5 rounded-lg text-xs font-black transition-all text-center cursor-pointer ${
+                              className={`w-full py-1.5 rounded-[4px] text-xs font-black transition-colors text-center cursor-pointer whitespace-nowrap ${
                                 autoSaveInterval === item.val
-                                  ? "bg-[var(--gm-primary,#FF6900)] text-white shadow-md shadow-orange-500/30"
-                                  : "bg-white/[0.04] text-white/50 hover:text-white hover:bg-white/10"
+                                  ? "bg-[var(--gm-primary,#FF6900)] text-[#0B0B0C]"
+                                  : "bg-[#131315] text-zinc-400 hover:text-white hover:bg-[#1B1B1E] border border-[#26262A]"
                               }`}
                             >
                               {item.label}
@@ -3731,34 +3754,32 @@ export default function Notes() {
                   )}
                 </AnimatePresence>
 
-                {/* Linha FIXA dos Botões: Fechar e Salvar Nota Lado a Lado 50%/50% */}
+                {/* Linha FIXA dos Botões */}
                 <div className="w-full grid grid-cols-2 gap-3 pt-0.5">
-                  {/* Botão FECHAR: Forge Secondary */}
                   <button
                     type="button"
                     onClick={() => setModalOpen(false)}
-                    className="w-full h-11 rounded-md text-xs font-bold uppercase tracking-wider text-[#F2F2F3] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] transition-all flex items-center justify-center cursor-pointer active:scale-95"
+                    className="w-full h-11 rounded-[6px] text-xs font-bold uppercase tracking-wider text-[#F2F2F3] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] transition-colors flex items-center justify-center cursor-pointer whitespace-nowrap"
                   >
                     FECHAR
                   </button>
 
-                  {/* Botão SALVAR: Forge Primary */}
                   <button
                     type="button"
                     onClick={() => handleSave(true)}
-                    className={`relative overflow-hidden w-full h-11 rounded-md text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 border cursor-pointer active:scale-95 ${
+                    className={`relative overflow-hidden w-full h-11 rounded-[6px] text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-colors duration-200 border cursor-pointer whitespace-nowrap ${
                       isSaveSuccessActive
-                        ? "bg-emerald-500 border-emerald-500 text-[#0B0B0C] shadow-[0_0_20px_rgba(34,197,94,0.5)]"
-                        : "bg-[#F65A1A] hover:bg-[#FF7A38] border-[#F65A1A] text-[#0B0B0C] shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
+                        ? "bg-emerald-500 border-emerald-500 text-[#0B0B0C]"
+                        : "bg-[#F65A1A] hover:bg-[#FF7A38] border-[#F65A1A] text-[#0B0B0C]"
                     }`}
                   >
                     <Check 
                       size={16} 
-                      className={`shrink-0 transition-all duration-300 ${
+                      className={`shrink-0 transition-transform duration-300 ${
                         isSaveSuccessActive ? "scale-125 text-[#0B0B0C] stroke-[3]" : "text-[#0B0B0C] stroke-[2.75]"
                       }`} 
                     />
-                    <span className="transition-all duration-300 text-[#0B0B0C] font-black">
+                    <span className="text-[#0B0B0C] font-black">
                       {isSaveSuccessActive ? "SALVO COM SUCESSO!" : "SALVAR NOTA"}
                     </span>
                   </button>
@@ -3908,7 +3929,7 @@ export default function Notes() {
             {/* 1. Miniatura de Seletor de Cores do Texto */}
             {colorPickerOpen && (
               <div
-                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs select-none pointer-events-auto"
+                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-sm select-none pointer-events-auto"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setColorPickerOpen(false);
@@ -3919,14 +3940,14 @@ export default function Notes() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: 10 }}
                   transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                  className="relative bg-[#0e111a]/98 border border-white/20 rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.95)] backdrop-blur-2xl flex flex-col gap-3 text-white"
+                  className="relative bg-[#131315] border border-[#26262A] rounded-lg p-4 shadow-2xl flex flex-col gap-3 text-white"
                   style={{ width: "300px", maxWidth: "calc(100vw - 32px)", margin: "auto" }}
                   onMouseDown={(e) => {
                     e.stopPropagation();
                   }}
                 >
                   {/* Cabeçalho da Miniatura */}
-                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#26262A]">
                     <div className="flex items-center gap-1.5">
                       <Palette size={14} className="text-[var(--gm-primary,#FE540B)]" />
                       <span className="text-xs font-black tracking-wide text-white">Cor do Texto</span>
@@ -3941,7 +3962,7 @@ export default function Notes() {
                           applyStyleToSelection({ color: "#ffffff" });
                           setColorPickerOpen(false);
                         }}
-                        className="text-[10px] font-bold text-white/70 hover:text-white px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 transition-all cursor-pointer"
+                        className="text-[11px] font-bold text-zinc-300 hover:text-white px-2 py-0.5 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] transition-colors cursor-pointer"
                         title="Redefinir para Branco"
                       >
                         Padrão
@@ -3953,7 +3974,7 @@ export default function Notes() {
                           e.stopPropagation();
                           setColorPickerOpen(false);
                         }}
-                        className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/50 hover:text-white transition-colors cursor-pointer"
+                        className="w-7 h-7 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
                         title="Fechar"
                       >
                         <X size={13} />
@@ -3962,15 +3983,15 @@ export default function Notes() {
                   </div>
 
                   {/* Amostra da cor atual */}
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/5 text-xs">
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-xs">
                     <div className="flex items-center gap-2">
                       <span
-                        className="w-4 h-4 rounded-full border border-white/40 shadow-xs shrink-0"
+                        className="w-4 h-4 rounded-sm border border-white/40 shrink-0"
                         style={{ backgroundColor: selectedTextColor }}
                       />
-                      <span className="font-mono text-[11px] text-white/90 uppercase">{selectedTextColor}</span>
+                      <span className="font-mono text-[11px] text-white uppercase tabular-nums">{selectedTextColor}</span>
                     </div>
-                    <span className="text-[10px] text-white/50 font-medium">
+                    <span className="text-[11px] text-zinc-400 font-medium">
                       {TEXT_COLORS.find((c) => c.hex.toLowerCase() === selectedTextColor.toLowerCase())?.label || "Personalizada"}
                     </span>
                   </div>
@@ -3990,10 +4011,10 @@ export default function Notes() {
                             applyStyleToSelection({ color: col.hex });
                             setColorPickerOpen(false);
                           }}
-                          className={`w-9 h-9 rounded-xl border transition-all flex items-center justify-center cursor-pointer shadow-xs ${
+                          className={`w-9 h-9 rounded-[4px] border transition-all flex items-center justify-center cursor-pointer ${
                             isActive
-                              ? "ring-2 ring-white scale-105 border-white shadow-orange-500/30"
-                              : "border-white/15 hover:border-white/50 hover:scale-105 opacity-90 hover:opacity-100"
+                              ? "ring-2 ring-white border-white"
+                              : "border-[#26262A] hover:border-white/50 opacity-90 hover:opacity-100"
                           }`}
                           style={{ backgroundColor: col.hex }}
                           title={col.label}
@@ -4010,7 +4031,7 @@ export default function Notes() {
                   </div>
 
                   {/* Seletor Livre Hex e Color Picker Customizado */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                  <div className="flex items-center gap-2 pt-2 border-t border-[#26262A]">
                     <input
                       type="color"
                       value={selectedTextColor}
@@ -4018,7 +4039,7 @@ export default function Notes() {
                         setSelectedTextColor(e.target.value);
                         applyStyleToSelection({ color: e.target.value });
                       }}
-                      className="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0 p-0 shrink-0"
+                      className="w-7 h-7 rounded-[4px] cursor-pointer bg-transparent border-0 p-0 shrink-0"
                       title="Escolher qualquer cor"
                     />
                     <input
@@ -4033,7 +4054,7 @@ export default function Notes() {
                         }
                       }}
                       placeholder="#FFFFFF"
-                      className="flex-1 h-7 px-2.5 rounded-lg bg-black/60 border border-white/15 text-white font-mono text-xs uppercase outline-none focus:border-[var(--gm-primary,#FE540B)]"
+                      className="flex-1 h-7 px-2.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white font-mono text-xs uppercase outline-none focus:border-[var(--gm-primary,#FE540B)]"
                     />
                   </div>
                 </motion.div>
@@ -4043,7 +4064,7 @@ export default function Notes() {
             {/* 2. Miniatura de Seletor de Marcador de Texto */}
             {highlighterPickerOpen && (
               <div
-                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs select-none pointer-events-auto"
+                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-sm select-none pointer-events-auto"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setHighlighterPickerOpen(false);
@@ -4054,14 +4075,14 @@ export default function Notes() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: 10 }}
                   transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                  className="relative bg-[#0e111a]/98 border border-white/20 rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.95)] backdrop-blur-2xl flex flex-col gap-3 text-white"
+                  className="relative bg-[#131315] border border-[#26262A] rounded-lg p-4 shadow-2xl flex flex-col gap-3 text-white"
                   style={{ width: "300px", maxWidth: "calc(100vw - 32px)", margin: "auto" }}
                   onMouseDown={(e) => {
                     e.stopPropagation();
                   }}
                 >
                   {/* Cabeçalho da Miniatura */}
-                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#26262A]">
                     <div className="flex items-center gap-1.5">
                       <Highlighter size={14} className="text-yellow-400" />
                       <span className="text-xs font-black tracking-wide text-white">Marcador</span>
@@ -4076,7 +4097,7 @@ export default function Notes() {
                           removeHighlight();
                           setHighlighterPickerOpen(false);
                         }}
-                        className="text-[10px] font-bold text-red-400 hover:text-red-300 px-2 py-0.5 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer flex items-center gap-1"
+                        className="text-[11px] font-bold text-red-400 hover:text-red-300 px-2 py-0.5 rounded-[4px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 transition-colors cursor-pointer flex items-center gap-1"
                         title="Remover marcação"
                       >
                         <Eraser size={11} />
@@ -4089,7 +4110,7 @@ export default function Notes() {
                           e.stopPropagation();
                           setHighlighterPickerOpen(false);
                         }}
-                        className="w-6 h-6 rounded-md bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/50 hover:text-white transition-colors cursor-pointer"
+                        className="w-7 h-7 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
                         title="Fechar"
                       >
                         <X size={13} />
@@ -4098,15 +4119,15 @@ export default function Notes() {
                   </div>
 
                   {/* Amostra do marcador */}
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/5 text-xs">
+                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-xs">
                     <div className="flex items-center gap-2">
                       <span
-                        className="w-4 h-4 rounded-full border border-white/40 shadow-xs shrink-0"
+                        className="w-4 h-4 rounded-sm border border-white/40 shrink-0"
                         style={{ backgroundColor: selectedHighlightColor || "transparent" }}
                       />
-                      <span className="font-mono text-[11px] text-white/90 uppercase">{selectedHighlightColor || "Sem cor"}</span>
+                      <span className="font-mono text-[11px] text-white uppercase tabular-nums">{selectedHighlightColor || "Sem cor"}</span>
                     </div>
-                    <span className="text-[10px] text-white/50 font-medium">
+                    <span className="text-[11px] text-zinc-400 font-medium">
                       {HIGHLIGHT_COLORS.find((c) => c.hex.toLowerCase() === selectedHighlightColor.toLowerCase())?.label || "Sem marcação"}
                     </span>
                   </div>
@@ -4131,10 +4152,10 @@ export default function Notes() {
                             }
                             setHighlighterPickerOpen(false);
                           }}
-                          className={`w-9 h-9 rounded-xl border transition-all flex items-center justify-center cursor-pointer shadow-xs ${
+                          className={`w-9 h-9 rounded-[4px] border transition-all flex items-center justify-center cursor-pointer ${
                             isActive
-                              ? "ring-2 ring-yellow-400 scale-105 border-white shadow-yellow-500/30"
-                              : "border-white/15 hover:border-white/50 hover:scale-105 opacity-90 hover:opacity-100"
+                              ? "ring-2 ring-yellow-400 border-white"
+                              : "border-[#26262A] hover:border-white/50 opacity-90 hover:opacity-100"
                           }`}
                           style={{ backgroundColor: col.hex }}
                           title={col.label}
@@ -4153,7 +4174,7 @@ export default function Notes() {
             {/* 3. Modal / Galeria de Fontes */}
             {fontSelectorOpen && (
               <div
-                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm select-none"
+                className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm select-none"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setFontSelectorOpen(false);
@@ -4164,20 +4185,20 @@ export default function Notes() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 15 }}
                   transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                  className="relative w-full max-w-[360px] max-h-[85vh] bg-[#111520] border border-white/20 rounded-3xl p-5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] flex flex-col gap-3 text-white"
+                  className="relative w-full max-w-[360px] max-h-[85vh] bg-[#131315] border border-[#26262A] rounded-lg p-5 shadow-2xl flex flex-col gap-3 text-white"
                   onMouseDown={(e) => {
                     e.stopPropagation();
                   }}
                 >
                   {/* Cabeçalho */}
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center justify-between border-b border-[#26262A] pb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
-                        <Type size={18} />
+                      <div className="w-8 h-8 rounded-[4px] bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                        <Type size={17} />
                       </div>
                       <div>
                         <h4 className="text-sm font-black tracking-wide text-white">Galeria de Fontes</h4>
-                        <p className="text-[10px] text-white/50">Tipografia para o texto</p>
+                        <p className="text-[11px] text-zinc-400">Tipografia para o texto</p>
                       </div>
                     </div>
                     <button
@@ -4187,7 +4208,7 @@ export default function Notes() {
                         e.stopPropagation();
                         setFontSelectorOpen(false);
                       }}
-                      className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors cursor-pointer"
+                      className="w-8 h-8 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
                       title="Fechar"
                     >
                       <X size={16} />
@@ -4217,11 +4238,11 @@ export default function Notes() {
                           applyStyleToSelection({ "font-family": f.value });
                           setFontSelectorOpen(false);
                         }}
-                        className="text-left w-full px-3.5 py-2.5 rounded-xl text-sm text-white/90 hover:text-white hover:bg-white/10 active:bg-[var(--gm-primary,#FE540B)]/20 transition-all flex items-center justify-between border border-transparent hover:border-white/10 cursor-pointer"
+                        className="text-left w-full px-3.5 py-2.5 rounded-[4px] text-sm text-zinc-200 hover:text-white hover:bg-[#1B1B1E] active:bg-[var(--gm-primary,#FE540B)]/20 transition-colors flex items-center justify-between border border-transparent hover:border-[#26262A] cursor-pointer"
                         style={{ fontFamily: f.value }}
                       >
                         <span className="font-semibold">{f.label}</span>
-                        <span className="text-[11px] text-white/40 uppercase tracking-wider font-mono">Aa Bb Cc</span>
+                        <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-mono">Aa Bb Cc</span>
                       </button>
                     ))}
                   </div>
@@ -4250,12 +4271,12 @@ export default function Notes() {
                 }}
               >
                 {/* Barra Superior do Visualizador de Zoom */}
-                <div className="w-full max-w-4xl flex items-center justify-between gap-4 bg-zinc-900/90 border border-white/15 px-4 py-2.5 rounded-2xl backdrop-blur-md shadow-2xl z-20">
+                <div className="w-full max-w-4xl flex items-center justify-between gap-4 bg-[#131315] border border-[#26262A] px-4 py-2.5 rounded-lg shadow-2xl z-20">
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] font-black tracking-widest uppercase px-3 py-1 rounded-lg bg-[var(--gm-primary,#FF6900)] text-white shadow-md">
+                    <span className="text-[11px] font-black tracking-widest uppercase px-3 py-1 rounded-[4px] bg-[var(--gm-primary,#FF6900)] text-[#0B0B0C] tabular-nums">
                       LAYOUT {zoomImage.index + 1} DE {layoutUrls.length}
                     </span>
-                    <span className="text-xs font-bold text-white/70 hidden sm:inline-block">
+                    <span className="text-xs font-bold text-zinc-300 hidden sm:inline-block tabular-nums">
                       Zoom: {Math.round(zoomScale * 100)}%
                     </span>
                   </div>
@@ -4265,7 +4286,7 @@ export default function Notes() {
                     <button
                       type="button"
                       onClick={() => setZoomScale((s) => Math.max(0.5, +(s - 0.25).toFixed(2)))}
-                      className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
+                      className="p-2 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-300 hover:text-white transition-colors cursor-pointer"
                       title="Diminuir Zoom (-)"
                     >
                       <ZoomOut size={16} />
@@ -4273,7 +4294,7 @@ export default function Notes() {
                     <button
                       type="button"
                       onClick={() => setZoomScale(1)}
-                      className="px-2.5 py-1 text-xs font-bold rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
+                      className="px-2.5 py-1.5 text-xs font-bold rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-300 hover:text-white transition-colors cursor-pointer tabular-nums"
                       title="Ajustar ao tamanho padrão (100%)"
                     >
                       100%
@@ -4281,7 +4302,7 @@ export default function Notes() {
                     <button
                       type="button"
                       onClick={() => setZoomScale((s) => Math.min(4, +(s + 0.25).toFixed(2)))}
-                      className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all cursor-pointer"
+                      className="p-2 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-300 hover:text-white transition-colors cursor-pointer"
                       title="Aumentar Zoom (+)"
                     >
                       <ZoomIn size={16} />
@@ -4290,7 +4311,7 @@ export default function Notes() {
                       href={zoomImage.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition-all ml-1"
+                      className="p-2 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-300 hover:text-white transition-colors ml-1"
                       title="Abrir imagem original em nova aba"
                     >
                       <Maximize2 size={16} />
@@ -4301,7 +4322,7 @@ export default function Notes() {
                         setZoomImage(null);
                         setZoomScale(1);
                       }}
-                      className="p-2 rounded-xl bg-red-600/90 hover:bg-red-500 text-white transition-all ml-2 cursor-pointer shadow-lg active:scale-95"
+                      className="w-9 h-9 rounded-[4px] bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors ml-2 cursor-pointer"
                       title="Fechar visualizador (ESC)"
                     >
                       <X size={16} />
@@ -4321,7 +4342,7 @@ export default function Notes() {
                         setZoomImage({ url: layoutUrls[prevIdx], index: prevIdx });
                         setZoomScale(1);
                       }}
-                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
+                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-[6px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] text-white flex items-center justify-center transition-colors shadow-2xl z-30 cursor-pointer"
                       title="Layout Anterior (Seta Esquerda ←)"
                     >
                       <ChevronLeft size={24} />
@@ -4338,7 +4359,7 @@ export default function Notes() {
                       animate={{ opacity: 1, scale: zoomScale }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="max-w-[90vw] max-h-[75vh] object-contain rounded-xl shadow-2xl cursor-zoom-in transition-transform duration-200"
+                      className="max-w-[90vw] max-h-[75vh] object-contain rounded-md shadow-2xl cursor-zoom-in transition-transform duration-200"
                       onClick={() => setZoomScale((s) => (s >= 2 ? 1 : +(s + 0.5).toFixed(2)))}
                     />
                   </div>
@@ -4353,7 +4374,7 @@ export default function Notes() {
                         setZoomImage({ url: layoutUrls[nextIdx], index: nextIdx });
                         setZoomScale(1);
                       }}
-                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/70 hover:bg-black/95 border border-white/20 hover:border-white/40 text-white flex items-center justify-center transition-all active:scale-95 shadow-2xl z-30 cursor-pointer backdrop-blur-md"
+                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-[6px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] text-white flex items-center justify-center transition-colors shadow-2xl z-30 cursor-pointer"
                       title="Próximo Layout (Seta Direita →)"
                     >
                       <ChevronRight size={24} />
@@ -4362,8 +4383,8 @@ export default function Notes() {
                 </div>
 
                 {/* Rodapé do Visualizador com Dicas de Navegação */}
-                <div className="w-full max-w-md flex items-center justify-center text-center text-white/50 text-[11px] font-semibold py-1.5 px-4 bg-zinc-900/70 border border-white/10 rounded-full backdrop-blur-sm z-20">
-                  <span>Navegue com <span className="text-white/80 font-bold">←</span> <span className="text-white/80 font-bold">→</span> • Zoom <span className="text-white/80 font-bold">+</span> / <span className="text-white/80 font-bold">-</span> • <span className="text-white/80 font-bold">ESC</span> para fechar</span>
+                <div className="w-full max-w-md flex items-center justify-center text-center text-zinc-400 text-[11px] font-semibold py-1.5 px-4 bg-[#131315] border border-[#26262A] rounded-[4px] z-20">
+                  <span>Navegue com <span className="text-white font-bold">←</span> <span className="text-white font-bold">→</span> • Zoom <span className="text-white font-bold">+</span> / <span className="text-white font-bold">-</span> • <span className="text-white font-bold">ESC</span> para fechar</span>
                 </div>
               </div>
             )}
@@ -4381,24 +4402,24 @@ export default function Notes() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                  className="absolute inset-0 bg-black/75 backdrop-blur-sm"
                   onClick={() => setDeleteConfirmId(null)}
                 />
                 <motion.div
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.95, opacity: 0 }}
-                  className={`p-6 relative w-full max-w-md ${cardBase} border-red-500/30 text-white`}
+                  className={`p-6 relative w-full max-w-md ${cardBase} border-red-500/40 text-white`}
                 >
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 backdrop-blur-md flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 rounded-md bg-red-500/10 border border-red-500/25 flex items-center justify-center shrink-0">
                       <AlertTriangle className="text-red-500" size={24} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">
+                      <h3 className="text-lg font-bold text-white">
                         Excluir Definitivamente?
                       </h3>
-                      <p className="text-white/60 text-sm mt-1">
+                      <p className="text-zinc-400 text-sm mt-1">
                         Esta ação não pode ser desfeita. A nota será removida
                         permanentemente do sistema.
                       </p>
@@ -4407,14 +4428,14 @@ export default function Notes() {
                   <div className="flex gap-3 mt-6">
                     <button
                       onClick={() => setDeleteConfirmId(null)}
-                      className="flex-1 px-4 py-3 rounded-xl font-medium text-white/70 hover:text-white barra border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] backdrop-blur-md transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-2.5 rounded-[6px] font-bold text-xs uppercase tracking-wider text-zinc-200 hover:text-white border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] transition-colors cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap"
                     >
                       <X size={15} />
                       <span>Cancelar</span>
                     </button>
                     <button
                       onClick={handleHardDeleteConfirm}
-                      className="flex-1 px-4 py-3 rounded-xl font-medium bg-red-500/80 hover:bg-red-500 text-white border border-red-400/40 backdrop-blur-md transition-all shadow-none cursor-pointer inline-flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-2.5 rounded-[6px] font-bold text-xs uppercase tracking-wider bg-red-600 hover:bg-red-500 text-white border border-red-500/40 transition-colors cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap"
                     >
                       <Trash2 size={15} />
                       <span>Excluir</span>
@@ -4433,26 +4454,27 @@ export default function Notes() {
           <AnimatePresence>
             {noteShareData && (
               <div
-                className="fixed inset-0 z-[9999999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+                className="fixed inset-0 z-[9999999] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
                 onClick={() => setNoteShareData(null)}
               >
                 <div
-                  className={`w-full max-w-md rounded-2xl overflow-hidden relative z-10 ${cardBase} text-white`}
+                  className={`w-full max-w-md rounded-lg overflow-hidden relative z-10 ${cardBase} text-white`}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.03]">
+                  <div className="p-5 border-b border-[#26262A] flex justify-between items-center bg-[#131315]">
                     <h3 className="text-lg font-bold text-white">
                       Compartilhar Nota
                     </h3>
                     <button
                       onClick={() => setNoteShareData(null)}
-                      className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-xl transition-colors text-white/50 hover:text-white cursor-pointer"
+                      className="w-9 h-9 flex items-center justify-center bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] rounded-[4px] transition-colors text-zinc-400 hover:text-white cursor-pointer"
+                      title="Fechar"
                     >
-                      <X size={20} />
+                      <X size={18} />
                     </button>
                   </div>
 
-                  <div className="p-6 space-y-3">
+                  <div className="p-5 space-y-2.5">
                     <button
                       onClick={() => {
                         const cleanMessage = htmlToPlainFormatedText(
@@ -4461,9 +4483,9 @@ export default function Notes() {
                         openWhatsapp("", cleanMessage);
                         setNoteShareData(null);
                       }}
-                      className="w-full rounded-xl barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/40 backdrop-blur-md flex items-center gap-4 p-4 transition-all cursor-pointer group"
+                      className="w-full rounded-[6px] border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/50 flex items-center gap-4 p-4 transition-colors cursor-pointer group"
                     >
-                      <div className="shrink-0 w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                      <div className="shrink-0 w-10 h-10 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
                         <WhatsAppIcon
                           size={22}
                           className="text-emerald-400"
@@ -4473,7 +4495,7 @@ export default function Notes() {
                         <p className="font-bold text-white group-hover:text-[var(--gm-primary)] leading-tight transition-colors">
                           WhatsApp
                         </p>
-                        <p className="text-[11px] text-white/50 leading-tight mt-0.5">
+                        <p className="text-xs text-zinc-400 leading-tight mt-0.5">
                           Enviar diretamente para um contato
                         </p>
                       </div>
@@ -4493,16 +4515,16 @@ export default function Notes() {
                         );
                         setNoteShareData(null);
                       }}
-                      className="w-full rounded-xl barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/40 backdrop-blur-md flex items-center gap-4 p-4 transition-all cursor-pointer group"
+                      className="w-full rounded-[6px] border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/50 flex items-center gap-4 p-4 transition-colors cursor-pointer group"
                     >
-                      <div className="shrink-0 w-10 h-10 rounded-xl bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 flex items-center justify-center">
+                      <div className="shrink-0 w-10 h-10 rounded-md bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 flex items-center justify-center">
                         <Mail size={20} className="text-[var(--gm-primary)]" />
                       </div>
                       <div className="text-left">
                         <p className="font-bold text-white group-hover:text-[var(--gm-primary)] leading-tight transition-colors">
                           E-mail
                         </p>
-                        <p className="text-[11px] text-white/50 leading-tight mt-0.5">
+                        <p className="text-xs text-zinc-400 leading-tight mt-0.5">
                           Enviar por correio eletrônico
                         </p>
                       </div>
@@ -4521,16 +4543,16 @@ export default function Notes() {
                           alert("Erro ao copiar texto.");
                         }
                       }}
-                      className="w-full rounded-xl barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/40 backdrop-blur-md flex items-center gap-4 p-4 transition-all cursor-pointer group"
+                      className="w-full rounded-[6px] border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/50 flex items-center gap-4 p-4 transition-colors cursor-pointer group"
                     >
-                      <div className="shrink-0 w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
+                      <div className="shrink-0 w-10 h-10 rounded-md bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
                         <Copy size={20} className="text-blue-400" />
                       </div>
                       <div className="text-left">
                         <p className="font-bold text-white group-hover:text-[var(--gm-primary)] leading-tight transition-colors">
                           Copiar Texto
                         </p>
-                        <p className="text-[11px] text-white/50 leading-tight mt-0.5">
+                        <p className="text-xs text-zinc-400 leading-tight mt-0.5">
                           Copiar para colar em outro lugar
                         </p>
                       </div>
@@ -4554,16 +4576,16 @@ export default function Notes() {
                             }
                           }
                         }}
-                        className="w-full rounded-xl barra border border-white/10 shadow-none bg-white/[0.02] hover:bg-white/[0.07] hover:border-[var(--gm-primary)]/40 backdrop-blur-md flex items-center gap-4 p-4 transition-all cursor-pointer group"
+                        className="w-full rounded-[6px] border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/50 flex items-center gap-4 p-4 transition-colors cursor-pointer group"
                       >
-                        <div className="shrink-0 w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
+                        <div className="shrink-0 w-10 h-10 rounded-md bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
                           <Share2 size={20} className="text-purple-400" />
                         </div>
                         <div className="text-left">
                           <p className="font-bold text-white group-hover:text-[var(--gm-primary)] leading-tight transition-colors">
                             Mais Opções
                           </p>
-                          <p className="text-[11px] text-white/50 leading-tight mt-0.5">
+                          <p className="text-xs text-zinc-400 leading-tight mt-0.5">
                             Compartilhamento nativo do dispositivo
                           </p>
                         </div>

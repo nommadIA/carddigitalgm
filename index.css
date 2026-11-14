@@ -488,7 +488,7 @@ button.forge-tabs__tab.is-active:focus-visible {
   align-items: center;
   gap: 0.375rem;
   padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
+  border-radius: 4px;
   background-color: #18181b;
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 0.75rem;
@@ -761,8 +761,8 @@ a.gm-btn-lg {
   color: #f2f2f3 !important;
 }
 
-.tc-pill-btn:active {
-  transform: scale(0.98) !important;
+.tc-pill-btn:active:not(:disabled) {
+  transform: scale(0.96) !important;
 }
 
 .tc-pill-btn:focus-visible {
@@ -973,14 +973,14 @@ button.primary:hover span,
   color: #ffffff !important;
 }
 
-.forge-btn--primary:active,
-.forge-btn-primary:active,
-.tc-pill-btn-primary:active,
-button.primary:active,
-.btn-primary:active,
-.gm-btn-primary:active,
-.gm-dash-primary-btn:active {
-  transform: scale(0.98) !important;
+.forge-btn--primary:active:not(:disabled),
+.forge-btn-primary:active:not(:disabled),
+.tc-pill-btn-primary:active:not(:disabled),
+button.primary:active:not(:disabled),
+.btn-primary:active:not(:disabled),
+.gm-btn-primary:active:not(:disabled),
+.gm-dash-primary-btn:active:not(:disabled) {
+  transform: scale(0.96) !important;
   background: var(--gm-primary, #FE540B) !important;
   box-shadow: 0 0 20px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.75), 0 0 36px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.35) !important;
 }
@@ -1218,13 +1218,13 @@ a.tc-pill-btn:hover svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([dat
   transform: none;
 }
 
-/* 6. Active state universal: scale(0.98) igual ao botão Grade */
-button:active,
-.tc-pill-btn:active,
-.gm-btn:active,
-.btn:active,
-.forge-btn:active {
-  transform: scale(0.98) !important;
+/* 6. Active state universal: feedback tátil nítido scale(0.96) */
+button:active:not(:disabled):not(.gm-sidebar-toggle):not(.forge-tabs__tab):not([data-no-scale]),
+.tc-pill-btn:active:not(:disabled),
+.gm-btn:active:not(:disabled),
+.btn:active:not(:disabled),
+.forge-btn:active:not(:disabled) {
+  transform: scale(0.96) !important;
 }
 
 /* 7. Focus Visible com contorno Ember Halo */
@@ -3338,7 +3338,7 @@ html:not([data-theme="light"]):not(.gm-light) .gm-card:hover {
   right: 14px !important;
   width: 32px !important;
   height: 32px !important;
-  border-radius: 9999px !important;
+  border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -3604,7 +3604,7 @@ button.gm-search-apple-glass-clear {
   width: 24px !important;
   height: 24px !important;
   min-height: 24px !important;
-  border-radius: 9999px !important;
+  border-radius: 6px !important;
   background: rgba(255, 255, 255, 0.12) !important;
   background-color: rgba(255, 255, 255, 0.12) !important;
   border: none !important;
@@ -3649,7 +3649,7 @@ button.gm-search-apple-glass-clear:hover {
   align-items: center !important;
   height: 36px !important;
   padding: 0 14px !important;
-  border-radius: 9999px !important;
+  border-radius: 6px !important;
   background: rgba(255, 255, 255, 0.08) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -3738,7 +3738,7 @@ button.gm-search-apple-glass-clear:hover {
   height: 36px !important;
   min-width: 36px !important;
   min-height: 36px !important;
-  border-radius: 9999px !important;
+  border-radius: 6px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -3832,7 +3832,7 @@ button.gm-search-apple-glass-clear:hover {
 .gm-tab-badge{
   margin-left: 8px;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 4px;
   font-size: 12px;
   font-weight: 800;
   border: 1px solid rgba(255,255,255,.12);
@@ -4776,7 +4776,7 @@ button.gm-sidebar-toggle,
   z-index: 100 !important;
   width: 26px !important;
   height: 26px !important;
-  border-radius: 9999px !important;
+  border-radius: 6px !important;
   background: var(--gm-primary, #f97316) !important;
   color: #ffffff !important;
   border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
@@ -6821,7 +6821,7 @@ body{
 .toast-close{
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255,255,255,0.08);
-  border-radius: 9999px;
+  border-radius: 6px;
   padding: 5px;
   line-height: 0;
   transition: all 0.2s ease;
@@ -6838,7 +6838,7 @@ body{
   font-size: 11px;
   font-weight: 800;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 4px;
   border: 1px solid rgba(255,255,255,0.10);
   background: rgba(255,255,255,0.06);
   opacity: .9;
@@ -6854,7 +6854,7 @@ body{
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 4px;
   border: 1px solid rgba(255,255,255,0.10);
   background: rgba(0,0,0,0.18);
   backdrop-filter: none !important;
@@ -8706,8 +8706,13 @@ html:not([data-theme="light"]):not(.gm-light) .card {
 /* BUTTONS */
 button,
 .gm-btn {
-  border-radius: 14px !important;
-  transition: all 250ms cubic-bezier(.4, 0, .2, 1) !important;
+  border-radius: 6px;
+  transition:
+    background-color 140ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 140ms cubic-bezier(0.2, 0, 0, 1),
+    color 140ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 140ms cubic-bezier(0.2, 0, 0, 1),
+    transform 110ms cubic-bezier(0.2, 0, 0, 1);
   font-family: inherit;
 }
 
@@ -8803,14 +8808,14 @@ input, select, textarea, .gm-input {
 /* MODALS */
 .gm-modal,
 [role="dialog"] {
-  border-radius: 20px !important;
-  animation: gmModalFade 250ms cubic-bezier(.4, 0, .2, 1) forwards;
+  border-radius: 8px !important;
+  animation: gmModalFade 160ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes gmModalFade {
   from {
     opacity: 0;
-    transform: scale(0.96) translateY(6px);
+    transform: scale(0.97) translateY(4px);
   }
   to {
     opacity: 1;
@@ -8821,19 +8826,14 @@ input, select, textarea, .gm-input {
 [data-theme="light"] .gm-modal,
 [data-theme="light"] [role="dialog"],
 .gm-light .gm-modal,
-.gm-light [role="dialog"] {
-  background-color: #FFFFFF !important;
-  border: 1px solid #ECEEF3 !important;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25) !important;
-}
-
+.gm-light [role="dialog"],
 [data-theme="dark"] .gm-modal,
 [data-theme="dark"] [role="dialog"],
 .gm-dark .gm-modal,
 .gm-dark [role="dialog"] {
-  background-color: #1F232D !important;
-  border: 1px solid #313847 !important;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5) !important;
+  background-color: #131315 !important;
+  border: 1px solid #26262A !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 /* TABLES */
@@ -9397,7 +9397,7 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     max-width: calc(100vw - 24px) !important;
     max-height: calc(100dvh - var(--smartphone-modal-respiro) - 32px) !important;
     margin-bottom: calc(var(--bottom-nav-height) + 14px) !important;
-    border-radius: 20px !important;
+    border-radius: 8px !important;
     display: flex !important;
     flex-direction: column !important;
     overflow-y: auto !important;
@@ -9496,7 +9496,7 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     min-height: 44px;
   }
 
-  /* Botões de ícones sempre quadrados com cantos arredondados (squircle / rounded square) */
+  /* Botões de ícones sempre quadrados com leve arredondamento nos cantos */
   button[class*="aspect-square"],
   button[class*="w-9"][class*="h-9"],
   button[class*="w-8"][class*="h-8"],
@@ -9504,7 +9504,7 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   [data-icon-btn] {
     min-height: unset !important;
     aspect-ratio: 1 / 1 !important;
-    border-radius: 10px !important;
+    border-radius: 6px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -9846,7 +9846,7 @@ input.gm-note-title-input,
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Dashboard Cards Glassmorphism - VIDRO FOSCO NO LUGAR DE SOMBRA PESADA (.barra e .fora) */
+/* Cards & Containers — Forge Solid Surface */
 .barra,
 .fora,
 .gm-dashboard-card,
@@ -9883,9 +9883,9 @@ input.gm-note-title-input,
   position: relative !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background: rgba(18, 18, 24, 0.40) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: none !important;
+  background: #131315 !important;
+  border: 1px solid #26262A !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04) !important;
   contain: none !important;
 }
 
@@ -9940,20 +9940,15 @@ header.fixed.top-0,
 }
 
 /* =========================================================
-   LINHAS DE DIVISÃO E SEPARAÇÃO DO APP (GLASSMORPHISM & ALTO CONTRASTE)
+   LINHAS DE DIVISÃO E SEPARAÇÃO DO APP (FORGE FILAMENT #26262A)
    ========================================================= */
 hr,
 .h-px,
 .gm-divider {
   height: 1px !important;
   border: none !important;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(255, 255, 255, 0.20) 50%,
-    rgba(255, 255, 255, 0.40) 100%
-  ) !important;
-  box-shadow: 0 1px 3px rgba(255, 255, 255, 0.20) !important;
+  background: #26262A !important;
+  box-shadow: none !important;
 }
 
 /* Linhas de divisão em tabelas e listas */
@@ -9961,27 +9956,27 @@ table thead tr,
 table thead th,
 .border-b,
 [class*="border-b"] {
-  border-bottom-color: rgba(255, 255, 255, 0.28) !important;
+  border-bottom-color: #26262A;
 }
 
 table tbody tr,
 .divide-y > :not([hidden]) ~ :not([hidden]) {
-  border-color: rgba(255, 255, 255, 0.22) !important;
+  border-color: #26262A;
 }
 
 .border-t,
 [class*="border-t"] {
-  border-top-color: rgba(255, 255, 255, 0.28) !important;
+  border-top-color: #26262A;
 }
 
 .border-r,
 [class*="border-r"] {
-  border-right-color: rgba(255, 255, 255, 0.28) !important;
+  border-right-color: #26262A;
 }
 
 .border-l,
 [class*="border-l"] {
-  border-left-color: rgba(255, 255, 255, 0.28) !important;
+  border-left-color: #26262A;
 }
 
 /* Suporte para PREFERS-REDUCED-TRANSPARENCY (Acessibilidade) */
@@ -10021,8 +10016,7 @@ table tbody tr,
 }
 
 /* =========================================================
-   GLOBAL BUTTON HOVER & ACTIVE UI STYLE (SOLID ORANGE ON HOVER / CLICK)
-   Quando passa o mouse ou clica em botões do app, eles ficam sólidos em Laranja
+   TRANSIÇÕES FORGE PARA BOTÕES E CONTROLES (SEM SEQUESTRO DE COR GLOBAL)
    ========================================================= */
 button,
 a.btn,
@@ -10033,72 +10027,40 @@ a.btn,
 .btn-action-icon,
 .gm-btn-icon,
 .gm-budget-action-btn {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition:
+    background-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 140ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(.psd-up-bounce):not(.psd-back-to-top):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):hover,
-button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(.psd-up-bounce):not(.psd-back-to-top):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):active,
-button:not(.btn-whatsapp):not(.psd-down):not(.psd-down-bounce):not(.psd-up):not(.psd-up-bounce):not(.psd-back-to-top):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):focus-visible,
-.btn-action-edit:hover,
-.btn-action-edit:active,
-.btn-action-neutral:hover,
-.btn-action-neutral:active,
-.btn-action-icon:hover,
-.btn-action-icon:active,
-.gm-btn-icon:hover,
-.gm-btn-icon:active,
-.gm-budget-action-btn:not(.gm-grid-action-btn):hover,
-.gm-budget-action-btn:not(.gm-grid-action-btn):active {
-  background-color: var(--gm-primary, #FE540B) !important;
-  background: linear-gradient(135deg, var(--gm-accent, var(--gm-primary, #FE540B)) 0%, var(--gm-primary, #FE540B) 100%) !important;
-  color: #FFFFFF !important;
-  border-color: rgba(255, 255, 255, 0.35) !important;
-  box-shadow: 0 4px 20px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.5) !important;
-  transform: translateY(-1px);
-}
-
-/* TOGGLE BUTTON DA BARRA LATERAL (CIRCULAR, COR DO TEMA) */
+/* TOGGLE BUTTON DA BARRA LATERAL (CONTROLE DISCRETO FORGE) */
 .gm-sidebar-toggle {
   position: absolute !important;
-  top: 42px !important;
+  top: 40px !important;
   right: -13px !important;
   width: 26px !important;
   height: 26px !important;
   min-width: 26px !important;
   min-height: 26px !important;
-  border-radius: 50% !important;
-  background-color: var(--gm-primary, #FE540B) !important;
-  background: var(--gm-primary, #FE540B) !important;
-  color: #FFFFFF !important;
+  border-radius: 6px !important;
+  background-color: #131315 !important;
+  color: #F2F2F3 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
   z-index: 999 !important;
-  border: 2px solid rgba(255, 255, 255, 0.5) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.5) !important;
+  border: 1px solid #26262A !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
   padding: 0 !important;
-  transition: transform 0.15s ease, background-color 0.15s ease !important;
+  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), background-color 140ms ease, border-color 140ms ease, color 140ms ease !important;
 }
 .gm-sidebar-toggle:hover {
-  transform: none !important;
-  background-color: var(--gm-primary-hover, var(--gm-accent, #FF7A38)) !important;
-}
-
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-button:not(.btn-whatsapp):not(.bg-red-500):not(.bg-red-600):not(.text-red-500):not(.gm-btn-danger):not(.bg-emerald-500):not(.bg-green-500):not(.gm-grid-action-btn):not(.topbar-nav-link):not(.website-nav-btn):not(.mobile-nav-link):not([data-nav-link]):not(.forge-tabs__tab):not([class*="forge-tabs"]):active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.btn-action-edit:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.btn-action-edit:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.btn-action-neutral:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.btn-action-neutral:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.btn-action-icon:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.btn-action-icon:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.gm-btn-icon:hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.gm-btn-icon:active *:not(.whatsapp-icon):not([data-icon="whatsapp"]),
-.gm-budget-action-btn:not(.gm-grid-action-btn):hover *:not(.whatsapp-icon):not([data-icon="whatsapp"]) {
-  color: #FFFFFF !important;
-  stroke: #FFFFFF !important;
-  fill: none;
+  background-color: var(--gm-primary, #FE540B) !important;
+  border-color: var(--gm-primary, #FE540B) !important;
+  color: #0B0B0C !important;
 }
 
 /* =========================================================
@@ -10487,7 +10449,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
   background-color: var(--color-ember, var(--gm-btn-bg, var(--gm-primary, #FE540B))) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  color: var(--gm-btn-text, #0b0b0c) !important;
+  color: #ffffff !important;
   border: 1px solid var(--gm-primary, rgba(254, 84, 11, 0.35)) !important;
   border-radius: 4px !important;
   box-shadow: none !important;
@@ -10506,15 +10468,16 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
     transform 120ms ease !important;
 }
 
-/* Estado normal: Ícone dinâmico */
-.gm-viewmode-btn-active svg {
-  color: currentColor !important;
-  stroke: currentColor !important;
+/* Estado ativo selecionado: Ícone e Texto sempre brancos */
+.gm-viewmode-btn-active svg,
+.gm-viewmode-btn-active svg.lucide {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
   transition: color 140ms ease, stroke 140ms ease !important;
 }
 
 .gm-viewmode-btn-active span {
-  color: inherit !important;
+  color: #ffffff !important;
   transition: color 140ms ease !important;
 }
 
@@ -10850,7 +10813,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 .gm-pin-key {
   height: 50px !important;
   min-height: 50px !important;
-  border-radius: 16px !important;
+  border-radius: 6px !important;
   font-size: 21px !important;
   line-height: 1 !important;
   font-weight: 600 !important;
@@ -10872,7 +10835,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
     height: 44px !important;
     min-height: 44px !important;
     font-size: 19px !important;
-    border-radius: 14px !important;
+    border-radius: 6px !important;
   }
 }
 
@@ -10931,7 +10894,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
     min-height: 40px !important;
     font-size: 11px !important;
     font-weight: 900 !important;
-    border-radius: 9999px !important;
+    border-radius: 6px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -11127,16 +11090,14 @@ body,
 .glass-card,
 .cartao-de-vidro,
 .cartão-de-vidro {
-  width: auto;
-  max-width: 100%;
-  background: #121215 !important;
+  background: #131315 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 8px;
+  border: 1px solid #26262A !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .glass-card::before,
@@ -11193,16 +11154,16 @@ nav.gm-bottom-nav,
 .gm-table-container,
 .gm-table-card,
 #apple-permission-dialog {
-  background: #121215 !important;
-  background-color: #121215 !important;
+  background: #131315 !important;
+  background-color: #131315 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 8px 30px rgba(0, 0, 0, 0.4) !important;
-  color: #ffffff !important;
+  border-radius: 8px;
+  border: 1px solid #26262A !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 8px 28px rgba(0, 0, 0, 0.45) !important;
+  color: #F2F2F3 !important;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
   will-change: auto;
 }
 
@@ -11302,33 +11263,33 @@ nav.gm-bottom-nav::after,
   text-shadow: none !important;
 }
 
-/* Ícones de ação nos cards de orçamento (em repouso) */
+/* Ícones de ação nos cards de orçamento (Forge UI 4px) */
 .gm-grid-action-btn {
-  height: 40px !important;
-  background-color: #18181b !important;
-  background: #18181b !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  height: 36px !important;
+  background-color: #131315 !important;
+  background: #131315 !important;
+  border: 1px solid #26262A !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-radius: 10px !important;
-  transition: all 0.2s ease !important;
+  border-radius: 4px !important;
+  transition: background-color 140ms cubic-bezier(0.16, 1, 0.3, 1), border-color 140ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .gm-grid-action-btn:hover {
-  background-color: #27272a !important;
-  background: #27272a !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
+  background-color: #1B1B1E !important;
+  background: #1B1B1E !important;
+  border-color: #3F3F46 !important;
 }
 
 .gm-grid-action-btn .gm-grid-icon-wrap svg {
   filter: none !important;
 }
 
-/* Cápsulas de status inativas: Forge UI solid zinc */
+/* Cápsulas de status inativas: Forge UI */
 .gm-status-capsule:not(.bg-emerald-500\/10):not(.bg-emerald-500\/20):not(.bg-rose-500\/10):not(.bg-rose-500\/20):not(.bg-\[var\(--gm-primary\)\]\/10):not(.bg-\[var\(--gm-primary\)\]\/20) {
-  background: #18181b !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: #131315 !important;
+  border: 1px solid #26262A !important;
   color: #D4D4D8 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -11338,8 +11299,8 @@ nav.gm-bottom-nav::after,
 
 /* Cápsulas Grade e Listas */
 .gm-viewmode-btn-inactive {
-  background: #18181b !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: #131315 !important;
+  border: 1px solid #26262A !important;
   box-shadow: none !important;
   color: #D4D4D8 !important;
   backdrop-filter: none !important;
@@ -11353,21 +11314,21 @@ nav.gm-bottom-nav::after,
 /* Barra de pesquisa Forge UI */
 .gm-search-apple-glass,
 .gm-search-glass {
-  background: #18181b !important;
-  background-color: #18181b !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 12px !important;
+  background: #131315 !important;
+  background-color: #131315 !important;
+  border: 1px solid #26262A !important;
+  border-radius: 6px !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   position: relative !important;
   overflow: hidden !important;
-  transition: border-color 0.2s ease !important;
+  transition: border-color 140ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .gm-search-apple-glass:focus-within,
 .gm-search-glass:focus-within {
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: var(--gm-primary, #FE540B) !important;
 }
 
 .gm-search-apple-glass input,
@@ -11405,20 +11366,25 @@ header.sticky {
   box-shadow: none !important;
 }
 
-/* Overlay dos Modais */
+/* Overlay dos Modais (evitando escurecimento duplo em backdrops aninhados) */
 .gm-modal-overlay,
 .gm-customer-modal-overlay,
 #apple-permission-overlay,
 .gm-note-modal-overlay,
 div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
-div[class*="fixed inset-0"][class*="bg-black"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
-div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]) > div[class*="absolute inset-0"],
-div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]) > motion.div[class*="absolute inset-0"] {
+div[class*="fixed inset-0"][class*="bg-black"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
-  background: rgba(0, 0, 0, 0.75) !important;
-  background-color: rgba(0, 0, 0, 0.75) !important;
+  background: rgba(0, 0, 0, 0.72) !important;
+  background-color: rgba(0, 0, 0, 0.72) !important;
   will-change: auto;
+}
+
+div[class*="fixed inset-0"][class*="z-"] > div[class*="absolute inset-0"][class*="bg-black"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 
 [data-theme="light"] .gm-modal-overlay,
@@ -11636,6 +11602,104 @@ button[disabled].login-submit-btn {
   cursor: not-allowed !important;
 }
 
+/* =========================================================
+   PADRONIZAÇÃO PROFISSIONAL DE BOTÕES E ALINHAMENTO DE MENU
+   1. Menu lateral: ícone + legenda sempre alinhados à esquerda
+   2. Botões do app: ícone + legenda sempre juntos e centralizados
+   3. Geometria: botões quadrados/retangulares com leve arredondamento (4px-6px)
+   4. Feedback tátil: escala breve ao clicar (active:scale)
+   ========================================================= */
+aside.gm-sidebar:not(.collapsed) .sidebar-btn,
+aside.gm-sidebar:not(.collapsed) a.sidebar-btn {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  gap: 12px !important;
+}
 
+aside.gm-sidebar.collapsed .sidebar-btn,
+aside.gm-sidebar.collapsed a.sidebar-btn {
+  justify-content: center !important;
+}
 
+aside.gm-sidebar .sidebar-btn svg,
+aside.gm-sidebar a.sidebar-btn svg {
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
 
+button svg,
+a.forge-btn svg,
+a.gm-btn svg,
+a.tc-pill-btn svg {
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+button:not(.rounded-full):not([role="switch"]):not(.gm-floating-whatsapp-btn):not(.gm-floating-save-btn):not(.gm-sidebar-toggle):not(.gm-drawer-nav-btn),
+.gm-btn,
+.forge-btn,
+.tc-pill-btn {
+  border-radius: 6px;
+}
+
+.gm-floating-whatsapp-btn,
+button.gm-floating-whatsapp-btn,
+.gm-floating-save-btn,
+button.gm-floating-save-btn {
+  border-radius: 6px !important;
+}
+
+button:active:not(:disabled):not(.gm-sidebar-toggle):not(.forge-tabs__tab):not([data-no-scale]),
+a.forge-btn:active,
+a.gm-btn:active,
+.tc-pill-btn:active:not(:disabled),
+aside.gm-sidebar .sidebar-btn:active,
+[role="button"]:active:not(:disabled):not([data-no-scale]) {
+  transform: scale(0.965) !important;
+  transition: transform 110ms cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:active:not(:disabled),
+  a.forge-btn:active,
+  a.gm-btn:active,
+  .tc-pill-btn:active:not(:disabled),
+  aside.gm-sidebar .sidebar-btn:active,
+  [role="button"]:active:not(:disabled) {
+    transform: none !important;
+  }
+}
+
+/* =========================================================
+   BOTÕES SELECIONADOS: ÍCONES SEMPRE NA COR BRANCA (#FFFFFF)
+   Sobrescreve a regra global de cor dos ícones Lucide em <main>
+   ========================================================= */
+main button.gm-viewmode-btn-active svg,
+main button.gm-viewmode-btn-active svg.lucide,
+.gm-main button.gm-viewmode-btn-active svg.lucide,
+.gm-container button.gm-viewmode-btn-active svg.lucide,
+button.gm-viewmode-btn-active svg,
+main button[aria-pressed="true"] svg.lucide,
+.gm-main button[aria-pressed="true"] svg.lucide,
+.gm-container button[aria-pressed="true"] svg.lucide,
+main button[aria-selected="true"] svg.lucide,
+.gm-main button[aria-selected="true"] svg.lucide,
+.gm-container button[aria-selected="true"] svg.lucide,
+main button[data-selected="true"] svg.lucide,
+.gm-main button[data-selected="true"] svg.lucide,
+.gm-container button[data-selected="true"] svg.lucide,
+main button[data-active="true"] svg.lucide,
+.gm-main button[data-active="true"] svg.lucide,
+.gm-container button[data-active="true"] svg.lucide,
+main button.is-selected svg.lucide,
+.gm-main button.is-selected svg.lucide,
+.gm-container button.is-selected svg.lucide,
+button[aria-pressed="true"] svg,
+button[aria-selected="true"] svg,
+button[data-selected="true"] svg,
+button[data-active="true"] svg,
+button.is-selected svg,
+[role="tab"][aria-selected="true"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}

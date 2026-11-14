@@ -213,7 +213,21 @@ export default function Financial() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [tenantId]);
+
+  useEffect(() => {
+    if (!showHistory && !shareData) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (shareData) {
+        setShareData(null);
+        return;
+      }
+      if (showHistory) setShowHistory(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showHistory, shareData]);
 
   const resumo = useMemo(() => {
     const entradas = rows.reduce((a, r) => a + r.entradas, 0);
@@ -388,7 +402,7 @@ export default function Financial() {
             </button>
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="ml-1 px-2.5 py-1 text-[10px] uppercase font-black bg-[#1B1B1E] hover:bg-[var(--gm-primary,#FE540B)] text-[#8B8B92] hover:text-[var(--gm-primary-foreground,#0B0B0C)] border border-[#26262A] rounded-md transition-all h-[26px] flex items-center justify-center cursor-pointer shadow-none"
+              className="ml-1 px-2.5 py-1 text-[11px] uppercase font-black bg-[#1B1B1E] hover:bg-[var(--gm-primary,#FE540B)] text-[#8B8B92] hover:text-[var(--gm-primary-foreground,#0B0B0C)] border border-[#26262A] rounded-[4px] transition-all h-[26px] flex items-center justify-center cursor-pointer shadow-none"
             >
               Hoje
             </button>
@@ -575,7 +589,7 @@ export default function Financial() {
                     <h3 className="text-lg font-bold text-white">Relatório Detalhado</h3>
                     <span className="text-xs text-slate-400">Movimentações de {selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
                   </div>
-                  <div className="px-3.5 py-1.5 rounded-full border border-[var(--gm-primary)]/25 text-[var(--gm-primary)] text-xs font-bold bg-[var(--gm-primary)]/10 flex items-center gap-1.5">
+                  <div className="px-3 py-1 rounded-[4px] border border-[var(--gm-primary)]/25 text-[var(--gm-primary)] text-xs font-bold bg-[var(--gm-primary)]/10 flex items-center gap-1.5 tabular-nums">
                     <FileText size={14} />
                     <span>{transactions.length} {transactions.length === 1 ? "registro" : "registros"}</span>
                   </div>
@@ -604,9 +618,9 @@ export default function Financial() {
                                 key={t.id}
                                 className="grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/[0.04] transition-colors items-center"
                               >
-                                <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
+                                <div className="text-slate-400 font-mono text-xs tabular-nums">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
                                 <div className="font-medium text-slate-100">{t.desc}</div>
-                                <div className="text-right font-bold text-emerald-400">
+                                <div className="text-right font-bold text-emerald-400 tabular-nums">
                                   + {CURRENCY_FORMATTER.format(t.amount)}
                                 </div>
                               </div>
@@ -626,9 +640,9 @@ export default function Financial() {
                                 key={t.id}
                                 className="grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/[0.04] transition-colors items-center"
                               >
-                                <div className="text-slate-400 font-mono text-xs">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
+                                <div className="text-slate-400 font-mono text-xs tabular-nums">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
                                 <div className="font-medium text-slate-100">{t.desc}</div>
-                                <div className="text-right font-bold text-red-400">
+                                <div className="text-right font-bold text-red-400 tabular-nums">
                                   - {CURRENCY_FORMATTER.format(t.amount)}
                                 </div>
                               </div>
@@ -675,12 +689,12 @@ export default function Financial() {
 
       {/* Modal Histórico */}
       {showHistory && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={() => setShowHistory(false)}>
-          <div className={`gm-modal ${cardBase} rounded-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden`} onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-5 border-b border-white/10 barra">
-              <h2 className="text-2xl font-extrabold text-white">Histórico de Relatórios</h2>
-              <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white cursor-pointer">
-                <X size={20} />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4" onClick={() => setShowHistory(false)}>
+          <div className={`gm-modal ${cardBase} rounded-lg w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden shadow-2xl`} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-[#26262A] bg-[#0B0B0C]">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white">Histórico de Relatórios</h2>
+              <button onClick={() => setShowHistory(false)} className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] flex items-center justify-center transition-colors text-slate-400 hover:text-white cursor-pointer">
+                <X size={16} />
               </button>
             </div>
 
@@ -694,15 +708,15 @@ export default function Financial() {
                   {historyReports.map((rep) => (
                     <div
                       key={rep.id}
-                      className={`p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${cardBase}`}
+                      className="p-4 rounded-md border border-[#26262A] bg-[#0B0B0C] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                     >
                       <div>
                         <h4 className="font-bold text-lg text-white">{rep.title}</h4>
-                        <p className="text-sm text-slate-400 mt-1">
+                        <p className="text-sm text-slate-400 mt-1 tabular-nums">
                           Salvo em {new Date(rep.created_at).toLocaleDateString("pt-BR")} às{" "}
                           {new Date(rep.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                         </p>
-                        <div className="flex gap-4 mt-2 text-sm font-medium">
+                        <div className="flex flex-wrap gap-4 mt-2 text-sm font-medium tabular-nums">
                           <span className="text-emerald-400">Entradas: {CURRENCY_FORMATTER.format(rep.totals?.entradas || 0)}</span>
                           <span className="text-red-400">Saídas: {CURRENCY_FORMATTER.format(rep.totals?.saidas || 0)}</span>
                           <span className={rep.totals?.acumulado >= 0 ? "text-[var(--gm-primary)]" : "text-emerald-400"}>
@@ -732,7 +746,7 @@ export default function Financial() {
                             handleDeleteReport(rep.id);
                           }}
                           className={confirmDeleteId === rep.id 
-                            ? "h-10 px-4 rounded-xl bg-red-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer animate-pulse"
+                            ? "h-10 px-4 rounded-[6px] bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer whitespace-nowrap"
                             : listBtnClass("red")
                           }
                           title={confirmDeleteId === rep.id ? "Clique novamente para confirmar" : "Excluir Relatório"}
@@ -752,12 +766,12 @@ export default function Financial() {
 
       {/* Modal de Compartilhamento */}
       {shareData && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={() => setShareData(null)}>
-          <div className={`gm-modal ${cardBase} rounded-2xl w-full max-w-md overflow-hidden`} onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-white/10 flex justify-between items-center barra">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
+          <div className={`gm-modal ${cardBase} rounded-lg w-full max-w-md overflow-hidden shadow-2xl`} onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-[#26262A] bg-[#0B0B0C] flex justify-between items-center">
               <h3 className="text-xl font-extrabold text-white">Compartilhar Relatório</h3>
-              <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white cursor-pointer">
-                <X size={20} />
+              <button onClick={() => setShareData(null)} className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] flex items-center justify-center transition-colors text-slate-400 hover:text-white cursor-pointer">
+                <X size={16} />
               </button>
             </div>
             <div className="p-6 space-y-3">
@@ -830,7 +844,7 @@ export default function Financial() {
                   </div>
                   <div className="text-left">
                     <p className="font-bold text-[var(--gm-primary)] leading-tight">Mais Opções</p>
-                    <p className="text-[10px] text-slate-400 leading-tight">Menu de compartilhamento do sistema</p>
+                    <p className="text-[11px] text-slate-400 leading-tight">Menu de compartilhamento do sistema</p>
                   </div>
                 </button>
               )}

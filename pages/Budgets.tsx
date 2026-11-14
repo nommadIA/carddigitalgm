@@ -219,16 +219,16 @@ function VirtualizedBudgetList({
   handlePdf?: (id: string, tenant_id: string) => void;
 }) {
   const listBtnClass = (tone: "neutral" | "green" | "red" | "orange" = "orange") => {
-    const base = "gm-budget-action-btn w-7.5 h-7.5 sm:w-8 sm:h-8 !p-0 flex items-center justify-center shrink-0 rounded-full transition-all duration-150 cursor-pointer border";
-    if (tone === "orange") return `${base} border-[#1a0e08] hover:border-[#b33a0e] text-[#f4ecd8] bg-[#1a0e08] hover:bg-[#b33a0e] hover:text-[#f4ecd8] shadow-none`;
-    if (tone === "green") return `${base} border-[#1a0e08] hover:border-emerald-500 text-emerald-400 bg-[#1a0e08] hover:bg-emerald-600 hover:text-white shadow-none`;
-    if (tone === "red") return `${base} border-[#1a0e08] hover:border-red-500 text-red-400 bg-[#1a0e08] hover:bg-red-600 hover:text-white shadow-none`;
-    return `${base} border-[#1a0e08] hover:border-[#b33a0e] text-[#f4ecd8] bg-[#1a0e08] hover:bg-[#b33a0e] hover:text-[#f4ecd8] shadow-none`;
+    const base = "gm-budget-action-btn w-8 h-8 !p-0 flex items-center justify-center shrink-0 rounded-[6px] transition-all duration-150 cursor-pointer border";
+    if (tone === "orange") return `${base} border-[#26262A] hover:border-[#b33a0e] text-[#f4ecd8] bg-[#1B1B1E] hover:bg-[#b33a0e] hover:text-[#f4ecd8] shadow-none`;
+    if (tone === "green") return `${base} border-[#26262A] hover:border-emerald-500 text-emerald-400 bg-[#1B1B1E] hover:bg-emerald-600 hover:text-white shadow-none`;
+    if (tone === "red") return `${base} border-[#26262A] hover:border-red-500 text-red-400 bg-[#1B1B1E] hover:bg-red-600 hover:text-white shadow-none`;
+    return `${base} border-[#26262A] hover:border-[#b33a0e] text-[#f4ecd8] bg-[#1B1B1E] hover:bg-[#b33a0e] hover:text-[#f4ecd8] shadow-none`;
   };
 
   if (!items || items.length === 0) {
     return (
-      <div className="w-full fora rounded-2xl border border-white/10 p-10 sm:p-14 md:p-16 min-h-[220px] sm:min-h-[260px] flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02] backdrop-blur-md shadow-none select-none">
+      <div className="w-full rounded-lg border border-[#26262A] p-10 sm:p-14 md:p-16 min-h-[220px] sm:min-h-[260px] flex flex-col items-center justify-center text-center gap-4 bg-[#131315] shadow-none select-none">
         <p className="text-sm sm:text-base text-slate-200 font-semibold leading-relaxed">
           Nenhum orçamento para exibir nesta lista.
         </p>
@@ -240,7 +240,7 @@ function VirtualizedBudgetList({
     <div className="flex flex-col gap-2 w-full pb-10">
       {/* CABEÇALHO DO MODO LISTA NO DESKTOP */}
       <div className="hidden lg:block w-full overflow-x-auto no-scrollbar">
-        <div className="flex items-center min-w-[1260px] xl:min-w-0 w-full px-4 py-2 text-xs font-black uppercase tracking-wider select-none bg-white/[0.02] border border-white/5 rounded-xl backdrop-blur-sm">
+        <div className="flex items-center min-w-[1260px] xl:min-w-0 w-full px-4 py-2.5 text-xs font-black uppercase tracking-wider select-none bg-[#131315] border border-[#26262A] rounded-md">
           <div className="flex items-center gap-3 w-[330px] xl:w-[350px] shrink-0">
             <span className="w-7 text-center text-slate-400">EXP.</span>
             <span className="w-24 text-left text-[var(--gm-primary)] font-black">EMISSÃO</span>
@@ -286,7 +286,7 @@ function VirtualizedBudgetList({
             onMouseEnter={() => stopSignal?.(r.id)}
             onTouchStart={() => stopSignal?.(r.id)}
             onClick={() => stopSignal?.(r.id)}
-            className={`gm-budget-row barra rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 transition-all duration-200 relative border border-white/10 hover:border-white/20 hover:bg-white/[0.03] !min-h-0 min-h-0 h-auto !h-auto ${
+            className={`gm-budget-row bg-[#131315] rounded-md px-3.5 sm:px-4 py-2.5 transition-all duration-200 relative border border-[#26262A] hover:border-[#3F3F46] hover:bg-[#1B1B1E] !min-h-0 min-h-0 h-auto !h-auto ${
               isHighlighted ? "gm-signal-bottom-container" : ""
             }`}
           >
@@ -307,10 +307,10 @@ function VirtualizedBudgetList({
                       e.stopPropagation();
                       toggleRow(r.id);
                     }}
-                    className={`w-7 h-7 !w-7 !h-7 !p-0 p-0 rounded-lg flex items-center justify-center transition-all duration-200 border cursor-pointer shrink-0 backdrop-blur-md ${
+                    className={`w-7 h-7 !w-7 !h-7 !p-0 p-0 rounded-[4px] flex items-center justify-center transition-all duration-200 border cursor-pointer shrink-0 ${
                       isExpanded
-                        ? "bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] shadow-[0_0_12px_rgba(246,90,26,0.6)] scale-105"
-                        : "bg-white/[0.06] text-[var(--gm-primary)] border-white/15 hover:border-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/15 hover:text-white"
+                        ? "bg-[var(--gm-primary)] text-white border-[var(--gm-primary)] scale-105"
+                        : "bg-[#1B1B1E] text-[var(--gm-primary)] border-[#26262A] hover:border-[var(--gm-primary)] hover:bg-[var(--gm-primary)]/15 hover:text-white"
                     } active:scale-95`}
                     title={isExpanded ? "Recolher informações do orçamento" : `Expandir detalhes: ${clientDisplayName} • ${budgetTitle}`}
                     aria-expanded={isExpanded}
@@ -327,10 +327,10 @@ function VirtualizedBudgetList({
                     className="flex items-center gap-1.5 shrink-0 cursor-pointer select-none whitespace-nowrap"
                     title={`Data de Emissão: ${formattedDate}`}
                   >
-                    <span className="text-[10px] sm:text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
+                    <span className="text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
                       EMISSÃO
                     </span>
-                    <span className="text-xs font-mono font-bold text-white">
+                    <span className="text-xs font-mono tabular-nums font-bold text-white">
                       {formattedDate}
                     </span>
                   </div>
@@ -343,7 +343,7 @@ function VirtualizedBudgetList({
                     className="flex items-center gap-1.5 min-w-0 flex-1 cursor-pointer select-none"
                     title={`Cliente: ${clientDisplayName}`}
                   >
-                    <span className="text-[10px] sm:text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider shrink-0">
+                    <span className="text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider shrink-0">
                       CLIENTE:
                     </span>
                     <span className="text-xs font-black text-white uppercase tracking-tight truncate">
@@ -352,12 +352,12 @@ function VirtualizedBudgetList({
                   </div>
                 </div>
 
-                {/* CÁPSULAS DE STATUS - ALINHADAS À ESQUERDA (MANTENDO O ESPAÇO COMPACTO ENTRE ELAS) */}
+                {/* CÁPSULAS DE STATUS - ALINHADAS À ESQUERDA */}
                 <div className="flex items-center justify-start gap-1.5 w-[470px] shrink-0 pl-8">
                   {STATUS_OPTIONS.map((opt) => {
                     const isActive = currentStatus === opt.value;
                     const activeCls = pillClass(opt.value);
-                    const inactiveCls = "bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200";
+                    const inactiveCls = "bg-[#0B0B0C] border border-[#26262A] text-zinc-400 hover:bg-[#1B1B1E] hover:text-zinc-200";
                     return (
                       <button
                         key={opt.value}
@@ -366,7 +366,7 @@ function VirtualizedBudgetList({
                           e.stopPropagation();
                           updateStatusInstant(r.id, opt.value);
                         }}
-                        className={`gm-status-capsule fora h-6.5 sm:h-7 px-2 sm:px-2.5 rounded-full text-[9.5px] sm:text-[10px] font-extrabold tracking-tight transition-all flex items-center justify-center border cursor-pointer shrink-0 text-center whitespace-nowrap ${
+                        className={`gm-status-capsule h-7 px-2.5 rounded-[4px] text-[11px] font-extrabold tracking-tight transition-all flex items-center justify-center border cursor-pointer shrink-0 text-center whitespace-nowrap ${
                           isActive ? activeCls : inactiveCls
                         }`}
                         title={`Alterar status para ${opt.label}`}
@@ -383,13 +383,13 @@ function VirtualizedBudgetList({
                   className="flex items-center justify-start gap-1.5 w-[240px] shrink-0 pl-16 whitespace-nowrap cursor-pointer select-none"
                   title="Valor Total"
                 >
-                  <span className="text-[10px] sm:text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
+                  <span className="text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
                     VALOR:
                   </span>
-                  <span className="text-sm sm:text-base font-black text-white leading-none">
+                  <span className="text-sm sm:text-base font-black tabular-nums text-white leading-none">
                     {totalFormatted}
                   </span>
-                  <span className="text-[9.5px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
+                  <span className="text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
                     TOTAL
                   </span>
                 </div>
@@ -641,7 +641,7 @@ function VirtualizedBudgetGrid({
             onMouseEnter={() => stopSignal?.(r.id)}
             onTouchStart={() => stopSignal?.(r.id)}
             onClick={() => stopSignal?.(r.id)}
-            className={`gm-budget-card barra flex flex-col justify-between !p-4 transition-all duration-300 relative ${
+            className={`gm-budget-card bg-[#131315] border-[#26262A] rounded-lg flex flex-col justify-between !p-4 transition-all duration-300 relative ${
               isHighlighted ? "gm-signal-bottom-container" : ""
             }`}
           >
@@ -652,19 +652,19 @@ function VirtualizedBudgetGrid({
             {/* HEADER estruturado e equilibrado */}
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <div className="font-black truncate text-white text-[15px] sm:text-base tracking-tight uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                <div className="font-black truncate text-white text-[15px] sm:text-base tracking-tight uppercase">
                   {(r.client_name || "CLIENTE").toUpperCase()}
                 </div>
-                <div className="text-xs sm:text-sm truncate mt-0.5 font-bold text-slate-200 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
+                <div className="text-xs sm:text-sm truncate mt-0.5 font-bold text-zinc-300">
                   {r.title || "Orçamento"}
                 </div>
 
                 <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-white/15 text-slate-100 text-[11px] sm:text-xs font-bold backdrop-blur-md shadow-sm">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-zinc-200 text-[11px] sm:text-xs font-bold tabular-nums">
                     <Calendar size={13} className="text-[var(--gm-primary)] shrink-0" />
                     <span>{created ? created.toLocaleDateString("pt-BR") : "-"}</span>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-white/15 text-slate-100 text-[11px] sm:text-xs font-bold backdrop-blur-md shadow-sm">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-zinc-200 text-[11px] sm:text-xs font-bold tabular-nums">
                     <Clock size={13} className="text-[var(--gm-primary)] shrink-0" />
                     <span>{r.delivery_days ?? 5} dias úteis</span>
                   </div>
@@ -672,24 +672,24 @@ function VirtualizedBudgetGrid({
               </div>
 
               <div className="text-right shrink-0 pl-1">
-                <div className="font-black text-[17px] sm:text-[19px] text-[var(--gm-primary)] leading-tight drop-shadow-[0_1px_4px_rgba(254,84,11,0.35)]">
+                <div className="font-black text-[17px] sm:text-[19px] text-[var(--gm-primary)] leading-tight tabular-nums">
                   {CURRENCY.format(Number(r.total_amount || 0))}
                 </div>
-                <div className="text-[10px] sm:text-xs text-slate-300 font-black uppercase tracking-wider mt-0.5">
+                <div className="text-[11px] text-zinc-400 font-black uppercase tracking-wider mt-0.5">
                   Total
                 </div>
               </div>
             </div>
 
             {/* FOOTER: cápsulas + 6 botões organizados */}
-            <div className="mt-4 pt-3.5 border-t border-white/10 flex flex-col gap-2.5">
-              {/* Cápsulas de status uniformes (mais largas na altura no smartphone) */}
+            <div className="mt-4 pt-3.5 border-t border-[#26262A] flex flex-col gap-2.5">
+              {/* Cápsulas de status uniformes */}
               <div className="grid grid-cols-4 gap-1.5 sm:gap-2 w-full">
                 {sortedOptions.map((opt) => {
                   const isActive = currentStatus === opt.value;
                   const activeCls = pillClass(opt.value);
                   const inactiveCls =
-                    "bg-black/35 border border-white/15 text-slate-200 hover:bg-white/15 hover:text-white font-bold backdrop-blur-md shadow-sm";
+                    "bg-[#0B0B0C] border border-[#26262A] text-zinc-300 hover:bg-[#1B1B1E] hover:text-white font-bold";
 
                   return (
                     <button
@@ -699,7 +699,7 @@ function VirtualizedBudgetGrid({
                         e.stopPropagation();
                         updateStatusInstant(r.id, opt.value);
                       }}
-                      className={`gm-status-capsule fora w-full h-10 sm:h-7.5 min-h-[40px] sm:min-h-[30px] px-1 rounded-full text-[10.5px] sm:text-[10.5px] font-black tracking-tight transition-all truncate flex items-center justify-center border shadow-sm ${
+                      className={`gm-status-capsule w-full h-10 sm:h-8 min-h-[40px] sm:min-h-[32px] px-1 rounded-[4px] text-[11px] font-black tracking-tight transition-all truncate flex items-center justify-center border cursor-pointer ${
                         isActive ? activeCls : inactiveCls
                       }`}
                     >
@@ -818,7 +818,7 @@ function VirtualizedBudgetGrid({
                   <button
                     type="button"
                     onClick={() => restore(r.id)}
-                    className="h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer active:scale-95"
+                    className="h-10 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
                     title="Restaurar orçamento"
                   >
                     <RotateCcw size={16} />
@@ -827,7 +827,7 @@ function VirtualizedBudgetGrid({
                   <button
                     type="button"
                     onClick={() => confirmHardDelete(r.id)}
-                    className="h-11 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all cursor-pointer active:scale-95"
+                    className="h-10 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
                     title="Excluir definitivamente"
                   >
                     <Trash2 size={16} />
@@ -1054,6 +1054,18 @@ export default function Budgets() {
       }
     }
   };
+
+  useEffect(() => {
+    if (!shareData && !deleteConfirmId) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShareData(null);
+        setDeleteConfirmId(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [shareData, deleteConfirmId]);
 
   useEffect(() => {
     load();
@@ -1399,45 +1411,50 @@ export default function Budgets() {
       actions={
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* SELETOR DE MODO NO CABEÇALHO DO TOPO (FORGE UI SYSTEM) */}
-          <div className="flex items-center gap-1 p-1 bg-[#131315] border border-[#26262a] rounded">
+          <div className="flex items-center gap-1 p-1 bg-[#131315] border border-[#26262a] rounded-[4px] h-10">
             <button
               type="button"
               onClick={() => handleSetViewMode("grid")}
-              className={`h-7 px-2.5 rounded-[3px] text-[11px] font-semibold transition-all duration-150 flex items-center gap-1 cursor-pointer uppercase tracking-wider ${
+              aria-pressed={viewMode === "grid"}
+              data-selected={viewMode === "grid"}
+              className={`h-8 px-3 rounded-[4px] text-xs font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider ${
                 viewMode === "grid"
-                  ? "gm-viewmode-btn-active !h-7 !px-2.5"
-                  : "gm-viewmode-btn-inactive !h-7 !px-2.5"
+                  ? "gm-viewmode-btn-active !h-8 !px-3 font-bold text-white"
+                  : "gm-viewmode-btn-inactive !h-8 !px-3"
               }`}
               title="Visualização em Grade de Cards"
             >
-              <LayoutGrid size={13} />
+              <LayoutGrid size={14} className={viewMode === "grid" ? "shrink-0 text-white" : "shrink-0"} />
               <span>Grade</span>
             </button>
             <button
               type="button"
               onClick={() => handleSetViewMode("list")}
-              className={`h-7 px-2.5 rounded-[3px] text-[11px] font-semibold transition-all duration-150 flex items-center gap-1 cursor-pointer uppercase tracking-wider ${
+              aria-pressed={viewMode === "list"}
+              data-selected={viewMode === "list"}
+              className={`h-8 px-3 rounded-[4px] text-xs font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider ${
                 viewMode === "list"
-                  ? "gm-viewmode-btn-active !h-7 !px-2.5"
-                  : "gm-viewmode-btn-inactive !h-7 !px-2.5"
+                  ? "gm-viewmode-btn-active !h-8 !px-3 font-bold text-white"
+                  : "gm-viewmode-btn-inactive !h-8 !px-3"
               }`}
               title="Visualização em Listas com Linhas e Setas de Expansão"
             >
-              <List size={13} />
+              <List size={14} className={viewMode === "list" ? "shrink-0 text-white" : "shrink-0"} />
               <span>Listas</span>
             </button>
           </div>
 
           {/* BOTÃO PRIMÁRIO: FORGE BUTTON */}
           <button 
-            className="forge-btn forge-btn--primary" 
+            className="forge-btn forge-btn--primary !h-10 !px-4 !rounded-[6px] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150" 
             type="button" 
             onClick={() => setNewOpen(true)}
+            title="Criar Novo Orçamento"
           >
             <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
-              <Plus size={14} strokeWidth={2.5} className="forge-btn__icon gm-btn-plus-black" stroke="#0b0b0c" />
+              <Plus size={16} strokeWidth={2.8} className="w-4 h-4 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
             </span>
-            <span>Novo Orçamento</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Novo Orçamento</span>
           </button>
         </div>
       }
@@ -1484,7 +1501,7 @@ export default function Budgets() {
                 <SafeResponsive height={112}>
                   <BarChart data={statusSummary.chartData} barSize={22} margin={{ top: 10, right: 8, left: 8, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" stroke="#888" fontSize={9} tickLine={false} axisLine={false} interval={0} />
+                    <XAxis dataKey="name" stroke="#888" fontSize={11} tickLine={false} axisLine={false} interval={0} />
                     <YAxis hide domain={[0, (dataMax: number) => (dataMax > 0 ? dataMax * 1.2 : 100)]} />
                     <Tooltip
                       formatter={(val: number) => CURRENCY.format(val)}
@@ -1538,16 +1555,8 @@ export default function Budgets() {
         </div>
 
         {/* ✅ Divisor Mensal de Busca (JAN a DEZ) em Container Forge UI */}
-        <div 
-          className="space-y-2.5 p-3 sm:p-3.5 rounded-xl gm-card forge-card w-full"
-          style={{
-            background: "#121215",
-            borderRadius: "14px",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 8px 30px rgba(0, 0, 0, 0.4)",
-            position: "relative",
-            overflow: "hidden",
-          }}
+        <div
+          className="space-y-2.5 p-3.5 rounded-lg bg-[#131315] border border-[#26262A] w-full relative overflow-hidden"
         >
           <div className="flex items-center justify-between text-xs font-bold text-zinc-300 px-1">
             <span className="flex items-center gap-1.5 text-zinc-100 font-extrabold text-xs sm:text-sm">
@@ -1558,7 +1567,7 @@ export default function Budgets() {
               <span className="text-[var(--gm-primary)] font-extrabold flex items-center gap-1 text-xs">
                 {MONTHS.find((m) => m.key === selectedMonth)?.full}{" "}
                 {selectedMonth === currentCalMonth && (
-                  <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 font-bold ml-1">
+                  <span className="text-[11px] uppercase px-1.5 py-0.5 rounded-[4px] bg-[var(--gm-primary)]/20 text-[var(--gm-primary)] border border-[var(--gm-primary)]/30 font-bold ml-1">
                     Mês Atual
                   </span>
                 )}
@@ -1580,19 +1589,19 @@ export default function Budgets() {
                   type="button"
                   onClick={() => setSelectedMonth(m.key)}
                   className={cn(
-                    "relative w-full h-8 sm:h-9 rounded-xl text-[11px] sm:text-xs tracking-tight flex items-center justify-center gap-1 cursor-pointer select-none transition-colors duration-200 border",
+                    "relative w-full h-8 sm:h-9 rounded-[6px] text-[11px] sm:text-xs tracking-tight flex items-center justify-center gap-1 cursor-pointer select-none transition-colors duration-200 border",
                     isSelected
                       ? "border-transparent bg-transparent text-white font-black"
                       : isCurrent
                       ? "bg-[var(--gm-primary,#FE540B)]/10 border-[var(--gm-primary,#FE540B)]/45 text-orange-400 font-bold hover:bg-[var(--gm-primary,#FE540B)]/15"
-                      : "bg-[#18181b] border-white/[0.08] text-zinc-300 font-bold hover:border-white/20 hover:text-white hover:bg-[#202025]"
+                      : "bg-[#0B0B0C] border-[#26262A] text-zinc-300 font-bold hover:border-[#3F3F46] hover:text-white hover:bg-[#1B1B1E]"
                   )}
                   title={`${m.full}${isCurrent ? " (Mês Atual no Calendário)" : ""}`}
                 >
                   {isSelected && (
                     <motion.div
                       layoutId="active-month-capsule"
-                      className="absolute inset-0 rounded-xl border-2 border-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/15 shadow-[0_0_16px_rgba(254,84,11,0.35),inset_0_0_10px_rgba(254,84,11,0.12)] pointer-events-none"
+                      className="absolute inset-0 rounded-[6px] border-2 border-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/15 pointer-events-none"
                       initial={false}
                       transition={ELASTIC_SPRING}
                     />
@@ -1604,8 +1613,8 @@ export default function Budgets() {
                         className={cn(
                           "w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200",
                           isSelected
-                            ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]"
-                            : "bg-[var(--gm-primary,#FE540B)] animate-pulse shadow-[0_0_6px_rgba(254,84,11,0.6)]"
+                            ? "bg-white"
+                            : "bg-[var(--gm-primary,#FE540B)]"
                         )}
                       />
                     )}
@@ -1619,16 +1628,16 @@ export default function Budgets() {
               type="button"
               onClick={() => setSelectedMonth("TODOS")}
               className={cn(
-                "relative col-span-6 md:col-span-1 w-full h-8 sm:h-9 rounded-xl text-[11px] sm:text-xs tracking-tight flex items-center justify-center cursor-pointer select-none transition-colors duration-200 border",
+                "relative col-span-6 md:col-span-1 w-full h-8 sm:h-9 rounded-[6px] text-[11px] sm:text-xs tracking-tight flex items-center justify-center cursor-pointer select-none transition-colors duration-200 border",
                 selectedMonth === "TODOS"
                   ? "border-transparent bg-transparent text-white font-black"
-                  : "bg-[#18181b] border-white/[0.08] text-zinc-300 font-bold hover:border-white/20 hover:text-white hover:bg-[#202025]"
+                  : "bg-[#0B0B0C] border-[#26262A] text-zinc-300 font-bold hover:border-[#3F3F46] hover:text-white hover:bg-[#1B1B1E]"
               )}
             >
               {selectedMonth === "TODOS" && (
                 <motion.div
                   layoutId="active-month-capsule"
-                  className="absolute inset-0 rounded-xl border-2 border-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/15 shadow-[0_0_16px_rgba(254,84,11,0.35),inset_0_0_10px_rgba(254,84,11,0.12)] pointer-events-none"
+                  className="absolute inset-0 rounded-[6px] border-2 border-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/15 pointer-events-none"
                   initial={false}
                   transition={ELASTIC_SPRING}
                 />
@@ -1717,31 +1726,35 @@ export default function Budgets() {
         </div>
 
         {/* CÁPSULA 3: GRADE E LISTA - FORGE BUTTON STYLE */}
-        <div className="w-full grid grid-cols-2 gap-2">
+        <div className="w-full grid grid-cols-2 gap-2.5">
           <button
             type="button"
             onClick={() => handleSetViewMode("grid")}
-            className={`w-full h-9 rounded-[4px] text-[11.5px] font-semibold uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+            aria-pressed={viewMode === "grid"}
+            data-selected={viewMode === "grid"}
+            className={`w-full h-10 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
               viewMode === "grid"
-                ? "gm-viewmode-btn-active"
-                : "gm-viewmode-btn-inactive"
+                ? "gm-viewmode-btn-active !h-10 text-white"
+                : "gm-viewmode-btn-inactive !h-10"
             }`}
             title="Visualização em Grade de Cards"
           >
-            <LayoutGrid size={14} />
+            <LayoutGrid size={15} className={viewMode === "grid" ? "shrink-0 text-white" : "shrink-0"} />
             <span>Grade</span>
           </button>
           <button
             type="button"
             onClick={() => handleSetViewMode("list")}
-            className={`w-full h-9 rounded-[4px] text-[11.5px] font-semibold uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+            aria-pressed={viewMode === "list"}
+            data-selected={viewMode === "list"}
+            className={`w-full h-10 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
               viewMode === "list"
-                ? "gm-viewmode-btn-active"
-                : "gm-viewmode-btn-inactive"
+                ? "gm-viewmode-btn-active !h-10 text-white"
+                : "gm-viewmode-btn-inactive !h-10"
             }`}
             title="Visualização em Listas com Linhas e Setas de Expansão"
           >
-            <List size={14} />
+            <List size={15} className={viewMode === "list" ? "shrink-0 text-white" : "shrink-0"} />
             <span>Listas</span>
           </button>
         </div>
@@ -1757,8 +1770,8 @@ export default function Budgets() {
           ))}
         </Grid>
       ) : filtered.length === 0 ? (
-        <div className="w-full fora rounded-2xl border border-white/10 p-10 sm:p-14 md:p-16 min-h-[240px] sm:min-h-[280px] flex flex-col items-center justify-center text-center gap-4 bg-white/[0.02] backdrop-blur-md shadow-none select-none">
-          <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--gm-primary)] shadow-none">
+        <div className="w-full rounded-lg border border-[#26262A] p-10 sm:p-14 md:p-16 min-h-[240px] sm:min-h-[280px] flex flex-col items-center justify-center text-center gap-4 bg-[#131315] shadow-none select-none">
+          <div className="w-12 h-12 rounded-md bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center text-[var(--gm-primary)] shadow-none">
             <Calendar size={22} />
           </div>
           <p className="text-sm sm:text-base text-slate-200 font-semibold leading-relaxed max-w-lg px-4">
@@ -1768,7 +1781,7 @@ export default function Budgets() {
             <button
               type="button"
               onClick={() => setSelectedMonth("TODOS")}
-              className="gm-btn bg-[var(--gm-primary)] text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2 hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer mt-1"
+              className="forge-btn forge-btn--primary h-10 px-5 rounded-[6px] text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95 cursor-pointer mt-1 whitespace-nowrap"
             >
               <Calendar size={15} />
               <span>Ver todos os meses ({totalInCurrentTab} no total)</span>
@@ -1852,49 +1865,57 @@ export default function Budgets() {
 
       {/* Share Options Modal */}
       {shareData && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
-          <div className="gm-card w-full max-w-md rounded-lg overflow-hidden animate-slide-up !border-white/10" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <h3 className="text-lg font-bold">Compartilhar Orçamento</h3>
-              <button onClick={() => setShareData(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                <X size={20} />
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4" onClick={() => setShareData(null)}>
+          <div className="w-full max-w-md rounded-lg overflow-hidden bg-[#131315] border border-[#26262A] shadow-2xl text-white" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-[#26262A] flex justify-between items-center bg-[#131315]">
+              <h3 className="text-lg font-bold text-white">Compartilhar Orçamento</h3>
+              <button
+                type="button"
+                onClick={() => setShareData(null)}
+                className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-400 hover:text-white transition-colors flex items-center justify-center cursor-pointer shrink-0"
+                title="Fechar"
+              >
+                <X size={18} />
               </button>
             </div>
             
-            <div className="p-6 space-y-3">
-              <button 
+            <div className="p-5 space-y-3">
+              <button
+                type="button"
                 onClick={() => {
                   openWhatsapp("", shareData.message);
                   setShareData(null);
                 }}
-                className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                className="w-full rounded-[6px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] flex items-center gap-3.5 p-3.5 transition-all cursor-pointer text-left"
               >
-                <div className="shrink-0">
-                  <WhatsAppIcon size={24} className="text-[var(--gm-primary)]" />
+                <div className="shrink-0 w-10 h-10 rounded-[6px] bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                  <WhatsAppIcon size={20} className="text-emerald-400" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-[var(--gm-primary)] leading-tight">WhatsApp</p>
-                  <p className="text-[10px] text-white/70 leading-tight">Enviar diretamente para um contato</p>
+                  <p className="font-bold text-white leading-tight">WhatsApp</p>
+                  <p className="text-[11px] text-zinc-400 leading-tight mt-0.5">Enviar diretamente para um contato</p>
                 </div>
               </button>
 
-              <button 
+              <button
+                type="button"
                 onClick={() => {
                   window.open(`mailto:?subject=Orçamento - ${shareData.budget.client_name}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                   setShareData(null);
                 }}
-                className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                className="w-full rounded-[6px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] flex items-center gap-3.5 p-3.5 transition-all cursor-pointer text-left"
               >
-                <div className="shrink-0">
-                  <Mail size={24} className="text-[var(--gm-primary)]" />
+                <div className="shrink-0 w-10 h-10 rounded-[6px] bg-[var(--gm-primary)]/15 border border-[var(--gm-primary)]/30 flex items-center justify-center">
+                  <Mail size={20} className="text-[var(--gm-primary)]" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-[var(--gm-primary)] leading-tight">E-mail</p>
-                  <p className="text-[10px] text-white/70 leading-tight">Enviar por correio eletrônico</p>
+                  <p className="font-bold text-white leading-tight">E-mail</p>
+                  <p className="text-[11px] text-zinc-400 leading-tight mt-0.5">Enviar por correio eletrônico</p>
                 </div>
               </button>
 
-              <button 
+              <button
+                type="button"
                 onClick={async () => {
                   try {
                     await navigator.clipboard.writeText(shareData.message);
@@ -1904,19 +1925,20 @@ export default function Budgets() {
                     alert("Erro ao copiar texto.");
                   }
                 }}
-                className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                className="w-full rounded-[6px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] flex items-center gap-3.5 p-3.5 transition-all cursor-pointer text-left"
               >
-                <div className="shrink-0">
-                  <Copy size={24} className="text-[var(--gm-primary)]" />
+                <div className="shrink-0 w-10 h-10 rounded-[6px] bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
+                  <Copy size={20} className="text-blue-400" />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-[var(--gm-primary)] leading-tight">Copiar Texto</p>
-                  <p className="text-[10px] text-white/70 leading-tight">Copiar para colar em outro lugar</p>
+                  <p className="font-bold text-white leading-tight">Copiar Texto</p>
+                  <p className="text-[11px] text-zinc-400 leading-tight mt-0.5">Copiar para colar em outro lugar</p>
                 </div>
               </button>
 
               {navigator.share && (
-                <button 
+                <button
+                  type="button"
                   onClick={async () => {
                     try {
                       await navigator.share({
@@ -1930,14 +1952,14 @@ export default function Budgets() {
                       }
                     }
                   }}
-                  className="w-full gm-btn gm-btn-outline !justify-start !pl-3 gap-3 py-4"
+                  className="w-full rounded-[6px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] flex items-center gap-3.5 p-3.5 transition-all cursor-pointer text-left"
                 >
-                  <div className="shrink-0">
-                    <Share2 size={24} className="text-[var(--gm-primary)]" />
+                  <div className="shrink-0 w-10 h-10 rounded-[6px] bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
+                    <Share2 size={20} className="text-purple-400" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-[var(--gm-primary)] leading-tight">Mais Opções</p>
-                    <p className="text-[10px] text-white/70 leading-tight">Menu de compartilhamento do sistema</p>
+                    <p className="font-bold text-white leading-tight">Mais Opções</p>
+                    <p className="text-[11px] text-zinc-400 leading-tight mt-0.5">Menu de compartilhamento do sistema</p>
                   </div>
                 </button>
               )}
@@ -1948,29 +1970,31 @@ export default function Budgets() {
 
       {/* Hard Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
-          <div className="gm-card w-full max-w-sm rounded-[32px] overflow-hidden !border-white/10 relative z-10 animate-fade-in" onClick={e => e.stopPropagation()}>
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-[var(--gm-primary)]/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-[var(--gm-primary)]/20 shadow-[0_0_15px_var(--gm-primary-10)]">
-                <Trash2 size={32} className="text-[var(--gm-primary)]" />
+        <div className="fixed inset-0 z-[1000] bg-black/75 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setDeleteConfirmId(null)}>
+          <div className="w-full max-w-sm rounded-lg overflow-hidden bg-[#131315] border border-[#26262A] shadow-2xl relative z-10 text-white" onClick={e => e.stopPropagation()}>
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-red-500/10 rounded-md flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                <Trash2 size={22} className="text-red-500" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Excluir Definitivamente?</h3>
-              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+              <h3 className="text-lg font-extrabold text-white mb-2">Excluir Definitivamente?</h3>
+              <p className="text-zinc-400 text-xs mb-6 leading-relaxed font-mono">
                 Esta ação não pode ser desfeita. O orçamento será removido permanentemente do sistema.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-2.5">
                 <button
+                  type="button"
                   onClick={() => setDeleteConfirmId(null)}
-                  className="gm-btn gm-btn-outline flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black inline-flex items-center justify-center gap-2"
+                  className="forge-btn forge-btn--secondary flex-1 h-10 rounded-[6px] text-xs uppercase tracking-wider font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
                 >
-                  <X size={15} />
+                  <X size={14} />
                   <span>Cancelar</span>
                 </button>
                 <button
+                  type="button"
                   onClick={hardDelete}
-                  className="gm-btn flex-1 h-12 rounded-xl text-xs uppercase tracking-widest font-black shadow-[0_4px_15px_rgba(var(--gm-primary-rgb,254,84,11),0.3)] inline-flex items-center justify-center gap-2 bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-[var(--gm-primary-foreground,#0b0b0c)]"
+                  className="forge-btn bg-red-600 hover:bg-red-500 border border-red-600 text-white flex-1 h-10 rounded-[6px] text-xs uppercase tracking-wider font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
                 >
-                  <Trash2 size={15} />
+                  <Trash2 size={14} />
                   <span>Excluir</span>
                 </button>
               </div>

@@ -155,18 +155,18 @@ const AlarmToast = () => {
           <div
             key={alarm.id}
             style={{
-              background: "#121215",
-              borderRadius: "20px",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
+              background: "#131315",
+              borderRadius: "8px",
+              border: "1px solid #26262A",
+              boxShadow: "0 24px 48px -12px rgba(0, 0, 0, 0.88)",
             }}
-            className="pointer-events-auto w-[380px] max-w-[calc(100vw-24px)] rounded-[20px] p-4.5 sm:p-5 animate-scale-up sm:animate-slide-up transition-all relative overflow-hidden group"
+            className="pointer-events-auto w-[380px] max-w-[calc(100vw-24px)] rounded-lg p-4 sm:p-5 animate-scale-up sm:animate-slide-up transition-all relative overflow-hidden group"
           >
             {/* Header: FIVE ICON (Logo Oficial do App CardDigital GM) + Identificação do Sistema */}
-            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-white/[0.08] relative z-10">
+            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#26262A] relative z-10">
               <div className="flex items-center gap-2.5 min-w-0">
                 {/* FIVE ICON oficial do App CardDigital GM */}
-                <div className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-[9px] border border-white/10 flex items-center justify-center overflow-hidden shadow-sm bg-black shrink-0 !p-0">
+                <div className="w-7 h-7 rounded-[4px] border border-[#26262A] flex items-center justify-center overflow-hidden bg-[#0B0B0C] shrink-0 !p-0">
                   <img
                     src={officialAppLogo}
                     alt="CardDigital GM Oficial"
@@ -184,8 +184,8 @@ const AlarmToast = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-[10px] font-bold uppercase tracking-wider text-orange-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-orange-500/15 border border-orange-500/35 text-[11px] font-bold uppercase tracking-wider text-orange-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-ping" />
                   AGORA
                 </span>
               </div>
@@ -193,16 +193,16 @@ const AlarmToast = () => {
 
             <div className="flex items-start gap-3.5 relative z-10">
               {/* Icon Box: LOGO CADASTRADO PELA CONTA DO USUÁRIO */}
-              <div className="w-12 h-12 rounded-[16px] bg-[#18181c] border border-white/10 shadow-md flex items-center justify-center shrink-0 relative overflow-hidden p-1">
+              <div className="w-12 h-12 rounded-md bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center shrink-0 relative overflow-hidden p-1">
                 {userRegisteredLogo ? (
                   <img
                     src={userRegisteredLogo}
                     alt={companyName}
-                    className="w-full h-full object-contain rounded-[12px]"
+                    className="w-full h-full object-contain rounded-[4px]"
                   />
                 ) : (
                   <>
-                    <div className="absolute inset-0 bg-[var(--gm-primary)]/15 animate-pulse" />
+                    <div className="absolute inset-0 bg-[var(--gm-primary)]/10" />
                     <Bell size={20} className="text-[var(--gm-primary)] relative z-10 animate-bell-ring" />
                   </>
                 )}
@@ -214,7 +214,7 @@ const AlarmToast = () => {
                     {alarm.type === 'EXPENSE' ? 'Lembrete de Despesa' : alarm.type === 'NOTE' ? 'Lembrete de Nota' : 'Orçamento Aprovado'}
                   </div>
                   <button
-                    className="h-6 w-6 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 text-white/60 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0 -mt-0.5 border border-white/10"
+                    className="h-7 w-7 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] active:scale-95 text-[#8B8B92] hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 -mt-0.5 border border-[#26262A]"
                     onClick={(e) => { e.stopPropagation(); dismiss(alarm.id); }}
                     type="button"
                     title="Fechar"
@@ -224,7 +224,7 @@ const AlarmToast = () => {
                 </div>
 
                 {/* Clean, fully left-aligned description with smooth Typewriter typing animation */}
-                <div className="text-[12px] text-zinc-300 leading-relaxed text-left font-normal">
+                <div className="text-xs text-[#CBD5E1] leading-relaxed text-left font-normal">
                   <TypewriterText text={descriptionText} />
                 </div>
               </div>
@@ -233,7 +233,7 @@ const AlarmToast = () => {
             {/* Action Buttons: estilo sólido Forge UI */}
             <div className="flex items-center gap-2.5 mt-4 pt-0.5 relative z-10 w-full">
               <button
-                className="flex-1 h-9 rounded-xl bg-[#1c1c21] hover:bg-[#27272e] active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center border border-white/10 shadow-xs cursor-pointer"
+                className="flex-1 h-9 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center border border-[#26262A] cursor-pointer whitespace-nowrap"
                 onClick={(e) => { e.stopPropagation(); dismiss(alarm.id); }}
                 type="button"
               >
@@ -241,7 +241,7 @@ const AlarmToast = () => {
               </button>
 
               <button
-                className="flex-1 h-9 rounded-xl bg-[var(--gm-primary,#FE540B)] hover:brightness-110 active:scale-[0.98] text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center shadow-md shadow-[var(--gm-primary,#FE540B)]/30 cursor-pointer"
+                className="flex-1 h-9 rounded-[6px] bg-[var(--gm-primary,#FE540B)] hover:brightness-110 active:scale-[0.98] text-[#0B0B0C] text-[11px] font-black uppercase tracking-wider transition-colors flex items-center justify-center cursor-pointer whitespace-nowrap"
                 onClick={(e) => {
                   e.stopPropagation();
                   const targetId = alarm.budgetId;

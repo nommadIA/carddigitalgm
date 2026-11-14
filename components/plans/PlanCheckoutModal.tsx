@@ -95,6 +95,15 @@ export default function PlanCheckoutModal({
       .catch((err) => console.error("Erro gerando QR Code Pix:", err));
   }, [isOpen, selectedPlanId, pixPayment.payload]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleCopyPix = async () => {
@@ -162,76 +171,65 @@ export default function PlanCheckoutModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
-      style={{
-        background: "rgba(5, 5, 8, 0.75)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-      }}
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-black/75 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
         ref={checkoutModalRef}
-        className="w-full rounded-3xl p-5 sm:p-7 relative overflow-hidden flex flex-col gap-5 text-white border border-white/20 shadow-2xl select-text"
+        role="dialog"
+        aria-modal="true"
+        className="w-full rounded-lg p-5 sm:p-6 relative overflow-hidden flex flex-col gap-5 text-[#F2F2F3] border border-[#26262A] bg-[#131315] gm-modal shadow-2xl select-text"
         style={{
           width: checkoutModalSize.width ? `min(${checkoutModalSize.width}px, 94vw)` : "92%",
           maxWidth: checkoutModalSize.width ? `min(${checkoutModalSize.width}px, 94vw)` : "500px",
           height: checkoutModalSize.height ? `min(${checkoutModalSize.height}px, 92vh)` : undefined,
           maxHeight: checkoutModalSize.height ? `min(${checkoutModalSize.height}px, 92vh)` : "90vh",
           overflowY: "auto",
-          background: "rgba(13, 15, 23, 0.98)",
-          boxShadow: "0 25px 65px -12px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.35)",
+          background: "#131315",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Redimensionador de Caixa/Container (Igual ao de Notas) com os 4 cantos e bordas */}
         <ModalResizeHandles
           onResizeStart={handleCheckoutResizeStart}
           onResetSize={handleCheckoutResetSize}
           accentColor={plan.accentColor}
         />
 
-        {/* Glow de fundo */}
-        <div
-          className="absolute -top-24 -right-24 w-60 h-60 rounded-full blur-3xl pointer-events-none opacity-20"
-          style={{ backgroundColor: plan.accentColor }}
-        />
-
         {/* Header do Modal */}
-        <div className="flex items-start justify-between gap-4 relative z-10 border-b border-white/15 pb-4">
+        <div className="flex items-start justify-between gap-4 relative z-10 border-b border-[#26262A] pb-4">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <span
-                className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                className="text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-[4px] border"
                 style={{
-                  backgroundColor: `${plan.accentColor}25`,
-                  borderColor: `${plan.accentColor}60`,
+                  backgroundColor: `${plan.accentColor}20`,
+                  borderColor: `${plan.accentColor}50`,
                   color: plan.accentColor,
                 }}
               >
                 {plan.badge || "Plano"}
               </span>
-              <span className="text-xs text-slate-200 font-semibold">Assinatura Mensal</span>
+              <span className="text-xs text-[#8B8B92] font-semibold">Assinatura Mensal</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white mt-1 drop-shadow-sm">
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
               Plano {plan.name}
             </h2>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-sm font-bold text-slate-300">R$</span>
-              <span className="text-3xl font-black text-white tracking-tight drop-shadow-sm">
+            <div className="flex items-baseline gap-1 mt-0.5 tabular-nums">
+              <span className="text-sm font-bold text-[#CBD5E1]">R$</span>
+              <span className="text-3xl font-black text-white tracking-tight">
                 {effectivePrice.toFixed(2).replace(".", ",")}
               </span>
-              <span className="text-xs text-slate-300 font-semibold">/mês</span>
+              <span className="text-xs text-[#8B8B92] font-semibold">/mês</span>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 font-bold"
+            className="w-9 h-9 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-[#8B8B92] hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
             aria-label="Fechar"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
@@ -240,26 +238,26 @@ export default function PlanCheckoutModal({
           <button
             type="button"
             onClick={() => setMethod("pix")}
-            className={`py-3 px-4 rounded-2xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`h-10 px-4 rounded-[6px] border font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${
               method === "pix"
-                ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-                : "bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white"
+                ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-400"
+                : "bg-[#0B0B0C] border-[#26262A] text-[#8B8B92] hover:bg-[#1B1B1E] hover:text-white"
             }`}
           >
-            <QrCode size={18} />
+            <QrCode size={16} />
             <span>Pix Instantâneo</span>
           </button>
 
           <button
             type="button"
             onClick={() => setMethod("card")}
-            className={`py-3 px-4 rounded-2xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`h-10 px-4 rounded-[6px] border font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${
               method === "card"
-                ? "bg-[var(--gm-primary)]/15 border-[var(--gm-primary)]/50 text-[var(--gm-primary)] shadow-[0_0_20px_rgba(254,84,11,0.2)]"
-                : "bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white"
+                ? "bg-[var(--gm-primary)]/15 border-[var(--gm-primary)]/50 text-[var(--gm-primary)]"
+                : "bg-[#0B0B0C] border-[#26262A] text-[#8B8B92] hover:bg-[#1B1B1E] hover:text-white"
             }`}
           >
-            <CreditCard size={18} />
+            <CreditCard size={16} />
             <span>Cartão / Link</span>
           </button>
         </div>
@@ -268,7 +266,7 @@ export default function PlanCheckoutModal({
         {method === "pix" && (
           <div className="flex flex-col items-center gap-4 relative z-10">
             {qrCodeUrl ? (
-              <div className="p-3 bg-white rounded-2xl shadow-xl flex items-center justify-center">
+              <div className="p-3 bg-white rounded-md border border-[#26262A] flex items-center justify-center">
                 <img
                   src={qrCodeUrl}
                   alt="QR Code Pix"
@@ -276,21 +274,21 @@ export default function PlanCheckoutModal({
                 />
               </div>
             ) : (
-              <div className="w-48 h-48 sm:w-52 sm:h-52 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
-                <span className="text-xs text-zinc-400">Carregando QR Code...</span>
+              <div className="w-48 h-48 sm:w-52 sm:h-52 bg-[#0B0B0C] rounded-md flex items-center justify-center border border-[#26262A]">
+                <span className="text-xs text-[#8B8B92]">Carregando QR Code...</span>
               </div>
             )}
 
             <div className="w-full flex flex-col gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 text-center">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8B8B92] text-center">
                 Pix Copia e Cola
               </span>
-              <div className="flex items-center gap-2 bg-black/40 border border-white/15 rounded-xl p-2 w-full">
+              <div className="flex items-center gap-2 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] p-1.5 w-full">
                 <input
                   type="text"
                   readOnly
                   value={pixPayment.payload}
-                  className="bg-transparent border-0 text-xs text-zinc-300 font-mono flex-1 outline-none truncate px-1"
+                  className="bg-transparent border-0 text-xs text-[#CBD5E1] font-mono flex-1 outline-none truncate px-2"
                 />
                 <button
                   type="button"
@@ -319,7 +317,7 @@ export default function PlanCheckoutModal({
             <button
               type="button"
               onClick={handleOpenWhatsappReceipt}
-              className="w-full py-3.5 px-5 rounded-md bg-[#131315] hover:bg-[#1B1B1E] border border-[#25D366] text-[#25D366] hover:text-white hover:bg-[#25D366] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all duration-150 cursor-pointer shadow-sm active:scale-95"
+              className="w-full py-3.5 px-5 rounded-[6px] bg-[#131315] border border-[#25D366] text-[#25D366] hover:text-white hover:bg-[#25D366] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all duration-150 cursor-pointer shadow-sm active:scale-95"
             >
               <MessageCircle size={18} />
               <span>Já realizei o Pix · Enviar Comprovante no WhatsApp</span>
@@ -341,14 +339,14 @@ export default function PlanCheckoutModal({
                   href={externalLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-4 px-5 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] transition-all cursor-pointer active:scale-95"
+                  className="w-full py-4 px-5 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] transition-all cursor-pointer active:scale-95"
                 >
                   <span>Pagar com Cartão de Crédito</span>
                   <ExternalLink size={16} className="text-current" />
                 </a>
               </div>
             ) : (
-              <div className="flex flex-col gap-3 p-4 rounded-xl bg-[#131315] border border-[#26262A] text-center">
+              <div className="flex flex-col gap-3 p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] text-center">
                 <div className="w-12 h-12 rounded-md bg-[var(--gm-primary,#FE540B)]/10 border border-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] flex items-center justify-center mx-auto">
                   <CreditCard size={22} />
                 </div>
@@ -359,7 +357,7 @@ export default function PlanCheckoutModal({
                 <button
                   type="button"
                   onClick={handleOpenWhatsappReceipt}
-                  className="w-full py-3 px-4 rounded-md border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer mt-1 active:scale-95 shadow-sm"
+                  className="w-full py-3 px-4 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer mt-1 active:scale-95 shadow-sm"
                 >
                   <MessageCircle size={16} className="text-emerald-400" />
                   <span>Solicitar Link de Cartão no WhatsApp</span>

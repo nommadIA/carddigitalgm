@@ -148,6 +148,15 @@ export default function Plans() {
     };
   }, [tenantId, user]);
 
+  useEffect(() => {
+    if (!isAdminEditOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsAdminEditOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isAdminEditOpen]);
+
   const handleOpenCheckout = (planId: PlanId) => {
     setSelectedPlanForCheckout(planId);
   };
@@ -219,45 +228,35 @@ export default function Plans() {
             1. HERO BANNER FORGE DESIGN (Inspirado no Designers Hub, adaptado para GM)
            ========================================================================= */}
         <div 
-          className="relative w-full rounded-2xl p-6 sm:p-10 border border-[#26262a] overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #121215 0%, #0d0d0f 100%)",
-            boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 40px rgba(0, 0, 0, 0.6)"
-          }}
+          className="relative w-full rounded-lg p-6 sm:p-10 border border-[#26262A] bg-[#131315] overflow-hidden"
         >
-          {/* Efeito Glow Ember Forge de fundo */}
-          <div 
-            className="absolute -right-20 -top-20 w-96 h-96 rounded-full pointer-events-none opacity-20 blur-3xl"
-            style={{ background: "radial-gradient(circle, var(--gm-primary, #FE540B) 0%, transparent 70%)" }}
-          />
-
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex flex-col gap-3 max-w-2xl">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#1b1b1e] text-[var(--gm-primary,#FE540B)] border border-[#2f2f34]">
+                <span className="px-2.5 py-1 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-[#1B1B1E] text-[var(--gm-primary,#FE540B)] border border-[#26262A]">
                   GM Edificação • Planos Oficiais
                 </span>
-                <span className="px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-white/5 text-zinc-400 border border-white/10">
+                <span className="px-2.5 py-1 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-[#0B0B0C] text-[#8B8B92] border border-[#26262A]">
                   Feito para Construtores & Prestadores
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#f2f2f3] tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#F2F2F3] tracking-tight leading-tight">
                 Seu próximo passo profissional.
               </h1>
 
-              <p className="text-sm sm:text-base text-zinc-400 leading-relaxed font-normal">
+              <p className="text-sm sm:text-base text-[#8B8B92] leading-relaxed font-normal">
                 Orçamentos rápidos em PDF A4 timbrado, catálogo de materiais, controle de clientes, despesas e envio no WhatsApp em 1 clique. Escolha o ritmo da sua produção.
               </p>
 
-              <div className="flex items-center gap-3 pt-2 text-xs font-mono text-zinc-400 flex-wrap">
+              <div className="flex items-center gap-3 pt-2 text-xs font-mono text-[#8B8B92] flex-wrap">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[var(--gm-primary,#FE540B)]" />
                   Planos mensais
                 </span>
-                <span className="text-zinc-600">•</span>
+                <span className="text-[#3F3F46]">•</span>
                 <span>Cancele quando quiser</span>
-                <span className="text-zinc-600">•</span>
+                <span className="text-[#3F3F46]">•</span>
                 <span className="text-emerald-400 font-bold">Ativação imediata via Pix & Cartão</span>
               </div>
             </div>
@@ -269,7 +268,7 @@ export default function Plans() {
                   <button
                     type="button"
                     onClick={handleOpenAdminEdit}
-                    className="py-3 px-4 rounded bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#09090b)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[var(--gm-primary,#FE540B)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))]"
+                    className="h-10 px-4 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] whitespace-nowrap shrink-0"
                   >
                     <Settings size={15} />
                     <span>Configurar Planos & Preços (ADM)</span>
@@ -277,7 +276,7 @@ export default function Plans() {
 
                   <a
                     href="/admin/usuarios"
-                    className="py-3 px-4 rounded bg-[#1b1b1e] hover:bg-[#25252a] text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-[#2f2f34] hover:border-amber-500/40 transition-all cursor-pointer shadow-sm"
+                    className="h-10 px-4 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-[#26262A] hover:border-amber-500/40 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                   >
                     <Users size={15} className="text-amber-400" />
                     <span>Gerenciar Usuários & Liberações</span>
@@ -292,45 +291,41 @@ export default function Plans() {
             2. CARD DE STATUS DO PLANO ATUAL (SEU PLANO ATUAL)
            ========================================================================= */}
         <div 
-          className="w-full p-5 sm:p-6 rounded-xl border border-[#26262a] flex flex-col md:flex-row md:items-center justify-between gap-4"
-          style={{
-            background: "#121215",
-            boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.05)"
-          }}
+          className="w-full p-5 sm:p-6 rounded-lg border border-[#26262A] bg-[#131315] flex flex-col md:flex-row md:items-center justify-between gap-4"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-[#1b1b1e] border border-[#2f2f34] text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-md bg-[#0B0B0C] border border-[#26262A] text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
               {subscription.isSuperAdmin ? (
-                <Award size={24} className="text-amber-400" />
+                <Award size={22} className="text-amber-400" />
               ) : (
-                <CheckCircle2 size={24} className="text-[var(--gm-primary,#FE540B)]" />
+                <CheckCircle2 size={22} className="text-[var(--gm-primary,#FE540B)]" />
               )}
             </div>
 
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-white/5 text-zinc-400 border border-white/10">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-[#0B0B0C] text-[#8B8B92] border border-[#26262A]">
                   SEU PLANO ATUAL
                 </span>
                 {subscription.isSuperAdmin && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
                     Acesso Master Ilimitado
                   </span>
                 )}
               </div>
 
-              <h3 className="text-lg sm:text-xl font-black text-[#f2f2f3]">
+              <h3 className="text-lg sm:text-xl font-black text-[#F2F2F3]">
                 {subscription.planName}
               </h3>
 
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-[#8B8B92] tabular-nums">
                 {subscription.isSuperAdmin ? (
                   "Conta administrativa principal liberada com acesso permanente e irrestrito a todos os módulos."
                 ) : (
                   <>
                     Consulte o estado da sua assinatura em cobrança •{" "}
                     {subscription.expiresAt ? (
-                      <>Fim do período: <strong className="text-zinc-200">{new Date(subscription.expiresAt).toLocaleDateString("pt-BR")}</strong> • </>
+                      <>Fim do período: <strong className="text-[#CBD5E1]">{new Date(subscription.expiresAt).toLocaleDateString("pt-BR")}</strong> • </>
                     ) : null}
                     <strong className="text-[var(--gm-primary,#FE540B)]">
                       {subscription.daysRemaining === "ilimitado" ? "Acesso Ilimitado" : `${subscription.daysRemaining} dias restantes`}
@@ -345,7 +340,7 @@ export default function Plans() {
             <button
               type="button"
               onClick={() => handleOpenCheckout("intermediario")}
-              className="py-2.5 px-4 rounded border border-[#2f2f34] bg-[#18181b] hover:bg-[#202024] text-zinc-200 hover:text-white font-mono text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2"
+              className="h-10 px-4 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#1B1B1E] hover:bg-[#26262A] text-[#CBD5E1] hover:text-white font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap"
             >
               <span>Gerenciar assinatura</span>
               <ArrowRight size={14} className="text-[var(--gm-primary,#FE540B)]" />
@@ -362,35 +357,31 @@ export default function Plans() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           {/* 1. PLANO ESSENCIAL (BÁSICO) */}
           <div 
-            className="flex flex-col justify-between p-6 sm:p-8 rounded-xl border border-[#26262a] relative overflow-hidden transition-all duration-200 hover:border-[#38383e]"
-            style={{
-              background: "#121215",
-              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.05)"
-            }}
+            className="flex flex-col justify-between p-6 sm:p-8 rounded-lg border border-[#26262A] bg-[#131315] relative overflow-hidden transition-colors duration-200 hover:border-[#3F3F46]"
           >
             <div className="flex flex-col gap-6">
               {/* Tag Superior */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#8B8B92]">
                   PARA O DIA A DIA
                 </span>
-                <h3 className="text-2xl font-black text-[#f2f2f3] tracking-tight">
+                <h3 className="text-2xl font-black text-[#F2F2F3] tracking-tight">
                   {PLANS_DATA.basico.name}
                 </h3>
-                <p className="text-xs text-zinc-400 min-h-[36px] leading-relaxed">
+                <p className="text-xs text-[#8B8B92] min-h-[36px] leading-relaxed">
                   {PLANS_DATA.basico.tagline}
                 </p>
               </div>
 
               {/* Preço */}
-              <div className="flex items-baseline gap-1 py-1">
-                <span className="text-sm font-black text-zinc-400">R$</span>
-                <span className="text-4xl sm:text-5xl font-black text-[#f2f2f3] tracking-tight">
+              <div className="flex items-baseline gap-1 py-1 tabular-nums">
+                <span className="text-sm font-black text-[#8B8B92]">R$</span>
+                <span className="text-4xl sm:text-5xl font-black text-[#F2F2F3] tracking-tight">
                   {config.priceBasico.toFixed(2).replace(".", ",")}
                 </span>
-                <span className="text-xs text-zinc-400 font-mono">/mês</span>
+                <span className="text-xs text-[#8B8B92] font-mono">/mês</span>
               </div>
-              <span className="text-[11px] text-zinc-500 font-mono -mt-4">
+              <span className="text-[11px] text-[#8B8B92] font-mono -mt-4">
                 Assinatura mensal flexível
               </span>
 
@@ -398,34 +389,34 @@ export default function Plans() {
               <button
                 type="button"
                 onClick={() => handleOpenCheckout("basico")}
-                className="w-full py-3.5 px-4 rounded border border-[#2f2f34] bg-[#18181b] hover:bg-[#202024] hover:border-zinc-500 text-zinc-200 hover:text-white font-mono text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 shadow-sm"
+                className="w-full h-11 px-4 rounded-[6px] border border-[#26262A] bg-[#1B1B1E] hover:bg-[#26262A] hover:border-[#3F3F46] text-[#CBD5E1] hover:text-white font-mono text-xs uppercase tracking-wider transition-colors duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 <span>Assinar Essencial</span>
-                <ArrowRight size={14} className="text-zinc-400" />
+                <ArrowRight size={14} className="text-[#8B8B92]" />
               </button>
-              <span className="text-[10px] text-zinc-500 text-center font-mono -mt-3">
+              <span className="text-[11px] text-[#8B8B92] text-center font-mono -mt-3">
                 Revise as condições antes de confirmar
               </span>
 
-              <div className="w-full h-[1px] bg-[#26262a] my-1" />
+              <div className="w-full h-[1px] bg-[#26262A] my-1" />
 
               {/* Cota Destaque */}
-              <div className="flex items-baseline gap-2.5 bg-[#0e0e10] p-3 rounded border border-[#26262a]">
+              <div className="flex items-baseline gap-2.5 bg-[#0B0B0C] p-3 rounded-md border border-[#26262A] tabular-nums">
                 <span className="text-3xl font-black text-sky-400 font-mono">
                   {PLANS_DATA.basico.quotaLabel}
                 </span>
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-[#f2f2f3] leading-tight">orçamentos por mês</span>
-                  <span className="text-[10px] text-zinc-400 font-mono">Renovação mensal da cota</span>
+                  <span className="text-xs font-black text-[#F2F2F3] leading-tight">orçamentos por mês</span>
+                  <span className="text-[11px] text-[#8B8B92] font-mono">Renovação mensal da cota</span>
                 </div>
               </div>
 
               {/* Checklist de Recursos Incluídos */}
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#8B8B92]">
                   Ferramentas Incluídas
                 </span>
-                <ul className="flex flex-col gap-2.5 text-xs text-zinc-300">
+                <ul className="flex flex-col gap-2.5 text-xs text-[#CBD5E1]">
                   {PLANS_DATA.basico.features.map((feat) => (
                     <li key={feat} className="flex items-start gap-2.5">
                       <Check size={15} className="text-sky-400 shrink-0 mt-0.5 stroke-[2.5]" />
@@ -436,11 +427,11 @@ export default function Plans() {
               </div>
 
               {/* Não incluídas */}
-              <div className="flex flex-col gap-2 pt-2 border-t border-[#26262a]">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500">
+              <div className="flex flex-col gap-2 pt-2 border-t border-[#26262A]">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#8B8B92]">
                   Não Incluídas no Básico
                 </span>
-                <ul className="flex flex-col gap-2 text-xs text-zinc-500">
+                <ul className="flex flex-col gap-2 text-xs text-[#8B8B92]">
                   <li className="flex items-center gap-2.5">
                     <X size={14} className="text-zinc-600 shrink-0" />
                     <span>Papel Timbrado A4 Oficial</span>
@@ -458,7 +449,7 @@ export default function Plans() {
             </div>
 
             {/* Rodapé do Card */}
-            <div className="border-t border-[#26262a] pt-4 mt-6 flex items-center justify-between text-xs font-mono text-zinc-400">
+            <div className="border-t border-[#26262A] pt-4 mt-6 flex items-center justify-between text-xs font-mono text-[#8B8B92]">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-sky-400" />
                 Pix & Cartão
@@ -469,15 +460,11 @@ export default function Plans() {
 
           {/* 2. PLANO CRIADOR (INTERMEDIÁRIO - CARD PRINCIPAL / MAIS POPULAR) */}
           <div 
-            className="flex flex-col justify-between p-6 sm:p-8 rounded-xl border-2 border-[var(--gm-primary,#FE540B)] relative overflow-hidden transition-all duration-200 shadow-[0_16px_50px_-10px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] scale-[1.02] z-10"
-            style={{
-              background: "#161619",
-              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 50px -10px rgba(var(--gm-primary-rgb,246,90,26), 0.25)"
-            }}
+            className="flex flex-col justify-between p-6 sm:p-8 rounded-lg border-2 border-[var(--gm-primary,#FE540B)] bg-[#131315] relative overflow-hidden transition-colors duration-200 z-10"
           >
             {/* Tag Flutuante Mais Escolhido */}
             <div className="absolute top-4 right-4">
-              <span className="px-2.5 py-1 rounded text-[10px] font-mono font-black uppercase tracking-wider bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#09090b)] flex items-center gap-1 shadow-md">
+              <span className="px-2.5 py-1 rounded-[4px] text-[11px] font-mono font-black uppercase tracking-wider bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0B0B0C)] flex items-center gap-1">
                 <Sparkles size={11} className="text-current" />
                 <span>Mais Escolhido</span>
               </span>
@@ -486,26 +473,26 @@ export default function Plans() {
             <div className="flex flex-col gap-6">
               {/* Header do Card */}
               <div className="flex flex-col gap-1.5 pr-24">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
                   MAIS ESPAÇO PARA CRIAR
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-black text-[#f2f2f3] tracking-tight">
+                <h3 className="text-2xl sm:text-3xl font-black text-[#F2F2F3] tracking-tight">
                   {PLANS_DATA.intermediario.name}
                 </h3>
-                <p className="text-xs text-zinc-300 min-h-[36px] leading-relaxed">
+                <p className="text-xs text-[#CBD5E1] min-h-[36px] leading-relaxed">
                   {PLANS_DATA.intermediario.tagline}
                 </p>
               </div>
 
               {/* Preço */}
-              <div className="flex items-baseline gap-1 py-1">
-                <span className="text-sm font-black text-zinc-300">R$</span>
-                <span className="text-4xl sm:text-5xl font-black text-[#f2f2f3] tracking-tight">
+              <div className="flex items-baseline gap-1 py-1 tabular-nums">
+                <span className="text-sm font-black text-[#CBD5E1]">R$</span>
+                <span className="text-4xl sm:text-5xl font-black text-[#F2F2F3] tracking-tight">
                   {config.priceIntermediario.toFixed(2).replace(".", ",")}
                 </span>
-                <span className="text-xs text-zinc-300 font-mono">/mês</span>
+                <span className="text-xs text-[#CBD5E1] font-mono">/mês</span>
               </div>
-              <span className="text-[11px] text-zinc-400 font-mono -mt-4">
+              <span className="text-[11px] text-[#8B8B92] font-mono -mt-4">
                 Assinatura mensal mais vendida
               </span>
 
@@ -513,33 +500,33 @@ export default function Plans() {
               <button
                 type="button"
                 onClick={() => handleOpenCheckout("intermediario")}
-                className="w-full py-4 px-4 rounded border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#09090b)] font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.3),0_4px_14px_rgba(var(--gm-primary-rgb,246,90,26),0.35)]"
+                className="w-full h-11 px-4 rounded-[6px] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                <Check size={18} className="text-current stroke-[3]" />
+                <Check size={17} className="text-current stroke-[3]" />
                 <span>
                   {subscription.planId === "intermediario" ? "Seu plano atual" : "Assinar Criador"}
                 </span>
               </button>
-              <span className="text-[10px] text-zinc-400 text-center font-mono -mt-3">
+              <span className="text-[11px] text-[#8B8B92] text-center font-mono -mt-3">
                 O mais equilibrado para quem produz e fatura diariamente
               </span>
 
-              <div className="w-full h-[1px] bg-white/10 my-1" />
+              <div className="w-full h-[1px] bg-[#26262A] my-1" />
 
               {/* Cota Destaque */}
-              <div className="flex items-baseline gap-2.5 bg-[#0e0e10] p-3 rounded border border-[var(--gm-primary,#FE540B)]/30 shadow-inner">
+              <div className="flex items-baseline gap-2.5 bg-[#0B0B0C] p-3 rounded-md border border-[var(--gm-primary,#FE540B)]/30 tabular-nums">
                 <span className="text-3xl font-black text-[var(--gm-primary,#FE540B)] font-mono">
                   {PLANS_DATA.intermediario.quotaLabel}
                 </span>
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-[#f2f2f3] leading-tight">orçamentos por mês</span>
-                  <span className="text-[10px] text-zinc-300 font-mono">Produção ativa para o dia a dia</span>
+                  <span className="text-xs font-black text-[#F2F2F3] leading-tight">orçamentos por mês</span>
+                  <span className="text-[11px] text-[#CBD5E1] font-mono">Produção ativa para o dia a dia</span>
                 </div>
               </div>
 
               {/* Checklist de Recursos */}
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
                   Tudo Liberado no Criador
                 </span>
                 <ul className="flex flex-col gap-2.5 text-xs text-white">
@@ -554,9 +541,9 @@ export default function Plans() {
             </div>
 
             {/* Rodapé com badges */}
-            <div className="border-t border-[#26262a] pt-4 mt-6 flex items-center justify-between text-xs font-mono text-zinc-300">
+            <div className="border-t border-[#26262A] pt-4 mt-6 flex items-center justify-between text-xs font-mono text-[#CBD5E1]">
               <span className="flex items-center gap-1.5 text-white">
-                <span className="w-2.5 h-2.5 rounded-full bg-[var(--gm-primary,#FE540B)] animate-pulse shadow-sm shadow-[var(--gm-primary,#FE540B)]/50" />
+                <span className="w-2 h-2 rounded-full bg-[var(--gm-primary,#FE540B)]" />
                 Pix Instantâneo & Cartão
               </span>
               <span className="text-emerald-400 font-bold">Liberação na hora</span>
@@ -565,35 +552,31 @@ export default function Plans() {
 
           {/* 3. PLANO PROFISSIONAL (AVANÇADO) */}
           <div 
-            className="flex flex-col justify-between p-6 sm:p-8 rounded-xl border border-[#26262a] relative overflow-hidden transition-all duration-200 hover:border-emerald-500/50"
-            style={{
-              background: "#121215",
-              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.05)"
-            }}
+            className="flex flex-col justify-between p-6 sm:p-8 rounded-lg border border-[#26262A] bg-[#131315] relative overflow-hidden transition-colors duration-200 hover:border-emerald-500/50"
           >
             <div className="flex flex-col gap-6">
               {/* Header do Card */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">
                   MAIS COMPLETO • ACESSO TOTAL
                 </span>
-                <h3 className="text-2xl font-black text-[#f2f2f3] tracking-tight">
+                <h3 className="text-2xl font-black text-[#F2F2F3] tracking-tight">
                   {PLANS_DATA.avancado.name}
                 </h3>
-                <p className="text-xs text-zinc-400 min-h-[36px] leading-relaxed">
+                <p className="text-xs text-[#8B8B92] min-h-[36px] leading-relaxed">
                   {PLANS_DATA.avancado.tagline}
                 </p>
               </div>
 
               {/* Preço */}
-              <div className="flex items-baseline gap-1 py-1">
-                <span className="text-sm font-black text-zinc-400">R$</span>
-                <span className="text-4xl sm:text-5xl font-black text-[#f2f2f3] tracking-tight">
+              <div className="flex items-baseline gap-1 py-1 tabular-nums">
+                <span className="text-sm font-black text-[#8B8B92]">R$</span>
+                <span className="text-4xl sm:text-5xl font-black text-[#F2F2F3] tracking-tight">
                   {config.priceAvancado.toFixed(2).replace(".", ",")}
                 </span>
-                <span className="text-xs text-zinc-400 font-mono">/mês</span>
+                <span className="text-xs text-[#8B8B92] font-mono">/mês</span>
               </div>
-              <span className="text-[11px] text-zinc-500 font-mono -mt-4">
+              <span className="text-[11px] text-[#8B8B92] font-mono -mt-4">
                 Assinatura sem limites de produção
               </span>
 
@@ -601,34 +584,34 @@ export default function Plans() {
               <button
                 type="button"
                 onClick={() => handleOpenCheckout("avancado")}
-                className="w-full py-3.5 px-4 rounded border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 hover:text-white font-mono text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 shadow-sm"
+                className="w-full h-11 px-4 rounded-[6px] border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-white font-mono text-xs uppercase tracking-wider transition-colors duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 <span>Assinar Profissional</span>
                 <ArrowRight size={14} className="text-emerald-400" />
               </button>
-              <span className="text-[10px] text-zinc-500 text-center font-mono -mt-3">
+              <span className="text-[11px] text-[#8B8B92] text-center font-mono -mt-3">
                 Acesso total irrestrito para alta produtividade
               </span>
 
-              <div className="w-full h-[1px] bg-[#26262a] my-1" />
+              <div className="w-full h-[1px] bg-[#26262A] my-1" />
 
               {/* Cota Destaque */}
-              <div className="flex items-baseline gap-2.5 bg-[#0e0e10] p-3 rounded border border-[#26262a]">
+              <div className="flex items-baseline gap-2.5 bg-[#0B0B0C] p-3 rounded-md border border-[#26262A] tabular-nums">
                 <span className="text-3xl font-black text-emerald-400 font-mono">
                   {PLANS_DATA.avancado.quotaLabel}
                 </span>
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-[#f2f2f3] leading-tight">orçamentos ilimitados</span>
-                  <span className="text-[10px] text-zinc-400 font-mono">Sem limites de cadastros</span>
+                  <span className="text-xs font-black text-[#F2F2F3] leading-tight">orçamentos ilimitados</span>
+                  <span className="text-[11px] text-[#8B8B92] font-mono">Sem limites de cadastros</span>
                 </div>
               </div>
 
               {/* Checklist de Recursos */}
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">
                   Benefícios Exclusivos Profissional
                 </span>
-                <ul className="flex flex-col gap-2.5 text-xs text-zinc-300">
+                <ul className="flex flex-col gap-2.5 text-xs text-[#CBD5E1]">
                   {PLANS_DATA.avancado.features.map((feat) => (
                     <li key={feat} className="flex items-start gap-2.5">
                       <Check size={15} className="text-emerald-400 shrink-0 mt-0.5 stroke-[2.5]" />
@@ -640,9 +623,9 @@ export default function Plans() {
             </div>
 
             {/* Rodapé com badges */}
-            <div className="border-t border-[#26262a] pt-4 mt-6 flex items-center justify-between text-xs font-mono text-zinc-400">
+            <div className="border-t border-[#26262A] pt-4 mt-6 flex items-center justify-between text-xs font-mono text-[#8B8B92]">
               <span className="flex items-center gap-1.5 text-emerald-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 Tudo Ilimitado
               </span>
               <span className="text-white font-bold">Suporte VIP Prioritário</span>
@@ -654,49 +637,48 @@ export default function Plans() {
             4. GUIA INFORMATIVO: COMO ADQUIRIR E ATIVAR SEU PLANO (3 PASSOS)
            ========================================================================= */}
         <div 
-          className="w-full p-6 sm:p-8 rounded-xl border border-[#26262a] flex flex-col gap-6"
-          style={{ background: "#121215" }}
+          className="w-full p-6 sm:p-8 rounded-lg border border-[#26262A] bg-[#131315] flex flex-col gap-6"
         >
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
               PROCESSO SIMPLES & SEGURO
             </span>
-            <h3 className="text-lg sm:text-2xl font-black text-[#f2f2f3] tracking-tight">
+            <h3 className="text-lg sm:text-2xl font-black text-[#F2F2F3] tracking-tight">
               Como adquirir e ativar seu plano em 3 passos
             </h3>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-[#8B8B92]">
               Sem burocracia. O sistema é ativado e atualizado imediatamente após a confirmação.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-lg bg-[#18181b] border border-[#26262a] flex flex-col gap-2">
+            <div className="p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-col gap-2">
               <span className="text-xs font-mono font-black text-[var(--gm-primary,#FE540B)]">01. ESCOLHA O PLANO</span>
               <h4 className="text-sm font-bold text-white">Selecione seu ritmo</h4>
-              <p className="text-xs text-zinc-400 leading-relaxed">
+              <p className="text-xs text-[#8B8B92] leading-relaxed">
                 Clique no botão de assinatura do plano Essencial, Criador ou Profissional de acordo com a sua demanda mensal de orçamentos.
               </p>
             </div>
 
-            <div className="p-4 rounded-lg bg-[#18181b] border border-[#26262a] flex flex-col gap-2">
+            <div className="p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-col gap-2">
               <span className="text-xs font-mono font-black text-[var(--gm-primary,#FE540B)]">02. PAGAMENTO INSTANTÂNEO</span>
               <h4 className="text-sm font-bold text-white">Pix ou Cartão</h4>
-              <p className="text-xs text-zinc-400 leading-relaxed">
+              <p className="text-xs text-[#8B8B92] leading-relaxed">
                 Pague diretamente com QR Code Pix com valor automático ou utilize seu cartão de crédito com faturamento mensal protegido.
               </p>
             </div>
 
-            <div className="p-4 rounded-lg bg-[#18181b] border border-[#26262a] flex flex-col gap-2">
+            <div className="p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-col gap-2">
               <span className="text-xs font-mono font-black text-[var(--gm-primary,#FE540B)]">03. LIBERAÇÃO IMEDIATA</span>
               <h4 className="text-sm font-bold text-white">Comece a produzir</h4>
-              <p className="text-xs text-zinc-400 leading-relaxed">
+              <p className="text-xs text-[#8B8B92] leading-relaxed">
                 Seu plano é validado e todas as funcionalidades correspondentes ficam prontas para você fechar propostas e gerenciar clientes.
               </p>
             </div>
           </div>
 
           {/* Bandeiras de Segurança */}
-          <div className="flex items-center justify-between flex-wrap gap-4 pt-4 border-t border-[#26262a] text-xs font-mono text-zinc-400">
+          <div className="flex items-center justify-between flex-wrap gap-4 pt-4 border-t border-[#26262A] text-xs font-mono text-[#8B8B92]">
             <span className="flex items-center gap-1.5">
               <Lock size={13} className="text-emerald-400" />
               <span>Checkout Seguro Criptografado</span>
@@ -717,45 +699,44 @@ export default function Plans() {
             5. ACORDEÃO RETRÁTIL: COMPARE OS DETALHES DE CADA PLANO
            ========================================================================= */}
         <div 
-          className="w-full rounded-xl border border-[#26262a] overflow-hidden"
-          style={{ background: "#121215" }}
+          className="w-full rounded-lg border border-[#26262A] bg-[#131315] overflow-hidden"
         >
           <button
             type="button"
             onClick={() => setIsCompareOpen(!isCompareOpen)}
-            className="w-full p-5 sm:p-6 flex items-center justify-between text-left hover:bg-white/[0.02] transition-colors cursor-pointer"
+            className="w-full p-5 sm:p-6 flex items-center justify-between text-left hover:bg-[#1B1B1E] transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded bg-[#18181b] border border-[#2f2f34] text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-md bg-[#0B0B0C] border border-[#26262A] text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
                 <Layers size={18} />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-black text-[#f2f2f3]">
+                <h3 className="text-base sm:text-lg font-black text-[#F2F2F3]">
                   Compare os detalhes
                 </h3>
-                <p className="text-xs text-zinc-400 font-mono">
+                <p className="text-xs text-[#8B8B92] font-mono">
                   Veja a tabela completa do que está incluído em cada plano
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 font-mono text-xs text-[var(--gm-primary,#FE540B)]">
+            <div className="flex items-center gap-2 font-mono text-xs text-[var(--gm-primary,#FE540B)] shrink-0 whitespace-nowrap">
               <span>{isCompareOpen ? "Ocultar comparativo" : "Ver comparativo"}</span>
               {isCompareOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </div>
           </button>
 
           {isCompareOpen && (
-            <div className="p-5 sm:p-6 border-t border-[#26262a] overflow-x-auto">
-              <table className="w-full min-w-[620px] text-xs text-left">
+            <div className="p-5 sm:p-6 border-t border-[#26262A] overflow-x-auto">
+              <table className="w-full min-w-[620px] text-xs text-left tabular-nums">
                 <thead>
-                  <tr className="border-b border-[#26262a] text-zinc-400 font-mono text-[11px] uppercase">
+                  <tr className="border-b border-[#26262A] text-[#8B8B92] font-mono text-[11px] uppercase">
                     <th className="py-3 px-2">Recurso / Módulo</th>
                     <th className="py-3 px-2 text-center text-sky-400">Essencial</th>
                     <th className="py-3 px-2 text-center text-[var(--gm-primary,#FE540B)] font-bold">Criador (Popular)</th>
                     <th className="py-3 px-2 text-center text-emerald-400">Profissional</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#26262a] text-zinc-300">
+                <tbody className="divide-y divide-[#26262A] text-[#CBD5E1]">
                   <tr>
                     <td className="py-3 px-2 font-bold text-white">Cota Mensal de Orçamentos</td>
                     <td className="py-3 px-2 text-center">15 / mês</td>
@@ -826,18 +807,17 @@ export default function Plans() {
             6. PERGUNTAS FREQUENTES (FAQ) - ANTES DE ESCOLHER
            ========================================================================= */}
         <div 
-          className="w-full p-6 sm:p-8 rounded-xl border border-[#26262a] flex flex-col gap-6"
-          style={{ background: "#121215" }}
+          className="w-full p-6 sm:p-8 rounded-lg border border-[#26262A] bg-[#131315] flex flex-col gap-6"
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
                 SEM COMPLICAÇÃO
               </span>
-              <h3 className="text-lg sm:text-2xl font-black text-[#f2f2f3] tracking-tight">
+              <h3 className="text-lg sm:text-2xl font-black text-[#F2F2F3] tracking-tight">
                 Antes de escolher.
               </h3>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-[#8B8B92]">
                 Respostas para decidir com tranquilidade.
               </p>
             </div>
@@ -846,7 +826,7 @@ export default function Plans() {
               href={`https://wa.me/${config.whatsappContact}?text=Ol%C3%A1%2C+tenho+d%C3%BAvidas+sobre+os+planos+do+CardDigital+GM`}
               target="_blank"
               rel="noopener noreferrer"
-              className="py-2.5 px-4 rounded border border-[#2f2f34] bg-[#18181b] hover:bg-[#202024] text-zinc-200 hover:text-white font-mono text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2 shrink-0 self-start sm:self-auto"
+              className="h-10 px-4 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#1B1B1E] hover:bg-[#26262A] text-[#CBD5E1] hover:text-white font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-2 shrink-0 self-start sm:self-auto whitespace-nowrap"
             >
               <MessageCircle size={15} className="text-[#25D366]" />
               <span>Falar com o suporte</span>
@@ -854,7 +834,7 @@ export default function Plans() {
             </a>
           </div>
 
-          <div className="flex flex-col divide-y divide-[#26262a] border-t border-[#26262a]">
+          <div className="flex flex-col divide-y divide-[#26262A] border-t border-[#26262A]">
             {FAQ_ITEMS.map((item, idx) => {
               const isOpen = openFaqIndex === idx;
               return (
@@ -864,16 +844,16 @@ export default function Plans() {
                     onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                     className="w-full flex items-center justify-between text-left gap-4 cursor-pointer group"
                   >
-                    <span className="text-xs sm:text-sm font-bold text-zinc-200 group-hover:text-white transition-colors">
+                    <span className="text-xs sm:text-sm font-bold text-[#CBD5E1] group-hover:text-white transition-colors">
                       ► {item.q}
                     </span>
-                    <span className="text-zinc-500 group-hover:text-[var(--gm-primary,#FE540B)] transition-colors shrink-0">
+                    <span className="text-[#8B8B92] group-hover:text-[var(--gm-primary,#FE540B)] transition-colors shrink-0">
                       {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </span>
                   </button>
 
                   {isOpen && (
-                    <div className="mt-2.5 pl-4 text-xs text-zinc-400 leading-relaxed font-normal animate-in fade-in duration-150">
+                    <div className="mt-2.5 pl-4 text-xs text-[#8B8B92] leading-relaxed font-normal animate-in fade-in duration-150">
                       {item.a}
                     </div>
                   )}
@@ -899,21 +879,20 @@ export default function Plans() {
       {/* MODAL DE EDIÇÃO DE CONFIGURAÇÕES DOS PLANOS (EXCLUSIVO PARA O ADMINISTRADOR) */}
       {isAdminEditOpen && (
         <div
-          className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
-          style={{ background: "rgba(0, 0, 0, 0.85)" }}
+          className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/75 backdrop-blur-sm animate-fade-in"
           onClick={() => setIsAdminEditOpen(false)}
         >
           <div
             ref={adminModalRef}
-            className="w-full rounded-2xl p-5 sm:p-7 relative flex flex-col gap-5 text-white border border-amber-500/40 shadow-2xl select-text"
+            role="dialog"
+            aria-modal="true"
+            className="w-full rounded-lg p-5 sm:p-7 relative flex flex-col gap-5 text-[#F2F2F3] bg-[#131315] border border-[#26262A] shadow-2xl select-text"
             style={{
               width: adminModalSize.width ? `min(${adminModalSize.width}px, 94vw)` : "95%",
               maxWidth: adminModalSize.width ? `min(${adminModalSize.width}px, 94vw)` : "760px",
               height: adminModalSize.height ? `min(${adminModalSize.height}px, 92vh)` : undefined,
               maxHeight: adminModalSize.height ? `min(${adminModalSize.height}px, 92vh)` : "90vh",
               overflowY: "auto",
-              background: "#141418",
-              boxShadow: "0 25px 65px -12px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -923,49 +902,50 @@ export default function Plans() {
               accentColor="#F59E0B"
             />
             {/* Header Amplo */}
-            <div className="flex items-center justify-between border-b border-white/15 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/30 to-orange-500/20 text-amber-300 border border-amber-500/40 flex items-center justify-center shrink-0">
+            <div className="flex items-center justify-between border-b border-[#26262A] pb-4 gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center justify-center shrink-0">
                   <Settings size={20} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-base sm:text-xl font-black text-white leading-tight">Configurar Planos & Pagamentos</h3>
-                  <p className="text-xs text-slate-300 font-medium">Edite valores, chave Pix e links de checkout dos planos para todos os usuários</p>
+                  <p className="text-xs text-[#8B8B92] font-medium">Edite valores, chave Pix e links de checkout dos planos para todos os usuários</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAdminEditOpen(false)}
-                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold flex items-center justify-center cursor-pointer transition-colors"
+                className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[#3F3F46] text-[#8B8B92] hover:text-white flex items-center justify-center cursor-pointer transition-colors shrink-0"
                 title="Fechar"
+                aria-label="Fechar"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
 
             <form onSubmit={handleSaveAdminConfig} className="flex flex-col gap-5 text-xs">
               {/* 1. CALCULADORA DE PORCENTAGEM SIMULTÂNEA */}
               <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-slate-100 text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span className="font-extrabold text-[#F2F2F3] text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-2 flex-wrap">
                     <span>Valores Mensais de Assinatura</span>
-                    <span className="text-[10px] text-amber-300 font-bold bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                    <span className="text-[11px] text-amber-300 font-bold bg-amber-500/15 px-2.5 py-0.5 rounded-[4px] border border-amber-500/30">
                       Simultâneo ou Individual
                     </span>
                   </span>
                 </div>
 
-                <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-amber-500/30 flex flex-col gap-3.5 shadow-inner">
+                <div className="p-4 sm:p-5 rounded-md bg-[#0B0B0C] border border-amber-500/30 flex flex-col gap-3.5">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
                         <Calculator size={15} />
                       </div>
                       <div>
                         <span className="text-xs font-black text-white block">
                           Calculadora Simultânea (%)
                         </span>
-                        <span className="text-[10px] text-slate-400 font-medium block">
+                        <span className="text-[11px] text-[#8B8B92] font-medium block">
                           Recalcula os 3 planos simultaneamente mantendo a proporção
                         </span>
                       </div>
@@ -974,7 +954,7 @@ export default function Plans() {
                     <button
                       type="button"
                       onClick={handleResetToConfigPrices}
-                      className="text-[11px] text-slate-300 hover:text-white flex items-center gap-1.5 font-semibold transition-colors cursor-pointer bg-white/5 hover:bg-white/10 px-3 py-1 rounded-xl border border-white/10"
+                      className="text-[11px] text-[#CBD5E1] hover:text-white flex items-center gap-1.5 font-semibold transition-colors cursor-pointer bg-[#1B1B1E] hover:bg-[#26262A] px-3 py-1.5 rounded-[6px] border border-[#26262A] whitespace-nowrap"
                       title="Restaurar valores aos padrões cadastrados"
                     >
                       <RotateCcw size={12} />
@@ -992,7 +972,7 @@ export default function Plans() {
                         value={percentValue}
                         onChange={(e) => setPercentValue(e.target.value)}
                         placeholder="Ex: 10"
-                        className="w-full h-10 pl-3 pr-8 rounded-xl bg-[#08090f] border border-white/25 text-white font-black text-sm outline-none focus:border-amber-400 text-center"
+                        className="w-full h-10 pl-3 pr-8 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-black text-sm outline-none focus:border-amber-400 text-center tabular-nums"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-amber-400 pointer-events-none">
                         %
@@ -1002,7 +982,7 @@ export default function Plans() {
                     <button
                       type="button"
                       onClick={() => handleApplyPercent("increase")}
-                      className="h-10 px-4 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
+                      className="h-10 px-4 rounded-[6px] bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer active:scale-95 shrink-0 whitespace-nowrap"
                     >
                       <TrendingUp size={14} />
                       <span>+ Aumentar (% digitada)</span>
@@ -1011,26 +991,26 @@ export default function Plans() {
                     <button
                       type="button"
                       onClick={() => handleApplyPercent("discount")}
-                      className="h-10 px-4 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
+                      className="h-10 px-4 rounded-[6px] bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/40 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer active:scale-95 shrink-0 whitespace-nowrap"
                     >
                       <TrendingDown size={14} />
                       <span>- Desconto (% digitada)</span>
                     </button>
                   </div>
 
-                  <div className="flex flex-col gap-2.5 pt-2.5 border-t border-white/10 w-full">
+                  <div className="flex flex-col gap-2.5 pt-2.5 border-t border-[#26262A] w-full tabular-nums">
                     <div className="flex items-center gap-2.5 w-full">
-                      <span className="text-[10px] uppercase font-bold text-emerald-400 shrink-0 flex items-center gap-1 w-24">
+                      <span className="text-[11px] uppercase font-bold text-emerald-400 shrink-0 flex items-center gap-1 w-24">
                         <TrendingUp size={11} />
                         <span>Acréscimos:</span>
                       </span>
-                      <div className="flex-1 grid grid-cols-7 gap-1.5 sm:gap-2 w-full">
+                      <div className="flex-1 grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2 w-full">
                         {[5, 10, 15, 20, 25, 30, 50].map((pct) => (
                           <button
                             key={`inc-${pct}`}
                             type="button"
                             onClick={() => handleApplyPercent("increase", pct)}
-                            className="h-8 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-black transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm"
+                            className="h-8 rounded-[4px] bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] font-black transition-colors cursor-pointer active:scale-95"
                           >
                             +{pct}%
                           </button>
@@ -1039,17 +1019,17 @@ export default function Plans() {
                     </div>
 
                     <div className="flex items-center gap-2.5 w-full">
-                      <span className="text-[10px] uppercase font-bold text-rose-400 shrink-0 flex items-center gap-1 w-24">
+                      <span className="text-[11px] uppercase font-bold text-rose-400 shrink-0 flex items-center gap-1 w-24">
                         <TrendingDown size={11} />
                         <span>Descontos:</span>
                       </span>
-                      <div className="flex-1 grid grid-cols-7 gap-1.5 sm:gap-2 w-full">
+                      <div className="flex-1 grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2 w-full">
                         {[5, 10, 15, 20, 25, 30, 50].map((pct) => (
                           <button
                             key={`dec-${pct}`}
                             type="button"
                             onClick={() => handleApplyPercent("discount", pct)}
-                            className="h-8 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-[11px] font-black transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm"
+                            className="h-8 rounded-[4px] bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-black transition-colors cursor-pointer active:scale-95"
                           >
                             -{pct}%
                           </button>
@@ -1060,8 +1040,8 @@ export default function Plans() {
                 </div>
 
                 {/* Preços Individuais dos 3 Planos */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="p-3.5 rounded-2xl bg-black/40 border border-white/15 flex flex-col gap-1.5 shadow-md">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 tabular-nums">
+                  <div className="p-3.5 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-col gap-1.5">
                     <span className="text-sky-400 font-extrabold text-[11px] uppercase">
                       1. Essencial (R$)
                     </span>
@@ -1071,14 +1051,14 @@ export default function Plans() {
                       min="0"
                       value={editPriceBasico}
                       onChange={(e) => setEditPriceBasico(parseFloat(e.target.value) || 0)}
-                      className="w-full h-10 px-3 rounded-xl bg-[#08090f] border border-white/25 text-white font-black text-sm outline-none focus:border-sky-400"
+                      className="w-full h-10 px-3 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-black text-sm outline-none focus:border-sky-400"
                     />
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-black/40 border-2 border-[var(--gm-primary)] flex flex-col gap-1.5 shadow-lg">
-                    <span className="text-[var(--gm-primary)] font-extrabold text-[11px] uppercase flex items-center gap-1">
+                  <div className="p-3.5 rounded-md bg-[#0B0B0C] border-2 border-[var(--gm-primary)] flex flex-col gap-1.5">
+                    <span className="text-[var(--gm-primary)] font-extrabold text-[11px] uppercase flex items-center gap-1.5">
                       <span>2. Criador (R$)</span>
-                      <span className="text-[9px] bg-[var(--gm-primary)]/20 px-1.5 py-0.2 rounded-full">Popular</span>
+                      <span className="text-[11px] bg-[var(--gm-primary)]/20 px-1.5 py-0.5 rounded-[4px]">Popular</span>
                     </span>
                     <input
                       type="number"
@@ -1086,11 +1066,11 @@ export default function Plans() {
                       min="0"
                       value={editPriceIntermediario}
                       onChange={(e) => setEditPriceIntermediario(parseFloat(e.target.value) || 0)}
-                      className="w-full h-10 px-3 rounded-xl bg-[#08090f] border border-[var(--gm-primary)] text-white font-black text-sm outline-none focus:ring-1 focus:ring-[var(--gm-primary)]"
+                      className="w-full h-10 px-3 rounded-[4px] bg-[#131315] border border-[var(--gm-primary)] text-white font-black text-sm outline-none focus:ring-1 focus:ring-[var(--gm-primary)]"
                     />
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-black/40 border border-white/15 flex flex-col gap-1.5 shadow-md">
+                  <div className="p-3.5 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-col gap-1.5">
                     <span className="text-emerald-400 font-extrabold text-[11px] uppercase">
                       3. Profissional (R$)
                     </span>
@@ -1100,95 +1080,95 @@ export default function Plans() {
                       min="0"
                       value={editPriceAvancado}
                       onChange={(e) => setEditPriceAvancado(parseFloat(e.target.value) || 0)}
-                      className="w-full h-10 px-3 rounded-xl bg-[#08090f] border border-white/25 text-white font-black text-sm outline-none focus:border-emerald-400"
+                      className="w-full h-10 px-3 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-black text-sm outline-none focus:border-emerald-400"
                     />
                   </div>
                 </div>
               </div>
 
               {/* 2. CHAVE PIX & NOME DO RECEBEDOR */}
-              <div className="flex flex-col gap-2.5 p-4 rounded-2xl bg-black/40 border border-white/15 shadow-md">
-                <span className="font-extrabold text-slate-100 text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-2">
+              <div className="flex flex-col gap-2.5 p-4 rounded-md bg-[#0B0B0C] border border-[#26262A]">
+                <span className="font-extrabold text-[#F2F2F3] text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-2">
                   <QrCode size={15} className="text-emerald-400" />
                   <span>Chave Pix Oficial para Recebimento</span>
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-slate-300 font-bold">Chave Pix (E-mail, CPF, CNPJ ou Celular)</label>
+                    <label className="text-[11px] text-[#CBD5E1] font-bold">Chave Pix (E-mail, CPF, CNPJ ou Celular)</label>
                     <input
                       type="text"
                       value={editPixKey}
                       onChange={(e) => setEditPixKey(e.target.value)}
                       placeholder="Ex: carddigitalgm@gmail.com"
-                      className="w-full h-10 px-3 rounded-xl bg-[#08090f] border border-white/25 text-white font-semibold text-xs outline-none focus:border-emerald-400"
+                      className="w-full h-10 px-3 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-semibold text-xs outline-none focus:border-emerald-400"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-slate-300 font-bold">Nome do Titular / Razão Social</label>
+                    <label className="text-[11px] text-[#CBD5E1] font-bold">Nome do Titular / Razão Social</label>
                     <input
                       type="text"
                       value={editReceiverName}
                       onChange={(e) => setEditReceiverName(e.target.value)}
                       placeholder="Ex: GM EDIFICACAO"
-                      className="w-full h-10 px-3 rounded-xl bg-[#08090f] border border-white/25 text-white font-semibold text-xs outline-none focus:border-emerald-400"
+                      className="w-full h-10 px-3 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-semibold text-xs outline-none focus:border-emerald-400"
                     />
                   </div>
                 </div>
               </div>
 
               {/* 3. LINKS EXTERNOS DE CHECKOUT (MERCADO PAGO / STRIPE / ASAAS) */}
-              <div className="flex flex-col gap-2.5 p-4 rounded-2xl bg-black/40 border border-white/15 shadow-md">
-                <span className="font-extrabold text-slate-100 text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-2">
+              <div className="flex flex-col gap-2.5 p-4 rounded-md bg-[#0B0B0C] border border-[#26262A]">
+                <span className="font-extrabold text-[#F2F2F3] text-[11px] sm:text-xs uppercase tracking-wider flex items-center gap-2">
                   <CreditCard size={15} className="text-sky-400" />
                   <span>Links de Pagamento com Cartão / Boleto (Opcional)</span>
                 </span>
                 <div className="flex flex-col gap-2.5">
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-sky-300 font-bold">Link de Checkout - Plano Essencial</label>
+                    <label className="text-[11px] text-sky-300 font-bold">Link de Checkout - Plano Essencial</label>
                     <input
                       type="url"
                       value={editLinkBasico}
                       onChange={(e) => setEditLinkBasico(e.target.value)}
                       placeholder="https://mpago.la/... ou https://buy.stripe.com/..."
-                      className="w-full h-10 px-3 rounded-xl bg-[#08090f] border border-white/25 text-white font-mono text-xs outline-none focus:border-sky-400"
+                      className="w-full h-10 px-3 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-mono text-xs outline-none focus:border-sky-400"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-[var(--gm-primary)] font-bold">Link de Checkout - Plano Criador</label>
+                    <label className="text-[11px] text-[var(--gm-primary)] font-bold">Link de Checkout - Plano Criador</label>
                     <input
                       type="url"
                       value={editLinkIntermediario}
                       onChange={(e) => setEditLinkIntermediario(e.target.value)}
                       placeholder="https://mpago.la/... ou https://buy.stripe.com/..."
-                      className="w-full h-10 px-3 rounded-xl bg-[#08090f] border border-[var(--gm-primary)] text-white font-mono text-xs outline-none focus:ring-1 focus:ring-[var(--gm-primary)]"
+                      className="w-full h-10 px-3 rounded-[4px] bg-[#131315] border border-[var(--gm-primary)] text-white font-mono text-xs outline-none focus:ring-1 focus:ring-[var(--gm-primary)]"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-emerald-300 font-bold">Link de Checkout - Plano Profissional</label>
+                    <label className="text-[11px] text-emerald-300 font-bold">Link de Checkout - Plano Profissional</label>
                     <input
                       type="url"
                       value={editLinkAvancado}
                       onChange={(e) => setEditLinkAvancado(e.target.value)}
                       placeholder="https://mpago.la/... ou https://buy.stripe.com/..."
-                      className="w-full h-10 px-3 rounded-xl bg-[#08090f] border border-white/25 text-white font-mono text-xs outline-none focus:border-emerald-400"
+                      className="w-full h-10 px-3 rounded-[4px] bg-[#131315] border border-[#26262A] text-white font-mono text-xs outline-none focus:border-emerald-400"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Botão de Salvar Alterações */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/15">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#26262A]">
                 <button
                   type="button"
                   onClick={() => setIsAdminEditOpen(false)}
-                  className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 font-bold text-xs transition-colors cursor-pointer"
+                  className="h-10 px-5 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-[#CBD5E1] hover:text-white font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingAdmin}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:brightness-110 text-white font-black text-xs shadow-lg shadow-amber-500/30 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                  className="h-10 px-6 rounded-[6px] bg-amber-500 hover:bg-amber-400 text-[#0B0B0C] font-black text-xs transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-50 whitespace-nowrap"
                 >
                   {savingAdmin ? "Salvando..." : "Salvar Configurações Globais"}
                 </button>

@@ -239,6 +239,17 @@ export default function Bio() {
   }, []);
 
   useEffect(() => {
+    if (!previewOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setPreviewOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [previewOpen]);
+
+  useEffect(() => {
     if (editorRef.current) {
       const currentHTML = editorRef.current.innerHTML;
       const targetDesc = basicInfoTab === "desktop" ? (bioConfig.description || "") : (bioConfig.description_mobile || "");
@@ -1587,11 +1598,11 @@ export default function Bio() {
   const hasActiveSection = Object.values(openSections).some(Boolean);
 
   const getSectionBtnClass = (isOpen: boolean) => {
-    const base = "relative flex items-center justify-between pl-7 pr-4 py-3 rounded-xl border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-bold shadow-none group backdrop-blur-md";
+    const base = "relative flex items-center justify-between pl-6 pr-4 py-3 rounded-md border text-left transition-colors duration-150 cursor-pointer text-xs sm:text-sm font-bold shadow-none group";
     if (isOpen) {
-      return `${base} fora bg-[var(--primary-color)]/20 border-[var(--primary-color)] text-[var(--primary-color)] dark:text-white font-black w-full shadow-[0_0_15px_rgba(254,84,11,0.25)] ring-1 ring-[var(--primary-color)]/50`;
+      return `${base} bg-[#1B1B1E] border-[var(--primary-color)] text-[#F2F2F3] font-black w-full`;
     }
-    return `${base} fora border-white/10 text-slate-700 dark:text-slate-200 hover:border-[var(--primary-color)] hover:text-[var(--primary-color)] dark:hover:text-[var(--primary-color)] hover:bg-[var(--primary-color)]/10`;
+    return `${base} bg-[#0B0B0C] border-[#26262A] text-[#CBD5E1] hover:border-[#3F3F46] hover:bg-[#1B1B1E] hover:text-white`;
   };
 
   return (
@@ -1607,7 +1618,7 @@ export default function Bio() {
         } as React.CSSProperties}>
 
         {/* HEADER PANEL SPANNING FULL WIDTH */}
-        <div className="gm-card fora p-4 sm:p-6 pb-7 sm:pb-9 text-center space-y-4 relative overflow-hidden rounded-2xl border border-white/10 shadow-none backdrop-blur-md">
+        <div className="p-4 sm:p-6 pb-7 sm:pb-9 text-center space-y-4 relative overflow-hidden rounded-lg bg-[#131315] border border-[#26262A] shadow-none">
            <style>{`
              @keyframes color-loop {
                0% { background-position: 0% 50%; }
@@ -1658,7 +1669,7 @@ export default function Bio() {
                 BiO
               </span>
               <span className="text-zinc-400 dark:text-zinc-600 text-xl sm:text-2xl font-light mx-0.5">|</span>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg barra border border-white/15 flex items-center justify-center overflow-hidden shadow-none shrink-0 p-1 bg-black/40">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center overflow-hidden shadow-none shrink-0 p-1">
                 {(bioConfig as any).website_logo_url || (bioConfig as any).logo_url || settings?.company_logo_url ? (
                   <img 
                     src={(bioConfig as any).website_logo_url || (bioConfig as any).logo_url || settings?.company_logo_url} 
@@ -1666,21 +1677,21 @@ export default function Bio() {
                     className="max-w-[70%] max-h-[70%] w-auto h-auto object-contain mx-auto my-auto block select-none"
                   />
                 ) : (
-                  <span className="text-[var(--gm-primary)] font-black text-[10px] sm:text-xs">
+                  <span className="text-[var(--gm-primary)] font-black text-[11px] sm:text-xs">
                     {(settings?.company_name || bioConfig.title || "GM").substring(0, 2).toUpperCase()}
                   </span>
                 )}
               </div>
-              <span className="text-lg sm:text-xl font-bold dark:text-white text-zinc-800 tracking-wide">
+              <span className="text-lg sm:text-xl font-bold text-[#F2F2F3] tracking-wide">
                 {settings?.company_name || bioConfig.title || "CardDigital GM"}
               </span>
            </h3>
-           <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
+           <p className="text-[#8B8B92] text-sm font-medium">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
            
            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 pt-2 w-full max-w-2xl mx-auto">
               <button 
                 onClick={handleCopyLink} 
-                className="w-full sm:w-[180px] h-10 px-3.5 rounded-md font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer shadow-sm"
+                className="w-full sm:w-[180px] h-10 px-3.5 rounded-[6px] font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] hover:border-[#3F3F46] bg-[#0B0B0C] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer"
               >
                 {copied ? <Check className="w-4 h-4 mr-2 text-emerald-400" /> : <Copy className="w-4 h-4 mr-2 text-[#8B8B92]" />}
                 {copied ? "Link Copiado!" : "Copiar Link"}
@@ -1689,20 +1700,20 @@ export default function Bio() {
                 href={`${window.location.origin}/${getCustomSlug()}`} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-full sm:w-[180px] h-10 px-3.5 rounded-md font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer shadow-sm"
+                className="w-full sm:w-[180px] h-10 px-3.5 rounded-[6px] font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] hover:border-[#3F3F46] bg-[#0B0B0C] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer"
               >
                 <Globe className="w-4 h-4 mr-2 text-[#8B8B92]" /> Ver Tela Inteira
               </a>
               <button 
                 onClick={() => setPreviewOpen(true)} 
-                className="w-full sm:w-[180px] h-10 px-3.5 rounded-md font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer shadow-sm"
+                className="w-full sm:w-[180px] h-10 px-3.5 rounded-[6px] font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] hover:border-[#3F3F46] bg-[#0B0B0C] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer"
               >
                 <Eye className="w-4 h-4 mr-2 text-[#8B8B92]" /> Visualizar Prévia
               </button>
               <button 
                 onClick={handleSave} 
                 disabled={saving}
-                className="w-full sm:w-[190px] h-10 px-4 rounded-md font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#F65A1A] bg-[#F65A1A] hover:bg-[#FF7A38] active:scale-95 text-[#0B0B0C] shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-[190px] h-10 px-4 rounded-[6px] font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#F65A1A] bg-[#F65A1A] hover:bg-[#FF7A38] active:scale-95 text-[#0B0B0C] transition-all disabled:opacity-50 cursor-pointer"
               >
                 <Save className="w-4 h-4 mr-2 text-[#0B0B0C]" /> {saving ? "Salvando..." : "Salvar Alterações"}
               </button>
@@ -1749,61 +1760,64 @@ export default function Bio() {
             </svg>
 
             {/* BARRA DE SELEÇÃO DE DISPOSITIVO (SMARTPHONE / COMPUTADOR) */}
-            <div className="gm-card fora flex flex-col sm:flex-row items-center justify-between p-4 sm:p-5 rounded-2xl border border-white/12 shadow-none backdrop-blur-xl gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between p-4 sm:p-5 rounded-lg bg-[#131315] border border-[#26262A] shadow-none gap-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
                 <span className="text-xs font-black uppercase tracking-wider text-[var(--primary-color)] flex items-center gap-2">
                   <Layout className="w-4 h-4" /> Versão da Página BiO:
                 </span>
-                <div className="flex items-center gap-1.5 p-1 rounded-2xl barra border border-white/10 bg-black/40 backdrop-blur-xl w-full sm:w-auto">
+                <div className="flex items-center gap-1 p-1 rounded-md border border-[#26262A] bg-[#0B0B0C] w-full sm:w-auto">
                   <button
                     type="button"
+                    aria-pressed={selectedView === "smartphone"}
+                    data-selected={selectedView === "smartphone"}
                     onClick={() => {
                       setSelectedView("smartphone");
                       setPreviewMode("smartphone");
                     }}
-                    className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                    className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-[4px] text-xs font-bold transition-colors cursor-pointer ${
                       selectedView === "smartphone"
-                        ? "bg-[var(--primary-color)] text-white shadow-lg shadow-[var(--primary-color)]/30 scale-[1.02]"
-                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        ? "bg-[var(--primary-color)] text-white font-black"
+                        : "text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]"
                     }`}
                   >
-                    <Smartphone className="w-4 h-4" />
+                    <Smartphone className={selectedView === "smartphone" ? "w-4 h-4 shrink-0 text-white" : "w-4 h-4 shrink-0"} />
                     <span>Bio Smartphone (Mobile)</span>
                   </button>
                   <button
                     type="button"
+                    aria-pressed={selectedView === "computador"}
+                    data-selected={selectedView === "computador"}
                     onClick={() => {
                       setSelectedView("computador");
                       setPreviewMode("pc");
                     }}
-                    className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                    className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-[4px] text-xs font-bold transition-colors cursor-pointer ${
                       selectedView === "computador"
-                        ? "bg-[var(--primary-color)] text-white shadow-lg shadow-[var(--primary-color)]/30 scale-[1.02]"
-                        : "text-zinc-400 hover:text-white hover:bg-white/5"
+                        ? "bg-[var(--primary-color)] text-white font-black"
+                        : "text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]"
                     }`}
                   >
-                    <Monitor className="w-4 h-4" />
+                    <Monitor className={selectedView === "computador" ? "w-4 h-4 shrink-0 text-white" : "w-4 h-4 shrink-0"} />
                     <span>Bio Computador (Desktop)</span>
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5 self-end sm:self-center">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-                <span className="text-xs font-semibold text-zinc-400">
-                  Editando agora: <strong className="text-white font-bold">{selectedView === "smartphone" ? "Versão Celular & Mobile" : "Versão Desktop & Computador"}</strong>
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <span className="text-xs font-semibold text-[#8B8B92]">
+                  Editando agora: <strong className="text-[#F2F2F3] font-bold">{selectedView === "smartphone" ? "Versão Celular & Mobile" : "Versão Desktop & Computador"}</strong>
                 </span>
               </div>
             </div>
 
             {/* SUBDIVISÃO SUPERIOR: Menu em Grade Completa de 9 Seções (Sempre Visível) */}
-            <div className="gm-card fora flex flex-col gap-3 p-4 sm:p-5 rounded-2xl border border-white/12 shadow-none backdrop-blur-xl">
+            <div className="flex flex-col gap-3 p-4 sm:p-5 rounded-lg bg-[#131315] border border-[#26262A] shadow-none">
               <div className="flex items-center justify-between px-1 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-[var(--primary-color)]" />
                   <span className="text-xs font-extrabold text-[var(--primary-color)] uppercase tracking-wider">Painel do Editor de Seções BiO</span>
                 </div>
-                <span className="text-xs text-zinc-400 font-medium">
+                <span className="text-xs text-[#8B8B92] font-medium">
                   {hasActiveSection 
                     ? "Clique em qualquer seção para alternar ou fechar" 
                     : "Selecione uma seção abaixo para editar"}
@@ -1814,189 +1828,207 @@ export default function Bio() {
                 {/* 1. Informações Básicas */}
                 <button
                   type="button"
+                  aria-expanded={openSections.basic}
+                  data-selected={openSections.basic}
                   onClick={() => toggleSection('basic')}
                   className={getSectionBtnClass(openSections.basic)}
                 >
                   {openSections.basic && (
-                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
                   <span className="flex items-center gap-3">
-                    <Info className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.basic ? 'text-[var(--primary-color)] scale-110' : 'text-[var(--primary-color)] opacity-85 group-hover:scale-110'}`} />
+                    <Info className={`w-4 h-4 transition-colors duration-150 ${openSections.basic ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
                     INFORMAÇÕES BÁSICAS
                   </span>
                   <div className="flex items-center gap-2">
                     {openSections.basic && (
-                      <span className="text-[10px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 uppercase tracking-wide font-bold animate-pulse">ATIVO</span>
+                      <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.basic ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-400 group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.basic ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
                 {/* 2. Aparência do Site */}
                 <button
                   type="button"
+                  aria-expanded={openSections.appearance}
+                  data-selected={openSections.appearance}
                   onClick={() => toggleSection('appearance')}
                   className={getSectionBtnClass(openSections.appearance)}
                 >
                   {openSections.appearance && (
-                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
                   <span className="flex items-center gap-3">
-                    <Eye className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.appearance ? 'text-[var(--primary-color)] scale-110' : 'text-[var(--primary-color)] opacity-85 group-hover:scale-110'}`} />
+                    <Eye className={`w-4 h-4 transition-colors duration-150 ${openSections.appearance ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
                     APARÊNCIA DO SITE
                   </span>
                   <div className="flex items-center gap-2">
                     {openSections.appearance && (
-                      <span className="text-[10px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 uppercase tracking-wide font-bold animate-pulse">ATIVO</span>
+                      <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.appearance ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-400 group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.appearance ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
                 {/* 3. Contatos e Redes */}
                 <button
                   type="button"
+                  aria-expanded={openSections.contacts}
+                  data-selected={openSections.contacts}
                   onClick={() => toggleSection('contacts')}
                   className={getSectionBtnClass(openSections.contacts)}
                 >
                   {openSections.contacts && (
-                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
                   <span className="flex items-center gap-3">
-                    <Phone className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.contacts ? 'text-[var(--primary-color)] scale-110' : 'text-[var(--primary-color)] opacity-85 group-hover:scale-110'}`} />
+                    <Phone className={`w-4 h-4 transition-colors duration-150 ${openSections.contacts ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
                     CONTATOS E REDES
                   </span>
                   <div className="flex items-center gap-2">
                     {openSections.contacts && (
-                      <span className="text-[10px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 uppercase tracking-wide font-bold animate-pulse">ATIVO</span>
+                      <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.contacts ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-400 group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.contacts ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
                 {/* 4. Outros Links */}
                 <button
                   type="button"
+                  aria-expanded={openSections.otherLinks}
+                  data-selected={openSections.otherLinks}
                   onClick={() => toggleSection('otherLinks')}
                   className={getSectionBtnClass(openSections.otherLinks)}
                 >
                   {openSections.otherLinks && (
-                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
                   <span className="flex items-center gap-3">
-                    <LinkIcon className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.otherLinks ? 'text-[var(--primary-color)] scale-110' : 'text-[var(--primary-color)] opacity-85 group-hover:scale-110'}`} />
+                    <LinkIcon className={`w-4 h-4 transition-colors duration-150 ${openSections.otherLinks ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
                     OUTROS LINKS
                   </span>
                   <div className="flex items-center gap-2">
                     {openSections.otherLinks && (
-                      <span className="text-[10px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 uppercase tracking-wide font-bold animate-pulse">ATIVO</span>
+                      <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.otherLinks ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-400 group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.otherLinks ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
                 {/* 5. Catálogo de Produtos */}
                 <button
                   type="button"
+                  aria-expanded={openSections.catalog}
+                  data-selected={openSections.catalog}
                   onClick={() => toggleSection('catalog')}
                   className={getSectionBtnClass(openSections.catalog)}
                 >
                   {openSections.catalog && (
-                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
                   <span className="flex items-center gap-3">
-                    <ShoppingBag className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.catalog ? 'text-[var(--primary-color)] scale-110' : 'text-[var(--primary-color)] opacity-85 group-hover:scale-110'}`} />
+                    <ShoppingBag className={`w-4 h-4 transition-colors duration-150 ${openSections.catalog ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
                     CATÁLOGO DE PRODUTOS
                   </span>
                   <div className="flex items-center gap-2">
                     {openSections.catalog && (
-                      <span className="text-[10px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 uppercase tracking-wide font-bold animate-pulse">ATIVO</span>
+                      <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.catalog ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-400 group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.catalog ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
                 {/* 6. Portfólio */}
                 <button
                   type="button"
+                  aria-expanded={openSections.portfolio}
+                  data-selected={openSections.portfolio}
                   onClick={() => toggleSection('portfolio')}
                   className={getSectionBtnClass(openSections.portfolio)}
                 >
                   {openSections.portfolio && (
-                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
                   <span className="flex items-center gap-3">
-                    <Layout className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.portfolio ? 'text-[var(--primary-color)] scale-110' : 'text-[var(--primary-color)] opacity-85 group-hover:scale-110'}`} />
+                    <Layout className={`w-4 h-4 transition-colors duration-150 ${openSections.portfolio ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
                     PORTFÓLIO
                   </span>
                   <div className="flex items-center gap-2">
                     {openSections.portfolio && (
-                      <span className="text-[10px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 uppercase tracking-wide font-bold animate-pulse">ATIVO</span>
+                      <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.portfolio ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-400 group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.portfolio ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
                 {/* 7. Pagamento */}
                 <button
                   type="button"
+                  aria-expanded={openSections.payment}
+                  data-selected={openSections.payment}
                   onClick={() => toggleSection('payment')}
                   className={getSectionBtnClass(openSections.payment)}
                 >
                   {openSections.payment && (
-                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
                   <span className="flex items-center gap-3">
-                    <CreditCard className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.payment ? 'text-[var(--primary-color)] scale-110' : 'text-[var(--primary-color)] opacity-85 group-hover:scale-110'}`} />
+                    <CreditCard className={`w-4 h-4 transition-colors duration-150 ${openSections.payment ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
                     DADOS DE PAGAMENTO (PIX)
                   </span>
                   <div className="flex items-center gap-2">
                     {openSections.payment && (
-                      <span className="text-[10px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 uppercase tracking-wide font-bold animate-pulse">ATIVO</span>
+                      <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.payment ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-400 group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.payment ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
                 {/* 8. Endereço */}
                 <button
                   type="button"
+                  aria-expanded={openSections.address}
+                  data-selected={openSections.address}
                   onClick={() => toggleSection('address')}
                   className={getSectionBtnClass(openSections.address)}
                 >
                   {openSections.address && (
-                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
                   <span className="flex items-center gap-3">
-                    <MapPin className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.address ? 'text-[var(--primary-color)] scale-110' : 'text-[var(--primary-color)] opacity-85 group-hover:scale-110'}`} />
+                    <MapPin className={`w-4 h-4 transition-colors duration-150 ${openSections.address ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
                     ENDEREÇO E LOCALIZAÇÃO
                   </span>
                   <div className="flex items-center gap-2">
                     {openSections.address && (
-                      <span className="text-[10px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 uppercase tracking-wide font-bold animate-pulse">ATIVO</span>
+                      <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.address ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-400 group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.address ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
                 {/* 9. Chat/Contato */}
                 <button
                   type="button"
+                  aria-expanded={openSections.contactSection}
+                  data-selected={openSections.contactSection}
                   onClick={() => toggleSection('contactSection')}
                   className={getSectionBtnClass(openSections.contactSection)}
                 >
                   {openSections.contactSection && (
-                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full shadow-[0_0_8px_var(--primary-color)]" />
+                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
                   <span className="flex items-center gap-3">
-                    <Sparkles className={`w-4.5 h-4.5 transition-transform duration-200 ${openSections.contactSection ? 'text-[var(--primary-color)] scale-110' : 'text-[var(--primary-color)] opacity-85 group-hover:scale-110'}`} />
+                    <Sparkles className={`w-4 h-4 transition-colors duration-150 ${openSections.contactSection ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
                     CHAT CARDDIGITAL GM
                   </span>
                   <div className="flex items-center gap-2">
                     {openSections.contactSection && (
-                      <span className="text-[10px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 uppercase tracking-wide font-bold animate-pulse">ATIVO</span>
+                      <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${openSections.contactSection ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-400 group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.contactSection ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
               </div>
@@ -2004,12 +2036,12 @@ export default function Bio() {
 
             {/* Placeholder quando nenhuma seção está expandida */}
             {!Object.values(openSections).some(Boolean) && (
-              <div className="gm-card fora flex flex-col items-center justify-center py-16 px-4 border border-white/10 rounded-2xl text-center shadow-none backdrop-blur-md animate-in fade-in duration-300">
-                <div className="w-16 h-16 rounded-full bg-[var(--primary-color)]/10 text-[var(--primary-color)] flex items-center justify-center mb-4 border border-[var(--primary-color)]/20 shadow-none">
-                  <Sparkles className="w-8 h-8 animate-pulse text-[var(--primary-color)]" />
+              <div className="flex flex-col items-center justify-center py-16 px-4 bg-[#131315] border border-[#26262A] rounded-lg text-center shadow-none animate-in fade-in duration-200">
+                <div className="w-14 h-14 rounded-md bg-[var(--primary-color)]/10 text-[var(--primary-color)] flex items-center justify-center mb-4 border border-[var(--primary-color)]/25 shadow-none">
+                  <Sparkles className="w-7 h-7 text-[var(--primary-color)]" />
                 </div>
-                <h3 className="text-xl font-extrabold text-zinc-800 dark:text-white mb-2">Painel de Edição BiO</h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md leading-relaxed font-medium">
+                <h3 className="text-xl font-extrabold text-[#F2F2F3] mb-2">Painel de Edição BiO</h3>
+                <p className="text-sm text-[#8B8B92] max-w-md leading-relaxed font-medium">
                   Clique em qualquer uma das seções acima para abrir seu respectivo painel de configuração e editar de ponta a ponta.
                 </p>
               </div>
@@ -2018,13 +2050,13 @@ export default function Bio() {
 
             {/* 1. INFORMAÇÕES BÁSICAS */}
             {openSections.basic && (
-              <div className="gm-card fora border border-white/10 p-4 sm:p-6 rounded-2xl space-y-5 shadow-none backdrop-blur-md w-full animate-in fade-in duration-300">
-                <div className="sticky top-0 z-20 barra py-2 sm:py-2.5 px-3 sm:px-4 border-b border-white/10 flex items-center justify-between mb-3 rounded-xl shadow-none">
-                  <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
-                    <Info className="w-4.5 h-4.5 text-[var(--primary-color)] animate-pulse" />
+              <div className="bg-[#131315] border border-[#26262A] p-4 sm:p-6 rounded-lg space-y-5 shadow-none w-full animate-in fade-in duration-200">
+                <div className="sticky top-0 z-20 bg-[#0B0B0C] py-2.5 px-3 sm:px-4 border border-[#26262A] flex items-center justify-between mb-3 rounded-md shadow-none">
+                  <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                    <Info className="w-4 h-4 text-[var(--primary-color)]" />
                     INFORMAÇÕES BÁSICAS
                   </span>
-                  <span className="text-[10px] sm:text-xs font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 shadow-none">
+                  <span className="text-[11px] font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 shadow-none">
                     Edição Ativa
                   </span>
                 </div>
@@ -2032,8 +2064,8 @@ export default function Bio() {
                 <div className="flex flex-col gap-5">
 
                 {/* Logomarca Exclusiva do Website */}
-                <div className="p-5 sm:p-6 rounded-2xl border border-white/10 fora flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-none">
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl barra border-2 border-dashed border-white/20 overflow-hidden flex items-center justify-center shrink-0 group">
+                <div className="p-5 sm:p-6 rounded-md border border-[#26262A] bg-[#0B0B0C] flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-none">
+                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-md bg-[#131315] border border-dashed border-[#3F3F46] overflow-hidden flex items-center justify-center shrink-0 group">
                     {(bioConfig as any).website_logo_url || (bioConfig as any).logo_url ? (
                       <img 
                         src={(bioConfig as any).website_logo_url || (bioConfig as any).logo_url} 
@@ -2041,9 +2073,9 @@ export default function Bio() {
                         className="w-full h-full object-contain p-2" 
                       />
                     ) : (
-                      <div className="flex flex-col items-center gap-1.5 text-zinc-500">
+                      <div className="flex flex-col items-center gap-1.5 text-[#8B8B92]">
                         <ImageIcon size={28} className="opacity-60 text-[var(--primary-color)]" />
-                        <span className="text-[10px] font-bold">Sem Imagem</span>
+                        <span className="text-[11px] font-bold">Sem Imagem</span>
                       </div>
                     )}
                   </div>
@@ -2052,11 +2084,11 @@ export default function Bio() {
                     <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--primary-color)] flex items-center gap-1.5">
                       <Sparkles size={14} /> Logomarca Exclusiva do Website
                     </span>
-                    <p className="text-xs sm:text-sm text-zinc-400 font-medium leading-relaxed">
+                    <p className="text-xs sm:text-sm text-[#8B8B92] font-medium leading-relaxed">
                       Esta imagem será exibida exclusivamente no cabeçalho e rodapé do seu site público. Ela é independente da logomarca do aplicativo interno.
                     </p>
                     <div className="flex flex-wrap items-center gap-2.5 pt-1 w-full">
-                      <label className="gm-btn py-2 px-4 text-xs font-bold flex items-center gap-2 cursor-pointer rounded-xl border border-[var(--primary-color)]/40 bg-[var(--primary-color)]/10 text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition-all shadow-none">
+                      <label className="py-2 px-4 text-xs font-bold flex items-center gap-2 cursor-pointer rounded-[6px] border border-[var(--primary-color)]/40 bg-[var(--primary-color)]/10 text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-[#0B0B0C] transition-colors shadow-none">
                         <Upload size={14} />
                         <span>Carregar Logo do Website</span>
                         <input 
@@ -2086,7 +2118,7 @@ export default function Bio() {
                             handleChange("website_logo_url", "");
                             pushToast({ type: "info", title: "Removido", message: "Logo do website removido." });
                           }}
-                          className="px-3 py-2 text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl border border-red-500/20 transition-all cursor-pointer"
+                          className="px-3 py-2 text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-[6px] border border-red-500/25 transition-colors cursor-pointer"
                         >
                           Remover
                         </button>
@@ -2128,13 +2160,13 @@ export default function Bio() {
                   )}
                   
                   {/* Barra de Formatação */}
-                  <div className="flex flex-wrap items-center gap-3 bg-[#0d0e12]/60 p-3 rounded-lg border border-white/5 mt-2">
+                  <div className="flex flex-wrap items-center gap-3 bg-[#0B0B0C] p-3 rounded-md border border-[#26262A] mt-2">
                     {/* Alinhamento */}
-                    <div className="flex items-center gap-1 bg-[#161920] p-1 rounded-xl border border-white/5 shadow-inner">
+                    <div className="flex items-center gap-1 bg-[#131315] p-1 rounded-md border border-[#26262A]">
                       <button
                         type="button"
                         onClick={() => handleChange(basicInfoTab === "desktop" ? "description_align" : "description_align_mobile", "left")}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'left') ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-[4px] transition-colors ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'left') ? 'bg-[var(--primary-color)] text-[#0B0B0C]' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}
                         title="Alinhar à Esquerda"
                       >
                         <AlignLeft className="w-4 h-4" />
@@ -2142,7 +2174,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={() => handleChange(basicInfoTab === "desktop" ? "description_align" : "description_align_mobile", "center")}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'center' || !(basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile)) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-[4px] transition-colors ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'center' || !(basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile)) ? 'bg-[var(--primary-color)] text-[#0B0B0C]' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}
                         title="Centralizado"
                       >
                         <AlignCenter className="w-4 h-4" />
@@ -2150,7 +2182,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={() => handleChange(basicInfoTab === "desktop" ? "description_align" : "description_align_mobile", "right")}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'right') ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-[4px] transition-colors ${((basicInfoTab === "desktop" ? bioConfig.description_align : bioConfig.description_align_mobile) === 'right') ? 'bg-[var(--primary-color)] text-[#0B0B0C]' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}
                         title="Alinhar à Direita"
                       >
                         <AlignRight className="w-4 h-4" />
@@ -2158,11 +2190,11 @@ export default function Bio() {
                     </div>
 
                     {/* Estilos */}
-                    <div className="flex items-center gap-1 bg-[#161920] p-1 rounded-xl border border-white/5 shadow-inner">
+                    <div className="flex items-center gap-1 bg-[#131315] p-1 rounded-md border border-[#26262A]">
                       <button
                         type="button"
                         onClick={handleBoldClick}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_bold : bioConfig.description_bold_mobile) || isSelectionBold) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-[4px] transition-colors ${((basicInfoTab === "desktop" ? bioConfig.description_bold : bioConfig.description_bold_mobile) || isSelectionBold) ? 'bg-[var(--primary-color)] text-[#0B0B0C]' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}
                         title="Negrito"
                       >
                         <Bold className="w-4 h-4 font-bold" />
@@ -2170,7 +2202,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={handleItalicClick}
-                        className={`p-2 rounded-lg transition-all duration-200 ${((basicInfoTab === "desktop" ? bioConfig.description_italic : bioConfig.description_italic_mobile) || isSelectionItalic) ? 'bg-[var(--primary-color)] text-white shadow-md' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
+                        className={`p-2 rounded-[4px] transition-colors ${((basicInfoTab === "desktop" ? bioConfig.description_italic : bioConfig.description_italic_mobile) || isSelectionItalic) ? 'bg-[var(--primary-color)] text-[#0B0B0C]' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}
                         title="Itálico"
                       >
                         <Italic className="w-4 h-4 italic" />
@@ -2180,10 +2212,10 @@ export default function Bio() {
                     {/* Fonte */}
                     <div className="flex-1 min-w-[180px]">
                       <select
-                        className={`gm-input !h-10 !py-0 !px-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                        className={`gm-input !h-10 !py-0 !px-3 text-sm font-semibold rounded-[4px] transition-colors ${
                           ((selectionFont || bioConfig.description_font || "ui") !== "ui")
                             ? 'border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5'
-                            : 'border-white/10'
+                            : 'border-[#26262A]'
                         }`}
                         value={selectionFont || bioConfig.description_font || "ui"}
                         onChange={e => handleFontChange(e.target.value)}
@@ -2200,13 +2232,13 @@ export default function Bio() {
                      {/* Tamanho da Fonte */}
                      <div className="flex-1 min-w-[150px]">
                        <select
-                         className={`gm-input !h-10 !py-0 !px-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                         className={`gm-input !h-10 !py-0 !px-3 text-sm font-semibold rounded-[4px] transition-colors ${
                            (basicInfoTab === "desktop"
                              ? (bioConfig.description_size && bioConfig.description_size !== "lg" && bioConfig.description_size !== "16 pt")
                              : (bioConfig.description_size_mobile && bioConfig.description_size_mobile !== "lg" && bioConfig.description_size_mobile !== "16 pt")
                            )
                              ? 'border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5'
-                             : 'border-white/10'
+                             : 'border-[#26262A]'
                          }`}
                          value={getSelectSizeValue(basicInfoTab === "desktop" ? bioConfig.description_size : (bioConfig.description_size_mobile || "lg"))}
                          onChange={e => handleChange(basicInfoTab === "desktop" ? "description_size" : "description_size_mobile", e.target.value)}
@@ -2227,8 +2259,8 @@ export default function Bio() {
                 </div>
 
                 {/* Botão de Ação Principal (Conheça nossos Serviços) */}
-                <div className="space-y-3 pt-4 border-t border-white/10">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                <div className="space-y-3 pt-4 border-t border-[#26262A]">
+                  <span className="text-xs font-bold text-[#F2F2F3] flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-[var(--primary-color)]" /> Botão de Ação Principal (Conheça nossos Serviços)
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2274,13 +2306,13 @@ export default function Bio() {
 
             {/* 2. APARÊNCIA DO SITE */}
             {openSections.appearance && (
-              <div className="gm-card fora border border-white/10 p-4 sm:p-6 rounded-2xl space-y-5 shadow-none backdrop-blur-md w-full animate-in fade-in duration-300">
-                <div className="sticky top-0 z-20 barra py-2 sm:py-2.5 px-3 sm:px-4 border-b border-white/10 flex items-center justify-between mb-3 rounded-xl shadow-none">
-                  <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
-                    <Eye className="w-4.5 h-4.5 text-[var(--primary-color)] animate-pulse" />
+              <div className="bg-[#131315] border border-[#26262A] p-4 sm:p-6 rounded-lg space-y-5 shadow-none w-full animate-in fade-in duration-200">
+                <div className="sticky top-0 z-20 bg-[#0B0B0C] py-2.5 px-3 sm:px-4 border border-[#26262A] flex items-center justify-between mb-3 rounded-md shadow-none">
+                  <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                    <Eye className="w-4 h-4 text-[var(--primary-color)]" />
                     APARÊNCIA DO SITE
                   </span>
-                  <span className="text-[10px] sm:text-xs font-semibold text-zinc-300 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/10 shadow-none">
+                  <span className="text-[11px] font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 shadow-none">
                     Edição Ativa
                   </span>
                 </div>
@@ -2292,7 +2324,7 @@ export default function Bio() {
                   <input type="color" className="w-10 h-10 rounded cursor-pointer border-0 p-0 bg-transparent" value={bioConfig.color || settings?.brand_primary || "#FF6900"} onChange={e => handleChange("color", e.target.value)} />
                   <input type="text" className="gm-input flex-1 font-mono text-sm" value={bioConfig.color || settings?.brand_primary || "#FF6900"} onChange={e => handleChange("color", e.target.value)} />
                 </div>
-                <p className="text-[10px] text-zinc-500 mt-1">Se vazio, usará a cor principal do sistema.</p>
+                <p className="text-[11px] text-[#8B8B92] mt-1">Se vazio, usará a cor principal do sistema.</p>
               </div>
               <div>
                 <label className="gm-label">Tema Visual</label>
@@ -2358,28 +2390,28 @@ export default function Bio() {
               </div>
               {/* Seção Desktop (Plano de Fundo & Banner Principal) */}
               {selectedView === "computador" && (
-                <div className="sm:col-span-2 border-t border-white/10 pt-4 mt-2 space-y-4">
-                  <div className="space-y-4 fora p-4 sm:p-5 rounded-2xl border border-white/10 shadow-none">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-2.5">
-                      <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                <div className="sm:col-span-2 border-t border-[#26262A] pt-4 mt-2 space-y-4">
+                  <div className="space-y-4 bg-[#0B0B0C] p-4 sm:p-5 rounded-md border border-[#26262A] shadow-none">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#26262A] pb-2.5">
+                      <span className="text-sm font-bold text-[#F2F2F3] flex items-center gap-1.5">
                         <Layout className="w-4 h-4 text-[var(--primary-color)]" /> Mídias Versão Desktop (Computador)
                       </span>
-                      <span className="text-[10px] font-semibold text-zinc-400 barra px-2.5 py-1 rounded-full border border-white/10 shadow-none">
+                      <span className="text-[11px] font-semibold text-[#8B8B92] bg-[#131315] px-2.5 py-1 rounded-[4px] border border-[#26262A] tabular-nums">
                         Tamanho Sugerido: <strong className="text-[var(--primary-color)]">1920x500 px</strong>
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4">
                     {/* Plano de Fundo Desktop */}
-                    <div className="space-y-2 barra p-3.5 rounded-2xl border border-white/10 flex flex-col justify-between shadow-none">
+                    <div className="space-y-2 bg-[#131315] p-3.5 rounded-md border border-[#26262A] flex flex-col justify-between shadow-none">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-xs font-bold text-zinc-300">Plano de Fundo Desktop</span>
+                          <span className="text-xs font-bold text-[#CBD5E1]">Plano de Fundo Desktop</span>
                           {bioConfig.bg_image_url && (
                             <button 
                               type="button" 
                               onClick={() => handleChange("bg_image_url", "")} 
-                              className="text-red-500 hover:text-red-400 text-[10px] font-bold cursor-pointer"
+                              className="text-red-400 hover:text-red-300 text-[11px] font-bold cursor-pointer"
                             >
                               Remover
                             </button>
@@ -2387,18 +2419,18 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.bg_image_url ? (
-                          <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/40 shadow-none">
+                          <div className="w-full aspect-video rounded-md overflow-hidden border border-[#26262A] bg-[#0B0B0C] shadow-none">
                             <OptimizedImage src={bioConfig.bg_image_url} alt="Plano de Fundo Desktop" className="w-full h-full object-cover" width={800} />
                           </div>
                         ) : (
-                          <div className="w-full aspect-video rounded-xl border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
-                            <Layout className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
+                          <div className="w-full aspect-video rounded-md border border-dashed border-[#3F3F46] flex flex-col items-center justify-center text-[#8B8B92] text-[11px] font-medium bg-[#0B0B0C]">
+                            <Layout className="w-4 h-4 mb-1 opacity-50 text-[var(--primary-color)]" />
                             Sem plano de fundo desktop
                           </div>
                         )}
                       </div>
                       <div className="pt-2">
-                        <label className="w-full gm-btn gm-btn-outline !py-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all shadow-none">
+                        <label className="w-full gm-btn gm-btn-outline !py-3.5 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-colors rounded-[6px] shadow-none">
                           <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
                           <span className="font-bold text-white">Upload</span>
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBg(false, e)} />
@@ -2407,15 +2439,15 @@ export default function Bio() {
                     </div>
 
                     {/* Banner Desktop Principal */}
-                    <div className="space-y-2 barra p-3.5 rounded-2xl border border-white/10 flex flex-col justify-between shadow-none">
+                    <div className="space-y-2 bg-[#131315] p-3.5 rounded-md border border-[#26262A] flex flex-col justify-between shadow-none">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-xs font-bold text-zinc-300">Banner Desktop Principal</span>
+                          <span className="text-xs font-bold text-[#CBD5E1]">Banner Desktop Principal</span>
                           {bioConfig.banner_img_url_1 && (
                             <button 
                               type="button" 
                               onClick={() => handleChange("banner_img_url_1", "")} 
-                              className="text-red-500 hover:text-red-400 text-[10px] font-bold cursor-pointer"
+                              className="text-red-400 hover:text-red-300 text-[11px] font-bold cursor-pointer"
                             >
                               Remover
                             </button>
@@ -2423,19 +2455,19 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.banner_img_url_1 ? (
-                          <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/40 shadow-none">
+                          <div className="w-full aspect-video rounded-md overflow-hidden border border-[#26262A] bg-[#0B0B0C] shadow-none">
                             <OptimizedImage src={bioConfig.banner_img_url_1} alt="Banner Desktop" className="w-full h-full object-cover" width={800} />
                           </div>
                         ) : (
-                          <div className="w-full aspect-video rounded-xl border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
-                            <Sparkles className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
+                          <div className="w-full aspect-video rounded-md border border-dashed border-[#3F3F46] flex flex-col items-center justify-center text-[#8B8B92] text-[11px] font-medium bg-[#0B0B0C]">
+                            <Sparkles className="w-4 h-4 mb-1 opacity-50 text-[var(--primary-color)]" />
                             Sem banner desktop
                           </div>
                         )}
                       </div>
 
                       <div className="pt-2">
-                        <label className="w-full gm-btn gm-btn-outline !py-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all shadow-none">
+                        <label className="w-full gm-btn gm-btn-outline !py-3.5 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-colors rounded-[6px] shadow-none">
                           <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
                           <span className="font-bold text-white">Upload</span>
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBanner(1, false, e)} />
@@ -2449,28 +2481,28 @@ export default function Bio() {
 
               {/* Seção Smartphone (Plano de Fundo & Banner Principal) */}
               {selectedView === "smartphone" && (
-                <div className="sm:col-span-2 border-t border-white/10 pt-4 mt-2 space-y-4">
-                  <div className="space-y-4 fora p-4 sm:p-5 rounded-2xl border border-white/10 shadow-none">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-2.5">
-                    <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                <div className="sm:col-span-2 border-t border-[#26262A] pt-4 mt-2 space-y-4">
+                  <div className="space-y-4 bg-[#0B0B0C] p-4 sm:p-5 rounded-md border border-[#26262A] shadow-none">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#26262A] pb-2.5">
+                    <span className="text-sm font-bold text-[#F2F2F3] flex items-center gap-1.5">
                       <Smartphone className="w-4 h-4 text-[var(--primary-color)]" /> Mídias Versão Smartphone (Celular)
                     </span>
-                    <span className="text-[10px] font-semibold text-zinc-400 barra px-2.5 py-1 rounded-full border border-white/10 shadow-none">
+                    <span className="text-[11px] font-semibold text-[#8B8B92] bg-[#131315] px-2.5 py-1 rounded-[4px] border border-[#26262A] tabular-nums">
                       Plano de Fundo: <strong className="text-[var(--primary-color)]">1080x1920 px (9:16)</strong> | Banner Principal: <strong className="text-[var(--primary-color)]">1080x900 px (6:5)</strong>
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Plano de Fundo Smartphone */}
-                    <div className="space-y-2 barra p-3.5 rounded-2xl border border-white/10 flex flex-col justify-between shadow-none">
+                    <div className="space-y-2 bg-[#131315] p-3.5 rounded-md border border-[#26262A] flex flex-col justify-between shadow-none">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-xs font-bold text-zinc-300">Plano de Fundo Smartphone</span>
+                          <span className="text-xs font-bold text-[#CBD5E1]">Plano de Fundo Smartphone</span>
                           {bioConfig.bg_mobile_image_url && (
                             <button 
                               type="button" 
                               onClick={() => handleChange("bg_mobile_image_url", "")} 
-                              className="text-red-500 hover:text-red-400 text-[10px] font-bold cursor-pointer"
+                              className="text-red-400 hover:text-red-300 text-[11px] font-bold cursor-pointer"
                             >
                               Remover
                             </button>
@@ -2478,19 +2510,19 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.bg_mobile_image_url ? (
-                          <div className="w-full aspect-[9/16] rounded-xl overflow-hidden border border-white/10 bg-black/40 shadow-none">
+                          <div className="w-full aspect-[9/16] rounded-md overflow-hidden border border-[#26262A] bg-[#0B0B0C] shadow-none">
                             <OptimizedImage src={bioConfig.bg_mobile_image_url} alt="Plano de Fundo Smartphone" className="w-full h-full object-cover" width={240} />
                           </div>
                         ) : (
-                          <div className="w-full aspect-[9/16] rounded-xl border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
-                            <Smartphone className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
+                          <div className="w-full aspect-[9/16] rounded-md border border-dashed border-[#3F3F46] flex flex-col items-center justify-center text-[#8B8B92] text-[11px] font-medium bg-[#0B0B0C]">
+                            <Smartphone className="w-4 h-4 mb-1 opacity-50 text-[var(--primary-color)]" />
                             Sem plano de fundo smartphone
                           </div>
                         )}
                       </div>
 
                       <div className="pt-2">
-                        <label className="w-full gm-btn gm-btn-outline !py-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all shadow-none">
+                        <label className="w-full gm-btn gm-btn-outline !py-3.5 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-colors rounded-[6px] shadow-none">
                           <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
                           <span className="font-bold text-white">Upload</span>
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBg(true, e)} />
@@ -2499,15 +2531,15 @@ export default function Bio() {
                     </div>
 
                     {/* Banner Smartphone Principal */}
-                    <div className="space-y-2 barra p-3.5 rounded-2xl border border-white/10 flex flex-col justify-between shadow-none">
+                    <div className="space-y-2 bg-[#131315] p-3.5 rounded-md border border-[#26262A] flex flex-col justify-between shadow-none">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-xs font-bold text-zinc-300">Banner Smartphone Principal (1080x900 px)</span>
+                          <span className="text-xs font-bold text-[#CBD5E1]">Banner Smartphone Principal (1080x900 px)</span>
                           {bioConfig.mobile_banner_img_url_1 && (
                             <button 
                               type="button" 
                               onClick={() => handleChange("mobile_banner_img_url_1", "")} 
-                              className="text-red-500 hover:text-red-400 text-[10px] font-bold cursor-pointer"
+                              className="text-red-400 hover:text-red-300 text-[11px] font-bold cursor-pointer"
                             >
                               Remover
                             </button>
@@ -2515,19 +2547,19 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.mobile_banner_img_url_1 ? (
-                          <div className="w-full aspect-[6/5] rounded-xl overflow-hidden border border-white/10 bg-black/40 shadow-none">
+                          <div className="w-full aspect-[6/5] rounded-md overflow-hidden border border-[#26262A] bg-[#0B0B0C] shadow-none">
                             <OptimizedImage src={bioConfig.mobile_banner_img_url_1} alt="Banner Smartphone" className="w-full h-full object-cover" width={240} />
                           </div>
                         ) : (
-                          <div className="w-full aspect-[6/5] rounded-xl border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
-                            <Sparkles className="w-4 h-4 mb-1 opacity-40 text-[var(--primary-color)]" />
+                          <div className="w-full aspect-[6/5] rounded-md border border-dashed border-[#3F3F46] flex flex-col items-center justify-center text-[#8B8B92] text-[11px] font-medium bg-[#0B0B0C]">
+                            <Sparkles className="w-4 h-4 mb-1 opacity-50 text-[var(--primary-color)]" />
                             Sem banner smartphone
                           </div>
                         )}
                       </div>
 
                       <div className="pt-2">
-                        <label className="w-full gm-btn gm-btn-outline !py-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all shadow-none">
+                        <label className="w-full gm-btn gm-btn-outline !py-3.5 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-colors rounded-[6px] shadow-none">
                           <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
                           <span className="font-bold text-white">Upload</span>
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadBanner(1, true, e)} />
@@ -2582,13 +2614,13 @@ export default function Bio() {
 
         {/* 3. CONTATOS E REDES */}
         {openSections.contacts && (
-          <div className="gm-card fora border border-white/10 p-4 sm:p-6 rounded-2xl space-y-5 shadow-none backdrop-blur-md w-full animate-in fade-in duration-300">
-            <div className="sticky top-0 z-20 barra py-2 sm:py-2.5 px-3 sm:px-4 border-b border-white/10 flex items-center justify-between mb-3 rounded-xl shadow-none">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
-                <Phone className="w-4.5 h-4.5 text-[var(--primary-color)] animate-pulse" />
+          <div className="bg-[#131315] border border-[#26262A] p-4 sm:p-6 rounded-lg space-y-5 shadow-none w-full animate-in fade-in duration-200">
+            <div className="sticky top-0 z-20 bg-[#0B0B0C] py-2.5 px-3 sm:px-4 border border-[#26262A] flex items-center justify-between mb-3 rounded-md shadow-none">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                <Phone className="w-4 h-4 text-[var(--primary-color)]" />
                 CONTATOS E REDES
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 shadow-none">
+              <span className="text-[11px] font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 shadow-none">
                 Edição Ativa
               </span>
             </div>
@@ -2628,13 +2660,13 @@ export default function Bio() {
 
         {/* 4. OUTROS LINKS */}
         {openSections.otherLinks && (
-          <div className="gm-card fora border border-white/10 p-4 sm:p-6 rounded-2xl space-y-5 shadow-none backdrop-blur-md w-full animate-in fade-in duration-300">
-            <div className="sticky top-0 z-20 barra py-2 sm:py-2.5 px-3 sm:px-4 border-b border-white/10 flex items-center justify-between mb-3 rounded-xl shadow-none">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
-                <LinkIcon className="w-4.5 h-4.5 text-[var(--primary-color)] animate-pulse" />
+          <div className="bg-[#131315] border border-[#26262A] p-4 sm:p-6 rounded-lg space-y-5 shadow-none w-full animate-in fade-in duration-200">
+            <div className="sticky top-0 z-20 bg-[#0B0B0C] py-2.5 px-3 sm:px-4 border border-[#26262A] flex items-center justify-between mb-3 rounded-md shadow-none">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                <LinkIcon className="w-4 h-4 text-[var(--primary-color)]" />
                 OUTROS LINKS
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 shadow-none">
+              <span className="text-[11px] font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 shadow-none">
                 Edição Ativa
               </span>
             </div>
@@ -2643,7 +2675,7 @@ export default function Bio() {
               <div className="flex justify-end mb-4">
                 <button 
                   onClick={addCustomLink}
-                  className="flex items-center text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] text-sm font-medium bg-[var(--primary-color-10)] px-3 py-1.5 rounded-lg border border-[var(--primary-color-20)] transition-all hover:bg-[var(--primary-color-20)] cursor-pointer"
+                  className="flex items-center text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] text-sm font-medium bg-[var(--primary-color-10)] px-3 py-1.5 rounded-[6px] border border-[var(--primary-color-20)] transition-colors hover:bg-[var(--primary-color-20)] cursor-pointer"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Adicionar
@@ -2651,7 +2683,7 @@ export default function Bio() {
               </div>
             
             {bioConfig.custom_links.length === 0 ? (
-               <div className="text-center py-6 text-zinc-500 text-sm border border-dashed border-white/10 rounded-xl">
+               <div className="text-center py-6 text-[#8B8B92] text-sm border border-dashed border-[#3F3F46] bg-[#0B0B0C] rounded-md">
                  Nenhum link adicional. Clique em "Adicionar" para inserir links customizados.
                </div>
             ) : (
@@ -2659,17 +2691,17 @@ export default function Bio() {
                  {bioConfig.custom_links.map((link) => {
                    const CurrentIcon = getPlatformIcon(link.platform);
                    return (
-                     <div key={link.id} className="p-4 fora rounded-2xl border border-white/10 space-y-3 relative group shadow-none">
+                     <div key={link.id} className="p-4 bg-[#0B0B0C] rounded-md border border-[#26262A] space-y-3 relative group shadow-none">
                        <button 
                          onClick={() => removeCustomLink(link.id)}
-                         className="absolute top-2 right-2 text-zinc-500 hover:text-red-400 p-1 bg-black/30 rounded-full hover:bg-red-500/20 transition-all cursor-pointer"
+                         className="absolute top-2 right-2 text-[#8B8B92] hover:text-red-400 p-1.5 bg-[#131315] border border-[#26262A] rounded-[4px] hover:bg-red-500/15 transition-colors cursor-pointer"
                        >
                          <Trash className="w-4 h-4" />
                        </button>
                        
                        <div className="grid grid-cols-1 gap-3 pt-2">
                          <div>
-                           <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Ícone & Tipo de Link</label>
+                           <label className="text-sm font-semibold text-[#CBD5E1] mb-1.5 block">Ícone & Tipo de Link</label>
                            <div className="relative">
                              <button
                                onClick={() => setIconPickerOpen(iconPickerOpen === link.id ? null : link.id)}
@@ -2683,7 +2715,7 @@ export default function Bio() {
                              </button>
                              
                              {iconPickerOpen === link.id && (
-                               <div className="absolute z-20 mt-1 w-full fora border border-white/10 rounded-2xl p-3 shadow-none backdrop-blur-xl">
+                               <div className="absolute z-20 mt-1 w-full bg-[#131315] border border-[#26262A] rounded-md p-3 shadow-2xl">
                                  <div className="grid grid-cols-4 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
                                    {platforms.map(p => {
                                      const PIcon = getPlatformIcon(p.value);
@@ -2696,10 +2728,10 @@ export default function Bio() {
                                            setIconPickerOpen(null);
                                          }}
                                          title={p.label}
-                                         className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-colors cursor-pointer ${link.platform === p.value ? 'bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)]' : 'border-transparent hover:bg-white/5 text-zinc-300'}`}
+                                         className={`flex flex-col items-center justify-center p-2 rounded-[4px] border transition-colors cursor-pointer ${link.platform === p.value ? 'bg-[var(--gm-primary)]/10 border-[var(--gm-primary)] text-[var(--gm-primary)]' : 'border-transparent hover:bg-[#1B1B1E] text-[#CBD5E1]'}`}
                                        >
                                          <PIcon className="w-5 h-5 mb-1" />
-                                         <span className="text-[9px] truncate w-full text-center">{p.label}</span>
+                                         <span className="text-[11px] truncate w-full text-center">{p.label}</span>
                                        </button>
                                      );
                                    })}
@@ -2767,13 +2799,13 @@ export default function Bio() {
 
         {/* 5. CATÁLOGO DE PRODUTOS */}
         {openSections.catalog && (
-          <div className="gm-card fora border border-white/10 p-4 sm:p-6 rounded-2xl space-y-5 shadow-none backdrop-blur-md w-full animate-in fade-in duration-300">
-            <div className="sticky top-0 z-20 barra py-2 sm:py-2.5 px-3 sm:px-4 border-b border-white/10 flex items-center justify-between mb-3 rounded-xl shadow-none">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
-                <ShoppingBag className="w-4.5 h-4.5 text-[var(--primary-color)] animate-pulse" />
+          <div className="bg-[#131315] border border-[#26262A] p-4 sm:p-6 rounded-lg space-y-5 shadow-none w-full animate-in fade-in duration-200">
+            <div className="sticky top-0 z-20 bg-[#0B0B0C] py-2.5 px-3 sm:px-4 border border-[#26262A] flex items-center justify-between mb-3 rounded-md shadow-none">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                <ShoppingBag className="w-4 h-4 text-[var(--primary-color)]" />
                 CATÁLOGO DE PRODUTOS
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 shadow-none">
+              <span className="text-[11px] font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 shadow-none">
                 Edição Ativa
               </span>
             </div>
@@ -2786,14 +2818,14 @@ export default function Bio() {
               </div>
 
               {/* TABS DE CONTROLE DO CATÁLOGO */}
-              <div className="flex border-b border-white/10 gap-1 overflow-x-auto no-scrollbar">
+              <div className="flex border-b border-[#26262A] gap-1 overflow-x-auto no-scrollbar">
                 <button
                   type="button"
                   onClick={() => setCatalogTab('list')}
-                  className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+                  className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-colors flex items-center gap-2 cursor-pointer shrink-0 tabular-nums ${
                     catalogTab === 'list' 
                       ? 'border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5' 
-                      : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                      : 'border-transparent text-[#8B8B92] hover:text-white'
                   }`}
                 >
                   <List className="w-4 h-4" />
@@ -2802,17 +2834,17 @@ export default function Bio() {
                 <button
                   type="button"
                   onClick={() => setCatalogTab('add')}
-                  className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+                  className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-colors flex items-center gap-2 cursor-pointer shrink-0 ${
                     catalogTab === 'add' 
                       ? 'border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5' 
-                      : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                      : 'border-transparent text-[#8B8B92] hover:text-white'
                   }`}
                 >
                   <PlusCircle className="w-4 h-4" />
                   Cadastrar Novo
                 </button>
                 <label 
-                  className="px-3 py-1.5 my-auto text-xs font-bold border rounded-xl border-white/10 hover:border-[var(--primary-color)] text-zinc-300 hover:text-white bg-black/40 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-none hover:bg-[var(--primary-color)]/20"
+                  className="px-3 py-1.5 my-auto text-xs font-bold border rounded-[6px] border-[#26262A] hover:border-[var(--primary-color)] text-[#CBD5E1] hover:text-white bg-[#0B0B0C] transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 shadow-none hover:bg-[#1B1B1E]"
                   title="Envie até 5 fotos para criar produtos rápidos de uma vez"
                 >
                   <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
@@ -2822,10 +2854,10 @@ export default function Bio() {
                 <button
                   type="button"
                   onClick={() => setCatalogTab('trash')}
-                  className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer shrink-0 ml-auto ${
+                  className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-colors flex items-center gap-2 cursor-pointer shrink-0 ml-auto tabular-nums ${
                     catalogTab === 'trash' 
                       ? 'border-red-500 text-red-400 bg-red-500/5' 
-                      : 'border-transparent text-zinc-400 hover:text-red-400/80'
+                      : 'border-transparent text-[#8B8B92] hover:text-red-400/80'
                   }`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -2837,13 +2869,13 @@ export default function Bio() {
               {catalogTab === 'list' && (
                 <div className="space-y-4">
                   {(!bioConfig.catalog_items || bioConfig.catalog_items.length === 0) ? (
-                    <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-white/10 rounded-2xl space-y-3">
+                    <div className="text-center py-10 text-[#8B8B92] text-sm border border-dashed border-[#3F3F46] bg-[#0B0B0C] rounded-md space-y-3">
                       <ShoppingBag className="w-12 h-12 opacity-30 mx-auto text-[var(--primary-color)]" />
-                      <p className="font-medium text-zinc-400">Nenhum produto cadastrado no momento.</p>
+                      <p className="font-medium text-[#8B8B92]">Nenhum produto cadastrado no momento.</p>
                       <button 
                         type="button"
                         onClick={() => setCatalogTab('add')}
-                        className="text-xs bg-[var(--primary-color)] hover:bg-[var(--primary-color-hover)] text-white px-4 py-2 rounded-xl font-bold transition-all shadow-none cursor-pointer"
+                        className="text-xs bg-[var(--primary-color)] hover:bg-[var(--primary-color-hover)] text-[#0B0B0C] px-4 py-2 rounded-[6px] font-bold transition-colors shadow-none cursor-pointer"
                       >
                         Cadastrar Primeiro Produto
                       </button>
@@ -2856,7 +2888,7 @@ export default function Bio() {
                         return (
                           <div 
                             key={item.id} 
-                            className="fora rounded-2xl border border-white/10 overflow-hidden transition-all duration-200 shadow-none"
+                            className="bg-[#0B0B0C] rounded-md border border-[#26262A] overflow-hidden transition-colors duration-150 shadow-none"
                           >
                             {/* ITEM HEADER (CLICK TO EXPAND) */}
                             <div 
@@ -2867,11 +2899,11 @@ export default function Bio() {
                                     : [...prev, item.id]
                                 );
                               }}
-                              className="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 select-none transition-colors"
+                              className="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-[#1B1B1E] select-none transition-colors"
                             >
                               <div className="flex items-center gap-3.5 min-w-0 flex-1">
                                 {firstImage ? (
-                                  <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden p-0.5 shrink-0 shadow-none">
+                                  <div className="w-12 h-12 rounded-[4px] bg-[#131315] border border-[#26262A] flex items-center justify-center overflow-hidden p-0.5 shrink-0 shadow-none">
                                     <OptimizedImage 
                                       src={firstImage} 
                                       alt={item.name} 
@@ -2880,13 +2912,13 @@ export default function Bio() {
                                     />
                                   </div>
                                 ) : (
-                                  <div className="w-12 h-12 rounded-xl bg-black/20 border border-white/10 flex items-center justify-center text-zinc-600 shrink-0">
+                                  <div className="w-12 h-12 rounded-[4px] bg-[#131315] border border-[#26262A] flex items-center justify-center text-[#8B8B92] shrink-0">
                                     <ShoppingBag className="w-5 h-5 opacity-40" />
                                   </div>
                                 )}
                                 <div className="min-w-0 flex-1 pr-2">
-                                  <h4 className="font-bold text-sm text-zinc-200 truncate">{item.name || <span className="italic text-zinc-500 font-normal">Sem Nome</span>}</h4>
-                                  <p className="text-xs text-[var(--primary-color)] font-mono font-bold mt-0.5">{item.price || 'Preço sob consulta'}</p>
+                                  <h4 className="font-bold text-sm text-[#F2F2F3] truncate">{item.name || <span className="italic text-[#8B8B92] font-normal">Sem Nome</span>}</h4>
+                                  <p className="text-xs text-[var(--primary-color)] font-mono font-bold tabular-nums mt-0.5">{item.price || 'Preço sob consulta'}</p>
                                 </div>
                               </div>
                               
@@ -2898,14 +2930,14 @@ export default function Bio() {
                                     e.stopPropagation();
                                     removeCatalogItem(item.id);
                                   }}
-                                  className="text-zinc-400 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-xl transition-all mr-1 cursor-pointer"
+                                  className="text-[#8B8B92] hover:text-red-400 hover:bg-red-500/10 p-2 rounded-[4px] transition-colors mr-1 cursor-pointer"
                                   title="Mover para lixeira"
                                 >
                                   <Trash className="w-4 h-4" />
                                 </button>
                                 
                                 {/* EXPANSION INDICATOR */}
-                                <div className="text-zinc-400 hover:text-zinc-200 p-2 rounded-xl">
+                                <div className="text-[#8B8B92] hover:text-white p-2 rounded-[4px]">
                                   {isExpanded ? (
                                     <ChevronUp className="w-5 h-5 text-[var(--primary-color)]" />
                                   ) : (
@@ -2917,7 +2949,7 @@ export default function Bio() {
 
                             {/* ITEM EDIT DETAILS (COLLAPSIBLE CONTENT) */}
                             {isExpanded && (
-                              <div className="p-4 sm:p-5 barra border-t border-white/10 space-y-5 animate-in fade-in duration-200 shadow-none">
+                              <div className="p-4 sm:p-5 bg-[#131315] border-t border-[#26262A] space-y-5 animate-in fade-in duration-200 shadow-none">
                                 <div className="space-y-4">
                                   <div>
                                     <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Nome do Produto/Serviço</label>
@@ -3025,18 +3057,18 @@ export default function Bio() {
                                         ))}
                                       </div>
                                     ) : (
-                                      <p className="text-[10px] text-zinc-500 leading-normal">Se o seu produto tem preços que variam por quantidade (ex: 250, 500, 1000 cartões), adicione as opções acima. Caso contrário, use apenas o preço fixo padrão.</p>
+                                      <p className="text-[11px] text-[#8B8B92] leading-normal">Se o seu produto tem preços que variam por quantidade (ex: 250, 500, 1000 cartões), adicione as opções acima. Caso contrário, use apenas o preço fixo padrão.</p>
                                     )}
                                   </div>
                                 </div>
 
-                                <div className="space-y-4 border-t border-white/10 pt-5">
+                                <div className="space-y-4 border-t border-[#26262A] pt-5">
                                   <div className="font-sans space-y-3">
                                     <div className="flex items-center justify-between flex-wrap gap-2">
-                                      <label className="text-sm font-bold text-zinc-300 block">Fotos do Produto (Máximo 8)</label>
+                                      <label className="text-sm font-bold text-[#CBD5E1] block">Fotos do Produto (Máximo 8)</label>
                                       <div className="flex items-center gap-2">
                                         <label 
-                                          className="text-xs bg-black/40 hover:bg-[var(--primary-color)] text-white px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 border border-white/15 transition-colors font-bold shadow-none hover:bg-[var(--primary-color)]/20"
+                                          className="text-xs bg-[#0B0B0C] hover:bg-[#1B1B1E] text-white px-2.5 py-1.5 rounded-[6px] cursor-pointer flex items-center gap-1.5 border border-[#26262A] hover:border-[var(--primary-color)] transition-colors font-bold shadow-none"
                                           title="Envie até 5 fotos de uma vez"
                                         >
                                           <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
@@ -3053,7 +3085,7 @@ export default function Bio() {
                                           <button 
                                             type="button"
                                             onClick={() => addCatalogItemImageSlot(item.id)}
-                                            className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-semibold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
+                                            className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-semibold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-colors cursor-pointer"
                                           >
                                             <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar Foto
                                           </button>
@@ -3063,11 +3095,11 @@ export default function Bio() {
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                       {(item.images || (item.image_url ? [item.image_url] : [""])).map((imgUrl, idx) => (
-                                        <div key={idx} className="fora p-4 rounded-2xl border border-white/10 space-y-4 flex flex-col justify-between shadow-none">
+                                        <div key={idx} className="bg-[#0B0B0C] p-4 rounded-md border border-[#26262A] space-y-4 flex flex-col justify-between shadow-none">
                                           {/* 1. FOTO MINIATURA */}
                                           <div className="flex items-center gap-3.5">
                                             {imgUrl ? (
-                                              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden border border-white/10 bg-black/40 shrink-0 group/img shadow-none flex items-center justify-center p-1">
+                                              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-md overflow-hidden border border-[#26262A] bg-[#131315] shrink-0 group/img shadow-none flex items-center justify-center p-1">
                                                 <OptimizedImage 
                                                   src={imgUrl} 
                                                   alt={"Foto " + (idx + 1)} 
@@ -3077,28 +3109,28 @@ export default function Bio() {
                                                 <button
                                                   type="button"
                                                   onClick={() => removeCatalogItemImage(item.id, idx)}
-                                                  className="absolute top-1 right-1 bg-black/85 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                                                  className="absolute top-1 right-1 bg-black/85 hover:bg-red-600 text-white rounded-[4px] p-1.5 transition-colors cursor-pointer"
                                                   title="Remover Foto"
                                                 >
-                                                  <X className="w-2.5 h-2.5" />
+                                                  <X className="w-3 h-3" />
                                                 </button>
                                               </div>
                                             ) : (
-                                              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-xl border border-dashed border-white/10 flex flex-col items-center justify-center bg-black/40 text-zinc-600 shrink-0">
+                                              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-md border border-dashed border-[#3F3F46] flex flex-col items-center justify-center bg-[#131315] text-[#8B8B92] shrink-0">
                                                 <ShoppingBag className="w-8 h-8 opacity-45 text-[var(--primary-color)]" />
                                               </div>
                                             )}
                                             <div className="space-y-0.5">
-                                              <p className="text-sm font-black text-zinc-200">Foto {idx + 1} de 8</p>
-                                              <p className="text-xs text-zinc-400 font-medium">
-                                                {imgUrl ? "⚡ Miniatura carregada" : "⚠️ Nenhuma imagem vinculada"}
+                                              <p className="text-sm font-black text-[#F2F2F3] tabular-nums">Foto {idx + 1} de 8</p>
+                                              <p className="text-xs text-[#8B8B92] font-medium">
+                                                {imgUrl ? "Miniatura carregada" : "Nenhuma imagem vinculada"}
                                               </p>
                                             </div>
                                           </div>
                                           
                                           {/* 2. ÁREA LINK WEB IMAGEM */}
                                           <div className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-zinc-500 tracking-wider block">Link Web da Imagem</label>
+                                            <label className="text-[11px] font-bold text-[#8B8B92] tracking-wider block">Link Web da Imagem</label>
                                             <input 
                                               type="text" 
                                               className="gm-input w-full !py-2 text-xs font-mono" 
@@ -3110,7 +3142,7 @@ export default function Bio() {
 
                                           {/* 3. UPLOAD e EXCLUIR */}
                                           <div className="grid grid-cols-2 gap-3 w-full">
-                                            <label className="gm-btn gm-btn-outline w-full px-3 py-2.5 text-xs flex items-center justify-center cursor-pointer gap-1.5 hover:bg-[var(--primary-color)]/15 border border-white/10 shadow-none">
+                                            <label className="gm-btn gm-btn-outline w-full px-3 py-2.5 text-xs flex items-center justify-center cursor-pointer gap-1.5 hover:bg-[var(--primary-color)]/15 border border-[#26262A] rounded-[6px] shadow-none">
                                               <Upload className="w-4 h-4" />
                                               <span className="font-bold">Upload</span>
                                               <input 
@@ -3124,7 +3156,7 @@ export default function Bio() {
                                             <button
                                               type="button"
                                               onClick={() => removeCatalogItemImage(item.id, idx)}
-                                              className="gm-btn w-full border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 px-3 py-2.5 text-xs flex items-center justify-center gap-1.5 shadow-none cursor-pointer"
+                                              className="gm-btn w-full border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 px-3 py-2.5 text-xs flex items-center justify-center gap-1.5 rounded-[6px] shadow-none cursor-pointer"
                                               title="Excluir Foto"
                                             >
                                               <Trash className="w-4 h-4 text-red-400" />
@@ -3148,9 +3180,9 @@ export default function Bio() {
 
               {/* CONTEÚDO DA TAB: CADASTRAR NOVO PRODUTO */}
               {catalogTab === 'add' && (
-                <div className="fora p-4 sm:p-5 rounded-2xl border border-white/10 space-y-5 animate-in fade-in duration-200 shadow-none">
-                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                    <h3 className="text-sm font-extrabold text-zinc-200 flex items-center gap-2">
+                <div className="bg-[#131315] p-4 sm:p-5 rounded-lg border border-[#26262A] space-y-5 animate-in fade-in duration-200 shadow-none">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#26262A]">
+                    <h3 className="text-sm font-extrabold text-[#F2F2F3] flex items-center gap-2">
                       <PlusCircle className="w-4 h-4 text-[var(--primary-color)]" />
                       Novo Cadastro de Produto
                     </h3>
@@ -3158,7 +3190,7 @@ export default function Bio() {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Nome do Produto/Serviço *</label>
+                      <label className="text-sm font-semibold text-[#CBD5E1] mb-1.5 block">Nome do Produto/Serviço *</label>
                       <input 
                         type="text" 
                         className="gm-input w-full !py-2.5 font-medium text-sm" 
@@ -3170,17 +3202,17 @@ export default function Bio() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Preço (opcional)</label>
+                        <label className="text-sm font-semibold text-[#CBD5E1] mb-1.5 block">Preço (opcional)</label>
                         <input 
                           type="text" 
-                          className="gm-input w-full !py-2.5 text-[var(--primary-color)] font-mono font-bold text-sm" 
+                          className="gm-input w-full !py-2.5 text-[var(--primary-color)] font-mono font-bold text-sm tabular-nums" 
                           value={newProduct.price} 
                           onChange={e => setNewProduct(prev => ({ ...prev, price: formatBRL(e.target.value) }))} 
                           placeholder="R$ 0,00"
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Link Direto (WhatsApp/Compra)</label>
+                        <label className="text-sm font-semibold text-[#CBD5E1] mb-1.5 block">Link Direto (WhatsApp/Compra)</label>
                         <input 
                           type="text" 
                           className="gm-input w-full !py-2.5 text-sm font-mono" 
@@ -3192,7 +3224,7 @@ export default function Bio() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Descrição do Produto</label>
+                      <label className="text-sm font-semibold text-[#CBD5E1] mb-1.5 block">Descrição do Produto</label>
                       <textarea 
                         className="gm-input w-full !py-2.5 min-h-[100px] resize-y text-sm" 
                         value={newProduct.description} 
@@ -3202,13 +3234,13 @@ export default function Bio() {
                     </div>
 
                     {/* CADASTRO POR QUANTIDADE / VARIAÇÕES (DRAFT FORM) */}
-                    <div className="border-t border-white/10 pt-4 mt-2">
+                    <div className="border-t border-[#26262A] pt-4 mt-2">
                       <div className="flex items-center justify-between mb-3">
-                        <label className="text-sm font-extrabold text-zinc-300 block tracking-wide uppercase">Cadastro por Quantidade / Variações</label>
+                        <label className="text-sm font-extrabold text-[#CBD5E1] block tracking-wide uppercase">Cadastro por Quantidade / Variações</label>
                         <button
                           type="button"
                           onClick={addNewProductOption}
-                          className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
+                          className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-colors cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5 mr-1" /> Add Opção
                         </button>
@@ -3229,7 +3261,7 @@ export default function Bio() {
                                 <input
                                   type="text"
                                   placeholder="R$ 0,00"
-                                  className="gm-input w-full !py-2 text-sm text-[var(--primary-color)] font-mono font-bold pl-3"
+                                  className="gm-input w-full !py-2 text-sm text-[var(--primary-color)] font-mono font-bold tabular-nums pl-3"
                                   value={opt.price}
                                   onChange={e => updateNewProductOption(optIdx, 'price', formatBRL(e.target.value))}
                                 />
@@ -3237,7 +3269,7 @@ export default function Bio() {
                               <button
                                 type="button"
                                 onClick={() => removeNewProductOption(optIdx)}
-                                className="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded-lg transition-all shrink-0 cursor-pointer"
+                                className="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded-[6px] transition-colors shrink-0 cursor-pointer"
                                 title="Remover Opção"
                               >
                                 <Trash className="w-4 h-4" />
@@ -3246,18 +3278,18 @@ export default function Bio() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-[10px] text-zinc-500 leading-normal">Se o seu produto tem preços que variam por quantidade (ex: 250, 500, 1000 cartões), adicione as opções acima. Caso contrário, use apenas o preço fixo padrão.</p>
+                        <p className="text-[11px] text-[#8B8B92] leading-normal">Se o seu produto tem preços que variam por quantidade (ex: 250, 500, 1000 cartões), adicione as opções acima. Caso contrário, use apenas o preço fixo padrão.</p>
                       )}
                     </div>
 
                     {/* FOTOS DO NOVO PRODUTO */}
-                    <div className="space-y-4 border-t border-white/10 pt-5">
+                    <div className="space-y-4 border-t border-[#26262A] pt-5">
                       <div className="font-sans space-y-3">
                         <div className="flex items-center justify-between flex-wrap gap-2">
-                          <label className="text-sm font-bold text-zinc-300 block">Fotos do Produto (Máximo 8)</label>
+                          <label className="text-sm font-bold text-[#CBD5E1] block">Fotos do Produto (Máximo 8)</label>
                           <div className="flex items-center gap-2">
                             <label 
-                              className="text-xs bg-black/40 hover:bg-[var(--primary-color)] text-white px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 border border-white/15 transition-colors font-bold shadow-none hover:bg-[var(--primary-color)]/20"
+                              className="text-xs bg-[#0B0B0C] hover:bg-[var(--primary-color)]/20 text-white px-2.5 py-1.5 rounded-[6px] cursor-pointer flex items-center gap-1.5 border border-[#26262A] transition-colors font-bold shadow-none"
                               title="Envie até 5 fotos de uma vez"
                             >
                               <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
@@ -3274,7 +3306,7 @@ export default function Bio() {
                               <button 
                                 type="button"
                                 onClick={addNewProductImageSlot}
-                                className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-semibold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
+                                className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-semibold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-colors cursor-pointer"
                               >
                                 <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar Foto
                               </button>
@@ -3284,11 +3316,11 @@ export default function Bio() {
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {newProduct.images.map((imgUrl, idx) => (
-                            <div key={idx} className="barra p-4 rounded-2xl border border-white/10 space-y-4 flex flex-col justify-between shadow-none">
+                            <div key={idx} className="bg-[#0B0B0C] p-4 rounded-md border border-[#26262A] space-y-4 flex flex-col justify-between shadow-none">
                               {/* 1. FOTO MINIATURA */}
                               <div className="flex items-center gap-3.5">
                                 {imgUrl ? (
-                                  <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden border border-white/10 bg-black/40 shrink-0 group/img shadow-none flex items-center justify-center p-1">
+                                  <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-md overflow-hidden border border-[#26262A] bg-[#131315] shrink-0 group/img shadow-none flex items-center justify-center p-1">
                                     <OptimizedImage 
                                       src={imgUrl} 
                                       alt={"Foto " + (idx + 1)} 
@@ -3298,28 +3330,28 @@ export default function Bio() {
                                     <button
                                       type="button"
                                       onClick={() => removeNewProductImageSlot(idx)}
-                                      className="absolute top-1 right-1 bg-black/85 hover:bg-red-600 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                                      className="absolute top-1 right-1 bg-black/85 hover:bg-red-600 text-white rounded-[4px] p-1.5 transition-colors cursor-pointer"
                                       title="Remover Foto"
                                     >
                                       <X className="w-2.5 h-2.5" />
                                     </button>
                                   </div>
                                 ) : (
-                                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-xl border border-dashed border-white/10 flex flex-col items-center justify-center bg-black/40 text-zinc-600 shrink-0">
+                                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-md border border-dashed border-[#3F3F46] flex flex-col items-center justify-center bg-[#131315] text-[#8B8B92] shrink-0">
                                     <ShoppingBag className="w-8 h-8 opacity-45 text-[var(--primary-color)]" />
                                   </div>
                                 )}
                                 <div className="space-y-0.5">
-                                  <p className="text-sm font-black text-zinc-200">Foto {idx + 1} de 8</p>
-                                  <p className="text-xs text-zinc-400 font-medium">
-                                    {imgUrl ? "⚡ Miniatura carregada" : "⚠️ Nenhuma imagem vinculada"}
+                                  <p className="text-sm font-black text-[#F2F2F3] tabular-nums">Foto {idx + 1} de 8</p>
+                                  <p className="text-xs text-[#8B8B92] font-medium">
+                                    {imgUrl ? "Miniatura carregada" : "Nenhuma imagem vinculada"}
                                   </p>
                                 </div>
                               </div>
                               
                               {/* 2. ÁREA LINK WEB IMAGEM */}
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-zinc-500 tracking-wider block">Link Web da Imagem</label>
+                                <label className="text-[11px] font-bold text-[#8B8B92] tracking-wider block">Link Web da Imagem</label>
                                 <input 
                                   type="text" 
                                   className="gm-input w-full !py-2 text-xs font-mono" 
@@ -3335,7 +3367,7 @@ export default function Bio() {
 
                               {/* 3. UPLOAD e EXCLUIR */}
                               <div className="grid grid-cols-2 gap-3 w-full">
-                                <label className="gm-btn gm-btn-outline w-full px-3 py-2.5 text-xs flex items-center justify-center cursor-pointer gap-1.5 hover:bg-[var(--primary-color)]/15 border border-white/10 shadow-none">
+                                <label className="gm-btn gm-btn-outline w-full px-3 py-2.5 text-xs flex items-center justify-center cursor-pointer gap-1.5 hover:bg-[var(--primary-color)]/15 border border-[#26262A] rounded-[6px] shadow-none">
                                   <Upload className="w-4 h-4" />
                                   <span className="font-bold">Upload</span>
                                   <input 
@@ -3349,7 +3381,7 @@ export default function Bio() {
                                 <button
                                   type="button"
                                   onClick={() => removeNewProductImageSlot(idx)}
-                                  className="gm-btn w-full border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 px-3 py-2.5 text-xs flex items-center justify-center gap-1.5 shadow-none cursor-pointer"
+                                  className="gm-btn w-full border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 px-3 py-2.5 text-xs flex items-center justify-center gap-1.5 rounded-[6px] shadow-none cursor-pointer"
                                   title="Excluir Foto"
                                 >
                                   <Trash className="w-4 h-4 text-red-400" />
@@ -3362,11 +3394,11 @@ export default function Bio() {
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t border-white/10 flex justify-end">
+                    <div className="pt-4 border-t border-[#26262A] flex justify-end">
                       <button
                         type="button"
                         onClick={handleCreateProduct}
-                        className="bg-[var(--primary-color)] hover:bg-[var(--primary-color-hover)] text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-none flex items-center gap-2 cursor-pointer"
+                        className="bg-[var(--primary-color)] hover:bg-[var(--primary-color-hover)] text-white font-bold px-6 py-2.5 rounded-[6px] transition-colors shadow-none flex items-center gap-2 cursor-pointer"
                       >
                         <Check className="w-4 h-4" />
                         Cadastrar Produto
@@ -3378,9 +3410,9 @@ export default function Bio() {
 
               {/* CONTEÚDO DA TAB: LIXEIRA */}
               {catalogTab === 'trash' && (
-                <div className="fora p-4 sm:p-5 rounded-2xl border border-white/10 space-y-4 animate-in fade-in duration-200 shadow-none">
-                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                    <h3 className="text-xs font-extrabold text-zinc-200 flex items-center gap-2">
+                <div className="bg-[#131315] p-4 sm:p-5 rounded-lg border border-[#26262A] space-y-4 animate-in fade-in duration-200 shadow-none">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#26262A]">
+                    <h3 className="text-xs font-extrabold text-[#F2F2F3] flex items-center gap-2">
                       <Trash2 className="w-4 h-4 text-red-400" />
                       Lixeira de Produtos
                     </h3>
@@ -3388,7 +3420,7 @@ export default function Bio() {
                       <button
                         type="button"
                         onClick={clearTrash}
-                        className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-none inline-flex items-center gap-1.5"
+                        className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-[6px] transition-colors cursor-pointer shadow-none inline-flex items-center gap-1.5"
                       >
                         <Trash2 size={13} />
                         <span>Esvaziar Lixeira</span>
@@ -3397,23 +3429,23 @@ export default function Bio() {
                   </div>
 
                   {deletedCatalogItems.length === 0 ? (
-                    <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-white/10 rounded-2xl space-y-2">
-                      <Trash2 className="w-10 h-10 opacity-20 mx-auto text-zinc-400" />
+                    <div className="text-center py-10 text-[#8B8B92] text-sm border border-dashed border-[#26262A] bg-[#0B0B0C] rounded-lg space-y-2">
+                      <Trash2 className="w-10 h-10 opacity-20 mx-auto text-[#8B8B92]" />
                       <p>A lixeira está vazia.</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-white/10">
+                    <div className="divide-y divide-[#26262A]">
                       {deletedCatalogItems.map((item, idx) => (
                         <div key={item.id || idx} className="py-3 flex items-center justify-between gap-4">
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-bold text-sm text-zinc-300 truncate">{item.name || 'Sem Nome'}</h4>
-                            <p className="text-xs text-zinc-500 font-mono mt-0.5">{item.price || 'Sem Preço'}</p>
+                            <h4 className="font-bold text-sm text-[#CBD5E1] truncate">{item.name || 'Sem Nome'}</h4>
+                            <p className="text-xs text-[#8B8B92] font-mono tabular-nums mt-0.5">{item.price || 'Sem Preço'}</p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <button
                               type="button"
                               onClick={() => restoreCatalogItem(item.id)}
-                              className="text-xs text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-none"
+                              className="text-xs text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 font-bold px-3 py-1.5 rounded-[6px] flex items-center gap-1.5 transition-colors cursor-pointer shadow-none"
                               title="Restaurar item"
                             >
                               <RotateCcw className="w-3.5 h-3.5" />
@@ -3422,7 +3454,7 @@ export default function Bio() {
                             <button
                               type="button"
                               onClick={() => permanentlyDeleteCatalogItem(item.id)}
-                              className="text-xs text-red-400 bg-red-500/10 hover:bg-red-500/20 font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-none"
+                              className="text-xs text-red-400 bg-red-500/10 hover:bg-red-500/20 font-bold px-3 py-1.5 rounded-[6px] flex items-center gap-1.5 transition-colors cursor-pointer shadow-none"
                               title="Excluir permanentemente"
                             >
                               <Trash className="w-3.5 h-3.5" />
@@ -3441,13 +3473,13 @@ export default function Bio() {
 
         {/* 6. PORTFÓLIO */}
         {openSections.portfolio && (
-          <div className="gm-card fora border border-white/10 p-4 sm:p-6 rounded-2xl space-y-5 shadow-none backdrop-blur-md w-full animate-in fade-in duration-300">
-            <div className="sticky top-0 z-20 barra py-2 sm:py-2.5 px-3 sm:px-4 border-b border-white/10 flex items-center justify-between mb-3 rounded-xl shadow-none">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
-                <Layout className="w-4.5 h-4.5 text-[var(--primary-color)] animate-pulse" />
+          <div className="gm-card bg-[#131315] border border-[#26262A] p-4 sm:p-6 rounded-lg space-y-5 shadow-none w-full animate-in fade-in duration-300">
+            <div className="sticky top-0 z-20 bg-[#0B0B0C] py-2 sm:py-2.5 px-3 sm:px-4 border border-[#26262A] flex items-center justify-between mb-3 rounded-md shadow-none">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                <Layout className="w-4 h-4 text-[var(--primary-color)]" />
                 PORTFÓLIO
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 shadow-none">
+              <span className="text-[11px] font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 shadow-none">
                 Edição Ativa
               </span>
             </div>
@@ -3460,18 +3492,18 @@ export default function Bio() {
               </div>
 
               {/* UPLOAD E LISTA DE ITENS */}
-              <div className="space-y-4 pt-2 border-t border-white/10">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3 mt-4">
+              <div className="space-y-4 pt-2 border-t border-[#26262A]">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#26262A] pb-3 mt-4">
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setActivePortfolioTab("active")}
-                      className={`text-sm font-bold pb-2 border-b-2 transition-colors cursor-pointer ${activePortfolioTab === "active" ? "border-[var(--primary-color)] text-white" : "border-transparent text-zinc-400 hover:text-zinc-300"}`}
+                      className={`text-sm font-bold pb-2 border-b-2 transition-colors cursor-pointer ${activePortfolioTab === "active" ? "border-[var(--primary-color)] text-[#F2F2F3]" : "border-transparent text-[#8B8B92] hover:text-[#CBD5E1]"}`}
                     >
                       Portfólios Ativos
                     </button>
                     <button
                       onClick={() => setActivePortfolioTab("trash")}
-                      className={`text-sm font-bold pb-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${activePortfolioTab === "trash" ? "border-red-500 text-red-400" : "border-transparent text-zinc-400 hover:text-red-400"}`}
+                      className={`text-sm font-bold pb-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 tabular-nums ${activePortfolioTab === "trash" ? "border-red-500 text-red-400" : "border-transparent text-[#8B8B92] hover:text-red-400"}`}
                     >
                       <Trash2 className="w-4 h-4" />
                       Lixeira ({deletedPortfolioItems.length})
@@ -3481,7 +3513,7 @@ export default function Bio() {
                   {activePortfolioTab === "active" && (
                     <div className="flex items-center gap-2">
                       <label 
-                        className="gm-btn gm-btn-outline px-3 py-1.5 text-[10px] flex items-center justify-center cursor-pointer hover:bg-[var(--primary-color)] hover:text-white transition-colors border border-white/10 shadow-none gap-1"
+                        className="gm-btn gm-btn-outline px-3 py-1.5 text-[11px] flex items-center justify-center cursor-pointer hover:bg-[var(--primary-color)] hover:text-white transition-colors border border-[#26262A] rounded-[6px] shadow-none gap-1"
                         title="Envie até 5 fotos para criar portfólios de uma vez"
                       >
                         <Upload className="w-3.5 h-3.5" />
@@ -3490,7 +3522,7 @@ export default function Bio() {
                       </label>
                       <button 
                         onClick={handleAddPortfolioCollection}
-                        className="gm-btn gm-btn-outline px-3 py-1.5 text-[10px] flex items-center justify-center cursor-pointer hover:bg-[var(--primary-color)] hover:text-white transition-colors border border-white/10 shadow-none"
+                        className="gm-btn gm-btn-outline px-3 py-1.5 text-[11px] flex items-center justify-center cursor-pointer hover:bg-[var(--primary-color)] hover:text-white transition-colors border border-[#26262A] rounded-[6px] shadow-none"
                       >
                         <Plus className="w-3.5 h-3.5 mr-1" />
                         <span>Novo Portfólio</span>
@@ -3517,27 +3549,27 @@ export default function Bio() {
                                 setIsAboutExpanded(!isAboutExpanded);
                                 setExpandedPortfolioItems([]);
                               }}
-                              className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-xl border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium select-none shadow-none ${
+                              className={`relative flex items-center justify-between pl-6 pr-3 py-[10px] rounded-md border text-left transition-colors duration-200 cursor-pointer text-xs sm:text-sm font-medium select-none shadow-none ${
                                 isAboutExpanded 
-                                  ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white' 
-                                  : 'fora border-white/10 text-zinc-400 hover:text-white hover:bg-white/5'
+                                  ? 'bg-[#1B1B1E] border-[var(--primary-color)] text-[#F2F2F3]' 
+                                  : 'bg-[#0B0B0C] border-[#26262A] text-[#CBD5E1] hover:border-[#3F3F46] hover:bg-[#1B1B1E]'
                               }`}
                             >
                               {isAboutExpanded && (
-                                <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full" />
+                                <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-[16px] bg-[var(--primary-color)] rounded-[2px]" />
                               )}
                               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <Layout className={`w-4 h-4 transition-transform duration-200 ${isAboutExpanded ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
-                                <span className="font-bold uppercase tracking-wider text-zinc-200 truncate text-[11px] sm:text-xs">Sobre sua empresa</span>
+                                <Layout className={`w-4 h-4 transition-colors duration-200 ${isAboutExpanded ? 'text-[var(--primary-color)]' : 'text-[#8B8B92]'}`} />
+                                <span className="font-bold uppercase tracking-wider text-[#F2F2F3] truncate text-[11px] sm:text-xs">Sobre sua empresa</span>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
-                                <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase shadow-none ${bioConfig.show_about !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'}`}>
+                                <span className={`text-[11px] px-1.5 py-0.5 rounded-[4px] font-bold uppercase shadow-none ${bioConfig.show_about !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-[#131315] text-[#8B8B92] border border-[#26262A]'}`}>
                                   {bioConfig.show_about !== false ? 'Ativo' : 'Oculto'}
                                 </span>
                                 {isAboutExpanded && (
-                                  <span className="text-[8px] text-zinc-400 bg-black/40 px-1.5 py-0.5 rounded border border-white/10 uppercase tracking-wide font-bold animate-pulse">ABERTO</span>
+                                  <span className="text-[11px] text-[#CBD5E1] bg-[#0B0B0C] px-1.5 py-0.5 rounded-[4px] border border-[#26262A] uppercase tracking-wide font-bold">ABERTO</span>
                                 )}
-                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isAboutExpanded ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isAboutExpanded ? 'text-[var(--primary-color)] rotate-180' : 'text-[#8B8B92]'}`} />
                               </div>
                             </div>
 
@@ -3557,22 +3589,22 @@ export default function Bio() {
                                       prev.includes(item.id) ? [] : [item.id]
                                     );
                                   }}
-                                  className={`relative flex items-center justify-between pl-7 pr-3 py-[10px] rounded-xl border text-left transition-all duration-200 cursor-pointer text-xs sm:text-sm font-medium select-none shadow-none ${
+                                  className={`relative flex items-center justify-between pl-6 pr-3 py-[10px] rounded-md border text-left transition-colors duration-200 cursor-pointer text-xs sm:text-sm font-medium select-none shadow-none ${
                                     isExpanded 
-                                      ? 'bg-[var(--primary-color)]/10 border-[var(--primary-color)]/30 text-white' 
-                                      : 'fora border-white/10 text-zinc-400 hover:text-white hover:bg-white/5'
+                                      ? 'bg-[#1B1B1E] border-[var(--primary-color)] text-[#F2F2F3]' 
+                                      : 'bg-[#0B0B0C] border-[#26262A] text-[#CBD5E1] hover:border-[#3F3F46] hover:bg-[#1B1B1E]'
                                   }`}
                                 >
                                   {isExpanded && (
-                                    <span className="absolute left-[3.5px] top-1/2 -translate-y-1/2 w-[3.5px] h-[16px] bg-[var(--primary-color)] rounded-full" />
+                                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-[16px] bg-[var(--primary-color)] rounded-[2px]" />
                                   )}
                                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                     {selectedView === "smartphone" ? (
-                                      <Smartphone className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                                      <Smartphone className={`w-4 h-4 transition-colors duration-200 ${isExpanded ? 'text-[var(--primary-color)]' : 'text-[#8B8B92]'}`} />
                                     ) : (
-                                      <Monitor className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'text-[var(--primary-color)] scale-110' : 'text-zinc-400'}`} />
+                                      <Monitor className={`w-4 h-4 transition-colors duration-200 ${isExpanded ? 'text-[var(--primary-color)]' : 'text-[#8B8B92]'}`} />
                                     )}
-                                    <span className="font-bold uppercase tracking-wider text-zinc-200 truncate text-[11px] sm:text-xs">{displayTitle || "Sem título"}</span>
+                                    <span className="font-bold uppercase tracking-wider text-[#F2F2F3] truncate text-[11px] sm:text-xs">{displayTitle || "Sem título"}</span>
                                   </div>
                                   <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
                                     <button
@@ -3581,15 +3613,15 @@ export default function Bio() {
                                         e.stopPropagation();
                                         handleRemovePortfolioCollection(item.id);
                                       }}
-                                      className="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-500/10 transition-colors cursor-pointer"
+                                      className="text-red-400 hover:text-red-300 p-1 rounded-[4px] hover:bg-red-500/10 transition-colors cursor-pointer"
                                       title="Excluir Portfólio (Move para Lixeira)"
                                     >
                                       <Trash className="w-3.5 h-3.5" />
                                     </button>
                                     {isExpanded && (
-                                      <span className="text-[8px] text-zinc-400 bg-black/40 px-1.5 py-0.5 rounded border border-white/10 uppercase tracking-wide font-bold animate-pulse">ABERTO</span>
+                                      <span className="text-[11px] text-[#CBD5E1] bg-[#0B0B0C] px-1.5 py-0.5 rounded-[4px] border border-[#26262A] uppercase tracking-wide font-bold">ABERTO</span>
                                     )}
-                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'text-[var(--primary-color)] rotate-180' : 'text-zinc-500'}`} />
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'text-[var(--primary-color)] rotate-180' : 'text-[#8B8B92]'}`} />
                                   </div>
                                 </div>
                               );
@@ -3598,17 +3630,17 @@ export default function Bio() {
 
                           {/* MENSAGEM SE NÃO HOUVER PORTFÓLIOS */}
                           {normalized.length === 0 && !isAboutExpanded && (
-                            <div className="py-8 text-center text-zinc-500 text-xs border border-dashed border-white/10 rounded-2xl fora">
+                            <div className="py-8 text-center text-[#8B8B92] text-xs border border-dashed border-[#26262A] rounded-lg bg-[#0B0B0C]">
                               Nenhum portfólio criado ainda. Clique em "+ Novo Portfólio" acima para criar o seu primeiro projeto.
                             </div>
                           )}
 
                           {/* EDITOR SOBRE SUA EMPRESA */}
                           {isAboutExpanded && (
-                            <div className="p-4 sm:p-6 space-y-6 fora border border-white/10 rounded-2xl animate-in fade-in duration-200 text-zinc-300 shadow-none">
-                              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                                <span className="flex items-center gap-2 text-sm font-extrabold text-white uppercase tracking-wider">
-                                  <Layout className="w-4.5 h-4.5 text-[var(--primary-color)]" />
+                            <div className="p-4 sm:p-6 space-y-6 bg-[#0B0B0C] border border-[#26262A] rounded-lg animate-in fade-in duration-200 text-[#CBD5E1] shadow-none">
+                              <div className="flex items-center justify-between border-b border-[#26262A] pb-3">
+                                <span className="flex items-center gap-2 text-sm font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                                  <Layout className="w-4 h-4 text-[var(--primary-color)]" />
                                   Sobre Sua Empresa
                                 </span>
                                 <div className="flex items-center gap-2">
@@ -3617,9 +3649,9 @@ export default function Bio() {
                                     id="show_about" 
                                     checked={bioConfig.show_about !== false} 
                                     onChange={e => handleChange("show_about", e.target.checked)}
-                                    className="w-4 h-4 rounded text-[var(--primary-color)] bg-black/40 border-white/10 focus:ring-0 cursor-pointer" 
+                                    className="w-4 h-4 rounded-[4px] text-[var(--primary-color)] bg-[#131315] border-[#26262A] focus:ring-0 cursor-pointer" 
                                   />
-                                  <label htmlFor="show_about" className="text-xs font-bold text-white cursor-pointer select-none">Exibir no site</label>
+                                  <label htmlFor="show_about" className="text-xs font-bold text-[#F2F2F3] cursor-pointer select-none">Exibir no site</label>
                                 </div>
                               </div>
 
@@ -3636,18 +3668,18 @@ export default function Bio() {
                                         onChange={e => handleChange("about_title", e.target.value)} 
                                         placeholder="Sobre a nossa empresa" 
                                       />
-                                      <div className="flex flex-wrap items-center gap-2 barra p-2 rounded-xl border border-white/10 mt-2 shadow-none">
-                                        <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                          <button type="button" onClick={() => handleChange("about_title_align", "left")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_title_align || 'center') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignLeft className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleChange("about_title_align", "center")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_title_align || 'center') === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignCenter className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleChange("about_title_align", "right")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_title_align || 'center') === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignRight className="w-4 h-4" /></button>
+                                      <div className="flex flex-wrap items-center gap-2 bg-[#131315] p-2 rounded-md border border-[#26262A] mt-2 shadow-none">
+                                        <div className="flex items-center gap-1 bg-[#0B0B0C] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                          <button type="button" onClick={() => handleChange("about_title_align", "left")} className={`p-1.5 rounded-[4px] transition-colors ${(bioConfig.about_title_align || 'center') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_title_align", "center")} className={`p-1.5 rounded-[4px] transition-colors ${(bioConfig.about_title_align || 'center') === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_title_align", "right")} className={`p-1.5 rounded-[4px] transition-colors ${(bioConfig.about_title_align || 'center') === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignRight className="w-4 h-4" /></button>
                                         </div>
-                                        <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                          <button type="button" onClick={() => handleChange("about_title_bold", !bioConfig.about_title_bold)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_title_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                          <button type="button" onClick={() => handleChange("about_title_italic", !bioConfig.about_title_italic)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_title_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Italic className="w-4 h-4 italic" /></button>
+                                        <div className="flex items-center gap-1 bg-[#0B0B0C] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                          <button type="button" onClick={() => handleChange("about_title_bold", !bioConfig.about_title_bold)} className={`p-1.5 rounded-[4px] transition-colors ${bioConfig.about_title_bold ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleChange("about_title_italic", !bioConfig.about_title_italic)} className={`p-1.5 rounded-[4px] transition-colors ${bioConfig.about_title_italic ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Italic className="w-4 h-4 italic" /></button>
                                         </div>
                                         <div className="flex-1 min-w-[140px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={bioConfig.about_title_font || "funnel"} onChange={e => handleChange("about_title_font", e.target.value)}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-[#CBD5E1] w-full" value={bioConfig.about_title_font || "funnel"} onChange={e => handleChange("about_title_font", e.target.value)}>
                                             <option value="ui">Inter (Sistema)</option>
                                             <option value="funnel">Funnel (Títulos)</option>
                                             <option value="roboto">Roboto</option>
@@ -3658,7 +3690,7 @@ export default function Bio() {
                                           </select>
                                         </div>
                                         <div className="w-[80px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={bioConfig.about_title_size || "30 pt"} onChange={e => handleChange("about_title_size", e.target.value)}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-[#CBD5E1] w-full" value={bioConfig.about_title_size || "30 pt"} onChange={e => handleChange("about_title_size", e.target.value)}>
                                             <option value="10 pt">10 pt</option>
                                             <option value="12 pt">12 pt</option>
                                             <option value="14 pt">14 pt</option>
@@ -3682,18 +3714,18 @@ export default function Bio() {
                                         onChange={e => handleChange("about_description", e.target.value)} 
                                         placeholder="Acreditamos que o design é mais do que aparência..." 
                                       />
-                                      <div className="flex flex-wrap items-center gap-2 barra p-2 rounded-xl border border-white/10 mt-2 shadow-none">
-                                        <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                          <button type="button" onClick={() => handleChange("about_desc_align", "left")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_desc_align || 'center') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignLeft className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleChange("about_desc_align", "center")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_desc_align || 'center') === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignCenter className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleChange("about_desc_align", "right")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_desc_align || 'center') === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignRight className="w-4 h-4" /></button>
+                                      <div className="flex flex-wrap items-center gap-2 bg-[#131315] p-2 rounded-md border border-[#26262A] mt-2 shadow-none">
+                                        <div className="flex items-center gap-1 bg-[#0B0B0C] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                          <button type="button" onClick={() => handleChange("about_desc_align", "left")} className={`p-1.5 rounded-[4px] transition-colors ${(bioConfig.about_desc_align || 'center') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_desc_align", "center")} className={`p-1.5 rounded-[4px] transition-colors ${(bioConfig.about_desc_align || 'center') === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_desc_align", "right")} className={`p-1.5 rounded-[4px] transition-colors ${(bioConfig.about_desc_align || 'center') === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignRight className="w-4 h-4" /></button>
                                         </div>
-                                        <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                          <button type="button" onClick={() => handleChange("about_desc_bold", !bioConfig.about_desc_bold)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_desc_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                          <button type="button" onClick={() => handleChange("about_desc_italic", !bioConfig.about_desc_italic)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_desc_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Italic className="w-4 h-4 italic" /></button>
+                                        <div className="flex items-center gap-1 bg-[#0B0B0C] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                          <button type="button" onClick={() => handleChange("about_desc_bold", !bioConfig.about_desc_bold)} className={`p-1.5 rounded-[4px] transition-colors ${bioConfig.about_desc_bold ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleChange("about_desc_italic", !bioConfig.about_desc_italic)} className={`p-1.5 rounded-[4px] transition-colors ${bioConfig.about_desc_italic ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Italic className="w-4 h-4 italic" /></button>
                                         </div>
                                         <div className="flex-1 min-w-[140px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={bioConfig.about_desc_font || "ui"} onChange={e => handleChange("about_desc_font", e.target.value)}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-[#CBD5E1] w-full" value={bioConfig.about_desc_font || "ui"} onChange={e => handleChange("about_desc_font", e.target.value)}>
                                             <option value="ui">Inter (Sistema)</option>
                                             <option value="funnel">Funnel (Títulos)</option>
                                             <option value="roboto">Roboto</option>
@@ -3704,7 +3736,7 @@ export default function Bio() {
                                           </select>
                                         </div>
                                         <div className="w-[80px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={bioConfig.about_desc_size || "16 pt"} onChange={e => handleChange("about_desc_size", e.target.value)}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-[#CBD5E1] w-full" value={bioConfig.about_desc_size || "16 pt"} onChange={e => handleChange("about_desc_size", e.target.value)}>
                                             <option value="10 pt">10 pt</option>
                                             <option value="12 pt">12 pt</option>
                                             <option value="14 pt">14 pt</option>
@@ -3729,18 +3761,18 @@ export default function Bio() {
                                         onChange={e => handleChange("about_highlight", e.target.value)} 
                                         placeholder="Comece sua jornada conosco. Vamos criar algo inesquecível." 
                                       />
-                                      <div className="flex flex-wrap items-center gap-2 barra p-2 rounded-xl border border-white/10 mt-2 shadow-none">
-                                        <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                          <button type="button" onClick={() => handleChange("about_highlight_align", "left")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_highlight_align || 'center') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignLeft className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleChange("about_highlight_align", "center")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_highlight_align || 'center') === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignCenter className="w-4 h-4" /></button>
-                                          <button type="button" onClick={() => handleChange("about_highlight_align", "right")} className={`p-1.5 rounded-md transition-colors ${(bioConfig.about_highlight_align || 'center') === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignRight className="w-4 h-4" /></button>
+                                      <div className="flex flex-wrap items-center gap-2 bg-[#131315] p-2 rounded-md border border-[#26262A] mt-2 shadow-none">
+                                        <div className="flex items-center gap-1 bg-[#0B0B0C] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                          <button type="button" onClick={() => handleChange("about_highlight_align", "left")} className={`p-1.5 rounded-[4px] transition-colors ${(bioConfig.about_highlight_align || 'center') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignLeft className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_highlight_align", "center")} className={`p-1.5 rounded-[4px] transition-colors ${(bioConfig.about_highlight_align || 'center') === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignCenter className="w-4 h-4" /></button>
+                                          <button type="button" onClick={() => handleChange("about_highlight_align", "right")} className={`p-1.5 rounded-[4px] transition-colors ${(bioConfig.about_highlight_align || 'center') === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignRight className="w-4 h-4" /></button>
                                         </div>
-                                        <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                          <button type="button" onClick={() => handleChange("about_highlight_bold", !bioConfig.about_highlight_bold)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_highlight_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                          <button type="button" onClick={() => handleChange("about_highlight_italic", !bioConfig.about_highlight_italic)} className={`p-1.5 rounded-md transition-colors ${bioConfig.about_highlight_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Italic className="w-4 h-4 italic" /></button>
+                                        <div className="flex items-center gap-1 bg-[#0B0B0C] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                          <button type="button" onClick={() => handleChange("about_highlight_bold", !bioConfig.about_highlight_bold)} className={`p-1.5 rounded-[4px] transition-colors ${bioConfig.about_highlight_bold ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                          <button type="button" onClick={() => handleChange("about_highlight_italic", !bioConfig.about_highlight_italic)} className={`p-1.5 rounded-[4px] transition-colors ${bioConfig.about_highlight_italic ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Italic className="w-4 h-4 italic" /></button>
                                         </div>
                                         <div className="flex-1 min-w-[140px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={bioConfig.about_highlight_font || "ui"} onChange={e => handleChange("about_highlight_font", e.target.value)}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-[#CBD5E1] w-full" value={bioConfig.about_highlight_font || "ui"} onChange={e => handleChange("about_highlight_font", e.target.value)}>
                                             <option value="ui">Inter (Sistema)</option>
                                             <option value="funnel">Funnel (Títulos)</option>
                                             <option value="roboto">Roboto</option>
@@ -3751,7 +3783,7 @@ export default function Bio() {
                                           </select>
                                         </div>
                                         <div className="w-[80px]">
-                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={bioConfig.about_highlight_size || "16 pt"} onChange={e => handleChange("about_highlight_size", e.target.value)}>
+                                          <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-[#CBD5E1] w-full" value={bioConfig.about_highlight_size || "16 pt"} onChange={e => handleChange("about_highlight_size", e.target.value)}>
                                             <option value="10 pt">10 pt</option>
                                             <option value="12 pt">12 pt</option>
                                             <option value="14 pt">14 pt</option>
@@ -3769,8 +3801,8 @@ export default function Bio() {
                                   </div>
 
                                   {/* Botão de Ação */}
-                                  <div className="space-y-3 pt-3 border-t border-white/10">
-                                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                                  <div className="space-y-3 pt-3 border-t border-[#26262A]">
+                                    <span className="text-xs font-bold text-[#F2F2F3] flex items-center gap-1.5">
                                       <Phone className="w-3.5 h-3.5 text-[var(--primary-color)]" /> Botão Fale Conosco (WhatsApp)
                                     </span>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -3804,7 +3836,7 @@ export default function Bio() {
                           {!isAboutExpanded && hasActivePortfolioItem && activePortfolioItem && (() => {
                             const item = activePortfolioItem;
                             return (
-                              <div className="p-4 sm:p-6 space-y-6 fora border border-white/10 rounded-2xl animate-in fade-in duration-200 shadow-none">
+                              <div className="p-4 sm:p-6 space-y-6 bg-[#0B0B0C] border border-[#26262A] rounded-lg animate-in fade-in duration-200 shadow-none">
                                 {selectedView === "smartphone" ? (
                                   <>
                                     {/* Versão Smartphone do Portfólio */}
@@ -3815,7 +3847,7 @@ export default function Bio() {
                                         </label>
                                         <input 
                                           type="text" 
-                                          className="bg-transparent text-white font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-white/20 pb-1 w-full"
+                                          className="bg-transparent text-[#F2F2F3] font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-[#3F3F46] pb-1 w-full"
                                           value={item.title_mobile !== undefined ? item.title_mobile : (item.title || '')}
                                           onChange={e => handleUpdatePortfolioCollection(item.id, { title_mobile: e.target.value })}
                                           placeholder="Nome do Portfólio no Celular (ex: Jah do Açaí)"
@@ -3824,7 +3856,7 @@ export default function Bio() {
                                       <button
                                         type="button"
                                         onClick={() => handleRemovePortfolioCollection(item.id)}
-                                        className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer shadow-none"
+                                        className="text-red-400 hover:text-red-300 p-2 rounded-[6px] hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer shadow-none"
                                         title="Excluir Portfólio (Move para Lixeira)"
                                       >
                                         <Trash className="w-4 h-4" />
@@ -3832,29 +3864,29 @@ export default function Bio() {
                                       </button>
                                     </div>
                                     
-                                    <div className="barra p-3 sm:p-4 rounded-2xl border border-white/10 shadow-none">
+                                    <div className="bg-[#131315] p-3 sm:p-4 rounded-md border border-[#26262A] shadow-none">
                                       <div className="mb-6">
-                                        <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-zinc-300">
+                                        <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-[#CBD5E1]">
                                           Descrição do Portfólio (Smartphone)
                                         </label>
                                         <textarea 
-                                          className={`gm-input min-h-[120px] w-full resize-y rounded-xl p-3 bg-black/30 border border-white/10 focus:border-[var(--primary-color)] outline-none transition-colors ${(item.description_align_mobile || item.description_align || "left") === "left" ? "text-left" : (item.description_align_mobile || item.description_align) === "right" ? "text-right" : "text-center"} ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? "font-bold" : "font-medium"} ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size_mobile || item.description_size || "16 pt")} bio-desc-font-${item.description_font_mobile || item.description_font || "ui"}`}
+                                          className={`gm-input min-h-[120px] w-full resize-y rounded-md p-3 bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--primary-color)] outline-none transition-colors ${(item.description_align_mobile || item.description_align || "left") === "left" ? "text-left" : (item.description_align_mobile || item.description_align) === "right" ? "text-right" : "text-center"} ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? "font-bold" : "font-medium"} ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size_mobile || item.description_size || "16 pt")} bio-desc-font-${item.description_font_mobile || item.description_font || "ui"}`}
                                           value={item.description_mobile !== undefined ? item.description_mobile : (item.description || '')}
                                           onChange={(e) => handleUpdatePortfolioCollection(item.id, { description_mobile: e.target.value })}
                                           placeholder="Descreva o projeto para exibição em smartphones..."
                                         />
-                                        <div className="flex flex-wrap items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/10 mt-2 shadow-none">
-                                          <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "left" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align || 'left') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignLeft className="w-4 h-4" /></button>
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "center" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignCenter className="w-4 h-4" /></button>
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "right" })} className={`p-1.5 rounded-md transition-colors ${(item.description_align_mobile || item.description_align) === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignRight className="w-4 h-4" /></button>
+                                        <div className="flex flex-wrap items-center gap-2 bg-[#0B0B0C] p-2 rounded-md border border-[#26262A] mt-2 shadow-none">
+                                          <div className="flex items-center gap-1 bg-[#131315] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "left" })} className={`p-1.5 rounded-[4px] transition-colors ${(item.description_align_mobile || item.description_align || 'left') === 'left' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignLeft className="w-4 h-4" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "center" })} className={`p-1.5 rounded-[4px] transition-colors ${(item.description_align_mobile || item.description_align) === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignCenter className="w-4 h-4" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align_mobile: "right" })} className={`p-1.5 rounded-[4px] transition-colors ${(item.description_align_mobile || item.description_align) === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignRight className="w-4 h-4" /></button>
                                           </div>
-                                          <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold_mobile: !(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) })} className={`p-1.5 rounded-md transition-colors ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic_mobile: !(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) })} className={`p-1.5 rounded-md transition-colors ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Italic className="w-4 h-4 italic" /></button>
+                                          <div className="flex items-center gap-1 bg-[#131315] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold_mobile: !(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) })} className={`p-1.5 rounded-[4px] transition-colors ${(item.description_bold_mobile !== undefined ? item.description_bold_mobile : item.description_bold) ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic_mobile: !(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) })} className={`p-1.5 rounded-[4px] transition-colors ${(item.description_italic_mobile !== undefined ? item.description_italic_mobile : item.description_italic) ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Italic className="w-4 h-4 italic" /></button>
                                           </div>
                                           <div className="flex-1 min-w-[140px]">
-                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={item.description_font_mobile || item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font_mobile: e.target.value })}>
+                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#131315] border border-[#26262A] text-[#CBD5E1] w-full" value={item.description_font_mobile || item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font_mobile: e.target.value })}>
                                               <option value="ui">Inter (Sistema)</option>
                                               <option value="funnel">Funnel (Títulos)</option>
                                               <option value="roboto">Roboto</option>
@@ -3865,7 +3897,7 @@ export default function Bio() {
                                             </select>
                                           </div>
                                           <div className="w-[80px]">
-                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={item.description_size_mobile || item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size_mobile: e.target.value })}>
+                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#131315] border border-[#26262A] text-[#CBD5E1] w-full" value={item.description_size_mobile || item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size_mobile: e.target.value })}>
                                               <option value="10 pt">10 pt</option>
                                               <option value="12 pt">12 pt</option>
                                               <option value="14 pt">14 pt</option>
@@ -3881,35 +3913,35 @@ export default function Bio() {
                                         </div>
                                       </div>
                                       
-                                      <div className="space-y-6 pt-4 border-t border-white/10">
+                                      <div className="space-y-6 pt-4 border-t border-[#26262A]">
                                         {/* Section for Portfolio Main Banner (Smartphone) */}
                                         <div className="space-y-4">
                                           <div className="flex flex-col gap-1">
-                                            <span className="text-xs font-bold text-zinc-200">Banner Principal do Portfólio (Smartphone)</span>
-                                            <span className="text-[10px] text-zinc-400 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão celular.</span>
+                                            <span className="text-xs font-bold text-[#F2F2F3]">Banner Principal do Portfólio (Smartphone)</span>
+                                            <span className="text-[11px] text-[#8B8B92] font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão celular.</span>
                                           </div>
                                           
                                           <div className="space-y-2 max-w-sm">
                                             <div className="flex items-center justify-between">
-                                              <span className="text-[11px] font-semibold text-zinc-400">Smartphone (1080x900 px) - Proporção 6:5</span>
+                                              <span className="text-[11px] font-semibold text-[#8B8B92] tabular-nums">Smartphone (1080x900 px) - Proporção 6:5</span>
                                               {item.main_banner_mobile_url && (
                                                 <button 
                                                   type="button" 
                                                   onClick={() => handleRemovePortfolioMainMobileBanner(item.id)}
-                                                  className="text-[10px] text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                                                  className="text-[11px] text-red-400 hover:text-red-300 font-bold cursor-pointer"
                                                 >
                                                   Remover
                                                 </button>
                                               )}
                                             </div>
                                             {item.main_banner_mobile_url ? (
-                                              <div className="relative aspect-[6/5] max-w-[200px] rounded-2xl overflow-hidden bg-black/40 border border-white/10 shadow-none">
+                                              <div className="relative aspect-[6/5] max-w-[200px] rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A] shadow-none">
                                                 <img src={item.main_banner_mobile_url} alt="Main Banner Mobile" className="w-full h-full object-cover" />
                                               </div>
                                             ) : (
-                                              <label className="flex flex-col items-center justify-center aspect-[6/5] max-w-[200px] rounded-2xl border-2 border-dashed border-white/10 hover:border-[var(--primary-color)] bg-black/20 cursor-pointer transition-colors text-center p-4 shadow-none">
-                                                <Upload className="w-5 h-5 text-zinc-400 mb-1" />
-                                                <span className="text-xs text-zinc-300 font-bold">Enviar Banner Smartphone</span>
+                                              <label className="flex flex-col items-center justify-center aspect-[6/5] max-w-[200px] rounded-md border-2 border-dashed border-[#3F3F46] hover:border-[var(--primary-color)] bg-[#0B0B0C] cursor-pointer transition-colors text-center p-4 shadow-none">
+                                                <Upload className="w-5 h-5 text-[#8B8B92] mb-1" />
+                                                <span className="text-xs text-[#CBD5E1] font-bold">Enviar Banner Smartphone</span>
                                                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainMobileBanner(item.id, e)} />
                                               </label>
                                             )}
@@ -3917,13 +3949,13 @@ export default function Bio() {
                                         </div>
 
                                         {/* Section for Smartphone Banners */}
-                                        <div className="space-y-3 pt-4 border-t border-white/10">
+                                        <div className="space-y-3 pt-4 border-t border-[#26262A]">
                                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                             <div className="flex flex-col">
-                                              <span className="text-xs font-semibold text-zinc-300">Banners Internos Smartphone ({item.mobile_layers?.length || 0})</span>
-                                              <span className="text-[10px] text-zinc-400 font-medium mt-0.5">Tamanho Recomendado: 1080x1920 px (Proporção 9:16)</span>
+                                              <span className="text-xs font-semibold text-[#CBD5E1] tabular-nums">Banners Internos Smartphone ({item.mobile_layers?.length || 0})</span>
+                                              <span className="text-[11px] text-[#8B8B92] font-medium mt-0.5 tabular-nums">Tamanho Recomendado: 1080x1920 px (Proporção 9:16)</span>
                                             </div>
-                                            <label className="text-xs bg-black/30 hover:bg-[var(--primary-color)] hover:text-white text-zinc-300 px-3 py-2 rounded-xl cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-white/10 hover:border-transparent shadow-none">
+                                            <label className="text-xs bg-[#0B0B0C] hover:bg-[var(--primary-color)] hover:text-white text-[#CBD5E1] px-3 py-2 rounded-[6px] cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-[#26262A] hover:border-transparent shadow-none">
                                               <Upload className="w-4 h-4" />
                                               Adicionar Banners Smartphone (até 5)
                                               <input type="file" multiple accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioMobileLayer(item.id, e)} />
@@ -3933,7 +3965,7 @@ export default function Bio() {
                                           {item.mobile_layers && item.mobile_layers.length > 0 ? (
                                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                                               {(item.mobile_layers || []).map((layer: any) => (
-                                                <div key={layer.id} className="relative group aspect-[9/16] max-w-[120px] rounded-xl overflow-hidden bg-black/40 border border-white/10 mx-auto w-full shadow-none">
+                                                <div key={layer.id} className="relative group aspect-[9/16] max-w-[120px] rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A] mx-auto w-full shadow-none">
                                                   <OptimizedImage src={layer.image_url} alt="Layer Smartphone" className="w-full h-full object-cover" width={150} />
                                                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                                     <button
@@ -3949,7 +3981,7 @@ export default function Bio() {
                                               ))}
                                             </div>
                                           ) : (
-                                            <div className="py-4 text-center text-zinc-500 text-xs border border-dashed border-white/10 rounded-2xl">
+                                            <div className="py-4 text-center text-[#8B8B92] text-xs border border-dashed border-[#26262A] bg-[#0B0B0C] rounded-md">
                                               Nenhum banner smartphone inserido neste portfólio.
                                             </div>
                                           )}
@@ -3967,7 +3999,7 @@ export default function Bio() {
                                         </label>
                                         <input 
                                           type="text" 
-                                          className="bg-transparent text-white font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-white/20 pb-1 w-full"
+                                          className="bg-transparent text-[#F2F2F3] font-bold text-sm sm:text-base outline-none border-b border-transparent focus:border-[#3F3F46] pb-1 w-full"
                                           value={item.title || ''}
                                           onChange={e => handleUpdatePortfolioCollection(item.id, { title: e.target.value })}
                                           placeholder="Nome do Portfólio no Computador (ex: Jah do Açaí)"
@@ -3976,7 +4008,7 @@ export default function Bio() {
                                       <button
                                         type="button"
                                         onClick={() => handleRemovePortfolioCollection(item.id)}
-                                        className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer shadow-none"
+                                        className="text-red-400 hover:text-red-300 p-2 rounded-[6px] hover:bg-red-500/10 transition-colors self-end sm:self-auto shrink-0 flex items-center gap-2 font-bold text-xs cursor-pointer shadow-none"
                                         title="Excluir Portfólio (Move para Lixeira)"
                                       >
                                         <Trash className="w-4 h-4" />
@@ -3984,29 +4016,29 @@ export default function Bio() {
                                       </button>
                                     </div>
                                     
-                                    <div className="barra p-3 sm:p-4 rounded-2xl border border-white/10 shadow-none">
+                                    <div className="bg-[#131315] p-3 sm:p-4 rounded-md border border-[#26262A] shadow-none">
                                       <div className="mb-6">
-                                        <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-zinc-300">
+                                        <label className="gm-label mb-2 block text-xs flex items-center gap-1.5 font-bold text-[#CBD5E1]">
                                           Descrição do Portfólio (Computador)
                                         </label>
                                         <textarea 
-                                          className={`gm-input min-h-[120px] w-full resize-y rounded-xl p-3 bg-black/30 border border-white/10 focus:border-[var(--primary-color)] outline-none transition-colors ${item.description_align === "left" ? "text-left" : item.description_align === "right" ? "text-right" : "text-center"} ${item.description_bold ? "font-bold" : "font-medium"} ${item.description_italic ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size)} bio-desc-font-${item.description_font || "ui"}`}
+                                          className={`gm-input min-h-[120px] w-full resize-y rounded-md p-3 bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--primary-color)] outline-none transition-colors ${item.description_align === "left" ? "text-left" : item.description_align === "right" ? "text-right" : "text-center"} ${item.description_bold ? "font-bold" : "font-medium"} ${item.description_italic ? "italic" : "not-italic"} ${getFontSizeClass(item.description_size)} bio-desc-font-${item.description_font || "ui"}`}
                                           value={item.description || ''}
                                           onChange={(e) => handleUpdatePortfolioCollection(item.id, { description: e.target.value })}
                                           placeholder="Descreva o projeto para exibição em computadores..."
                                         />
-                                        <div className="flex flex-wrap items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/10 mt-2 shadow-none">
-                                          <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "left" })} className={`p-1.5 rounded-md transition-colors ${(!item.description_align || item.description_align === 'left') ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignLeft className="w-4 h-4" /></button>
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "center" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignCenter className="w-4 h-4" /></button>
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "right" })} className={`p-1.5 rounded-md transition-colors ${item.description_align === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><AlignRight className="w-4 h-4" /></button>
+                                        <div className="flex flex-wrap items-center gap-2 bg-[#0B0B0C] p-2 rounded-md border border-[#26262A] mt-2 shadow-none">
+                                          <div className="flex items-center gap-1 bg-[#131315] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "left" })} className={`p-1.5 rounded-[4px] transition-colors ${(!item.description_align || item.description_align === 'left') ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignLeft className="w-4 h-4" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "center" })} className={`p-1.5 rounded-[4px] transition-colors ${item.description_align === 'center' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignCenter className="w-4 h-4" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_align: "right" })} className={`p-1.5 rounded-[4px] transition-colors ${item.description_align === 'right' ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><AlignRight className="w-4 h-4" /></button>
                                           </div>
-                                          <div className="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10 shadow-none">
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold: !item.description_bold })} className={`p-1.5 rounded-md transition-colors ${item.description_bold ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Bold className="w-4 h-4 font-bold" /></button>
-                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic: !item.description_italic })} className={`p-1.5 rounded-md transition-colors ${item.description_italic ? 'bg-[var(--primary-color)] text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}><Italic className="w-4 h-4 italic" /></button>
+                                          <div className="flex items-center gap-1 bg-[#131315] p-1 rounded-[4px] border border-[#26262A] shadow-none">
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_bold: !item.description_bold })} className={`p-1.5 rounded-[4px] transition-colors ${item.description_bold ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Bold className="w-4 h-4 font-bold" /></button>
+                                            <button type="button" onClick={() => handleUpdatePortfolioCollection(item.id, { description_italic: !item.description_italic })} className={`p-1.5 rounded-[4px] transition-colors ${item.description_italic ? 'bg-[var(--primary-color)] text-white' : 'text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]'}`}><Italic className="w-4 h-4 italic" /></button>
                                           </div>
                                           <div className="flex-1 min-w-[140px]">
-                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font: e.target.value })}>
+                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#131315] border border-[#26262A] text-[#CBD5E1] w-full" value={item.description_font || "ui"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_font: e.target.value })}>
                                               <option value="ui">Inter (Sistema)</option>
                                               <option value="funnel">Funnel (Títulos)</option>
                                               <option value="roboto">Roboto</option>
@@ -4017,7 +4049,7 @@ export default function Bio() {
                                             </select>
                                           </div>
                                           <div className="w-[80px]">
-                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-lg bg-black/30 border border-white/10 text-zinc-300 w-full" value={item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size: e.target.value })}>
+                                            <select className="gm-input !h-8 !py-0 !px-2 text-xs font-semibold rounded-[4px] bg-[#131315] border border-[#26262A] text-[#CBD5E1] w-full" value={item.description_size || "16 pt"} onChange={e => handleUpdatePortfolioCollection(item.id, { description_size: e.target.value })}>
                                               <option value="10 pt">10 pt</option>
                                               <option value="12 pt">12 pt</option>
                                               <option value="14 pt">14 pt</option>
@@ -4033,35 +4065,35 @@ export default function Bio() {
                                         </div>
                                       </div>
                                       
-                                      <div className="space-y-6 pt-4 border-t border-white/10">
+                                      <div className="space-y-6 pt-4 border-t border-[#26262A]">
                                         {/* Section for Portfolio Main Banner (Desktop) */}
                                         <div className="space-y-4">
                                           <div className="flex flex-col gap-1">
-                                            <span className="text-xs font-bold text-zinc-200">Banner Principal do Portfólio (Desktop)</span>
-                                            <span className="text-[10px] text-zinc-400 font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão computador.</span>
+                                            <span className="text-xs font-bold text-[#F2F2F3]">Banner Principal do Portfólio (Desktop)</span>
+                                            <span className="text-[11px] text-[#8B8B92] font-medium">Este banner substituirá o banner da empresa quando este portfólio estiver aberto no site versão computador.</span>
                                           </div>
                                           
                                           <div className="space-y-2">
                                             <div className="flex items-center justify-between">
-                                              <span className="text-[11px] font-semibold text-zinc-400">Desktop (Tamanho Lógico e Funcional: 1920x500 px a 1920x800 px para preenchimento widescreen perfeito)</span>
+                                              <span className="text-[11px] font-semibold text-[#8B8B92] tabular-nums">Desktop (Tamanho Lógico e Funcional: 1920x500 px a 1920x800 px para preenchimento widescreen perfeito)</span>
                                               {item.main_banner_url && (
                                                 <button 
                                                   type="button" 
                                                   onClick={() => handleRemovePortfolioMainBanner(item.id)}
-                                                  className="text-[10px] text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                                                  className="text-[11px] text-red-400 hover:text-red-300 font-bold cursor-pointer"
                                                 >
                                                   Remover
                                                 </button>
                                               )}
                                             </div>
                                             {item.main_banner_url ? (
-                                              <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/40 border border-white/10 shadow-none">
+                                              <div className="relative aspect-video rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A] shadow-none">
                                                 <img src={item.main_banner_url} alt="Main Banner Desktop" className="w-full h-full object-cover" />
                                               </div>
                                             ) : (
-                                              <label className="flex flex-col items-center justify-center aspect-video rounded-2xl border-2 border-dashed border-white/10 hover:border-[var(--primary-color)] bg-black/20 cursor-pointer transition-colors text-center p-4 shadow-none">
-                                                <Upload className="w-5 h-5 text-zinc-400 mb-1" />
-                                                <span className="text-xs text-zinc-300 font-bold">Enviar Banner Desktop</span>
+                                              <label className="flex flex-col items-center justify-center aspect-video rounded-md border-2 border-dashed border-[#3F3F46] hover:border-[var(--primary-color)] bg-[#0B0B0C] cursor-pointer transition-colors text-center p-4 shadow-none">
+                                                <Upload className="w-5 h-5 text-[#8B8B92] mb-1" />
+                                                <span className="text-xs text-[#CBD5E1] font-bold">Enviar Banner Desktop</span>
                                                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPortfolioMainBanner(item.id, e)} />
                                               </label>
                                             )}
@@ -4072,10 +4104,10 @@ export default function Bio() {
                                         <div className="space-y-3">
                                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                             <div className="flex flex-col">
-                                              <span className="text-xs font-semibold text-zinc-300">Banners Internos Desktop ({item.layers?.length || 0})</span>
-                                              <span className="text-[10px] text-zinc-400 font-medium mt-0.5">Tamanho Lógico e Funcional: 1600x900 px (Proporção 16:9) ou 1600x560 px para encaixe excelente nas proporções do computador</span>
+                                              <span className="text-xs font-semibold text-[#CBD5E1] tabular-nums">Banners Internos Desktop ({item.layers?.length || 0})</span>
+                                              <span className="text-[11px] text-[#8B8B92] font-medium mt-0.5 tabular-nums">Tamanho Lógico e Funcional: 1600x900 px (Proporção 16:9) ou 1600x560 px para encaixe excelente nas proporções do computador</span>
                                             </div>
-                                            <label className="text-xs bg-black/30 hover:bg-[var(--primary-color)] hover:text-white text-zinc-300 px-3 py-2 rounded-xl cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-white/10 hover:border-transparent shadow-none">
+                                            <label className="text-xs bg-[#0B0B0C] hover:bg-[var(--primary-color)] hover:text-white text-[#CBD5E1] px-3 py-2 rounded-[6px] cursor-pointer transition-colors flex items-center justify-center gap-2 w-full sm:w-auto font-bold border border-[#26262A] hover:border-transparent shadow-none">
                                               <Upload className="w-4 h-4" />
                                               Adicionar Banners Desktop (até 5)
                                               <input type="file" multiple accept="image/*,video/mp4" className="hidden" onChange={(e) => handleUploadPortfolioLayer(item.id, e)} />
@@ -4085,7 +4117,7 @@ export default function Bio() {
                                           {item.layers && item.layers.length > 0 ? (
                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                               {(item.layers || []).map((layer: any) => (
-                                                <div key={layer.id} className="relative group aspect-video rounded-xl overflow-hidden bg-black/40 border border-white/10 shadow-none">
+                                                <div key={layer.id} className="relative group aspect-video rounded-md overflow-hidden bg-[#0B0B0C] border border-[#26262A] shadow-none">
                                                   <OptimizedImage src={layer.image_url} alt="Layer Desktop" className="w-full h-full object-cover" width={300} />
                                                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                                     <button
@@ -4101,7 +4133,7 @@ export default function Bio() {
                                               ))}
                                             </div>
                                           ) : (
-                                            <div className="py-4 text-center text-zinc-500 text-xs border border-dashed border-white/10 rounded-2xl">
+                                            <div className="py-4 text-center text-[#8B8B92] text-xs border border-dashed border-[#26262A] bg-[#0B0B0C] rounded-md">
                                               Nenhum banner desktop inserido neste portfólio.
                                             </div>
                                           )}
@@ -4124,7 +4156,7 @@ export default function Bio() {
                         <button
                           type="button"
                           onClick={clearPortfolioTrash}
-                          className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-none inline-flex items-center gap-1.5"
+                          className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-[6px] transition-colors cursor-pointer shadow-none inline-flex items-center gap-1.5"
                         >
                           <Trash2 size={13} />
                           <span>Esvaziar Lixeira</span>
@@ -4132,27 +4164,27 @@ export default function Bio() {
                       )}
                     </div>
                     {deletedPortfolioItems.length === 0 ? (
-                      <div className="text-center py-10 text-zinc-500 text-sm border border-dashed border-white/10 rounded-2xl space-y-2">
-                        <Trash2 className="w-10 h-10 opacity-20 mx-auto text-zinc-400" />
+                      <div className="text-center py-10 text-[#8B8B92] text-sm border border-dashed border-[#26262A] bg-[#0B0B0C] rounded-lg space-y-2">
+                        <Trash2 className="w-10 h-10 opacity-20 mx-auto text-[#8B8B92]" />
                         <p>A lixeira está vazia.</p>
                       </div>
                     ) : (
-                      <div className="divide-y divide-white/10">
+                      <div className="divide-y divide-[#26262A]">
                         {deletedPortfolioItems.map((item: any, idx: number) => (
                           <div key={item.id || idx} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="min-w-0 flex-1 flex items-center gap-3">
                               {item.layers && item.layers[0] && (
-                                <div className="w-10 h-10 rounded-xl bg-black/40 overflow-hidden border border-white/10 shrink-0 shadow-none">
+                                <div className="w-10 h-10 rounded-md bg-[#0B0B0C] overflow-hidden border border-[#26262A] shrink-0 shadow-none">
                                   <img src={item.layers[0].image_url} alt="" className="w-full h-full object-cover" />
                                 </div>
                               )}
-                              <h4 className="font-bold text-sm text-zinc-300 truncate">{item.title || 'Portfólio Excluído'}</h4>
+                              <h4 className="font-bold text-sm text-[#CBD5E1] truncate">{item.title || 'Portfólio Excluído'}</h4>
                             </div>
                             <div className="flex flex-wrap items-center gap-2 shrink-0">
                               <button
                                 type="button"
                                 onClick={() => restorePortfolioCollection(item.id)}
-                                className="text-xs text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer flex-1 justify-center sm:flex-none shadow-none"
+                                className="text-xs text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 font-bold px-3 py-2 rounded-[6px] flex items-center gap-1.5 transition-colors cursor-pointer flex-1 justify-center sm:flex-none shadow-none"
                                 title="Restaurar portfólio"
                               >
                                 <RotateCcw className="w-3.5 h-3.5" />
@@ -4161,7 +4193,7 @@ export default function Bio() {
                               <button
                                 type="button"
                                 onClick={() => permanentlyDeletePortfolioCollection(item.id)}
-                                className="text-xs text-red-400 bg-red-500/10 hover:bg-red-500/20 font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer flex-1 justify-center sm:flex-none shadow-none"
+                                className="text-xs text-red-400 bg-red-500/10 hover:bg-red-500/20 font-bold px-3 py-2 rounded-[6px] flex items-center gap-1.5 transition-colors cursor-pointer flex-1 justify-center sm:flex-none shadow-none"
                                 title="Excluir permanentemente"
                               >
                                 <Trash className="w-3.5 h-3.5" />
@@ -4181,13 +4213,13 @@ export default function Bio() {
 
         {/* 7. DADOS DE PAGAMENTO (PIX) */}
         {openSections.payment && (
-          <div className="gm-card fora border border-white/10 p-4 sm:p-6 rounded-2xl space-y-5 shadow-none backdrop-blur-md w-full animate-in fade-in duration-300">
-            <div className="sticky top-0 z-20 barra py-2 sm:py-2.5 px-3 sm:px-4 border-b border-white/10 flex items-center justify-between mb-3 rounded-xl shadow-none">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
-                <CreditCard className="w-4.5 h-4.5 text-[var(--primary-color)] animate-pulse" />
+          <div className="gm-card bg-[#131315] border border-[#26262A] p-4 sm:p-6 rounded-lg space-y-5 shadow-none w-full animate-in fade-in duration-300">
+            <div className="sticky top-0 z-20 bg-[#0B0B0C] py-2 sm:py-2.5 px-3 sm:px-4 border border-[#26262A] flex items-center justify-between mb-3 rounded-md shadow-none">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                <CreditCard className="w-4 h-4 text-[var(--primary-color)]" />
                 DADOS DE PAGAMENTO (PIX)
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 shadow-none">
+              <span className="text-[11px] font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 shadow-none">
                 Edição Ativa
               </span>
             </div>
@@ -4198,7 +4230,7 @@ export default function Bio() {
                   <label className="gm-label font-semibold">Como deseja receber / Chave PIX</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Tipo de Chave PIX</label>
+                      <label className="text-sm font-semibold text-[#CBD5E1] mb-1.5 block">Tipo de Chave PIX</label>
                       <select className="gm-input !py-2.5 text-sm" value={bioConfig.pix_type} onChange={e => handleChange("pix_type", e.target.value)}>
                         <option value="CPF">CPF</option>
                         <option value="CNPJ">CNPJ</option>
@@ -4208,16 +4240,16 @@ export default function Bio() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-zinc-300 mb-1.5 block">Chave PIX</label>
+                      <label className="text-sm font-semibold text-[#CBD5E1] mb-1.5 block">Chave PIX</label>
                       <input type="text" className="gm-input !py-2.5 text-sm" value={bioConfig.pix_key} onChange={e => handleChange("pix_key", e.target.value)} placeholder="Chave do PIX..." />
                     </div>
                   </div>
                 </div>
 
-                <div className="border-t border-white/10 pt-4">
+                <div className="border-t border-[#26262A] pt-4">
                   <label className="gm-label font-semibold">Link para Pagamento (Cartão de Crédito URL)</label>
                   <input type="text" className="gm-input font-mono text-sm !py-2.5" value={bioConfig.card_url || ''} onChange={e => handleChange("card_url", e.target.value)} placeholder="https://link.mercadopago.com/... ou stripe..." />
-                  <p className="text-xs text-zinc-500 mt-1">Ao receber o clique no botão do cartão de crédito, o cliente será redirecionado para este link de pagamento.</p>
+                  <p className="text-xs text-[#8B8B92] mt-1">Ao receber o clique no botão do cartão de crédito, o cliente será redirecionado para este link de pagamento.</p>
                 </div>
               </div>
             </div>
@@ -4226,13 +4258,13 @@ export default function Bio() {
 
         {/* 8. ENDEREÇO E LOCALIZAÇÃO */}
         {openSections.address && (
-          <div className="gm-card fora border border-white/10 p-4 sm:p-6 rounded-2xl space-y-5 shadow-none backdrop-blur-md w-full animate-in fade-in duration-300">
-            <div className="sticky top-0 z-20 barra py-2 sm:py-2.5 px-3 sm:px-4 border-b border-white/10 flex items-center justify-between mb-3 rounded-xl shadow-none">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
-                <MapPin className="w-4.5 h-4.5 text-[var(--primary-color)] animate-pulse" />
+          <div className="gm-card bg-[#131315] border border-[#26262A] p-4 sm:p-6 rounded-lg space-y-5 shadow-none w-full animate-in fade-in duration-300">
+            <div className="sticky top-0 z-20 bg-[#0B0B0C] py-2 sm:py-2.5 px-3 sm:px-4 border border-[#26262A] flex items-center justify-between mb-3 rounded-md shadow-none">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                <MapPin className="w-4 h-4 text-[var(--primary-color)]" />
                 ENDEREÇO E LOCALIZAÇÃO
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 shadow-none">
+              <span className="text-[11px] font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 shadow-none">
                 Edição Ativa
               </span>
             </div>
@@ -4246,7 +4278,7 @@ export default function Bio() {
                 <div>
                   <label className="gm-label font-semibold">Link de Localização (Google Maps / Waze)</label>
                   <input type="text" className="gm-input font-mono text-sm !py-2.5" value={bioConfig.address_url || ''} onChange={e => handleChange("address_url", e.target.value)} placeholder="https://maps.app.goo.gl/..." />
-                  <p className="text-xs text-zinc-500 mt-1">Ao receber o clique no endereço, o cliente abrirá esta localização.</p>
+                  <p className="text-xs text-[#8B8B92] mt-1">Ao receber o clique no endereço, o cliente abrirá esta localização.</p>
                 </div>
               </div>
             </div>
@@ -4255,36 +4287,36 @@ export default function Bio() {
 
         {/* 9. CHAT CARDDIGITAL GM */}
         {openSections.contactSection && (
-          <div className="gm-card fora border border-white/10 p-4 sm:p-6 rounded-2xl space-y-5 shadow-none backdrop-blur-md w-full animate-in fade-in duration-300">
-            <div className="sticky top-0 z-20 barra py-2 sm:py-2.5 px-3 sm:px-4 border-b border-white/10 flex items-center justify-between mb-3 rounded-xl shadow-none">
-              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-zinc-800 dark:text-white uppercase tracking-wider">
-                <Sparkles className="w-4.5 h-4.5 text-[var(--primary-color)] animate-pulse" />
+          <div className="gm-card bg-[#131315] border border-[#26262A] p-4 sm:p-6 rounded-lg space-y-5 shadow-none w-full animate-in fade-in duration-300">
+            <div className="sticky top-0 z-20 bg-[#0B0B0C] py-2 sm:py-2.5 px-3 sm:px-4 border border-[#26262A] flex items-center justify-between mb-3 rounded-md shadow-none">
+              <span className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-[#F2F2F3] uppercase tracking-wider">
+                <Sparkles className="w-4 h-4 text-[var(--primary-color)]" />
                 CHAT CARDDIGITAL GM
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-full border border-[var(--primary-color)]/20 shadow-none">
+              <span className="text-[11px] font-bold text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 shadow-none">
                 Edição Ativa
               </span>
             </div>
             
             {true && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-top-2 pt-2 text-zinc-600 dark:text-zinc-300">
+              <div className="space-y-6 animate-in fade-in slide-in-from-top-2 pt-2 text-[#CBD5E1]">
                 {/* Banner de Contato */}
-                <div className="space-y-4 fora p-4 sm:p-5 rounded-2xl border border-white/10 shadow-none">
-                  <h4 className="text-sm font-bold text-zinc-800 dark:text-white flex items-center gap-2">
+                <div className="space-y-4 bg-[#0B0B0C] p-4 sm:p-5 rounded-lg border border-[#26262A] shadow-none">
+                  <h4 className="text-sm font-bold text-[#F2F2F3] flex items-center gap-2">
                     <Layout className="w-4 h-4 text-[var(--primary-color)]" /> Banner da Página de Contato
                   </h4>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Envie um banner exclusivo para a página de contato do seu site (caso vazio, usará o banner principal).</p>
+                  <p className="text-xs text-[#8B8B92]">Envie um banner exclusivo para a página de contato do seu site (caso vazio, usará o banner principal).</p>
                   
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2 barra p-3.5 rounded-2xl border border-white/10 flex flex-col justify-between shadow-none">
+                    <div className="space-y-2 bg-[#131315] p-3.5 rounded-md border border-[#26262A] flex flex-col justify-between shadow-none">
                       <div>
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-xs font-bold text-zinc-300">Imagem do Banner</span>
+                          <span className="text-xs font-bold text-[#CBD5E1]">Imagem do Banner</span>
                           {bioConfig.contact_banner_img_url && (
                             <button 
                               type="button" 
                               onClick={() => handleChange("contact_banner_img_url", "")} 
-                              className="text-red-500 hover:text-red-400 text-[10px] font-bold cursor-pointer"
+                              className="text-red-400 hover:text-red-300 text-[11px] font-bold cursor-pointer"
                             >
                               Remover
                             </button>
@@ -4292,18 +4324,18 @@ export default function Bio() {
                         </div>
                         
                         {bioConfig.contact_banner_img_url ? (
-                          <div className="w-full aspect-[16/6] rounded-xl overflow-hidden border border-white/10 bg-black/40 shadow-none">
+                          <div className="w-full aspect-[16/6] rounded-md overflow-hidden border border-[#26262A] bg-[#0B0B0C] shadow-none">
                             <OptimizedImage src={bioConfig.contact_banner_img_url} alt="Banner Contato" className="w-full h-full object-cover" width={800} />
                           </div>
                         ) : (
-                          <div className="w-full aspect-[16/6] rounded-xl border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-500 text-[10px] font-medium bg-black/10">
+                          <div className="w-full aspect-[16/6] rounded-md border border-dashed border-[#3F3F46] flex flex-col items-center justify-center text-[#8B8B92] text-[11px] font-medium bg-[#0B0B0C]">
                             <Layout className="w-5 h-5 mb-1 opacity-40 text-[var(--primary-color)]" />
                             Sem banner de contato personalizado
                           </div>
                         )}
                       </div>
                       <div className="pt-2">
-                        <label className="w-full gm-btn gm-btn-outline !py-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-all shadow-none">
+                        <label className="w-full gm-btn gm-btn-outline !py-4 gap-1.5 text-xs flex items-center justify-center cursor-pointer border border-[var(--primary-color-60)] hover:border-[var(--primary-color)] hover:bg-[var(--primary-color-10)] transition-colors rounded-[6px] shadow-none">
                           <Upload className="w-3.5 h-3.5 text-[var(--primary-color)]" />
                           <span className="font-bold text-white">Upload Banner de Contato</span>
                           <input type="file" accept="image/*" className="hidden" onChange={handleUploadContactBanner} />
@@ -4314,8 +4346,8 @@ export default function Bio() {
                 </div>
 
                 {/* Textos da Página de Contato */}
-                <div className="space-y-4 fora p-4 sm:p-5 rounded-2xl border border-white/10 shadow-none">
-                  <h4 className="text-sm font-bold text-zinc-800 dark:text-white flex items-center gap-2">
+                <div className="space-y-4 bg-[#0B0B0C] p-4 sm:p-5 rounded-lg border border-[#26262A] shadow-none">
+                  <h4 className="text-sm font-bold text-[#F2F2F3] flex items-center gap-2">
                     <Edit3 className="w-4 h-4 text-[var(--primary-color)]" /> Textos da Página de Contato
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -4343,32 +4375,32 @@ export default function Bio() {
                 </div>
 
                 {/* Configurações do Balão do Chat */}
-                <div className="space-y-4 fora p-4 sm:p-5 rounded-2xl border border-white/10 shadow-none">
-                  <h4 className="text-sm font-bold text-zinc-800 dark:text-white flex items-center gap-2">
+                <div className="space-y-4 bg-[#0B0B0C] p-4 sm:p-5 rounded-lg border border-[#26262A] shadow-none">
+                  <h4 className="text-sm font-bold text-[#F2F2F3] flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--primary-color)]" /> Balão do Chat Flutuante (WhatsApp)
                   </h4>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Personalize o widget do Join.chat exibido na página de contato do seu site.</p>
+                  <p className="text-xs text-[#8B8B92]">Personalize o widget do Join.chat exibido na página de contato do seu site.</p>
                   
-                  <div className="flex flex-col sm:flex-row gap-4 barra p-3.5 rounded-2xl border border-white/10 shadow-none">
+                  <div className="flex flex-col sm:flex-row gap-4 bg-[#131315] p-3.5 rounded-md border border-[#26262A] shadow-none">
                     <div className="flex items-center gap-3">
                       <input 
                         type="checkbox" 
                         id="chat_balloon_enabled" 
                         checked={bioConfig.chat_balloon_enabled !== false} 
                         onChange={e => handleChange("chat_balloon_enabled", e.target.checked)}
-                        className="w-4 h-4 rounded text-[var(--primary-color)] bg-white dark:bg-zinc-850 border-white/10 focus:ring-0 cursor-pointer" 
+                        className="w-4 h-4 rounded-[4px] text-[var(--primary-color)] bg-[#0B0B0C] border-[#26262A] focus:ring-0 cursor-pointer" 
                       />
-                      <label htmlFor="chat_balloon_enabled" className="text-xs font-bold text-zinc-700 dark:text-white cursor-pointer select-none">Habilitar Chat Balão</label>
+                      <label htmlFor="chat_balloon_enabled" className="text-xs font-bold text-[#F2F2F3] cursor-pointer select-none">Habilitar Chat Balão</label>
                     </div>
-                    <div className="sm:border-l border-white/10 sm:pl-4 flex items-center gap-3">
+                    <div className="sm:border-l border-[#26262A] sm:pl-4 flex items-center gap-3">
                       <input 
                         type="checkbox" 
                         id="chat_balloon_show_qrcode" 
                         checked={bioConfig.chat_balloon_show_qrcode !== false} 
                         onChange={e => handleChange("chat_balloon_show_qrcode", e.target.checked)}
-                        className="w-4 h-4 rounded text-[var(--primary-color)] bg-white dark:bg-zinc-850 border-white/10 focus:ring-0 cursor-pointer" 
+                        className="w-4 h-4 rounded-[4px] text-[var(--primary-color)] bg-[#0B0B0C] border-[#26262A] focus:ring-0 cursor-pointer" 
                       />
-                      <label htmlFor="chat_balloon_show_qrcode" className="text-xs font-bold text-zinc-700 dark:text-white cursor-pointer select-none">Mostrar QR Code ao passar o mouse (PC)</label>
+                      <label htmlFor="chat_balloon_show_qrcode" className="text-xs font-bold text-[#F2F2F3] cursor-pointer select-none">Mostrar QR Code ao passar o mouse (PC)</label>
                     </div>
                   </div>
 
@@ -4461,10 +4493,10 @@ export default function Bio() {
         </div>
 
       {/* FLOATING ACTION PANEL WITH TOUCH SWIPE-LEFT/RIGHT TO COLLAPSE AND CLICK-TO-EXPAND */}
-      <div className="fixed top-1/2 -tranzinc-y-1/2 right-0 z-[80] select-none pointer-events-none flex flex-col items-end">
+      <div className="fixed top-1/2 -translate-y-1/2 right-0 z-[80] select-none pointer-events-none flex flex-col items-end">
         <AnimatePresence mode="wait">
           {isDocked ? (
-            /* Docked State: Thin vertical color bars fixed on the right edge with high touch sensitivity */
+            /* Docked State: Thin vertical bar fixed on the right edge with high touch sensitivity */
             <motion.div
               key="docked"
               initial={{ opacity: 0, scale: 0.85 }}
@@ -4493,14 +4525,14 @@ export default function Bio() {
               whileDrag={{ scale: 1.02 }}
               title="Clique ou arraste para a esquerda para abrir o botão Salvar"
             >
-              <div className="flex flex-col gap-2 py-8 pl-10 pr-1 bg-transparent select-none">
-                <div className="w-3.5 h-20 rounded-full bg-[var(--gm-primary)] shadow-xl transition-all group-hover:w-5 flex items-center justify-center text-white border border-orange-300/40">
-                  <Save size={15} className="opacity-90 animate-pulse text-white" />
+              <div className="flex flex-col gap-2 py-8 pl-10 pr-1 bg-transparent select-none pointer-events-auto cursor-pointer">
+                <div className="w-4 h-20 rounded-l-md bg-[var(--gm-primary)] shadow-lg transition-all flex items-center justify-center text-white border border-r-0 border-[#26262A]">
+                  <Save size={14} className="text-white" />
                 </div>
               </div>
             </motion.div>
           ) : (
-            /* Expanded format: Directly draggable circular buttons with hover labels */
+            /* Expanded format: Directly draggable action buttons with hover labels */
             <motion.div
               key="expanded"
               initial={{ opacity: 0, scale: 0.85 }}
@@ -4530,9 +4562,9 @@ export default function Bio() {
                     initial={{ opacity: 0, scale: 0.8, x: 20 }}
                     animate={{ opacity: 1, scale: 1, x: 0 }}
                     exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                    className="flex items-center gap-2 text-[var(--gm-primary)] bg-white/95 dark:bg-zinc-900/95 border border-[var(--gm-primary)]/40 px-3.5 py-2 rounded-lg text-xs font-black shadow-lg backdrop-blur-md"
+                    className="flex items-center gap-2 text-[var(--gm-primary)] bg-[#131315] border border-[var(--gm-primary)]/40 px-3.5 py-2 rounded-md text-xs font-black shadow-lg"
                   >
-                    <CheckCircle2 size={16} className="text-[var(--gm-primary)] animate-bounce" />
+                    <CheckCircle2 size={16} className="text-[var(--gm-primary)]" />
                     <span>Bio Salva!</span>
                   </motion.div>
                 )}
@@ -4540,7 +4572,7 @@ export default function Bio() {
 
               {/* SAVE BUTTON */}
               <div className="relative group flex items-center">
-                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
+                <span className="absolute right-14 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[#131315] text-[#F2F2F3] text-xs font-bold px-3 py-1.5 rounded-md shadow-lg whitespace-nowrap pointer-events-none border border-[#26262A]">
                   {saving ? "Salvando..." : "Salvar Alterações"}
                 </span>
                 <button 
@@ -4551,23 +4583,23 @@ export default function Bio() {
                     handleSave();
                   }}
                   disabled={saving}
-                  className="gm-floating-save-btn !p-0 w-14 h-14 hover:brightness-110 active:translate-y-0.5 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 border border-white/20 cursor-pointer outline-none"
+                  className="gm-floating-save-btn !p-0 w-12 h-12 hover:brightness-110 active:translate-y-0.5 text-white rounded-lg flex items-center justify-center shadow-lg transition-all duration-200 disabled:opacity-50 border border-[#26262A] cursor-pointer outline-none"
                   style={{ backgroundColor: (bioConfig as any).brand_color || bioConfig.color || 'var(--gm-primary)' }}
                   title="Salvar todas as alterações da Bio"
                 >
                   {saving ? (
-                    <Loader2 className="w-6 h-6 animate-spin text-white shrink-0" />
+                    <Loader2 className="w-5 h-5 animate-spin text-white shrink-0" />
                   ) : saveSuccess ? (
-                    <CheckCircle2 className="w-6 h-6 text-white animate-bounce shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
                   ) : (
-                    <Save className="w-6 h-6 text-white shrink-0" />
+                    <Save className="w-5 h-5 text-white shrink-0" />
                   )}
                 </button>
               </div>
 
               {/* PREVIEW BUTTON */}
               <div className="relative group flex items-center">
-                <span className="absolute right-16 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-zinc-900/95 text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none border border-zinc-800/80 backdrop-blur-sm">
+                <span className="absolute right-14 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[#131315] text-[#F2F2F3] text-xs font-bold px-3 py-1.5 rounded-md shadow-lg whitespace-nowrap pointer-events-none border border-[#26262A]">
                   Visualizar Prévia
                 </span>
                 <button 
@@ -4577,10 +4609,10 @@ export default function Bio() {
                     if (isDraggingRef.current) return;
                     setPreviewOpen(true);
                   }}
-                  className="w-14 h-14 bg-[var(--gm-primary)] hover:brightness-110 active:scale-95 text-white rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(255,105,0,0.45)] hover:shadow-[0_12px_32px_rgba(255,105,0,0.65)] transition-all duration-300 border border-orange-300/40 cursor-pointer outline-none"
+                  className="w-12 h-12 bg-[var(--gm-primary)] hover:brightness-110 active:scale-95 text-white rounded-lg flex items-center justify-center shadow-lg transition-all duration-200 border border-[#26262A] cursor-pointer outline-none"
                   title="Visualizar Prévia"
                 >
-                  <Eye className="w-6 h-6 text-white transition-transform duration-200" />
+                  <Eye className="w-5 h-5 text-white transition-transform duration-200" />
                 </button>
               </div>
             </motion.div>
@@ -4591,6 +4623,9 @@ export default function Bio() {
       {/* PREVIEW 100% FULL SCREEN - SEM MODAL, SEM CÁPSULA, SEM CONTAINER */}
       {previewOpen && (
         <div 
+          role="dialog"
+          aria-modal="true"
+          aria-label="Prévia do Site"
           data-website-root="true"
           data-site-preview="true"
           className="gm-website-fullscreen site-full-viewport gm-website-viewport gm-site-fullscreen fixed inset-0 z-[99999] w-screen h-screen bg-black overflow-hidden m-0 p-0 border-0 rounded-none flex flex-col animate-in fade-in duration-200"
@@ -4609,14 +4644,14 @@ export default function Bio() {
           }}
         >
           {/* Top Device Switcher & Exit Toolbar - Minimal floating header */}
-          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100001] bg-zinc-950/90 backdrop-blur-xl border border-white/20 p-1.5 rounded-full flex items-center gap-1.5 shadow-2xl pointer-events-auto">
+          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100001] bg-[#131315] border border-[#26262A] p-1 rounded-md flex items-center gap-1 shadow-xl pointer-events-auto">
             <button
               type="button"
               onClick={() => setPreviewMode("smartphone")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-[4px] text-xs font-bold transition-colors cursor-pointer tabular-nums ${
                 previewMode === "smartphone"
-                  ? "bg-[var(--primary-color)] text-white shadow-md"
-                  : "text-zinc-400 hover:text-white hover:bg-white/10"
+                  ? "bg-[var(--primary-color)] text-white"
+                  : "text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]"
               }`}
             >
               <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -4625,10 +4660,10 @@ export default function Bio() {
             <button
               type="button"
               onClick={() => setPreviewMode("pc")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-[4px] text-xs font-bold transition-colors cursor-pointer ${
                 previewMode === "pc"
-                  ? "bg-[var(--primary-color)] text-white shadow-md"
-                  : "text-zinc-400 hover:text-white hover:bg-white/10"
+                  ? "bg-[var(--primary-color)] text-white"
+                  : "text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]"
               }`}
             >
               <Layout className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -4640,7 +4675,7 @@ export default function Bio() {
           <button 
             type="button"
             onClick={() => setPreviewOpen(false)}
-            className="fixed top-3 right-3 sm:right-5 z-[100001] bg-zinc-900/90 hover:bg-red-600 text-white font-black px-3.5 py-2 sm:px-4 sm:py-2 rounded-full flex items-center justify-center gap-1.5 shadow-2xl transition-all duration-300 pointer-events-auto border border-white/20 cursor-pointer text-xs sm:text-sm backdrop-blur-md"
+            className="fixed top-3 right-3 sm:right-5 z-[100001] bg-[#131315] hover:bg-red-600 text-white font-bold px-3.5 py-2 sm:px-4 sm:py-2 rounded-[6px] flex items-center justify-center gap-1.5 shadow-xl transition-colors duration-200 pointer-events-auto border border-[#26262A] cursor-pointer text-xs sm:text-sm"
             title="Voltar ao Editor"
           >
             <X className="w-4 h-4" />

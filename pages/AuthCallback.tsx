@@ -14,12 +14,11 @@ const AuthCallback = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0c] text-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md pointer-events-none" />
-      <div className="fora apple-glass-card p-8 rounded-3xl border border-white/15 flex flex-col items-center justify-center text-center shadow-2xl backdrop-blur-2xl relative z-10 max-w-sm w-full mx-4">
-        <div className="w-12 h-12 border-4 border-[var(--gm-primary)] border-t-transparent rounded-full animate-spin mb-4"></div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0B0C] text-[#F2F2F3] relative overflow-hidden">
+      <div className="bg-[#131315] p-8 rounded-lg border border-[#26262A] flex flex-col items-center justify-center text-center shadow-2xl relative z-10 max-w-sm w-full mx-4">
+        <div className="w-11 h-11 border-4 border-[var(--gm-primary)] border-t-transparent rounded-full animate-spin mb-4" />
         <h3 className="text-lg font-bold text-white mb-1">CardDigital GM</h3>
-        <p className="text-xs text-slate-300 font-medium">Autenticando sessão com segurança...</p>
+        <p className="text-xs text-[#8B8B92] font-medium">Autenticando sessão com segurança...</p>
       </div>
     </div>
   );

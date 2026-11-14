@@ -119,17 +119,17 @@ const AnimatedFormCard = ({ name }: { name: string }) => {
   }, [name]);
 
   return (
-    <div className="w-full max-w-sm mx-auto rounded-2xl border border-white/10 bg-neutral-950/80 p-3 sm:p-4 backdrop-blur-xl shadow-2xl shadow-black/60">
+    <div className="w-full max-w-sm mx-auto rounded-lg border border-[#26262A] bg-[#131315] p-3 sm:p-4 shadow-2xl shadow-black/60">
       <div className="mb-3 px-1">
-        <h3 className="text-sm font-semibold text-neutral-200 tracking-tight">Criar uma conta</h3>
-        <p className="text-xs text-neutral-400">Preencha os dados abaixo para continuar</p>
+        <h3 className="text-sm font-semibold text-[#F2F2F3] tracking-tight">Criar uma conta</h3>
+        <p className="text-xs text-[#8B8B92]">Preencha os dados abaixo para continuar</p>
       </div>
 
       <div className="space-y-2.5">
         {/* Campo Nome / E-mail */}
-        <div className="rounded-xl border border-neutral-200/30 dark:border-neutral-800/80 p-1 bg-gradient-to-b from-neutral-900/40 to-neutral-950 shadow-[inset_0_1px_0_0_#f5f5f510,inset_0_0_0_1px_#131313]">
-          <div className="rounded-lg p-2.5 flex items-center justify-between gap-3 bg-gradient-to-b from-neutral-900/60 to-neutral-950 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),inset_0_0_0_1px_#131313]">
-            <div className="flex items-center gap-1.5 overflow-hidden text-sm font-medium text-neutral-200">
+        <div className="rounded-md border border-[#26262A] p-1 bg-[#0B0B0C]">
+          <div className="rounded-[4px] p-2.5 flex items-center justify-between gap-3 bg-[#131315]">
+            <div className="flex items-center gap-1.5 overflow-hidden text-sm font-medium text-[#F2F2F3]">
               <span className="truncate">{typedName}</span>
               {!nameDone && (
                 <motion.span
@@ -150,9 +150,9 @@ const AnimatedFormCard = ({ name }: { name: string }) => {
         </div>
 
         {/* Campo Senha */}
-        <div className="rounded-xl border border-neutral-200/30 dark:border-neutral-800/80 p-1 bg-gradient-to-b from-neutral-900/40 to-neutral-950 shadow-[inset_0_1px_0_0_#f5f5f510,inset_0_0_0_1px_#131313]">
-          <div className="rounded-lg p-2.5 flex items-center justify-between gap-3 bg-gradient-to-b from-neutral-900/60 to-neutral-950 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),inset_0_0_0_1px_#131313]">
-            <div className="flex items-center gap-1.5 overflow-hidden text-sm font-mono tracking-widest text-neutral-300">
+        <div className="rounded-md border border-[#26262A] p-1 bg-[#0B0B0C]">
+          <div className="rounded-[4px] p-2.5 flex items-center justify-between gap-3 bg-[#131315]">
+            <div className="flex items-center gap-1.5 overflow-hidden text-sm font-mono tracking-widest text-[#CBD5E1]">
               <span>{typedPassword}</span>
               {nameDone && !passwordDone && (
                 <motion.span

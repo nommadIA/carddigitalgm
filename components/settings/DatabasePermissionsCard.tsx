@@ -133,17 +133,17 @@ export default function DatabasePermissionsCard() {
   };
 
   return (
-    <div className="w-full rounded-2xl bg-[#121215] border border-white/10 p-5 sm:p-6 flex flex-col gap-4 text-white">
+    <div className="w-full rounded-lg bg-[#131315] border border-[#26262A] p-5 sm:p-6 flex flex-col gap-4 text-white">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[var(--gm-primary)] shrink-0">
+          <div className="w-9 h-9 rounded-md bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] shrink-0">
             <Database size={18} />
           </div>
           <div>
             <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
               Status do Banco de Dados & Permissões Supabase
             </h3>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-[#8B8B92]">
               Verificação de integridade de RLS e tabela <code>tenant_memberships</code>
             </p>
           </div>
@@ -153,7 +153,7 @@ export default function DatabasePermissionsCard() {
           type="button"
           onClick={testConnection}
           disabled={testing}
-          className="text-xs font-bold text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+          className="text-xs font-bold text-[#CBD5E1] hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] px-3 py-1.5 rounded-[6px] flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
         >
           <RefreshCw size={13} className={testing ? "animate-spin" : ""} />
           <span>{testing ? "Testando..." : "Testar Agora"}</span>
@@ -161,26 +161,26 @@ export default function DatabasePermissionsCard() {
       </div>
 
       {status === "checking" && (
-        <div className="flex items-center gap-2 text-xs text-zinc-400 py-2">
+        <div className="flex items-center gap-2 text-xs text-[#8B8B92] py-2">
           <RefreshCw size={14} className="animate-spin text-[var(--gm-primary)]" />
           <span>Checando permissões no Supabase...</span>
         </div>
       )}
 
       {status === "ok" && (
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs sm:text-sm font-semibold">
+        <div className="flex items-center gap-3 p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs sm:text-sm font-semibold">
           <ShieldCheck size={18} className="shrink-0" />
           <span>Permissões e consultas Supabase operando com sucesso. Sem bloqueios 42501.</span>
         </div>
       )}
 
       {status === "error" && (
-        <div className="flex flex-col gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/25">
+        <div className="flex flex-col gap-3 p-4 rounded-md bg-amber-500/10 border border-amber-500/30">
           <div className="flex items-start gap-2.5 text-amber-400 text-xs sm:text-sm font-bold">
             <AlertTriangle size={18} className="shrink-0 mt-0.5" />
             <div>
               <span>Atenção: Permissão pendente para <code>tenant_memberships</code> (Erro 42501)</span>
-              <p className="text-xs font-normal text-zinc-300 mt-1">
+              <p className="text-xs font-normal text-[#CBD5E1] mt-1">
                 O aplicativo está operando com <strong>Cache Local de Segurança</strong> para proteger seus dados.
                 Para liberar o sincronismo automático no Supabase, execute o script SQL de 1 clique abaixo no seu painel Supabase.
               </p>
@@ -191,7 +191,7 @@ export default function DatabasePermissionsCard() {
             <button
               type="button"
               onClick={handleCopySql}
-              className="bg-amber-500 hover:bg-amber-600 text-black px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-md cursor-pointer"
+              className="bg-amber-500 hover:bg-amber-600 text-[#0B0B0C] px-4 py-2 rounded-[6px] text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap"
             >
               {copied ? <Check size={15} /> : <Copy size={15} />}
               <span>{copied ? "Script SQL Copiado!" : "Copiar Script SQL (1 Clique)"}</span>
@@ -201,7 +201,7 @@ export default function DatabasePermissionsCard() {
               href="https://supabase.com/dashboard/project/hbvqfpqnuzvzcvhnickt/sql/new"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/15 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+              className="bg-[#1B1B1E] hover:bg-[#26262A] text-white border border-[#26262A] px-3.5 py-2 rounded-[6px] text-xs font-bold flex items-center gap-1.5 transition-colors whitespace-nowrap"
             >
               <ExternalLink size={14} />
               <span>Abrir Supabase SQL Editor</span>

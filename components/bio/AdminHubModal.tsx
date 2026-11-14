@@ -135,6 +135,21 @@ export function AdminHubModal({
     setLoadingCustomers(false);
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (selectedReceiptUrl) {
+          setSelectedReceiptUrl(null);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, selectedReceiptUrl]);
+
   if (!isOpen) return null;
 
   const handleAdminLogin = async (e: React.FormEvent) => {
@@ -347,28 +362,26 @@ export function AdminHubModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[170] flex items-center justify-center p-3 sm:p-6 bg-black/80 animate-in fade-in duration-200 overflow-y-auto"
+      className="fixed inset-0 z-[170] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-5xl fora border border-white/12 rounded-[2.25rem] p-6 sm:p-9 shadow-2xl relative my-auto max-h-[94vh] flex flex-col text-white overflow-hidden"
+        className="w-full max-w-5xl bg-[#131315] border border-[#26262A] rounded-lg p-5 sm:p-7 shadow-2xl relative my-auto max-h-[94vh] flex flex-col text-white overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ============================================================== */}
-        {/* TOP BAR / HEADER                                               */}
-        {/* ============================================================== */}
-        <div className="flex items-center justify-between pb-5 border-b border-white/10 shrink-0">
+        {/* TOP BAR / HEADER */}
+        <div className="flex items-center justify-between pb-4 border-b border-[#26262A] shrink-0">
           <div className="flex items-center gap-3.5">
             <div 
-              className="w-13 h-13 rounded-2xl flex items-center justify-center text-white shadow-xl"
+              className="w-11 h-11 rounded-[6px] flex items-center justify-center text-white shrink-0 border border-white/15"
               style={{ backgroundColor: brandColor }}
             >
-              <ShieldCheck className="w-7 h-7" />
+              <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2.5">
-                <h2 className="text-xl sm:text-2xl font-black text-white">Painel do Administrador</h2>
-                <span className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                <h2 className="text-lg sm:text-xl font-black text-white">Painel do Administrador</h2>
+                <span className="text-[11px] uppercase font-bold px-2 py-0.5 rounded-[4px] bg-orange-500/15 text-orange-400 border border-orange-500/30">
                   Master
                 </span>
               </div>
@@ -384,7 +397,7 @@ export function AdminHubModal({
                 type="button"
                 onClick={loadAllData}
                 disabled={loadingOrders || loadingCustomers}
-                className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer"
+                className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center justify-center text-zinc-300 hover:text-white transition-colors cursor-pointer"
                 title="Atualizar dados"
               >
                 <RefreshCw className={`w-4 h-4 ${loadingOrders || loadingCustomers ? "animate-spin text-orange-400" : ""}`} />
@@ -394,22 +407,20 @@ export function AdminHubModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer"
+              className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
               aria-label="Fechar"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* ============================================================== */}
-        {/* VIEW 1: NOT LOGGED IN AS ADMIN -> LOGIN FORM                   */}
-        {/* ============================================================== */}
+        {/* VIEW 1: NOT LOGGED IN AS ADMIN -> LOGIN FORM */}
         {!isOwnerLoggedIn ? (
           <div className="flex-1 overflow-y-auto py-10 px-4 sm:px-12 flex flex-col items-center justify-center">
             <div className="w-full max-w-md space-y-6 text-center">
-              <div className="w-18 h-18 rounded-3xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center mx-auto text-orange-400 shadow-xl">
-                <Lock className="w-8 h-8" />
+              <div className="w-14 h-14 rounded-md bg-orange-500/15 border border-orange-500/30 flex items-center justify-center mx-auto text-orange-400">
+                <Lock className="w-7 h-7" />
               </div>
 
               <div>
@@ -420,7 +431,7 @@ export function AdminHubModal({
               </div>
 
               {loginError && (
-                <div className="p-3.5 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs font-semibold text-left flex items-center gap-2">
+                <div className="p-3.5 rounded-md bg-red-500/15 border border-red-500/30 text-red-300 text-xs font-semibold text-left flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
                   <span>{loginError}</span>
                 </div>
@@ -428,35 +439,35 @@ export function AdminHubModal({
 
               <form onSubmit={handleAdminLogin} className="space-y-4 text-left">
                 <div>
-                  <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
                     E-mail do Administrador
                   </label>
                   <div className="relative flex items-center">
-                    <Mail className="w-5 h-5 text-zinc-500 absolute left-4 pointer-events-none" />
+                    <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 pointer-events-none" />
                     <input
                       type="email"
                       required
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
                       placeholder="admin@exemplo.com"
-                      className="w-full h-14 pl-12 pr-4 rounded-2xl bg-[#14151e] border border-white/12 text-white font-medium text-sm sm:text-base focus:outline-none focus:border-[#FE540B] focus:ring-2 focus:ring-[#FE540B]/20"
+                      className="w-full h-11 pl-11 pr-4 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white font-medium text-sm focus:outline-none focus:border-[#FE540B]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">
+                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
                     Senha de Acesso
                   </label>
                   <div className="relative flex items-center">
-                    <Lock className="w-5 h-5 text-zinc-500 absolute left-4 pointer-events-none" />
+                    <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 pointer-events-none" />
                     <input
                       type="password"
                       required
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
                       placeholder="Sua senha de administrador"
-                      className="w-full h-14 pl-12 pr-4 rounded-2xl bg-[#14151e] border border-white/12 text-white font-medium text-sm sm:text-base focus:outline-none focus:border-[#FE540B] focus:ring-2 focus:ring-[#FE540B]/20"
+                      className="w-full h-11 pl-11 pr-4 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white font-medium text-sm focus:outline-none focus:border-[#FE540B]"
                     />
                   </div>
                 </div>
@@ -464,25 +475,25 @@ export function AdminHubModal({
                 <button
                   type="submit"
                   disabled={loggingIn}
-                  className="w-full h-14 rounded-full text-white font-black text-sm sm:text-base tracking-wide transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:scale-98 mt-2"
+                  className="w-full h-11 rounded-[6px] text-white font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 mt-2 whitespace-nowrap"
                   style={{ backgroundColor: brandColor }}
                 >
                   {loggingIn ? (
                     <>
-                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      <RefreshCw className="w-4 h-4 animate-spin" />
                       <span>Autenticando...</span>
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="w-5 h-5" />
+                      <ShieldCheck className="w-4 h-4" />
                       <span>Entrar no Painel do Administrador</span>
                     </>
                   )}
                 </button>
               </form>
 
-              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/8 text-[11px] text-zinc-500 text-center">
-                🔐 Área restrita protegida por criptografia de ponta a ponta
+              <div className="p-3.5 rounded-md bg-[#0B0B0C] border border-[#26262A] text-[11px] text-zinc-400 text-center">
+                Área restrita protegida por criptografia de ponta a ponta
               </div>
             </div>
           </div>
@@ -491,14 +502,14 @@ export function AdminHubModal({
           /* VIEW 2: LOGGED IN -> COMPLETE ADMIN HUB                        */
           /* ============================================================== */
           <div className="flex-1 flex flex-col min-h-0">
-            {/* Navigation Tabs (Pills) */}
-            <div className="p-1.5 bg-black/50 rounded-2xl border border-white/10 my-4 grid grid-cols-4 gap-1 shrink-0">
+            {/* Navigation Tabs */}
+            <div className="p-1 bg-[#0B0B0C] rounded-md border border-[#26262A] my-4 grid grid-cols-4 gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveTab("orders")}
-                className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`py-2.5 px-2 rounded-[4px] text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                   activeTab === "orders" 
-                    ? "bg-white text-zinc-950 shadow-md scale-[1.01]" 
+                    ? "bg-white text-zinc-950" 
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
@@ -506,7 +517,7 @@ export function AdminHubModal({
                 <span className="hidden sm:inline">Pedidos & Vendas</span>
                 <span className="sm:hidden">Pedidos</span>
                 {pendingReceiptCount > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full bg-amber-400 text-black font-black text-[10px] animate-pulse">
+                  <span className="px-1.5 py-0.5 rounded-[4px] bg-amber-400 text-black font-black text-[11px] tabular-nums">
                     {pendingReceiptCount}
                   </span>
                 )}
@@ -515,22 +526,22 @@ export function AdminHubModal({
               <button
                 type="button"
                 onClick={() => setActiveTab("customers")}
-                className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`py-2.5 px-2 rounded-[4px] text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                   activeTab === "customers" 
-                    ? "bg-white text-zinc-950 shadow-md scale-[1.01]" 
+                    ? "bg-white text-zinc-950" 
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
                 <Users className="w-4 h-4 text-blue-400" />
-                <span>Clientes ({customers.length})</span>
+                <span className="tabular-nums">Clientes ({customers.length})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab("metrics")}
-                className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`py-2.5 px-2 rounded-[4px] text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                   activeTab === "metrics" 
-                    ? "bg-white text-zinc-950 shadow-md scale-[1.01]" 
+                    ? "bg-white text-zinc-950" 
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
@@ -542,9 +553,9 @@ export function AdminHubModal({
               <button
                 type="button"
                 onClick={() => setActiveTab("settings")}
-                className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`py-2.5 px-2 rounded-[4px] text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                   activeTab === "settings" 
-                    ? "bg-white text-zinc-950 shadow-md scale-[1.01]" 
+                    ? "bg-white text-zinc-950" 
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
@@ -555,19 +566,16 @@ export function AdminHubModal({
 
             {/* Content Tabs */}
             <div className="flex-1 overflow-y-auto pr-1">
-              {/* ============================================================== */}
-              {/* TAB 1: PEDIDOS & VENDAS                                        */}
-              {/* ============================================================== */}
               {activeTab === "orders" && (
                 <div className="space-y-4">
                   {/* Sub-Filters and Search */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10 text-xs">
+                    <div className="flex flex-wrap gap-1 p-1 rounded-md bg-[#0B0B0C] border border-[#26262A] text-xs">
                       <button
                         type="button"
                         onClick={() => setOrderFilterTab("all")}
-                        className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                          orderFilterTab === "all" ? "bg-white text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                        className={`px-3 py-1.5 rounded-[4px] font-bold transition-colors cursor-pointer tabular-nums ${
+                          orderFilterTab === "all" ? "bg-white text-zinc-950" : "text-zinc-400 hover:text-white"
                         }`}
                       >
                         Todos ({orders.length})
@@ -576,17 +584,17 @@ export function AdminHubModal({
                       <button
                         type="button"
                         onClick={() => setOrderFilterTab("review_receipt")}
-                        className={`px-3 py-1.5 rounded-lg font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                        className={`px-3 py-1.5 rounded-[4px] font-black transition-colors cursor-pointer flex items-center gap-1.5 ${
                           orderFilterTab === "review_receipt"
-                            ? "bg-amber-400 text-zinc-950 shadow"
+                            ? "bg-amber-400 text-zinc-950"
                             : pendingReceiptCount > 0
-                              ? "text-amber-400 bg-amber-400/10 border border-amber-400/30 animate-pulse"
+                              ? "text-amber-400 bg-amber-400/10 border border-amber-400/30"
                               : "text-zinc-400 hover:text-white"
                         }`}
                       >
-                        <span>⚠️ Conferir Comprovantes</span>
+                        <span>Conferir Comprovantes</span>
                         {pendingReceiptCount > 0 && (
-                          <span className="w-5 h-5 rounded-full bg-amber-500 text-black text-[10px] font-black flex items-center justify-center">
+                          <span className="w-5 h-5 rounded-[4px] bg-amber-500 text-black text-[11px] font-black flex items-center justify-center tabular-nums">
                             {pendingReceiptCount}
                           </span>
                         )}
@@ -595,8 +603,8 @@ export function AdminHubModal({
                       <button
                         type="button"
                         onClick={() => setOrderFilterTab("paid")}
-                        className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                          orderFilterTab === "paid" ? "bg-white text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                        className={`px-3 py-1.5 rounded-[4px] font-bold transition-colors cursor-pointer tabular-nums ${
+                          orderFilterTab === "paid" ? "bg-white text-zinc-950" : "text-zinc-400 hover:text-white"
                         }`}
                       >
                         Pagos ({orders.filter(o => o.payment_status === "paid").length})
@@ -605,8 +613,8 @@ export function AdminHubModal({
                       <button
                         type="button"
                         onClick={() => setOrderFilterTab("preparing")}
-                        className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                          orderFilterTab === "preparing" ? "bg-white text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                        className={`px-3 py-1.5 rounded-[4px] font-bold transition-colors cursor-pointer ${
+                          orderFilterTab === "preparing" ? "bg-white text-zinc-950" : "text-zinc-400 hover:text-white"
                         }`}
                       >
                         Em Preparo
@@ -614,13 +622,13 @@ export function AdminHubModal({
                     </div>
 
                     <div className="relative flex items-center w-full sm:w-64">
-                      <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 pointer-events-none" />
+                      <Search className="w-4 h-4 text-zinc-500 absolute left-3 pointer-events-none" />
                       <input
                         type="text"
                         placeholder="Buscar por cliente ou pedido..."
                         value={orderSearchQuery}
                         onChange={(e) => setOrderSearchQuery(e.target.value)}
-                        className="w-full h-10 pl-10 pr-3 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-medium focus:outline-none focus:border-[#FE540B]"
+                        className="w-full h-10 pl-9 pr-3 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white text-xs font-medium focus:outline-none focus:border-[#FE540B]"
                       />
                     </div>
                   </div>
@@ -633,11 +641,11 @@ export function AdminHubModal({
                     </div>
                   ) : filteredOrders.length === 0 ? (
                     <div className="py-16 text-center text-zinc-400 space-y-3">
-                      <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-zinc-500">
-                        <ShoppingBag className="w-8 h-8" />
+                      <div className="w-14 h-14 rounded-md bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center mx-auto text-zinc-500">
+                        <ShoppingBag className="w-7 h-7" />
                       </div>
                       <p className="text-base font-bold text-white">Nenhum pedido encontrado nesta categoria</p>
-                      <p className="text-xs text-zinc-500">Assim que os clientes realizarem compras, você poderá aprová-las aqui.</p>
+                      <p className="text-xs text-zinc-400">Assim que os clientes realizarem compras, você poderá aprová-las aqui.</p>
                     </div>
                   ) : (
                     filteredOrders.map((order) => {
@@ -648,10 +656,10 @@ export function AdminHubModal({
                       return (
                         <div
                           key={order.id}
-                          className={`p-5 rounded-3xl border transition-all space-y-4 shadow-md ${
+                          className={`p-4 sm:p-5 rounded-md border transition-colors space-y-4 ${
                             isReceiptPendingReview 
-                              ? "bg-gradient-to-r from-amber-500/10 via-[#14151e] to-[#14151e] border-amber-500/40 shadow-[0_0_25px_rgba(245,158,11,0.15)]"
-                              : "bg-[#14151e] border-white/10 hover:border-white/20"
+                              ? "bg-[#0B0B0C] border-amber-500/40"
+                              : "bg-[#0B0B0C] border-[#26262A] hover:border-[#3F3F46]"
                           }`}
                         >
                           {/* Order Summary Bar */}
@@ -661,30 +669,30 @@ export function AdminHubModal({
                           >
                             <div className="space-y-1.5">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-base sm:text-lg font-black text-white">
+                                <span className="text-base sm:text-lg font-black text-white tabular-nums">
                                   Pedido #{order.order_number}
                                 </span>
 
                                 {order.payment_status === "paid" ? (
-                                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                  <span className="px-2.5 py-0.5 rounded-[4px] text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                                     <CheckCircle2 className="w-3 h-3" /> Pago
                                   </span>
                                 ) : isReceiptPendingReview ? (
-                                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/40 flex items-center gap-1 animate-pulse">
+                                  <span className="px-2.5 py-0.5 rounded-[4px] text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
                                     <AlertCircle className="w-3.5 h-3.5" /> Comprovante Anexado (Conferir)
                                   </span>
                                 ) : (
-                                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-zinc-500/20 text-zinc-400 border border-zinc-500/30">
+                                  <span className="px-2.5 py-0.5 rounded-[4px] text-[11px] font-bold bg-zinc-500/15 text-zinc-400 border border-zinc-500/30">
                                     Aguardando Pagamento
                                   </span>
                                 )}
 
-                                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/5 border border-white/10 text-zinc-300">
+                                <span className="px-2.5 py-0.5 rounded-[4px] text-[11px] font-bold bg-[#131315] border border-[#26262A] text-zinc-300">
                                   {order.order_status === "preparando" ? "Em Preparo" : order.order_status === "enviado" ? "Enviado" : order.order_status === "entregue" ? "Entregue" : "Novo Pedido"}
                                 </span>
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400">
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400 tabular-nums">
                                 <span className="font-bold text-white flex items-center gap-1">
                                   <User className="w-3.5 h-3.5 text-zinc-400" />
                                   {order.customer_name}
@@ -699,14 +707,14 @@ export function AdminHubModal({
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between sm:justify-end gap-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                            <div className="flex items-center justify-between sm:justify-end gap-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-[#26262A]">
                               <div className="text-right">
-                                <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">Total</span>
-                                <span className="text-lg sm:text-xl font-black" style={{ color: brandColor }}>
+                                <span className="text-[11px] uppercase font-bold text-zinc-400 block tracking-wider">Total</span>
+                                <span className="text-lg sm:text-xl font-black tabular-nums" style={{ color: brandColor }}>
                                   {formatBRL(order.total)}
                                 </span>
                               </div>
-                              <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400">
+                              <div className="w-8 h-8 rounded-[4px] bg-[#131315] border border-[#26262A] flex items-center justify-center text-zinc-400">
                                 {isExpanded ? <X className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
                               </div>
                             </div>
@@ -714,9 +722,9 @@ export function AdminHubModal({
 
                           {/* Quick Receipt Review Alert */}
                           {isReceiptPendingReview && receiptUrl && (
-                            <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-200">
+                            <div className="p-3.5 rounded-md bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-200">
                               <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 text-amber-400">
+                                <div className="w-9 h-9 rounded-[4px] bg-amber-500/15 flex items-center justify-center shrink-0 text-amber-400">
                                   <ImageIcon className="w-5 h-5" />
                                 </div>
                                 <div>
@@ -729,7 +737,7 @@ export function AdminHubModal({
                                 <button
                                   type="button"
                                   onClick={() => setSelectedReceiptUrl(receiptUrl)}
-                                  className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                                  className="px-3.5 h-9 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-white font-bold transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                                 >
                                   <Eye className="w-4 h-4" />
                                   <span>Ver Foto</span>
@@ -738,7 +746,7 @@ export function AdminHubModal({
                                   type="button"
                                   disabled={updatingId === order.id}
                                   onClick={() => handleApprovePayment(order)}
-                                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black transition-all cursor-pointer shadow-md flex items-center gap-1.5"
+                                  className="px-4 h-9 rounded-[6px] bg-emerald-600 hover:bg-emerald-500 text-white font-black transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                                 >
                                   <Check className="w-4 h-4" />
                                   <span>Aprovar Pagamento</span>
@@ -749,31 +757,31 @@ export function AdminHubModal({
 
                           {/* Expanded Details */}
                           {isExpanded && (
-                            <div className="pt-4 border-t border-white/10 space-y-4 animate-in fade-in duration-200">
+                            <div className="pt-4 border-t border-[#26262A] space-y-4 animate-in fade-in duration-200">
                               {/* Products List */}
                               <div className="space-y-2">
-                                <span className="text-xs font-black text-zinc-300 uppercase tracking-wider block">
+                                <span className="text-[11px] font-black text-zinc-300 uppercase tracking-wider block">
                                   Produtos Comprados:
                                 </span>
                                 <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                                   {(order.items || []).map((it, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-black/40 border border-white/5 text-xs sm:text-sm">
+                                    <div key={idx} className="flex items-center justify-between p-3 rounded-md bg-[#131315] border border-[#26262A] text-xs sm:text-sm">
                                       <div className="flex items-center gap-3 min-w-0">
                                         {it.image_url ? (
-                                          <img src={it.image_url} alt={it.name} className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10" />
+                                          <img src={it.image_url} alt={it.name} className="w-11 h-11 rounded-[4px] object-cover shrink-0 border border-[#26262A]" />
                                         ) : (
-                                          <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center shrink-0 text-zinc-400">
+                                          <div className="w-11 h-11 rounded-[4px] bg-[#1B1B1E] flex items-center justify-center shrink-0 text-zinc-400">
                                             <ShoppingBag className="w-5 h-5" />
                                           </div>
                                         )}
                                         <div className="min-w-0">
                                           <p className="font-bold text-white truncate max-w-[220px] sm:max-w-xs">{it.name}</p>
-                                          <p className="text-xs text-zinc-400 mt-0.5">
+                                          <p className="text-xs text-zinc-400 mt-0.5 tabular-nums">
                                             Qtd: <strong>{it.quantity}</strong> {it.selectedOption?.quantity ? `(${it.selectedOption.quantity})` : ""}
                                           </p>
                                         </div>
                                       </div>
-                                      <span className="font-black text-white shrink-0 text-sm">
+                                      <span className="font-black text-white shrink-0 text-sm tabular-nums">
                                         {formatBRL(Number(it.price) * it.quantity)}
                                       </span>
                                     </div>
@@ -783,17 +791,17 @@ export function AdminHubModal({
 
                               {/* Customer and Delivery Info */}
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                                <div className="p-3.5 rounded-md bg-[#131315] border border-[#26262A] space-y-1">
                                   <span className="font-bold text-zinc-300 flex items-center gap-1.5">
                                     <User className="w-4 h-4 text-orange-400" /> Dados do Cliente:
                                   </span>
                                   <p className="text-white font-bold">{order.customer_name}</p>
                                   <p className="text-zinc-400">{order.customer_email}</p>
-                                  <p className="text-zinc-400">{order.customer_phone || "Sem telefone informado"}</p>
-                                  {order.customer_cpf_cnpj && <p className="text-zinc-400">CPF/CNPJ: {order.customer_cpf_cnpj}</p>}
+                                  <p className="text-zinc-400 tabular-nums">{order.customer_phone || "Sem telefone informado"}</p>
+                                  {order.customer_cpf_cnpj && <p className="text-zinc-400 tabular-nums">CPF/CNPJ: {order.customer_cpf_cnpj}</p>}
                                 </div>
 
-                                <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                                <div className="p-3.5 rounded-md bg-[#131315] border border-[#26262A] space-y-1">
                                   <span className="font-bold text-zinc-300 flex items-center gap-1.5">
                                     <Truck className="w-4 h-4 text-emerald-400" /> Entrega:
                                   </span>
@@ -809,7 +817,7 @@ export function AdminHubModal({
 
                               {/* Receipt Image in details */}
                               {receiptUrl && (
-                                <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+                                <div className="p-4 rounded-md bg-[#131315] border border-[#26262A] space-y-3">
                                   <div className="flex items-center justify-between">
                                     <span className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
                                       <ImageIcon className="w-4 h-4 text-teal-400" />
@@ -825,27 +833,27 @@ export function AdminHubModal({
                                   </div>
 
                                   <div 
-                                    className="bg-black/50 p-2 rounded-xl border border-white/10 inline-block cursor-pointer hover:border-white/30 transition-all max-w-xs"
+                                    className="bg-[#0B0B0C] p-2 rounded-md border border-[#26262A] inline-block cursor-pointer hover:border-[#3F3F46] transition-colors max-w-xs"
                                     onClick={() => setSelectedReceiptUrl(receiptUrl)}
                                   >
                                     <img 
                                       src={receiptUrl} 
                                       alt="Comprovante de pagamento" 
-                                      className="h-36 rounded-lg object-contain"
+                                      className="h-36 rounded-[4px] object-contain"
                                     />
                                   </div>
                                 </div>
                               )}
 
                               {/* Order Action Bar */}
-                              <div className="p-4 rounded-2xl bg-black/50 border border-white/10 flex flex-wrap items-center justify-between gap-3">
+                              <div className="p-4 rounded-md bg-[#131315] border border-[#26262A] flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-zinc-400 font-bold">Status do Pedido:</span>
                                   <select
                                     value={order.order_status}
                                     disabled={updatingId === order.id}
                                     onChange={(e) => handleChangeOrderStatus(order.id, e.target.value as any)}
-                                    className="h-9 px-3 rounded-lg bg-[#14151e] border border-white/15 text-white text-xs font-bold focus:outline-none focus:border-orange-500 cursor-pointer"
+                                    className="h-9 px-3 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white text-xs font-bold focus:outline-none focus:border-orange-500 cursor-pointer"
                                   >
                                     <option value="aguardando_aprovacao">Aguardando Confirmação</option>
                                     <option value="preparando">Em Preparo</option>
@@ -861,13 +869,13 @@ export function AdminHubModal({
                                       type="button"
                                       disabled={updatingId === order.id}
                                       onClick={() => handleApprovePayment(order)}
-                                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                                      className="px-4 h-9 rounded-[6px] bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                                     >
                                       <CheckCircle2 className="w-4 h-4" />
                                       <span>Aprovar Pagamento (Marcar como Pago)</span>
                                     </button>
                                   ) : (
-                                    <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-black flex items-center gap-1.5">
+                                    <span className="px-3 h-9 rounded-[4px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-black flex items-center gap-1.5">
                                       <CheckCircle2 className="w-4 h-4" /> Pagamento Já Confirmado
                                     </span>
                                   )}
@@ -877,7 +885,7 @@ export function AdminHubModal({
                                       type="button"
                                       disabled={updatingId === order.id}
                                       onClick={() => handleRejectPayment(order)}
-                                      className="px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 font-bold text-xs transition-all cursor-pointer"
+                                      className="px-3 h-9 rounded-[6px] bg-red-600/15 hover:bg-red-600/25 text-red-300 border border-red-500/30 font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
                                     >
                                       Rejeitar Comprovante
                                     </button>
@@ -891,7 +899,7 @@ export function AdminHubModal({
                                         const num = clean.startsWith("55") || clean.length > 11 ? clean : `55${clean}`;
                                         window.open(`https://api.whatsapp.com/send?phone=${num}&text=Olá%20${order.customer_name}!%20Aqui%20é%20da%20${companyName},%20sobre%20seu%20Pedido%20#${order.order_number}:`, "_blank");
                                       }}
-                                      className="px-3.5 py-2 rounded-xl bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                                      className="px-3.5 h-9 rounded-[6px] bg-green-600/15 hover:bg-green-600/25 text-green-400 border border-green-500/30 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                                     >
                                       <MessageCircle className="w-4 h-4" />
                                       <span>WhatsApp</span>
@@ -908,9 +916,7 @@ export function AdminHubModal({
                 </div>
               )}
 
-              {/* ============================================================== */}
-              {/* TAB 2: CLIENTES DO SITE                                        */}
-              {/* ============================================================== */}
+              {/* TAB 2: CLIENTES DO SITE */}
               {activeTab === "customers" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-3">
@@ -918,13 +924,13 @@ export function AdminHubModal({
                       Lista de Clientes Cadastrados no Site
                     </span>
                     <div className="relative flex items-center w-full sm:w-64">
-                      <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 pointer-events-none" />
+                      <Search className="w-4 h-4 text-zinc-500 absolute left-3 pointer-events-none" />
                       <input
                         type="text"
                         placeholder="Buscar cliente..."
                         value={customerSearchQuery}
                         onChange={(e) => setCustomerSearchQuery(e.target.value)}
-                        className="w-full h-10 pl-10 pr-3 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-medium focus:outline-none focus:border-[#FE540B]"
+                        className="w-full h-10 pl-9 pr-3 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white text-xs font-medium focus:outline-none focus:border-[#FE540B]"
                       />
                     </div>
                   </div>
@@ -942,10 +948,10 @@ export function AdminHubModal({
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {filteredCustomers.map((cust) => (
-                        <div key={cust.id} className="p-4 rounded-3xl bg-[#14151e] border border-white/10 space-y-2.5 shadow-sm">
+                        <div key={cust.id} className="p-4 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-2.5">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-black">
+                              <div className="w-10 h-10 rounded-[6px] bg-orange-500/15 text-orange-400 border border-orange-500/20 flex items-center justify-center font-black">
                                 {(cust.full_name || "C").charAt(0).toUpperCase()}
                               </div>
                               <div>
@@ -961,7 +967,7 @@ export function AdminHubModal({
                                   const num = clean.startsWith("55") || clean.length > 11 ? clean : `55${clean}`;
                                   window.open(`https://api.whatsapp.com/send?phone=${num}&text=Olá%20${cust.full_name}!`, "_blank");
                                 }}
-                                className="p-2 rounded-lg bg-green-600/20 text-green-400 hover:bg-green-600/30 transition-all cursor-pointer"
+                                className="w-8 h-8 rounded-[4px] bg-green-600/15 text-green-400 border border-green-500/30 hover:bg-green-600/25 flex items-center justify-center transition-colors cursor-pointer"
                                 title="Enviar mensagem no WhatsApp"
                               >
                                 <MessageCircle className="w-4 h-4" />
@@ -969,11 +975,11 @@ export function AdminHubModal({
                             )}
                           </div>
 
-                          <div className="pt-2 border-t border-white/5 text-[11px] text-zinc-400 space-y-1">
-                            {cust.phone && <p>📱 {cust.phone}</p>}
-                            {cust.cpf_cnpj && <p>📄 CPF/CNPJ: {cust.cpf_cnpj}</p>}
+                          <div className="pt-2 border-t border-[#26262A] text-[11px] text-zinc-400 space-y-1 tabular-nums">
+                            {cust.phone && <p>Tel: {cust.phone}</p>}
+                            {cust.cpf_cnpj && <p>CPF/CNPJ: {cust.cpf_cnpj}</p>}
                             {(cust.street || cust.city) && (
-                              <p>📍 {`${cust.street || ""} ${cust.number ? `Nº ${cust.number}` : ""} ${cust.neighborhood || ""} - ${cust.city || ""} ${cust.state || ""}`.trim()}</p>
+                              <p>Endereço: {`${cust.street || ""} ${cust.number ? `Nº ${cust.number}` : ""} ${cust.neighborhood || ""} - ${cust.city || ""} ${cust.state || ""}`.trim()}</p>
                             )}
                             <p className="text-zinc-500">Cadastrado em: {formatDate(cust.created_at)}</p>
                           </div>
@@ -984,68 +990,64 @@ export function AdminHubModal({
                 </div>
               )}
 
-              {/* ============================================================== */}
-              {/* TAB 3: MÉTRICAS & FATURAMENTO                                  */}
-              {/* ============================================================== */}
+              {/* TAB 3: MÉTRICAS & FATURAMENTO */}
               {activeTab === "metrics" && (
                 <div className="space-y-6">
                   {/* Metric Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <div className="p-5 rounded-3xl bg-[#14151e] border border-white/10 space-y-1">
-                      <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Faturamento Pago</span>
-                      <p className="text-2xl font-black text-emerald-400">{formatBRL(totalPaidRevenue)}</p>
+                    <div className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-1">
+                      <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Faturamento Pago</span>
+                      <p className="text-2xl font-black text-emerald-400 tabular-nums">{formatBRL(totalPaidRevenue)}</p>
                       <span className="text-[11px] text-zinc-500">Pedidos com Pix/Cartão aprovados</span>
                     </div>
 
-                    <div className="p-5 rounded-3xl bg-[#14151e] border border-white/10 space-y-1">
-                      <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Total de Pedidos</span>
-                      <p className="text-2xl font-black text-white">{orders.length}</p>
+                    <div className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-1">
+                      <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Total de Pedidos</span>
+                      <p className="text-2xl font-black text-white tabular-nums">{orders.length}</p>
                       <span className="text-[11px] text-zinc-500">Realizados no site</span>
                     </div>
 
-                    <div className="p-5 rounded-3xl bg-[#14151e] border border-white/10 space-y-1">
-                      <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Comprovantes p/ Conferir</span>
-                      <p className="text-2xl font-black text-amber-400">{pendingReceiptCount}</p>
+                    <div className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-1">
+                      <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Comprovantes p/ Conferir</span>
+                      <p className="text-2xl font-black text-amber-400 tabular-nums">{pendingReceiptCount}</p>
                       <span className="text-[11px] text-zinc-500">Aguardando sua aprovação</span>
                     </div>
 
-                    <div className="p-5 rounded-3xl bg-[#14151e] border border-white/10 space-y-1">
-                      <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Ticket Médio</span>
-                      <p className="text-2xl font-black text-orange-400">{formatBRL(averageTicket)}</p>
+                    <div className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-1">
+                      <span className="text-[11px] text-zinc-400 font-bold uppercase tracking-wider">Ticket Médio</span>
+                      <p className="text-2xl font-black text-orange-400 tabular-nums">{formatBRL(averageTicket)}</p>
                       <span className="text-[11px] text-zinc-500">Média por pedido aprovado</span>
                     </div>
                   </div>
 
                   {/* Summary Breakdown */}
-                  <div className="p-6 rounded-3xl bg-[#14151e] border border-white/10 space-y-4">
+                  <div className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-4">
                     <h4 className="text-sm font-black text-white uppercase tracking-wider">
                       Resumo Operacional de Vendas
                     </h4>
-                    <div className="space-y-3 text-xs">
-                      <div className="flex items-center justify-between p-3 rounded-2xl bg-black/40 border border-white/5">
+                    <div className="space-y-2.5 text-xs">
+                      <div className="flex items-center justify-between p-3 rounded-[4px] bg-[#131315] border border-[#26262A]">
                         <span className="text-zinc-300">Pedidos com Pagamento Confirmado:</span>
-                        <span className="font-bold text-emerald-400">{orders.filter(o => o.payment_status === "paid").length} pedidos</span>
+                        <span className="font-bold text-emerald-400 tabular-nums">{orders.filter(o => o.payment_status === "paid").length} pedidos</span>
                       </div>
-                      <div className="flex items-center justify-between p-3 rounded-2xl bg-black/40 border border-white/5">
+                      <div className="flex items-center justify-between p-3 rounded-[4px] bg-[#131315] border border-[#26262A]">
                         <span className="text-zinc-300">Pedidos Aguardando Pagamento:</span>
-                        <span className="font-bold text-amber-400">{orders.filter(o => o.payment_status === "pending").length} pedidos</span>
+                        <span className="font-bold text-amber-400 tabular-nums">{orders.filter(o => o.payment_status === "pending").length} pedidos</span>
                       </div>
-                      <div className="flex items-center justify-between p-3 rounded-2xl bg-black/40 border border-white/5">
+                      <div className="flex items-center justify-between p-3 rounded-[4px] bg-[#131315] border border-[#26262A]">
                         <span className="text-zinc-300">Total de Clientes Cadastrados:</span>
-                        <span className="font-bold text-white">{customers.length} clientes</span>
+                        <span className="font-bold text-white tabular-nums">{customers.length} clientes</span>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* ============================================================== */}
-              {/* TAB 4: GESTÃO DO SITE & CONFIGURAÇÕES                          */}
-              {/* ============================================================== */}
+              {/* TAB 4: GESTÃO DO SITE & CONFIGURAÇÕES */}
               {activeTab === "settings" && (
-                <div className="space-y-6">
+                <div className="space-y-5">
                   {/* Live Editor Launchers */}
-                  <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-orange-500/10 via-[#14151e] to-[#14151e] border border-orange-500/30 space-y-4">
+                  <div className="p-5 rounded-md bg-[#0B0B0C] border border-orange-500/30 space-y-4">
                     <div>
                       <h4 className="text-base font-black text-white flex items-center gap-2">
                         <Edit3 className="w-5 h-5 text-orange-400" />
@@ -1064,7 +1066,7 @@ export function AdminHubModal({
                             onClose();
                             onOpenLiveEdit();
                           }}
-                          className="px-5 py-3 rounded-xl bg-[#FE540B] hover:bg-[#e04505] text-white font-black text-xs sm:text-sm transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+                          className="px-5 h-10 rounded-[6px] bg-[#FE540B] hover:bg-[#e04505] text-white font-black text-xs sm:text-sm transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap"
                         >
                           <Edit3 className="w-4 h-4" />
                           <span>Ativar Modo Editor no Site</span>
@@ -1078,7 +1080,7 @@ export function AdminHubModal({
                             onClose();
                             onOpenThemeModal();
                           }}
-                          className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs sm:text-sm transition-all border border-white/10 flex items-center gap-2 cursor-pointer"
+                          className="px-4 h-10 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] text-white font-bold text-xs sm:text-sm transition-colors border border-[#26262A] flex items-center gap-2 cursor-pointer whitespace-nowrap"
                         >
                           <Palette className="w-4 h-4 text-orange-400" />
                           <span>Mudar Cores & Estilos</span>
@@ -1089,7 +1091,7 @@ export function AdminHubModal({
                         href="/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-bold text-xs sm:text-sm transition-all border border-white/10 flex items-center gap-2"
+                        className="px-4 h-10 rounded-[6px] bg-[#131315] hover:bg-[#1B1B1E] text-zinc-300 hover:text-white font-bold text-xs sm:text-sm transition-colors border border-[#26262A] flex items-center gap-2 whitespace-nowrap"
                       >
                         <ExternalLink className="w-4 h-4" />
                         <span>Abrir Dashboard Completo do Sistema</span>
@@ -1098,7 +1100,7 @@ export function AdminHubModal({
                   </div>
 
                   {/* Pix Configuration */}
-                  <div className="p-5 sm:p-6 rounded-3xl bg-[#14151e] border border-white/10 space-y-4">
+                  <div className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-4">
                     <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                       <CreditCard className="w-4 h-4 text-teal-400" />
                       Chave Pix para Recebimento de Vendas
@@ -1106,13 +1108,13 @@ export function AdminHubModal({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
+                        <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
                           Tipo de Chave
                         </label>
                         <select
                           value={editPixType}
                           onChange={(e) => setEditPixType(e.target.value)}
-                          className="w-full h-12 px-4 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-orange-500 cursor-pointer"
+                          className="w-full h-11 px-3.5 rounded-[4px] bg-[#131315] border border-[#26262A] text-white text-xs font-semibold focus:outline-none focus:border-orange-500 cursor-pointer"
                         >
                           <option value="CPF">CPF</option>
                           <option value="CNPJ">CNPJ</option>
@@ -1123,7 +1125,7 @@ export function AdminHubModal({
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
+                        <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
                           Chave Pix
                         </label>
                         <input
@@ -1131,7 +1133,7 @@ export function AdminHubModal({
                           value={editPixKey}
                           onChange={(e) => setEditPixKey(e.target.value)}
                           placeholder="Digite sua chave Pix"
-                          className="w-full h-12 px-4 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-mono font-semibold focus:outline-none focus:border-orange-500"
+                          className="w-full h-11 px-3.5 rounded-[4px] bg-[#131315] border border-[#26262A] text-white text-xs font-mono font-semibold focus:outline-none focus:border-orange-500"
                         />
                       </div>
                     </div>
@@ -1139,7 +1141,7 @@ export function AdminHubModal({
                     <button
                       type="button"
                       onClick={handleSavePix}
-                      className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                      className="px-5 h-10 rounded-[6px] bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                     >
                       <Check className="w-4 h-4" />
                       <span>Salvar Configuração Pix</span>
@@ -1147,12 +1149,12 @@ export function AdminHubModal({
                   </div>
 
                   {/* Company Contact Info */}
-                  <div className="p-5 sm:p-6 rounded-3xl bg-[#14151e] border border-white/10 space-y-3 text-xs text-zinc-400">
+                  <div className="p-5 rounded-md bg-[#0B0B0C] border border-[#26262A] space-y-2.5 text-xs text-zinc-400">
                     <h4 className="text-sm font-black text-white uppercase tracking-wider">
                       Dados de Contato da Loja
                     </h4>
                     <p>• <strong>Nome da Empresa:</strong> {companyName}</p>
-                    <p>• <strong>WhatsApp de Atendimento:</strong> {companyWhatsapp || "Não configurado"}</p>
+                    <p className="tabular-nums">• <strong>WhatsApp de Atendimento:</strong> {companyWhatsapp || "Não configurado"}</p>
                     <p>• <strong>E-mail Principal:</strong> {companyEmail}</p>
                   </div>
                 </div>
@@ -1160,7 +1162,7 @@ export function AdminHubModal({
             </div>
 
             {/* Admin Footer with Logout */}
-            <div className="pt-4 border-t border-white/10 mt-4 flex items-center justify-between text-xs text-zinc-400 shrink-0">
+            <div className="pt-4 border-t border-[#26262A] mt-4 flex items-center justify-between text-xs text-zinc-400 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 <span>Logado como: <strong className="text-white">{user?.email || adminEmail}</strong></span>
@@ -1170,7 +1172,7 @@ export function AdminHubModal({
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 h-9 rounded-[6px] text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sair do Admin</span>
@@ -1178,7 +1180,7 @@ export function AdminHubModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2 rounded-xl text-xs font-black text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+                  className="px-4 h-9 rounded-[6px] text-xs font-black text-zinc-300 hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] transition-colors cursor-pointer whitespace-nowrap"
                 >
                   Fechar
                 </button>
@@ -1191,14 +1193,14 @@ export function AdminHubModal({
       {/* Lightbox / Fullscreen Receipt Viewer */}
       {selectedReceiptUrl && (
         <div 
-          className="fixed inset-0 z-[190] flex items-center justify-center p-4 bg-black/90 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[190] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setSelectedReceiptUrl(null)}
         >
           <div 
-            className="relative max-w-3xl max-h-[90vh] bg-zinc-950 p-4 rounded-3xl border border-white/20 shadow-2xl flex flex-col items-center"
+            className="relative max-w-3xl max-h-[90vh] bg-[#131315] p-4 rounded-lg border border-[#26262A] shadow-2xl flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full flex items-center justify-between pb-3 border-b border-white/10 mb-3 text-xs">
+            <div className="w-full flex items-center justify-between pb-3 border-b border-[#26262A] mb-3 text-xs">
               <span className="font-bold text-white flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-teal-400" /> Comprovante de Pagamento do Cliente
               </span>
@@ -1207,25 +1209,26 @@ export function AdminHubModal({
                   href={selectedReceiptUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1"
+                  className="px-3 h-8 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-white font-bold flex items-center gap-1.5 whitespace-nowrap"
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> Abrir Original
                 </a>
                 <button
                   type="button"
                   onClick={() => setSelectedReceiptUrl(null)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+                  className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-300 hover:text-white flex items-center justify-center cursor-pointer"
+                  aria-label="Fechar"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            <div className="overflow-auto max-h-[75vh] w-full flex items-center justify-center bg-black/40 rounded-2xl p-2">
+            <div className="overflow-auto max-h-[75vh] w-full flex items-center justify-center bg-[#0B0B0C] border border-[#26262A] rounded-md p-2">
               <img 
                 src={selectedReceiptUrl} 
                 alt="Comprovante de pagamento" 
-                className="max-h-[70vh] object-contain rounded-xl"
+                className="max-h-[70vh] object-contain rounded-[4px]"
               />
             </div>
           </div>

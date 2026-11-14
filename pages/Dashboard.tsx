@@ -386,7 +386,7 @@ export default function Dashboard() {
       {/* 1. TOP HEADER WITH USER LOGO & TITLE */}
       <div className="w-full flex items-center justify-start gap-4 text-left">
         {appSettings?.company_logo_url ? (
-          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-2xl !p-0 flex items-center justify-center shadow-md shrink-0 overflow-hidden border border-white/15 bg-black/40">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg !p-0 flex items-center justify-center shrink-0 overflow-hidden border border-[#26262A] bg-[#131315]">
             <img
               src={appSettings.company_logo_url}
               alt={appSettings.company_name || "Logo da Empresa"}
@@ -394,7 +394,7 @@ export default function Dashboard() {
             />
           </div>
         ) : (
-          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-22 md:h-22 rounded-2xl bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/30 p-3 flex items-center justify-center text-[color:var(--gm-primary)] shadow-md shrink-0 font-black text-2xl sm:text-3xl uppercase tracking-wider">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/30 p-3 flex items-center justify-center text-[color:var(--gm-primary)] shrink-0 font-black text-2xl sm:text-3xl uppercase tracking-wider">
             {appSettings?.company_name ? appSettings.company_name.substring(0, 2) : "GM"}
           </div>
         )}
@@ -432,36 +432,36 @@ export default function Dashboard() {
 
       {/* 3. BOTÕES NOVO ORÇAMENTO E EXPORTAR LADO A LADO - TC PILL SYSTEM */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
-        {/* BOTÃO PRIMÁRIO: FORGE UI (IDÊNTICO AO BOTÃO GRADE) */}
+        {/* BOTÃO PRIMÁRIO: FORGE UI */}
         <Link
           to="/budgets?new=true"
-          className="forge-btn forge-btn--primary w-full !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 group cursor-pointer shadow-none select-none"
+          className="forge-btn forge-btn--primary w-full !h-10 !px-4 !rounded-[6px] text-xs font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,border-color,box-shadow] duration-150 group cursor-pointer shadow-none select-none"
           title="Novo Orçamento"
           aria-label="Novo Orçamento"
         >
           <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
-            <Plus size={15} strokeWidth={2.5} className="w-3.5 h-3.5 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
+            <Plus size={16} strokeWidth={2.8} className="w-4 h-4 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
           </span>
-          <span className="text-[11.5px] font-semibold">
+          <span className="text-xs font-bold">
             Novo Orçamento
           </span>
         </Link>
 
-        {/* BOTÃO SECUNDÁRIO: FORGE UI (IDÊNTICO AO BOTÃO LISTAS) */}
+        {/* BOTÃO SECUNDÁRIO: FORGE UI */}
         <button
           type="button"
           onClick={handleExport}
           disabled={exporting}
-          className="forge-btn forge-btn--secondary w-full !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 group cursor-pointer shadow-none select-none disabled:opacity-50 disabled:cursor-not-allowed"
+          className="forge-btn forge-btn--secondary w-full !h-10 !px-4 !rounded-[6px] text-xs font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,border-color,box-shadow] duration-150 group cursor-pointer shadow-none select-none disabled:opacity-50 disabled:cursor-not-allowed"
           title="Exportar Relatório"
           aria-label="Exportar Relatório"
         >
           {exporting ? (
-            <Loader2 size={14} className="w-3.5 h-3.5 animate-spin shrink-0" />
+            <Loader2 size={15} className="w-4 h-4 animate-spin shrink-0 text-[var(--gm-primary,#FE540B)]" />
           ) : (
-            <Download size={14} className="w-3.5 h-3.5 shrink-0 stroke-[2]" />
+            <Download size={15} className="w-4 h-4 shrink-0 stroke-[2.2] text-[var(--gm-primary,#FE540B)]" />
           )}
-          <span className="text-[11.5px] font-semibold">
+          <span className="text-xs font-bold">
             Exportar Relatório
           </span>
         </button>
@@ -542,7 +542,7 @@ export default function Dashboard() {
             <span className="forge-spec__title">ORÇAMENTOS RECENTES</span>
             <Link
               to="/budgets"
-              className="forge-btn forge-btn--primary gm-dash-primary-btn !h-7 !py-0 px-2.5 rounded-[4px] text-[11px] font-mono font-bold tracking-wider uppercase inline-flex items-center gap-1.5 cursor-pointer shadow-none group"
+              className="forge-btn forge-btn--primary gm-dash-primary-btn !h-7 !py-0 px-2.5 !rounded-[6px] text-[11px] font-mono font-bold tracking-wider uppercase inline-flex items-center justify-center gap-1.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 cursor-pointer shadow-none group"
               title="Ver Todos os Orçamentos"
             >
               <ArrowUpRight size={13} className="shrink-0 stroke-[2.5]" />
@@ -650,19 +650,19 @@ export default function Dashboard() {
                 <button
                   type="submit"
                   disabled={savingClient}
-                  className="forge-btn forge-btn--primary w-full !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-none select-none"
+                  className="forge-btn forge-btn--primary w-full !h-[40px] !px-4 !rounded-[6px] text-xs font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-none select-none"
                 >
                   {savingClient ? (
                     <>
                       <Loader2 size={15} className="w-4 h-4 animate-spin shrink-0" />
-                      <span className="text-[11.5px] font-semibold tracking-wider">CADASTRANDO...</span>
+                      <span className="text-xs font-bold tracking-wider">CADASTRANDO...</span>
                     </>
                   ) : (
                     <>
                       <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
                         <Plus size={15} strokeWidth={2.5} className="w-3.5 h-3.5 shrink-0 gm-btn-plus-black" />
                       </span>
-                      <span className="text-[11.5px] font-semibold tracking-wider">
+                      <span className="text-xs font-bold tracking-wider">
                         CADASTRAR CLIENTE
                       </span>
                     </>
@@ -685,7 +685,7 @@ export default function Dashboard() {
                   Paleta de cores oficial do sistema
                 </p>
               </div>
-              <span className="text-[10px] font-mono font-bold text-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/10 px-2.5 py-1 rounded-full border border-[var(--gm-primary,#FE540B)]/30">
+              <span className="text-[11px] font-mono font-bold text-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/10 px-2.5 py-1 rounded-[4px] border border-[var(--gm-primary,#FE540B)]/30 tabular-nums">
                 8 CORES
               </span>
             </div>
@@ -710,7 +710,7 @@ export default function Dashboard() {
                       pushToast({ title: "Cor copiada", message: `Cor ${color.name} (${color.hex}) copiada!`, type: "success" });
                     } catch (e) {}
                   }}
-                  className="rounded-xl overflow-hidden hover:border-[var(--gm-primary,#FE540B)]/70 transition-all cursor-pointer group shadow-none flex flex-col border border-white/10 bg-transparent"
+                  className="rounded-[6px] overflow-hidden hover:border-[var(--gm-primary,#FE540B)]/70 active:scale-[0.96] transition-[transform,border-color] duration-150 cursor-pointer group shadow-none flex flex-col border border-[#26262A] bg-transparent select-none"
                   title={`Clique para copiar ${color.hex}`}
                 >
                   {/* Bloco Único/Superior com a Cor preenchendo o topo de ponta a ponta */}
@@ -724,11 +724,11 @@ export default function Dashboard() {
                   </div>
 
                   {/* Painel Inferior com Nome e Código Hex integrado sem borda interna duplicada */}
-                  <div className="p-2 sm:p-2.5 bg-black/30 flex flex-col justify-center">
+                  <div className="p-2 sm:p-2.5 bg-[#0B0B0C] flex flex-col justify-center">
                     <h4 className="text-xs font-bold text-white group-hover:text-[var(--gm-primary,#FE540B)] transition-colors leading-tight">
                       {color.name}
                     </h4>
-                    <p className="text-[10px] font-mono text-[#8B8B92] uppercase mt-0.5 tracking-wider font-semibold">
+                    <p className="text-[11px] font-mono text-[#8B8B92] uppercase mt-0.5 tracking-wider font-semibold tabular-nums">
                       {color.hex}
                     </p>
                   </div>

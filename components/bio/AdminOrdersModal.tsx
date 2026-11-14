@@ -47,6 +47,21 @@ export function AdminOrdersModal({
     }
   }, [isOpen, tenantId]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (selectedReceiptUrl) {
+          setSelectedReceiptUrl(null);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isOpen, selectedReceiptUrl, onClose]);
+
   const loadOrders = async () => {
     setLoading(true);
     const list = await fetchAllStoreOrders(tenantId);
@@ -227,52 +242,53 @@ export function AdminOrdersModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-black/80 animate-in fade-in duration-200 overflow-y-auto"
+      className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-4xl fora border border-white/12 rounded-[2.25rem] p-6 sm:p-8 shadow-2xl relative my-auto max-h-[94vh] flex flex-col text-white overflow-hidden"
+        className="w-full max-w-4xl bg-[#131315] border border-[#26262A] rounded-lg p-5 sm:p-6 shadow-2xl relative my-auto max-h-[94vh] flex flex-col text-white overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="flex items-center justify-between pb-5 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-3.5">
+        <div className="flex items-center justify-between pb-4 border-b border-[#26262A] shrink-0 gap-3">
+          <div className="flex items-center gap-3">
             <div 
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg"
+              className="w-10 h-10 rounded-md flex items-center justify-center text-white shrink-0"
               style={{ backgroundColor: brandColor }}
             >
-              <ShoppingBag className="w-6 h-6" />
+              <ShoppingBag className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="text-xl sm:text-2xl font-black text-white">Gestão de Pedidos & Vendas</h2>
-                <span className="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-extrabold text-white">Gestão de Pedidos e Vendas</h2>
+                <span className="text-[11px] uppercase font-bold px-2 py-0.5 rounded-[4px] bg-orange-500/15 text-orange-400 border border-orange-500/30 whitespace-nowrap">
                   Painel do Lojista
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-zinc-400">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Acompanhe compras, confira comprovantes de Pix e atualize pedidos em tempo real
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={loadOrders}
               disabled={loading}
-              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer"
+              className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center justify-center text-zinc-300 hover:text-white transition-colors cursor-pointer"
               title="Recarregar Pedidos"
+              aria-label="Recarregar Pedidos"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-orange-400" : ""}`} />
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all cursor-pointer"
+              className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
               aria-label="Fechar"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -280,13 +296,13 @@ export function AdminOrdersModal({
         {/* Filter & Search Bar */}
         <div className="my-4 space-y-3 shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            {/* Filter Pills */}
-            <div className="flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-black/40 border border-white/10">
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap gap-1.5 p-1 rounded-md bg-[#0B0B0C] border border-[#26262A]">
               <button
                 type="button"
                 onClick={() => setFilterTab("all")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  filterTab === "all" ? "bg-white text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                className={`px-3 py-1.5 rounded-[4px] text-xs font-bold transition-colors cursor-pointer whitespace-nowrap tabular-nums ${
+                  filterTab === "all" ? "bg-white text-zinc-950" : "text-zinc-400 hover:text-white"
                 }`}
               >
                 Todos ({orders.length})
@@ -295,17 +311,17 @@ export function AdminOrdersModal({
               <button
                 type="button"
                 onClick={() => setFilterTab("review_receipt")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-[4px] text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                   filterTab === "review_receipt" 
-                    ? "bg-amber-400 text-zinc-950 shadow" 
+                    ? "bg-amber-400 text-zinc-950" 
                     : pendingReceiptCount > 0 
-                      ? "text-amber-400 bg-amber-400/10 border border-amber-400/30 animate-pulse" 
+                      ? "text-amber-400 bg-amber-400/10 border border-amber-400/30" 
                       : "text-zinc-400 hover:text-white"
                 }`}
               >
-                <span>⚠️ Conferir Comprovantes</span>
+                <span>Conferir Comprovantes</span>
                 {pendingReceiptCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-amber-500 text-black text-[10px] font-black flex items-center justify-center">
+                  <span className="px-1.5 py-0.5 rounded-[4px] bg-amber-500 text-black text-[11px] font-extrabold tabular-nums">
                     {pendingReceiptCount}
                   </span>
                 )}
@@ -314,8 +330,8 @@ export function AdminOrdersModal({
               <button
                 type="button"
                 onClick={() => setFilterTab("paid")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  filterTab === "paid" ? "bg-white text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                className={`px-3 py-1.5 rounded-[4px] text-xs font-bold transition-colors cursor-pointer whitespace-nowrap tabular-nums ${
+                  filterTab === "paid" ? "bg-white text-zinc-950" : "text-zinc-400 hover:text-white"
                 }`}
               >
                 Pagos ({orders.filter(o => o.payment_status === "paid").length})
@@ -324,8 +340,8 @@ export function AdminOrdersModal({
               <button
                 type="button"
                 onClick={() => setFilterTab("preparing")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  filterTab === "preparing" ? "bg-white text-zinc-950 shadow" : "text-zinc-400 hover:text-white"
+                className={`px-3 py-1.5 rounded-[4px] text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+                  filterTab === "preparing" ? "bg-white text-zinc-950" : "text-zinc-400 hover:text-white"
                 }`}
               >
                 Em Andamento
@@ -334,13 +350,13 @@ export function AdminOrdersModal({
 
             {/* Search Input */}
             <div className="relative flex items-center w-full sm:w-64">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 pointer-events-none" />
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Buscar por cliente ou pedido..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-10 pr-3 rounded-xl bg-black/40 border border-white/10 text-white text-xs font-medium focus:outline-none focus:border-[#FE540B]"
+                className="w-full h-9 pl-9 pr-3 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white text-xs font-medium focus:outline-none focus:border-[#FE540B]"
               />
             </div>
           </div>
@@ -370,10 +386,10 @@ export function AdminOrdersModal({
               return (
                 <div 
                   key={order.id}
-                  className={`p-5 rounded-3xl border transition-all space-y-4 shadow-md ${
+                  className={`p-4 sm:p-5 rounded-md border transition-colors space-y-4 ${
                     isReceiptPendingReview 
-                      ? "bg-gradient-to-r from-amber-500/10 via-[#14151e] to-[#14151e] border-amber-500/40 shadow-[0_0_25px_rgba(245,158,11,0.15)]"
-                      : "bg-[#14151e] border-white/10 hover:border-white/20"
+                      ? "bg-[#131315] border-amber-500/40"
+                      : "bg-[#0B0B0C] border-[#26262A] hover:border-[#3F3F46]"
                   }`}
                 >
                   {/* Order Summary Bar */}
@@ -383,64 +399,64 @@ export function AdminOrdersModal({
                   >
                     <div className="space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-base sm:text-lg font-black text-white">
+                        <span className="text-base font-extrabold text-white tabular-nums">
                           Pedido #{order.order_number}
                         </span>
 
                         {/* Payment Status Badge */}
                         {order.payment_status === "paid" ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 whitespace-nowrap">
                             <CheckCircle2 className="w-3 h-3" /> Pago
                           </span>
                         ) : isReceiptPendingReview ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-500/25 text-amber-300 border border-amber-500/40 flex items-center gap-1 animate-pulse">
+                          <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1 whitespace-nowrap">
                             <AlertCircle className="w-3.5 h-3.5" /> Comprovante Anexado (Conferir)
                           </span>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-zinc-500/20 text-zinc-400 border border-zinc-500/30">
+                          <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-bold bg-zinc-500/15 text-zinc-400 border border-zinc-500/30 whitespace-nowrap">
                             Aguardando Pagamento
                           </span>
                         )}
 
                         {/* Fulfillment Status Badge */}
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/5 border border-white/10 text-zinc-300">
+                        <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-bold bg-[#1B1B1E] border border-[#26262A] text-zinc-300 whitespace-nowrap">
                           {order.order_status === "preparando" ? "Em Preparo" : order.order_status === "enviado" ? "Enviado" : order.order_status === "entregue" ? "Entregue" : "Novo Pedido"}
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400">
+                      <div className="flex flex-wrap items-center gap-2.5 text-xs text-zinc-400">
                         <span className="font-bold text-white flex items-center gap-1">
                           <User className="w-3.5 h-3.5 text-zinc-400" />
                           {order.customer_name}
                         </span>
                         <span>•</span>
-                        <span>{order.customer_phone || "Sem tel"}</span>
+                        <span className="tabular-nums">{order.customer_phone || "Sem tel"}</span>
                         <span>•</span>
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1 tabular-nums">
                           <Clock className="w-3.5 h-3.5 text-zinc-500" />
                           {formatDate(order.created_at)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                    <div className="flex items-center justify-between sm:justify-end gap-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-[#26262A]">
                       <div className="text-right">
-                        <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">Total</span>
-                        <span className="text-lg sm:text-xl font-black" style={{ color: brandColor }}>
+                        <span className="text-[11px] uppercase font-bold text-zinc-400 block tracking-wider">Total</span>
+                        <span className="text-lg font-extrabold tabular-nums" style={{ color: brandColor }}>
                           {formatBRL(order.total)}
                         </span>
                       </div>
-                      <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400">
-                        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      <div className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-zinc-400">
+                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </div>
                     </div>
                   </div>
 
                   {/* Prominent Receipt Alert if attached and pending */}
                   {isReceiptPendingReview && receiptUrl && (
-                    <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-200">
+                    <div className="p-3.5 rounded-md bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-200">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 text-amber-400">
+                        <div className="w-9 h-9 rounded-md bg-amber-500/20 flex items-center justify-center shrink-0 text-amber-400">
                           <ImageIcon className="w-5 h-5" />
                         </div>
                         <div>
@@ -453,7 +469,7 @@ export function AdminOrdersModal({
                         <button
                           type="button"
                           onClick={() => setSelectedReceiptUrl(receiptUrl)}
-                          className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                          className="px-3 py-2 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-white font-bold transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                         >
                           <Eye className="w-4 h-4" />
                           <span>Ver Foto</span>
@@ -462,7 +478,7 @@ export function AdminOrdersModal({
                           type="button"
                           disabled={updatingId === order.id}
                           onClick={() => handleApprovePayment(order)}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black transition-all cursor-pointer shadow-md flex items-center gap-1.5"
+                          className="px-3.5 py-2 rounded-[6px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                         >
                           <Check className="w-4 h-4" />
                           <span>Aprovar Pagamento</span>
@@ -473,31 +489,31 @@ export function AdminOrdersModal({
 
                   {/* Order Expanded Details */}
                   {isExpanded && (
-                    <div className="pt-4 border-t border-white/10 space-y-4 animate-in fade-in duration-200">
+                    <div className="pt-4 border-t border-[#26262A] space-y-4 animate-in fade-in duration-200">
                       {/* Products List */}
                       <div className="space-y-2">
-                        <span className="text-xs font-black text-zinc-300 uppercase tracking-wider block">
+                        <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider block">
                           Produtos Comprados:
                         </span>
                         <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                           {(order.items || []).map((it, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-black/40 border border-white/5 text-xs sm:text-sm">
+                            <div key={idx} className="flex items-center justify-between p-3 rounded-md bg-[#131315] border border-[#26262A] text-xs sm:text-sm">
                               <div className="flex items-center gap-3 min-w-0">
                                 {it.image_url ? (
-                                  <img src={it.image_url} alt={it.name} className="w-12 h-12 rounded-xl object-cover shrink-0 border border-white/10" />
+                                  <img src={it.image_url} alt={it.name} className="w-11 h-11 rounded-[4px] object-cover shrink-0 border border-[#26262A]" />
                                 ) : (
-                                  <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center shrink-0 text-zinc-400">
+                                  <div className="w-11 h-11 rounded-[4px] bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center shrink-0 text-zinc-400">
                                     <ShoppingBag className="w-5 h-5" />
                                   </div>
                                 )}
                                 <div className="min-w-0">
                                   <p className="font-bold text-white truncate max-w-[220px] sm:max-w-xs">{it.name}</p>
-                                  <p className="text-xs text-zinc-400 mt-0.5">
+                                  <p className="text-xs text-zinc-400 mt-0.5 tabular-nums">
                                     Qtd: <strong>{it.quantity}</strong> {it.selectedOption?.quantity ? `(${it.selectedOption.quantity})` : ""}
                                   </p>
                                 </div>
                               </div>
-                              <span className="font-black text-white shrink-0 text-sm">
+                              <span className="font-extrabold text-white shrink-0 text-sm tabular-nums">
                                 {formatBRL(Number(it.price) * it.quantity)}
                               </span>
                             </div>
@@ -507,17 +523,17 @@ export function AdminOrdersModal({
 
                       {/* Customer & Delivery Address Card */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                        <div className="p-3.5 rounded-md bg-[#131315] border border-[#26262A] space-y-1">
                           <span className="font-bold text-zinc-300 flex items-center gap-1.5">
                             <User className="w-4 h-4 text-orange-400" /> Dados do Cliente:
                           </span>
                           <p className="text-white font-bold">{order.customer_name}</p>
                           <p className="text-zinc-400">{order.customer_email}</p>
-                          <p className="text-zinc-400">{order.customer_phone || "Sem telefone informado"}</p>
-                          {order.customer_cpf_cnpj && <p className="text-zinc-400">CPF/CNPJ: {order.customer_cpf_cnpj}</p>}
+                          <p className="text-zinc-400 tabular-nums">{order.customer_phone || "Sem telefone informado"}</p>
+                          {order.customer_cpf_cnpj && <p className="text-zinc-400 tabular-nums">CPF/CNPJ: {order.customer_cpf_cnpj}</p>}
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                        <div className="p-3.5 rounded-md bg-[#131315] border border-[#26262A] space-y-1">
                           <span className="font-bold text-zinc-300 flex items-center gap-1.5">
                             <Truck className="w-4 h-4 text-emerald-400" /> Entrega:
                           </span>
@@ -533,9 +549,9 @@ export function AdminOrdersModal({
 
                       {/* Attached Receipt Preview inside details */}
                       {receiptUrl && (
-                        <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+                        <div className="p-4 rounded-md bg-[#131315] border border-[#26262A] space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                            <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                               <ImageIcon className="w-4 h-4 text-teal-400" />
                               Comprovante de Pagamento Anexado:
                             </span>
@@ -549,20 +565,20 @@ export function AdminOrdersModal({
                           </div>
 
                           <div 
-                            className="bg-black/50 p-2 rounded-xl border border-white/10 inline-block cursor-pointer hover:border-white/30 transition-all max-w-xs"
+                            className="bg-[#0B0B0C] p-2 rounded-[4px] border border-[#26262A] inline-block cursor-pointer hover:border-[#3F3F46] transition-colors max-w-xs"
                             onClick={() => setSelectedReceiptUrl(receiptUrl)}
                           >
                             <img 
                               src={receiptUrl} 
                               alt="Comprovante de pagamento" 
-                              className="h-36 rounded-lg object-contain"
+                              className="h-36 rounded-[4px] object-contain"
                             />
                           </div>
                         </div>
                       )}
 
                       {/* Admin Actions Bar for Order */}
-                      <div className="p-4 rounded-2xl bg-black/50 border border-white/10 flex flex-wrap items-center justify-between gap-3">
+                      <div className="p-4 rounded-md bg-[#131315] border border-[#26262A] flex flex-wrap items-center justify-between gap-3">
                         {/* Status do Pedido Selector */}
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-zinc-400 font-bold">Status do Pedido:</span>
@@ -570,7 +586,7 @@ export function AdminOrdersModal({
                             value={order.order_status}
                             disabled={updatingId === order.id}
                             onChange={(e) => handleChangeOrderStatus(order.id, e.target.value as any)}
-                            className="h-9 px-3 rounded-lg bg-[#14151e] border border-white/15 text-white text-xs font-bold focus:outline-none focus:border-orange-500 cursor-pointer"
+                            className="h-9 px-3 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white text-xs font-bold focus:outline-none focus:border-orange-500 cursor-pointer"
                           >
                             <option value="aguardando_aprovacao">Aguardando Confirmação</option>
                             <option value="preparando">Em Preparo</option>
@@ -587,13 +603,13 @@ export function AdminOrdersModal({
                               type="button"
                               disabled={updatingId === order.id}
                               onClick={() => handleApprovePayment(order)}
-                              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                              className="px-4 py-2 rounded-[6px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                             >
                               <CheckCircle2 className="w-4 h-4" />
                               <span>Confirmar Pagamento (Marcar como Pago)</span>
                             </button>
                           ) : (
-                            <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-black flex items-center gap-1.5">
+                            <span className="px-3 py-1.5 rounded-[4px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap">
                               <CheckCircle2 className="w-4 h-4" /> Pagamento Já Confirmado
                             </span>
                           )}
@@ -603,7 +619,7 @@ export function AdminOrdersModal({
                               type="button"
                               disabled={updatingId === order.id}
                               onClick={() => handleRejectPayment(order)}
-                              className="px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 font-bold text-xs transition-all cursor-pointer"
+                              className="px-3 py-2 rounded-[6px] bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
                             >
                               Rejeitar Comprovante
                             </button>
@@ -613,7 +629,7 @@ export function AdminOrdersModal({
                             <button
                               type="button"
                               onClick={() => handleContactCustomerWhatsApp(order)}
-                              className="px-3.5 py-2 rounded-xl bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                              className="px-3.5 py-2 rounded-[6px] bg-green-600/20 hover:bg-green-600/30 text-green-400 border border-green-500/30 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
                             >
                               <MessageCircle className="w-4 h-4" />
                               <span>WhatsApp</span>
@@ -630,14 +646,14 @@ export function AdminOrdersModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="pt-4 border-t border-white/10 mt-4 flex items-center justify-between text-xs text-zinc-400 shrink-0">
-          <span>
+        <div className="pt-4 border-t border-[#26262A] mt-4 flex items-center justify-between text-xs text-zinc-400 shrink-0">
+          <span className="tabular-nums">
             Total de Pedidos Registrados: <strong className="text-white">{orders.length}</strong>
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl text-xs font-black text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer"
+            className="px-5 py-2 rounded-[6px] text-xs font-bold text-zinc-300 hover:text-white bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] transition-colors cursor-pointer whitespace-nowrap"
           >
             Fechar
           </button>
@@ -647,14 +663,14 @@ export function AdminOrdersModal({
       {/* Lightbox / Fullscreen Receipt Viewer */}
       {selectedReceiptUrl && (
         <div 
-          className="fixed inset-0 z-[180] flex items-center justify-center p-4 bg-black/90 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[180] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setSelectedReceiptUrl(null)}
         >
           <div 
-            className="relative max-w-3xl max-h-[90vh] bg-zinc-950 p-4 rounded-3xl border border-white/20 shadow-2xl flex flex-col items-center"
+            className="relative max-w-3xl max-h-[90vh] bg-[#131315] p-4 rounded-lg border border-[#26262A] shadow-2xl flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full flex items-center justify-between pb-3 border-b border-white/10 mb-3 text-xs">
+            <div className="w-full flex items-center justify-between pb-3 border-b border-[#26262A] mb-3 text-xs">
               <span className="font-bold text-white flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-teal-400" /> Comprovante de Pagamento
               </span>
@@ -663,25 +679,26 @@ export function AdminOrdersModal({
                   href={selectedReceiptUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-white font-bold flex items-center gap-1 whitespace-nowrap"
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> Abrir Original
                 </a>
                 <button
                   type="button"
                   onClick={() => setSelectedReceiptUrl(null)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+                  className="w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-zinc-400 hover:text-white flex items-center justify-center cursor-pointer"
+                  aria-label="Fechar imagem"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            <div className="overflow-auto max-h-[75vh] w-full flex items-center justify-center bg-black/40 rounded-2xl p-2">
+            <div className="overflow-auto max-h-[75vh] w-full flex items-center justify-center bg-[#0B0B0C] border border-[#26262A] rounded-md p-2">
               <img 
                 src={selectedReceiptUrl} 
                 alt="Comprovante de pagamento" 
-                className="max-h-[70vh] object-contain rounded-xl"
+                className="max-h-[70vh] object-contain rounded-[4px]"
               />
             </div>
           </div>

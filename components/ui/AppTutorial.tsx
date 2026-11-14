@@ -66,20 +66,20 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 overflow-y-auto">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
       <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.94, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="relative w-full max-w-lg bg-[#000000]/95 border border-white/10 rounded-lg overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex flex-col min-h-[500px] backdrop-blur-xl animate-fade-in"
+        exit={{ scale: 0.94, opacity: 0 }}
+        className="relative w-full max-w-lg bg-[#131315] border border-[#26262A] rounded-lg overflow-hidden shadow-[0_24px_56px_rgba(0,0,0,0.9)] flex flex-col min-h-[500px] animate-fade-in"
       >
         {/* Progress Bar Header */}
-        <div className="w-full h-1.5 bg-white/5 flex">
+        <div className="w-full h-1.5 bg-[#0B0B0C] flex">
           {Array.from({ length: stepsCount }).map((_, idx) => (
             <div 
               key={idx} 
               className={`h-full flex-1 transition-all duration-300 ${
-                idx <= step ? "bg-[var(--gm-primary)] shadow-[0_0_8px_var(--gm-primary)]" : "bg-white/10"
+                idx <= step ? "bg-[var(--gm-primary)]" : "bg-[#26262A]"
               }`}
             />
           ))}
@@ -87,11 +87,12 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
 
         {/* Floating Skip/Close Button */}
         <button 
+          type="button"
           onClick={handleComplete}
-          className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-full transition-all z-20"
+          className="absolute top-4 right-4 w-8 h-8 rounded-[4px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] text-[#8B8B92] hover:text-white flex items-center justify-center transition-colors z-20 cursor-pointer"
           title="Pular Tutorial"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
 
         {/* Step Contents */}
@@ -107,27 +108,27 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
             >
               {step === 0 && (
                 <div className="text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto rounded-lg bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] animate-pulse">
-                    <Sparkles size={36} className="text-[var(--gm-primary)]" />
+                  <div className="w-16 h-16 mx-auto rounded-lg bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)]">
+                    <Sparkles size={32} className="text-[var(--gm-primary)]" />
                   </div>
                   <h3 className="text-2xl font-black text-white tracking-tight">
                     Bem-vindo ao CardDigital <span className="text-[var(--gm-primary)]">GM</span>!
                   </h3>
-                  <p className="text-sm text-zinc-300 leading-relaxed max-w-sm mx-auto">
+                  <p className="text-sm text-[#CBD5E1] leading-relaxed max-w-sm mx-auto">
                     Parabéns pelo cadastro! Vamos fazer um tour interativo rápido para aprender a usar as principais funções. É prático e rápido!
                   </p>
-                  <div className="bg-white/5 border border-white/5 rounded-lg p-4 text-left space-y-3 max-w-sm mx-auto">
-                    <div className="flex items-center gap-3 text-xs text-zinc-300">
+                  <div className="bg-[#0B0B0C] border border-[#26262A] rounded-md p-4 text-left space-y-3 max-w-sm mx-auto">
+                    <div className="flex items-center gap-3 text-xs text-[#CBD5E1]">
                       <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                      <span><b>Orçamentos 📄:</b> Calcule em segundos.</span>
+                      <span><b>Orçamentos:</b> Calcule em segundos.</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-zinc-300">
+                    <div className="flex items-center gap-3 text-xs text-[#CBD5E1]">
                       <div className="w-2 h-2 rounded-full bg-[var(--gm-primary)] shrink-0" />
-                      <span><b>Clientes 👥:</b> Lista de contatos e obras integradas.</span>
+                      <span><b>Clientes:</b> Lista de contatos e obras integradas.</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-zinc-300">
+                    <div className="flex items-center gap-3 text-xs text-[#CBD5E1]">
                       <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                      <span><b>Aparência ⚙️:</b> Carregue sua logo e cores.</span>
+                      <span><b>Aparência:</b> Carregue sua logo e cores.</span>
                     </div>
                   </div>
                 </div>
@@ -165,37 +166,37 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
                             setSelectedIconHelp(item.key);
                             try { playNotificationSound(); } catch (e) {}
                           }}
-                          className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 aspect-square transition-all ${
+                          className={`p-2.5 rounded-md border flex flex-col items-center justify-center gap-1.5 aspect-square transition-colors cursor-pointer ${
                             isSel 
-                              ? "bg-[var(--gm-primary)]/15 border-[var(--gm-primary)] text-[var(--gm-primary)] shadow-md"
-                              : "bg-white/5 border-white/5 text-zinc-400 hover:border-white/10 hover:text-white"
+                              ? "bg-[var(--gm-primary)]/15 border-[var(--gm-primary)] text-[var(--gm-primary)]"
+                              : "bg-[#0B0B0C] border-[#26262A] text-[#8B8B92] hover:border-[#3F3F46] hover:text-white"
                           }`}
                         >
                           <Icon size={20} />
-                          <span className="text-[9px] font-bold text-center truncate w-full">{item.label}</span>
+                          <span className="text-[11px] font-bold text-center truncate w-full">{item.label}</span>
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="min-h-[64px] bg-white/5 border border-white/5 rounded-lg p-3 flex items-center justify-center text-center">
+                  <div className="min-h-[64px] bg-[#0B0B0C] border border-[#26262A] rounded-md p-3 flex items-center justify-center text-center">
                     {selectedIconHelp === "orc" && (
-                      <p className="text-xs text-[var(--gm-primary)] font-bold">➕ Novo Orçamento: Preencha materiais, mão de obra, margens e gere Orçamentos e PDFs prontos!</p>
+                      <p className="text-xs text-[var(--gm-primary)] font-bold">Novo Orçamento: Preencha materiais, mão de obra, margens e gere Orçamentos e PDFs prontos!</p>
                     )}
                     {selectedIconHelp === "cli" && (
-                      <p className="text-xs text-[var(--gm-primary)] font-bold">👥 Clientes: Cadastro completo de clientes para acompanhamento e envio de mensagens.</p>
+                      <p className="text-xs text-[var(--gm-primary)] font-bold">Clientes: Cadastro completo de clientes para acompanhamento e envio de mensagens.</p>
                     )}
                     {selectedIconHelp === "fin" && (
-                      <p className="text-xs text-[var(--gm-primary)] font-bold">💰 Financeiro: Entradas, saídas de caixa e faturamento estimado unificado.</p>
+                      <p className="text-xs text-[var(--gm-primary)] font-bold">Financeiro: Entradas, saídas de caixa e faturamento estimado unificado.</p>
                     )}
                     {selectedIconHelp === "mer" && (
-                      <p className="text-xs text-[var(--gm-primary)] font-bold">🛒 Mercado: Lista de suprimentos comuns da construção civil para pesquisa e cálculo rápida.</p>
+                      <p className="text-xs text-[var(--gm-primary)] font-bold">Mercado: Lista de suprimentos comuns da construção civil para pesquisa e cálculo rápida.</p>
                     )}
                     {selectedIconHelp === "not" && (
-                      <p className="text-xs text-[var(--gm-primary)] font-bold">📝 Notas: Rascunho de anotações e checklists salvos na hora localmente!</p>
+                      <p className="text-xs text-[var(--gm-primary)] font-bold">Notas: Rascunho de anotações e checklists salvos na hora localmente!</p>
                     )}
                     {!selectedIconHelp && (
-                      <p className="text-xs text-zinc-400 italic">Toque em qualquer botão acima para simular a ação.</p>
+                      <p className="text-xs text-[#8B8B92] italic">Toque em qualquer botão acima para simular a ação.</p>
                     )}
                   </div>
                 </div>
@@ -204,26 +205,27 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
               {step === 2 && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] shrink-0">
+                    <div className="w-10 h-10 rounded-md bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/30 flex items-center justify-center text-[var(--gm-primary)] shrink-0">
                       <FileText size={20} />
                     </div>
                     <div>
                       <h4 className="text-lg font-bold text-white leading-tight">Criação Instantânea de Orçamentos</h4>
-                      <p className="text-xs text-zinc-400">Pronto para formatar e compartilhar</p>
+                      <p className="text-xs text-[#8B8B92]">Pronto para formatar e compartilhar</p>
                     </div>
                   </div>
-                  <p className="text-sm text-zinc-300 leading-relaxed">
+                  <p className="text-sm text-[#CBD5E1] leading-relaxed">
                     Você digita os materiais e mão de obra, adiciona impostos ou margens e o app compacta tudo em um link ou PDF direto para o WhatsApp do cliente.
                   </p>
 
-                  <div className="bg-white/5 border border-white/5 rounded-lg p-4 flex flex-col items-center gap-4 justify-center">
-                    <span className="text-xs text-zinc-400 uppercase tracking-wider">Simulador de Emissão</span>
+                  <div className="bg-[#0B0B0C] border border-[#26262A] rounded-md p-4 flex flex-col items-center gap-4 justify-center">
+                    <span className="text-xs text-[#8B8B92] uppercase tracking-wider">Simulador de Emissão</span>
                     <button
+                      type="button"
                       onClick={() => {
                         setSimulatedBudget(true);
                         try { playNotificationSound(); } catch (e) {}
                       }}
-                      className="gm-btn w-full max-w-xs py-2.5 flex items-center justify-center gap-2 font-bold"
+                      className="h-10 w-full max-w-xs px-4 rounded-[6px] bg-[var(--gm-primary,#FE540B)] text-[#0B0B0C] flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider cursor-pointer"
                     >
                       <FileText size={16} />
                       Simular Emissão de Orçamento
@@ -233,14 +235,14 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
                       <motion.div 
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="w-full bg-emerald-500/15 border border-emerald-500/30 rounded-xl p-3 flex gap-3 items-center"
+                        className="w-full bg-emerald-500/15 border border-emerald-500/30 rounded-md p-3 flex gap-3 items-center"
                       >
-                        <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                        <div className="w-8 h-8 rounded-[4px] bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                           <Check size={18} />
                         </div>
                         <div className="flex-1 text-left">
                           <h5 className="text-xs font-bold text-white">Orc_Reforma_648A.pdf Gerado!</h5>
-                          <p className="text-[10px] text-emerald-400">Sucesso: Disponível para enviar ao WhatsApp!</p>
+                          <p className="text-[11px] text-emerald-400">Sucesso: Disponível para enviar ao WhatsApp!</p>
                         </div>
                       </motion.div>
                     )}
@@ -332,11 +334,11 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
                           className="w-8 h-8 rounded-full shadow-lg" 
                           style={{ backgroundColor: col.hex }}
                         />
-                        <span className="text-[10px] text-zinc-300 font-medium text-center">{col.name}</span>
+                        <span className="text-[11px] text-[#CBD5E1] font-medium text-center">{col.name}</span>
                       </button>
                     ))}
                   </div>
-                  <p className="text-[11px] text-zinc-400 text-center italic mt-1">
+                  <p className="text-[11px] text-[#8B8B92] text-center italic mt-1">
                     Nota: Acesse o menu Configurações para carregar sua logotipo e misturar outras cores personalizadas!
                   </p>
                 </div>
@@ -344,20 +346,20 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
 
               {step === 5 && (
                 <div className="text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <div className="w-16 h-16 mx-auto rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                     <Check size={36} />
                   </div>
                   <h3 className="text-2xl font-black text-white tracking-tight">
                     Tudo Pronto para decolar!
                   </h3>
-                  <p className="text-sm text-zinc-300 leading-relaxed max-w-sm mx-auto">
+                  <p className="text-sm text-[#CBD5E1] leading-relaxed max-w-sm mx-auto">
                     Excelente! Você concluiu o seu mini tutorial interativo e aprendeu a usar o aplicativo CardDigital GM.
                   </p>
-                  <div className="bg-black/40 rounded-lg p-4 border border-white/5 max-w-sm mx-auto flex items-center gap-3 text-left">
-                    <HelpCircle size={24} className="text-[var(--gm-primary)] shrink-0 animate-bounce" />
+                  <div className="bg-[#0B0B0C] rounded-md p-4 border border-[#26262A] max-w-sm mx-auto flex items-center gap-3 text-left">
+                    <HelpCircle size={22} className="text-[var(--gm-primary)] shrink-0" />
                     <div>
-                      <h5 className="text-xs font-bold text-white">Dica Extra ⚙️</h5>
-                      <p className="text-[10px] text-zinc-400">Você pode refazer este tutorial quando quiser clicando no botão em <b>Configurações</b>!</p>
+                      <h5 className="text-xs font-bold text-white">Dica Extra</h5>
+                      <p className="text-[11px] text-[#8B8B92]">Você pode refazer este tutorial quando quiser clicando no botão em <b>Configurações</b>!</p>
                     </div>
                   </div>
                 </div>
@@ -366,26 +368,28 @@ export default function AppTutorial({ onClose }: AppTutorialProps) {
           </AnimatePresence>
 
           {/* Footer Controls */}
-          <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-4 select-none shrink-0">
+          <div className="flex items-center justify-between border-t border-[#26262A] pt-4 mt-4 select-none shrink-0">
             {/* Back Button */}
             <button
+              type="button"
               onClick={handlePrev}
               disabled={step === 0}
-              className="py-2 px-4 rounded-xl flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white transition-all disabled:opacity-0 disabled:pointer-events-none"
+              className="h-9 px-3.5 rounded-[6px] flex items-center gap-1.5 text-xs font-bold text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E] transition-colors disabled:opacity-0 disabled:pointer-events-none cursor-pointer whitespace-nowrap"
             >
               <ChevronLeft size={16} />
               Anterior
             </button>
 
             {/* Steps Counter */}
-            <span className="text-[11px] font-mono text-zinc-500">
+            <span className="text-[11px] font-mono text-[#8B8B92] tabular-nums">
               Passo {step + 1} de {stepsCount}
             </span>
 
             {/* Next / Complete button */}
             <button
+              type="button"
               onClick={handleNext}
-              className="gm-btn py-2.5 px-5 rounded-lg flex items-center gap-1.5 text-xs font-bold text-white transition-all shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
+              className="h-10 px-5 rounded-[6px] bg-[var(--gm-primary,#FE540B)] hover:brightness-110 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#0B0B0C] transition-colors cursor-pointer whitespace-nowrap"
             >
               {step === stepsCount - 1 ? "Concluir" : "Próximo"}
               <ChevronRight size={16} />

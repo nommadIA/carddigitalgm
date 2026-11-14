@@ -19,8 +19,8 @@ export default function EditClientPage({ clientId, onBack, onSuccess }: { client
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-md">
-        <div className="fora p-6 rounded-2xl border border-white/15 flex items-center gap-3 shadow-none bg-white/[0.02] backdrop-blur-md">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-sm">
+        <div className="p-6 rounded-lg border border-[#26262A] flex items-center gap-3 shadow-2xl bg-[#131315]">
           <Loader2 className="w-5 h-5 animate-spin text-[var(--gm-primary)]" />
           <span className="text-white text-sm font-semibold">Carregando cliente...</span>
         </div>

@@ -3,6 +3,11 @@ import { supabase, purgeSupabaseAuthStorage } from '../lib/supabase';
 import { UserProfile } from '../types';
 import { ADMIN_EMAIL, isUserAdminEmail } from '../constants';
 import { fetchSettingsSupabase, applySettingsToDOM, DEFAULT_SETTINGS } from '../lib/settings';
+import {
+  markNewDeviceLoginSession,
+  registerOrHeartbeatDeviceSession,
+  removeCurrentDeviceOnSignOut,
+} from '../lib/deviceSessions';
 
 export const MASTER_ADMIN_EMAIL = "gmedificacao@gmail.com";
 export const MASTER_TENANT_ID = "6f4ee596-eb5e-415f-9189-d571ad85ed95";
@@ -191,6 +196,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       if (event === 'PASSWORD_RECOVERY') {
         window.location.replace(`${window.location.origin}/update-password`);
       }
+      if (event === 'SIGNED_IN') {
+        markNewDeviceLoginSession();
+      }
       if (event === 'SIGNED_OUT') {
         if (mounted) initializeUser(null);
         return;
@@ -225,6 +233,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   };
 
   const signInWithPassword = async (email: string, password: string) => {
+    markNewDeviceLoginSession();
     const { error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password
@@ -233,6 +242,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   };
 
   const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+    markNewDeviceLoginSession();
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -242,6 +252,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   };
 
   const loginAsMasterAdmin = async () => {
+    markNewDeviceLoginSession();
     localStorage.setItem("gm_master_admin_session", "true");
     localStorage.setItem("tenant_id", MASTER_TENANT_ID);
     localStorage.setItem("gm_last_email", MASTER_ADMIN_EMAIL);
@@ -256,9 +267,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     } catch {}
   };
 
-  const signOut = async () => {
+  const performSignOut = async (skipCloudRemoval = false) => {
+    if (!skipCloudRemoval && user?.email) {
+      await removeCurrentDeviceOnSignOut({
+        tenantId,
+        userId: user.id,
+        email: user.email,
+      }).catch(() => {});
+    }
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: "local" });
     } catch {}
     purgeSupabaseAuthStorage();
     localStorage.removeItem("gm_master_admin_session");
@@ -275,6 +293,59 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     } catch {}
     applySettingsToDOM(DEFAULT_SETTINGS, false, null);
   };
+
+  const signOut = async () => {
+    await performSignOut(false);
+  };
+
+  // Heartbeat multi-dispositivo + verificação automática de desvinculação remota
+  useEffect(() => {
+    if (!checked || !user?.email) return;
+    let active = true;
+
+    const syncDevice = async (forceWrite = false) => {
+      if (!active || !user?.email) return;
+      try {
+        const res = await registerOrHeartbeatDeviceSession({
+          tenantId,
+          userId: user.id,
+          email: user.email,
+          forceWrite,
+        });
+        if (active && res.revoked) {
+          try {
+            sessionStorage.setItem(
+              "gm_session_revoked_notice",
+              "Este dispositivo foi desvinculado nas configurações de segurança de outro acesso."
+            );
+          } catch {}
+          await performSignOut(true);
+        }
+      } catch {}
+    };
+
+    void syncDevice(true);
+
+    const interval = setInterval(() => {
+      void syncDevice(false);
+    }, 25000);
+
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === "visible") {
+        void syncDevice(false);
+      }
+    };
+
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+    };
+  }, [checked, user?.id, user?.email, tenantId]);
 
   const value = useMemo(() => ({
     user,

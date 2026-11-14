@@ -71,7 +71,7 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-[100dvh] min-h-screen w-full flex items-center justify-center p-3.5 sm:p-6 bg-[#0a0a0a] relative overflow-x-hidden selection:bg-[var(--gm-primary)] selection:text-white" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="min-h-[100dvh] min-h-screen w-full flex items-center justify-center p-3.5 sm:p-6 bg-[#0B0B0C] relative overflow-x-hidden selection:bg-[var(--gm-primary)] selection:text-white" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {/* Background Wallpaper */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center" aria-hidden="true">
         <div
@@ -81,8 +81,7 @@ export default function Register() {
             backgroundPosition: "50% 50%",
           }}
         />
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] bg-gradient-to-br from-[var(--gm-primary)]/20 via-orange-600/10 to-transparent rounded-full blur-3xl opacity-80" />
+        <div className="absolute inset-0 bg-black/75 pointer-events-none" />
       </div>
 
       <motion.div
@@ -99,7 +98,7 @@ export default function Register() {
         }}
       >
         <Card
-          className="gm-login-card-square gm-login-card-compact apple-glass-card p-6 sm:p-8 relative overflow-hidden rounded-3xl border border-white/15 shadow-2xl backdrop-blur-2xl"
+          className="gm-login-card-square gm-login-card-compact bg-[#131315] p-6 sm:p-8 relative overflow-hidden rounded-lg border border-[#26262A] shadow-2xl"
           style={{
             width: "100%",
             maxWidth: "440px",
@@ -139,13 +138,13 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
-              <label className="gm-label ml-1 text-xs uppercase tracking-wider font-bold opacity-60">Nome Completo</label>
+              <label className="gm-label ml-1 text-[11px] uppercase tracking-wider font-bold text-[#8B8B92]">Nome Completo</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-                  <User size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10">
+                  <User size={18} className="text-[#8B8B92] group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-lg w-full text-white"
+                  className="gm-input !pl-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[4px] w-full text-white"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -154,13 +153,13 @@ export default function Register() {
             </div>
 
             <div className="space-y-1">
-              <label className="gm-label ml-1 text-xs uppercase tracking-wider font-bold opacity-60">E-mail</label>
+              <label className="gm-label ml-1 text-[11px] uppercase tracking-wider font-bold text-[#8B8B92]">E-mail</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-                  <Mail size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10">
+                  <Mail size={18} className="text-[#8B8B92] group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-lg w-full text-white"
+                  className="gm-input !pl-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[4px] w-full text-white"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -170,13 +169,13 @@ export default function Register() {
             </div>
 
             <div className="space-y-1">
-              <label className="gm-label ml-1 text-xs uppercase tracking-wider font-bold opacity-60">Senha</label>
+              <label className="gm-label ml-1 text-[11px] uppercase tracking-wider font-bold text-[#8B8B92]">Senha</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-                  <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10">
+                  <Lock size={18} className="text-[#8B8B92] group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 !pr-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-lg w-full text-white"
+                  className="gm-input !pl-11 !pr-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[4px] w-full text-white"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -185,22 +184,22 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors focus:outline-none"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8B8B92] hover:text-white transition-colors focus:outline-none cursor-pointer"
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="gm-label ml-1 text-xs uppercase tracking-wider font-bold opacity-60">Confirmar Senha</label>
+              <label className="gm-label ml-1 text-[11px] uppercase tracking-wider font-bold text-[#8B8B92]">Confirmar Senha</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-                  <Lock size={20} className="text-slate-400 group-focus-within:text-[var(--gm-primary)] transition-colors" />
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10">
+                  <Lock size={18} className="text-[#8B8B92] group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-12 h-14 text-base focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-all rounded-lg w-full text-white"
+                  className="gm-input !pl-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[4px] w-full text-white"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -212,7 +211,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={isLoading || isGoogleLoading}
-              className="gm-btn !bg-gradient-to-r !from-[#FF7A2A] !to-[#FE540B] !text-white !border-none font-bold w-full h-14 shadow-lg shadow-orange-500/20 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center rounded-lg text-base"
+              className="gm-btn !bg-[var(--gm-primary,#FE540B)] !text-white !border-none font-bold w-full h-11 hover:brightness-110 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center rounded-[6px] text-sm"
             >
               {isLoading ? (
                 <span className="inline-flex items-center gap-2">
@@ -225,18 +224,18 @@ export default function Register() {
             </button>
 
             <div className="relative my-3 flex items-center justify-center">
-              <div className="border-t border-white/10 w-full" />
-              <span className="bg-[#12151b] px-3 text-[11px] font-mono uppercase tracking-wider text-zinc-400 shrink-0">
+              <div className="border-t border-[#26262A] w-full" />
+              <span className="bg-[#131315] px-3 text-[11px] font-mono uppercase tracking-wider text-[#8B8B92] shrink-0">
                 ou continue com
               </span>
-              <div className="border-t border-white/10 w-full" />
+              <div className="border-t border-[#26262A] w-full" />
             </div>
 
             <button
               type="button"
               onClick={handleGoogleLogin}
               disabled={isLoading || isGoogleLoading}
-              className="w-full h-12 rounded-xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.99] text-white font-semibold text-sm transition-all flex items-center justify-center gap-3 cursor-pointer shadow-sm hover:border-white/25 disabled:opacity-50 disabled:cursor-not-allowed group touch-manipulation"
+              className="w-full h-11 rounded-[6px] border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[#3F3F46] active:scale-[0.99] text-white font-semibold text-sm transition-colors flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group touch-manipulation"
             >
               {isGoogleLoading ? (
                 <Loader2 size={18} className="animate-spin text-white" />
@@ -264,8 +263,8 @@ export default function Register() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-white/10 text-center">
-            <Link to="/login" className="inline-flex items-center text-slate-400 hover:text-white text-sm transition-colors gap-2 group">
+          <div className="mt-8 pt-6 border-t border-[#26262A] text-center">
+            <Link to="/login" className="inline-flex items-center text-[#8B8B92] hover:text-white text-sm transition-colors gap-2 group">
               <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Voltar para Login
             </Link>
           </div>
