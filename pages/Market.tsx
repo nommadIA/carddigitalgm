@@ -11,8 +11,12 @@ import { Page } from "../components/ui/Page";
 import { Grid } from "../components/ui/Grid";
 import { Card } from "../components/ui/Card";
 import { SectionDivider } from "../components/ui/SectionDivider";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from '@google/genai';
+import { usePlanAccess } from '../hooks/usePlanAccess';
+import PlanLockedNotice from '../components/plans/PlanLockedNotice';
+import { PlanId } from '../lib/subscriptionPlans';
 
 type CartItem = {
   id: string;
@@ -67,6 +71,13 @@ const SUPERMARKET_FOOD_SUGGESTIONS = [
 
 const Market = () => {
   const { tenantId, user } = useAuth();
+  const { subscription, canAccess, checkQuota, isExpired } = usePlanAccess();
+  const marketAccess = canAccess("market");
+  const [lockModal, setLockModal] = useState<{
+    title: string;
+    reason?: string;
+    requiredPlan?: PlanId;
+  } | null>(null);
   
   const [walletBalance, setWalletBalance] = useState(0);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -378,6 +389,16 @@ const Market = () => {
     };
 
   const handleAddItem = async () => {
+    const qCheck = checkQuota("market_items", cartItems.length);
+    if (!qCheck.allowed) {
+      setLockModal({
+        title: "Limite de Itens no Mercado Atingido",
+        reason: qCheck.reason,
+        requiredPlan: qCheck.requiredPlan || "intermediario",
+      });
+      return;
+    }
+
     const nome = newItemName.trim();
     const preco = parsePriceStr(newItemPrice);
     if (!nome) return;
@@ -1009,31 +1030,46 @@ const Market = () => {
     setShareData({ title: "Histórico de Compra", message: msg });
   };
 
+  if (!marketAccess.allowed) {
+    return (
+      <Page title="Mercado">
+        <PlanLockedNotice
+          variant="page"
+          title="Acesso ao Mercado Bloqueado"
+          reason={marketAccess.reason}
+          requiredPlan={marketAccess.requiredPlan || "basico"}
+          currentPlanName={subscription.planName}
+          isExpired={isExpired}
+        />
+      </Page>
+    );
+  }
+
   return (
     <Page 
         title="Mercado"
         actions={
-            <div className="flex gap-2">
+            <div className="flex gap-2.5">
                 <button 
-                    className="forge-btn forge-btn--secondary !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] group cursor-pointer" 
+                    className="forge-btn forge-btn--secondary !h-11 !min-h-[44px] !px-4 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] group cursor-pointer" 
                     onClick={() => setShowHistory(!showHistory)}
                 >
-                    <History size={14} className="w-3.5 h-3.5 shrink-0 stroke-[2]" />
+                    <History size={19} className="w-5 h-5 shrink-0 stroke-[2]" />
                     <span>{showHistory ? "Ver Lista" : "Histórico"}</span>
                 </button>
                 {!showHistory && cartItems.length > 0 && (
                     <button 
-                        className="forge-btn forge-btn--primary !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] group cursor-pointer" 
+                        className="forge-btn forge-btn--primary !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] group cursor-pointer" 
                         onClick={handleShare}
                     >
-                        <Share2 size={14} className="w-3.5 h-3.5 shrink-0 stroke-[2.5]" />
+                        <Share2 size={19} className="w-5 h-5 shrink-0 stroke-[2.5]" />
                         <span>Compartilhar</span>
                     </button>
                 )}
             </div>
         }
     >
-       <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
+       <div className="w-full space-y-6 pb-4">
        <SectionDivider label="Resumo Financeiro" />
        <Grid cols={1}>
            <div className="relative rounded-lg border border-[#26262A] bg-[#131315] p-0 overflow-hidden">
@@ -1042,7 +1078,7 @@ const Market = () => {
                     <p className="text-[11px] font-mono uppercase tracking-[0.14em] font-semibold mb-1.5 text-[#8B8B92]">Saldo Disponível</p>
                     <div className="flex items-center justify-center sm:justify-start gap-3.5">
                         <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums text-[var(--gm-primary)]">
-                            {CURRENCY_FORMATTER.format(availableBalanceDisplay)}
+                            <AnimatedNumber value={availableBalanceDisplay} currency decimals={2} replayKey={String(showHistory)} />
                         </div>
                         <div className="flex gap-2">
                             <button
@@ -1070,7 +1106,9 @@ const Market = () => {
                  </div>
                  <div className="text-center md:text-right bg-[#0B0B0C] px-5 py-4 rounded-md border border-[#26262A] min-w-[190px]">
                      <p className="text-[11px] font-mono uppercase tracking-[0.14em] font-semibold mb-1 text-[#8B8B92]">Total da Lista</p>
-                     <div className="text-2xl font-bold tabular-nums text-[#F2F2F3]">{CURRENCY_FORMATTER.format(totalListValue)}</div>
+                     <div className="text-2xl font-bold tabular-nums text-[#F2F2F3]">
+                         <AnimatedNumber value={totalListValue} currency decimals={2} replayKey={String(showHistory)} />
+                     </div>
                  </div>
               </div>
            </div>
@@ -1116,7 +1154,7 @@ const Market = () => {
                                            <div className="text-[11px] font-mono bg-[#1B1B1E] border border-[#26262A] px-2.5 py-1 rounded-[4px] font-semibold text-[#F2F2F3] whitespace-nowrap">{h.count} compras</div>
                                        </div>
                                        <div className="text-2xl sm:text-3xl font-black tabular-nums text-[#F2F2F3] mb-4">
-                                           {CURRENCY_FORMATTER.format(h.total)}
+                                           <AnimatedNumber value={h.total} currency decimals={2} />
                                        </div>
                                        
                                        {/* Lista detalhada das compras do mês */}
@@ -1232,7 +1270,9 @@ const Market = () => {
                                     type="button"
                                     onClick={handleVoiceCommand1Product}
                                     disabled={isListening || processingVoice}
-                                    className={`px-3 !h-[38px] rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    aria-pressed={voiceStep === 'product' || activeVoiceCommand === 'product'}
+                                    data-selected={voiceStep === 'product' || activeVoiceCommand === 'product' ? 'true' : undefined}
+                                    className={`px-3 !h-[38px] rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
                                         activeVoiceCommand === 'product' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'product' && processingVoice
@@ -1249,7 +1289,7 @@ const Market = () => {
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                         </span>
                                     ) : activeVoiceCommand === 'product' && processingVoice ? (
-                                        <Loader2 size={13} className="animate-spin" />
+                                        <Loader2 size={13} className="animate-spin text-white" />
                                     ) : (
                                         <Mic size={13} className={voiceStep === 'product' ? 'text-white' : 'text-[#FF7A38]'} />
                                     )}
@@ -1261,7 +1301,9 @@ const Market = () => {
                                     type="button"
                                     onClick={handleVoiceCommand2Price}
                                     disabled={isListening || processingVoice}
-                                    className={`px-3 !h-[38px] rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    aria-pressed={voiceStep === 'price' || activeVoiceCommand === 'price'}
+                                    data-selected={voiceStep === 'price' || activeVoiceCommand === 'price' ? 'true' : undefined}
+                                    className={`px-3 !h-[38px] rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
                                         activeVoiceCommand === 'price' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'price' && processingVoice
@@ -1278,7 +1320,7 @@ const Market = () => {
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                         </span>
                                     ) : activeVoiceCommand === 'price' && processingVoice ? (
-                                        <Loader2 size={13} className="animate-spin" />
+                                        <Loader2 size={13} className="animate-spin text-white" />
                                     ) : (
                                         <Mic size={13} className={voiceStep === 'price' ? 'text-white' : 'text-[#FF7A38]'} />
                                     )}
@@ -1290,7 +1332,9 @@ const Market = () => {
                                     type="button"
                                     onClick={handleVoiceCommand3Value}
                                     disabled={isListening || processingVoice}
-                                    className={`px-3 !h-[38px] rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    aria-pressed={voiceStep === 'value' || activeVoiceCommand === 'value'}
+                                    data-selected={voiceStep === 'value' || activeVoiceCommand === 'value' ? 'true' : undefined}
+                                    className={`px-3 !h-[38px] rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
                                         activeVoiceCommand === 'value' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'value' && processingVoice
@@ -1307,7 +1351,7 @@ const Market = () => {
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                         </span>
                                     ) : activeVoiceCommand === 'value' && processingVoice ? (
-                                        <Loader2 size={13} className="animate-spin" />
+                                        <Loader2 size={13} className="animate-spin text-white" />
                                     ) : (
                                         <Mic size={13} className={voiceStep === 'value' ? 'text-white' : 'text-[#FF7A38]'} />
                                     )}
@@ -1319,7 +1363,9 @@ const Market = () => {
                                     type="button"
                                     onClick={handleVoiceCommand4Quantity}
                                     disabled={isListening || processingVoice}
-                                    className={`px-3 !h-[38px] rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    aria-pressed={voiceStep === 'quantity' || activeVoiceCommand === 'quantity'}
+                                    data-selected={voiceStep === 'quantity' || activeVoiceCommand === 'quantity' ? 'true' : undefined}
+                                    className={`px-3 !h-[38px] rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
                                         activeVoiceCommand === 'quantity' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'quantity' && processingVoice
@@ -1336,7 +1382,7 @@ const Market = () => {
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                         </span>
                                     ) : activeVoiceCommand === 'quantity' && processingVoice ? (
-                                        <Loader2 size={13} className="animate-spin" />
+                                        <Loader2 size={13} className="animate-spin text-white" />
                                     ) : (
                                         <Mic size={13} className={voiceStep === 'quantity' ? 'text-white' : 'text-[#FF7A38]'} />
                                     )}
@@ -1349,7 +1395,9 @@ const Market = () => {
                                 type="button"
                                 onClick={handleVoiceSequential}
                                 disabled={isListening || processingVoice}
-                                className={`w-full !h-[38px] !px-4 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                                aria-pressed={activeVoiceCommand === 'sequential'}
+                                data-selected={activeVoiceCommand === 'sequential' ? 'true' : undefined}
+                                className={`w-full !h-[40px] !px-4 !rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center justify-center gap-2 border transition-all cursor-pointer ${
                                     activeVoiceCommand === 'sequential' && isListening
                                         ? 'bg-red-500 text-white border-red-400 animate-pulse shadow-none'
                                         : activeVoiceCommand === 'sequential' && processingVoice
@@ -1359,12 +1407,12 @@ const Market = () => {
                             >
                                 {activeVoiceCommand === 'sequential' && isListening ? (
                                     <>
-                                        <Loader2 size={14} className="animate-spin" />
+                                        <Loader2 size={14} className="animate-spin text-white" />
                                         <span>Ouvindo passo atual...</span>
                                     </>
                                 ) : activeVoiceCommand === 'sequential' && processingVoice ? (
                                     <>
-                                        <Loader2 size={14} className="animate-spin" />
+                                        <Loader2 size={14} className="animate-spin text-white" />
                                         <span>Processando fala...</span>
                                     </>
                                 ) : (
@@ -1389,7 +1437,7 @@ const Market = () => {
                                         <input 
                                             ref={nameInputRef}
                                             type="text"
-                                            className={`w-full h-11 px-3.5 pr-10 rounded-[4px] bg-[#0B0B0C] text-[#F2F2F3] placeholder-[#8B8B92] border transition-colors outline-none ${
+                                            className={`w-full h-11 px-3.5 pr-10 rounded-[6px] bg-[#0B0B0C] text-[#F2F2F3] placeholder-[#8B8B92] border transition-colors outline-none ${
                                                 voiceStep === 'product' 
                                                     ? 'border-[var(--gm-primary)]' 
                                                     : 'border-[#26262A] focus:border-[var(--gm-primary)]'
@@ -1460,7 +1508,7 @@ const Market = () => {
                                             ref={priceInputRef}
                                             type="text" 
                                             inputMode="decimal"
-                                            className={`h-11 w-full !pl-10 pr-3 font-bold tabular-nums text-base text-[#F2F2F3] rounded-[4px] bg-[#0B0B0C] border transition-colors outline-none ${
+                                            className={`h-11 w-full !pl-10 pr-3 font-bold tabular-nums text-base text-[#F2F2F3] rounded-[6px] bg-[#0B0B0C] border transition-colors outline-none ${
                                                 voiceStep === 'price' || voiceStep === 'value'
                                                     ? 'border-[var(--gm-primary)]' 
                                                     : 'border-[#26262A] focus:border-[var(--gm-primary)]'
@@ -1490,7 +1538,7 @@ const Market = () => {
                                     </label>
                                     <input 
                                         ref={qtyInputRef}
-                                        className={`text-center h-11 w-full font-bold tabular-nums text-[#F2F2F3] rounded-[4px] bg-[#0B0B0C] border transition-colors outline-none ${
+                                        className={`text-center h-11 w-full font-bold tabular-nums text-[#F2F2F3] rounded-[6px] bg-[#0B0B0C] border transition-colors outline-none ${
                                             voiceStep === 'quantity' 
                                                 ? 'border-[var(--gm-primary)]' 
                                                 : 'border-[#26262A] focus:border-[var(--gm-primary)]'
@@ -1618,7 +1666,7 @@ const Market = () => {
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[var(--gm-primary)]">R$</span>
                             <input 
                                 type="number" 
-                                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[4px] py-3.5 pl-12 pr-4 text-2xl font-bold tabular-nums text-[#F2F2F3] focus:outline-none focus:border-[var(--gm-primary)] transition-colors text-center" 
+                                className="w-full bg-[#0B0B0C] border border-[#26262A] rounded-[6px] py-3.5 pl-12 pr-4 text-2xl font-bold tabular-nums text-[#F2F2F3] focus:outline-none focus:border-[var(--gm-primary)] transition-colors text-center" 
                                 value={topUpAmount} 
                                 onChange={e => setTopUpAmount(e.target.value)} 
                                 onFocus={(e) => e.target.select()}
@@ -1951,6 +1999,17 @@ const Market = () => {
             </div>
           </div>
         )}
+
+      <PlanLockedNotice
+        variant="modal"
+        isOpen={Boolean(lockModal)}
+        onClose={() => setLockModal(null)}
+        title={lockModal?.title || "Recurso Bloqueado no Plano Atual"}
+        reason={lockModal?.reason}
+        requiredPlan={lockModal?.requiredPlan || "intermediario"}
+        currentPlanName={subscription.planName}
+        isExpired={isExpired}
+      />
     </Page>
   );
 };

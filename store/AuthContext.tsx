@@ -8,6 +8,8 @@ import {
   registerOrHeartbeatDeviceSession,
   removeCurrentDeviceOnSignOut,
 } from '../lib/deviceSessions';
+import { registerOrUpdateUser } from '../lib/adminUsersService';
+import { syncUserSubscriptionFromCloud } from '../lib/subscriptionPlans';
 
 export const MASTER_ADMIN_EMAIL = "gmedificacao@gmail.com";
 export const MASTER_TENANT_ID = "6f4ee596-eb5e-415f-9189-d571ad85ed95";
@@ -157,6 +159,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           if (s) applySettingsToDOM(s, true, activeTenantId);
         }).catch(() => {});
       }
+
+      // Registra/atualiza usuário e sincroniza assinatura da nuvem
+      registerOrUpdateUser({
+        id: profile.id,
+        email,
+        name: profile.full_name,
+        tenantId: activeTenantId,
+      }).catch(() => {});
+      syncUserSubscriptionFromCloud(activeTenantId || null, email).catch(() => {});
 
     } catch (e) {
       console.error("Auth init error:", e);

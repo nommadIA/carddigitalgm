@@ -260,7 +260,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-[#131315] border border-[#26262A] rounded-lg custom-scrollbar flex flex-col shadow-2xl"
+        className="w-full max-w-5xl max-h-[90dvh] overflow-y-auto bg-[#131315] border border-[#26262A] rounded-[10px] custom-scrollbar flex flex-col shadow-2xl"
       >
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-[#26262A] sticky top-0 bg-[#131315] z-10 shrink-0">
@@ -282,7 +282,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
         </div>
 
         {/* Body */}
-        <div className="p-4 sm:p-6 pb-32 sm:pb-8">
+        <div className="p-4 sm:p-6 pb-8">
             {loading ? (
             <div className="flex items-center gap-3 text-zinc-400 p-4 justify-center h-48">
                 <Loader2 className="animate-spin" size={24} />
@@ -312,7 +312,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                             <Select
                                 value={clientId}
                                 onChange={(val) => setClientId(String(val))}
-                                className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[6px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                                 options={clients.map(c => ({ value: c.id, label: c.name }))}
                             />
                         </div>
@@ -323,7 +323,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Ex: Identidade Visual"
-                                className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[6px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                             />
                         </div>
 
@@ -336,13 +336,13 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Pagamento</label>
                                 <Select
                                     value={paymentMethod}
                                     onChange={(val) => setPaymentMethod(val as any)}
-                                    className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                    className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[6px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                                     options={[
                                         { value: "PIX", label: "PIX" },
                                         { value: "CREDIT", label: "Cartão de Crédito" }
@@ -350,13 +350,13 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                 />
                             </div>
                             {paymentMethod === "CREDIT" && (
-                                <div className="col-span-2 grid grid-cols-2 gap-3 bg-[#131315] p-3.5 rounded-md border border-[#26262A]">
+                                <div className="sm:col-span-2 grid grid-cols-2 gap-3 bg-[#131315] p-3.5 rounded-md border border-[#26262A]">
                                     <div>
                                         <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Parcelas</label>
                                         <Select
                                             value={installments}
                                             onChange={(val) => setInstallments(Number(val))}
-                                            className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                            className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[6px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                                             options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => ({ value: n, label: `${n}x` }))}
                                         />
                                     </div>
@@ -369,7 +369,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                             onFocus={(e) => e.target.select()}
                                             min="0"
                                             max="100"
-                                            className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 text-white tabular-nums outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                            className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[6px] px-3 text-white tabular-nums outline-none focus:border-[var(--gm-primary)] transition-colors"
                                         />
                                     </div>
                                     <div className="col-span-2">
@@ -379,14 +379,14 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                             onChange={(e) => setPaymentLink(e.target.value)}
                                             placeholder="https://..."
                                             type="url"
-                                            className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                            className="w-full h-11 bg-[#0B0B0C] border border-[#26262A] rounded-[6px] px-3 text-white outline-none focus:border-[var(--gm-primary)] transition-colors"
                                         />
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label className="text-xs font-bold text-zinc-400 uppercase mb-2 block">Prazo (dias)</label>
                                 <input
@@ -395,7 +395,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                     onFocus={(e) => e.target.select()}
                                     type="number"
                                     min={0}
-                                    className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white tabular-nums outline-none focus:border-[var(--gm-primary)] transition-colors"
+                                    className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[6px] px-3 text-white tabular-nums outline-none focus:border-[var(--gm-primary)] transition-colors"
                                 />
                             </div>
 
@@ -408,7 +408,7 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                                         onFocus={(e) => e.target.select()}
                                         type="number"
                                         min={0}
-                                        className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[4px] px-3 text-white tabular-nums outline-none focus:border-[var(--gm-primary)] transition-colors pr-14"
+                                        className="w-full h-11 bg-[#131315] border border-[#26262A] rounded-[6px] px-3 text-white tabular-nums outline-none focus:border-[var(--gm-primary)] transition-colors pr-14"
                                     />
                                     <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold tabular-nums text-zinc-400 bg-[#1B1B1E] px-1.5 py-0.5 rounded-[4px] border border-[#26262A]">
                                         {discountPercentage.toFixed(1)}%
@@ -469,8 +469,8 @@ export default function EditBudgetModal({ open, budgetId, onClose, onSuccess }: 
                             * Lembrete “APROVADO” usa seus 3 horários em Configurações.
                         </div>
 
-                        {/* Espaço vazio garantido no final para visualização limpa do background */}
-                        <div className="w-full h-24 sm:h-8 pointer-events-none select-none" aria-hidden="true" />
+                        {/* Espaço mínimo no final do card */}
+                        <div className="w-full h-2 pointer-events-none select-none" aria-hidden="true" />
                     </div>
                 </div>
             </div>

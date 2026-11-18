@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   FileText,
@@ -42,7 +42,6 @@ function applyTheme(mode: ThemeMode) {
 
 export default function Sidebar() {
   const { signOut, isAdmin } = useAuth();
-  const location = useLocation();
 
   const items = React.useMemo(() => {
     if (isAdmin) {
@@ -84,42 +83,34 @@ export default function Sidebar() {
       <nav className="gm-nav flex flex-col gap-1 select-none" aria-label="Menu">
         {items.map((it) => {
           const Icon = it.icon;
-          const itemActive = location.pathname === it.to || (it.to !== "/" && location.pathname.startsWith(it.to));
           return (
             <NavLink
               key={it.to}
               to={it.to}
+              end={it.to === "/"}
               title={it.label}
               className={({ isActive }) =>
-                `flex items-center px-3.5 py-2.5 rounded-[6px] text-sm font-semibold relative transition-colors whitespace-nowrap ${
+                `gm-nav-item sidebar-btn flex items-center text-sm font-semibold relative whitespace-nowrap ${
                   isActive
-                    ? "text-white font-bold bg-[#18181B]"
-                    : "text-[#8B8B92] hover:text-white hover:bg-[#131315]"
+                    ? "is-active active font-bold"
+                    : ""
                 }`
               }
             >
-              <span
-                className={`sidebar-window-indicator ${
-                  itemActive
-                    ? "!opacity-100 !bg-[var(--gm-menu-primary,var(--gm-primary,#FE540B))]"
-                    : "!opacity-0 pointer-events-none"
-                }`}
-                aria-hidden="true"
-              />
               {it.to === "/planos" ? (
                 <GoldCrownIcon size={18} />
               ) : (
-                <Icon size={18} className="shrink-0 text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] stroke-[1.75]" />
+                <Icon size={18} className="shrink-0 stroke-[1.75]" />
               )}
-              <span className={`ml-3 truncate ${it.to === "/planos" ? "text-amber-300 font-bold" : it.to === "/admin/usuarios" ? "text-[var(--gm-primary,#FE540B)] font-bold" : ""}`}>{it.label}</span>
+              <span className={`truncate ${it.to === "/admin/usuarios" ? "text-[var(--gm-primary,#FE540B)] font-bold" : ""}`}>{it.label}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="gm-sidebar-footer mt-auto pt-4 border-t border-[#26262A]">
+      <div className="gm-sidebar-footer mt-auto pt-4 border-t border-white/[0.08]">
         <button
-          className="w-full h-10 flex items-center justify-center gap-2 px-3 rounded-[6px] border border-[#26262A] bg-[#131315] hover:bg-[#1F1315] hover:border-red-500/50 text-xs font-bold uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+          className="gm-top-action gm-glass-btn w-full h-10 flex items-center justify-center gap-2 px-3 rounded-[8px] text-xs font-bold uppercase tracking-wider text-red-400 hover:text-red-300 transition-colors cursor-pointer"
           onClick={signOut}
           type="button"
           title="Sair"

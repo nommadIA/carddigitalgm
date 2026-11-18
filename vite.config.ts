@@ -136,6 +136,12 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       allowedHosts: true,
       hmr: false,
+      watch: {
+        ignored: ["**/bin/**", "**/.aistudio/**", "**/*.traineddata", "**/*.sql", "**/*.txt"],
+      },
+    },
+    optimizeDeps: {
+      entries: ["index.html"],
     },
     plugins: [react(), tailwindcss(), idmMediaDownloaderPlugin()],
     resolve: {

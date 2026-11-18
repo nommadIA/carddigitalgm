@@ -6058,11 +6058,12 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           {/* Left column: Adicionar & Ver no Site Original */}
                           <div className="flex flex-col gap-2.5">
                             <button 
+                              type="button"
                               onClick={() => {
                                 addToCart(selectedProduct, productQuantity, selectedProductOption);
                                 setSelectedProduct(null);
                               }}
-                              className={`w-full flex items-center justify-center py-4 px-3 rounded-lg font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md border cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
+                              className={`w-full flex items-center justify-center gap-2 py-4 px-3 rounded-[6px] font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md border cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
                                 theme === 'glass'
                                   ? 'bg-white/10 hover:bg-white/15 text-white border-white/10'
                                   : theme === 'dark' 
@@ -6070,8 +6071,8 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
                               }`}
                             >
-                              <Plus className="w-4 h-4 mr-1.5 shrink-0" />
-                              Adicionar
+                              <Plus className="w-4 h-4 shrink-0" />
+                              <span>Adicionar</span>
                             </button>
 
                             {productLink && (
@@ -6079,10 +6080,10 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                 href={productLink}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="w-full flex items-center justify-center py-2.5 text-xs font-bold opacity-65 hover:opacity-100 transition-opacity"
+                                className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold opacity-65 hover:opacity-100 transition-opacity"
                               >
-                                <Globe className="w-4 h-4 mr-1.5 shrink-0" />
-                                Ver no Site Original
+                                <Globe className="w-4 h-4 shrink-0" />
+                                <span>Ver no Site Original</span>
                               </a>
                             )}
                           </div>
@@ -6090,16 +6091,17 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                           {/* Right column: Comprar Já */}
                           <div className="flex flex-col gap-2.5">
                             <button 
+                              type="button"
                               onClick={() => {
                                 addToCart(selectedProduct, productQuantity, selectedProductOption);
                                 setSelectedProduct(null);
                                 setIsCartOpen(true);
                               }}
-                              className="w-full flex items-center justify-center py-4 px-3 rounded-lg text-white font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                              className="w-full flex items-center justify-center gap-2 py-4 px-3 rounded-[6px] text-white font-black text-xs sm:text-sm whitespace-nowrap transition-all shadow-md hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] cursor-pointer"
                               style={{ backgroundColor: brandColor || '#ff6900' }}
                             >
-                              <ShoppingCart className="w-4 h-4 mr-1.5 shrink-0" />
-                              Comprar Já
+                              <ShoppingCart className="w-4 h-4 shrink-0" />
+                              <span>Comprar Já</span>
                             </button>
                           </div>
                         </div>
@@ -6692,14 +6694,14 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                     <button 
                                       type="button"
                                       onClick={handleCopyPix}
-                                      className="w-full flex items-center justify-center py-3.5 px-4 rounded-[6px] text-sm font-black transition-all duration-300 hover:shadow-md hover:brightness-110 cursor-pointer text-white border-0 shadow-sm"
+                                      className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-[6px] text-sm font-black transition-all duration-300 hover:shadow-md hover:brightness-110 cursor-pointer text-white border-0 shadow-sm"
                                       style={{ 
                                         background: `linear-gradient(90deg, ${brandColor}, #ff8c00, #22c55e, #32BCAD, #8b5cf6, #ec4899, ${brandColor})`,
                                         backgroundSize: '300% 300%',
                                         animation: 'color-loop 5s ease infinite',
                                       }}
                                     >
-                                      {copiedPix ? <Check className="w-5 h-5 mr-1.5 font-bold" /> : <Copy className="w-5 h-5 mr-1.5 font-bold" />}
+                                      {copiedPix ? <Check className="w-5 h-5 shrink-0 font-bold" /> : <Copy className="w-5 h-5 shrink-0 font-bold" />}
                                       <span className="font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
                                         {copiedPix ? "Chave copiada!" : "Copiar Chave Pix Copia e Cola"}
                                       </span>
@@ -6746,13 +6748,13 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                                       href={cardUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="w-full flex items-center justify-center py-4 px-4 rounded-[6px] text-sm font-black text-white transition-all duration-300 hover:shadow-lg border-0 shadow-md"
+                                      className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-[6px] text-sm font-black text-white transition-all duration-300 hover:shadow-lg border-0 shadow-md"
                                       style={{ 
                                         backgroundColor: brandColor,
                                         boxShadow: `0 4px 12px ${brandColor}40`
                                       }}
                                     >
-                                      <CreditCard className="w-5 h-5 mr-1.5 font-bold" />
+                                      <CreditCard className="w-5 h-5 shrink-0 font-bold" />
                                       <span className="font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
                                         Pagar com Cartão de Crédito
                                       </span>
@@ -6788,32 +6790,33 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
 
                   {checkoutStep === "cart" ? (
                     <button 
+                      type="button"
                       onClick={() => setCheckoutStep("checkout")}
-                      className="w-full flex items-center justify-center p-4 rounded-[6px] text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 p-4 rounded-[6px] text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
                       style={{ backgroundColor: brandColor }}
                     >
-                      Avançar para Entrega
-                      <ChevronRight className="w-5 h-5 ml-1.5" />
+                      <span>Avançar para Entrega</span>
+                      <ChevronRight className="w-5 h-5 shrink-0" />
                     </button>
                   ) : (
                     <div className="space-y-2.5">
                       <button 
                         type="button"
                         onClick={handleCheckoutDirectPayment}
-                        className="w-full flex items-center justify-center p-4 rounded-[6px] text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
+                        className="w-full flex items-center justify-center gap-2 p-4 rounded-[6px] text-white font-black text-sm transition-all shadow-lg hover:brightness-110 active:scale-[0.98] cursor-pointer"
                         style={{ backgroundColor: brandColor }}
                       >
-                        <CreditCard className="w-5 h-5 mr-2" />
-                        Finalizar & Pagar com Segurança
+                        <CreditCard className="w-5 h-5 shrink-0" />
+                        <span>Finalizar & Pagar com Segurança</span>
                       </button>
 
                       <button 
                         type="button"
                         onClick={handleCheckoutWhatsApp}
-                        className="w-full flex items-center justify-center p-3 rounded-[6px] text-white font-black text-xs sm:text-sm transition-all shadow hover:brightness-110 active:scale-[0.98] cursor-pointer bg-green-600 hover:bg-green-700"
+                        className="w-full flex items-center justify-center gap-2 p-3 rounded-[6px] text-white font-black text-xs sm:text-sm transition-all shadow hover:brightness-110 active:scale-[0.98] cursor-pointer bg-green-600 hover:bg-green-700"
                       >
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        Finalizar e Enviar via WhatsApp
+                        <MessageCircle className="w-4 h-4 shrink-0" />
+                        <span>Finalizar e Enviar via WhatsApp</span>
                       </button>
                       
                       <button 
@@ -7094,7 +7097,7 @@ export default function BioRenderer({ data, asPreview = false, previewMode }: { 
                               }}
                             >
                               <span>{bio.chat_balloon_button_text || "Abrir chat"}</span>
-                              <Send className="w-4 h-4 ml-1.5" />
+                              <Send className="w-4 h-4 shrink-0" />
                             </button>
                           </div>
                         </div>

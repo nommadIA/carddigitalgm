@@ -20,6 +20,10 @@ export function useSwipeNav<T extends HTMLElement>({
   stopPropagation = false,
 }: Options) {
   const ref = useRef<T | null>(null);
+  const onSwipeLeftRef = useRef(onSwipeLeft);
+  const onSwipeRightRef = useRef(onSwipeRight);
+  onSwipeLeftRef.current = onSwipeLeft;
+  onSwipeRightRef.current = onSwipeRight;
 
   useEffect(() => {
     if (!enabled) return;
@@ -78,9 +82,9 @@ export function useSwipeNav<T extends HTMLElement>({
 
       if (absX >= 65 && absX >= absY * 2.5) {
         if (distX < 0) {
-          onSwipeLeft?.();
+          onSwipeLeftRef.current?.();
         } else {
-          onSwipeRight?.();
+          onSwipeRightRef.current?.();
         }
       }
     };
@@ -92,7 +96,7 @@ export function useSwipeNav<T extends HTMLElement>({
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [enabled, onSwipeLeft, onSwipeRight, thresholdPx, restraintPx, allowedTimeMs, stopPropagation]);
+  }, [enabled, thresholdPx, restraintPx, allowedTimeMs, stopPropagation]);
 
   return ref;
 }

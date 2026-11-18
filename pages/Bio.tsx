@@ -9,6 +9,8 @@ import BioRenderer, { getPlatformIcon } from "../components/bio/BioRenderer";
 import { supabase } from "../lib/supabase";
 import { motion, AnimatePresence } from "motion/react";
 import { compressImage } from "../lib/imageCompressor";
+import { usePlanAccess } from "../hooks/usePlanAccess";
+import PlanLockedNotice from "../components/plans/PlanLockedNotice";
 
 const formatBRL = (value: string): string => {
   const clean = value.replace(/\D/g, "");
@@ -79,6 +81,8 @@ function OptimizedImage({ src, alt, className, width = 360 }: { src: string; alt
 
 export default function Bio() {
   const { tenantId, user } = useAuth();
+  const { subscription, canAccess, isExpired } = usePlanAccess();
+  const bioAccess = canAccess("bio");
   const cachedSettings = readSettingsLocal();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1598,12 +1602,27 @@ export default function Bio() {
   const hasActiveSection = Object.values(openSections).some(Boolean);
 
   const getSectionBtnClass = (isOpen: boolean) => {
-    const base = "relative flex items-center justify-between pl-6 pr-4 py-3 rounded-md border text-left transition-colors duration-150 cursor-pointer text-xs sm:text-sm font-bold shadow-none group";
+    const base = "relative flex items-center justify-between gap-2 w-full min-h-[48px] pl-5 pr-3.5 py-2.5 rounded-[6px] border text-left transition-colors duration-150 cursor-pointer text-xs sm:text-[13px] font-bold shadow-none group";
     if (isOpen) {
-      return `${base} bg-[#1B1B1E] border-[var(--primary-color)] text-[#F2F2F3] font-black w-full`;
+      return `${base} bg-[#1B1B1E] border-[var(--primary-color)] text-[#F2F2F3] font-extrabold`;
     }
     return `${base} bg-[#0B0B0C] border-[#26262A] text-[#CBD5E1] hover:border-[#3F3F46] hover:bg-[#1B1B1E] hover:text-white`;
   };
+
+  if (!bioAccess.allowed) {
+    return (
+      <Page title="Minha Bio">
+        <PlanLockedNotice
+          variant="page"
+          title="Minha Bio / Portfólio Website Bloqueado"
+          reason={bioAccess.reason}
+          requiredPlan={bioAccess.requiredPlan || "intermediario"}
+          currentPlanName={subscription.planName}
+          isExpired={isExpired}
+        />
+      </Page>
+    );
+  }
 
   return (
     <Page title="">
@@ -1688,34 +1707,40 @@ export default function Bio() {
            </h3>
            <p className="text-[#8B8B92] text-sm font-medium">Essa é a página que você pode enviar para seus clientes como um cartão de visitas digital ou Link na Bio.</p>
            
-           <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 pt-2 w-full max-w-2xl mx-auto">
+           <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2.5 pt-2 w-full max-w-3xl mx-auto">
               <button 
+                type="button"
                 onClick={handleCopyLink} 
-                className="w-full sm:w-[180px] h-10 px-3.5 rounded-[6px] font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] hover:border-[#3F3F46] bg-[#0B0B0C] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer"
+                className="w-full sm:w-auto sm:min-w-[180px] h-11 px-5 rounded-[6px] font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 border border-[#26262A] hover:border-[#3F3F46] bg-[#0B0B0C] hover:bg-[#1B1B1E] active:scale-[0.96] text-[#F2F2F3] transition-all cursor-pointer whitespace-nowrap"
               >
-                {copied ? <Check className="w-4 h-4 mr-2 text-emerald-400" /> : <Copy className="w-4 h-4 mr-2 text-[#8B8B92]" />}
-                {copied ? "Link Copiado!" : "Copiar Link"}
+                {copied ? <Check className="w-5 h-5 shrink-0 text-emerald-400" /> : <Copy className="w-5 h-5 shrink-0 text-[#8B8B92]" />}
+                <span>{copied ? "Link Copiado!" : "Copiar Link"}</span>
               </button>
               <a 
                 href={`${window.location.origin}/${getCustomSlug()}`} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-full sm:w-[180px] h-10 px-3.5 rounded-[6px] font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] hover:border-[#3F3F46] bg-[#0B0B0C] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer"
+                className="w-full sm:w-auto sm:min-w-[180px] h-11 px-5 rounded-[6px] font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 border border-[#26262A] hover:border-[#3F3F46] bg-[#0B0B0C] hover:bg-[#1B1B1E] active:scale-[0.96] text-[#F2F2F3] transition-all cursor-pointer whitespace-nowrap"
               >
-                <Globe className="w-4 h-4 mr-2 text-[#8B8B92]" /> Ver Tela Inteira
+                <Globe className="w-5 h-5 shrink-0 text-[#8B8B92]" />
+                <span>Ver Tela Inteira</span>
               </a>
               <button 
+                type="button"
                 onClick={() => setPreviewOpen(true)} 
-                className="w-full sm:w-[180px] h-10 px-3.5 rounded-[6px] font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#26262A] hover:border-[#3F3F46] bg-[#0B0B0C] hover:bg-[#1B1B1E] active:scale-95 text-[#F2F2F3] transition-all cursor-pointer"
+                className="w-full sm:w-auto sm:min-w-[180px] h-11 px-5 rounded-[6px] font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 border border-[#26262A] hover:border-[#3F3F46] bg-[#0B0B0C] hover:bg-[#1B1B1E] active:scale-[0.96] text-[#F2F2F3] transition-all cursor-pointer whitespace-nowrap"
               >
-                <Eye className="w-4 h-4 mr-2 text-[#8B8B92]" /> Visualizar Prévia
+                <Eye className="w-5 h-5 shrink-0 text-[#8B8B92]" />
+                <span>Visualizar Prévia</span>
               </button>
               <button 
+                type="button"
                 onClick={handleSave} 
                 disabled={saving}
-                className="w-full sm:w-[190px] h-10 px-4 rounded-[6px] font-black text-xs uppercase tracking-wider flex items-center justify-center border border-[#F65A1A] bg-[#F65A1A] hover:bg-[#FF7A38] active:scale-95 text-[#0B0B0C] transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto sm:min-w-[196px] h-11 px-5 rounded-[6px] font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 border border-[var(--gm-btn-border,var(--gm-primary,#F65A1A))] bg-[var(--gm-btn-bg,var(--gm-primary,#F65A1A))] hover:brightness-110 active:scale-[0.96] text-[var(--gm-primary-foreground,#0B0B0C)] transition-all disabled:opacity-50 cursor-pointer whitespace-nowrap"
               >
-                <Save className="w-4 h-4 mr-2 text-[#0B0B0C]" /> {saving ? "Salvando..." : "Salvar Alterações"}
+                <Save className="w-5 h-5 shrink-0 text-current" />
+                <span>{saving ? "Salvando..." : "Salvar Alterações"}</span>
               </button>
             </div>
 
@@ -1824,7 +1849,7 @@ export default function Bio() {
                 </span>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 items-stretch">
                 {/* 1. Informações Básicas */}
                 <button
                   type="button"
@@ -1836,15 +1861,15 @@ export default function Bio() {
                   {openSections.basic && (
                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
-                  <span className="flex items-center gap-3">
-                    <Info className={`w-4 h-4 transition-colors duration-150 ${openSections.basic ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
-                    INFORMAÇÕES BÁSICAS
+                  <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <Info className={`w-4 h-4 shrink-0 transition-colors duration-150 ${openSections.basic ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
+                    <span className="truncate">INFORMAÇÕES BÁSICAS</span>
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {openSections.basic && (
                       <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.basic ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${openSections.basic ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
@@ -1859,15 +1884,15 @@ export default function Bio() {
                   {openSections.appearance && (
                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
-                  <span className="flex items-center gap-3">
-                    <Eye className={`w-4 h-4 transition-colors duration-150 ${openSections.appearance ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
-                    APARÊNCIA DO SITE
+                  <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <Eye className={`w-4 h-4 shrink-0 transition-colors duration-150 ${openSections.appearance ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
+                    <span className="truncate">APARÊNCIA DO SITE</span>
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {openSections.appearance && (
                       <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.appearance ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${openSections.appearance ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
@@ -1882,15 +1907,15 @@ export default function Bio() {
                   {openSections.contacts && (
                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
-                  <span className="flex items-center gap-3">
-                    <Phone className={`w-4 h-4 transition-colors duration-150 ${openSections.contacts ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
-                    CONTATOS E REDES
+                  <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <Phone className={`w-4 h-4 shrink-0 transition-colors duration-150 ${openSections.contacts ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
+                    <span className="truncate">CONTATOS E REDES</span>
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {openSections.contacts && (
                       <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.contacts ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${openSections.contacts ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
@@ -1905,15 +1930,15 @@ export default function Bio() {
                   {openSections.otherLinks && (
                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
-                  <span className="flex items-center gap-3">
-                    <LinkIcon className={`w-4 h-4 transition-colors duration-150 ${openSections.otherLinks ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
-                    OUTROS LINKS
+                  <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <LinkIcon className={`w-4 h-4 shrink-0 transition-colors duration-150 ${openSections.otherLinks ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
+                    <span className="truncate">OUTROS LINKS</span>
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {openSections.otherLinks && (
                       <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.otherLinks ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${openSections.otherLinks ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
@@ -1928,15 +1953,15 @@ export default function Bio() {
                   {openSections.catalog && (
                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
-                  <span className="flex items-center gap-3">
-                    <ShoppingBag className={`w-4 h-4 transition-colors duration-150 ${openSections.catalog ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
-                    CATÁLOGO DE PRODUTOS
+                  <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <ShoppingBag className={`w-4 h-4 shrink-0 transition-colors duration-150 ${openSections.catalog ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
+                    <span className="truncate">CATÁLOGO DE PRODUTOS</span>
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {openSections.catalog && (
                       <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.catalog ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${openSections.catalog ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
@@ -1951,15 +1976,15 @@ export default function Bio() {
                   {openSections.portfolio && (
                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
-                  <span className="flex items-center gap-3">
-                    <Layout className={`w-4 h-4 transition-colors duration-150 ${openSections.portfolio ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
-                    PORTFÓLIO
+                  <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <Layout className={`w-4 h-4 shrink-0 transition-colors duration-150 ${openSections.portfolio ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
+                    <span className="truncate">PORTFÓLIO</span>
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {openSections.portfolio && (
                       <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.portfolio ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${openSections.portfolio ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
@@ -1974,15 +1999,15 @@ export default function Bio() {
                   {openSections.payment && (
                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
-                  <span className="flex items-center gap-3">
-                    <CreditCard className={`w-4 h-4 transition-colors duration-150 ${openSections.payment ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
-                    DADOS DE PAGAMENTO (PIX)
+                  <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <CreditCard className={`w-4 h-4 shrink-0 transition-colors duration-150 ${openSections.payment ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
+                    <span className="truncate">DADOS DE PAGAMENTO (PIX)</span>
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {openSections.payment && (
                       <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.payment ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${openSections.payment ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
@@ -1997,15 +2022,15 @@ export default function Bio() {
                   {openSections.address && (
                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
-                  <span className="flex items-center gap-3">
-                    <MapPin className={`w-4 h-4 transition-colors duration-150 ${openSections.address ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
-                    ENDEREÇO E LOCALIZAÇÃO
+                  <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <MapPin className={`w-4 h-4 shrink-0 transition-colors duration-150 ${openSections.address ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
+                    <span className="truncate">ENDEREÇO E LOCALIZAÇÃO</span>
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {openSections.address && (
                       <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.address ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${openSections.address ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
 
@@ -2020,15 +2045,15 @@ export default function Bio() {
                   {openSections.contactSection && (
                     <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--primary-color)] rounded-[2px]" />
                   )}
-                  <span className="flex items-center gap-3">
-                    <Sparkles className={`w-4 h-4 transition-colors duration-150 ${openSections.contactSection ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
-                    CHAT CARDDIGITAL GM
+                  <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <Sparkles className={`w-4 h-4 shrink-0 transition-colors duration-150 ${openSections.contactSection ? 'text-white' : 'text-[var(--primary-color)] opacity-85'}`} />
+                    <span className="truncate">CHAT CARDDIGITAL GM</span>
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {openSections.contactSection && (
                       <span className="text-[11px] text-[var(--primary-color)] bg-[var(--primary-color)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--primary-color)]/25 uppercase tracking-wider font-bold">ATIVO</span>
                     )}
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openSections.contactSection ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
+                    <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${openSections.contactSection ? 'text-white rotate-180' : 'text-[#8B8B92] group-hover:text-[var(--primary-color)]'}`} />
                   </div>
                 </button>
               </div>
@@ -2146,7 +2171,7 @@ export default function Bio() {
                </div>
                <div>
                  <label className="gm-label">{basicInfoTab === "desktop" ? "Descrição (Desktop)" : "Descrição (Smartphone)"}</label>
-                 <div ref={editorRef} contentEditable onInput={handleEditorInput} onBlur={handleEditorInput} className={`gm-input bio-desc-editor min-h-[160px] !py-3 w-full transition-all duration-200 overflow-y-auto whitespace-pre-wrap outline-none border border-white/10 focus:border-[var(--primary-color)] rounded-xl resize-y overflow-auto ${
+                 <div ref={editorRef} contentEditable onInput={handleEditorInput} onBlur={handleEditorInput} className={`gm-input bio-desc-editor min-h-[160px] !py-3 w-full transition-all duration-200 overflow-y-auto whitespace-pre-wrap outline-none border border-[#26262A] focus:border-[var(--primary-color)] rounded-lg resize-y overflow-auto ${
                     (basicInfoTab === "desktop" ? bioConfig.description_align : (bioConfig.description_align_mobile || "center")) === "left" ? "text-left" : (basicInfoTab === "desktop" ? bioConfig.description_align : (bioConfig.description_align_mobile || "center")) === "right" ? "text-right" : "text-center"
                   } ${
                     (basicInfoTab === "desktop" ? bioConfig.description_bold : bioConfig.description_bold_mobile) ? "font-bold" : "font-medium"
@@ -2674,11 +2699,12 @@ export default function Bio() {
             <div className="animate-in fade-in slide-in-from-top-2 pt-2">
               <div className="flex justify-end mb-4">
                 <button 
+                  type="button"
                   onClick={addCustomLink}
-                  className="flex items-center text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] text-sm font-medium bg-[var(--primary-color-10)] px-3 py-1.5 rounded-[6px] border border-[var(--primary-color-20)] transition-colors hover:bg-[var(--primary-color-20)] cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] text-sm font-medium bg-[var(--primary-color-10)] px-3 py-1.5 rounded-[6px] border border-[var(--primary-color-20)] transition-colors hover:bg-[var(--primary-color-20)] cursor-pointer"
                 >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Adicionar
+                  <Plus className="w-4 h-4 shrink-0" />
+                  <span>Adicionar</span>
                 </button>
               </div>
             
@@ -3006,9 +3032,10 @@ export default function Bio() {
                                           const updatedOptions = [...currentOptions, { id: Date.now().toString(), quantity: '', price: '' }];
                                           updateCatalogItem(item.id, 'options', updatedOptions);
                                         }}
-                                        className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
+                                        className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center justify-center gap-1.5 font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-all cursor-pointer"
                                       >
-                                        <Plus className="w-3.5 h-3.5 mr-1" /> Add Opção
+                                        <Plus className="w-3.5 h-3.5 shrink-0" />
+                                        <span>Add Opção</span>
                                       </button>
                                     </div>
                                     
@@ -3085,9 +3112,10 @@ export default function Bio() {
                                           <button 
                                             type="button"
                                             onClick={() => addCatalogItemImageSlot(item.id)}
-                                            className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-semibold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-colors cursor-pointer"
+                                            className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center justify-center gap-1.5 font-semibold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-colors cursor-pointer"
                                           >
-                                            <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar Foto
+                                            <Plus className="w-3.5 h-3.5 shrink-0" />
+                                            <span>Adicionar Foto</span>
                                           </button>
                                         )}
                                       </div>
@@ -3240,9 +3268,10 @@ export default function Bio() {
                         <button
                           type="button"
                           onClick={addNewProductOption}
-                          className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-colors cursor-pointer"
+                          className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center justify-center gap-1.5 font-bold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-colors cursor-pointer"
                         >
-                          <Plus className="w-3.5 h-3.5 mr-1" /> Add Opção
+                          <Plus className="w-3.5 h-3.5 shrink-0" />
+                          <span>Add Opção</span>
                         </button>
                       </div>
                       
@@ -3306,9 +3335,10 @@ export default function Bio() {
                               <button 
                                 type="button"
                                 onClick={addNewProductImageSlot}
-                                className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center font-semibold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-colors cursor-pointer"
+                                className="text-xs text-[var(--primary-color)] hover:text-[var(--primary-color-hover)] flex items-center justify-center gap-1.5 font-semibold bg-[var(--primary-color-10)] hover:bg-[var(--primary-color-20)] px-2.5 py-1.5 rounded-[6px] transition-colors cursor-pointer"
                               >
-                                <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar Foto
+                                <Plus className="w-3.5 h-3.5 shrink-0" />
+                                <span>Adicionar Foto</span>
                               </button>
                             )}
                           </div>
@@ -3521,10 +3551,11 @@ export default function Bio() {
                         <input type="file" multiple accept="image/*" className="hidden" onChange={handleUploadMultiplePortfolioProjects} />
                       </label>
                       <button 
+                        type="button"
                         onClick={handleAddPortfolioCollection}
-                        className="gm-btn gm-btn-outline px-3 py-1.5 text-[11px] flex items-center justify-center cursor-pointer hover:bg-[var(--primary-color)] hover:text-white transition-colors border border-[#26262A] rounded-[6px] shadow-none"
+                        className="gm-btn gm-btn-outline px-3 py-1.5 text-[11px] flex items-center justify-center gap-1.5 cursor-pointer hover:bg-[var(--primary-color)] hover:text-white transition-colors border border-[#26262A] rounded-[6px] shadow-none"
                       >
-                        <Plus className="w-3.5 h-3.5 mr-1" />
+                        <Plus className="w-3.5 h-3.5 shrink-0" />
                         <span>Novo Portfólio</span>
                       </button>
                     </div>
@@ -4609,7 +4640,7 @@ export default function Bio() {
                     if (isDraggingRef.current) return;
                     setPreviewOpen(true);
                   }}
-                  className="w-12 h-12 bg-[var(--gm-primary)] hover:brightness-110 active:scale-95 text-white rounded-lg flex items-center justify-center shadow-lg transition-all duration-200 border border-[#26262A] cursor-pointer outline-none"
+                  className="w-12 h-12 bg-[var(--gm-primary)] hover:brightness-110 active:scale-95 text-white rounded-[6px] flex items-center justify-center shadow-lg transition-all duration-200 border border-[#26262A] cursor-pointer outline-none"
                   title="Visualizar Prévia"
                 >
                   <Eye className="w-5 h-5 text-white transition-transform duration-200" />
@@ -4643,44 +4674,53 @@ export default function Bio() {
             boxShadow: 'none'
           }}
         >
-          {/* Top Device Switcher & Exit Toolbar - Minimal floating header */}
-          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100001] bg-[#131315] border border-[#26262A] p-1 rounded-md flex items-center gap-1 shadow-xl pointer-events-auto">
-            <button
+          {/* Top Device Switcher & Exit Toolbar - Non-overlapping responsive header */}
+          <div className="fixed top-3 inset-x-3 sm:inset-x-5 z-[100001] flex flex-wrap items-center justify-center sm:justify-between gap-2 pointer-events-none">
+            <div className="hidden lg:block w-[155px]" aria-hidden="true" />
+            <div className="bg-[#131315] border border-[#26262A] p-1 rounded-[6px] flex items-center gap-1 shadow-xl pointer-events-auto max-w-full">
+              <button
+                type="button"
+                aria-pressed={previewMode === "smartphone"}
+                data-selected={previewMode === "smartphone"}
+                onClick={() => setPreviewMode("smartphone")}
+                className={`flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-[4px] text-xs font-bold transition-colors cursor-pointer tabular-nums whitespace-nowrap ${
+                  previewMode === "smartphone"
+                    ? "bg-[var(--primary-color)] text-white"
+                    : "text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]"
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="hidden sm:inline">SMARTPHONE (1080×1920)</span>
+                <span className="sm:hidden">MOBILE</span>
+              </button>
+              <button
+                type="button"
+                aria-pressed={previewMode === "pc"}
+                data-selected={previewMode === "pc"}
+                onClick={() => setPreviewMode("pc")}
+                className={`flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-[4px] text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+                  previewMode === "pc"
+                    ? "bg-[var(--primary-color)] text-white"
+                    : "text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]"
+                }`}
+              >
+                <Layout className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="hidden sm:inline">DESKTOP PC</span>
+                <span className="sm:hidden">PC</span>
+              </button>
+            </div>
+
+            {/* Exit Button */}
+            <button 
               type="button"
-              onClick={() => setPreviewMode("smartphone")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-[4px] text-xs font-bold transition-colors cursor-pointer tabular-nums ${
-                previewMode === "smartphone"
-                  ? "bg-[var(--primary-color)] text-white"
-                  : "text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]"
-              }`}
+              onClick={() => setPreviewOpen(false)}
+              className="bg-[#131315] hover:bg-red-600 text-white font-bold px-3.5 py-2 sm:px-4 sm:py-2 rounded-[6px] flex items-center justify-center gap-1.5 shadow-xl transition-colors duration-200 pointer-events-auto border border-[#26262A] cursor-pointer text-xs sm:text-sm whitespace-nowrap"
+              title="Voltar ao Editor"
             >
-              <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>SMARTPHONE (1080×1920)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setPreviewMode("pc")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-[4px] text-xs font-bold transition-colors cursor-pointer ${
-                previewMode === "pc"
-                  ? "bg-[var(--primary-color)] text-white"
-                  : "text-[#8B8B92] hover:text-white hover:bg-[#1B1B1E]"
-              }`}
-            >
-              <Layout className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>DESKTOP PC</span>
+              <X className="w-4 h-4 shrink-0" />
+              <span>Voltar ao Editor</span>
             </button>
           </div>
-
-          {/* Floating Exit Button */}
-          <button 
-            type="button"
-            onClick={() => setPreviewOpen(false)}
-            className="fixed top-3 right-3 sm:right-5 z-[100001] bg-[#131315] hover:bg-red-600 text-white font-bold px-3.5 py-2 sm:px-4 sm:py-2 rounded-[6px] flex items-center justify-center gap-1.5 shadow-xl transition-colors duration-200 pointer-events-auto border border-[#26262A] cursor-pointer text-xs sm:text-sm"
-            title="Voltar ao Editor"
-          >
-            <X className="w-4 h-4" />
-            <span>Voltar ao Editor</span>
-          </button>
 
           {/* 100% Full Screen Website Viewport - Centralizado e pegando as extremidades da tela na versão smartphone */}
           <div 

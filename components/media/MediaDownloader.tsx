@@ -1286,7 +1286,7 @@ export const MediaDownloader: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-[#26262A] pb-3.5">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-[4px] bg-[var(--gm-primary,#FE540B)]/15 border border-[var(--gm-primary,#FE540B)]/40 text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
-                  {sectionMeta[activeSection].icon}
+                  {renderSectionIcon(activeSection, false)}
                 </div>
                 <div>
                   <div className="text-xs sm:text-sm font-semibold text-white tracking-tight flex items-center gap-2 flex-wrap">

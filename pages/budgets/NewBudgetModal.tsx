@@ -1050,7 +1050,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             handleSaveQuickClient();
                           }
                         }}
-                        className="w-full bg-black/60 border border-white/15 focus:border-[var(--gm-primary)] rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                        className="w-full h-11 bg-[#131315] border border-[#26262A] focus:border-[var(--gm-primary)] rounded-[6px] pl-10 pr-3 text-sm text-white placeholder-slate-500 outline-none transition-all"
                       />
                     </div>
                   </div>
@@ -1073,7 +1073,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             handleSaveQuickClient();
                           }
                         }}
-                        className="w-full bg-black/60 border border-white/15 focus:border-[var(--gm-primary)] rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                        className="w-full h-11 bg-[#131315] border border-[#26262A] focus:border-[var(--gm-primary)] rounded-[6px] pl-10 pr-3 text-sm text-white placeholder-slate-500 outline-none transition-all"
                       />
                     </div>
                   </div>
@@ -1096,7 +1096,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                             handleSaveQuickClient();
                           }
                         }}
-                        className="w-full bg-black/60 border border-white/15 focus:border-[var(--gm-primary)] rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all"
+                        className="w-full h-11 bg-[#131315] border border-[#26262A] focus:border-[var(--gm-primary)] rounded-[6px] pl-10 pr-3 text-sm text-white placeholder-slate-500 outline-none transition-all"
                       />
                     </div>
                   </div>
@@ -1162,14 +1162,14 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   <button
                     type="button"
                     onClick={() => applyTemplate(kind)}
-                    className="px-4 py-2 rounded-xl font-bold text-xs bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/25 hover:bg-[var(--gm-primary)]/25 transition-all"
+                    className="h-10 px-4 rounded-[6px] font-bold text-xs bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/25 hover:bg-[var(--gm-primary)]/25 transition-all cursor-pointer"
                   >
                     Usar páginas predefinidas
                   </button>
                   <button
                     type="button"
                     onClick={handleAddItem}
-                    className="px-4 py-2 rounded-xl font-bold text-xs bg-black/20 text-slate-300 border border-white/10 hover:bg-white/5 transition-all inline-flex items-center gap-1.5"
+                    className="h-10 px-4 rounded-[6px] font-bold text-xs bg-[#1B1B1E] text-slate-300 border border-[#26262A] hover:bg-[#26262A] transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Plus size={14} />
                     <span>Adicionar item manual</span>
@@ -1456,7 +1456,7 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
                   );
                 })()}
 
-                <div className="mt-4 grid grid-cols-3 gap-4 items-end">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                   <div>
                     <label style={labelTop}>Desconto (R$)</label>
                     <div className="relative">

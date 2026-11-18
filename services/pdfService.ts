@@ -217,10 +217,16 @@ function wrapText(text: string, maxWidth: number, font: PDFFont, size: number) {
   return lines;
 }
 
-export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], settings: AppSettings) {
+export async function generateOrcamentoPdf(
+  orc: Orcamento,
+  itens: OrcItem[],
+  settings: AppSettings,
+  options?: { simpleMode?: boolean }
+) {
   try {
+    const simpleMode = Boolean(options?.simpleMode);
     const timbradoUrl = settings?.timbrado_url || "";
-    if (!timbradoUrl) {
+    if (!simpleMode && !timbradoUrl) {
       throw new Error(
         "Nenhum timbrado configurado. Vá em Configurações e envie o timbrado A4 (PNG/JPG)."
       );
@@ -230,7 +236,7 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
     const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
     const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
 
-    const bgImage = await embedBackgroundImage(doc, timbradoUrl);
+    const bgImage = !simpleMode && timbradoUrl ? await embedBackgroundImage(doc, timbradoUrl) : null;
 
     const W = 595.28;
     const H = 841.89;
@@ -238,11 +244,11 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
     const PX_W = 2480;
     const PX_H = 3508;
 
-    // Margens e limites ajustados para o timbrado (trabalhando no limite)
+    // Margens e limites ajustados para o timbrado ou PDF simples limpo
     const CONTENT_X_PX = 160;
-    const CONTENT_TOP_PX = 230; // Descido conforme solicitado (estava 140)
+    const CONTENT_TOP_PX = simpleMode ? 190 : 230;
     const CONTENT_W_PX = 2160;
-    const CONTENT_H_PX = 2260; // Ajustado para manter o limite inferior proporcional
+    const CONTENT_H_PX = simpleMode ? 2860 : 2260;
 
     const CONTENT_X = (CONTENT_X_PX / PX_W) * W;
     const CONTENT_W = (CONTENT_W_PX / PX_W) * W;
@@ -261,7 +267,42 @@ export async function generateOrcamentoPdf(orc: Orcamento, itens: OrcItem[], set
 
     const addPage = () => {
       const p = doc.addPage([W, H]);
-      p.drawImage(bgImage, { x: 0, y: 0, width: W, height: H });
+      if (bgImage) {
+        p.drawImage(bgImage, { x: 0, y: 0, width: W, height: H });
+      } else {
+        // Cabeçalho limpo de PDF simples (Plano Essencial)
+        p.drawRectangle({
+          x: 0,
+          y: H - 46,
+          width: W,
+          height: 46,
+          color: rgb(0.07, 0.07, 0.08),
+        });
+        p.drawRectangle({
+          x: 0,
+          y: H - 49,
+          width: W,
+          height: 3,
+          color: rgb(0.996, 0.329, 0.043),
+        });
+        const headerBrand = stripEmojis(settings?.company_name || "ORÇAMENTO SIMPLES").toUpperCase();
+        p.drawText(headerBrand, {
+          x: CONTENT_X,
+          y: H - 29,
+          size: 12,
+          font: fontBold,
+          color: rgb(1, 1, 1),
+        });
+        const badgeTxt = "PDF SIMPLES";
+        const badgeW = fontBold.widthOfTextAtSize(badgeTxt, 8);
+        p.drawText(badgeTxt, {
+          x: CONTENT_RIGHT_X - badgeW,
+          y: H - 27,
+          size: 8,
+          font: fontBold,
+          color: rgb(0.996, 0.329, 0.043),
+        });
+      }
       page = p;
       cursorY = CONTENT_TOP_Y;
     };

@@ -8,7 +8,7 @@ interface GoldCrownIconProps {
 
 /**
  * Ícone da Coroa em Planos:
- * - Dourada pura e brilhante (#FFD700)
+ * - Segue a cor dos demais ícones do menu (laranja por padrão via currentColor)
  * - Animação suave de pulsar levemente
  * - Sem esfumaçado, blur ou sombras atrás
  */
@@ -36,12 +36,12 @@ export default function GoldCrownIcon({ size = 20, className = "", style }: Gold
           overflow: "visible",
         }}
       >
-        {/* Corpo da Coroa em tom dourado puro */}
+        {/* Corpo da Coroa herdando currentColor */}
         <path
           d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"
-          fill="#FFD700"
-          fillOpacity="0.32"
-          stroke="#FFD700"
+          fill="currentColor"
+          fillOpacity="0.22"
+          stroke="currentColor"
           strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -50,15 +50,15 @@ export default function GoldCrownIcon({ size = 20, className = "", style }: Gold
         {/* Linha da base da coroa */}
         <path
           d="M5 20h14"
-          stroke="#FFD700"
+          stroke="currentColor"
           strokeWidth="2.4"
           strokeLinecap="round"
         />
 
-        {/* Joias luminosas nos ápices da coroa */}
-        <circle cx="12" cy="4" r="1.3" fill="#FFF9A6" stroke="#FFD700" strokeWidth="0.8" />
-        <circle cx="2" cy="4" r="1.1" fill="#FFF9A6" stroke="#FFD700" strokeWidth="0.8" />
-        <circle cx="22" cy="4" r="1.1" fill="#FFF9A6" stroke="#FFD700" strokeWidth="0.8" />
+        {/* Pontos nos ápices da coroa */}
+        <circle cx="12" cy="4" r="1.3" fill="currentColor" stroke="currentColor" strokeWidth="0.8" />
+        <circle cx="2" cy="4" r="1.1" fill="currentColor" stroke="currentColor" strokeWidth="0.8" />
+        <circle cx="22" cy="4" r="1.1" fill="currentColor" stroke="currentColor" strokeWidth="0.8" />
       </svg>
     </span>
   );

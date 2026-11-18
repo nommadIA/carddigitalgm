@@ -8,6 +8,7 @@ import { playNotificationSound } from "../../lib/audio";
 import { readSettingsLocal } from "../../lib/settings";
 import { triggerRealNotification } from "../../lib/realNotification";
 import { broadcastAppNotification } from "../../lib/syncHub";
+import { usePlanAccess } from "../../hooks/usePlanAccess";
 
 // Fast typing effect for premium notifications
 const TypewriterText = ({ text }: { text: string }) => {
@@ -40,9 +41,17 @@ const TypewriterText = ({ text }: { text: string }) => {
 
 const AlarmToast = () => {
   const navigate = useNavigate();
+  const { canAccess } = usePlanAccess();
+  const alarmsAllowed = canAccess("alarms").allowed;
+  const realtimeAllowed = canAccess("realtime_alarms").allowed;
   const [alarms, setAlarms] = useState<BudgetAlarm[]>([]);
 
   useEffect(() => {
+    if (!alarmsAllowed) {
+      setAlarms([]);
+      return;
+    }
+
     // Solicita permissão para notifications do navegador
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
@@ -69,19 +78,21 @@ const AlarmToast = () => {
           inAppToast: false, // O AlarmToast já renderiza o card visual interno
         }).catch(() => {});
 
-        // Transmissão simultânea de alarme para Smartphone & Desktop
-        try {
-          const tid = typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null;
-          broadcastAppNotification(tid, {
-            id: `alarm_${alarm.id}`,
-            title: `⏰ Alarme (${alarm.time}): ${alarm.clientName}`,
-            message: text,
-            type: "alarm",
-            icon: userLogo,
-            url: alarm.type === "EXPENSE" ? "/expenses" : alarm.type === "NOTE" ? "/notes" : "/budgets",
-            skipInAppToast: true,
-          });
-        } catch (e) {}
+        // Transmissão simultânea de alarme para Smartphone & Desktop (Plano Profissional)
+        if (realtimeAllowed) {
+          try {
+            const tid = typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null;
+            broadcastAppNotification(tid, {
+              id: `alarm_${alarm.id}`,
+              title: `⏰ Alarme (${alarm.time}): ${alarm.clientName}`,
+              message: text,
+              type: "alarm",
+              icon: userLogo,
+              url: alarm.type === "EXPENSE" ? "/expenses" : alarm.type === "NOTE" ? "/notes" : "/budgets",
+              skipInAppToast: true,
+            });
+          } catch (e) {}
+        }
 
         // Marca como disparado (no storage e IndexedDB)
         markAlarmAsTriggered(alarm.id);
@@ -111,7 +122,7 @@ const AlarmToast = () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [alarmsAllowed, realtimeAllowed]);
 
   const dismiss = (id: string) => {
     setAlarms(prev => prev.filter(a => a.id !== id));
@@ -127,7 +138,7 @@ const AlarmToast = () => {
     return `Olá! O orçamento "${alarm.clientName}" está em andamento. Lembre-se de concluir antes do prazo estipulado de ${alarm.deliveryDays || 5} dias.`;
   };
 
-  if (alarms.length === 0) return null;
+  if (!alarmsAllowed || alarms.length === 0) return null;
 
   const settings = readSettingsLocal();
   const companyName = settings?.company_name || "GM Edificação";

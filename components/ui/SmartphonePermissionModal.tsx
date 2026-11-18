@@ -20,6 +20,8 @@ import { useAuth } from "../../store/AuthContext";
 import { forceSavePushToken } from "../../services/pushFCM";
 import { playNotificationSound } from "../../lib/audio";
 import { pushToast } from "../../store/toast";
+import { usePlanAccess } from "../../hooks/usePlanAccess";
+import PlanLockedNotice from "../plans/PlanLockedNotice";
 
 export interface SmartphonePermissionModalProps {
   forceOpen?: boolean;
@@ -85,6 +87,8 @@ const PERMISSION_CONFIG: PermissionItem[] = [
 
 export default function SmartphonePermissionModal({ forceOpen = false, onClose }: SmartphonePermissionModalProps) {
   const { tenantId, user } = useAuth();
+  const { subscription, canAccess, isExpired } = usePlanAccess();
+  const realtimeAccess = canAccess("realtime_alarms");
   const [isOpen, setIsOpen] = useState(false);
   const [isSequenceRunning, setIsSequenceRunning] = useState(false);
   const [activeStepId, setActiveStepId] = useState<PermissionId | null>(null);
@@ -126,18 +130,19 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
       return;
     }
 
-    // Disparo imediato se PWA for instalado
+    // Disparo imediato se PWA for instalado (apenas planos com push/sync)
     const handleAppInstalled = () => {
+      if (!realtimeAccess.allowed) return;
       setIsOpen(true);
       startSequentialGrant();
     };
     window.addEventListener("appinstalled", handleAppInstalled);
 
-    // Prompt automático caso o usuário nunca tenha visto
+    // Prompt automático apenas quando a assinatura possui Push em Tempo Real
     const hasPrompted = localStorage.getItem("gm_device_permissions_prompted_v3");
     const notifPermission = typeof window !== "undefined" && "Notification" in window ? Notification.permission : "granted";
 
-    if (!hasPrompted && notifPermission !== "granted") {
+    if (realtimeAccess.allowed && !hasPrompted && notifPermission !== "granted") {
       const timer = setTimeout(() => {
         setIsOpen(true);
       }, 1500);
@@ -152,7 +157,7 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
       window.removeEventListener("appinstalled", handleAppInstalled);
       window.removeEventListener("open-smartphone-permissions", handleGlobalOpen);
     };
-  }, [forceOpen]);
+  }, [forceOpen, realtimeAccess.allowed]);
 
   // Função auxiliar de áudio estilo Apple
   const playAppleChime = (type: "pop" | "complete" = "pop") => {
@@ -337,6 +342,21 @@ export default function SmartphonePermissionModal({ forceOpen = false, onClose }
   const progressPercent = (grantedCount / 4) * 100;
 
   if (!isOpen) return null;
+
+  if (!realtimeAccess.allowed) {
+    return (
+      <PlanLockedNotice
+        variant="modal"
+        isOpen={isOpen}
+        onClose={handleDismiss}
+        title="Push Remoto & Sincronização em Tempo Real (VIP)"
+        reason={realtimeAccess.reason}
+        requiredPlan={realtimeAccess.requiredPlan || "avancado"}
+        currentPlanName={subscription.planName}
+        isExpired={isExpired}
+      />
+    );
+  }
 
   return (
     <AnimatePresence>

@@ -10,6 +10,7 @@ import { pushToast } from "../store/toast";
 import { FileText, Save, History, X, Download, Trash2, ChevronLeft, ChevronRight, Calendar, Share2, Copy, Mail, TrendingUp, TrendingDown, Wallet, BarChart3 } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { SectionDivider } from "../components/ui/SectionDivider";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 import { useAuth } from "../store/AuthContext";
 import { generateFinanceReportPdf } from "../services/pdfService";
 import { fetchSettingsSupabase } from "../lib/settings";
@@ -20,6 +21,9 @@ import {
   deleteFinanceReportForever,
   FinanceReport,
 } from "../lib/financeReports";
+import { usePlanAccess } from "../hooks/usePlanAccess";
+import PlanLockedNotice from "../components/plans/PlanLockedNotice";
+import { PlanId } from "../lib/subscriptionPlans";
 
 const cardBase =
   "relative rounded-xl border border-[#26262A] bg-[#131315] text-[#F2F2F3] shadow-sm overflow-hidden transition-all";
@@ -70,6 +74,14 @@ function toISODate(d: Date) {
 
 export default function Financial() {
   const { tenantId } = useAuth();
+  const { subscription, canAccess, isExpired } = usePlanAccess();
+  const financialAccess = canAccess("financial");
+  const financeExportAccess = canAccess("finance_export");
+  const [lockModal, setLockModal] = useState<{
+    title: string;
+    reason?: string;
+    requiredPlan?: PlanId;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<DayRow[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -266,6 +278,14 @@ export default function Financial() {
 
   // ✅ FIX: passar "settings" (não brand), que é o que o pdfService realmente usa
   const handlePDF = async (customTransactions?: any[], customTitle?: string) => {
+    if (!financeExportAccess.allowed) {
+      setLockModal({
+        title: "Exportação DRE em PDF Bloqueada",
+        reason: financeExportAccess.reason,
+        requiredPlan: financeExportAccess.requiredPlan || "intermediario",
+      });
+      return;
+    }
     try {
       const settings = await fetchSettingsSupabase(tenantId);
       if (!settings) {
@@ -303,6 +323,14 @@ export default function Financial() {
   };
 
   const handleSave = async () => {
+    if (!financeExportAccess.allowed) {
+      setLockModal({
+        title: "Fechamento e Histórico Mensal Bloqueados",
+        reason: financeExportAccess.reason,
+        requiredPlan: financeExportAccess.requiredPlan || "intermediario",
+      });
+      return;
+    }
     try {
       const monthName = selectedDate.toLocaleString("pt-BR", { month: "long" }).toUpperCase();
       const year = selectedDate.getFullYear();
@@ -378,61 +406,85 @@ export default function Financial() {
     }
   };
 
+  if (!financialAccess.allowed) {
+    return (
+      <Page title="Relatórios Financeiros">
+        <PlanLockedNotice
+          variant="page"
+          title="Relatórios Financeiros & DRE Bloqueados"
+          reason={financialAccess.reason}
+          requiredPlan={financialAccess.requiredPlan || "intermediario"}
+          currentPlanName={subscription.planName}
+          isExpired={isExpired}
+        />
+      </Page>
+    );
+  }
+
   return (
     <Page
       title="Relatórios Financeiros"
       actions={
-        <div className="flex flex-col xl:flex-row gap-3 w-full items-stretch xl:items-center mt-4">
-          <div className="flex items-center rounded-md p-1 w-full xl:w-auto justify-between xl:justify-start h-[40px] border border-[#26262A] bg-[#131315]">
+        <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto items-stretch sm:items-center">
+          <div className="flex items-center rounded-[6px] p-1 w-full sm:w-auto justify-between sm:justify-start h-10 border border-[#26262A] bg-[#131315]">
             <button 
+              type="button"
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
-              className="p-1.5 hover:bg-[#1B1B1E] rounded-md transition-colors text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center cursor-pointer"
+              className="w-8 h-8 hover:bg-[#1B1B1E] rounded-[4px] transition-colors text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center cursor-pointer shrink-0"
+              title="Mês anterior"
             >
               <ChevronLeft size={16} />
             </button>
-            <div className="px-3 flex items-center gap-2 font-bold text-xs uppercase tracking-wider min-w-[140px] justify-center text-[#F2F2F3]">
-              <Calendar size={14} className="text-[var(--gm-primary,#FE540B)]" />
-              <span className="capitalize">{selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
+            <div className="px-3 flex items-center gap-2 font-bold text-xs uppercase tracking-wider min-w-[136px] justify-center text-[#F2F2F3]">
+              <Calendar size={14} className="text-[var(--gm-primary,#FE540B)] shrink-0" />
+              <span className="capitalize truncate">{selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" })}</span>
             </div>
             <button 
+              type="button"
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
-              className="p-1.5 hover:bg-[#1B1B1E] rounded-md transition-colors text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center cursor-pointer"
+              className="w-8 h-8 hover:bg-[#1B1B1E] rounded-[4px] transition-colors text-[#8B8B92] hover:text-[#F2F2F3] flex items-center justify-center cursor-pointer shrink-0"
+              title="Próximo mês"
             >
               <ChevronRight size={16} />
             </button>
             <button
+              type="button"
               onClick={() => setSelectedDate(new Date())}
-              className="ml-1 px-2.5 py-1 text-[11px] uppercase font-black bg-[#1B1B1E] hover:bg-[var(--gm-primary,#FE540B)] text-[#8B8B92] hover:text-[var(--gm-primary-foreground,#0B0B0C)] border border-[#26262A] rounded-[4px] transition-all h-[26px] flex items-center justify-center cursor-pointer shadow-none"
+              className="ml-1 px-2.5 text-[11px] uppercase font-black bg-[#1B1B1E] hover:bg-[var(--gm-primary,#FE540B)] text-[#8B8B92] hover:text-[var(--gm-primary-foreground,#0B0B0C)] border border-[#26262A] rounded-[4px] transition-all h-8 flex items-center justify-center cursor-pointer shadow-none shrink-0"
             >
               Hoje
             </button>
           </div>
           
-          <div className="flex flex-row gap-2 w-full xl:w-auto justify-between xl:justify-start">
+          <div className="grid grid-cols-4 sm:flex flex-row gap-2 w-full sm:w-auto">
             <button
+              type="button"
               onClick={() => handleShare(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }), transactions)}
-              className="forge-btn forge-btn--secondary !w-[38px] !h-[38px] !min-w-[38px] !p-0 !rounded-[4px] cursor-pointer"
+              className="forge-btn forge-btn--secondary w-full sm:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer"
               title="Compartilhar Relatório"
             >
               <Share2 size={15} />
             </button>
             <button 
+              type="button"
               onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} 
-              className="forge-btn forge-btn--secondary !w-[38px] !h-[38px] !min-w-[38px] !p-0 !rounded-[4px] cursor-pointer" 
+              className="forge-btn forge-btn--secondary w-full sm:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer" 
               title="Gerar PDF"
             >
               <FileText size={15} />
             </button>
             <button 
+              type="button"
               onClick={handleSave} 
-              className="forge-btn forge-btn--primary !w-[38px] !h-[38px] !min-w-[38px] !p-0 !rounded-[4px] cursor-pointer" 
+              className="forge-btn forge-btn--primary w-full sm:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer" 
               title="Fechar e Salvar Mês"
             >
               <Save size={15} />
             </button>
             <button 
+              type="button"
               onClick={openHistory} 
-              className="forge-btn forge-btn--secondary !w-[38px] !h-[38px] !min-w-[38px] !p-0 !rounded-[4px] cursor-pointer" 
+              className="forge-btn forge-btn--secondary w-full sm:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer" 
               title="Histórico"
             >
               <History size={15} />
@@ -448,52 +500,52 @@ export default function Financial() {
           <div className="mb-2">
             <SectionDivider label="Resumo do mês" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-emerald-500/40`}>
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                     Entradas
                   </span>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1.5 tracking-tight">
-                    {CURRENCY_FORMATTER.format(resumo.entradas)}
+                  <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1.5 tracking-tight tabular-nums">
+                    <AnimatedNumber value={resumo.entradas} currency decimals={2} replayKey={`${selectedDate.getFullYear()}-${selectedDate.getMonth()}`} />
                   </div>
                 </div>
-                <div className="w-11 h-11 rounded-xl barra border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-none">
+                <div className="w-11 h-11 rounded-[6px] barra border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-none">
                   <TrendingUp size={20} />
                 </div>
               </div>
             </div>
 
             <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-red-500/40`}>
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                     Saídas
                   </span>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-red-400 mt-1.5 tracking-tight">
-                    {CURRENCY_FORMATTER.format(resumo.saidas)}
+                  <div className="text-2xl sm:text-3xl font-extrabold text-red-400 mt-1.5 tracking-tight tabular-nums">
+                    <AnimatedNumber value={resumo.saidas} currency decimals={2} replayKey={`${selectedDate.getFullYear()}-${selectedDate.getMonth()}`} />
                   </div>
                 </div>
-                <div className="w-11 h-11 rounded-xl barra border border-red-500/25 text-red-400 flex items-center justify-center shrink-0 shadow-none">
+                <div className="w-11 h-11 rounded-[6px] barra border border-red-500/25 text-red-400 flex items-center justify-center shrink-0 shadow-none">
                   <TrendingDown size={20} />
                 </div>
               </div>
             </div>
 
-            <div className={`p-5 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
-              <div className="flex items-start justify-between">
-                <div>
+            <div className={`p-5 md:col-span-2 lg:col-span-1 flex flex-col justify-between space-y-3 group ${cardBase} hover:border-[color:var(--gm-primary)]/40`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                     Saldo Acumulado
                   </span>
-                  <div className={`text-2xl sm:text-3xl font-extrabold mt-1.5 tracking-tight ${
+                  <div className={`text-2xl sm:text-3xl font-extrabold mt-1.5 tracking-tight tabular-nums ${
                     resumo.acumulado >= 0 ? "text-[color:var(--gm-primary)]" : "text-red-400"
                   }`}>
-                    {CURRENCY_FORMATTER.format(resumo.acumulado)}
+                    <AnimatedNumber value={resumo.acumulado} currency decimals={2} replayKey={`${selectedDate.getFullYear()}-${selectedDate.getMonth()}`} />
                   </div>
                 </div>
-                <div className={`w-11 h-11 rounded-xl barra border ${
+                <div className={`w-11 h-11 rounded-[6px] barra border ${
                   resumo.acumulado >= 0 ? "border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)]" : "border-red-500/25 text-red-400"
                 } flex items-center justify-center shrink-0 shadow-none`}>
                   <Wallet size={20} />
@@ -512,7 +564,7 @@ export default function Financial() {
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Fluxo Diário</span>
                   <h3 className="text-base font-bold text-white mt-1">Entradas x Saídas</h3>
                 </div>
-                <div className="w-8 h-8 rounded-lg barra border border-white/15 text-slate-400 flex items-center justify-center shrink-0 shadow-none">
+                <div className="w-8 h-8 rounded-[6px] barra border border-white/15 text-slate-400 flex items-center justify-center shrink-0 shadow-none">
                   <BarChart3 size={16} />
                 </div>
               </div>
@@ -549,7 +601,7 @@ export default function Financial() {
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Evolução</span>
                   <h3 className="text-base font-bold text-white mt-1">Saldo Acumulado</h3>
                 </div>
-                <div className="w-8 h-8 rounded-lg barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
+                <div className="w-8 h-8 rounded-[6px] barra border border-[color:var(--gm-primary)]/25 text-[color:var(--gm-primary)] flex items-center justify-center shrink-0 shadow-none">
                   <TrendingUp size={16} />
                 </div>
               </div>
@@ -600,27 +652,27 @@ export default function Financial() {
                     <div className="text-center p-8 opacity-50">Sem movimentações no período.</div>
                   ) : (
                     <div className="text-sm">
-                      <div className="grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/10 font-bold text-xs text-slate-400 uppercase tracking-wider barra bg-transparent">
+                      <div className="grid grid-cols-[auto_1fr_auto] gap-3 sm:gap-4 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 font-bold text-xs text-slate-400 uppercase tracking-wider barra bg-transparent">
                         <div>Data</div>
                         <div>Descrição</div>
                         <div className="text-right">Valor</div>
                       </div>
-                      <div className="pb-8">
+                      <div className="pb-6">
                         {/* RECEITAS */}
                         {transactions.filter(t => t.type === "receita").length > 0 && (
                           <>
-                            <div className="px-6 py-2.5 flex items-center gap-2 border-y border-white/10 bg-emerald-500/10 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                            <div className="px-4 sm:px-6 py-2.5 flex items-center gap-2 border-y border-white/10 bg-emerald-500/10 text-emerald-400 font-bold text-xs uppercase tracking-wider">
                               <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
                               Ganhos / Receitas
                             </div>
                             {transactions.filter(t => t.type === "receita").map((t) => (
                               <div
                                 key={t.id}
-                                className="grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/[0.04] transition-colors items-center"
+                                className="grid grid-cols-[auto_1fr_auto] gap-3 sm:gap-4 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/5 hover:bg-white/[0.04] transition-colors items-center"
                               >
                                 <div className="text-slate-400 font-mono text-xs tabular-nums">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
-                                <div className="font-medium text-slate-100">{t.desc}</div>
-                                <div className="text-right font-bold text-emerald-400 tabular-nums">
+                                <div className="font-medium text-slate-100 min-w-0 truncate">{t.desc}</div>
+                                <div className="text-right font-bold text-emerald-400 tabular-nums whitespace-nowrap">
                                   + {CURRENCY_FORMATTER.format(t.amount)}
                                 </div>
                               </div>
@@ -631,18 +683,18 @@ export default function Financial() {
                         {/* DESPESAS */}
                         {transactions.filter(t => t.type === "despesa").length > 0 && (
                           <>
-                            <div className="px-6 py-2.5 flex items-center gap-2 border-y border-white/10 bg-red-500/10 text-red-400 font-bold text-xs uppercase tracking-wider mt-4">
+                            <div className="px-4 sm:px-6 py-2.5 flex items-center gap-2 border-y border-white/10 bg-red-500/10 text-red-400 font-bold text-xs uppercase tracking-wider mt-4">
                               <span className="w-2 h-2 rounded-full bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.8)]" />
                               Despesas / Saídas
                             </div>
                             {transactions.filter(t => t.type === "despesa").map((t) => (
                               <div
                                 key={t.id}
-                                className="grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/[0.04] transition-colors items-center"
+                                className="grid grid-cols-[auto_1fr_auto] gap-3 sm:gap-4 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/5 hover:bg-white/[0.04] transition-colors items-center"
                               >
                                 <div className="text-slate-400 font-mono text-xs tabular-nums">{new Date(t.date).toLocaleDateString("pt-BR")}</div>
-                                <div className="font-medium text-slate-100">{t.desc}</div>
-                                <div className="text-right font-bold text-red-400 tabular-nums">
+                                <div className="font-medium text-slate-100 min-w-0 truncate">{t.desc}</div>
+                                <div className="text-right font-bold text-red-400 tabular-nums whitespace-nowrap">
                                   - {CURRENCY_FORMATTER.format(t.amount)}
                                 </div>
                               </div>
@@ -655,25 +707,25 @@ export default function Financial() {
                 </div>
 
                 {/* ✅ Totais detalhados */}
-                <div className="mt-4 pt-4 border-t border-white/10 px-6 pb-6 barra">
+                <div className="mt-4 pt-4 border-t border-white/10 px-4 sm:px-6 pb-6 barra">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between gap-4">
                         <span className="font-bold text-slate-400 text-sm">Total de Ganhos:</span>
-                        <span className="text-base font-extrabold text-emerald-400">
+                        <span className="text-base font-extrabold text-emerald-400 tabular-nums">
                           {CURRENCY_FORMATTER.format(resumo.entradas)}
                         </span>
                       </div>
 
                       <div className="flex items-center justify-between gap-4">
                         <span className="font-bold text-slate-400 text-sm">Total de Despesas:</span>
-                        <span className="text-base font-extrabold text-red-400">
+                        <span className="text-base font-extrabold text-red-400 tabular-nums">
                           {CURRENCY_FORMATTER.format(resumo.saidas)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4 sm:min-w-[280px] barra p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                    <div className="flex items-center justify-between gap-4 sm:min-w-[280px] barra p-3.5 rounded-lg border border-white/10 bg-white/[0.02]">
                       <span className="font-bold text-slate-300 text-sm">Total Líquido:</span>
                       <span className={`text-xl font-extrabold ${resumo.acumulado >= 0 ? "text-[var(--gm-primary)]" : "text-red-400"}`}>
                         {CURRENCY_FORMATTER.format(resumo.acumulado)}
@@ -780,7 +832,7 @@ export default function Financial() {
                   openWhatsapp("", shareData.message);
                   setShareData(null);
                 }}
-                className={`w-full p-3.5 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-emerald-500/50`}
+                className={`w-full p-3.5 rounded-lg flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-emerald-500/50`}
               >
                 <div className="shrink-0">
                   <WhatsAppIcon size={22} className="text-emerald-400" />
@@ -796,7 +848,7 @@ export default function Financial() {
                   window.open(`mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.message)}`, "_blank");
                   setShareData(null);
                 }}
-                className={`w-full p-3.5 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-[var(--gm-primary)]/50`}
+                className={`w-full p-3.5 rounded-lg flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-[var(--gm-primary)]/50`}
               >
                 <div className="shrink-0">
                   <Mail size={22} className="text-[var(--gm-primary)]" />
@@ -813,7 +865,7 @@ export default function Financial() {
                   pushToast({ type: "success", title: "Copiado", message: "Texto copiado para a área de transferência!" });
                   setShareData(null);
                 }}
-                className={`w-full p-3.5 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-white/30`}
+                className={`w-full p-3.5 rounded-lg flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-white/30`}
               >
                 <div className="shrink-0">
                   <Copy size={22} className="text-slate-300" />
@@ -837,7 +889,7 @@ export default function Financial() {
                       console.warn("Share failed", e);
                     }
                   }}
-                  className={`w-full p-3.5 rounded-xl flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-[var(--gm-primary)]/50`}
+                  className={`w-full p-3.5 rounded-lg flex items-center gap-3 transition-all text-left cursor-pointer ${cardBase} hover:border-[var(--gm-primary)]/50`}
                 >
                   <div className="shrink-0">
                     <Share2 size={22} className="text-[var(--gm-primary)]" />
@@ -852,6 +904,17 @@ export default function Financial() {
           </div>
         </div>
       )}
+
+      <PlanLockedNotice
+        variant="modal"
+        isOpen={Boolean(lockModal)}
+        onClose={() => setLockModal(null)}
+        title={lockModal?.title || "Recurso Bloqueado no Plano Atual"}
+        reason={lockModal?.reason}
+        requiredPlan={lockModal?.requiredPlan || "intermediario"}
+        currentPlanName={subscription.planName}
+        isExpired={isExpired}
+      />
     </Page>
   );
 }

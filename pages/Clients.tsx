@@ -13,9 +13,14 @@ import { useAuth } from "../store/AuthContext";
 import { openWhatsapp } from "../services/whatsApp";
 import ExpandedClientRow from "../components/clients/ExpandedClientRow";
 import { SectionDivider } from "../components/ui/SectionDivider";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LabelList, Cell } from "recharts";
 import SafeResponsive from "../components/ui/SafeResponsive";
 import { ForgeSpecCard } from "../components/ui/ForgeSpecCard";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
+import { Lock } from "lucide-react";
+import { usePlanAccess } from "../hooks/usePlanAccess";
+import PlanLockedNotice from "../components/plans/PlanLockedNotice";
+import { PlanId } from "../lib/subscriptionPlans";
 
 const cardBase =
   "relative rounded-lg transition-all bg-[#131315] border border-[#26262A] hover:border-[#3F3F46] overflow-hidden";
@@ -133,8 +138,8 @@ function VirtualizedClientList({
     <div className={`overflow-hidden ${cardBase}`}>
       <div className="overflow-x-auto">
         <div className="text-sm min-w-full">
-          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-4 border-b border-[#26262A] font-bold text-xs text-[#8B8B92] uppercase tracking-wider bg-[#0B0B0C]">
-            <div>Avatar</div>
+          <div className="hidden sm:grid grid-cols-[auto_1fr_auto] gap-4 px-6 py-3.5 border-b border-[#26262A] font-bold text-xs text-[#8B8B92] uppercase tracking-wider bg-[#0B0B0C]">
+            <div className="pl-10">Avatar</div>
             <div>Cliente</div>
             <div className="text-right">Ações</div>
           </div>
@@ -144,26 +149,33 @@ function VirtualizedClientList({
               const wppDigits = onlyDigits(c.whatsapp || c.phone || "");
               const prettyWpp = fmtPhoneBR(c.whatsapp || c.phone || "");
               const hasWpp = wppDigits.length >= 10;
+              const isExpanded = expandedRows.has(c.id);
 
               return (
                 <div
                   key={c.id}
                   className="hover:bg-white/[0.04] transition-colors"
                 >
-                  <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 px-6 py-4 sm:items-center">
+                  <div className="flex flex-col sm:grid sm:grid-cols-[auto_1fr_auto] gap-2.5 sm:gap-4 px-4 sm:px-6 py-4 sm:items-center">
                     <div className="flex justify-between sm:contents">
                       <div className="flex items-center gap-3">
-                        {/* SETA DE EXPANSÃO: QUADRADO LARANJA (IDÊNTICO AO CARD DE ORÇAMENTOS RECENTES NO DASHBOARD) */}
+                        {/* SETA DE EXPANSÃO: QUADRADO LARANJA COM SETA PARA BAIXO */}
                         <button
                           type="button"
+                          aria-expanded={isExpanded}
+                          data-selected={isExpanded}
                           onClick={() => toggleRow(c.id)}
-                          className="w-7 h-7 min-w-[28px] min-h-[28px] rounded-[4px] bg-[var(--gm-primary,#FE540B)] text-[#0b0b0c] flex items-center justify-center shadow-sm cursor-pointer transition-transform duration-200 hover:brightness-110 active:scale-95 shrink-0"
-                          title={expandedRows.has(c.id) ? "Recolher detalhes" : "Expandir detalhes"}
+                          className="w-7 h-7 !w-7 !h-7 min-w-[28px] min-h-[28px] !p-0 rounded-[4px] bg-[var(--gm-primary,#FE540B)] border border-[var(--gm-primary,#FE540B)] flex items-center justify-center shadow-sm cursor-pointer transition-all duration-150 hover:brightness-110 active:scale-95 shrink-0"
+                          title={isExpanded ? "Recolher detalhes" : "Expandir detalhes"}
                         >
                           <ChevronDown
-                            size={15}
-                            strokeWidth={3}
-                            className={`transition-transform duration-300 stroke-[#0b0b0c] ${expandedRows.has(c.id) ? "rotate-180" : ""}`}
+                            size={16}
+                            strokeWidth={2.75}
+                            className={`gm-btn-icon-ink transition-transform duration-200 ${
+                              isExpanded
+                                ? "rotate-180 text-white stroke-white"
+                                : "text-[#0B0B0C] stroke-[#0B0B0C]"
+                            }`}
                           />
                         </button>
                         <div style={avatarStyle}>
@@ -287,6 +299,7 @@ function VirtualizedClientList({
 
 export default function Clients() {
   const { tenantId } = useAuth();
+  const { subscription, checkQuota, isExpired } = usePlanAccess();
   const isMobile = useIsMobile(860);
 
   const [rows, setRows] = useState<ClientRow[]>([]);
@@ -298,6 +311,37 @@ export default function Clients() {
   const [openNewPage, setOpenNewPage] = useState(false);
   const [editPageId, setEditPageId] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [lockModal, setLockModal] = useState<{
+    title: string;
+    reason?: string;
+    requiredPlan?: PlanId;
+  } | null>(null);
+
+  const activeClientsCount = useMemo(
+    () => rows.filter((r) => !r.deleted_at).length,
+    [rows]
+  );
+  const clientQuota = checkQuota("clients", activeClientsCount);
+
+  const handleOpenNewClient = () => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove para cadastrar clientes.",
+        requiredPlan: "basico",
+      });
+      return;
+    }
+    if (!clientQuota.allowed) {
+      setLockModal({
+        title: "Limite de Clientes Atingido",
+        reason: clientQuota.reason,
+        requiredPlan: clientQuota.requiredPlan || "intermediario",
+      });
+      return;
+    }
+    setOpenNewPage(true);
+  };
 
   const toggleRow = (id: string) => {
     setExpandedRows(prev => {
@@ -384,12 +428,17 @@ export default function Clients() {
     const in30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const novos30d = active.filter((r) => r.created_at && new Date(r.created_at) >= in30d).length;
 
-    const monthLabels: { key: string; label: string }[] = [];
+    const monthLabels: { key: string; label: string; fullLabel: string }[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const rawShort = d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+      const label = rawShort.charAt(0).toUpperCase() + rawShort.slice(1);
+      const rawFull = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      const fullLabel = rawFull.charAt(0).toUpperCase() + rawFull.slice(1);
       monthLabels.push({
         key: `${d.getFullYear()}-${d.getMonth()}`,
-        label: d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
+        label,
+        fullLabel,
       });
     }
     const counts: Record<string, number> = {};
@@ -400,14 +449,42 @@ export default function Clients() {
       counts[key] = (counts[key] || 0) + 1;
     });
 
+    const chartData = monthLabels.map((m) => ({
+      name: m.label,
+      fullLabel: m.fullLabel,
+      value: counts[m.key] || 0,
+    }));
+    const totalSemestre = chartData.reduce((acc, item) => acc + item.value, 0);
+
     return {
       totalAtivos: active.length,
       novos30d,
-      chartData: monthLabels.map((m) => ({ name: m.label, value: counts[m.key] || 0 })),
+      chartData,
+      totalSemestre,
     };
   }, [rows]);
 
+  const requestEditClient = (id: string) => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para editar clientes.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
+    setEditPageId(id);
+  };
+
   async function softDelete(id: string) {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para excluir clientes.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
     try {
       await softDeleteApi("clients", id);
       setToast("Movido para lixeira");
@@ -418,6 +495,14 @@ export default function Clients() {
   }
 
   async function restore(id: string) {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para restaurar clientes.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
     try {
       await restoreApi("clients", id);
       load();
@@ -427,10 +512,27 @@ export default function Clients() {
   }
 
   const confirmHardDelete = (id: string) => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para excluir clientes.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
     setDeleteConfirmId(id);
   };
 
   async function hardDelete() {
+    if (isExpired) {
+      setDeleteConfirmId(null);
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para continuar.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
     if (!deleteConfirmId) return;
     try {
       await supabase.from("clients").delete().eq("id", deleteConfirmId);
@@ -472,7 +574,7 @@ export default function Clients() {
   const avatarStyle: React.CSSProperties = {
     height: isMobile ? 36 : 40,
     width: isMobile ? 36 : 40,
-    borderRadius: isMobile ? 12 : 14,
+    borderRadius: isMobile ? 6 : 8,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -496,20 +598,36 @@ export default function Clients() {
         title="Clientes"
         actions={
           <button 
-            className="forge-btn forge-btn--primary !h-[38px] !px-3.5 !rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer" 
+            className="forge-btn forge-btn--primary w-full sm:w-auto !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer" 
             type="button" 
-            onClick={() => setOpenNewPage(true)}
+            onClick={handleOpenNewClient}
           >
-            <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
-              <Plus size={14} strokeWidth={2.5} className="w-3.5 h-3.5 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
-            </span>
-            <span>NOVO CLIENTE</span>
+            {isExpired || !clientQuota.allowed ? (
+              <Lock size={17} className="shrink-0 text-[#0b0b0c]" />
+            ) : (
+              <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
+                <Plus size={20} strokeWidth={2.6} className="w-5 h-5 shrink-0 gm-btn-plus-black text-[#0b0b0c]" />
+              </span>
+            )}
+            <span className="text-sm font-bold">NOVO CLIENTE</span>
           </button>
         }
       >
+        {isExpired && (
+          <div className="mb-6">
+            <PlanLockedNotice
+              variant="inline"
+              title="Assinatura Expirada — Ações Bloqueadas"
+              reason="Sua assinatura ou período de teste expirou. Renove ou escolha um plano na tela de Planos para cadastrar, editar ou remover clientes."
+              requiredPlan="intermediario"
+              currentPlanName={subscription.planName}
+              isExpired={true}
+            />
+          </div>
+        )}
         <div className="mb-4 space-y-4">
           <SectionDivider label="Resumo" />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
             <ForgeSpecCard
               id="01"
               title="CLIENTES ATIVOS"
@@ -518,6 +636,8 @@ export default function Clients() {
               eyebrow="BASE CADASTRADA"
               figure={clientSummary.totalAtivos}
               unit="BASE"
+              animationKey={tab}
+              className="h-full"
               tags={[
                 { label: "CRM ATIVO", accent: true }
               ]}
@@ -531,29 +651,81 @@ export default function Clients() {
               eyebrow="CRESCIMENTO RECENTE"
               figure={clientSummary.novos30d}
               unit="NOVOS"
+              animationKey={tab}
+              className="h-full"
               tags={[
-                { label: `+${clientSummary.novos30d} CADASTRADOS`, accent: true }
+                { label: <>+<AnimatedNumber value={clientSummary.novos30d} replayKey={tab} /> CADASTRADOS</>, accent: true }
               ]}
             />
 
-            <div className="forge-spec">
+            <div className="forge-spec h-full md:col-span-2 lg:col-span-1">
               <div className="forge-spec__bar">
                 <span className="forge-spec__id">03</span>
                 <span className="forge-spec__title">CADASTROS POR MÊS</span>
-                <span className="forge-spec__status">HISTÓRICO</span>
+                <span className="forge-spec__status forge-spec__status--live tabular-nums">
+                  <AnimatedNumber value={clientSummary.totalSemestre} replayKey={tab} /> / 6M
+                </span>
               </div>
-              <div className="forge-spec__body !py-3">
-                <div className="h-20 relative overflow-hidden w-full">
-                  <SafeResponsive height={80}>
-                    <BarChart data={clientSummary.chartData} barSize={16}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="name" stroke="#666" fontSize={9} tickLine={false} axisLine={false} />
-                      <YAxis hide allowDecimals={false} />
+              <div className="forge-spec__body flex-1 flex flex-col justify-center !py-2.5 !px-3.5">
+                <div className="h-[126px] relative w-full">
+                  <SafeResponsive height={126}>
+                    <BarChart
+                      data={clientSummary.chartData}
+                      barSize={22}
+                      margin={{ top: 20, right: 8, left: 8, bottom: 2 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
+                      <XAxis
+                        dataKey="name"
+                        interval={0}
+                        height={22}
+                        tickLine={false}
+                        axisLine={{ stroke: "#26262A" }}
+                        tick={{ fill: "#CBD5E1", fontSize: 11, fontWeight: 600 }}
+                      />
+                      <YAxis
+                        hide
+                        allowDecimals={false}
+                        domain={[0, (dataMax: number) => (dataMax > 0 ? Math.ceil(dataMax * 1.32) : 4)]}
+                      />
                       <Tooltip
                         cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                        contentStyle={{ backgroundColor: "#141418", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "4px", color: "#fff", fontSize: 12, boxShadow: "none" }}
+                        labelFormatter={(_label: any, payload: any) =>
+                          payload?.[0]?.payload?.fullLabel || _label
+                        }
+                        formatter={(value: any) => [`${value} cliente${Number(value) === 1 ? "" : "s"}`, "Cadastros"]}
+                        contentStyle={{
+                          backgroundColor: "#131315",
+                          border: "1px solid #26262A",
+                          borderRadius: "6px",
+                          color: "#F2F2F3",
+                          fontSize: 12,
+                          padding: "8px 10px",
+                          boxShadow: "0 8px 20px rgba(0,0,0,0.45)",
+                        }}
+                        itemStyle={{ color: "#F2F2F3", fontWeight: 700 }}
+                        labelStyle={{ color: "var(--gm-primary, #FE540B)", fontWeight: 700, marginBottom: 2 }}
                       />
-                      <Bar dataKey="value" name="Clientes" radius={[2, 2, 0, 0]} fill="var(--gm-primary, #FE540B)" />
+                      <Bar dataKey="value" name="Cadastros" radius={[4, 4, 0, 0]} maxBarSize={26}>
+                        {clientSummary.chartData.map((entry, idx) => (
+                          <Cell
+                            key={`cell-${entry.name}-${idx}`}
+                            fill={entry.value > 0 ? "var(--gm-primary, #FE540B)" : "#26262A"}
+                          />
+                        ))}
+                        <LabelList
+                          dataKey="value"
+                          position="top"
+                          offset={5}
+                          formatter={(val: any) => (Number(val) > 0 ? String(val) : "")}
+                          style={{
+                            fill: "#F2F2F3",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            fontFamily: "var(--font-mono, monospace)",
+                          }}
+                        />
+                      </Bar>
                     </BarChart>
                   </SafeResponsive>
                 </div>
@@ -577,10 +749,12 @@ export default function Clients() {
                 <button
                   key={item.key}
                   type="button"
+                  aria-pressed={active}
+                  data-selected={active}
                   onClick={() => setTab(item.key as any)}
-                  className={`w-full h-9 rounded-[6px] text-[11px] sm:text-xs font-black tracking-tight transition-all uppercase flex items-center justify-center border cursor-pointer ${
+                  className={`w-full h-11 rounded-[6px] text-sm font-bold tracking-wider transition-all uppercase flex items-center justify-center border cursor-pointer ${
                     active
-                      ? "bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border-[var(--gm-primary)]/40 shadow-none font-black"
+                      ? "bg-[var(--gm-primary)]/15 text-white border-[var(--gm-primary)]/60 shadow-none font-black"
                       : "bg-[#0B0B0C] border-[#26262A] text-slate-300 hover:bg-[#1B1B1E] hover:text-white font-bold"
                   }`}
                 >
@@ -612,10 +786,10 @@ export default function Clients() {
           </div>
         </div>
 
-        <div className="mb-2 flex items-center justify-between text-xs text-slate-400 px-1">
-          <SectionDivider label="Lista de clientes" />
-          <span className="shrink-0 ml-4 px-2.5 py-1 rounded-[4px] bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5 shadow-none tabular-nums">
-            <Users size={13} /> Clientes ({filtered.length})
+        <div className="mt-6 mb-3 flex items-center justify-between gap-3 text-xs text-slate-400 px-1">
+          <SectionDivider label="Lista de clientes" className="!my-0 flex-1" />
+          <span className="shrink-0 px-2.5 py-1 rounded-[4px] bg-[var(--gm-primary)]/10 border border-[var(--gm-primary)]/20 text-[var(--gm-primary)] font-bold flex items-center gap-1.5 shadow-none tabular-nums">
+            <Users size={13} /> Clientes ({filtered.length}{clientQuota.limit !== null ? ` / ${clientQuota.limit}` : ""})
           </span>
         </div>
         <div style={{ height: 8 }} />
@@ -646,7 +820,7 @@ export default function Clients() {
               avatarStyle={avatarStyle}
               restore={restore}
               confirmHardDelete={confirmHardDelete}
-              setEditPageId={setEditPageId}
+              setEditPageId={requestEditClient}
               openWhatsApp={openWhatsApp}
               copyToClipboard={copyToClipboard}
               setToast={setToast}
@@ -713,6 +887,16 @@ export default function Clients() {
           </div>
         </div>
       )}
+      <PlanLockedNotice
+        variant="modal"
+        isOpen={Boolean(lockModal)}
+        onClose={() => setLockModal(null)}
+        title={lockModal?.title || "Recurso Bloqueado"}
+        reason={lockModal?.reason}
+        requiredPlan={lockModal?.requiredPlan || "intermediario"}
+        currentPlanName={subscription.planName}
+        isExpired={isExpired}
+      />
     </div>
   );
 }

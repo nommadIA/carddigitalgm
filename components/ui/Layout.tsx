@@ -42,6 +42,7 @@ import {
   VolumeX,
   Crown,
   Radio,
+  Lock,
 } from "lucide-react";
 import {
   playNotificationSound,
@@ -66,6 +67,8 @@ import NotificationCheckinModal from "../notifications/NotificationCheckinModal"
 import { ToastHost } from "./Toast";
 import BottomNav from "./BottomNav";
 import GoldCrownIcon from "./GoldCrownIcon";
+import { usePlanAccess } from "../../hooks/usePlanAccess";
+import { FeatureKey } from "../../lib/subscriptionPlans";
 
 const DEFAULT_NOTIFICATIONS = [
   {
@@ -121,15 +124,16 @@ import { useSwipeNav } from "../../hooks/useSwipeNav";
 import { pushToast } from "../../store/toast";
 
 export default function Layout({ children }: { children?: React.ReactNode }) {
-  const { signOut, tenantId } = useAuth();
+  const { signOut, tenantId, user } = useAuth();
+  const { subscription, isSuperAdmin, isExpired, canAccess } = usePlanAccess();
   const navigate = useNavigate();
   const location = useLocation();
 
   const sidebarRef = useRef<HTMLElement | null>(null);
   const handleRef = useRef<HTMLDivElement | null>(null);
 
-  const EXPANDED_SIDEBAR_WIDTH = 224;
-  const COLLAPSED_SIDEBAR_WIDTH = 56;
+  const EXPANDED_SIDEBAR_WIDTH = 232;
+  const COLLAPSED_SIDEBAR_WIDTH = 58;
 
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("gm.sidebar") === "1");
   const sidebarWidth = collapsed ? COLLAPSED_SIDEBAR_WIDTH : EXPANDED_SIDEBAR_WIDTH;
@@ -307,7 +311,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
   useEffect(() => {
     // Inicializa a sincronização em tempo real simultânea entre Desktop & Smartphone
-    const cleanupSync = initSyncHub(tenantId);
+    const cleanupSync = initSyncHub(tenantId, user?.email);
 
     fetchSettingsSupabase(tenantId)
       .then((s) => {
@@ -346,20 +350,20 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       window.removeEventListener("gm_settings_updated", handleSettingsUpdate);
       window.removeEventListener("gm_notifications_changed", handleNotificationsChanged);
     };
-  }, [tenantId]);
+  }, [tenantId, user?.email]);
 
 
 
   const nav = useMemo(
     () => [
       { to: "/", label: "Início", icon: LayoutGrid },
-      { to: "/budgets", label: "Orçamentos", icon: FileText },
-      { to: "/clients", label: "Clientes", icon: Users },
-      { to: "/expenses", label: "Despesas", icon: Receipt },
-      { to: "/market", label: "Mercado", icon: ShoppingCart },
-      { to: "/notes", label: "Notas", icon: StickyNote },
-      { to: "/financial", label: "Financeiro", icon: Wallet },
-      { to: "/minha-bio", label: "Bio", icon: Smartphone },
+      { to: "/budgets", label: "Orçamentos", icon: FileText, feature: "budgets" as FeatureKey },
+      { to: "/clients", label: "Clientes", icon: Users, feature: "clients" as FeatureKey },
+      { to: "/expenses", label: "Despesas", icon: Receipt, feature: "expenses" as FeatureKey },
+      { to: "/market", label: "Mercado", icon: ShoppingCart, feature: "market" as FeatureKey },
+      { to: "/notes", label: "Notas", icon: StickyNote, feature: "notes" as FeatureKey },
+      { to: "/financial", label: "Financeiro", icon: Wallet, feature: "financial" as FeatureKey },
+      { to: "/minha-bio", label: "Bio", icon: Smartphone, feature: "bio" as FeatureKey },
       { to: "/planos", label: "Planos", icon: Crown },
       { to: "/configuracoes", label: "Configurações", icon: Settings }
     ],
@@ -439,22 +443,24 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
   // Reseta a rolagem vertical para o topo sempre que o usuário troca de rota e atualiza indicadores de rolagem
   useEffect(() => {
     if (mainRef.current) {
-      mainRef.current.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+      mainRef.current.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" as any });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 
     const checkScroll = () => {
       const el = mainRef.current || (document.querySelector('.gm-main') as HTMLElement);
       if (el) {
         const currentY = el.scrollTop || window.scrollY || 0;
         const maxScroll = el.scrollHeight - el.clientHeight;
-        setCanScrollUp(currentY > 60);
-        setCanScrollDown(maxScroll > 20 && currentY < maxScroll - 40);
+        const nextUp = currentY > 60;
+        const nextDown = maxScroll > 20 && currentY < maxScroll - 40;
+        setCanScrollUp((prev) => (prev === nextUp ? prev : nextUp));
+        setCanScrollDown((prev) => (prev === nextDown ? prev : nextDown));
       }
     };
 
-    const timer = setTimeout(checkScroll, 200);
-    return () => clearTimeout(timer);
+    const rafId = requestAnimationFrame(checkScroll);
+    return () => cancelAnimationFrame(rafId);
   }, [location.pathname]);
 
   // Efeito de Parallax Suave Contínuo no Plano de Fundo (Mouse + Scroll)
@@ -737,7 +743,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
         </div>
 
         <div
-          className={`flex items-center justify-center px-2 py-1 rounded-[4px] text-[10px] font-mono font-bold tracking-wider uppercase shrink-0 transition-all ${
+          className={`flex items-center justify-center px-2 py-1 rounded-[4px] text-[11px] font-mono font-bold tracking-wider uppercase shrink-0 transition-all ${
             uiSoundsActive
               ? "bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] text-[#0B0B0C]"
               : "bg-[#18181B] text-[#8B8B92] border border-[#26262A]"
@@ -749,109 +755,135 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
     );
   };
 
-  const renderSyncButton = (extraBtnClass = "") => (
+  const renderSyncButton = (isMobileHeader = false) => (
     <button
       type="button"
       onClick={handleSyncClick}
       title="Sincronização do App"
       aria-label="Sincronização do App"
-      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] flex items-center justify-center hover:!text-white active:scale-95 transition-[background-color,border-color,transform] duration-150 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`rounded-[6px] flex items-center justify-center active:scale-90 transition-[opacity,transform] duration-100 relative cursor-pointer shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${
+        isMobileHeader
+          ? "gm-mobile-header-btn w-9 h-9 min-w-[36px] min-h-[36px] bg-transparent hover:bg-transparent border-0 !text-white hover:opacity-80"
+          : "w-10 h-10 min-w-[40px] min-h-[40px] hover:!text-white bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46]"
+      }`}
       style={{
-        width: '40px',
-        height: '40px',
-        minWidth: '40px',
-        minHeight: '40px',
+        width: isMobileHeader ? '36px' : '40px',
+        height: isMobileHeader ? '36px' : '40px',
+        minWidth: isMobileHeader ? '36px' : '40px',
+        minHeight: isMobileHeader ? '36px' : '40px',
         borderRadius: '6px',
-        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+        color: isMobileHeader
+          ? "#FFFFFF"
+          : "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
       }}
     >
       <RefreshCw 
-        size={17} 
-        className={`text-current shrink-0 transition-transform duration-500 ${isSyncing ? "animate-spin" : "group-hover:rotate-90"}`} 
+        size={isMobileHeader ? 19 : 17} 
+        className={`text-current shrink-0 transition-transform duration-300 ${isSyncing ? "animate-spin" : "group-hover:rotate-90"}`} 
       />
     </button>
   );
 
-  const renderBellButton = (extraBtnClass = "") => (
+  const renderBellButton = (isMobileHeader = false) => (
     <button
       type="button"
       onClick={handleBellClick}
       title="Atualizações e Informações"
       aria-label="Atualizações e Informações"
-      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] flex items-center justify-center hover:!text-white active:scale-95 transition-[background-color,border-color,transform] duration-150 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`rounded-[6px] flex items-center justify-center active:scale-90 transition-[opacity,transform] duration-100 relative cursor-pointer shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${
+        isMobileHeader
+          ? "gm-mobile-header-btn w-9 h-9 min-w-[36px] min-h-[36px] bg-transparent hover:bg-transparent border-0 !text-white hover:opacity-80"
+          : "w-10 h-10 min-w-[40px] min-h-[40px] hover:!text-white bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46]"
+      }`}
       style={{
-        width: '40px',
-        height: '40px',
-        minWidth: '40px',
-        minHeight: '40px',
+        width: isMobileHeader ? '36px' : '40px',
+        height: isMobileHeader ? '36px' : '40px',
+        minWidth: isMobileHeader ? '36px' : '40px',
+        minHeight: isMobileHeader ? '36px' : '40px',
         borderRadius: '6px',
-        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+        color: isMobileHeader
+          ? "#FFFFFF"
+          : "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
       }}
     >
-      <Bell size={17} className="text-current shrink-0" />
+      <Bell size={isMobileHeader ? 19 : 17} className="text-current shrink-0" />
       {unreadCount > 0 && (
         <span 
-          className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#131315]" 
+          className={`absolute w-2 h-2 rounded-full bg-emerald-400 ${
+            isMobileHeader ? "top-1.5 right-1.5 ring-1 ring-[#0B0B0C]/40" : "top-2 right-2 ring-2 ring-[#131315]"
+          }`} 
         />
       )}
     </button>
   );
 
-  const renderLogoutButton = (extraBtnClass = "") => (
+  const renderLogoutButton = (isMobileHeader = false) => (
     <button 
       type="button"
       onClick={signOut}
       title="Sair"
       aria-label="Sair"
-      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] flex items-center justify-center hover:!text-white active:scale-95 transition-[background-color,border-color,transform] duration-150 cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`rounded-[6px] flex items-center justify-center active:scale-90 transition-[opacity,transform] duration-100 cursor-pointer shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${
+        isMobileHeader
+          ? "gm-mobile-header-btn w-9 h-9 min-w-[36px] min-h-[36px] bg-transparent hover:bg-transparent border-0 !text-white hover:opacity-80"
+          : "w-10 h-10 min-w-[40px] min-h-[40px] hover:!text-white bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46]"
+      }`}
       style={{
-        width: '40px',
-        height: '40px',
-        minWidth: '40px',
-        minHeight: '40px',
+        width: isMobileHeader ? '36px' : '40px',
+        height: isMobileHeader ? '36px' : '40px',
+        minWidth: isMobileHeader ? '36px' : '40px',
+        minHeight: isMobileHeader ? '36px' : '40px',
         borderRadius: '6px',
-        color: "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
+        color: isMobileHeader
+          ? "#FFFFFF"
+          : "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B)))",
       }}
     >
-      <LogOut size={17} className="text-current shrink-0" />
+      <LogOut size={isMobileHeader ? 19 : 17} className="text-current shrink-0" />
     </button>
   );
 
-  const renderSoundButton = (extraBtnClass = "") => (
+  const renderSoundButton = (isMobileHeader = false) => (
     <button
       type="button"
       onClick={toggleUiSounds}
       title={uiSoundsActive ? "Sons do App: Ativados (toque para desativar)" : "Sons do App: Desativados (toque para ativar)"}
       aria-label={uiSoundsActive ? "Sons do App Ativados" : "Sons do App Desativados"}
-      className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] flex items-center justify-center hover:!text-white active:scale-95 transition-[background-color,border-color,transform] duration-150 relative cursor-pointer bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${extraBtnClass}`}
+      className={`rounded-[6px] flex items-center justify-center active:scale-90 transition-[opacity,transform] duration-100 relative cursor-pointer shrink-0 grow-0 self-center group p-0 overflow-hidden shadow-none ${
+        isMobileHeader
+          ? "gm-mobile-header-btn w-9 h-9 min-w-[36px] min-h-[36px] bg-transparent hover:bg-transparent border-0 !text-white hover:opacity-80"
+          : "w-10 h-10 min-w-[40px] min-h-[40px] hover:!text-white bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46]"
+      }`}
       style={{
-        width: '40px',
-        height: '40px',
-        minWidth: '40px',
-        minHeight: '40px',
+        width: isMobileHeader ? '36px' : '40px',
+        height: isMobileHeader ? '36px' : '40px',
+        minWidth: isMobileHeader ? '36px' : '40px',
+        minHeight: isMobileHeader ? '36px' : '40px',
         borderRadius: '6px',
-        color: uiSoundsActive
-          ? "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))"
-          : "#8B8B92",
+        color: isMobileHeader
+          ? "#FFFFFF"
+          : uiSoundsActive
+            ? "var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #F65A1A)))"
+            : "#8B8B92",
       }}
     >
       {uiSoundsActive ? (
-        <Volume2 size={17} className="text-current shrink-0" />
+        <Volume2 size={isMobileHeader ? 19 : 17} className="text-current shrink-0" />
       ) : (
-        <VolumeX size={17} className="text-current shrink-0" />
+        <VolumeX size={isMobileHeader ? 19 : 17} className={`text-current shrink-0 ${isMobileHeader ? "opacity-85" : ""}`} />
       )}
       {uiSoundsActive && (
-        <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+        <span className={`absolute w-1.5 h-1.5 bg-emerald-400 rounded-full ${isMobileHeader ? "top-1.5 right-1.5" : "top-2 right-2"}`} />
       )}
     </button>
   );
 
   const renderHeaderActionButtons = (extraClass = "") => (
-    <div className={`flex items-center gap-1.5 sm:gap-2 shrink-0 ${extraClass}`}>
-      {renderSoundButton()}
-      {renderSyncButton()}
-      {renderBellButton()}
-      {renderLogoutButton()}
+    <div className={`flex items-center gap-1 sm:gap-1.5 shrink-0 ${extraClass}`}>
+      {renderSoundButton(true)}
+      {renderSyncButton(true)}
+      {renderBellButton(true)}
+      {renderLogoutButton(true)}
     </div>
   );
 
@@ -876,44 +908,48 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* Tutorial Onboarding do Aplicativo */}
       {showTutorial && <AppTutorial onClose={() => setShowTutorial(false)} />}
 
-      {/* MOBILE TOP HEADER - FORGE SOLID INK HEADER */}
-      <header 
-        className="fixed top-0 left-0 right-0 w-full h-16 z-[100] flex md:hidden items-center justify-between px-4 bg-[#0B0B0C] border-b border-[#26262A] shadow-none gm-mobile-header select-none"
-        style={{
-          zIndex: 100,
-          background: "#0B0B0C",
-          borderBottom: "1px solid #26262A",
-        }}
-      >
-        <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center shrink-0">
-              <div className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center overflow-hidden shadow-none bg-[#18181B] p-1">
-                <img 
-                  src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
-                  alt="Logo CardDigital GM" 
-                  className="w-full h-full object-cover scale-[1.2] transform"
-                />
+      {/* MOBILE TOP HEADER - GLASSMORPHISM FROSTED (PORTAL NO BODY PARA BLUR REAL) */}
+      {typeof document !== "undefined" && createPortal(
+        <header 
+          className="fixed top-0 left-0 right-0 w-full h-16 z-[100] flex md:hidden items-center justify-between gap-2 px-3 sm:px-4 gm-mobile-header select-none"
+          style={{ zIndex: 100 }}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-[9px] border border-white/25 flex items-center justify-center overflow-hidden shadow-none bg-[#333333] p-0">
+                  <img 
+                    src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
+                    alt="Logo CardDigital GM" 
+                    className="w-full h-full object-cover scale-[1.06] transform block"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-1.5 leading-none">
-              <span 
-                className="text-base font-extrabold text-white tracking-wide select-none flex items-center gap-1.5"
-                style={{ fontFamily: "'Funnel Display', sans-serif" }}
-              >
-                <span className="text-white">CardDigital</span>
+              <div className="flex items-center gap-1.5 leading-none min-w-0">
                 <span 
-                  className="font-black text-[#FE540B] text-lg inline-block"
-                  style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}
+                  className="text-[15px] sm:text-base font-extrabold tracking-wide select-none flex items-center gap-1 truncate gm-mobile-brand-wrap"
+                  style={{ fontFamily: "'Funnel Display', sans-serif" }}
                 >
-                  GM
+                  <span
+                    className="gm-mobile-brand-card text-white truncate"
+                    style={{ color: "#FFFFFF" }}
+                  >
+                    CardDigital
+                  </span>
+                  <span 
+                    className="gm-mobile-brand-gm font-black text-[17px] sm:text-lg inline-block shrink-0"
+                    style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 900, color: "#FE540B" }}
+                  >
+                    GM
+                  </span>
                 </span>
-              </span>
-            </div>
-        </div>
+              </div>
+          </div>
 
-        {/* Botões do cabeçalho mobile: caixas sólidas Forge com micro-bordas #26262A e ícones laranja */}
-        {renderHeaderActionButtons()}
-      </header>
+          {/* Botões do cabeçalho mobile: ícones brancos minimalistas */}
+          {renderHeaderActionButtons()}
+        </header>,
+        document.body
+      )}
 
       {/* DESKTOP SIDEBAR */}
       <aside
@@ -936,7 +972,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           <button
             type="button"
             onClick={toggleSidebar}
-            className="w-5 h-8 rounded-[4px] bg-[#131315] border border-[#26262A] flex items-center justify-center text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))] active:scale-95 transition-all duration-120 shadow-none hover:bg-[#1B1B1E] hover:border-[#38383F] cursor-pointer outline-none !m-0 !p-0"
+            className="w-5 h-8 rounded-[4px] bg-[#131315] border border-[#26262A] flex items-center justify-center text-[var(--gm-menu-icon,var(--gm-primary,#FE540B))] active:scale-95 transition-all duration-100 shadow-none hover:bg-[#1B1B1E] hover:border-[#38383F] cursor-pointer outline-none !m-0 !p-0"
             style={{
               transformOrigin: "center center"
             }}
@@ -953,12 +989,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
         <div className="sidebar-inner flex flex-col h-full w-full bg-[#0B0B0C]">
           {/* Header exatamente como no print */}
-          <header className="flex items-center gap-2.5 px-4 py-3.5 border-b border-[#26262A] shrink-0 bg-[#0B0B0C]">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0 shadow-none bg-[#18181B] border border-white/10 p-1">
+          <header className={`flex items-center gap-2.5 ${collapsed ? "justify-center px-2" : "px-4"} py-3.5 border-b border-[#26262A] shrink-0 bg-[#0B0B0C]`}>
+            <div className="w-10 h-10 rounded-[9px] flex items-center justify-center overflow-hidden shrink-0 shadow-none bg-[#333333] border border-[#26262A] p-0">
               <img 
                 src="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg" 
                 alt="Logo Official CardDigital GM" 
-                className="w-full h-full object-cover logo-icon scale-[1.2] transform"
+                className="w-full h-full object-cover logo-icon scale-[1.06] transform block"
               />
             </div>
             {!collapsed && (
@@ -981,7 +1017,8 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
           {/* Navigation List - Forge UI */}
           <ul className="flex-1 flex flex-col py-3 px-2 gap-1 overflow-y-auto no-scrollbar select-none w-full">
-            {filteredNav.map(({ to, label, icon: Icon }) => {
+            {filteredNav.map(({ to, label, icon: Icon, feature }) => {
+              const isLocked = feature ? !canAccess(feature).allowed : false;
               return (
                 <li key={to} className="w-full flex items-center relative">
                   <NavLink
@@ -992,10 +1029,20 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                       } active:scale-[0.97] transition-[background-color,color,border-color,transform] duration-150 ${
                         isActive
                           ? "active bg-[#18181B] text-[#F2F2F3] font-bold border-l-[3px] border-[var(--gm-menu-primary,var(--gm-primary,#FE540B))]"
-                          : "text-[#8B8B92] hover:text-[#F2F2F3] hover:bg-[#131315] border-l-[3px] border-transparent"
+                          : isLocked
+                            ? "text-[#63636B] hover:bg-[#18181B] hover:text-[#CBD5E1] border-l-[3px] border-transparent"
+                            : "text-[#8B8B92] hover:bg-[var(--gm-menu-primary,var(--gm-primary,#FE540B))] hover:text-[#0B0B0C] hover:border-[var(--gm-menu-primary,var(--gm-primary,#FE540B))] border-l-[3px] border-transparent"
                       }`
                     }
-                    title={collapsed ? label : undefined}
+                    title={
+                      collapsed
+                        ? isLocked
+                          ? `${label} (Bloqueado no plano atual)`
+                          : label
+                        : isLocked
+                          ? "Recurso bloqueado no plano atual — clique para ver opções"
+                          : undefined
+                    }
                   >
                     {/* Barra de destaque na extremidade esquerda do item ativo */}
                     <span
@@ -1004,18 +1051,29 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                     />
 
                     {to === "/planos" ? (
-                      <GoldCrownIcon size={18} />
+                      <GoldCrownIcon size={18} className="text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))]" />
                     ) : (
                       <Icon 
                         size={18} 
-                        className="shrink-0 text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))] stroke-[1.75] transition-colors duration-150" 
+                        className={`shrink-0 stroke-[1.75] transition-colors duration-150 ${
+                          isLocked
+                            ? "text-[#63636B] group-hover:text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))]"
+                            : "text-[var(--gm-menu-icon,var(--gm-menu-primary,var(--gm-primary,#FE540B)))]"
+                        }`} 
                       />
                     )}
 
                     {!collapsed && (
-                      <span className={`truncate text-left text-[13px] font-mono tracking-wider uppercase font-semibold leading-tight whitespace-nowrap ${to === "/planos" ? "text-amber-300" : ""}`}>
+                      <span className="truncate text-left text-[13px] font-mono tracking-wider uppercase font-semibold leading-tight whitespace-nowrap transition-colors duration-150 flex-1">
                         {label}
                       </span>
+                    )}
+
+                    {isLocked && !collapsed && (
+                      <Lock size={13} className="ml-auto shrink-0 opacity-75" />
+                    )}
+                    {isLocked && collapsed && (
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500/80 ring-1 ring-[#0B0B0C]" />
                     )}
                   </NavLink>
                 </li>
@@ -1035,6 +1093,33 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
               </div>
             ) : (
               <div className="flex flex-col gap-2.5 w-full">
+                {/* Badge do Plano Atual */}
+                <button
+                  type="button"
+                  onClick={() => navigate("/planos")}
+                  className={`w-full px-2.5 py-1.5 rounded-[6px] border flex items-center justify-between gap-2 text-left transition-colors cursor-pointer ${
+                    isExpired
+                      ? "bg-red-500/10 border-red-500/35 text-red-400 hover:bg-red-500/15"
+                      : "bg-[#131315] border-[#26262A] text-[#CBD5E1] hover:border-[var(--gm-primary,#FE540B)]/50"
+                  }`}
+                  title="Gerenciar seu plano e recursos disponíveis"
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Crown size={13} className="text-[var(--gm-primary,#FE540B)] shrink-0" />
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider truncate">
+                      {isSuperAdmin
+                        ? "ADM Master"
+                        : isExpired
+                          ? "Plano Expirado"
+                          : subscription.planName}
+                    </span>
+                  </div>
+                  {!isSuperAdmin && !isExpired && typeof subscription.daysRemaining === "number" && (
+                    <span className="text-[10px] font-mono font-bold text-[#8B8B92] shrink-0 tabular-nums">
+                      {subscription.daysRemaining}d
+                    </span>
+                  )}
+                </button>
                 {/* Linha 1: 3 Caixas sólidas Forge */}
                 <div className="grid grid-cols-3 gap-2 w-full">
                   <button
@@ -1100,7 +1185,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
 
       <main 
         ref={setMainRefs}
-        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-full min-h-0 overflow-y-auto w-full p-0 scroll-smooth relative"
+        className="gm-main flex-1 min-w-0 flex flex-col items-center justify-start h-full min-h-0 overflow-y-auto w-full p-0 relative"
       >
         {/* CAMADA DO PLANO DE FUNDO DENTRO DO MAIN: Garante que o backdrop-filter dos containers/cards desfoque o background no Chrome e Safari */}
         <div className="gm-main-bg-layer" aria-hidden="true" />
@@ -1111,7 +1196,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           <div className="gm-bg-prism-layer" style={{ zIndex: 0 }} aria-hidden="true" />
         )}
 
-        <div className="gm-container w-full max-w-[1440px] mx-auto flex flex-col items-stretch px-4 sm:px-8 md:px-10 lg:px-12 xl:px-16 pt-20 md:pt-10 lg:pt-12 pb-[calc(var(--bottom-nav-height,84px)+36px)] md:pb-16 relative z-10">
+        <div className="gm-container w-full max-w-[1440px] min-[1441px]:max-w-[1536px] mx-auto flex flex-col items-stretch px-4 sm:px-6 lg:px-10 xl:px-12 pt-20 md:pt-8 lg:pt-10 pb-[calc(var(--gm-mobile-nav-safe-height,96px)+28px)] md:pb-12 relative z-10">
           {children}
         </div>
       </main>
@@ -1120,22 +1205,22 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {createPortal(
         <>
           {/* WHATSAPP SUPPORT BUTTON (EXCLUSIVO NA PÁGINA DO DASHBOARD NO CANTO INFERIOR DIREITO) */}
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {location.pathname === "/" && (
               <motion.div
                 key="dashboard-whatsapp-floating-btn"
-                initial={{ scale: 0, opacity: 0, y: 15 }}
+                initial={{ scale: 0.85, opacity: 0, y: 8 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0, opacity: 0, y: 15 }}
-                transition={{ type: "spring", damping: 22, stiffness: 350 }}
-                className="fixed bottom-[calc(var(--bottom-nav-height,96px)+16px)] md:bottom-7 right-4 md:right-7 z-[10002] pointer-events-auto"
+                exit={{ scale: 0.85, opacity: 0, y: 8 }}
+                transition={{ type: "spring", damping: 32, stiffness: 580, mass: 0.55 }}
+                className="fixed bottom-[calc(var(--gm-mobile-nav-safe-height,96px)+14px)] md:bottom-7 right-4 md:right-7 z-[10002] pointer-events-auto"
               >
                 <button
                   type="button"
                   onClick={() => {
                     openWhatsapp("5598981120686", "Olá! CardDigital GM, preciso de outras informações.");
                   }}
-                  className="gm-floating-whatsapp-btn !p-0 flex items-center justify-center w-12 h-12 rounded-[6px] bg-[#25D366] hover:bg-[#20ba5a] text-white border border-white/20 shadow-[0_6px_20px_rgba(0,0,0,0.45)] active:scale-[0.95] transition-[background-color,transform] duration-150 cursor-pointer focus:outline-none"
+                  className="gm-floating-whatsapp-btn !p-0 flex items-center justify-center w-12 h-12 rounded-[6px] bg-[#25D366] hover:bg-[#20ba5a] text-white border border-white/20 shadow-[0_6px_20px_rgba(0,0,0,0.45)] active:scale-[0.95] transition-[background-color,transform] duration-100 cursor-pointer focus:outline-none"
                   aria-label="Ajuda via WhatsApp"
                   title="Ajuda via WhatsApp"
                 >
@@ -1145,9 +1230,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
             )}
           </AnimatePresence>
 
-          {/* SCROLL INDICATOR ARROWS (CENTERED VERTICALLY IN THE MIDDLE OF THE SCREEN ON THE RIGHT - NO BOX/BACKGROUND, ONLY ARROW STROKE) */}
+          {/* SCROLL INDICATOR ARROWS (CENTERED VERTICALLY IN THE MIDDLE OF THE SCREEN ON THE RIGHT - HIDDEN ON SMALL MOBILE TO AVOID TOUCH OVERLAP) */}
           <div 
-            className="fixed right-1.5 sm:right-2.5 md:right-4 top-1/2 -translate-y-1/2 z-[10001] flex flex-col items-center gap-2 pointer-events-none select-none" 
+            className="hidden sm:flex fixed right-2.5 md:right-4 top-1/2 -translate-y-1/2 z-[10001] flex-col items-center gap-2 pointer-events-none select-none" 
             style={{ zIndex: 10001 }}
           >
               {/* BACK TO TOP ARROW (PURE CHEVRON STROKE) */}

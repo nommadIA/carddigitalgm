@@ -45,7 +45,7 @@
   --space-2xs: 4px;
   --space-xs: 8px;
   --space-md: 16px;
-  --radius-md: 4px;
+  --radius-md: 6px;
   --duration-fast: 120ms;
   --ease-out: cubic-bezier(0.2, 0.65, 0.25, 1);
   display: block;
@@ -117,9 +117,11 @@
   --space-sm: 12px;
   --space-md: 16px;
   --space-lg: 20px;
-  --radius-sm: 2px;
-  --radius-md: 4px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
   width: 100%;
+  display: flex;
+  flex-direction: column;
   background: var(--color-graphite);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -155,7 +157,7 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  shrink: 0;
+  flex-shrink: 0;
 }
 
 .forge-spec__title {
@@ -173,7 +175,7 @@
 
 .forge-spec__status {
   font-family: ui-monospace, monospace;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -181,7 +183,7 @@
   padding: 2px 7px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  shrink: 0;
+  flex-shrink: 0;
 }
 
 .forge-spec__status--live {
@@ -190,14 +192,15 @@
 }
 
 .forge-spec__body {
+  flex: 1;
   padding: 18px 20px;
 }
 
 .forge-spec__eyebrow {
   font-family: ui-monospace, monospace;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-text-muted);
   margin-bottom: var(--space-xs);
@@ -245,7 +248,7 @@
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
   font-family: ui-monospace, monospace;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -262,7 +265,7 @@
 .forge-card {
   background: var(--color-graphite, #131315) !important;
   border: 1px solid var(--color-border, #26262a) !important;
-  border-radius: var(--radius-md, 4px) !important;
+  border-radius: var(--radius-lg, 8px) !important;
   box-shadow: inset 0 1px 0 var(--color-edge-highlight, rgba(255, 255, 255, 0.03)) !important;
   transition: border-color 150ms ease, box-shadow 150ms ease !important;
 }
@@ -532,7 +535,7 @@ nav.gm-bottom-nav,
   border: 1px solid #26262a !important;
   border-color: #26262a !important;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.03), 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
-  border-radius: 4px !important;
+  border-radius: var(--radius-card, 8px) !important;
   overflow: hidden;
   color: #f4f4f5;
 }
@@ -666,7 +669,7 @@ html:not([data-theme="light"]):not(.gm-light) [role="dialog"],
     inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
   color: #ffffff !important;
   overflow: hidden;
-  border-radius: 4px !important;
+  border-radius: var(--radius-modal, 10px) !important;
 }
 
 /* =========================================================
@@ -705,40 +708,38 @@ html:not([data-theme="light"]):not(.gm-light) [role="dialog"],
    - SM (32px / h-8): Ações inline em tabelas e mini filtros (fonte: 11px)
 ========================================================= */
 
-/* Modificadores Globais de Botão Forge UI (Padrão: 38px, Radius 4px, 11.5px) */
+/* Modificadores Globais de Botão Forge UI */
 .gm-btn-lg,
 .btn-lg,
 button.lg,
 a.gm-btn-lg {
-  height: 42px !important;
-  min-height: 42px !important;
-  padding: 0 18px !important;
-  font-size: 12px !important;
-  border-radius: 4px !important;
-  font-weight: 600 !important;
+  min-height: 44px !important;
+  padding: 0 20px !important;
+  font-size: 14px !important;
+  border-radius: 6px !important;
+  font-weight: 700 !important;
   letter-spacing: 0.05em !important;
 }
 
 /* =========================================================
    From Uiverse.io by uiverse-astronaut
-   TC PILL BUTTON SYSTEM (Formato Pílula Ergonômico 999px)
+   TC PILL BUTTON SYSTEM
    ========================================================= */
 
 .tc-pill-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 8px !important;
-  height: 38px !important;
-  min-height: 38px !important;
-  padding: 0 14px !important;
+  gap: 9px !important;
+  min-height: 42px !important;
+  padding: 0 18px !important;
   font-family: inherit !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
   letter-spacing: 0.05em !important;
   text-transform: uppercase !important;
   line-height: 1 !important;
-  border-radius: 4px !important;
+  border-radius: 6px !important;
   border: 1px solid #26262a !important;
   background: #131315 !important;
   background-color: #131315 !important;
@@ -771,8 +772,8 @@ a.gm-btn-lg {
 }
 
 .tc-pill-btn__icon {
-  width: 14px !important;
-  height: 14px !important;
+  width: 18px !important;
+  height: 18px !important;
   display: block;
   fill: none !important;
   stroke: currentColor !important;
@@ -811,25 +812,25 @@ a[class*="bg-[var(--gm-primary)]"] {
   --color-text: #f2f2f3;
   --color-border: #26262a;
   --color-ember-halo: rgba(var(--gm-primary-rgb, 254, 84, 11), 0.24);
-  --radius-md: 4px;
-  --space-xs: 8px;
-  --space-md: 16px;
+  --radius-md: 6px;
+  --space-xs: 9px;
+  --space-md: 18px;
   --duration-fast: 120ms;
   --ease-out: cubic-bezier(0.2, 0.65, 0.25, 1);
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: var(--space-xs) !important;
-  height: 38px !important;
-  padding: 0 14px !important;
+  min-height: 42px;
+  padding: 0 18px !important;
   border-radius: var(--radius-md) !important;
   border: 1px solid transparent !important;
   background: var(--color-ember) !important;
   background-color: var(--color-ember) !important;
   color: var(--color-ink) !important;
   font-family: inherit !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
   letter-spacing: 0.05em !important;
   text-transform: uppercase !important;
   cursor: pointer !important;
@@ -1001,12 +1002,12 @@ button.primary:active:not(:disabled),
 }
 
 .forge-btn__icon {
-  width: 14px !important;
-  height: 14px !important;
+  width: 18px !important;
+  height: 18px !important;
   flex-shrink: 0 !important;
 }
 
-/* 2. MODELO SECUNDÁRIO FORGE (Slate #131315 com borda #26262a, ícone Laranja Claro #FF7A38 e radius 4px) */
+/* 2. MODELO SECUNDÁRIO FORGE (Slate #131315 com borda #26262a, ícone Laranja Claro #FF7A38 e radius 6px) */
 .forge-btn--secondary,
 .tc-pill-btn-secondary,
 button.secondary,
@@ -1023,16 +1024,16 @@ button.ghost,
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 8px !important;
-  height: 38px !important;
-  padding: 0 14px !important;
+  gap: 9px !important;
+  min-height: 42px;
+  padding: 0 18px !important;
   font-family: inherit !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
   letter-spacing: 0.05em !important;
   text-transform: uppercase !important;
   line-height: 1 !important;
-  border-radius: 4px !important;
+  border-radius: 6px !important;
   border: 1px solid #26262a !important;
   background: #131315 !important;
   background-color: #131315 !important;
@@ -1185,12 +1186,37 @@ button[class*="bg-"] span,
 a[class*="bg-"] span {
   color: inherit !important;
   font-family: inherit !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   letter-spacing: 0.05em !important;
   text-shadow: none !important;
 }
 
-/* 5. Ícones dentro dos botões */
+/* Padroniza font-size herdado em labels de botões Forge / ViewMode */
+.forge-btn > span:not(.forge-badge):not(.gm-badge),
+.forge-btn .gm-plus-icon-wrapper + span,
+.tc-pill-btn > span,
+.gm-btn > span,
+.btn > span,
+.gm-viewmode-btn-active > span,
+.gm-viewmode-btn-inactive > span {
+  font-size: inherit !important;
+}
+
+/* 5. Ícones dentro dos botões — Padrão Global Unificado */
+.forge-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.tc-pill-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.gm-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+.gm-viewmode-btn-active svg:not(.whatsapp-icon),
+.gm-viewmode-btn-inactive svg:not(.whatsapp-icon),
+a.tc-pill-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+a.forge-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+button.primary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
+button.secondary svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]) {
+  width: 18px !important;
+  height: 18px !important;
+}
+
 button svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
 .tc-pill-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
 .forge-btn svg:not(.whatsapp-icon):not([data-icon="whatsapp"]):not([data-fill="true"]),
@@ -1259,40 +1285,91 @@ button:disabled svg,
   transform: none !important;
 }
 
-/* 9. Variações de Tamanho Padronizadas Forge UI (Radius 4px, igual botão Grade) */
+/* 9. Variações de Tamanho Padronizadas Forge UI (Radius 6px, Padrão Unificado) */
 .tc-pill-btn-lg,
 button.lg,
-.gm-btn-lg {
-  height: 42px !important;
-  padding: 0 18px !important;
-  font-size: 12px !important;
-  border-radius: 4px !important;
+.gm-btn-lg,
+.forge-btn[class*="h-11"],
+.forge-btn[class*="h-12"],
+.gm-viewmode-btn-active[class*="h-11"],
+.gm-viewmode-btn-inactive[class*="h-11"],
+button[class*="h-11"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]):not(.gm-pin-key),
+button[class*="h-12"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]):not(.gm-pin-key),
+a[class*="h-11"]:not([class*="w-"]):not(.rounded-full),
+a[class*="h-12"]:not([class*="w-"]):not(.rounded-full) {
+  min-height: 44px !important;
+  padding: 0 20px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+}
+
+.tc-pill-btn-lg svg,
+button.lg svg,
+.gm-btn-lg svg,
+.forge-btn[class*="h-11"] svg:not(.whatsapp-icon),
+.forge-btn[class*="h-12"] svg:not(.whatsapp-icon),
+.gm-viewmode-btn-active[class*="h-11"] svg:not(.whatsapp-icon),
+.gm-viewmode-btn-inactive[class*="h-11"] svg:not(.whatsapp-icon),
+button[class*="h-11"]:not([class*="w-"]):not(.rounded-full):not(.gm-pin-key) svg:not(.whatsapp-icon),
+button[class*="h-12"]:not([class*="w-"]):not(.rounded-full):not(.gm-pin-key) svg:not(.whatsapp-icon),
+a[class*="h-11"]:not([class*="w-"]):not(.rounded-full) svg:not(.whatsapp-icon),
+a[class*="h-12"]:not([class*="w-"]):not(.rounded-full) svg:not(.whatsapp-icon) {
+  width: 20px !important;
+  height: 20px !important;
 }
 
 .tc-pill-btn-md,
 button.md,
 .gm-btn-md,
 button[class*="h-10"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
-button[class*="h-11"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
-a[class*="h-10"]:not([class*="w-"]):not(.rounded-full),
-a[class*="h-11"]:not([class*="w-"]):not(.rounded-full) {
-  height: 38px !important;
-  padding: 0 14px !important;
-  font-size: 11.5px !important;
-  border-radius: 4px !important;
+a[class*="h-10"]:not([class*="w-"]):not(.rounded-full) {
+  min-height: 40px !important;
+  padding: 0 18px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+}
+
+.tc-pill-btn-md svg,
+button.md svg,
+.gm-btn-md svg,
+button[class*="h-10"]:not([class*="w-"]):not(.rounded-full) svg:not(.whatsapp-icon),
+a[class*="h-10"]:not([class*="w-"]):not(.rounded-full) svg:not(.whatsapp-icon) {
+  width: 18px !important;
+  height: 18px !important;
 }
 
 .tc-pill-btn-sm,
 button.sm,
 .gm-btn-sm,
 button[class*="h-8"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
+a[class*="h-8"]:not([class*="w-"]):not(.rounded-full) {
+  min-height: 32px !important;
+  padding: 0 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+}
+
 button[class*="h-9"]:not([class*="w-"]):not(.rounded-full):not([class*="btn-action"]):not(.gm-budget-action-btn):not(.gm-grid-action-btn):not(.gm-btn-icon):not([class*="!p-0"]),
-a[class*="h-8"]:not([class*="w-"]):not(.rounded-full),
 a[class*="h-9"]:not([class*="w-"]):not(.rounded-full) {
-  height: 32px !important;
-  padding: 0 10px !important;
-  font-size: 11px !important;
-  border-radius: 4px !important;
+  min-height: 36px !important;
+  padding: 0 14px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+}
+
+.tc-pill-btn-sm svg,
+button.sm svg,
+.gm-btn-sm svg,
+button[class*="h-8"]:not([class*="w-"]):not(.rounded-full) svg:not(.whatsapp-icon),
+button[class*="h-9"]:not([class*="w-"]):not(.rounded-full) svg:not(.whatsapp-icon),
+a[class*="h-8"]:not([class*="w-"]):not(.rounded-full) svg:not(.whatsapp-icon),
+a[class*="h-9"]:not([class*="w-"]):not(.rounded-full) svg:not(.whatsapp-icon) {
+  width: 16px !important;
+  height: 16px !important;
 }
 
 /* Protecao Total para Botoes de Acao e Icones (Clientes, Orcamentos, etc) */
@@ -1327,8 +1404,20 @@ button.p-0 {
 .btn-whatsapp svg,
 .gm-budget-action-btn svg,
 .gm-grid-action-btn svg,
-button[class*="w-10"][class*="h-10"] svg,
+button[class*="w-9"][class*="h-9"] svg,
 button[class*="w-8"][class*="h-8"] svg {
+  width: 17px !important;
+  height: 17px !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+button[class*="w-10"][class*="h-10"] svg,
+button[class*="w-11"][class*="h-11"] svg {
+  width: 19px !important;
+  height: 19px !important;
   flex-shrink: 0 !important;
   display: inline-block !important;
   opacity: 1 !important;
@@ -1464,7 +1553,7 @@ h3, h4, .gm-card-title, .gm-modal-title, .card-title-lg, .metric-title {
 }
 
 /* 2. RÓTULOS DE FORMULÁRIO (LABELS) & CABEÇALHOS DE TABELA (TH) */
-label,
+label.gm-label,
 .gm-label,
 th,
 dt,
@@ -1534,8 +1623,8 @@ small,
 .gm-modal,
 [role="dialog"],
 .gm-solid-modal {
-  background-color: #141418 !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background-color: #131315 !important;
+  border: 1px solid #26262a !important;
   color: #ffffff !important;
 }
 
@@ -1545,40 +1634,34 @@ small,
 [role="dialog"] h3 {
   color: #ffffff !important;
   font-weight: 900 !important;
-  letter-spacing: 0.02em !important;
+  letter-spacing: -0.01em !important;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
 }
 
-.gm-modal label,
-[role="dialog"] label {
-  color: #ffffff !important;
+.gm-modal label.gm-label,
+[role="dialog"] label.gm-label {
+  color: #f8fafc !important;
   font-weight: 700 !important;
   font-size: 12px !important;
   letter-spacing: 0.05em !important;
   text-transform: uppercase !important;
 }
 
-.gm-modal p,
-.gm-modal span.text-xs,
-.gm-modal span.text-sm,
-[role="dialog"] p,
-[role="dialog"] span.text-xs,
-[role="dialog"] span.text-sm,
-div[class*="fixed inset-0"] p,
-div[class*="fixed inset-0"] span.text-xs,
-div[class*="fixed inset-0"] span.text-sm {
-  color: #cbd5e1 !important;
+.gm-modal p:not([class*="text-"]),
+[role="dialog"] p:not([class*="text-"]),
+div[class*="fixed inset-0"] p:not([class*="text-"]) {
+  color: #cbd5e1;
 }
 
 /* 7. INPUTS, SELECTS E TEXTAREAS (NÍTIDOS COM TEXTO BRANCO E PLACEHOLDER VISÍVEL) */
-input, select, textarea {
-  color: #ffffff !important;
-  font-size: 14px !important;
+:where(input, select, textarea) {
+  color: #ffffff;
+  font-size: 14px;
 }
 
 input::placeholder, textarea::placeholder {
   color: #94a3b8 !important;
-  font-size: 13px !important;
+  font-size: 13px;
 }
 
 /* 8. TABELAS E DATA GRIDS */
@@ -2071,7 +2154,7 @@ html.lenis, html.lenis body {
   --gm-radius-btn: 12px;
   --gm-radius-input: 12px;
   --gm-radius-modal: 20px;
-  --gm-transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  --gm-transition: transform 110ms cubic-bezier(0.22, 1, 0.36, 1), opacity 110ms cubic-bezier(0.22, 1, 0.36, 1), background-color 110ms cubic-bezier(0.22, 1, 0.36, 1), border-color 110ms cubic-bezier(0.22, 1, 0.36, 1), color 110ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-theme="light"], .gm-light {
@@ -2128,7 +2211,7 @@ html {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-snap-type: none !important;
   overscroll-behavior-y: auto !important;
   overscroll-behavior-x: none !important;
@@ -2149,7 +2232,7 @@ body{
   -webkit-overflow-scrolling: touch;
   background: var(--gm-bg);
   touch-action: pan-y;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-snap-type: none !important;
   overscroll-behavior-y: auto !important;
   overscroll-behavior-x: none !important;
@@ -2192,7 +2275,7 @@ body{
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-snap-type: none !important;
   overscroll-behavior-y: auto;
   overscroll-behavior-x: none;
@@ -2435,16 +2518,16 @@ input[type="submit"]:active:not(:disabled) {
   to { opacity: 1; }
 }
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.12s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Slide Up Animation */
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
+  from { transform: translateY(12px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 .animate-slide-up {
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideUp 0.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Gradient Animation for Theme Swatches */
@@ -2610,7 +2693,8 @@ body.resizing * {
 }
 
 .logo-icon {
-  width: 22px;
+  width: 100%;
+  height: 100%;
 }
 
 .logo-text {
@@ -2833,7 +2917,7 @@ button.handle,
   padding-left: 32px;
   padding-right: 32px;
   padding-top: 32px;
-  padding-bottom: 180px;
+  padding-bottom: 64px;
 }
 
 @media (min-width: 1024px) {
@@ -2841,7 +2925,13 @@ button.handle,
     padding-left: 44px;
     padding-right: 44px;
     padding-top: 36px;
-    padding-bottom: 220px;
+    padding-bottom: 64px;
+  }
+}
+
+@media (min-width: 1441px) {
+  .gm-container {
+    max-width: 1536px;
   }
 }
 
@@ -2865,14 +2955,14 @@ button.handle,
     scroll-snap-type: none !important;
     overscroll-behavior-y: auto !important;
     overscroll-behavior-x: none !important;
-    scroll-padding-bottom: calc(var(--bottom-nav-safe-space) + 64px) !important;
+    scroll-padding-bottom: calc(var(--bottom-nav-height, 84px) + env(safe-area-inset-bottom, 0px) + 32px) !important;
   }
   .gm-container {
-    padding-top: 88px !important;
-    padding-bottom: calc(var(--bottom-nav-safe-space) + 64px) !important;
-    scroll-padding-bottom: calc(var(--bottom-nav-safe-space) + 64px) !important;
-    padding-left: 18px !important;
-    padding-right: 18px !important;
+    padding-top: 84px !important;
+    padding-bottom: calc(var(--bottom-nav-height, 84px) + env(safe-area-inset-bottom, 0px) + 36px) !important;
+    scroll-padding-bottom: calc(var(--bottom-nav-height, 84px) + env(safe-area-inset-bottom, 0px) + 36px) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
     width: 100%;
     box-sizing: border-box;
     overflow-y: visible !important;
@@ -7233,37 +7323,24 @@ nav.fixed.bottom-0 {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Fundo estendido contínuo anti-vazado do BottomNav móvel */
+/* Fundo estendido contínuo abaixo da barra para overscroll sem bloquear o blur da barra */
 .gm-bottom-nav-skirt {
   position: absolute;
-  top: 0;
+  top: 100%;
   left: 0;
   right: 0;
-  bottom: -400px;
+  height: 400px;
   pointer-events: none;
   z-index: -10;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  border-bottom-left-radius: 0px !important;
-  border-bottom-right-radius: 0px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-left: none !important;
-  border-right: none !important;
-  border-bottom: none !important;
-  background: #121215 !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  border-radius: 0px !important;
+  border: none !important;
+  background: color-mix(in srgb, var(--gm-primary, #FE540B) 62%, rgba(11, 11, 12, 0.35)) !important;
 }
 
 [data-theme="light"] .gm-bottom-nav-skirt,
 .gm-light .gm-bottom-nav-skirt {
-  background: #18181b !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-left: none !important;
-  border-right: none !important;
-  border-bottom: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  background: color-mix(in srgb, var(--gm-primary, #FE540B) 62%, rgba(11, 11, 12, 0.35)) !important;
+  border: none !important;
 }
 
 [data-theme="light"] .barra,
@@ -8066,9 +8143,9 @@ p.gm-subtitle-text,
 }
 
 /* 3. Ícones (Lucide) nas Páginas Internas */
-main svg.lucide:not([class*="text-"]):not(.text-white):not(.text-slate-100):not(.text-zinc-100),
-.gm-main svg.lucide:not([class*="text-"]):not(.text-white):not(.text-slate-100):not(.text-zinc-100),
-.gm-container svg.lucide:not([class*="text-"]):not(.text-white):not(.text-slate-100):not(.text-zinc-100) {
+main svg.lucide:not([class*="text-"]):not([class*="stroke-"]):not(.gm-btn-plus-black):not(.gm-btn-icon-ink):not(.text-white):not(.text-slate-100):not(.text-zinc-100),
+.gm-main svg.lucide:not([class*="text-"]):not([class*="stroke-"]):not(.gm-btn-plus-black):not(.gm-btn-icon-ink):not(.text-white):not(.text-slate-100):not(.text-zinc-100),
+.gm-container svg.lucide:not([class*="text-"]):not([class*="stroke-"]):not(.gm-btn-plus-black):not(.gm-btn-icon-ink):not(.text-white):not(.text-slate-100):not(.text-zinc-100) {
   color: var(--gm-icon) !important;
   stroke: var(--gm-icon) !important;
 }
@@ -10399,38 +10476,44 @@ body::before {
   max-width: 1440px !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  padding-left: clamp(1.25rem, 3.2vw, 3.5rem) !important;
-  padding-right: clamp(1.25rem, 3.2vw, 3.5rem) !important;
-  padding-top: 5.5rem !important; /* Mobile com top bar */
-  padding-bottom: calc(var(--bottom-nav-height, 84px) + max(env(safe-area-inset-bottom, 0px), 16px) + 36px) !important;
+  padding-left: clamp(1rem, 3vw, 3rem) !important;
+  padding-right: clamp(1rem, 3vw, 3rem) !important;
+  padding-top: 5.25rem !important; /* Mobile com top bar */
+  padding-bottom: calc(var(--bottom-nav-height, 84px) + max(env(safe-area-inset-bottom, 0px), 16px) + 32px) !important;
 }
 
 @media (min-width: 768px) {
   .gm-container {
-    padding-top: clamp(2rem, 3.5vh, 3.5rem) !important; /* Desktop com respiro superior equilibrado */
-    padding-bottom: 5rem !important; /* Respiro inferior elegante para tabelas e cards */
+    padding-top: clamp(1.75rem, 3vh, 2.75rem) !important; /* Desktop com respiro superior equilibrado */
+    padding-bottom: 4rem !important; /* Respiro inferior elegante para tabelas e cards */
+  }
+}
+
+@media (min-width: 1441px) {
+  .gm-container {
+    max-width: 1536px !important;
   }
 }
 
 /* 2. Respiro dos Cabeçalhos e Títulos de Páginas */
 .gm-header {
-  margin-bottom: clamp(1.5rem, 2.5vh, 2.25rem) !important;
+  margin-bottom: clamp(1.25rem, 2.2vh, 1.75rem) !important;
   padding-bottom: 1rem !important;
 }
 
 /* 3. Respiro Universal de Modais e Popups */
-.gm-modal-overlay,
-div[class*="fixed inset-0"][class*="z-"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
-div[class*="fixed inset-0"][class*="backdrop-blur"]:not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
+.gm-modal-overlay:not(.gm-note-modal-overlay),
+div[class*="fixed inset-0"][class*="z-"]:not(.gm-note-modal-overlay):not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen),
+div[class*="fixed inset-0"][class*="backdrop-blur"]:not(.gm-note-modal-overlay):not(.gm-alarm-host):not([class*="toast-host"]):not([class*="gm-alarm"]):not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
   box-sizing: border-box !important;
-  padding: clamp(1rem, 3vw, 2.5rem) !important;
+  padding: clamp(0.75rem, 2.5vw, 2rem) !important;
 }
 
 .gm-modal-container,
 .gm-modal,
 [role="dialog"],
-div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) > div[class*="rounded-"]:not(.gm-pin-lock-card):not(.gm-pin-modal-card):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
-  max-height: calc(100dvh - clamp(2rem, 6vh, 5rem)) !important;
+div[class*="fixed inset-0"]:not(.gm-note-modal-overlay):not(.gm-pin-lock-overlay):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) > div[class*="rounded-"]:not(.gm-note-modal):not(.gm-pin-lock-card):not(.gm-pin-modal-card):not(.gm-website-fullscreen):not(.site-full-viewport):not(.gm-website-viewport):not([data-website-root]):not([data-site-preview]):not(.gm-site-fullscreen) {
+  max-height: calc(100dvh - clamp(1.5rem, 5vh, 4rem)) !important;
   margin-top: auto !important;
   margin-bottom: auto !important;
 }
@@ -10451,13 +10534,13 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
   -webkit-backdrop-filter: none !important;
   color: #ffffff !important;
   border: 1px solid var(--gm-primary, rgba(254, 84, 11, 0.35)) !important;
-  border-radius: 4px !important;
+  border-radius: 6px;
   box-shadow: none !important;
-  font-family: inherit !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.05em !important;
-  text-transform: uppercase !important;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer !important;
   user-select: none !important;
   transition:
@@ -10505,7 +10588,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 }
 
 .gm-viewmode-btn-active:active {
-  transform: scale(0.98) !important;
+  transform: scale(0.96) !important;
   background: var(--gm-primary, #FE540B) !important;
   box-shadow: 0 0 20px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.75), 0 0 36px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.35) !important;
 }
@@ -10518,13 +10601,13 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
   -webkit-backdrop-filter: none !important;
   color: #8b8b92 !important;
   border: 1px solid #26262a !important;
-  border-radius: 4px !important;
+  border-radius: 6px;
   box-shadow: none !important;
-  font-family: inherit !important;
-  font-size: 11.5px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.05em !important;
-  text-transform: uppercase !important;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer !important;
   user-select: none !important;
   transition:
@@ -10569,7 +10652,7 @@ div[class*="fixed inset-0"]:not(.gm-pin-lock-overlay):not(.gm-website-fullscreen
 }
 
 .gm-viewmode-btn-inactive:active {
-  transform: scale(0.98) !important;
+  transform: scale(0.96) !important;
 }
 
 /* =========================================================
@@ -11035,23 +11118,24 @@ body,
 [style*="overflowY: auto"] {
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior-y: auto !important;
-  scroll-behavior: smooth;
+  scroll-behavior: auto !important;
 }
 
-/* Aceleração em componentes interativos sem quebrar o contexto de composição do backdrop-filter */
-.gm-bottom-nav,
+/* Aceleração em componentes interativos estilo Apple iOS ProMotion */
 .gm-sidebar {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* Transições ultra-ágeis de troca de abas sem atraso visual */
 .gm-bottom-nav a,
 .gm-sidebar a,
 .gm-filter-tab {
-  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.12s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.12s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: transform 0.09s cubic-bezier(0.22, 1, 0.36, 1),
+              background-color 0.09s cubic-bezier(0.22, 1, 0.36, 1),
+              color 0.09s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.09s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
 .gm-bottom-nav a:active,
@@ -11158,7 +11242,7 @@ nav.gm-bottom-nav,
   background-color: #131315 !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-radius: 8px;
+  border-radius: var(--radius-card, 8px);
   border: 1px solid #26262A !important;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 8px 28px rgba(0, 0, 0, 0.45) !important;
   color: #F2F2F3 !important;
@@ -11405,8 +11489,8 @@ div[class*="fixed inset-0"][class*="z-"] > div[class*="absolute inset-0"][class*
 /* 2. Container/Card do Modal: acabamento unificado idêntico a todos os containers */
 
 /* =========================================================
-   ANIMAÇÃO GOLD & ESTILO DOURADO PARA O ÍCONE DA COROA (PLANOS)
-   Pulsar leve, sem rotação e sem esfumaçado neon atrás da coroa
+   ANIMAÇÃO & COR LARANJA PARA O ÍCONE DA COROA (PLANOS)
+   Pulsar leve, sem rotação e na mesma cor laranja dos ícones do menu
    ========================================================= */
 
 @keyframes gm-gold-crown-pulse {
@@ -11425,7 +11509,7 @@ div[class*="fixed inset-0"][class*="z-"] > div[class*="absolute inset-0"][class*
 .gm-gold-crown-animated,
 .gm-gold-crown-container,
 .gm-gold-crown-svg {
-  color: #FFD700 !important;
+  color: var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B))) !important;
   transform-origin: center center;
   will-change: transform;
   display: inline-flex !important;
@@ -11443,15 +11527,21 @@ div[class*="fixed inset-0"][class*="z-"] > div[class*="absolute inset-0"][class*
 }
 
 aside.gm-sidebar a .gm-gold-crown-svg,
-aside.gm-sidebar a:hover .gm-gold-crown-svg,
 aside.gm-sidebar a.active .gm-gold-crown-svg,
 .sidebar a .gm-gold-crown-svg,
-.sidebar a:hover .gm-gold-crown-svg,
 .sidebar a.active .gm-gold-crown-svg {
-  color: #FFD700 !important;
+  color: var(--gm-menu-icon, var(--gm-menu-primary, var(--gm-primary, #FE540B))) !important;
   filter: none !important;
   box-shadow: none !important;
   text-shadow: none !important;
+}
+
+aside.gm-sidebar .sidebar-btn:hover:not(.active) .gm-gold-crown-svg,
+aside.gm-sidebar .sidebar-btn:hover:not(.active) .gm-gold-crown-svg path,
+aside.gm-sidebar .sidebar-btn:hover:not(.active) .gm-gold-crown-svg circle {
+  color: #0B0B0C !important;
+  stroke: #0B0B0C !important;
+  fill: #0B0B0C !important;
 }
 
 /* =========================================================
@@ -11545,9 +11635,24 @@ aside.gm-sidebar .sidebar-btn.active,
 
 aside.gm-sidebar .sidebar-btn:hover:not(.active),
 .sidebar-btn:hover:not(.active) {
-  background: #131315 !important;
-  background-color: #131315 !important;
-  color: #FFFFFF !important;
+  background: var(--gm-menu-primary, var(--gm-primary, #FE540B)) !important;
+  background-color: var(--gm-menu-primary, var(--gm-primary, #FE540B)) !important;
+  border-color: var(--gm-menu-primary, var(--gm-primary, #FE540B)) !important;
+  color: #0B0B0C !important;
+}
+
+aside.gm-sidebar .sidebar-btn:hover:not(.active) span,
+.sidebar-btn:hover:not(.active) span {
+  color: #0B0B0C !important;
+  font-weight: 700 !important;
+}
+
+aside.gm-sidebar .sidebar-btn:hover:not(.active) svg,
+aside.gm-sidebar .sidebar-btn:hover:not(.active) svg.lucide,
+.sidebar-btn:hover:not(.active) svg,
+.sidebar-btn:hover:not(.active) svg.lucide {
+  color: #0B0B0C !important;
+  stroke: #0B0B0C !important;
 }
 
 .sidebar-window-indicator {
@@ -11703,3 +11808,248 @@ button.is-selected svg,
   color: #ffffff !important;
   stroke: #ffffff !important;
 }
+
+/* =========================================================
+   MOBILE: BARRA DE MENU INFERIOR, BARRA SUPERIOR E BOTÃO DO APP
+   Barras em Vidro Escuro Translúcido com Desfoque Real (sem laranja nas barras)
+   Laranja apenas no Botão MENU recolhido e no "GM" do Logo
+   ========================================================= */
+@media (max-width: 767px) {
+  html:not(.gm-has-bg) .gm-main-bg-layer {
+    background: var(--gm-bg, #0B0B0C) !important;
+  }
+  html:not(.gm-has-bg) .gm-layout::after {
+    background: transparent !important;
+    background-image: none !important;
+    animation: none !important;
+  }
+}
+
+nav.gm-bottom-nav,
+.gm-bottom-nav,
+nav.fixed.bottom-0,
+[data-theme="dark"] nav.gm-bottom-nav,
+[data-theme="dark"] .gm-bottom-nav,
+[data-theme="light"] nav.gm-bottom-nav,
+[data-theme="light"] .gm-bottom-nav,
+.gm-dark nav.gm-bottom-nav,
+.gm-dark .gm-bottom-nav,
+.gm-light nav.gm-bottom-nav,
+.gm-light .gm-bottom-nav,
+html.gm-has-bg nav.gm-bottom-nav,
+html.gm-has-bg .gm-bottom-nav,
+html:not([data-theme="light"]):not(.gm-light) nav.gm-bottom-nav,
+html:not([data-theme="light"]):not(.gm-light) .gm-bottom-nav {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 18, 22, 0.62) 0%,
+    rgba(11, 11, 14, 0.78) 100%
+  ) !important;
+  background-color: transparent !important;
+  -webkit-backdrop-filter: blur(28px) saturate(185%) !important;
+  backdrop-filter: blur(28px) saturate(185%) !important;
+  -webkit-backface-visibility: visible !important;
+  backface-visibility: visible !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-top-left-radius: 16px !important;
+  border-top-right-radius: 16px !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 -4px 16px rgba(0, 0, 0, 0.34) !important;
+  min-height: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+.gm-bottom-nav-skirt,
+[data-theme="light"] .gm-bottom-nav-skirt,
+.gm-light .gm-bottom-nav-skirt,
+[data-theme="dark"] .gm-bottom-nav-skirt,
+.gm-dark .gm-bottom-nav-skirt {
+  display: none !important;
+}
+
+/* Itens da barra inferior: 100% minimalistas, sem caixas ou bordas */
+nav.gm-bottom-nav .gm-bottom-nav-item,
+.gm-bottom-nav .gm-bottom-nav-item,
+nav.gm-bottom-nav .gm-bottom-nav-item.is-active,
+.gm-bottom-nav .gm-bottom-nav-item.is-active,
+nav.gm-bottom-nav a,
+.gm-bottom-nav a {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Ícones na cor laranja na barra de menu inferior mobile (incluindo coroa de Planos) */
+nav.gm-bottom-nav .gm-bottom-nav-item svg:not(.gm-bottom-nav-lock),
+.gm-bottom-nav .gm-bottom-nav-item svg:not(.gm-bottom-nav-lock),
+nav.gm-bottom-nav .gm-bottom-nav-item svg.lucide:not(.gm-bottom-nav-lock),
+.gm-bottom-nav .gm-bottom-nav-item svg.lucide:not(.gm-bottom-nav-lock),
+nav.gm-bottom-nav .gm-gold-crown-container,
+.gm-bottom-nav .gm-gold-crown-container,
+nav.gm-bottom-nav .gm-gold-crown-svg,
+.gm-bottom-nav .gm-gold-crown-svg,
+nav.gm-bottom-nav .gm-gold-crown-svg path,
+.gm-bottom-nav .gm-gold-crown-svg path,
+nav.gm-bottom-nav .gm-gold-crown-svg circle,
+.gm-bottom-nav .gm-gold-crown-svg circle {
+  color: var(--gm-primary, #FE540B) !important;
+  stroke: var(--gm-primary, #FE540B) !important;
+}
+
+/* Legendas claras nítidas sobre o vidro escuro da barra de menu inferior */
+nav.gm-bottom-nav .gm-bottom-nav-item span,
+.gm-bottom-nav .gm-bottom-nav-item span,
+nav.gm-bottom-nav a span,
+.gm-bottom-nav a span {
+  color: #E4E4E7 !important;
+  text-shadow: none !important;
+}
+
+nav.gm-bottom-nav .gm-bottom-nav-item.is-active span,
+.gm-bottom-nav .gm-bottom-nav-item.is-active span,
+nav.gm-bottom-nav a.is-active span,
+.gm-bottom-nav a.is-active span {
+  color: #FFFFFF !important;
+}
+
+/* Botão flutuante MENU recolhido (Botão do App): ÚNICO com cor Laranja Translúcida + Desfoque real */
+button.gm-bottom-menu-trigger,
+.gm-bottom-menu-trigger {
+  background: linear-gradient(
+    180deg,
+    rgba(var(--gm-primary-rgb, 254, 84, 11), 0.56) 0%,
+    rgba(var(--gm-primary-rgb, 254, 84, 11), 0.66) 100%
+  ) !important;
+  background-color: transparent !important;
+  -webkit-backdrop-filter: blur(26px) saturate(185%) !important;
+  backdrop-filter: blur(26px) saturate(185%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  color: #0B0B0C !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    0 4px 14px rgba(0, 0, 0, 0.28) !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+button.gm-bottom-menu-trigger svg,
+.gm-bottom-menu-trigger svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+button.gm-bottom-menu-trigger span,
+.gm-bottom-menu-trigger span {
+  color: #0B0B0C !important;
+}
+
+/* Barra superior mobile: Vidro Escuro Translúcido com Desfoque Real + CardDigital (Branco) GM (Laranja) */
+header.gm-mobile-header,
+header.fixed.top-0.gm-mobile-header,
+.gm-mobile-header {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 18, 22, 0.68) 0%,
+    rgba(12, 12, 15, 0.58) 100%
+  ) !important;
+  background-color: transparent !important;
+  -webkit-backdrop-filter: blur(28px) saturate(185%) !important;
+  backdrop-filter: blur(28px) saturate(185%) !important;
+  -webkit-backface-visibility: visible !important;
+  backface-visibility: visible !important;
+  transform: none !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 4px 16px rgba(0, 0, 0, 0.34) !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+.gm-mobile-header .gm-mobile-brand-card {
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+.gm-mobile-header .gm-mobile-brand-gm {
+  color: var(--gm-primary, #FE540B) !important;
+  text-shadow: none !important;
+}
+
+.gm-mobile-header .gm-mobile-header-btn,
+header.gm-mobile-header button.gm-mobile-header-btn,
+.gm-mobile-header .gm-mobile-header-btn:hover,
+header.gm-mobile-header button.gm-mobile-header-btn:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #FFFFFF !important;
+}
+
+.gm-mobile-header .gm-mobile-header-btn svg,
+.gm-mobile-header .gm-mobile-header-btn svg.lucide {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* =========================================================
+   APPLE iOS SYSTEM VELOCITY — RESPOSTA INSTANTÂNEA (120Hz)
+   ========================================================= */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="tab"],
+.gm-bottom-nav-item,
+.gm-bottom-menu-trigger,
+.sidebar-btn,
+.gm-btn,
+.forge-btn,
+.gm-filter-tab,
+.gm-status-capsule {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.gm-card,
+.gm-dashboard-card,
+.gm-stat-card,
+.gm-budget-card,
+.gm-budget-row,
+.gm-client-card,
+.gm-client-row,
+.gm-expense-card,
+.gm-expense-row,
+.gm-note-card,
+.gm-market-card {
+  contain: style;
+}
+
+button:active:not(:disabled):not(.gm-sidebar-toggle):not(.forge-tabs__tab):not([data-no-scale]),
+a.forge-btn:active,
+a.gm-btn:active,
+.tc-pill-btn:active:not(:disabled),
+aside.gm-sidebar .sidebar-btn:active,
+.gm-bottom-nav-item:active,
+[role="button"]:active:not(:disabled):not([data-no-scale]) {
+  transform: scale(0.965) !important;
+  transition: transform 75ms cubic-bezier(0.2, 0, 0, 1) !important;
+}
+

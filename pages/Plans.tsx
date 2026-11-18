@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Check, X, ShieldCheck, Sparkles, ArrowRight, Settings, QrCode, CreditCard, 
   ExternalLink, HelpCircle, Users, Award, Lock, Star, Calculator, 
-  TrendingUp, TrendingDown, RotateCcw, Percent, ChevronDown, ChevronUp,
+  TrendingUp, TrendingDown, RotateCcw, Percent, ChevronDown, ChevronUp, ChevronRight,
   FileText, Smartphone, Bell, Flame, MessageCircle, CheckCircle2,
   Clock, Zap, Building2, Layers
 } from "lucide-react";
@@ -11,8 +11,11 @@ import { SectionDivider } from "../components/ui/SectionDivider";
 import { useAuth } from "../store/AuthContext";
 import { 
   PlanId, PLANS_DATA, getStoredPlansConfig, fetchPlansConfigFromCloud, 
-  getUserSubscription, savePlansConfig, setUserSubscription 
+  savePlansConfig
 } from "../lib/subscriptionPlans";
+import { usePlanAccess } from "../hooks/usePlanAccess";
+import { supabase } from "../lib/supabase";
+import { readBudgetsLocal } from "../lib/budgetsCache";
 import PlanCheckoutModal from "../components/plans/PlanCheckoutModal";
 import ModalResizeHandles from "../components/ui/ModalResizeHandles";
 import { useModalResize } from "../hooks/useModalResize";
@@ -21,9 +24,10 @@ import { CURRENCY_FORMATTER } from "../constants";
 
 export default function Plans() {
   const { user, tenantId, isAdmin } = useAuth();
+  const { subscription, isExpired, refreshLocal, refreshCloud } = usePlanAccess();
   const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<PlanId | null>(null);
-  const [subscription, setSubscription] = useState(() => getUserSubscription(tenantId, user?.email));
   const [config, setConfig] = useState(() => getStoredPlansConfig());
+  const [usageStats, setUsageStats] = useState({ monthlyBudgets: 0, activeClients: 0 });
 
   // Estado para acordeões expansíveis (Comparativo e FAQ)
   const [isCompareOpen, setIsCompareOpen] = useState(false);
@@ -125,11 +129,11 @@ export default function Plans() {
   useEffect(() => {
     let isMounted = true;
     const syncPlans = () => {
-      setSubscription(getUserSubscription(tenantId, user?.email));
       const freshConfig = getStoredPlansConfig();
       setConfig(freshConfig);
     };
     syncPlans();
+    void refreshCloud();
 
     fetchPlansConfigFromCloud(tenantId).then((cloudConfig) => {
       if (isMounted && cloudConfig) {
@@ -137,16 +141,43 @@ export default function Plans() {
       }
     }).catch(() => {});
 
+    // Carrega uso real de orçamentos no mês e clientes ativos para exibir progresso da cota
+    async function loadUsage() {
+      if (!tenantId) return;
+      try {
+        const now = new Date();
+        const curMonth = now.getMonth();
+        const curYear = now.getFullYear();
+
+        const [budgetsRes, clientsRes] = await Promise.all([
+          supabase.from("budgets").select("id, created_at, deleted_at").eq("tenant_id", tenantId),
+          supabase.from("clients").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).is("deleted_at", null),
+        ]);
+
+        const rawBudgets = budgetsRes.data || readBudgetsLocal(tenantId) || [];
+        const monthlyBudgets = rawBudgets.filter((b: any) => {
+          if (b.deleted_at) return false;
+          if (!b.created_at) return false;
+          const d = new Date(b.created_at);
+          return d.getMonth() === curMonth && d.getFullYear() === curYear;
+        }).length;
+
+        const activeClients = clientsRes.count ?? 0;
+        if (isMounted) {
+          setUsageStats({ monthlyBudgets, activeClients });
+        }
+      } catch {}
+    }
+    void loadUsage();
+
     window.addEventListener("gm_settings_updated", syncPlans);
     window.addEventListener("gm_plans_config_updated", syncPlans);
-    window.addEventListener("gm_plan_updated", syncPlans);
     return () => {
       isMounted = false;
       window.removeEventListener("gm_settings_updated", syncPlans);
       window.removeEventListener("gm_plans_config_updated", syncPlans);
-      window.removeEventListener("gm_plan_updated", syncPlans);
     };
-  }, [tenantId, user]);
+  }, [tenantId, user, refreshCloud]);
 
   useEffect(() => {
     if (!isAdminEditOpen) return;
@@ -241,7 +272,7 @@ export default function Plans() {
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#F2F2F3] tracking-tight leading-tight">
+              <h1 className="text-[clamp(1.625rem,2.8vw,2.375rem)] leading-[1.15] font-black text-[#F2F2F3] tracking-tight">
                 Seu próximo passo profissional.
               </h1>
 
@@ -268,17 +299,17 @@ export default function Plans() {
                   <button
                     type="button"
                     onClick={handleOpenAdminEdit}
-                    className="h-10 px-4 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] whitespace-nowrap shrink-0"
+                    className="h-11 px-5 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 active:scale-[0.96] transition-all cursor-pointer border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] whitespace-nowrap shrink-0"
                   >
-                    <Settings size={15} />
+                    <Settings size={19} />
                     <span>Configurar Planos & Preços (ADM)</span>
                   </button>
 
                   <a
                     href="/admin/usuarios"
-                    className="h-10 px-4 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-[#26262A] hover:border-amber-500/40 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                    className="h-11 px-5 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] text-white font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 border border-[#26262A] hover:border-amber-500/40 active:scale-[0.96] transition-all cursor-pointer whitespace-nowrap shrink-0"
                   >
-                    <Users size={15} className="text-amber-400" />
+                    <Users size={19} className="text-amber-400" />
                     <span>Gerenciar Usuários & Liberações</span>
                   </a>
                 </div>
@@ -288,64 +319,147 @@ export default function Plans() {
         </div>
 
         {/* =========================================================================
-            2. CARD DE STATUS DO PLANO ATUAL (SEU PLANO ATUAL)
+            2. CARD DE STATUS DO PLANO ATUAL (SEU PLANO ATUAL + USO DE COTAS)
            ========================================================================= */}
         <div 
-          className="w-full p-5 sm:p-6 rounded-lg border border-[#26262A] bg-[#131315] flex flex-col md:flex-row md:items-center justify-between gap-4"
+          className="w-full p-5 sm:p-6 rounded-lg border border-[#26262A] bg-[#131315] flex flex-col gap-5"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-md bg-[#0B0B0C] border border-[#26262A] text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
-              {subscription.isSuperAdmin ? (
-                <Award size={22} className="text-amber-400" />
-              ) : (
-                <CheckCircle2 size={22} className="text-[var(--gm-primary,#FE540B)]" />
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-[#0B0B0C] text-[#8B8B92] border border-[#26262A]">
-                  SEU PLANO ATUAL
-                </span>
-                {subscription.isSuperAdmin && (
-                  <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                    Acesso Master Ilimitado
-                  </span>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-md bg-[#0B0B0C] border border-[#26262A] text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
+                {subscription.isSuperAdmin ? (
+                  <Award size={22} className="text-amber-400" />
+                ) : isExpired ? (
+                  <Lock size={22} className="text-red-400" />
+                ) : (
+                  <CheckCircle2 size={22} className="text-[var(--gm-primary,#FE540B)]" />
                 )}
               </div>
 
-              <h3 className="text-lg sm:text-xl font-black text-[#F2F2F3]">
-                {subscription.planName}
-              </h3>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-[#0B0B0C] text-[#8B8B92] border border-[#26262A]">
+                    SEU PLANO ATUAL
+                  </span>
+                  {subscription.isSuperAdmin ? (
+                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      Acesso Master Ilimitado
+                    </span>
+                  ) : subscription.status === "solicitou_liberacao" ? (
+                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      Aguardando Liberação ADM
+                    </span>
+                  ) : isExpired ? (
+                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-red-500/15 text-red-400 border border-red-500/30">
+                      Expirado • Recursos Bloqueados
+                    </span>
+                  ) : subscription.status === "teste" ? (
+                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                      Período de Teste Ativo
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      Assinatura Ativa
+                    </span>
+                  )}
+                </div>
 
-              <p className="text-xs text-[#8B8B92] tabular-nums">
-                {subscription.isSuperAdmin ? (
-                  "Conta administrativa principal liberada com acesso permanente e irrestrito a todos os módulos."
-                ) : (
-                  <>
-                    Consulte o estado da sua assinatura em cobrança •{" "}
-                    {subscription.expiresAt ? (
-                      <>Fim do período: <strong className="text-[#CBD5E1]">{new Date(subscription.expiresAt).toLocaleDateString("pt-BR")}</strong> • </>
-                    ) : null}
-                    <strong className="text-[var(--gm-primary,#FE540B)]">
-                      {subscription.daysRemaining === "ilimitado" ? "Acesso Ilimitado" : `${subscription.daysRemaining} dias restantes`}
-                    </strong>
-                  </>
-                )}
-              </p>
+                <h3 className="text-lg sm:text-xl font-black text-[#F2F2F3]">
+                  {subscription.planName}
+                </h3>
+
+                <p className="text-xs text-[#8B8B92] tabular-nums">
+                  {subscription.isSuperAdmin ? (
+                    "Conta administrativa principal liberada com acesso permanente e irrestrito a todos os módulos."
+                  ) : (
+                    <>
+                      Status em tempo real da sua conta •{" "}
+                      {subscription.expiresAt ? (
+                        <>Vencimento: <strong className="text-[#CBD5E1]">{new Date(subscription.expiresAt).toLocaleDateString("pt-BR")}</strong> • </>
+                      ) : null}
+                      <strong className={isExpired ? "text-red-400" : "text-[var(--gm-primary,#FE540B)]"}>
+                        {subscription.daysRemaining === "ilimitado"
+                          ? "Acesso Ilimitado"
+                          : isExpired
+                          ? "Expirado (0 dias restantes)"
+                          : `${subscription.daysRemaining} dias restantes`}
+                      </strong>
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() =>
+                  handleOpenCheckout(
+                    subscription.planId === "basico"
+                      ? "intermediario"
+                      : subscription.planId === "intermediario"
+                      ? "avancado"
+                      : "intermediario"
+                  )
+                }
+                className="h-10 px-4 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#1B1B1E] hover:bg-[#26262A] text-[#CBD5E1] hover:text-white font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap"
+              >
+                <span>{isExpired ? "Renovar assinatura" : "Gerenciar assinatura"}</span>
+                <ArrowRight size={14} className="text-[var(--gm-primary,#FE540B)]" />
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={() => handleOpenCheckout("intermediario")}
-              className="h-10 px-4 rounded-[6px] border border-[#26262A] hover:border-[#3F3F46] bg-[#1B1B1E] hover:bg-[#26262A] text-[#CBD5E1] hover:text-white font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap"
-            >
-              <span>Gerenciar assinatura</span>
-              <ArrowRight size={14} className="text-[var(--gm-primary,#FE540B)]" />
-            </button>
-          </div>
+          {/* Medidores reais de uso do plano */}
+          {!subscription.isSuperAdmin && subscription.planId !== "adm" && (() => {
+            const planDef = PLANS_DATA[subscription.planId] || PLANS_DATA.intermediario;
+            const bLimit = planDef.maxBudgetsPerMonth;
+            const cLimit = planDef.maxClients;
+            const bPct = bLimit === "ilimitado" ? 100 : Math.min(100, Math.round((usageStats.monthlyBudgets / bLimit) * 100));
+            const cPct = cLimit === "ilimitado" ? 100 : Math.min(100, Math.round((usageStats.activeClients / cLimit) * 100));
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-[#26262A]">
+                <div className="p-3 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#8B8B92] uppercase font-bold">Orçamentos no mês</span>
+                    <span className="font-black text-[#F2F2F3] tabular-nums">
+                      {usageStats.monthlyBudgets} / {bLimit === "ilimitado" ? "∞ Ilimitado" : bLimit}
+                    </span>
+                  </div>
+                  {bLimit !== "ilimitado" && (
+                    <div className="w-full h-1.5 rounded-full bg-[#1B1B1E] overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          bPct >= 100 ? "bg-red-500" : bPct >= 80 ? "bg-amber-400" : "bg-[var(--gm-primary,#FE540B)]"
+                        }`}
+                        style={{ width: `${bPct}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-3 rounded-md bg-[#0B0B0C] border border-[#26262A] flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#8B8B92] uppercase font-bold">Clientes cadastrados</span>
+                    <span className="font-black text-[#F2F2F3] tabular-nums">
+                      {usageStats.activeClients} / {cLimit === "ilimitado" ? "∞ Ilimitado" : cLimit}
+                    </span>
+                  </div>
+                  {cLimit !== "ilimitado" && (
+                    <div className="w-full h-1.5 rounded-full bg-[#1B1B1E] overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          cPct >= 100 ? "bg-red-500" : cPct >= 80 ? "bg-amber-400" : "bg-sky-400"
+                        }`}
+                        style={{ width: `${cPct}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* =========================================================================
@@ -354,7 +468,7 @@ export default function Plans() {
                - Criador (Mais espaço para criar • Card Destacado)
                - Profissional (Mais completo • Com acesso total)
            ========================================================================= */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
           {/* 1. PLANO ESSENCIAL (BÁSICO) */}
           <div 
             className="flex flex-col justify-between p-6 sm:p-8 rounded-lg border border-[#26262A] bg-[#131315] relative overflow-hidden transition-colors duration-200 hover:border-[#3F3F46]"
@@ -376,7 +490,7 @@ export default function Plans() {
               {/* Preço */}
               <div className="flex items-baseline gap-1 py-1 tabular-nums">
                 <span className="text-sm font-black text-[#8B8B92]">R$</span>
-                <span className="text-4xl sm:text-5xl font-black text-[#F2F2F3] tracking-tight">
+                <span className="text-4xl 2xl:text-5xl font-black text-[#F2F2F3] tracking-tight">
                   {config.priceBasico.toFixed(2).replace(".", ",")}
                 </span>
                 <span className="text-xs text-[#8B8B92] font-mono">/mês</span>
@@ -389,10 +503,19 @@ export default function Plans() {
               <button
                 type="button"
                 onClick={() => handleOpenCheckout("basico")}
-                className="w-full h-11 px-4 rounded-[6px] border border-[#26262A] bg-[#1B1B1E] hover:bg-[#26262A] hover:border-[#3F3F46] text-[#CBD5E1] hover:text-white font-mono text-xs uppercase tracking-wider transition-colors duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap"
+                className="w-full h-11 px-5 rounded-[6px] border border-[#26262A] bg-[#1B1B1E] hover:bg-[#26262A] hover:border-[#3F3F46] text-[#CBD5E1] hover:text-white font-bold text-sm uppercase tracking-wider transition-colors duration-150 cursor-pointer active:scale-[0.96] flex items-center justify-center gap-2.5 whitespace-nowrap"
               >
-                <span>Assinar Essencial</span>
-                <ArrowRight size={14} className="text-[#8B8B92]" />
+                {subscription.planId === "basico" && !isExpired ? (
+                  <>
+                    <Check size={19} className="text-sky-400" />
+                    <span>Seu plano atual</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{subscription.planId === "basico" && isExpired ? "Renovar Essencial" : "Assinar Essencial"}</span>
+                    <ArrowRight size={19} className="text-[#8B8B92]" />
+                  </>
+                )}
               </button>
               <span className="text-[11px] text-[#8B8B92] text-center font-mono -mt-3">
                 Revise as condições antes de confirmar
@@ -429,20 +552,24 @@ export default function Plans() {
               {/* Não incluídas */}
               <div className="flex flex-col gap-2 pt-2 border-t border-[#26262A]">
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#8B8B92]">
-                  Não Incluídas no Básico
+                  Não Incluídas no Essencial
                 </span>
                 <ul className="flex flex-col gap-2 text-xs text-[#8B8B92]">
                   <li className="flex items-center gap-2.5">
-                    <X size={14} className="text-zinc-600 shrink-0" />
-                    <span>Papel Timbrado A4 Oficial</span>
+                    <X size={14} className="text-red-400/80 shrink-0" />
+                    <span>Minha Bio / Portfólio Website (Bloqueado)</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <X size={14} className="text-red-400/80 shrink-0" />
+                    <span>Bloco de Notas e Produção (Bloqueado)</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <X size={14} className="text-zinc-600 shrink-0" />
-                    <span>Controle de Despesas & Relatórios DRE</span>
+                    <span>Papel Timbrado A4 & Exportação DRE em PDF</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <X size={14} className="text-zinc-600 shrink-0" />
-                    <span>Minha Bio / Portfólio Website</span>
+                    <span>Alarmes Multi-dispositivos & Exportação Consolidada</span>
                   </li>
                 </ul>
               </div>
@@ -487,7 +614,7 @@ export default function Plans() {
               {/* Preço */}
               <div className="flex items-baseline gap-1 py-1 tabular-nums">
                 <span className="text-sm font-black text-[#CBD5E1]">R$</span>
-                <span className="text-4xl sm:text-5xl font-black text-[#F2F2F3] tracking-tight">
+                <span className="text-4xl 2xl:text-5xl font-black text-[#F2F2F3] tracking-tight">
                   {config.priceIntermediario.toFixed(2).replace(".", ",")}
                 </span>
                 <span className="text-xs text-[#CBD5E1] font-mono">/mês</span>
@@ -500,11 +627,15 @@ export default function Plans() {
               <button
                 type="button"
                 onClick={() => handleOpenCheckout("intermediario")}
-                className="w-full h-11 px-4 rounded-[6px] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap"
+                className="w-full h-11 px-5 rounded-[6px] border border-[var(--gm-btn-border,var(--gm-primary,#FE540B))] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] font-bold text-sm uppercase tracking-wider transition-all duration-150 cursor-pointer active:scale-[0.96] flex items-center justify-center gap-2.5 whitespace-nowrap"
               >
-                <Check size={17} className="text-current stroke-[3]" />
+                <Check size={20} className="text-current stroke-[2.8]" />
                 <span>
-                  {subscription.planId === "intermediario" ? "Seu plano atual" : "Assinar Criador"}
+                  {subscription.planId === "intermediario" && !isExpired
+                    ? "Seu plano atual"
+                    : subscription.planId === "intermediario" && isExpired
+                    ? "Renovar Criador"
+                    : "Assinar Criador"}
                 </span>
               </button>
               <span className="text-[11px] text-[#8B8B92] text-center font-mono -mt-3">
@@ -527,7 +658,7 @@ export default function Plans() {
               {/* Checklist de Recursos */}
               <div className="flex flex-col gap-2">
                 <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)]">
-                  Tudo Liberado no Criador
+                  Recursos Liberados (Capacidade Intermediária)
                 </span>
                 <ul className="flex flex-col gap-2.5 text-xs text-white">
                   {PLANS_DATA.intermediario.features.map((feat) => (
@@ -571,7 +702,7 @@ export default function Plans() {
               {/* Preço */}
               <div className="flex items-baseline gap-1 py-1 tabular-nums">
                 <span className="text-sm font-black text-[#8B8B92]">R$</span>
-                <span className="text-4xl sm:text-5xl font-black text-[#F2F2F3] tracking-tight">
+                <span className="text-4xl 2xl:text-5xl font-black text-[#F2F2F3] tracking-tight">
                   {config.priceAvancado.toFixed(2).replace(".", ",")}
                 </span>
                 <span className="text-xs text-[#8B8B92] font-mono">/mês</span>
@@ -584,10 +715,25 @@ export default function Plans() {
               <button
                 type="button"
                 onClick={() => handleOpenCheckout("avancado")}
-                className="w-full h-11 px-4 rounded-[6px] border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-white font-mono text-xs uppercase tracking-wider transition-colors duration-150 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap"
+                className="w-full h-11 px-5 rounded-[6px] border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-white font-bold text-sm uppercase tracking-wider transition-colors duration-150 cursor-pointer active:scale-[0.96] flex items-center justify-center gap-2.5 whitespace-nowrap"
               >
-                <span>Assinar Profissional</span>
-                <ArrowRight size={14} className="text-emerald-400" />
+                {subscription.planId === "avancado" && !isExpired ? (
+                  <>
+                    <Check size={19} className="text-emerald-400" />
+                    <span>Seu plano atual</span>
+                  </>
+                ) : (
+                  <>
+                    <span>
+                      {subscription.planId === "avancado" && isExpired
+                        ? "Renovar Profissional"
+                        : subscription.planId !== "adm"
+                        ? "Fazer Upgrade →"
+                        : "Assinar Profissional"}
+                    </span>
+                    <ArrowRight size={19} className="text-emerald-400" />
+                  </>
+                )}
               </button>
               <span className="text-[11px] text-[#8B8B92] text-center font-mono -mt-3">
                 Acesso total irrestrito para alta produtividade
@@ -703,8 +849,9 @@ export default function Plans() {
         >
           <button
             type="button"
+            aria-expanded={isCompareOpen}
             onClick={() => setIsCompareOpen(!isCompareOpen)}
-            className="w-full p-5 sm:p-6 flex items-center justify-between text-left hover:bg-[#1B1B1E] transition-colors cursor-pointer"
+            className="w-full p-5 sm:p-6 flex items-center justify-between text-left hover:bg-[#1B1B1E] transition-colors cursor-pointer gap-3"
           >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-md bg-[#0B0B0C] border border-[#26262A] text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0">
@@ -786,9 +933,15 @@ export default function Plans() {
                     <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-emerald-400" /></td>
                   </tr>
                   <tr>
-                    <td className="py-3 px-2 font-bold text-white">Alarmes & Notificações de Prazos</td>
+                    <td className="py-3 px-2 font-bold text-white">Exportação Consolidada PDF (Todos os Módulos)</td>
                     <td className="py-3 px-2 text-center"><X size={15} className="mx-auto text-zinc-600" /></td>
-                    <td className="py-3 px-2 text-center">Básico</td>
+                    <td className="py-3 px-2 text-center"><X size={15} className="mx-auto text-zinc-600" /></td>
+                    <td className="py-3 px-2 text-center"><Check size={16} className="mx-auto text-emerald-400" /></td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-2 font-bold text-white">Alarmes & Notificações Push em Tempo Real</td>
+                    <td className="py-3 px-2 text-center"><X size={15} className="mx-auto text-zinc-600" /></td>
+                    <td className="py-3 px-2 text-center">Básico (Local)</td>
                     <td className="py-3 px-2 text-center font-bold text-emerald-400">Tempo Real VIP</td>
                   </tr>
                   <tr>
@@ -841,11 +994,13 @@ export default function Plans() {
                 <div key={item.q} className="py-4">
                   <button
                     type="button"
+                    aria-expanded={isOpen}
                     onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                     className="w-full flex items-center justify-between text-left gap-4 cursor-pointer group"
                   >
-                    <span className="text-xs sm:text-sm font-bold text-[#CBD5E1] group-hover:text-white transition-colors">
-                      ► {item.q}
+                    <span className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-[#CBD5E1] group-hover:text-white transition-colors">
+                      <ChevronRight size={14} className={`shrink-0 text-[var(--gm-primary,#FE540B)] transition-transform duration-150 ${isOpen ? "rotate-90" : ""}`} />
+                      <span>{item.q}</span>
                     </span>
                     <span className="text-[#8B8B92] group-hover:text-[var(--gm-primary,#FE540B)] transition-colors shrink-0">
                       {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -871,7 +1026,8 @@ export default function Plans() {
           onClose={() => setSelectedPlanForCheckout(null)}
           selectedPlanId={selectedPlanForCheckout}
           onPlanActivated={() => {
-            setSubscription(getUserSubscription(tenantId, user?.email));
+            refreshLocal();
+            void refreshCloud();
           }}
         />
       )}

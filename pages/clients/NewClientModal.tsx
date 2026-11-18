@@ -210,7 +210,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-2xl lg:max-w-3xl rounded-lg border border-[#26262A] bg-[#131315] overflow-hidden shadow-2xl relative z-10 p-0 my-auto flex flex-col max-h-[92vh]"
+        className="w-full max-w-2xl lg:max-w-3xl rounded-[10px] border border-[#26262A] bg-[#131315] overflow-hidden shadow-2xl relative z-10 p-0 my-auto flex flex-col max-h-[90dvh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -248,7 +248,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 Nome <span className="text-[var(--gm-primary)]">*</span>
               </label>
               <input
-                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                className="w-full h-11 rounded-[6px] px-3.5 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Nome completo ou Razão Social"
@@ -261,7 +261,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 WhatsApp (obrigatório) <span className="text-[var(--gm-primary)]">*</span>
               </label>
               <input
-                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none tabular-nums"
+                className="w-full h-11 rounded-[6px] px-3.5 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none tabular-nums"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(formatWhatsappBR(e.target.value))}
                 placeholder="(98) 9xxxx-xxxx"
@@ -278,7 +278,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 Telefone fixo / recado (opcional)
               </label>
               <input
-                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none tabular-nums"
+                className="w-full h-11 rounded-[6px] px-3.5 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none tabular-nums"
                 value={phone}
                 onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
                 placeholder="(98) xxxx-xxxx"
@@ -292,7 +292,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 E-mail (opcional)
               </label>
               <input
-                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                className="w-full h-11 rounded-[6px] px-3.5 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="cliente@exemplo.com"
@@ -308,7 +308,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 CPF / CNPJ (opcional)
               </label>
               <input
-                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none tabular-nums"
+                className="w-full h-11 rounded-[6px] px-3.5 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none tabular-nums"
                 value={cpfCnpj}
                 onChange={(e) => setCpfCnpj(e.target.value)}
                 placeholder="000.000.000-00 ou 00.000.000/0001-00"
@@ -321,7 +321,7 @@ export default function NewClientModal({ open, onClose, onSuccess, clientToEdit 
                 Endereço completo (opcional)
               </label>
               <input
-                className="w-full rounded-[4px] px-4 py-3 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
+                className="w-full h-11 rounded-[6px] px-3.5 text-sm bg-[#0B0B0C] border border-[#26262A] text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--gm-primary)] transition-all shadow-none"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Rua, número, bairro, cidade - UF"

@@ -123,7 +123,7 @@ export default function Register() {
               />
             </motion.div>
 
-            <div className="text-4xl font-light text-white leading-none" style={{ fontFamily: "'Funnel Display', sans-serif" }}>
+            <div className="text-3xl sm:text-4xl font-light text-white leading-none" style={{ fontFamily: "'Funnel Display', sans-serif" }}>
               <span className="opacity-95 font-bold">CardDigital</span>{" "}
               <span className="text-[#FE540B] font-black" style={{ fontFamily: "'Funnel Display', sans-serif", fontWeight: 800 }}>GM</span>
             </div>
@@ -144,7 +144,7 @@ export default function Register() {
                   <User size={18} className="text-[#8B8B92] group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[4px] w-full text-white"
+                  className="gm-input !pl-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[6px] w-full text-white"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -159,7 +159,7 @@ export default function Register() {
                   <Mail size={18} className="text-[#8B8B92] group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[4px] w-full text-white"
+                  className="gm-input !pl-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[6px] w-full text-white"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -175,7 +175,7 @@ export default function Register() {
                   <Lock size={18} className="text-[#8B8B92] group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-11 !pr-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[4px] w-full text-white"
+                  className="gm-input !pl-11 !pr-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[6px] w-full text-white"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -199,7 +199,7 @@ export default function Register() {
                   <Lock size={18} className="text-[#8B8B92] group-focus-within:text-[var(--gm-primary)] transition-colors" />
                 </div>
                 <input
-                  className="gm-input !pl-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[4px] w-full text-white"
+                  className="gm-input !pl-11 h-12 text-sm bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] !outline-none !ring-0 focus:!ring-0 focus:!outline-none transition-colors rounded-[6px] w-full text-white"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

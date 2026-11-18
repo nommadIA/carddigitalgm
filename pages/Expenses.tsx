@@ -35,6 +35,10 @@ import { useAuth } from "../store/AuthContext";
 import { broadcastAppNotification } from "../lib/syncHub";
 import { motion, AnimatePresence } from "motion/react";
 import { SectionDivider } from "../components/ui/SectionDivider";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
+import { usePlanAccess } from "../hooks/usePlanAccess";
+import PlanLockedNotice from "../components/plans/PlanLockedNotice";
+import { PlanId } from "../lib/subscriptionPlans";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -138,8 +142,16 @@ function monthRange(monthYYYYMM: string) {
 
 export default function Expenses() {
   const { tenantId } = useAuth();
+  const { subscription, canAccess, checkQuota, isExpired } = usePlanAccess();
+  const expensesAccess = canAccess("expenses");
+  const recurringAccess = canAccess("expenses_recurring");
   const [expenses, setExpenses] = useState<ExpenseUI[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lockModal, setLockModal] = useState<{
+    title: string;
+    reason?: string;
+    requiredPlan?: PlanId;
+  } | null>(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -612,8 +624,31 @@ export default function Expenses() {
     }
   };
 
+  const activeExpensesCount = expenses.filter((e) => !e.deleted_at).length;
+
+  const openNewExpenseWithCheck = () => {
+    const qCheck = checkQuota("expenses_monthly", activeExpensesCount);
+    if (!qCheck.allowed) {
+      setLockModal({
+        title: "Limite Mensal de Despesas Atingido",
+        reason: qCheck.reason,
+        requiredPlan: qCheck.requiredPlan || "intermediario",
+      });
+      return;
+    }
+    setShowNewModal(true);
+  };
+
   // Import recurring expenses to the current selected month
   const handleImportRecurring = async () => {
+    if (!recurringAccess.allowed) {
+      setLockModal({
+        title: "Importação de Recorrentes Bloqueada",
+        reason: recurringAccess.reason,
+        requiredPlan: recurringAccess.requiredPlan || "intermediario",
+      });
+      return;
+    }
     try {
       setLoading(true);
       let recurringData: any[] = [];
@@ -781,37 +816,52 @@ export default function Expenses() {
     }
   }
 
+  if (!expensesAccess.allowed) {
+    return (
+      <Page title="Despesas">
+        <PlanLockedNotice
+          variant="page"
+          title="Controle de Despesas Bloqueado"
+          reason={expensesAccess.reason}
+          requiredPlan={expensesAccess.requiredPlan || "intermediario"}
+          currentPlanName={subscription.planName}
+          isExpired={isExpired}
+        />
+      </Page>
+    );
+  }
+
   return (
     <Page
       title="Despesas"
       actions={
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
             type="button"
-            className="forge-btn forge-btn--secondary !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] cursor-pointer"
+            className="forge-btn forge-btn--secondary !h-11 !min-h-[44px] !px-4 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] cursor-pointer"
             onClick={handleImportRecurring}
             title="Importar despesas recorrentes para este mês"
           >
-            <Repeat size={14} />
+            <Repeat size={19} />
             <span>Importar Recorrentes</span>
           </button>
 
           <button
             type="button"
-            className="forge-btn forge-btn--secondary !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] cursor-pointer"
+            className="forge-btn forge-btn--secondary !h-11 !min-h-[44px] !px-4 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] cursor-pointer"
             onClick={() => setShowShareModal(true)}
             title="Compartilhar Relatório de Despesas"
           >
-            <Share2 size={14} />
+            <Share2 size={19} />
             <span>Compartilhar Relatório</span>
           </button>
 
           <button
-            className="forge-btn forge-btn--primary !h-[38px] !px-3.5 !rounded-[4px] text-[11.5px] font-semibold uppercase tracking-[0.05em] cursor-pointer"
+            className="forge-btn forge-btn--primary !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] cursor-pointer"
             type="button"
-            onClick={() => setShowNewModal(true)}
+            onClick={openNewExpenseWithCheck}
           >
-            <Plus size={14} className="stroke-[2.5]" />
+            <Plus size={20} className="stroke-[2.5] gm-btn-plus-black" />
             <span>Nova Despesa</span>
           </button>
         </div>
@@ -861,27 +911,27 @@ export default function Expenses() {
               className="flex items-center justify-between gap-3 sm:gap-4 bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] hover:border-[#3F3F46] px-3.5 py-2 rounded-[6px] w-full sm:w-auto sm:min-w-[250px] min-h-[40px] h-10 transition-colors cursor-pointer group"
               title="Clique para abrir o seletor de mês e ano"
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-[4px] border border-[var(--gm-primary,#FE540B)]/30 bg-[var(--gm-primary,#FE540B)]/15 flex items-center justify-center text-[var(--gm-primary,#FE540B)] shrink-0">
                   <Calendar size={14} />
                 </div>
-                <div className="flex flex-col items-start text-left select-none leading-tight">
+                <div className="flex flex-col items-start text-left select-none leading-tight min-w-0">
                   <span className="text-[11px] uppercase font-mono tracking-wider text-[#8b8b92] font-semibold leading-none mb-0.5">
                     Mês de Referência
                   </span>
-                  <span className="text-xs sm:text-sm font-bold text-[#f2f2f3] capitalize font-mono leading-none">
+                  <span className="text-xs sm:text-sm font-bold text-[#f2f2f3] capitalize font-mono leading-none truncate">
                     {monthFormatted}
                   </span>
                 </div>
               </div>
-              <ChevronDown size={16} className="text-[#8b8b92] group-hover:text-[var(--gm-primary,#FE540B)] transition-colors shrink-0 ml-1" />
+              <ChevronDown size={16} className="text-[#8b8b92] group-hover:text-[var(--gm-primary,#FE540B)] transition-colors shrink-0" />
             </button>
 
             {/* Desktop: Seta Próximo */}
             <button
               type="button"
               onClick={handleNextMonth}
-              className="hidden sm:flex w-10 h-10 min-w-[40px] min-h-[40px] rounded-[4px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
+              className="hidden sm:flex w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
               title="Próximo mês"
             >
               <ChevronRight size={18} />
@@ -896,7 +946,7 @@ export default function Expenses() {
                 setMonth(currentMonthKey);
                 showToast("Mês atual selecionado!");
               }}
-              className="hidden sm:flex h-10 px-3.5 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white text-xs font-mono font-bold uppercase tracking-wider transition-all items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95"
+              className="hidden sm:flex h-10 px-3.5 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white text-xs font-mono font-bold uppercase tracking-wider transition-all items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95"
               title="Ir para o mês atual"
             >
               Hoje
@@ -907,7 +957,7 @@ export default function Expenses() {
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="flex-1 h-10 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                className="flex-1 h-10 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer"
                 title="Mês anterior"
               >
                 <ChevronLeft size={18} />
@@ -916,7 +966,7 @@ export default function Expenses() {
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="flex-1 h-10 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                className="flex-1 h-10 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer"
                 title="Próximo mês"
               >
                 <ChevronRight size={18} />
@@ -925,47 +975,47 @@ export default function Expenses() {
           </div>
 
           {/* Workflow Tabs: Todas do Mês / Recorrentes / Lixeira no padrão Forge */}
-          <div className="flex items-center gap-1 p-1 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] shadow-none w-full sm:w-auto h-10">
+          <div className="grid grid-cols-3 sm:flex items-center gap-1.5 p-1 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] shadow-none w-full sm:w-auto min-h-[44px]">
             <button
               type="button"
               aria-pressed={tab === "active"}
               data-selected={tab === "active"}
-              className={`flex-1 sm:flex-initial h-8 px-3.5 rounded-[3px] text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`h-9 px-3 sm:px-4 rounded-[4px] text-xs sm:text-[13px] font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 tab === "active"
                   ? "bg-[var(--gm-primary,#FE540B)] text-white font-bold shadow-none"
                   : "text-[#8b8b92] hover:text-[#f2f2f3] hover:bg-white/5"
               }`}
               onClick={() => setTab("active")}
             >
-              <ListFilter size={14} className={tab === "active" ? "text-white shrink-0" : "text-[var(--gm-primary,#FE540B)] shrink-0"} />
+              <ListFilter size={17} className={tab === "active" ? "text-white shrink-0" : "text-[var(--gm-primary,#FE540B)] shrink-0"} />
               <span className="truncate">Todas do Mês</span>
             </button>
             <button
               type="button"
               aria-pressed={tab === "recurring"}
               data-selected={tab === "recurring"}
-              className={`flex-1 sm:flex-initial h-8 px-3.5 rounded-[3px] text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`h-9 px-3 sm:px-4 rounded-[4px] text-xs sm:text-[13px] font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 tab === "recurring"
                   ? "bg-[var(--gm-primary,#FE540B)] text-white font-bold shadow-none"
                   : "text-[#8b8b92] hover:text-[#f2f2f3] hover:bg-white/5"
               }`}
               onClick={() => setTab("recurring")}
             >
-              <Repeat size={14} className={tab === "recurring" ? "text-white shrink-0" : "text-[var(--gm-primary,#FE540B)] shrink-0"} />
+              <Repeat size={17} className={tab === "recurring" ? "text-white shrink-0" : "text-[var(--gm-primary,#FE540B)] shrink-0"} />
               <span className="truncate">Recorrentes</span>
             </button>
             <button
               type="button"
               aria-pressed={tab === "trash"}
               data-selected={tab === "trash"}
-              className={`flex-1 sm:flex-initial h-8 px-3.5 rounded-[3px] text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`h-9 px-3 sm:px-4 rounded-[4px] text-xs sm:text-[13px] font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 tab === "trash"
                   ? "bg-red-600 text-white font-bold shadow-none"
                   : "text-[#8b8b92] hover:text-red-400 hover:bg-white/5"
               }`}
               onClick={() => setTab("trash")}
             >
-              <Trash2 size={14} className={tab === "trash" ? "text-white shrink-0" : "shrink-0"} />
+              <Trash2 size={17} className={tab === "trash" ? "text-white shrink-0" : "shrink-0"} />
               <span className="truncate">Lixeira</span>
             </button>
           </div>
@@ -977,18 +1027,24 @@ export default function Expenses() {
             <div className="flex items-center gap-2 px-3 py-2 rounded-[4px] border border-[#26262a] bg-[#0B0B0C] text-emerald-400 font-mono text-xs justify-center sm:justify-start min-h-[38px]">
               <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
               <span className="text-[11px] uppercase tracking-wider text-[#8b8b92] font-semibold">PAGO:</span>
-              <span className="font-bold tabular-nums text-[#f2f2f3]">{CURRENCY_FORMATTER.format(totalPago)}</span>
+              <span className="font-bold tabular-nums text-[#f2f2f3]">
+                <AnimatedNumber value={totalPago} currency decimals={2} replayKey={`${tab}-${month}`} />
+              </span>
             </div>
 
             <div className="flex items-center gap-2 px-3 py-2 rounded-[4px] border border-[#26262a] bg-[#0B0B0C] text-red-400 font-mono text-xs justify-center sm:justify-start min-h-[38px]">
               <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
               <span className="text-[11px] uppercase tracking-wider text-[#8b8b92] font-semibold">PENDENTE:</span>
-              <span className="font-bold tabular-nums text-[#f2f2f3]">{CURRENCY_FORMATTER.format(totalPendente)}</span>
+              <span className="font-bold tabular-nums text-[#f2f2f3]">
+                <AnimatedNumber value={totalPendente} currency decimals={2} replayKey={`${tab}-${month}`} />
+              </span>
             </div>
 
             <div className="col-span-2 sm:col-span-1 flex items-center gap-2 px-3 py-2 rounded-[4px] border border-[#26262a] bg-[#0B0B0C] text-[#f2f2f3] font-mono text-xs justify-center sm:justify-start min-h-[38px]">
               <span className="text-[11px] uppercase tracking-wider text-[#8b8b92] font-semibold">TOTAL:</span>
-              <span className="font-bold tabular-nums text-[#f2f2f3]">{CURRENCY_FORMATTER.format(totalGeral)}</span>
+              <span className="font-bold tabular-nums text-[#f2f2f3]">
+                <AnimatedNumber value={totalGeral} currency decimals={2} replayKey={`${tab}-${month}`} />
+              </span>
             </div>
           </div>
 
@@ -1994,7 +2050,7 @@ export default function Expenses() {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.94, opacity: 0 }}
                   transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="w-full max-w-[420px] sm:max-w-md rounded-lg border border-[#26262A] bg-[#131315] shadow-2xl relative z-10 overflow-hidden flex flex-col m-auto h-[84dvh] min-h-[580px] max-h-[760px] sm:h-auto sm:min-h-0 sm:max-h-[90dvh] text-white"
+                  className="w-full max-w-[420px] sm:max-w-md rounded-[10px] border border-[#26262A] bg-[#131315] shadow-2xl relative z-10 overflow-hidden flex flex-col m-auto h-auto max-h-[88dvh] sm:max-h-[90dvh] text-white"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Header do Modal */}
@@ -2125,6 +2181,17 @@ export default function Expenses() {
           </AnimatePresence>,
           document.body
         )}
+
+      <PlanLockedNotice
+        variant="modal"
+        isOpen={Boolean(lockModal)}
+        onClose={() => setLockModal(null)}
+        title={lockModal?.title || "Recurso Bloqueado no Plano Atual"}
+        reason={lockModal?.reason}
+        requiredPlan={lockModal?.requiredPlan || "intermediario"}
+        currentPlanName={subscription.planName}
+        isExpired={isExpired}
+      />
     </Page>
   );
 }

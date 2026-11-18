@@ -23,7 +23,12 @@ import { SectionDivider } from "../components/ui/SectionDivider";
 import { generateFullAppSummaryPdf } from "../services/pdfService";
 import { BorderBeam } from "../components/ui/BorderBeam";
 import { ForgeSpecCard } from "../components/ui/ForgeSpecCard";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
 import { MediaDownloader } from "../components/media/MediaDownloader";
+import { Lock } from "lucide-react";
+import { usePlanAccess } from "../hooks/usePlanAccess";
+import PlanLockedNotice from "../components/plans/PlanLockedNotice";
+import { PlanId } from "../lib/subscriptionPlans";
 
 function formatPhoneBR(value: string) {
   const digits = (value || "").replace(/\D/g, "").slice(0, 11);
@@ -71,8 +76,16 @@ const inputBase =
 
 export default function Dashboard() {
   const { user, tenantId } = useAuth();
+  const { subscription, canAccess, checkQuota, isExpired } = usePlanAccess();
+  const consolidatedAccess = canAccess("consolidated_pdf");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [monthlyBudgetsCount, setMonthlyBudgetsCount] = useState(0);
+  const [lockModal, setLockModal] = useState<{
+    title: string;
+    reason?: string;
+    requiredPlan?: PlanId;
+  } | null>(null);
 
   // App Settings (for user registered company logo & name)
   const [appSettings, setAppSettings] = useState<AppSettings | null>(() => readSettingsLocal());
@@ -155,6 +168,14 @@ export default function Dashboard() {
         }
 
         const allBudgets = (rawBudgets || []).filter((b: any) => !b.deleted_at);
+        const nowDate = new Date();
+        const curMonth = nowDate.getMonth();
+        const curYear = nowDate.getFullYear();
+        const curMonthCount = allBudgets.filter((b: any) => {
+          const d = b.created_at ? new Date(b.created_at) : nowDate;
+          return d.getMonth() === curMonth && d.getFullYear() === curYear;
+        }).length;
+        setMonthlyBudgetsCount(curMonthCount);
         const mapped: BudgetRow[] = allBudgets.slice(0, 5).map((b: any) => ({
           id: b.id,
           client_name: b.client_name || b.title || b.customer_name || "Cliente",
@@ -237,6 +258,23 @@ export default function Dashboard() {
 
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove para cadastrar novos clientes.",
+        requiredPlan: "basico",
+      });
+      return;
+    }
+    const cQuota = checkQuota("clients", stats.clientesAtivos);
+    if (!cQuota.allowed) {
+      setLockModal({
+        title: "Limite de Clientes Atingido",
+        reason: cQuota.reason,
+        requiredPlan: cQuota.requiredPlan || "intermediario",
+      });
+      return;
+    }
     if (!newClientName.trim()) {
       pushToast({ title: "Informe o nome do cliente", type: "error" });
       return;
@@ -282,6 +320,15 @@ export default function Dashboard() {
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async () => {
+    if (!consolidatedAccess.allowed) {
+      setLockModal({
+        title: "Exportação Consolidada PDF (Multi-Módulo)",
+        reason: consolidatedAccess.reason,
+        requiredPlan: consolidatedAccess.requiredPlan || "avancado",
+      });
+      return;
+    }
+
     if (!tenantId) {
       pushToast({ title: "Sessão não identificada", type: "error" });
       return;
@@ -403,11 +450,22 @@ export default function Dashboard() {
           <div className="text-xs sm:text-sm font-extrabold tracking-widest text-[color:var(--gm-primary)] uppercase">
             {appSettings?.company_name ? `${appSettings.company_name} · PAINEL` : "PAINEL"}
           </div>
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-[color:var(--gm-text)] tracking-tight mt-1 truncate">
+          <h1 className="text-[clamp(1.625rem,2.5vw,2.125rem)] leading-[1.15] font-black text-[color:var(--gm-text)] tracking-tight mt-1 truncate">
             Dashboard
           </h1>
         </div>
       </div>
+
+      {isExpired && (
+        <PlanLockedNotice
+          variant="inline"
+          title="Assinatura ou Período de Teste Expirado"
+          reason="Os módulos e ações de criação, edição, status e exportação estão bloqueados. Renove ou escolha um plano na tela de Planos."
+          requiredPlan="intermediario"
+          currentPlanName={subscription.planName}
+          isExpired={true}
+        />
+      )}
 
       {/* 2. CARD DO RELÓGIO DIGITAL CENTRALIZADO (FORGE SPEC UI) */}
       <div className="forge-spec relative overflow-hidden">
@@ -419,8 +477,8 @@ export default function Dashboard() {
         </div>
         <div className="forge-spec__body flex flex-col items-center justify-center text-center py-6 sm:py-7">
           <div className="flex items-center justify-center gap-3 sm:gap-4 text-[#F2F2F3]">
-            <Clock size={28} className="text-[var(--gm-primary,#FE540B)] shrink-0" />
-            <span className="text-4xl sm:text-5xl md:text-6xl font-black font-mono tracking-widest text-[#F2F2F3] drop-shadow-sm">
+            <Clock size={26} className="text-[var(--gm-primary,#FE540B)] shrink-0" />
+            <span className="text-[clamp(2rem,3.8vw,3rem)] leading-none font-black font-mono tracking-widest tabular-nums text-[#F2F2F3] drop-shadow-sm">
               {now.toLocaleTimeString("pt-BR", { hour12: false })}
             </span>
           </div>
@@ -435,14 +493,34 @@ export default function Dashboard() {
         {/* BOTÃO PRIMÁRIO: FORGE UI */}
         <Link
           to="/budgets?new=true"
-          className="forge-btn forge-btn--primary w-full !h-10 !px-4 !rounded-[6px] text-xs font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,border-color,box-shadow] duration-150 group cursor-pointer shadow-none select-none"
+          onClick={(e) => {
+            if (isExpired) {
+              e.preventDefault();
+              setLockModal({
+                title: "Assinatura Expirada",
+                reason: "Seu período de teste ou assinatura expirou. Renove para criar novos orçamentos.",
+                requiredPlan: "basico",
+              });
+              return;
+            }
+            const bQuota = checkQuota("budgets_monthly", monthlyBudgetsCount);
+            if (!bQuota.allowed) {
+              e.preventDefault();
+              setLockModal({
+                title: "Limite Mensal de Orçamentos Atingido",
+                reason: bQuota.reason,
+                requiredPlan: bQuota.requiredPlan || "intermediario",
+              });
+            }
+          }}
+          className="forge-btn forge-btn--primary w-full !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,border-color,box-shadow] duration-150 group cursor-pointer shadow-none select-none"
           title="Novo Orçamento"
           aria-label="Novo Orçamento"
         >
           <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
-            <Plus size={16} strokeWidth={2.8} className="w-4 h-4 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
+            <Plus size={20} strokeWidth={2.6} className="w-5 h-5 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
           </span>
-          <span className="text-xs font-bold">
+          <span className="text-sm font-bold">
             Novo Orçamento
           </span>
         </Link>
@@ -452,18 +530,27 @@ export default function Dashboard() {
           type="button"
           onClick={handleExport}
           disabled={exporting}
-          className="forge-btn forge-btn--secondary w-full !h-10 !px-4 !rounded-[6px] text-xs font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,border-color,box-shadow] duration-150 group cursor-pointer shadow-none select-none disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Exportar Relatório"
+          className={`forge-btn forge-btn--secondary w-full !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,border-color,box-shadow] duration-150 group cursor-pointer shadow-none select-none disabled:opacity-50 disabled:cursor-not-allowed ${
+            !consolidatedAccess.allowed ? "opacity-80" : ""
+          }`}
+          title={consolidatedAccess.allowed ? "Exportar Relatório Consolidado" : "Exclusivo do Plano Profissional"}
           aria-label="Exportar Relatório"
         >
           {exporting ? (
-            <Loader2 size={15} className="w-4 h-4 animate-spin shrink-0 text-[var(--gm-primary,#FE540B)]" />
+            <Loader2 size={20} className="w-5 h-5 animate-spin shrink-0 text-[var(--gm-primary,#FE540B)]" />
+          ) : !consolidatedAccess.allowed ? (
+            <Lock size={17} className="shrink-0 text-amber-400" />
           ) : (
-            <Download size={15} className="w-4 h-4 shrink-0 stroke-[2.2] text-[var(--gm-primary,#FE540B)]" />
+            <Download size={20} className="w-5 h-5 shrink-0 stroke-[2.2] text-[var(--gm-primary,#FE540B)]" />
           )}
-          <span className="text-xs font-bold">
+          <span className="text-sm font-bold">
             Exportar Relatório
           </span>
+          {!consolidatedAccess.allowed && (
+            <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-[4px] bg-amber-500/15 border border-amber-500/35 text-amber-400">
+              PRO
+            </span>
+          )}
         </button>
       </div>
 
@@ -471,7 +558,7 @@ export default function Dashboard() {
       <SectionDivider label="Métricas gerais" />
 
       {/* 4. TOP METRIC CARDS WITH FORGE-SPEC UI DESIGN */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mt-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mt-1 items-stretch">
         {/* CARD 1: FATURADO NO MÊS */}
         <ForgeSpecCard
           id="01"
@@ -480,8 +567,9 @@ export default function Dashboard() {
           statusLive={true}
           eyebrow="TOTAL APROVADO / CONCLUÍDO"
           figure={formatCurrency(stats.faturamentoMensal)}
+          className="h-full"
           tags={[
-            { label: "+12,4% ESTE MÊS", accent: true, icon: <ArrowUpRight size={13} className="text-[#f65a1a] stroke-[2.5]" /> },
+            { label: "+12,4% ESTE MÊS", accent: true, icon: <ArrowUpRight size={13} className="text-[var(--gm-primary,#FE540B)] stroke-[2.5]" /> },
             { label: "METAS 2026", accent: false }
           ]}
         />
@@ -495,8 +583,9 @@ export default function Dashboard() {
           eyebrow="EM ANÁLISE / AGUARDANDO"
           figure={stats.orcametosAbertos}
           unit="ITENS"
+          className="h-full"
           tags={[
-            { label: `${stats.aguardando} EM ANÁLISE`, accent: true, icon: <Clock size={18} className="text-[#f65a1a] w-[18px] h-[18px]" /> },
+            { label: <><AnimatedNumber value={stats.aguardando} /> EM ANÁLISE</>, accent: true, icon: <Clock size={13} className="text-[var(--gm-primary,#FE540B)] stroke-[2.2]" /> },
             { label: "PENDENTE", accent: false }
           ]}
         />
@@ -509,8 +598,9 @@ export default function Dashboard() {
           statusLive={true}
           eyebrow="MÉDIA POR CLIENTE"
           figure={formatCurrency(stats.ticketMedio)}
+          className="h-full"
           tags={[
-            { label: "+4,1% DO ALVO", accent: true, icon: <ArrowUpRight size={13} className="text-[#f65a1a] stroke-[2.5]" /> },
+            { label: "+4,1% DO ALVO", accent: true, icon: <ArrowUpRight size={13} className="text-[var(--gm-primary,#FE540B)] stroke-[2.5]" /> },
             { label: "ACIMA DA META", accent: false }
           ]}
         />
@@ -524,8 +614,9 @@ export default function Dashboard() {
           eyebrow="BASE CADASTRADA"
           figure={stats.clientesAtivos}
           unit="BASE"
+          className="h-full"
           tags={[
-            { label: "+9 NOVOS ESTA SEMANA", accent: true, icon: <Users size={18} className="text-[#f65a1a] w-[18px] h-[18px]" /> },
+            { label: "+9 NOVOS ESTA SEMANA", accent: true, icon: <Users size={13} className="text-[var(--gm-primary,#FE540B)] stroke-[2.2]" /> },
             { label: "CRM ATIVO", accent: false }
           ]}
         />
@@ -538,14 +629,14 @@ export default function Dashboard() {
       <div className="space-y-4 mt-1">
         <div className="forge-spec overflow-hidden">
           <div className="forge-spec__bar">
-            <span className="forge-spec__id">05</span>
-            <span className="forge-spec__title">ORÇAMENTOS RECENTES</span>
+            <span className="forge-spec__id shrink-0">05</span>
+            <span className="forge-spec__title min-w-0 truncate">ORÇAMENTOS RECENTES</span>
             <Link
               to="/budgets"
-              className="forge-btn forge-btn--primary gm-dash-primary-btn !h-7 !py-0 px-2.5 !rounded-[6px] text-[11px] font-mono font-bold tracking-wider uppercase inline-flex items-center justify-center gap-1.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 cursor-pointer shadow-none group"
+              className="forge-btn forge-btn--primary gm-dash-primary-btn !h-9 !min-h-[36px] !py-0 px-3.5 !rounded-[6px] text-[12.5px] font-mono font-bold tracking-wider uppercase inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 cursor-pointer shadow-none shrink-0 group"
               title="Ver Todos os Orçamentos"
             >
-              <ArrowUpRight size={13} className="shrink-0 stroke-[2.5]" />
+              <ArrowUpRight size={16} className="shrink-0 stroke-[2.5]" />
               <span>VER TODOS</span>
             </Link>
           </div>
@@ -554,10 +645,10 @@ export default function Dashboard() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[#26262a] text-xs font-mono font-bold text-[#8b8b92] uppercase tracking-wider bg-white/[0.01]">
-                  <th className="px-6 py-3.5">CLIENTE</th>
-                  <th className="px-6 py-3.5">SERVIÇO</th>
-                  <th className="px-6 py-3.5">VALOR</th>
-                  <th className="px-6 py-3.5 text-right">STATUS</th>
+                  <th className="px-4 sm:px-6 py-3.5">CLIENTE</th>
+                  <th className="px-4 sm:px-6 py-3.5">SERVIÇO</th>
+                  <th className="px-4 sm:px-6 py-3.5 text-right">VALOR</th>
+                  <th className="px-4 sm:px-6 py-3.5 text-right">STATUS</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#26262a] text-sm">
@@ -574,26 +665,26 @@ export default function Dashboard() {
                       className="hover:bg-white/[0.03] transition-colors cursor-pointer group"
                       onClick={() => navigate(`/budgets`)}
                     >
-                      <td className="px-6 py-3.5 font-bold text-[#f2f2f3] whitespace-nowrap">
+                      <td className="px-4 sm:px-6 py-3.5 font-bold text-[#f2f2f3] whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded-[2px] border border-[#26262a] bg-[#1b1b1e] flex items-center justify-center text-[#8b8b92] font-mono font-bold text-[11px] uppercase group-hover:bg-[#f65a1a] group-hover:text-black group-hover:border-[#f65a1a] transition-colors">
+                          <div className="w-7 h-7 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] flex items-center justify-center text-[#8b8b92] font-mono font-bold text-[11px] uppercase shrink-0 group-hover:bg-[#f65a1a] group-hover:text-black group-hover:border-[#f65a1a] transition-colors">
                             {item.client_name.substring(0, 2)}
                           </div>
-                          <span className="text-sm font-semibold text-[#f2f2f3]">
+                          <span className="text-sm font-semibold text-[#f2f2f3] truncate max-w-[160px] sm:max-w-[220px]">
                             {item.client_name}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-3.5 text-[#8b8b92] font-medium whitespace-nowrap">
+                      <td className="px-4 sm:px-6 py-3.5 text-[#8b8b92] font-medium whitespace-nowrap max-w-[160px] sm:max-w-[240px] truncate">
                         {item.service_name}
                       </td>
-                      <td className="px-6 py-3.5 font-bold text-[#f2f2f3] whitespace-nowrap">
+                      <td className="px-4 sm:px-6 py-3.5 font-bold font-mono tabular-nums text-right text-[#f2f2f3] whitespace-nowrap">
                         {item.total_amount.toLocaleString("pt-BR", {
                           style: "currency",
                           currency: "BRL",
                         })}
                       </td>
-                      <td className="px-6 py-3.5 text-right whitespace-nowrap">
+                      <td className="px-4 sm:px-6 py-3.5 text-right whitespace-nowrap">
                         {getStatusBadge(item.status)}
                       </td>
                     </tr>
@@ -613,9 +704,9 @@ export default function Dashboard() {
       <SectionDivider label="Ações rápidas" />
 
       {/* 5. LOWER SECTION: GRID 2 COLUMNS (EQUAL SIZES) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-1 mb-8 sm:mb-12 md:mb-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 mt-1 mb-4 items-stretch">
         {/* LEFT COLUMN: NOVO CLIENTE */}
-        <div className="forge-spec">
+        <div className="forge-spec h-full flex flex-col">
           <div className="forge-spec__bar">
             <span className="forge-spec__id">06</span>
             <span className="forge-spec__title">NOVO CLIENTE · CADASTRO</span>
@@ -646,23 +737,23 @@ export default function Dashboard() {
                 />
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 mt-auto">
                 <button
                   type="submit"
                   disabled={savingClient}
-                  className="forge-btn forge-btn--primary w-full !h-[40px] !px-4 !rounded-[6px] text-xs font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-none select-none"
+                  className="forge-btn forge-btn--primary w-full !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-none select-none"
                 >
                   {savingClient ? (
                     <>
-                      <Loader2 size={15} className="w-4 h-4 animate-spin shrink-0" />
-                      <span className="text-xs font-bold tracking-wider">CADASTRANDO...</span>
+                      <Loader2 size={20} className="w-5 h-5 animate-spin shrink-0" />
+                      <span className="text-sm font-bold tracking-wider">CADASTRANDO...</span>
                     </>
                   ) : (
                     <>
                       <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
-                        <Plus size={15} strokeWidth={2.5} className="w-3.5 h-3.5 shrink-0 gm-btn-plus-black" />
+                        <Plus size={20} strokeWidth={2.6} className="w-5 h-5 shrink-0 gm-btn-plus-black" />
                       </span>
-                      <span className="text-xs font-bold tracking-wider">
+                      <span className="text-sm font-bold tracking-wider">
                         CADASTRAR CLIENTE
                       </span>
                     </>
@@ -674,24 +765,26 @@ export default function Dashboard() {
         </div>
 
         {/* RIGHT COLUMN: PALETA DO SISTEMA (EQUAL SIZE TO NOVO CLIENTE) */}
-        <div className={`p-6 flex flex-col justify-between ${cardBase}`} style={glassCardStyle}>
-          <div className="relative z-10 flex flex-col h-full justify-between">
-            <div className="flex items-center justify-between mb-4">
+        <div className="forge-spec h-full flex flex-col">
+          <div className="forge-spec__bar">
+            <span className="forge-spec__id">07</span>
+            <span className="forge-spec__title">PALETA DE CORES · SISTEMA</span>
+            <span className="forge-spec__status forge-spec__status--live tabular-nums">8 CORES</span>
+          </div>
+          <div className="forge-spec__body flex-1 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#26262A]">
               <div>
-                <h2 className="text-xl font-bold text-[color:var(--gm-text)] tracking-tight">
-                  Paleta de Cores
+                <h2 className="text-base sm:text-lg font-bold text-[color:var(--gm-text)] tracking-tight leading-snug">
+                  Paleta Oficial
                 </h2>
-                <p className="text-xs text-[color:var(--gm-text-tertiary)] font-medium">
-                  Paleta de cores oficial do sistema
+                <p className="text-xs text-[color:var(--gm-text-tertiary)] font-medium mt-0.5">
+                  Clique em qualquer cor para copiar o código HEX
                 </p>
               </div>
-              <span className="text-[11px] font-mono font-bold text-[var(--gm-primary,#FE540B)] bg-[var(--gm-primary,#FE540B)]/10 px-2.5 py-1 rounded-[4px] border border-[var(--gm-primary,#FE540B)]/30 tabular-nums">
-                8 CORES
-              </span>
             </div>
 
             {/* GRID DE CARDS DA PALETA */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-auto">
               {[
                 { name: "Ink", hex: "#0B0B0C" },
                 { name: "Graphite", hex: "#131315" },
@@ -738,6 +831,17 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <PlanLockedNotice
+        variant="modal"
+        isOpen={Boolean(lockModal)}
+        onClose={() => setLockModal(null)}
+        title={lockModal?.title || "Recurso Bloqueado no Plano Atual"}
+        reason={lockModal?.reason}
+        requiredPlan={lockModal?.requiredPlan || "avancado"}
+        currentPlanName={subscription.planName}
+        isExpired={isExpired}
+      />
     </div>
   );
 }

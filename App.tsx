@@ -2,7 +2,7 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './store/AuthContext';
 import Layout from './components/ui/Layout';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { fetchSettingsSupabase, applySettingsToDOM, AppSettings } from "./lib/settings";
 import { initGlobalUiSoundListener } from "./lib/audio";
@@ -63,9 +63,9 @@ const PrivateRoutes = () => {
       <Layout>
         <motion.div
           key={location.pathname}
-          initial={{ opacity: 0.9 }}
+          initial={{ opacity: 0.96 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.08, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.06, ease: [0.22, 1, 0.36, 1] }}
           className="grid grid-cols-1 w-full max-w-full gap-4 sm:gap-6 box-border will-change-[opacity]"
         >
           <Suspense fallback={<PageLoader />}>
@@ -164,13 +164,13 @@ const AppRoutes = () => {
 
   if (firstSegment && !reserved.includes(firstSegment)) {
     return (
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.div
           key="public-bio-direct"
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 0.95 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="w-full h-full"
         >
           <Suspense fallback={<PageLoader />}>
@@ -232,7 +232,8 @@ function BootReady() {
       }
     }
 
-    setTimeout(() => window.__GM_APP_READY__?.(), 500);
+    const rafId = requestAnimationFrame(() => window.__GM_APP_READY__?.());
+    return () => cancelAnimationFrame(rafId);
   }, [checked, user, tenantId]);
 
   return <ThemeSync prefs={settings || undefined} />;
@@ -245,18 +246,15 @@ export default function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <BootReady />
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="min-h-screen w-full max-w-full overflow-x-hidden"
-      >
-        <Router>
-          <AppRoutes />
-        </Router>
-      </motion.div>
-    </AuthProvider>
+    <MotionConfig reducedMotion="user">
+      <AuthProvider>
+        <BootReady />
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden">
+          <Router>
+            <AppRoutes />
+          </Router>
+        </div>
+      </AuthProvider>
+    </MotionConfig>
   );
 }

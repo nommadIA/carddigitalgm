@@ -14,25 +14,29 @@ import {
   ChevronUp,
   GripHorizontal,
   Crown,
+  Lock,
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
 import GoldCrownIcon from "./GoldCrownIcon";
+import { usePlanAccess } from "../../hooks/usePlanAccess";
+import { FeatureKey } from "../../lib/subscriptionPlans";
 
 // Todos os ícones do menu da aplicação para o seletor horizontal
-const allNavItems = [
+const allNavItems: Array<{ to: string; label: string; icon: any; feature?: FeatureKey }> = [
   { to: "/", label: "Início", icon: LayoutGrid },
-  { to: "/budgets", label: "Orçamentos", icon: FileText },
-  { to: "/clients", label: "Clientes", icon: Users },
-  { to: "/expenses", label: "Despesas", icon: Receipt },
-  { to: "/market", label: "Mercado", icon: ShoppingCart },
-  { to: "/notes", label: "Notas", icon: StickyNote },
-  { to: "/financial", label: "Financeiro", icon: Wallet },
-  { to: "/minha-bio", label: "Bio", icon: Smartphone },
+  { to: "/budgets", label: "Orçamentos", icon: FileText, feature: "budgets" },
+  { to: "/clients", label: "Clientes", icon: Users, feature: "clients" },
+  { to: "/expenses", label: "Despesas", icon: Receipt, feature: "expenses" },
+  { to: "/market", label: "Mercado", icon: ShoppingCart, feature: "market" },
+  { to: "/notes", label: "Notas", icon: StickyNote, feature: "notes" },
+  { to: "/financial", label: "Financeiro", icon: Wallet, feature: "financial" },
+  { to: "/minha-bio", label: "Bio", icon: Smartphone, feature: "bio" },
   { to: "/planos", label: "Planos", icon: Crown },
   { to: "/configuracoes", label: "Ajustes", icon: Settings },
 ];
 
 export default function BottomNav() {
+  const { canAccess } = usePlanAccess();
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth < 768 : false
@@ -49,8 +53,8 @@ export default function BottomNav() {
   const stretchValue = useMotionValue(0);
   const translateYValue = useMotionValue(0);
 
-  const springStretch = useSpring(stretchValue, { stiffness: 420, damping: 28 });
-  const springTranslateY = useSpring(translateYValue, { stiffness: 420, damping: 28 });
+  const springStretch = useSpring(stretchValue, { stiffness: 650, damping: 40, mass: 0.55 });
+  const springTranslateY = useSpring(translateYValue, { stiffness: 650, damping: 40, mass: 0.55 });
 
   const heightAnim = useTransform(
     springStretch,
@@ -86,10 +90,8 @@ export default function BottomNav() {
     );
 
     if (activeIndex <= 4) {
-      // 5 primeiros ícones: reseta para o início para que fiquem os 5 perfeitamente alinhados e visíveis
-      scrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+      scrollRef.current.scrollTo({ left: 0, behavior: "auto" });
     } else if (activeItemRef.current) {
-      // Se for um item além dos 5 primeiros (ex: Notas, Financeiro, Bio, Ajustes), traz para a visão
       activeItemRef.current.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
@@ -122,25 +124,22 @@ export default function BottomNav() {
 
   const navContent = (
     <div className="md:hidden">
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false}>
         {expanded ? (
-          /* MENU EXPANDIDO COM EFEITO GLASS BLUR E 5 PRIMEIROS ÍCONES ALINHADOS */
+          /* MENU EXPANDIDO MOBILE: BARRA LARANJA COM ÍCONES BRANCOS E LEGENDAS PRETAS */
           <motion.nav
             key="expanded-menu"
-            initial={{ y: 120, opacity: 0 }}
+            initial={{ y: 84, opacity: 0.9 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 120, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 28 }}
+            exit={{ y: 84, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 680, damping: 42, mass: 0.55 }}
             onPan={(_, info) => {
               if (info.offset.y < 0) {
-                // Puxar para cima: a base permanece 100% reta e fixa na borda (translateY = 0)
-                // e a altura expande elasticamente
                 translateYValue.set(0);
                 const pullUp = -info.offset.y;
                 const elastic = Math.min(65, pullUp * 0.38);
                 stretchValue.set(elastic);
               } else {
-                // Puxar para baixo: altura normal, translada para baixo para colapsar
                 stretchValue.set(0);
                 translateYValue.set(info.offset.y);
               }
@@ -153,38 +152,26 @@ export default function BottomNav() {
                 translateYValue.set(0);
               }
             }}
-            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav bg-[#131315] border-t border-[#26262A] border-b-0 border-x-0 !rounded-t-[8px] !rounded-b-none pb-[calc(env(safe-area-inset-bottom,0px)+8px)] shadow-none select-none overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 w-full z-[800] gm-bottom-nav !rounded-t-[16px] !rounded-b-none pb-[calc(env(safe-area-inset-bottom,0px)+8px)] select-none"
             style={{
               y: springTranslateY,
               height: heightAnim,
               zIndex: 800,
               "--gm-mobile-nav-height": "76px",
-              borderTopLeftRadius: "8px",
-              borderTopRightRadius: "8px",
+              borderTopLeftRadius: "16px",
+              borderTopRightRadius: "16px",
               borderBottomLeftRadius: "0px",
               borderBottomRightRadius: "0px",
               borderLeft: "none",
               borderRight: "none",
               borderBottom: "none",
-              background: "#131315",
             } as unknown as React.CSSProperties}
           >
-            {/* FUNDO SELADO (ZERO FRESTA NA BASE) */}
-            <div
-              className="gm-bottom-nav-skirt"
-              style={{
-                borderTopLeftRadius: "8px",
-                borderTopRightRadius: "8px",
-                borderBottomLeftRadius: "0px",
-                borderBottomRightRadius: "0px",
-                background: "#131315",
-              }}
-            />
 
             {/* ALÇA SUPERIOR CENTRALIZADA (PUXAR P/ CIMA EXPANDE ALTURA / TOQUE OCULTA) */}
             <motion.div
               style={{ paddingTop: handleTopPaddingAnim }}
-              className="w-full flex justify-center pb-1.5 cursor-pointer group active:opacity-80 transition-opacity touch-none"
+              className="w-full flex justify-center pb-1.5 cursor-pointer group active:opacity-80 transition-opacity duration-100 touch-none"
               onClick={() => setExpanded(false)}
               title="Toque ou arraste para baixo para ocultar o menu"
               role="button"
@@ -192,7 +179,7 @@ export default function BottomNav() {
             >
               <motion.div
                 style={{ width: handleWidthAnim }}
-                className="h-1.5 rounded-full bg-white/25 group-hover:bg-white/45 active:scale-95 transition-colors"
+                className="h-1.5 rounded-full bg-white/25 group-hover:bg-white/40 active:scale-95 transition-colors duration-100"
               />
             </motion.div>
 
@@ -204,11 +191,12 @@ export default function BottomNav() {
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUpOrLeave}
                 onMouseLeave={handleMouseUpOrLeave}
-                className="flex items-center overflow-x-auto px-1 py-1.5 no-scrollbar snap-x touch-pan-x scroll-smooth cursor-grab active:cursor-grabbing select-none w-full"
+                className="flex items-center overflow-x-auto px-1.5 py-1.5 no-scrollbar snap-x touch-pan-x cursor-grab active:cursor-grabbing select-none w-full gap-0.5"
               >
                 {allNavItems.map((it) => {
                   const Icon = it.icon;
                   const isPlanos = it.to === "/planos";
+                  const isLocked = it.feature ? !canAccess(it.feature).allowed : false;
                   const isActive =
                     location.pathname === it.to ||
                     (it.to !== "/" && location.pathname.startsWith(it.to));
@@ -220,10 +208,10 @@ export default function BottomNav() {
                       end={it.to === "/"}
                       ref={isActive ? activeItemRef : undefined}
                       className={({ isActive: navActive }) =>
-                        `shrink-0 snap-start basis-1/5 min-w-[20%] flex flex-col items-center justify-center min-h-[50px] px-1 py-1 rounded-[6px] transition-[color,background-color] duration-150 relative group cursor-pointer ${
+                        `gm-bottom-nav-item shrink-0 snap-start basis-1/5 min-w-[20%] flex flex-col items-center justify-center min-h-[50px] px-1 py-1 bg-transparent border-0 transition-[opacity,transform] duration-100 relative group cursor-pointer active:scale-95 ${
                           isActive || navActive
-                            ? "text-white font-bold"
-                            : "text-[#8B8B92] hover:text-white font-medium"
+                            ? "is-active font-extrabold"
+                            : "font-semibold"
                         }`
                       }
                     >
@@ -231,26 +219,40 @@ export default function BottomNav() {
                         const active = isActive || navActive;
                         return (
                           <>
+                            {isLocked && (
+                              <Lock
+                                size={10}
+                                strokeWidth={2.5}
+                                style={{ color: "#D4D4D8" }}
+                                className="gm-bottom-nav-lock absolute top-1 right-2.5 text-[#D4D4D8] opacity-80 pointer-events-none"
+                              />
+                            )}
                             {isPlanos ? (
-                              <GoldCrownIcon size={20} className="my-0.5" />
+                              <GoldCrownIcon
+                                size={20}
+                                style={{ color: "var(--gm-primary, #FE540B)" }}
+                                className={`my-0.5 text-[var(--gm-primary,#FE540B)] ${
+                                  active ? "opacity-100" : "opacity-85"
+                                }`}
+                              />
                             ) : (
                               <Icon
                                 size={20}
-                                style={{ color: "var(--gm-menu-icon, var(--gm-primary, #FE540B))" }}
-                                className={`transition-opacity duration-150 ${
-                                  active
-                                    ? "opacity-100"
-                                    : "opacity-75 group-hover:opacity-100"
+                                strokeWidth={active ? 2.4 : 1.85}
+                                style={{ color: "var(--gm-primary, #FE540B)" }}
+                                className={`text-[var(--gm-primary,#FE540B)] ${
+                                  isLocked ? "opacity-55" : active ? "opacity-100" : "opacity-85"
                                 }`}
                               />
                             )}
                             <span
+                              style={{ color: active ? "#FFFFFF" : "#D4D4D8" }}
                               className={`text-[11px] tracking-tight mt-1 text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-full ${
-                                isPlanos
-                                  ? "text-amber-300 font-bold"
-                                  : active
-                                  ? "text-white font-bold"
-                                  : "text-[#8B8B92] font-medium group-hover:text-white"
+                                active
+                                  ? "text-white font-extrabold opacity-100"
+                                  : isLocked
+                                    ? "text-zinc-300 font-semibold opacity-55"
+                                    : "text-zinc-200 font-semibold opacity-90"
                               }`}
                             >
                               {it.label}
@@ -265,31 +267,34 @@ export default function BottomNav() {
             </div>
           </motion.nav>
         ) : (
-          /* MENU OCULTO - BOTÃO FLUTUANTE DO GAVETEIRO COM PONTINHOS LARANJA NEON E NOME "MENU" */
+          /* MENU OCULTO - BOTÃO FLUTUANTE LARANJA GLASSMORPHISM COM BLUR REAL */
           <motion.div
             key="collapsed-menu-trigger"
-            initial={{ y: 40, opacity: 0 }}
+            initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 40, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[800]"
+            exit={{ y: 24, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 700, damping: 42, mass: 0.5 }}
+            className="fixed bottom-3 inset-x-0 flex justify-center pointer-events-none z-[800]"
             style={{ zIndex: 800 }}
           >
             <button
               type="button"
               onClick={() => setExpanded(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-[6px] bg-[#131315] hover:bg-[#1B1B1E] text-[#F2F2F3] font-bold text-xs uppercase tracking-wider hover:border-[#3F3F46] active:scale-95 transition-[background-color,border-color,transform] duration-150 cursor-pointer group shadow-lg border border-[#26262A]"
+              className="gm-bottom-menu-trigger pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full text-[#0B0B0C] font-extrabold text-xs uppercase tracking-wider active:scale-95 transition-transform duration-100 cursor-pointer group"
+              style={{ color: "#0B0B0C" }}
               aria-label="Expandir Menu"
               title="Expandir Menu (Gaveteiro)"
             >
               <GripHorizontal
                 size={16}
-                className="text-[color:var(--gm-primary)] shrink-0"
+                style={{ color: "#FFFFFF" }}
+                className="text-white shrink-0"
               />
-              <span className="text-[#F2F2F3] font-bold tracking-widest text-[11px] whitespace-nowrap">MENU</span>
+              <span className="text-[#0B0B0C] font-extrabold tracking-widest text-[11px] whitespace-nowrap">MENU</span>
               <ChevronUp
                 size={15}
-                className="text-[color:var(--gm-primary)] shrink-0"
+                style={{ color: "#FFFFFF" }}
+                className="text-white shrink-0"
               />
             </button>
           </motion.div>

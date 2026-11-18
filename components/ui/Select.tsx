@@ -84,7 +84,7 @@ export default function Select({
 
       {isOpen && (
         <div 
-          className="absolute z-[999999] top-[calc(100%+6px)] left-0 w-full max-h-80 overflow-hidden flex flex-col rounded-md bg-[#131315] border border-[#26262A] shadow-2xl"
+          className="absolute z-[999999] top-[calc(100%+6px)] left-0 w-full max-h-80 overflow-hidden flex flex-col rounded-[6px] bg-[#131315] border border-[#26262A] shadow-2xl"
           style={{ padding: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -95,7 +95,7 @@ export default function Select({
                 <input
                   ref={searchInputRef}
                   type="text"
-                  className="w-full h-9 bg-[#131315] border border-[#26262A] rounded-[4px] pl-9 pr-3 text-sm text-[#F2F2F3] placeholder-[#8B8B92] focus:outline-none focus:border-[var(--gm-primary)] transition-colors"
+                  className="w-full h-10 bg-[#131315] border border-[#26262A] rounded-[6px] pl-9 pr-3 text-sm text-[#F2F2F3] placeholder-[#8B8B92] focus:outline-none focus:border-[var(--gm-primary)] transition-colors"
                   placeholder="Buscar..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}

@@ -10,9 +10,9 @@ export function Toolbar({
 }) {
   return (
     <div className="gm-card gm-compact">
-      <div className="flex items-center justify-between gap-3 w-full flex-wrap">
-        <div className="flex items-center gap-2">{left}</div>
-        <div className="flex items-center gap-2">{right}</div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 w-full">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">{left}</div>
+        <div className="flex flex-wrap items-center gap-2 min-w-0 sm:justify-end">{right}</div>
       </div>
     </div>
   );

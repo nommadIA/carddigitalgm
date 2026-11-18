@@ -10,6 +10,9 @@ import { Card } from "../components/ui/Card";
 import { SignalBottomGradient } from "../components/ui/SignalBottomGradient";
 import { SectionDivider } from "../components/ui/SectionDivider";
 import { motion, AnimatePresence } from "motion/react";
+import { usePlanAccess } from "../hooks/usePlanAccess";
+import PlanLockedNotice from "../components/plans/PlanLockedNotice";
+import { PlanId } from "../lib/subscriptionPlans";
 import {
   Plus,
   Search,
@@ -235,6 +238,14 @@ function htmlToPlainFormatedText(html: string): string {
 
 export default function Notes() {
   const { tenantId, user } = useAuth();
+  const { subscription, canAccess, checkQuota, isExpired } = usePlanAccess();
+  const notesAccess = canAccess("notes");
+  const alarmsAccess = canAccess("alarms");
+  const [lockModal, setLockModal] = useState<{
+    title: string;
+    reason?: string;
+    requiredPlan?: PlanId;
+  } | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -1282,6 +1293,16 @@ export default function Notes() {
   };
 
   function openNewNote() {
+    const activeNotesCount = notes.filter((n) => !n.deleted_at).length;
+    const qCheck = checkQuota("notes", activeNotesCount);
+    if (!qCheck.allowed) {
+      setLockModal({
+        title: "Limite de Notas Atingido",
+        reason: qCheck.reason,
+        requiredPlan: qCheck.requiredPlan || "avancado",
+      });
+      return;
+    }
     setNewNoteModalOpen(true);
   }
 
@@ -1436,9 +1457,9 @@ export default function Notes() {
         setEditingNote(result.data);
       }
 
-      // Update Alarm Schedule if reminder format is valid
+      // Update Alarm Schedule if reminder format is valid AND plan permits alarms
       if (savedNote) {
-        if (!isCompleted && savedNote.reminder_time) {
+        if (alarmsAccess.allowed && !isCompleted && savedNote.reminder_time) {
           const hasDate = savedNote.reminder_time.includes(" ");
           let rDate: string | null = null;
           let rTimeStr = savedNote.reminder_time;
@@ -1708,21 +1729,39 @@ export default function Notes() {
     { id: "LIXEIRA", label: "LIXEIRA", icon: Trash2, count: noteCounts.lixeira, tone: "red" },
   ] as const;
 
+  if (!notesAccess.allowed) {
+    return (
+      <Page title="Notas">
+        <PlanLockedNotice
+          variant="page"
+          title="Acesso às Notas Bloqueado"
+          reason={notesAccess.reason}
+          requiredPlan={notesAccess.requiredPlan || "intermediario"}
+          currentPlanName={subscription.planName}
+          isExpired={isExpired}
+        />
+      </Page>
+    );
+  }
+
   return (
     <Page
       title="Notas"
       className="relative min-h-full"
       actions={
         <button
+          type="button"
           onClick={openNewNote}
-          className="h-10 px-4 rounded-md bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs uppercase tracking-wider font-black flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 shadow-sm active:scale-95"
+          className="forge-btn forge-btn--primary w-full sm:w-auto !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer"
         >
-          <Plus size={16} strokeWidth={3} className="text-[#0B0B0C]" />
-          <span>Criar Nota</span>
+          <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
+            <Plus size={20} strokeWidth={2.6} className="w-5 h-5 shrink-0 gm-btn-plus-black text-[#0B0B0C]" />
+          </span>
+          <span className="text-sm font-bold">Criar Nota</span>
         </button>
       }
     >
-      <div className="w-full space-y-6 pb-20 sm:pb-28 md:pb-36 mb-12">
+      <div className="w-full space-y-6 pb-4">
         {/* Tabs + Busca Padrão Orçamentos */}
         <div className="mb-6 space-y-3">
           <SectionDivider label="Filtros e Categorias" />
@@ -1820,7 +1859,7 @@ export default function Notes() {
                       aria-pressed={isActive}
                       data-selected={isActive}
                       onClick={() => setNoteTab(t.id as any)}
-                      className={`w-full h-9 sm:h-10 rounded-[6px] text-xs font-black tracking-tight transition-all uppercase flex items-center justify-between px-3 border cursor-pointer whitespace-nowrap ${
+                      className={`w-full h-10 rounded-[6px] text-xs font-black tracking-tight transition-all uppercase flex items-center justify-between px-3 border cursor-pointer whitespace-nowrap ${
                         isActive
                           ? activeClasses
                           : "bg-[#0B0B0C] border-[#26262A] text-zinc-300 hover:bg-[#1B1B1E] hover:text-white hover:border-[#3F3F46]"
@@ -1854,7 +1893,7 @@ export default function Notes() {
               placeholder="Buscar notas por título, conteúdo ou responsável..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-11 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] pl-10 pr-10 text-sm text-white placeholder-zinc-500 outline-none transition-colors"
+              className="w-full h-11 rounded-[6px] bg-[#0B0B0C] border border-[#26262A] focus:border-[var(--gm-primary)] pl-10 pr-10 text-sm text-white placeholder-zinc-500 outline-none transition-colors"
             />
             {searchTerm && (
               <button
@@ -3505,61 +3544,73 @@ export default function Notes() {
                       className="overflow-hidden flex flex-col gap-3 w-full"
                     >
                       {/* Linha 1: Data do Lembrete & Horários */}
-                      <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-1">
-                        {/* Lembrete Data */}
-                        <div className="relative flex-1 w-full">
-                          <GlassDatePicker
-                            className="w-full bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] rounded-[4px] text-[13px] font-bold text-white pl-10 pr-16 py-3 outline-none transition-colors flex items-center min-h-[46px]"
-                            value={reminderDate}
-                            onChange={setReminderDate}
-                            title="Data do Lembrete"
-                            themeColor={color}
-                            placeholder="DD/MM/AAAA"
-                          />
-                          <Calendar
-                            size={16}
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
+                      {!alarmsAccess.allowed ? (
+                        <div className="pt-1">
+                          <PlanLockedNotice
+                            variant="inline"
+                            title="Alarmes e Lembretes Programados Bloqueados"
+                            reason={alarmsAccess.reason}
+                            requiredPlan={alarmsAccess.requiredPlan || "intermediario"}
+                            currentPlanName={subscription.planName}
+                            isExpired={isExpired}
                           />
                         </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-1">
+                          {/* Lembrete Data */}
+                          <div className="relative flex-1 w-full">
+                            <GlassDatePicker
+                              className="w-full bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] rounded-[4px] text-[13px] font-bold text-white pl-10 pr-16 py-3 outline-none transition-colors flex items-center min-h-[46px]"
+                              value={reminderDate}
+                              onChange={setReminderDate}
+                              title="Data do Lembrete"
+                              themeColor={color}
+                              placeholder="DD/MM/AAAA"
+                            />
+                            <Calendar
+                              size={16}
+                              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
+                            />
+                          </div>
 
-                        {/* Lembrete Horários Alarme */}
-                        {(() => {
-                          const activeClocksCount = [reminderTime, reminderTime2, reminderTime3].filter(Boolean).length;
-                          const hasActiveClocks = activeClocksCount > 0;
-                          return (
-                            <div className="relative flex-1 w-full">
-                              <button
-                                type="button"
-                                onClick={() => setClocksExpanded(!clocksExpanded)}
-                                className="w-full bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] rounded-[4px] text-[13px] font-black uppercase text-white px-4 py-3 outline-none transition-colors flex items-center justify-between min-h-[46px] cursor-pointer"
-                              >
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                  <Clock
-                                    size={17}
-                                    className={`shrink-0 ${hasActiveClocks ? "text-emerald-400" : "text-zinc-400"}`}
-                                  />
-                                  <span className="truncate text-white font-black tracking-wide uppercase tabular-nums">
-                                    {hasActiveClocks
-                                      ? [reminderTime, reminderTime2, reminderTime3].filter(Boolean).join(" • ")
-                                      : "Horários Programados"}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  {hasActiveClocks && (
-                                    <span className="px-1.5 py-0.5 rounded-[4px] flex items-center justify-center text-[11px] font-black bg-emerald-500 text-[#0B0B0C] tabular-nums">
-                                      {activeClocksCount}
+                          {/* Lembrete Horários Alarme */}
+                          {(() => {
+                            const activeClocksCount = [reminderTime, reminderTime2, reminderTime3].filter(Boolean).length;
+                            const hasActiveClocks = activeClocksCount > 0;
+                            return (
+                              <div className="relative flex-1 w-full">
+                                <button
+                                  type="button"
+                                  onClick={() => setClocksExpanded(!clocksExpanded)}
+                                  className="w-full bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] rounded-[4px] text-[13px] font-black uppercase text-white px-4 py-3 outline-none transition-colors flex items-center justify-between min-h-[46px] cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-2 overflow-hidden">
+                                    <Clock
+                                      size={17}
+                                      className={`shrink-0 ${hasActiveClocks ? "text-emerald-400" : "text-zinc-400"}`}
+                                    />
+                                    <span className="truncate text-white font-black tracking-wide uppercase tabular-nums">
+                                      {hasActiveClocks
+                                        ? [reminderTime, reminderTime2, reminderTime3].filter(Boolean).join(" • ")
+                                        : "Horários Programados"}
                                     </span>
-                                  )}
-                                  <ChevronUp size={16} className={`text-zinc-400 transition-transform ${clocksExpanded ? "rotate-180" : ""}`} />
-                                </div>
-                              </button>
+                                  </div>
 
-                              {/* Modal de Horários / Alertas - Renderizado via Portal */}
-                              {typeof document !== "undefined" &&
-                                createPortal(
-                                  <AnimatePresence>
-                                    {clocksExpanded && (
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    {hasActiveClocks && (
+                                      <span className="px-1.5 py-0.5 rounded-[4px] flex items-center justify-center text-[11px] font-black bg-emerald-500 text-[#0B0B0C] tabular-nums">
+                                        {activeClocksCount}
+                                      </span>
+                                    )}
+                                    <ChevronUp size={16} className={`text-zinc-400 transition-transform ${clocksExpanded ? "rotate-180" : ""}`} />
+                                  </div>
+                                </button>
+
+                                {/* Modal de Horários / Alertas - Renderizado via Portal */}
+                                {typeof document !== "undefined" &&
+                                  createPortal(
+                                    <AnimatePresence>
+                                      {clocksExpanded && (
                                       <div className="fixed inset-0 z-[10000050] flex items-center justify-center p-4 overflow-hidden pointer-events-auto">
                                         <motion.div
                                           initial={{ opacity: 0 }}
@@ -3718,6 +3769,7 @@ export default function Notes() {
                           );
                         })()}
                       </div>
+                      )}
 
                       {/* Linha 2: Salvar Auto */}
                       <div className="w-full flex items-center gap-3 bg-[#0B0B0C] border border-[#26262A] p-2.5 rounded-md">
@@ -4598,6 +4650,17 @@ export default function Notes() {
           </AnimatePresence>,
           document.body
         )}
+
+      <PlanLockedNotice
+        variant="modal"
+        isOpen={Boolean(lockModal)}
+        onClose={() => setLockModal(null)}
+        title={lockModal?.title || "Recurso Bloqueado no Plano Atual"}
+        reason={lockModal?.reason}
+        requiredPlan={lockModal?.requiredPlan || "avancado"}
+        currentPlanName={subscription.planName}
+        isExpired={isExpired}
+      />
     </Page>
   );
 }

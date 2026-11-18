@@ -21,6 +21,11 @@ import ReminderConfigModal from "../components/budgets/ReminderConfigModal";
 import ExpandedBudgetRow from "../components/budgets/ExpandedBudgetRow";
 import { SignalBottomGradient } from "../components/ui/SignalBottomGradient";
 import { ForgeSpecCard } from "../components/ui/ForgeSpecCard";
+import { AnimatedNumber } from "../components/ui/AnimatedNumber";
+import { usePlanAccess } from "../hooks/usePlanAccess";
+import PlanLockedNotice from "../components/plans/PlanLockedNotice";
+import { PlanId } from "../lib/subscriptionPlans";
+import { pushToast } from "../store/toast";
 import {
   Plus,
   Search,
@@ -43,10 +48,11 @@ import {
   LayoutGrid,
   List,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 import { SectionDivider } from "../components/ui/SectionDivider";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList } from "recharts";
 import SafeResponsive from "../components/ui/SafeResponsive";
 
 // ✅ Componente para Scroll por Arrastre (Mouse/Touch) sem barra visível
@@ -240,19 +246,19 @@ function VirtualizedBudgetList({
     <div className="flex flex-col gap-2 w-full pb-10">
       {/* CABEÇALHO DO MODO LISTA NO DESKTOP */}
       <div className="hidden lg:block w-full overflow-x-auto no-scrollbar">
-        <div className="flex items-center min-w-[1260px] xl:min-w-0 w-full px-4 py-2.5 text-xs font-black uppercase tracking-wider select-none bg-[#131315] border border-[#26262A] rounded-md">
-          <div className="flex items-center gap-3 w-[330px] xl:w-[350px] shrink-0">
+        <div className="flex items-center min-w-[1080px] 2xl:min-w-0 w-full px-4 py-2.5 text-xs font-black uppercase tracking-wider select-none bg-[#131315] border border-[#26262A] rounded-md">
+          <div className="flex items-center gap-3 w-[310px] 2xl:w-[350px] shrink-0">
             <span className="w-7 text-center text-slate-400">EXP.</span>
             <span className="w-24 text-left text-[var(--gm-primary)] font-black">EMISSÃO</span>
             <span className="text-left text-[var(--gm-primary)] font-black">CLIENTE</span>
           </div>
-          <div className="text-left w-[470px] shrink-0 pl-8">
+          <div className="text-left w-[385px] 2xl:w-[440px] shrink-0 pl-4 2xl:pl-8">
             <span className="text-[var(--gm-primary)] font-black">STATUS DO ORÇAMENTO</span>
           </div>
-          <div className="text-left w-[240px] shrink-0 pl-16">
+          <div className="text-left w-[195px] 2xl:w-[230px] shrink-0 pl-4 2xl:pl-12">
             <span className="text-[var(--gm-primary)] font-black">VALOR TOTAL</span>
           </div>
-          <div className="ml-auto text-right pr-2 min-w-[170px]">
+          <div className="ml-auto text-right pr-2 min-w-[164px]">
             <span className="text-[var(--gm-primary)] font-black">AÇÕES</span>
           </div>
         </div>
@@ -297,9 +303,9 @@ function VirtualizedBudgetList({
 
             {/* LINHA PRINCIPAL DA BARRA EM UMA LINHA SÓ */}
             <div className="w-full overflow-x-auto no-scrollbar">
-              <div className="flex items-center min-w-[1260px] xl:min-w-0 w-full min-h-0 py-0.5">
+              <div className="flex items-center min-w-[1080px] 2xl:min-w-0 w-full min-h-0 py-0.5">
                 {/* IDENTIFICAÇÃO: EXPANSÃO + EMISSÃO + CLIENTE (COLUNA FIXA) */}
-                <div className="flex items-center gap-2.5 sm:gap-3 w-[330px] xl:w-[350px] shrink-0 min-w-0">
+                <div className="flex items-center gap-2.5 sm:gap-3 w-[310px] 2xl:w-[350px] shrink-0 min-w-0">
                   {/* SETA DE EXPANSÃO DESTACADA */}
                   <button
                     type="button"
@@ -353,7 +359,7 @@ function VirtualizedBudgetList({
                 </div>
 
                 {/* CÁPSULAS DE STATUS - ALINHADAS À ESQUERDA */}
-                <div className="flex items-center justify-start gap-1.5 w-[470px] shrink-0 pl-8">
+                <div className="flex items-center justify-start gap-1.5 w-[385px] 2xl:w-[440px] shrink-0 pl-4 2xl:pl-8">
                   {STATUS_OPTIONS.map((opt) => {
                     const isActive = currentStatus === opt.value;
                     const activeCls = pillClass(opt.value);
@@ -380,7 +386,7 @@ function VirtualizedBudgetList({
                 {/* VALOR TOTAL - AFASTADO PARA A DIREITA E ALINHADO À ESQUERDA */}
                 <div
                   onClick={() => toggleRow(r.id)}
-                  className="flex items-center justify-start gap-1.5 w-[240px] shrink-0 pl-16 whitespace-nowrap cursor-pointer select-none"
+                  className="flex items-center justify-start gap-1.5 w-[195px] 2xl:w-[230px] shrink-0 pl-4 2xl:pl-12 whitespace-nowrap cursor-pointer select-none"
                   title="Valor Total"
                 >
                   <span className="text-[11px] font-black text-[var(--gm-primary)] uppercase tracking-wider">
@@ -845,12 +851,18 @@ function VirtualizedBudgetGrid({
 
 export default function Budgets() {
   const { tenantId } = useAuth();
+  const { subscription, canAccess, checkQuota, isExpired } = usePlanAccess();
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const [rows, setRows] = useState<BudgetRow[]>(() => (readBudgetsLocal(tenantId) as BudgetRow[]) || []);
   const [loading, setLoading] = useState(false);
+  const [lockModal, setLockModal] = useState<{
+    title: string;
+    reason?: string;
+    requiredPlan?: PlanId;
+  } | null>(null);
 
   const [tab, setTabState] = useState<TabKey>(() => {
     const saved = localStorage.getItem("gm_budgets_tab");
@@ -886,6 +898,76 @@ export default function Budgets() {
   const [reminderConfigOpen, setReminderConfigOpen] = useState(false);
   const [shareData, setShareData] = useState<{ budget: BudgetRow; message: string } | null>(null);
   const [sharing, setSharing] = useState<string | null>(null);
+
+  const monthlyBudgetsCount = useMemo(() => {
+    const now = new Date();
+    const curMonth = now.getMonth();
+    const curYear = now.getFullYear();
+    return rows.filter((r) => {
+      if (r.deleted_at) return false;
+      const d = r.created_at ? new Date(r.created_at) : now;
+      return d.getMonth() === curMonth && d.getFullYear() === curYear;
+    }).length;
+  }, [rows]);
+
+  const budgetQuota = checkQuota("budgets_monthly", monthlyBudgetsCount);
+
+  const openNewBudgetWithCheck = () => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove para criar novos orçamentos.",
+        requiredPlan: "basico",
+      });
+      return;
+    }
+    const qCheck = checkQuota("budgets_monthly", monthlyBudgetsCount);
+    if (!qCheck.allowed) {
+      setLockModal({
+        title: "Limite Mensal de Orçamentos Atingido",
+        reason: qCheck.reason,
+        requiredPlan: qCheck.requiredPlan || "intermediario",
+      });
+      return;
+    }
+    setNewOpen(true);
+  };
+
+  const requestDuplicateBudget = (id: string) => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove para duplicar orçamentos.",
+        requiredPlan: "basico",
+      });
+      return;
+    }
+    const qCheck = checkQuota("budgets_monthly", monthlyBudgetsCount);
+    if (!qCheck.allowed) {
+      setLockModal({
+        title: "Limite Mensal de Orçamentos Atingido",
+        reason: qCheck.reason,
+        requiredPlan: qCheck.requiredPlan || "intermediario",
+      });
+      return;
+    }
+    setDuplicateId(id);
+  };
+
+  const requestReminderConfigOpen = (open: boolean) => {
+    if (open) {
+      const alarmCheck = canAccess("alarms");
+      if (!alarmCheck.allowed) {
+        setLockModal({
+          title: "Alarmes Programados Bloqueados",
+          reason: alarmCheck.reason,
+          requiredPlan: alarmCheck.requiredPlan || "intermediario",
+        });
+        return;
+      }
+    }
+    setReminderConfigOpen(open);
+  };
   
   // Hard delete confirmation state
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -921,7 +1003,7 @@ export default function Budgets() {
     const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
     const params = new URLSearchParams(location.search || window.location.search || hashQuery);
     if (params.get("new") === "true") {
-      setNewOpen(true);
+      openNewBudgetWithCheck();
     }
     const viewParam = (params.get("view") || params.get("mode") || "").toLowerCase();
     if (viewParam === "list" || viewParam === "lista" || viewParam === "listas") {
@@ -1209,9 +1291,18 @@ export default function Budgets() {
       return status;
     };
 
+    const fullNameFor = (status: string) => {
+      if (status === "AGUARDANDO") return "Aguardando";
+      if (status === "APROVADO") return "Aprovado";
+      if (status === "CONCLUIDO") return "Concluídos";
+      if (status === "CANCELADO") return "Cancelados";
+      return status;
+    };
+
     return {
       chartData: Object.entries(groups).map(([status, v]) => ({
         name: labelFor(status),
+        fullName: fullNameFor(status),
         value: v.total,
         count: v.count,
         color: colorFor(status),
@@ -1220,10 +1311,19 @@ export default function Budgets() {
       countAtivo: groups.AGUARDANDO.count + groups.APROVADO.count,
       totalConcluido: groups.CONCLUIDO.total,
       countConcluido: groups.CONCLUIDO.count,
+      totalBudgetsCount: active.length,
     };
   }, [rows]);
 
   const updateStatusInstant = async (id: string, next: string) => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove para atualizar status.",
+        requiredPlan: "basico",
+      });
+      return;
+    }
     const nextNorm = normalizeStatus(next);
 
     // UI otimista
@@ -1245,8 +1345,9 @@ export default function Budgets() {
     try {
       const row = rows.find((r) => r.id === id);
       const enabled = getBudgetRemindersEnabled();
+      const alarmsAllowed = canAccess("alarms").allowed;
 
-      if ((nextNorm === "APROVADO" || nextNorm === "PRODUCAO") && enabled && row) {
+      if ((nextNorm === "APROVADO" || nextNorm === "PRODUCAO") && enabled && alarmsAllowed && row) {
         scheduleApprovedBudgetReminders(id, row.client_name || "Cliente", row.delivery_days || 5);
       }
 
@@ -1274,6 +1375,14 @@ export default function Budgets() {
   };
 
   const handlePdf = async (id: string, tenant_id: string) => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove para gerar PDFs.",
+        requiredPlan: "basico",
+      });
+      return;
+    }
     try {
       const { data: fullBudget, error } = await supabase
         .from("budgets")
@@ -1283,6 +1392,7 @@ export default function Budgets() {
       if (error) throw error;
 
       const settings = await fetchSettingsSupabase(tenant_id);
+      const hasTimbradoAccess = canAccess("pdf_timbrado").allowed;
 
       const items = (fullBudget.items || []).map((i: any) => ({
         titulo: i.description,
@@ -1310,14 +1420,32 @@ export default function Budgets() {
           interestRate: fullBudget.interest_rate,
         },
         items,
-        settings!
+        settings!,
+        { simpleMode: !hasTimbradoAccess }
       );
+
+      if (!hasTimbradoAccess) {
+        pushToast({
+          title: "PDF Simples Gerado",
+          message: "O Papel Timbrado A4 Oficial está disponível a partir do Plano Criador.",
+          type: "info",
+        });
+      }
     } catch (err: any) {
       alert(err?.message || "Erro ao gerar PDF.");
     }
   };
 
   const handleShare = async (r: BudgetRow) => {
+    const whatsappAccess = canAccess("whatsapp");
+    if (!whatsappAccess.allowed) {
+      setLockModal({
+        title: "Compartilhamento Bloqueado",
+        reason: whatsappAccess.reason,
+        requiredPlan: whatsappAccess.requiredPlan || "basico",
+      });
+      return;
+    }
     setSharing(r.id);
     try {
       const { data: fullBudget } = await supabase
@@ -1362,7 +1490,27 @@ export default function Budgets() {
     }
   };
 
+  const requestEditBudget = (id: string) => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para editar orçamentos.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
+    setEditId(id);
+  };
+
   const softDelete = async (id: string) => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para mover orçamentos.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
     try {
       await softDeleteApi("budgets", id);
       load();
@@ -1372,6 +1520,14 @@ export default function Budgets() {
   };
 
   const restore = async (id: string) => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para restaurar orçamentos.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
     try {
       await restoreApi("budgets", id);
       load();
@@ -1381,10 +1537,27 @@ export default function Budgets() {
   };
 
   const confirmHardDelete = (id: string) => {
+    if (isExpired) {
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para excluir orçamentos.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
     setDeleteConfirmId(id);
   };
 
   const hardDelete = async () => {
+    if (isExpired) {
+      setDeleteConfirmId(null);
+      setLockModal({
+        title: "Assinatura Expirada",
+        reason: "Seu período de teste ou assinatura expirou. Renove ou escolha um plano na tela de Planos para continuar.",
+        requiredPlan: "intermediario",
+      });
+      return;
+    }
     if (!deleteConfirmId) return;
     try {
       await supabase.from("budget_items").delete().eq("budget_id", deleteConfirmId);
@@ -1409,22 +1582,22 @@ export default function Budgets() {
     <Page
       title="Orçamentos"
       actions={
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
           {/* SELETOR DE MODO NO CABEÇALHO DO TOPO (FORGE UI SYSTEM) */}
-          <div className="flex items-center gap-1 p-1 bg-[#131315] border border-[#26262a] rounded-[4px] h-10">
+          <div className="flex items-center gap-1 p-1 bg-[#131315] border border-[#26262a] rounded-[6px] h-11">
             <button
               type="button"
               onClick={() => handleSetViewMode("grid")}
               aria-pressed={viewMode === "grid"}
               data-selected={viewMode === "grid"}
-              className={`h-8 px-3 rounded-[4px] text-xs font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider ${
+              className={`h-9 px-3.5 rounded-[4px] text-[13px] font-bold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${
                 viewMode === "grid"
-                  ? "gm-viewmode-btn-active !h-8 !px-3 font-bold text-white"
-                  : "gm-viewmode-btn-inactive !h-8 !px-3"
+                  ? "gm-viewmode-btn-active !h-9 !px-3.5 font-bold text-white"
+                  : "gm-viewmode-btn-inactive !h-9 !px-3.5"
               }`}
               title="Visualização em Grade de Cards"
             >
-              <LayoutGrid size={14} className={viewMode === "grid" ? "shrink-0 text-white" : "shrink-0"} />
+              <LayoutGrid size={17} className={viewMode === "grid" ? "shrink-0 text-white" : "shrink-0"} />
               <span>Grade</span>
             </button>
             <button
@@ -1432,38 +1605,54 @@ export default function Budgets() {
               onClick={() => handleSetViewMode("list")}
               aria-pressed={viewMode === "list"}
               data-selected={viewMode === "list"}
-              className={`h-8 px-3 rounded-[4px] text-xs font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider ${
+              className={`h-9 px-3.5 rounded-[4px] text-[13px] font-bold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${
                 viewMode === "list"
-                  ? "gm-viewmode-btn-active !h-8 !px-3 font-bold text-white"
-                  : "gm-viewmode-btn-inactive !h-8 !px-3"
+                  ? "gm-viewmode-btn-active !h-9 !px-3.5 font-bold text-white"
+                  : "gm-viewmode-btn-inactive !h-9 !px-3.5"
               }`}
               title="Visualização em Listas com Linhas e Setas de Expansão"
             >
-              <List size={14} className={viewMode === "list" ? "shrink-0 text-white" : "shrink-0"} />
+              <List size={17} className={viewMode === "list" ? "shrink-0 text-white" : "shrink-0"} />
               <span>Listas</span>
             </button>
           </div>
 
           {/* BOTÃO PRIMÁRIO: FORGE BUTTON */}
           <button 
-            className="forge-btn forge-btn--primary !h-10 !px-4 !rounded-[6px] inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150" 
+            className="forge-btn forge-btn--primary !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 cursor-pointer" 
             type="button" 
-            onClick={() => setNewOpen(true)}
+            onClick={openNewBudgetWithCheck}
             title="Criar Novo Orçamento"
           >
-            <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
-              <Plus size={16} strokeWidth={2.8} className="w-4 h-4 shrink-0 gm-btn-plus-black" stroke="#0b0b0c" />
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wider">Novo Orçamento</span>
+            {isExpired || !budgetQuota.allowed ? (
+              <Lock size={17} className="shrink-0 text-[#0b0b0c]" />
+            ) : (
+              <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
+                <Plus size={20} strokeWidth={2.6} className="w-5 h-5 shrink-0 gm-btn-plus-black text-[#0b0b0c]" />
+              </span>
+            )}
+            <span className="text-sm font-bold uppercase tracking-wider">Novo Orçamento</span>
           </button>
         </div>
       }
     >
+      {isExpired && (
+        <div className="mb-6">
+          <PlanLockedNotice
+            variant="inline"
+            title="Assinatura Expirada — Ações Bloqueadas"
+            reason="Sua assinatura ou período de teste expirou. Renove ou escolha um plano na tela de Planos para criar, editar, alterar status ou exportar orçamentos."
+            requiredPlan="intermediario"
+            currentPlanName={subscription.planName}
+            isExpired={true}
+          />
+        </div>
+      )}
       {/* ✅ Resumo geral (dado real, calculado a partir de todos os orçamentos ativos) */}
       <div className="mb-6 space-y-4">
         <SectionDivider label="Resumo" />
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
           <ForgeSpecCard
             id="01"
             title="EM ABERTO"
@@ -1471,8 +1660,10 @@ export default function Budgets() {
             statusLive={true}
             eyebrow="AGUARDANDO + APROVADO"
             figure={CURRENCY.format(statusSummary.totalAtivo)}
+            animationKey={tab}
+            className="h-full"
             tags={[
-              { label: `${statusSummary.countAtivo} ORÇAMENTO(S)`, accent: true }
+              { label: <><AnimatedNumber value={statusSummary.countAtivo} replayKey={tab} /> ORÇAMENTO(S)</>, accent: true }
             ]}
             onClick={() => setTab("AGUARDANDO")}
           />
@@ -1484,34 +1675,90 @@ export default function Budgets() {
             statusLive={true}
             eyebrow="FINALIZADOS COM SUCESSO"
             figure={CURRENCY.format(statusSummary.totalConcluido)}
+            animationKey={tab}
+            className="h-full"
             tags={[
-              { label: `${statusSummary.countConcluido} ORÇAMENTO(S)`, accent: true }
+              { label: <><AnimatedNumber value={statusSummary.countConcluido} replayKey={tab} /> ORÇAMENTO(S)</>, accent: true }
             ]}
             onClick={() => { setTab("CONCLUIDOS"); setSelectedMonth("TODOS"); }}
           />
 
-          <div className="forge-spec">
+          <div className="forge-spec h-full md:col-span-2 lg:col-span-1">
             <div className="forge-spec__bar">
               <span className="forge-spec__id">03</span>
               <span className="forge-spec__title">VALOR POR STATUS</span>
-              <span className="forge-spec__status">GRÁFICO</span>
+              <span className="forge-spec__status forge-spec__status--live tabular-nums">
+                <AnimatedNumber value={statusSummary.totalBudgetsCount} replayKey={tab} /> TOTAL
+              </span>
             </div>
-            <div className="forge-spec__body !py-3">
-              <div className="h-28 relative overflow-hidden w-full">
-                <SafeResponsive height={112}>
-                  <BarChart data={statusSummary.chartData} barSize={22} margin={{ top: 10, right: 8, left: 8, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" stroke="#888" fontSize={11} tickLine={false} axisLine={false} interval={0} />
-                    <YAxis hide domain={[0, (dataMax: number) => (dataMax > 0 ? dataMax * 1.2 : 100)]} />
-                    <Tooltip
-                      formatter={(val: number) => CURRENCY.format(val)}
-                      cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                      contentStyle={{ backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#fff", fontSize: 12 }}
+            <div className="forge-spec__body flex-1 flex flex-col justify-center !py-2.5 !px-3.5">
+              <div className="h-[132px] relative w-full">
+                <SafeResponsive height={132}>
+                  <BarChart
+                    data={statusSummary.chartData}
+                    barSize={26}
+                    margin={{ top: 22, right: 8, left: 8, bottom: 2 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
+                    <XAxis
+                      dataKey="name"
+                      interval={0}
+                      height={24}
+                      tickLine={false}
+                      axisLine={{ stroke: "#26262A" }}
+                      tick={{ fill: "#CBD5E1", fontSize: 11, fontWeight: 600 }}
                     />
-                    <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                    <YAxis
+                      hide
+                      domain={[0, (dataMax: number) => (dataMax > 0 ? Math.ceil(dataMax * 1.32) : 100)]}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                      labelFormatter={(_label: any, payload: any) =>
+                        payload?.[0]?.payload?.fullName || _label
+                      }
+                      formatter={(val: any, _name: any, props: any) => {
+                        const count = props?.payload?.count ?? 0;
+                        return [
+                          `${CURRENCY.format(Number(val || 0))} (${count} ${count === 1 ? "orçamento" : "orçamentos"})`,
+                          "Total",
+                        ];
+                      }}
+                      contentStyle={{
+                        backgroundColor: "#131315",
+                        border: "1px solid #26262A",
+                        borderRadius: "6px",
+                        color: "#F2F2F3",
+                        fontSize: 12,
+                        padding: "8px 10px",
+                        boxShadow: "0 8px 20px rgba(0,0,0,0.45)",
+                      }}
+                      itemStyle={{ color: "#F2F2F3", fontWeight: 700 }}
+                      labelStyle={{ color: "var(--gm-primary, #FE540B)", fontWeight: 700, marginBottom: 2 }}
+                    />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={30}>
                       {statusSummary.chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={6}
+                        formatter={(val: any) => {
+                          const n = Number(val || 0);
+                          if (n <= 0) return "";
+                          if (n >= 1000) {
+                            return `R$ ${(n / 1000).toFixed(1).replace(".", ",")}k`;
+                          }
+                          return `R$ ${Math.round(n)}`;
+                        }}
+                        style={{
+                          fill: "#F2F2F3",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          fontFamily: "var(--font-mono, monospace)",
+                        }}
+                      />
                     </Bar>
                   </BarChart>
                 </SafeResponsive>
@@ -1578,7 +1825,7 @@ export default function Budgets() {
               </span>
             )}
           </div>
-          <div className="grid grid-cols-6 md:grid-cols-13 gap-1 sm:gap-1.5 w-full">
+          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-7 xl:grid-cols-13 gap-1.5 w-full">
             {MONTHS.map((m) => {
               const isSelected = selectedMonth === m.key;
               const isCurrent = currentCalMonth === m.key;
@@ -1589,7 +1836,7 @@ export default function Budgets() {
                   type="button"
                   onClick={() => setSelectedMonth(m.key)}
                   className={cn(
-                    "relative w-full h-8 sm:h-9 rounded-[6px] text-[11px] sm:text-xs tracking-tight flex items-center justify-center gap-1 cursor-pointer select-none transition-colors duration-200 border",
+                    "relative w-full h-9 rounded-[6px] text-[11px] sm:text-xs tracking-tight flex items-center justify-center gap-1 cursor-pointer select-none transition-colors duration-200 border",
                     isSelected
                       ? "border-transparent bg-transparent text-white font-black"
                       : isCurrent
@@ -1628,7 +1875,7 @@ export default function Budgets() {
               type="button"
               onClick={() => setSelectedMonth("TODOS")}
               className={cn(
-                "relative col-span-6 md:col-span-1 w-full h-8 sm:h-9 rounded-[6px] text-[11px] sm:text-xs tracking-tight flex items-center justify-center cursor-pointer select-none transition-colors duration-200 border",
+                "relative col-span-4 sm:col-span-6 lg:col-span-2 xl:col-span-1 w-full h-9 rounded-[6px] text-[11px] sm:text-xs tracking-tight flex items-center justify-center cursor-pointer select-none transition-colors duration-200 border",
                 selectedMonth === "TODOS"
                   ? "border-transparent bg-transparent text-white font-black"
                   : "bg-[#0B0B0C] border-[#26262A] text-zinc-300 font-bold hover:border-[#3F3F46] hover:text-white hover:bg-[#1B1B1E]"
@@ -1679,15 +1926,28 @@ export default function Budgets() {
       {/* ✅ 3 CÁPSULAS VERTICAIS - FORGE UI SYSTEM */}
       <div className="mb-4 flex flex-col gap-2 w-full text-xs text-slate-400">
         {/* CÁPSULA 1: ORÇAMENTOS (X) */}
-        <div className="w-full px-4 py-3 min-h-[44px] rounded-[4px] bg-[#131315] border border-[#26262a] text-[#f2f2f3] font-semibold flex items-center justify-between select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+        <div className="w-full px-4 py-3 min-h-[44px] rounded-[6px] bg-[#131315] border border-[#26262a] text-[#f2f2f3] font-semibold flex items-center justify-between gap-2 flex-wrap select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
           <div className="flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-[1px] bg-[var(--gm-primary,#FE540B)]" />
             <FileText size={16} className="text-[var(--gm-primary,#FE540B)]" />
             <span className="text-xs font-semibold text-[#f2f2f3] tracking-wider uppercase font-mono">Orçamentos</span>
           </div>
-          <span className="px-2.5 py-0.5 rounded-[2px] bg-[var(--gm-primary,#FE540B)]/15 border border-[var(--gm-primary,#FE540B)]/30 text-[var(--gm-primary,#FE540B)] font-mono font-bold text-xs">
-            {filtered.length}
-          </span>
+          <div className="flex items-center gap-2">
+            {budgetQuota.limit !== null && (
+              <span
+                className={`px-2.5 py-0.5 rounded-[4px] border font-mono font-bold text-[11px] tabular-nums ${
+                  budgetQuota.allowed
+                    ? "bg-[#0B0B0C] border-[#26262A] text-[#CBD5E1]"
+                    : "bg-red-500/15 border-red-500/35 text-red-400"
+                }`}
+              >
+                Mês: {monthlyBudgetsCount}/{budgetQuota.limit}
+              </span>
+            )}
+            <span className="px-2.5 py-0.5 rounded-[4px] bg-[var(--gm-primary,#FE540B)]/15 border border-[var(--gm-primary,#FE540B)]/30 text-[var(--gm-primary,#FE540B)] font-mono font-bold text-xs tabular-nums">
+              {filtered.length}
+            </span>
+          </div>
         </div>
 
         {/* CÁPSULA 2: MÊS SET */}
@@ -1697,7 +1957,7 @@ export default function Budgets() {
               setSelectedMonth("TODOS");
             }
           }}
-          className={`w-full px-4 py-3 min-h-[44px] rounded-[4px] bg-[#131315] border border-[#26262a] flex items-center justify-between select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+          className={`w-full px-4 py-3 min-h-[44px] rounded-[6px] bg-[#131315] border border-[#26262a] flex items-center justify-between select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
             selectedMonth !== "TODOS"
               ? "cursor-pointer hover:border-[#38383f] hover:bg-[#18181b] transition-colors"
               : ""
@@ -1715,47 +1975,47 @@ export default function Budgets() {
           </div>
 
           {selectedMonth !== "TODOS" ? (
-            <span className="text-xs font-mono font-bold text-[var(--gm-primary,#FE540B)] px-2.5 py-0.5 rounded-[2px] bg-[var(--gm-primary,#FE540B)]/15 border border-[var(--gm-primary,#FE540B)]/30 hover:bg-[var(--gm-primary,#FE540B)]/25 transition-colors">
+            <span className="text-xs font-mono font-bold text-[var(--gm-primary,#FE540B)] px-2.5 py-0.5 rounded-[4px] bg-[var(--gm-primary,#FE540B)]/15 border border-[var(--gm-primary,#FE540B)]/30 hover:bg-[var(--gm-primary,#FE540B)]/25 transition-colors tabular-nums">
               VER TODOS ({totalInCurrentTab})
             </span>
           ) : (
-            <span className="text-xs font-mono font-semibold text-[#8b8b92] px-2.5 py-0.5 rounded-[2px] bg-white/[0.04] border border-white/[0.08]">
+            <span className="text-xs font-mono font-semibold text-[#8b8b92] px-2.5 py-0.5 rounded-[4px] bg-white/[0.04] border border-white/[0.08] tabular-nums">
               {totalInCurrentTab} orçamentos
             </span>
           )}
         </div>
 
         {/* CÁPSULA 3: GRADE E LISTA - FORGE BUTTON STYLE */}
-        <div className="w-full grid grid-cols-2 gap-2.5">
+        <div className="w-full grid grid-cols-2 gap-3 sm:gap-4">
           <button
             type="button"
             onClick={() => handleSetViewMode("grid")}
             aria-pressed={viewMode === "grid"}
             data-selected={viewMode === "grid"}
-            className={`w-full h-10 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,border-color,box-shadow] duration-150 cursor-pointer select-none ${
               viewMode === "grid"
-                ? "gm-viewmode-btn-active !h-10 text-white"
-                : "gm-viewmode-btn-inactive !h-10"
+                ? "gm-viewmode-btn-active text-white"
+                : "gm-viewmode-btn-inactive"
             }`}
             title="Visualização em Grade de Cards"
           >
-            <LayoutGrid size={15} className={viewMode === "grid" ? "shrink-0 text-white" : "shrink-0"} />
-            <span>Grade</span>
+            <LayoutGrid size={20} className={viewMode === "grid" ? "w-5 h-5 shrink-0 text-white" : "w-5 h-5 shrink-0"} />
+            <span className="text-sm font-bold">Grade</span>
           </button>
           <button
             type="button"
             onClick={() => handleSetViewMode("list")}
             aria-pressed={viewMode === "list"}
             data-selected={viewMode === "list"}
-            className={`w-full h-10 rounded-[4px] text-xs font-bold uppercase tracking-wider transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,border-color,box-shadow] duration-150 cursor-pointer select-none ${
               viewMode === "list"
-                ? "gm-viewmode-btn-active !h-10 text-white"
-                : "gm-viewmode-btn-inactive !h-10"
+                ? "gm-viewmode-btn-active text-white"
+                : "gm-viewmode-btn-inactive"
             }`}
             title="Visualização em Listas com Linhas e Setas de Expansão"
           >
-            <List size={15} className={viewMode === "list" ? "shrink-0 text-white" : "shrink-0"} />
-            <span>Listas</span>
+            <List size={20} className={viewMode === "list" ? "w-5 h-5 shrink-0 text-white" : "w-5 h-5 shrink-0"} />
+            <span className="text-sm font-bold">Listas</span>
           </button>
         </div>
       </div>
@@ -1796,14 +2056,14 @@ export default function Budgets() {
           toggleRow={toggleRow}
           tab={tab}
           updateStatusInstant={updateStatusInstant}
-          setEditId={setEditId}
-          setDuplicateId={setDuplicateId}
+          setEditId={requestEditBudget}
+          setDuplicateId={requestDuplicateBudget}
           handleShare={handleShare}
           sharing={sharing}
           softDelete={softDelete}
           restore={restore}
           confirmHardDelete={confirmHardDelete}
-          setReminderConfigOpen={setReminderConfigOpen}
+          setReminderConfigOpen={requestReminderConfigOpen}
           stopSignal={stopSignal}
           handlePdf={handlePdf}
         />
@@ -1813,12 +2073,12 @@ export default function Budgets() {
           highlightedId={highlightedId}
           tab={tab}
           updateStatusInstant={updateStatusInstant}
-          setEditId={setEditId}
-          setDuplicateId={setDuplicateId}
+          setEditId={requestEditBudget}
+          setDuplicateId={requestDuplicateBudget}
           handleShare={handleShare}
           sharing={sharing}
           handlePdf={handlePdf}
-          setReminderConfigOpen={setReminderConfigOpen}
+          setReminderConfigOpen={requestReminderConfigOpen}
           softDelete={softDelete}
           restore={restore}
           confirmHardDelete={confirmHardDelete}
@@ -1827,8 +2087,8 @@ export default function Budgets() {
         />
       )}
 
-      {/* ✅ Folga generosa no rodapé da página em relação aos containers finais */}
-      <div className="h-32 sm:h-40 w-full shrink-0 pointer-events-none" aria-hidden="true" />
+      {/* ✅ Folga equilibrada no rodapé da página */}
+      <div className="h-4 w-full shrink-0 pointer-events-none" aria-hidden="true" />
 
       {/* Instance for creating new budget (persistent state) */}
       <NewBudgetModal 
@@ -2002,6 +2262,17 @@ export default function Budgets() {
           </div>
         </div>
       )}
+      {/* Modal de Limite / Bloqueio por Plano */}
+      <PlanLockedNotice
+        variant="modal"
+        isOpen={Boolean(lockModal)}
+        onClose={() => setLockModal(null)}
+        title={lockModal?.title || "Recurso Bloqueado no Plano Atual"}
+        reason={lockModal?.reason}
+        requiredPlan={lockModal?.requiredPlan || "intermediario"}
+        currentPlanName={subscription.planName}
+        isExpired={isExpired}
+      />
     </Page>
   );
 }

@@ -20,8 +20,8 @@ import {
   BgEffectConfig,
 } from "../lib/backgroundEffects";
 
-const DEFAULT_ARCH_WALLPAPER =
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80";
+const OFFICIAL_APP_LOGO_URL =
+  "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg";
 
 function isMobileDevice(): boolean {
   if (typeof window === "undefined") return false;
@@ -108,7 +108,7 @@ function resolveAppBackground(forceMobile?: boolean): {
   }
 
   return {
-    url: DEFAULT_ARCH_WALLPAPER,
+    url: "",
     isVideo: false,
     fit: "cover",
     pos_x: "50%",
@@ -118,7 +118,7 @@ function resolveAppBackground(forceMobile?: boolean): {
 }
 
 export default function Login() {
-  const { signInWithPassword, signInWithGoogle, loginAsMasterAdmin, checked, user } = useAuth();
+  const { signInWithPassword, signInWithGoogle, checked, user } = useAuth();
   const navigate = useNavigate();
 
   // Detecção de primeiro login / usuário novo vs cadastrado
@@ -531,7 +531,7 @@ export default function Login() {
           transition={bgAnim.transition as any}
           className="w-full h-full will-change-transform scale-[1.12]"
         >
-          {bgInfo.isVideo ? (
+          {bgInfo.isVideo && bgInfo.url ? (
             <video
               src={bgInfo.url}
               autoPlay
@@ -548,26 +548,28 @@ export default function Login() {
             <div
               className="w-full h-full"
               style={{
-                backgroundImage: `url("${bgInfo.url}")`,
-                backgroundSize: bgInfo.fit || "cover",
-                backgroundPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
-                backgroundRepeat: "no-repeat",
+                background:
+                  "radial-gradient(circle at 50% 35%, rgba(254, 84, 11, 0.16) 0%, rgba(8, 9, 11, 0.96) 65%)",
               }}
             />
           )}
         </motion.div>
-        <div className="absolute inset-0 bg-black/75 backdrop-blur-[4px]" />
+        <div className="absolute inset-0 bg-black/70" />
       </div>
 
       {/* ------------------------------------------------------------- */}
       {/* LADO ESQUERDO: Painel de Credenciais Minimalista Forge        */}
       {/* ------------------------------------------------------------- */}
       <div className="w-full lg:w-[480px] xl:w-[540px] 2xl:w-[580px] h-full flex flex-col justify-between shrink-0 bg-[#0B0B0C]/95 lg:bg-[#0B0B0C] lg:border-r border-[#26262A] relative z-20 overflow-y-auto px-6 sm:px-10 lg:px-12 xl:px-14 py-8 sm:py-10 shadow-2xl">
-        {/* Topo: LOGO OFICIAL DO APP Card Digital GM (Sem avatar e sem área do assinante) */}
+        {/* Topo: LOGO OFICIAL DO APP CardDigital GM */}
         <div className="flex items-center justify-between mb-5 sm:mb-7">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-[#FE540B] flex items-center justify-center font-black text-white text-base shrink-0">
-              GM
+            <div className="w-10 h-10 rounded-[9px] flex items-center justify-center overflow-hidden shrink-0 shadow-none bg-[#333333] border border-[#26262A] p-0">
+              <img
+                src={OFFICIAL_APP_LOGO_URL}
+                alt="Logo Oficial CardDigital GM"
+                className="w-full h-full object-cover scale-[1.06] transform block"
+              />
             </div>
             <div className="flex flex-col min-w-0">
               <div className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-1 leading-tight">
@@ -813,21 +815,7 @@ export default function Login() {
             )}
 
             {!isForgotPassword && (
-              <div className="pt-2 space-y-2 text-center">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    setIsLoading(true);
-                    await loginAsMasterAdmin();
-                    navigate("/");
-                  }}
-                  className="w-full h-11 rounded-[6px] border border-[#F65A1A]/40 bg-[#F65A1A]/10 hover:bg-[#F65A1A]/20 text-[#FF7A38] hover:text-white font-mono font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
-                  title="Testar demonstração completa sem precisar de senha"
-                >
-                  <Sparkles size={14} className="text-[#F65A1A]" />
-                  <span>Entrar Modo Demonstração (Acesso Completo)</span>
-                </button>
-
+              <div className="pt-2 text-center">
                 <Link
                   to="/register"
                   className="w-full inline-flex items-center justify-center h-11 sm:h-12 rounded-[6px] border border-[#26262A] bg-[#131315] hover:bg-[#1B1B1E] hover:border-[#3F3F46] transition-colors font-semibold text-xs tracking-wide text-[#CBD5E1] hover:text-white active:scale-[0.99]"
@@ -848,62 +836,97 @@ export default function Login() {
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* LADO DIREITO: Fundo Animado Rolando + Visual Hero (Designers Hub) */}
+      {/* LADO DIREITO: Vitrine Animada com Logo Oficial do Aplicativo  */}
       {/* ------------------------------------------------------------- */}
-      <div className="hidden lg:flex flex-1 relative h-full overflow-hidden bg-black flex-col justify-between p-10 xl:p-14 2xl:p-16 select-none">
-        {/* Camada do background rolando animado */}
+      <div className="hidden lg:flex flex-1 relative h-full overflow-hidden bg-[#07080A] flex-col justify-between p-10 xl:p-14 2xl:p-16 select-none">
+        {/* Camada de fundo técnica Forge + aura laranja central animada */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <div
+            className="absolute inset-0 opacity-[0.14]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)",
+              backgroundSize: "48px 48px",
+            }}
+          />
           <motion.div
-            animate={bgAnim.animate}
-            transition={bgAnim.transition as any}
-            className="w-full h-full will-change-transform scale-[1.08]"
-            style={{ transformOrigin: "center center", width: "100%", height: "100%" }}
-          >
-            {bgInfo.isVideo ? (
-              <video
-                src={bgInfo.url}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-                style={{
-                  objectFit: (bgInfo.fit as any) || "cover",
-                  objectPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
-                }}
-              />
-            ) : (
-              <div
-                className="w-full h-full"
-                style={{
-                  backgroundImage: `url("${bgInfo.url}")`,
-                  backgroundSize: bgInfo.fit || "cover",
-                  backgroundPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
-                  backgroundRepeat: "no-repeat",
-                }}
-              />
-            )}
-          </motion.div>
-
-          {/* Gradientes cinematográficos e vinheta tipo magma */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/25 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0c0d12] via-transparent to-black/60 pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-gradient-to-br from-[#FE540B]/20 via-orange-600/10 to-transparent rounded-full blur-3xl opacity-75 pointer-events-none" />
+            animate={{
+              scale: [1, 1.12, 1],
+              opacity: [0.45, 0.72, 0.45],
+            }}
+            transition={{
+              duration: 5.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] bg-gradient-to-br from-[#FE540B]/30 via-orange-600/10 to-transparent rounded-full blur-3xl pointer-events-none"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/45 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0B0B0C] via-transparent to-black/40 pointer-events-none" />
         </div>
 
         {/* Topo do painel direito: Badge */}
         <div className="relative z-10 flex justify-end w-full">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[4px] bg-[#131315]/90 border border-[#26262A] text-[#CBD5E1] text-xs font-medium">
             <Sparkles size={13} className="text-[#FE540B]" />
-            <span>Vídeo em tempo real</span>
+            <span>App Oficial</span>
           </div>
+        </div>
+
+        {/* Centro do painel direito: Miniatura do Logo Oficial do App em Animação */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center py-6">
+          <div className="relative flex items-center justify-center">
+            {/* Anel orbital externo */}
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+              className="absolute -inset-6 rounded-[40px] border border-dashed border-[#FE540B]/25 pointer-events-none"
+            />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+              className="absolute -inset-12 rounded-[52px] border border-white/[0.06] pointer-events-none"
+            />
+
+            {/* Caixa da Miniatura Oficial Animada (sem vazados internos) */}
+            <motion.div
+              animate={{
+                y: [0, -10, 0],
+                scale: [1, 1.04, 1],
+              }}
+              transition={{
+                duration: 4.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="relative w-36 h-36 xl:w-44 xl:h-44 rounded-[30px] p-[2px] bg-gradient-to-br from-[#FE540B]/80 via-[#FE540B]/25 to-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.75)]"
+            >
+              <div className="w-full h-full rounded-[28px] overflow-hidden bg-[#333333] flex items-center justify-center border border-white/15">
+                <img
+                  src={OFFICIAL_APP_LOGO_URL}
+                  alt="Logo Oficial CardDigital GM"
+                  className="w-full h-full object-cover scale-[1.06] transform block"
+                />
+              </div>
+            </motion.div>
+          </div>
+
+          <motion.div
+            animate={{ opacity: [0.75, 1, 0.75] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+            className="mt-8 flex items-center gap-1.5 text-xl xl:text-2xl font-extrabold tracking-wide"
+            style={{ fontFamily: "'Funnel Display', sans-serif" }}
+          >
+            <span className="text-white">CardDigital</span>
+            <span className="font-black text-[#FE540B]">GM</span>
+          </motion.div>
         </div>
 
         {/* Rodapé do painel direito: Tipografia de impacto e tags */}
         <div className="relative z-10 flex items-end justify-between w-full">
           <div className="max-w-xl">
             <div className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#FE540B] font-bold mb-2">
-              GM EDIFICAÇÃO • PLATAFORMA
+              CARD DIGITAL GM • PLATAFORMA
             </div>
             <h2 className="text-3xl xl:text-4xl 2xl:text-5xl font-black text-white tracking-tight leading-[1.1] mb-3">
               Seu estúdio criativo, de volta em um clique.

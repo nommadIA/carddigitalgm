@@ -69,6 +69,7 @@ import {
   Info,
   Crown,
   QrCode,
+  Lock,
 } from "lucide-react";
 import SmartQrCodeGenerator from "../components/settings/SmartQrCodeGenerator";
 import PixQrDownloadFormats from "../components/settings/PixQrDownloadFormats";
@@ -109,6 +110,8 @@ import { triggerRealNotification } from "../lib/realNotification";
 import { broadcastBackgroundChange, broadcastAppNotification } from "../lib/syncHub";
 import SmartphonePermissionModal from "../components/ui/SmartphonePermissionModal";
 import NotificationCheckinModal from "../components/notifications/NotificationCheckinModal";
+import { usePlanAccess } from "../hooks/usePlanAccess";
+import PlanLockedNotice from "../components/plans/PlanLockedNotice";
 
 type Fit = "cover" | "contain";
 
@@ -120,6 +123,9 @@ import { compressImage } from "../lib/imageCompressor";
 
 export default function Configuracoes() {
   const { tenantId, user } = useAuth();
+  const { subscription, canAccess, isExpired } = usePlanAccess();
+  const timbradoAccess = canAccess("pdf_timbrado");
+  const realtimeAccess = canAccess("realtime_alarms");
   const navigate = useNavigate();
 
   const [activeSound, setActiveSound] = useState(() => {
@@ -326,9 +332,9 @@ export default function Configuracoes() {
   const hasActiveSection = Object.values(openSections).some(Boolean);
 
   const getSectionBtnClass = (isOpen: boolean) => {
-    return `group relative flex items-center justify-between gap-4 pl-5 pr-4 py-3 min-h-[48px] sm:min-h-[52px] rounded-[6px] border font-bold text-xs sm:text-sm tracking-wide transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98] text-left outline-none cursor-pointer shadow-none ${
+    return `group relative flex items-center justify-between gap-2 min-h-[48px] pl-5 pr-3.5 py-2.5 rounded-[6px] border text-left outline-none cursor-pointer transition-colors duration-150 active:scale-[0.98] text-xs sm:text-[13px] font-bold shadow-none ${
       isOpen
-        ? "w-full sm:w-auto sm:min-w-[320px] bg-[#1B1B1E] border-[var(--gm-primary)] text-[#F2F2F3] font-black"
+        ? "w-full sm:w-auto sm:min-w-[360px] bg-[#1B1B1E] border-[var(--gm-primary)] text-[#F2F2F3] font-extrabold"
         : "w-full bg-[#0B0B0C] border-[#26262A] text-[#CBD5E1] hover:border-[#3F3F46] hover:bg-[#1B1B1E] hover:text-white"
     }`;
   };
@@ -1653,36 +1659,35 @@ export default function Configuracoes() {
   return (
     <Page
       title="Configurações"
-      className={viewMode === "smartphone" ? "-mt-7 md:mt-0 pt-0" : ""}
       actions={
-        <div className="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0 items-center">
+        <div className="flex flex-wrap gap-2.5 w-full sm:w-auto items-center justify-end">
           <AnimatePresence>
             {saveSuccess && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="flex items-center gap-2 text-emerald-500 bg-emerald-500/10 px-3 py-1.5 rounded-lg text-sm font-medium absolute -top-10 right-0 sm:static"
+                exit={{ opacity: 0, y: -6 }}
+                className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 h-10 rounded-[6px] text-xs font-bold uppercase tracking-wider"
               >
-                <Check size={16} />
-                Salvo!
+                <Check size={15} className="shrink-0" />
+                <span>Salvo!</span>
               </motion.div>
             )}
           </AnimatePresence>
           <button
             type="button"
-            className="h-10 px-5 rounded-[6px] bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] border border-[#F65A1A] text-xs uppercase tracking-wider font-black flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-none active:scale-95 disabled:opacity-50"
+            className="w-full sm:w-auto sm:min-w-[196px] h-11 px-5 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#F65A1A))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#F65A1A))] text-sm uppercase tracking-wider font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-none active:scale-[0.96] disabled:opacity-50 whitespace-nowrap"
             onClick={handleSave}
             disabled={saving}
           >
             {saving ? (
               <>
-                <Loader2 size={16} className="animate-spin text-[#0B0B0C]" />
+                <Loader2 size={20} className="w-5 h-5 animate-spin text-current shrink-0" />
                 <span>Salvando...</span>
               </>
             ) : (
               <>
-                <Save size={16} className="text-[#0B0B0C]" />
+                <Save size={20} className="w-5 h-5 text-current shrink-0" />
                 <span>Salvar</span>
               </>
             )}
@@ -1692,7 +1697,7 @@ export default function Configuracoes() {
     >
       <div className="flex flex-col flex-1 w-full">
         {/* CONTENT */}
-        <div className="w-full max-w-[1440px] mx-auto flex flex-col gap-6 pb-2 sm:pb-0">
+        <div className="w-full flex flex-col gap-6 pb-2 sm:pb-0">
           {loading ? (
             <Card className="text-center p-10">Carregando...</Card>
           ) : (
@@ -1712,7 +1717,7 @@ export default function Configuracoes() {
                   </span>
                 </div>
 
-                <div className={hasActiveSection ? "flex flex-col sm:flex-row gap-2.5 justify-center flex-wrap" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5"}>
+                <div className={hasActiveSection ? "flex flex-col sm:flex-row gap-2.5 justify-center flex-wrap" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 items-stretch"}>
                   {/* 1. Personalização */}
                   {(!hasActiveSection || openSections.personalization) && (
                     <button
@@ -1725,11 +1730,11 @@ export default function Configuracoes() {
                       {openSections.personalization && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <Palette className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.personalization ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">PERSONALIZAÇÃO</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {openSections.personalization && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -1750,11 +1755,11 @@ export default function Configuracoes() {
                       {openSections.colors && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <Paintbrush className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.colors ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">CORES & FONTE</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {openSections.colors && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -1775,11 +1780,11 @@ export default function Configuracoes() {
                       {openSections.background && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <ImageIcon className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.background ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">IMAGEM DE FUNDO</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {openSections.background && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -1800,11 +1805,11 @@ export default function Configuracoes() {
                       {openSections.pix && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <CreditCard className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.pix ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">DADOS PIX</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {openSections.pix && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -1825,11 +1830,16 @@ export default function Configuracoes() {
                       {openSections.timbrado && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <FileText className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.timbrado ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">PAPEL TIMBRADO</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {!timbradoAccess.allowed && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-[4px] bg-amber-500/15 border border-amber-500/35 text-amber-400 uppercase whitespace-nowrap">
+                            <Lock size={11} /> Criador+
+                          </span>
+                        )}
                         {openSections.timbrado && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -1850,11 +1860,16 @@ export default function Configuracoes() {
                       {openSections.push && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <Bell className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.push ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">NOTIFICAÇÕES PUSH</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {!realtimeAccess.allowed && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded-[4px] bg-amber-500/15 border border-amber-500/35 text-amber-400 uppercase whitespace-nowrap">
+                            <Lock size={11} /> Pro
+                          </span>
+                        )}
                         {openSections.push && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -1875,11 +1890,11 @@ export default function Configuracoes() {
                       {openSections.sounds && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <Volume2 className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.sounds ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">SONS DO SISTEMA</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {openSections.sounds && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -1900,11 +1915,11 @@ export default function Configuracoes() {
                       {openSections.tutorial && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <HelpCircle className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.tutorial ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">TUTORIAL & SUPORTE</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {openSections.tutorial && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -1925,11 +1940,11 @@ export default function Configuracoes() {
                       {openSections.security && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <ShieldCheck className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.security ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">SEGURANÇA & PIN</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {openSections.security && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -1950,11 +1965,11 @@ export default function Configuracoes() {
                       {openSections.qrcode && (
                         <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[var(--gm-primary)] rounded-[2px]" />
                       )}
-                      <span className="flex items-center gap-3 min-w-0">
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
                         <QrCode className={"w-4 h-4 shrink-0 transition-colors duration-150 " + (openSections.qrcode ? "text-white" : "text-[var(--gm-primary)] opacity-85")} />
                         <span className="truncate">GERADOR DE QR CODE</span>
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {openSections.qrcode && (
                           <span className="text-[11px] text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 uppercase tracking-wider font-bold whitespace-nowrap">RECOLHER</span>
                         )}
@@ -2663,10 +2678,20 @@ export default function Configuracoes() {
                       <span>PAPEL TIMBRADO</span>
                     </span>
                     <span className="text-[11px] font-bold text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 whitespace-nowrap">
-                      Edição Ativa
+                      {timbradoAccess.allowed ? "Edição Ativa" : "Bloqueado"}
                     </span>
                   </div>
 
+                  {!timbradoAccess.allowed ? (
+                    <PlanLockedNotice
+                      variant="inline"
+                      title="Papel Timbrado A4 Oficial Bloqueado"
+                      reason={timbradoAccess.reason}
+                      requiredPlan={timbradoAccess.requiredPlan || "intermediario"}
+                      currentPlanName={subscription.planName}
+                      isExpired={isExpired}
+                    />
+                  ) : (
                   <div className="flex flex-col items-center">
                     <label className="text-xs font-bold uppercase tracking-wider text-[var(--gm-primary)] mb-6 text-center">
                       Timbrado A4 para Impressão e PDF
@@ -2721,6 +2746,7 @@ export default function Configuracoes() {
                       </div>
                     </div>
                   </div>
+                  )}
                 </div>
               )}
 
@@ -2738,10 +2764,21 @@ export default function Configuracoes() {
                       <span>NOTIFICAÇÕES PUSH & ALERTAS</span>
                     </span>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--gm-primary)] bg-[var(--gm-primary)]/10 px-2.5 py-0.5 rounded-[4px] border border-[var(--gm-primary)]/25 whitespace-nowrap">
-                      Edição Ativa
+                      {realtimeAccess.allowed ? "Edição Ativa" : "Bloqueado"}
                     </span>
                   </div>
 
+                  {!realtimeAccess.allowed ? (
+                    <PlanLockedNotice
+                      variant="inline"
+                      title="Push Remoto & Alarmes em Tempo Real (VIP)"
+                      reason={realtimeAccess.reason}
+                      requiredPlan={realtimeAccess.requiredPlan || "avancado"}
+                      currentPlanName={subscription.planName}
+                      isExpired={isExpired}
+                    />
+                  ) : (
+                  <>
                   {/* 1. HERO CARD: STATUS PRINCIPAL DO DISPOSITIVO */}
                   <div
                     className="relative w-full p-6 rounded-lg border border-[#26262A] bg-[#0B0B0C] text-center flex flex-col items-center gap-3.5 shadow-none"
@@ -3026,6 +3063,8 @@ export default function Configuracoes() {
                       </p>
                     </div>
                   </div>
+                  </>
+                  )}
                 </div>
               )}
 

@@ -1,6 +1,14 @@
 // lib/adminUsersService.ts
 import { supabase } from "./supabase";
-import { PlanId, PLANS_DATA, MASTER_TENANT_ID, MASTER_RECORD_ID, DEFAULT_PLANS_CONFIG } from "./subscriptionPlans";
+import {
+  PlanId,
+  PLANS_DATA,
+  MASTER_TENANT_ID,
+  MASTER_RECORD_ID,
+  DEFAULT_PLANS_CONFIG,
+  computeSubscriptionSnapshot,
+  saveLocalUserSubscription,
+} from "./subscriptionPlans";
 import { isUserAdminEmail } from "../constants";
 
 export type UserSubscriptionStatus = "teste" | "solicitou_liberacao" | "ativo" | "expirado" | "adm";
@@ -42,7 +50,7 @@ const INITIAL_KNOWN_USERS: RegisteredUserRecord[] = [
     planName: "Administrador Master",
     daysRemaining: "ilimitado",
     expiresAt: null,
-    notes: "Conta oficial do proprietário e desenvolvedor"
+    notes: "Conta oficial do proprietário e desenvolvedor",
   },
   {
     id: "6ead6174-5a1f-4938-b626-f65e78dd9395",
@@ -56,7 +64,7 @@ const INITIAL_KNOWN_USERS: RegisteredUserRecord[] = [
     planName: "Criador",
     daysRemaining: 28,
     expiresAt: new Date(Date.now() + 28 * 86400000).toISOString(),
-    notes: "Empresa de vigilância patrimonial e monitoramento"
+    notes: "Empresa de vigilância patrimonial e monitoramento",
   },
   {
     id: "6188ba37-317f-4085-a4cb-e21e54ca87f1",
@@ -69,7 +77,7 @@ const INITIAL_KNOWN_USERS: RegisteredUserRecord[] = [
     planName: "Criador (Teste 7 Dias)",
     daysRemaining: 4,
     expiresAt: new Date(Date.now() + 4 * 86400000).toISOString(),
-    notes: "Usuário em período experimental ativo"
+    notes: "Usuário em período experimental ativo",
   },
   {
     id: "37dd350c-932c-4da0-90ac-2609c8abb76e",
@@ -85,9 +93,98 @@ const INITIAL_KNOWN_USERS: RegisteredUserRecord[] = [
     receiptSent: true,
     daysRemaining: 0,
     expiresAt: null,
-    notes: "Enviou comprovante via Pix e solicitou liberação do plano Criador"
-  }
+    notes: "Enviou comprovante via Pix e solicitou liberação do plano Criador",
+  },
 ];
+
+/**
+ * Sincroniza um registro individual com a tabela dedicada public.subscriptions (se existir no Supabase)
+ */
+async function syncSingleRecordToSubscriptionsTable(user: RegisteredUserRecord): Promise<void> {
+  if (!user?.email) return;
+  const cleanEmail = user.email.trim().toLowerCase();
+
+  try {
+    const payload: Record<string, any> = {
+      user_email: cleanEmail,
+      user_name: user.name || cleanEmail.split("@")[0],
+      phone: user.phone || null,
+      plan_id: user.planId || "intermediario",
+      status: user.status || "teste",
+      gateway: user.requestedGateway || "pix",
+      starts_at: user.createdAt || new Date().toISOString(),
+      expires_at: user.expiresAt || null,
+      requested_plan_id: user.requestedPlanId || null,
+      requested_at: user.requestedAt || null,
+      notes: user.notes || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (user.tenantId && /^[0-9a-f-]{36}$/i.test(user.tenantId)) {
+      payload.tenant_id = user.tenantId;
+    }
+    if (user.id && /^[0-9a-f-]{36}$/i.test(user.id)) {
+      payload.user_id = user.id;
+    }
+
+    const { data: existing } = await supabase
+      .from("subscriptions")
+      .select("id")
+      .ilike("user_email", cleanEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing?.id) {
+      await supabase.from("subscriptions").update(payload).eq("id", existing.id);
+    } else {
+      await supabase.from("subscriptions").insert(payload);
+    }
+  } catch {
+    // Resiliente caso a migração SQL ainda não tenha adicionado as colunas extras
+    try {
+      const minimalPayload: Record<string, any> = {
+        user_email: cleanEmail,
+        plan_id: user.planId || "intermediario",
+        status: user.status || "teste",
+        gateway: user.requestedGateway || "pix",
+        starts_at: user.createdAt || new Date().toISOString(),
+        expires_at: user.expiresAt || null,
+      };
+      if (user.tenantId && /^[0-9a-f-]{36}$/i.test(user.tenantId)) {
+        minimalPayload.tenant_id = user.tenantId;
+      }
+
+      const { data: existing } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .ilike("user_email", cleanEmail)
+        .limit(1)
+        .maybeSingle();
+
+      if (existing?.id) {
+        await supabase.from("subscriptions").update(minimalPayload).eq("id", existing.id);
+      } else {
+        await supabase.from("subscriptions").insert(minimalPayload);
+      }
+    } catch {}
+  }
+
+  // Atualiza cache local da assinatura para este email/tenant
+  try {
+    const snap = computeSubscriptionSnapshot({
+      planId: user.planId,
+      planName: user.planName,
+      status: user.status,
+      expiresAt: user.expiresAt,
+      daysRemaining: user.daysRemaining,
+      activatedAt: user.createdAt,
+      requestedPlanId: user.requestedPlanId,
+      notes: user.notes,
+      userEmail: cleanEmail,
+    });
+    saveLocalUserSubscription(snap, user.tenantId || null, cleanEmail);
+  } catch {}
+}
 
 /**
  * Lê o registro de usuários do LocalStorage
@@ -126,7 +223,7 @@ export async function saveUsersRegistry(users: RegisteredUserRecord[]): Promise<
       const updatedConfig = {
         ...existingConfig,
         users_registry: users,
-        users_registry_updated_at: new Date().toISOString()
+        users_registry_updated_at: new Date().toISOString(),
       };
 
       await supabase
@@ -146,13 +243,13 @@ export async function saveUsersRegistry(users: RegisteredUserRecord[]): Promise<
 
 /**
  * Busca a lista consolidada de usuários cadastrados
- * Integrando Supabase (app_settings + tenant_memberships + profiles) com o registro mestre
+ * Integrando Supabase (subscriptions + app_settings) com o registro mestre
  */
 export async function fetchConsolidatedUsers(): Promise<RegisteredUserRecord[]> {
   let list = getLocalUsersRegistry();
 
   try {
-    // 1. Tenta buscar da nuvem (Supabase app_settings master)
+    // 1. Busca do registro mestre em app_settings
     const { data: masterRow } = await supabase
       .from("app_settings")
       .select("app_plans_config")
@@ -163,7 +260,74 @@ export async function fetchConsolidatedUsers(): Promise<RegisteredUserRecord[]> 
       list = masterRow.app_plans_config.users_registry;
     }
 
-    // 2. Consulta outras configurações cadastradas para capturar novos tenants
+    // 2. Mescla com tabela dedicada public.subscriptions (se existir)
+    try {
+      const { data: subsRows } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (Array.isArray(subsRows) && subsRows.length > 0) {
+        subsRows.forEach((sub: any) => {
+          const email = String(sub.user_email || "").trim().toLowerCase();
+          if (!email) return;
+
+          const existingIdx = list.findIndex((u) => u.email.toLowerCase() === email);
+          const isMaster = isUserAdminEmail(email);
+          const snap = computeSubscriptionSnapshot({
+            planId: sub.plan_id,
+            status: sub.status,
+            expiresAt: sub.expires_at,
+            activatedAt: sub.starts_at || sub.created_at,
+            requestedPlanId: sub.requested_plan_id,
+            notes: sub.notes,
+            userEmail: email,
+          });
+
+          if (existingIdx >= 0) {
+            const cur = list[existingIdx];
+            const subUpdated = new Date(sub.updated_at || sub.created_at || 0).getTime();
+            const curTime = new Date(masterRow?.app_plans_config?.users_registry_updated_at || cur.createdAt || 0).getTime();
+
+            if (subUpdated > curTime) {
+              list[existingIdx] = {
+                ...cur,
+                tenantId: sub.tenant_id || cur.tenantId,
+                name: sub.user_name || cur.name,
+                phone: sub.phone || cur.phone,
+                status: snap.status,
+                planId: snap.planId,
+                planName: snap.planName,
+                daysRemaining: snap.daysRemaining,
+                expiresAt: snap.expiresAt,
+                requestedPlanId: sub.requested_plan_id ?? cur.requestedPlanId,
+                requestedAt: sub.requested_at ?? cur.requestedAt,
+                notes: sub.notes ?? cur.notes,
+              };
+            }
+          } else {
+            list.push({
+              id: sub.user_id || sub.id,
+              tenantId: sub.tenant_id || undefined,
+              name: sub.user_name || email.split("@")[0] || "Usuário Cadastrado",
+              email,
+              phone: sub.phone || undefined,
+              createdAt: sub.created_at || new Date().toISOString(),
+              status: isMaster ? "adm" : snap.status,
+              planId: isMaster ? "adm" : snap.planId,
+              planName: isMaster ? "Administrador Master" : snap.planName,
+              daysRemaining: isMaster ? "ilimitado" : snap.daysRemaining,
+              expiresAt: isMaster ? null : snap.expiresAt,
+              requestedPlanId: sub.requested_plan_id || null,
+              requestedAt: sub.requested_at || null,
+              notes: sub.notes || undefined,
+            });
+          }
+        });
+      }
+    } catch {}
+
+    // 3. Consulta outras configurações cadastradas para capturar novos tenants
     const { data: allSettings } = await supabase
       .from("app_settings")
       .select("id, tenant_id, owner, company_name, created_at, bio_config");
@@ -173,7 +337,7 @@ export async function fetchConsolidatedUsers(): Promise<RegisteredUserRecord[]> 
         const email = setting.bio_config?.email || "";
         const name = setting.company_name || setting.bio_config?.title || "Usuário Cadastrado";
         const tid = setting.tenant_id;
-        const exists = list.some((u) => (email && u.email.toLowerCase() === email.toLowerCase()) || u.tenantId === tid);
+        const exists = list.some((u) => (email && u.email.toLowerCase() === email.toLowerCase()) || (tid && u.tenantId === tid));
 
         if (!exists && email) {
           const isMaster = isUserAdminEmail(email);
@@ -187,7 +351,7 @@ export async function fetchConsolidatedUsers(): Promise<RegisteredUserRecord[]> 
             planId: isMaster ? "adm" : "intermediario",
             planName: isMaster ? "Administrador Master" : "Criador (Teste 7 Dias)",
             daysRemaining: isMaster ? "ilimitado" : 7,
-            expiresAt: isMaster ? null : new Date(Date.now() + 7 * 86400000).toISOString()
+            expiresAt: isMaster ? null : new Date(Date.now() + 7 * 86400000).toISOString(),
           });
         }
       });
@@ -203,12 +367,19 @@ export async function fetchConsolidatedUsers(): Promise<RegisteredUserRecord[]> 
           planId: "adm" as const,
           planName: "Administrador Master",
           daysRemaining: "ilimitado" as const,
-          expiresAt: null
+          expiresAt: null,
         };
       }
 
       if (u.status === "solicitou_liberacao") {
-        return u; // Mantém pendência de liberação ativa para o admin decidir
+        return u;
+      }
+
+      if (u.status === "expirado") {
+        return {
+          ...u,
+          daysRemaining: 0,
+        };
       }
 
       if (u.expiresAt) {
@@ -218,12 +389,12 @@ export async function fetchConsolidatedUsers(): Promise<RegisteredUserRecord[]> 
           return {
             ...u,
             status: "expirado" as const,
-            daysRemaining: 0
+            daysRemaining: 0,
           };
         }
         return {
           ...u,
-          daysRemaining: diffDays
+          daysRemaining: diffDays,
         };
       }
 
@@ -255,21 +426,24 @@ export async function registerOrUpdateUser(info: {
   const list = getLocalUsersRegistry();
   const existingIndex = list.findIndex((u) => u.email.toLowerCase() === cleanEmail);
 
+  let targetRecord: RegisteredUserRecord;
+
   if (existingIndex >= 0) {
     const existing = list[existingIndex];
-    list[existingIndex] = {
+    targetRecord = {
       ...existing,
       id: info.id || existing.id,
       tenantId: info.tenantId || existing.tenantId,
       name: info.name && info.name !== "Usuário Cadastrado" ? info.name : existing.name,
       phone: info.phone || existing.phone,
     };
+    list[existingIndex] = targetRecord;
   } else {
     const now = new Date();
     const expires = new Date();
     expires.setDate(now.getDate() + 7);
 
-    list.unshift({
+    targetRecord = {
       id: info.id || `usr_${Date.now()}`,
       tenantId: info.tenantId,
       name: info.name || cleanEmail.split("@")[0] || "Novo Usuário",
@@ -280,11 +454,13 @@ export async function registerOrUpdateUser(info: {
       planId: isMaster ? "adm" : "intermediario",
       planName: isMaster ? "Administrador Master" : "Criador (Teste 7 Dias)",
       daysRemaining: isMaster ? "ilimitado" : 7,
-      expiresAt: isMaster ? null : expires.toISOString()
-    });
+      expiresAt: isMaster ? null : expires.toISOString(),
+    };
+    list.unshift(targetRecord);
   }
 
   await saveUsersRegistry(list);
+  await syncSingleRecordToSubscriptionsTable(targetRecord);
 }
 
 /**
@@ -303,19 +479,22 @@ export async function recordPaymentActivationRequest(req: {
   const now = new Date().toISOString();
 
   const existingIndex = list.findIndex((u) => u.email.toLowerCase() === cleanEmail);
+  let targetRecord: RegisteredUserRecord;
 
   if (existingIndex >= 0) {
-    list[existingIndex] = {
+    targetRecord = {
       ...list[existingIndex],
+      tenantId: req.tenantId || list[existingIndex].tenantId,
       status: "solicitou_liberacao",
       requestedPlanId: req.planId,
       requestedAt: now,
       requestedGateway: req.gateway || "pix",
       receiptSent: true,
-      notes: `Solicitou liberação do plano ${plan.name} após pagamento.`
+      notes: `Solicitou liberação do plano ${plan.name} após pagamento.`,
     };
+    list[existingIndex] = targetRecord;
   } else {
-    list.unshift({
+    targetRecord = {
       id: `usr_${Date.now()}`,
       tenantId: req.tenantId,
       name: req.name || cleanEmail.split("@")[0] || "Cliente Solicitante",
@@ -330,11 +509,14 @@ export async function recordPaymentActivationRequest(req: {
       requestedAt: now,
       requestedGateway: req.gateway || "pix",
       receiptSent: true,
-      notes: `Solicitou liberação do plano ${plan.name} após pagamento.`
-    });
+      notes: `Solicitou liberação do plano ${plan.name} após pagamento.`,
+    };
+    list.unshift(targetRecord);
   }
 
-  return await saveUsersRegistry(list);
+  const ok = await saveUsersRegistry(list);
+  await syncSingleRecordToSubscriptionsTable(targetRecord);
+  return ok;
 }
 
 /**
@@ -356,9 +538,10 @@ export async function approveUserAccess(
   const expires = new Date();
   expires.setDate(now.getDate() + durationDays);
 
+  let updatedUser: RegisteredUserRecord | null = null;
   const updatedList = list.map((u) => {
     if (u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase()) {
-      return {
+      updatedUser = {
         ...u,
         status: "ativo" as const,
         planId,
@@ -367,13 +550,18 @@ export async function approveUserAccess(
         expiresAt: expires.toISOString(),
         requestedPlanId: null,
         requestedAt: null,
-        notes: adminNotes || `Liberado pelo Administrador em ${now.toLocaleDateString("pt-BR")}`
+        notes: adminNotes || `Liberado pelo Administrador em ${now.toLocaleDateString("pt-BR")}`,
       };
+      return updatedUser;
     }
     return u;
   });
 
-  return await saveUsersRegistry(updatedList);
+  const ok = await saveUsersRegistry(updatedList);
+  if (updatedUser) {
+    await syncSingleRecordToSubscriptionsTable(updatedUser);
+  }
+  return ok;
 }
 
 /**
@@ -395,48 +583,57 @@ export async function extendUserTrial(
   const expires = new Date();
   expires.setDate(expires.getDate() + newDays);
 
+  let updatedUser: RegisteredUserRecord | null = null;
   const updatedList = list.map((u) => {
     if (u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase()) {
-      return {
+      updatedUser = {
         ...u,
         status: "teste" as const,
         daysRemaining: newDays,
         expiresAt: expires.toISOString(),
-        notes: adminNotes || `Período de teste estendido em +${extraDays} dias pelo ADM`
+        notes: adminNotes || `Período de teste estendido em +${extraDays} dias pelo ADM`,
       };
+      return updatedUser;
     }
     return u;
   });
 
-  return await saveUsersRegistry(updatedList);
+  const ok = await saveUsersRegistry(updatedList);
+  if (updatedUser) {
+    await syncSingleRecordToSubscriptionsTable(updatedUser);
+  }
+  return ok;
 }
 
 /**
  * Expira ou bloqueia o acesso de um usuário
  */
-export async function expireUserAccess(
-  emailOrId: string,
-  reason?: string
-): Promise<boolean> {
+export async function expireUserAccess(emailOrId: string, reason?: string): Promise<boolean> {
   const list = getLocalUsersRegistry();
   const user = list.find((u) => u.id === emailOrId || u.email.toLowerCase() === emailOrId.toLowerCase());
 
   if (!user || isUserAdminEmail(user.email)) return false;
 
+  let updatedUser: RegisteredUserRecord | null = null;
   const updatedList = list.map((u) => {
     if (u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase()) {
-      return {
+      updatedUser = {
         ...u,
         status: "expirado" as const,
         daysRemaining: 0,
         expiresAt: new Date().toISOString(),
-        notes: reason || "Acesso expirado / bloqueado pelo administrador."
+        notes: reason || "Acesso expirado / bloqueado pelo administrador.",
       };
+      return updatedUser;
     }
     return u;
   });
 
-  return await saveUsersRegistry(updatedList);
+  const ok = await saveUsersRegistry(updatedList);
+  if (updatedUser) {
+    await syncSingleRecordToSubscriptionsTable(updatedUser);
+  }
+  return ok;
 }
 
 /**
@@ -444,10 +641,19 @@ export async function expireUserAccess(
  */
 export async function deleteUserFromRegistry(emailOrId: string): Promise<boolean> {
   const list = getLocalUsersRegistry();
+  const target = list.find((u) => u.id === emailOrId || u.email.toLowerCase() === emailOrId.toLowerCase());
   const filtered = list.filter((u) => {
     if (isUserAdminEmail(u.email)) return true; // Nunca remove o Master ADM
     return u.id !== emailOrId && u.email.toLowerCase() !== emailOrId.toLowerCase();
   });
 
-  return await saveUsersRegistry(filtered);
+  const ok = await saveUsersRegistry(filtered);
+
+  if (target?.email && !isUserAdminEmail(target.email)) {
+    try {
+      await supabase.from("subscriptions").delete().ilike("user_email", target.email.trim().toLowerCase());
+    } catch {}
+  }
+
+  return ok;
 }

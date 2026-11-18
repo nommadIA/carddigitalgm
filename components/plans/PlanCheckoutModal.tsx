@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, Check, Copy, ExternalLink, QrCode, CreditCard, ShieldCheck, Sparkles, MessageCircle, AlertCircle } from "lucide-react";
 import * as QRCode from "qrcode";
-import { PlanId, PLANS_DATA, getStoredPlansConfig, fetchPlansConfigFromCloud, generatePlanPixPayment, setUserSubscription } from "../../lib/subscriptionPlans";
+import { PlanId, PLANS_DATA, MASTER_TENANT_ID, getStoredPlansConfig, fetchPlansConfigFromCloud, generatePlanPixPayment, setUserSubscription } from "../../lib/subscriptionPlans";
 import { openWhatsapp } from "../../services/whatsApp";
 import { CURRENCY_FORMATTER } from "../../constants";
 import { useAuth } from "../../store/AuthContext";
 import { pushToast } from "../../store/toast";
+import { broadcastAppNotification, sendRemoteUserNotification } from "../../lib/syncHub";
 import ModalResizeHandles from "../ui/ModalResizeHandles";
 import { useModalResize } from "../../hooks/useModalResize";
 
@@ -136,6 +137,32 @@ export default function PlanCheckoutModal({
           tenantId: tenantId || undefined,
           gateway: method,
         });
+
+        // Registra notificação no app do usuário confirmando a solicitação de pagamento/mudança de plano
+        await broadcastAppNotification(tenantId, {
+          title: `Solicitação do Plano ${plan.name} Enviada`,
+          message: `Recebemos seu pedido de liberação/pagamento via ${method === "pix" ? "Pix" : "Cartão"}. Assim que o ADM confirmar, seu plano será liberado no app.`,
+          type: "system",
+          url: "/planos",
+          skipInAppToast: true,
+        });
+
+        // Dispara notificação em tempo real para o app do Administrador Master
+        await sendRemoteUserNotification({
+          targetTenantId: MASTER_TENANT_ID,
+          targetEmail: "gmedificacao@gmail.com",
+          title: `Solicitação de Plano: ${plan.name} 💳`,
+          message: `${user.full_name || user.email} (${user.email}) enviou pedido de liberação do Plano ${plan.name} via ${method === "pix" ? "Pix" : "Cartão"}.`,
+          type: "system",
+          url: "/admin/usuarios",
+          createdBy: user.email,
+        });
+
+        pushToast({
+          title: "Solicitação Registrada!",
+          message: `Seu pedido do Plano ${plan.name} foi enviado para análise de liberação.`,
+          type: "info",
+        });
       }
     } catch (e) {
       console.warn("Erro ao registrar solicitacao de ativacao:", e);
@@ -152,7 +179,14 @@ export default function PlanCheckoutModal({
   const handleAdminImmediateActivation = () => {
     setActivating(true);
     setTimeout(() => {
-      setUserSubscription(tenantId, selectedPlanId, 365);
+      setUserSubscription(tenantId, selectedPlanId, 365, user?.email);
+      void broadcastAppNotification(tenantId, {
+        title: `Plano ${plan.name} Aplicado`,
+        message: `O plano ${plan.name} foi ativado imediatamente na sua conta.`,
+        type: "system",
+        url: "/planos",
+        skipInAppToast: true,
+      });
       setActivating(false);
       pushToast({
         title: "Plano Ativado com Sucesso!",
@@ -237,27 +271,31 @@ export default function PlanCheckoutModal({
         <div className="grid grid-cols-2 gap-2 relative z-10">
           <button
             type="button"
+            aria-pressed={method === "pix"}
+            data-selected={method === "pix"}
             onClick={() => setMethod("pix")}
             className={`h-10 px-4 rounded-[6px] border font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${
               method === "pix"
-                ? "bg-emerald-500/15 border-emerald-500/50 text-emerald-400"
+                ? "bg-emerald-500/20 border-emerald-500/60 text-white"
                 : "bg-[#0B0B0C] border-[#26262A] text-[#8B8B92] hover:bg-[#1B1B1E] hover:text-white"
             }`}
           >
-            <QrCode size={16} />
+            <QrCode size={16} className="shrink-0" />
             <span>Pix Instantâneo</span>
           </button>
 
           <button
             type="button"
+            aria-pressed={method === "card"}
+            data-selected={method === "card"}
             onClick={() => setMethod("card")}
             className={`h-10 px-4 rounded-[6px] border font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer ${
               method === "card"
-                ? "bg-[var(--gm-primary)]/15 border-[var(--gm-primary)]/50 text-[var(--gm-primary)]"
+                ? "bg-[var(--gm-primary)]/20 border-[var(--gm-primary)]/60 text-white"
                 : "bg-[#0B0B0C] border-[#26262A] text-[#8B8B92] hover:bg-[#1B1B1E] hover:text-white"
             }`}
           >
-            <CreditCard size={16} />
+            <CreditCard size={16} className="shrink-0" />
             <span>Cartão / Link</span>
           </button>
         </div>
@@ -283,7 +321,7 @@ export default function PlanCheckoutModal({
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#8B8B92] text-center">
                 Pix Copia e Cola
               </span>
-              <div className="flex items-center gap-2 bg-[#0B0B0C] border border-[#26262A] rounded-[4px] p-1.5 w-full">
+              <div className="flex items-center gap-2 bg-[#0B0B0C] border border-[#26262A] rounded-[6px] p-1.5 w-full">
                 <input
                   type="text"
                   readOnly
@@ -293,7 +331,7 @@ export default function PlanCheckoutModal({
                 <button
                   type="button"
                   onClick={handleCopyPix}
-                  className="px-3 py-1.5 rounded-md bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
+                  className="px-3 py-1.5 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
                 >
                   {copied ? <Check size={14} className="text-current" /> : <Copy size={14} className="text-current" />}
                   <span>{copied ? "Copiado!" : "Copiar"}</span>

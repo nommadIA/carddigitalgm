@@ -42,10 +42,10 @@ export const Card = ({
 
       {(title || right) && (
         <div className="forge-spec__bar">
-          <div className="forge-spec__title">
-            {title ? <h3>{title}</h3> : null}
+          <div className="forge-spec__title min-w-0 truncate">
+            {title ? <h3 className="truncate">{title}</h3> : null}
           </div>
-          {right ? <div className="ml-auto">{right}</div> : null}
+          {right ? <div className="ml-auto shrink-0">{right}</div> : null}
         </div>
       )}
       <div className="relative z-10 w-full p-4 sm:p-5">

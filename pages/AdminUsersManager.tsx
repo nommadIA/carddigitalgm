@@ -17,7 +17,7 @@ import { pushToast } from "../store/toast";
 import { openWhatsapp } from "../services/whatsApp";
 import { isUserAdminEmail } from "../constants";
 import { ForgeSpecCard } from "../components/ui/ForgeSpecCard";
-import { broadcastAppNotification } from "../lib/syncHub";
+import { sendRemoteUserNotification } from "../lib/syncHub";
 import { WhatsAppIcon } from "../components/ui/WhatsAppIcon";
 
 function formatPhoneBR(value: string) {
@@ -60,6 +60,14 @@ export default function AdminUsersManager() {
   // Modal deletar usuário
   const [deleteModalUser, setDeleteModalUser] = useState<RegisteredUserRecord | null>(null);
 
+  // Modal disparo de notificação direta no app do usuário
+  const [notifyModalUser, setNotifyModalUser] = useState<RegisteredUserRecord | null>(null);
+  const [notifyTitle, setNotifyTitle] = useState<string>("");
+  const [notifyMessage, setNotifyMessage] = useState<string>("");
+  const [notifyUrl, setNotifyUrl] = useState<string>("/planos");
+  const [notifyType, setNotifyType] = useState<"system" | "direct" | "update">("direct");
+  const [isSendingNotify, setIsSendingNotify] = useState<boolean>(false);
+
   const loadUsers = async () => {
     setLoading(true);
     try {
@@ -85,9 +93,13 @@ export default function AdminUsersManager() {
   }, []);
 
   useEffect(() => {
-    if (!approvalModalUser && !extendModalUser && !deleteModalUser) return;
+    if (!approvalModalUser && !extendModalUser && !deleteModalUser && !notifyModalUser) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
+      if (notifyModalUser) {
+        setNotifyModalUser(null);
+        return;
+      }
       if (deleteModalUser) {
         setDeleteModalUser(null);
         return;
@@ -100,7 +112,7 @@ export default function AdminUsersManager() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [approvalModalUser, extendModalUser, deleteModalUser]);
+  }, [approvalModalUser, extendModalUser, deleteModalUser, notifyModalUser]);
 
   // Estatísticas e contadores
   const stats = useMemo(() => {
@@ -164,21 +176,44 @@ export default function AdminUsersManager() {
     if (!approvalModalUser) return;
     setIsProcessingAction(true);
     const planName = PLANS_DATA[selectedPlanForApproval].name;
+    const isPlanSwitch =
+      approvalModalUser.status === "ativo" &&
+      approvalModalUser.planId !== "adm" &&
+      approvalModalUser.planId !== selectedPlanForApproval;
+    const wasPendingPayment = approvalModalUser.status === "solicitou_liberacao";
+
     const ok = await approveUserAccess(approvalModalUser.email, selectedPlanForApproval, approvalDurationDays, adminNotes);
     setIsProcessingAction(false);
 
     if (ok) {
-      // 1. Notificação do Sistema no Aplicativo do Usuário
+      let systemNotifResult: { ok: boolean; dbSaved: boolean; realtimeSent: boolean } | null = null;
+
+      // 1. Notificação Direcionada ao App / Dispositivo Instalado do Usuário
       if (approvalSendSystem) {
         try {
-          await broadcastAppNotification(approvalModalUser.tenantId || null, {
-            title: "Plano Liberado com Sucesso! 🚀",
-            message: `Seu plano ${planName} foi ativado por ${approvalDurationDays} dias no CardDigital GM! Todas as funcionalidades estão desbloqueadas.`,
+          const notifTitle = wasPendingPayment
+            ? `Pagamento Confirmado · Plano ${planName} Liberado! 🚀`
+            : isPlanSwitch
+            ? `Seu Plano foi Alterado para ${planName}! 🔄`
+            : `Plano ${planName} Ativado no App! 🚀`;
+
+          const notifMessage = wasPendingPayment
+            ? `Seu pagamento foi confirmado! O Plano ${planName} está ativo por ${approvalDurationDays} dias no seu CardDigital GM.`
+            : isPlanSwitch
+            ? `Sua assinatura foi alterada para o Plano ${planName} com validade de ${approvalDurationDays} dias. Recursos atualizados no seu app!`
+            : `Seu Plano ${planName} foi liberado por ${approvalDurationDays} dias no CardDigital GM! Todas as funcionalidades correspondentes já estão ativas.`;
+
+          systemNotifResult = await sendRemoteUserNotification({
+            targetTenantId: approvalModalUser.tenantId || null,
+            targetEmail: approvalModalUser.email,
+            title: notifTitle,
+            message: notifMessage,
             type: "system",
             url: "/planos",
+            createdBy: user?.email || "gmedificacao@gmail.com",
           });
         } catch (err) {
-          console.warn("Aviso ao disparar notificação do sistema:", err);
+          console.warn("Aviso ao disparar notificação no app do usuário:", err);
         }
       }
 
@@ -202,9 +237,17 @@ export default function AdminUsersManager() {
         }
       }
 
+      const appNotifStatus = approvalSendSystem
+        ? systemNotifResult?.dbSaved
+          ? "Notificação enviada e salva na fila do app do usuário."
+          : systemNotifResult?.realtimeSent
+          ? "Notificação enviada ao app em tempo real."
+          : "Execute o SQL de notificações no Supabase para entrega offline."
+        : "Notificação interna do app desmarcada.";
+
       pushToast({
         title: "Acesso Liberado com Sucesso!",
-        message: `O usuário ${approvalModalUser.name} foi ativado no plano ${planName} por ${approvalDurationDays} dias. Notificações disparadas!`,
+        message: `${approvalModalUser.name} atualizado no plano ${planName} (${approvalDurationDays}d). ${appNotifStatus}`,
         type: "success",
       });
       setApprovalModalUser(null);
@@ -225,17 +268,20 @@ export default function AdminUsersManager() {
     setIsProcessingAction(false);
 
     if (ok) {
-      // 1. Notificação do Sistema no Aplicativo do Usuário
+      // 1. Notificação Direcionada ao App / Dispositivo Instalado do Usuário
       if (extendSendSystem) {
         try {
-          await broadcastAppNotification(extendModalUser.tenantId || null, {
+          await sendRemoteUserNotification({
+            targetTenantId: extendModalUser.tenantId || null,
+            targetEmail: extendModalUser.email,
             title: "Período de Teste Estendido! ⏳",
-            message: `Você ganhou mais +${extraTrialDays} dias de degustação gratuita no CardDigital GM! Aproveite para criar orçamentos e cadastrar clientes.`,
+            message: `Você ganhou mais +${extraTrialDays} dias de degustação no CardDigital GM! Aproveite para criar orçamentos e gerenciar clientes.`,
             type: "system",
             url: "/planos",
+            createdBy: user?.email || "gmedificacao@gmail.com",
           });
         } catch (err) {
-          console.warn("Aviso ao disparar notificação do sistema:", err);
+          console.warn("Aviso ao disparar notificação no app do usuário:", err);
         }
       }
 
@@ -260,7 +306,7 @@ export default function AdminUsersManager() {
 
       pushToast({
         title: "Período de Teste Estendido!",
-        message: `Adicionados +${extraTrialDays} dias de teste para ${extendModalUser.name}. Notificações enviadas!`,
+        message: `Adicionados +${extraTrialDays} dias de teste para ${extendModalUser.name}. Notificação enviada ao app do usuário!`,
         type: "success",
       });
       setExtendModalUser(null);
@@ -278,13 +324,112 @@ export default function AdminUsersManager() {
     if (confirm(`Tem certeza que deseja bloquear/expirar o acesso de ${userRecord.name} (${userRecord.email})?`)) {
       const ok = await expireUserAccess(userRecord.email);
       if (ok) {
+        try {
+          await sendRemoteUserNotification({
+            targetTenantId: userRecord.tenantId || null,
+            targetEmail: userRecord.email,
+            title: "Plano Pausado / Expirado ⚠️",
+            message: "Seu plano ou período de acesso no CardDigital GM foi encerrado ou pausado. Acesse a tela de Planos para renovar ou reativar.",
+            type: "system",
+            url: "/planos",
+            createdBy: user?.email || "gmedificacao@gmail.com",
+          });
+        } catch {}
+
         pushToast({
           title: "Acesso Expirado",
-          message: `O acesso do usuário ${userRecord.email} foi encerrado.`,
+          message: `O acesso do usuário ${userRecord.email} foi encerrado e o aviso enviado ao app.`,
           type: "info",
         });
         loadUsers();
       }
+    }
+  };
+
+  const applyNotifyPreset = (
+    preset: "vencimento" | "pagamento" | "mudanca_plano" | "aviso_geral",
+    target: RegisteredUserRecord
+  ) => {
+    if (preset === "vencimento") {
+      setNotifyTitle("Aviso de Vencimento de Plano ⏳");
+      setNotifyMessage(
+        `Olá ${target.name}! Seu plano ${target.planName} no CardDigital GM está próximo do vencimento ou pendente de renovação. Acesse a aba Planos para manter tudo ativo.`
+      );
+      setNotifyUrl("/planos");
+      setNotifyType("system");
+    } else if (preset === "pagamento") {
+      setNotifyTitle("Pagamento Confirmado no Sistema ✅");
+      setNotifyMessage(
+        `Olá ${target.name}! Confirmamos o recebimento do seu pagamento no CardDigital GM. Seu plano ${target.planName} segue ativo e liberado no app.`
+      );
+      setNotifyUrl("/planos");
+      setNotifyType("system");
+    } else if (preset === "mudanca_plano") {
+      setNotifyTitle("Atualização de Plano Aplicada 🔄");
+      setNotifyMessage(
+        `Olá ${target.name}! Houve uma atualização no seu plano (${target.planName}) dentro do CardDigital GM. Confira seus novos recursos na tela de Planos.`
+      );
+      setNotifyUrl("/planos");
+      setNotifyType("system");
+    } else {
+      setNotifyTitle("Aviso Importante · CardDigital GM 🔔");
+      setNotifyMessage(
+        `Olá ${target.name}! Temos uma atualização importante para a sua conta no aplicativo CardDigital GM.`
+      );
+      setNotifyUrl("/");
+      setNotifyType("direct");
+    }
+  };
+
+  const handleOpenNotifyModal = (userRecord: RegisteredUserRecord) => {
+    setNotifyModalUser(userRecord);
+    if (userRecord.status === "solicitou_liberacao") {
+      applyNotifyPreset("pagamento", userRecord);
+    } else if (userRecord.status === "expirado") {
+      applyNotifyPreset("vencimento", userRecord);
+    } else {
+      applyNotifyPreset("aviso_geral", userRecord);
+    }
+  };
+
+  const handleConfirmDirectNotify = async () => {
+    if (!notifyModalUser) return;
+    if (!notifyTitle.trim() || !notifyMessage.trim()) {
+      pushToast({
+        title: "Campos obrigatórios",
+        message: "Preencha o título e a mensagem da notificação.",
+        type: "error",
+      });
+      return;
+    }
+
+    setIsSendingNotify(true);
+    const result = await sendRemoteUserNotification({
+      targetTenantId: notifyModalUser.tenantId || null,
+      targetEmail: notifyModalUser.email,
+      title: notifyTitle.trim(),
+      message: notifyMessage.trim(),
+      type: notifyType,
+      url: notifyUrl || "/planos",
+      createdBy: user?.email || "gmedificacao@gmail.com",
+    });
+    setIsSendingNotify(false);
+
+    if (result.ok) {
+      pushToast({
+        title: "Notificação Disparada!",
+        message: result.dbSaved
+          ? `Aviso enviado para o app de ${notifyModalUser.name} (entrega em tempo real + fila garantida para dispositivo instalado).`
+          : `Aviso transmitido em tempo real para o dispositivo de ${notifyModalUser.name}.`,
+        type: "success",
+      });
+      setNotifyModalUser(null);
+    } else {
+      pushToast({
+        title: "Atenção na entrega",
+        message: "Verifique se o SQL de user_notifications já foi executado no seu Supabase.",
+        type: "error",
+      });
     }
   };
 
@@ -311,7 +456,7 @@ export default function AdminUsersManager() {
   };
 
   return (
-    <div className="w-full min-h-screen pb-20 text-[#f2f2f3] select-none space-y-6">
+    <div className="w-full min-h-screen pb-6 text-[#f2f2f3] select-none space-y-6">
       {/* 1. TOP BANNER / NAVEGAÇÃO FORGE INDUSTRIAL */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-[#26262a]">
         <div className="flex items-center gap-3.5">
@@ -360,7 +505,7 @@ export default function AdminUsersManager() {
       </div>
 
       {/* 2. KPI CARDS (FORGE SPEC SYSTEM) */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* CARD 01: TOTAL USUÁRIOS */}
         <ForgeSpecCard
           id="01"
@@ -460,8 +605,10 @@ export default function AdminUsersManager() {
               <button
                 key={tab.id}
                 type="button"
+                aria-pressed={isSelected}
+                data-selected={isSelected}
                 onClick={() => setSelectedFilter(tab.id as any)}
-                className={`h-10 px-3.5 rounded-[4px] font-mono text-xs font-bold tracking-wider uppercase flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 border ${
+                className={`h-10 px-3.5 rounded-[6px] font-mono text-xs font-bold tracking-wider uppercase flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 border ${
                   isSelected
                     ? tab.highlight && stats.pendingApproval > 0
                       ? "bg-amber-500 text-black border-amber-500 shadow-sm"
@@ -470,7 +617,7 @@ export default function AdminUsersManager() {
                 }`}
               >
                 <span>{tab.label}</span>
-                <span className={`px-1.5 py-0.5 rounded-[2px] text-[11px] font-mono ${
+                <span className={`px-1.5 py-0.5 rounded-[4px] text-[11px] font-mono tabular-nums ${
                   isSelected ? "bg-black/25 text-current font-bold" : "bg-white/10 text-zinc-400"
                 }`}>
                   {tab.count}
@@ -481,20 +628,20 @@ export default function AdminUsersManager() {
         </div>
 
         {/* Input de Busca Forge */}
-        <div className="relative min-w-[260px] sm:min-w-[320px]">
+        <div className="relative min-w-0 w-full md:w-auto md:min-w-[300px]">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nome ou e-mail..."
-            className="w-full h-10 pl-9 pr-8 rounded-[4px] bg-[#131315] border border-[#26262a] hover:border-[#38383f] focus:border-[var(--gm-primary,#FE540B)] text-xs sm:text-[13px] font-mono text-[#f2f2f3] outline-none transition-all placeholder:text-[#8b8b92]"
+            className="w-full h-10 pl-9 pr-8 rounded-[6px] bg-[#131315] border border-[#26262a] hover:border-[#38383f] focus:border-[var(--gm-primary,#FE540B)] text-xs sm:text-[13px] font-mono text-[#f2f2f3] outline-none transition-all placeholder:text-[#8b8b92]"
           />
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8b8b92]" />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8b8b92] hover:text-white p-1"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8b8b92] hover:text-white p-1 cursor-pointer"
             >
               <X size={13} />
             </button>
@@ -530,7 +677,7 @@ export default function AdminUsersManager() {
                 <th className="py-4 px-4 min-w-[170px] text-left">DATA DE CRIAÇÃO</th>
                 <th className="py-4 px-4 min-w-[220px] text-left">STATUS DA ASSINATURA</th>
                 <th className="py-4 px-4 min-w-[200px] text-left">PLANO VIGENTE / SOLICITADO</th>
-                <th className="py-4 px-4 sm:px-6 min-w-[320px] text-left">AÇÕES DO ADMINISTRADOR</th>
+                <th className="py-4 px-4 sm:px-6 min-w-[360px] text-left">AÇÕES DO ADMINISTRADOR</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#26262a]">
@@ -714,6 +861,17 @@ export default function AdminUsersManager() {
                                 <WhatsAppIcon size={16} className="text-[#25D366] group-hover:scale-110 transition-transform duration-200" />
                               </button>
 
+                              {/* Botão Notificação Direta no App / Dispositivo Instalado do Usuário */}
+                              <button
+                                type="button"
+                                onClick={() => handleOpenNotifyModal(u)}
+                                className="w-10 h-10 rounded-[4px] bg-[#1b1b1e] hover:bg-[var(--gm-primary,#FE540B)]/20 text-[var(--gm-primary,#FE540B)] border border-[#26262a] hover:border-[var(--gm-primary,#FE540B)]/50 flex items-center justify-center transition-all cursor-pointer shadow-sm group active:scale-95 shrink-0"
+                                title="Disparar Notificação de Aviso no App do Usuário"
+                                aria-label="Disparar Notificação de Aviso no App do Usuário"
+                              >
+                                <Bell size={15} className="group-hover:scale-110 transition-transform duration-200" />
+                              </button>
+
                               {/* Expirar / Revogar */}
                               {isActive && (
                                 <button
@@ -808,7 +966,7 @@ export default function AdminUsersManager() {
                 <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#8b8b92] block">
                   Selecione o Plano a Ser Liberado:
                 </label>
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {(["basico", "intermediario", "avancado"] as PlanId[]).map((pid) => {
                     const p = PLANS_DATA[pid];
                     const isSel = selectedPlanForApproval === pid;
@@ -837,7 +995,7 @@ export default function AdminUsersManager() {
                 <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#8b8b92] block">
                   Período de Validade:
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
                     { days: 30, label: "30 Dias (1 Mês)" },
                     { days: 90, label: "90 Dias (3 Meses)" },
@@ -869,7 +1027,7 @@ export default function AdminUsersManager() {
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   placeholder="Ex: Pagamento confirmado via Pix em 30/10"
-                  className="w-full h-10 px-3 rounded-[4px] bg-[#1b1b1e] border border-[#26262a] focus:border-emerald-500 text-xs sm:text-[13px] font-mono text-[#f2f2f3] outline-none"
+                  className="w-full h-11 px-3.5 rounded-[6px] bg-[#1b1b1e] border border-[#26262a] focus:border-emerald-500 text-xs sm:text-[13px] font-mono text-[#f2f2f3] outline-none"
                 />
               </div>
 
@@ -902,7 +1060,7 @@ export default function AdminUsersManager() {
                         value={approvalPhone}
                         onChange={(e) => setApprovalPhone(formatPhoneBR(e.target.value))}
                         placeholder="WhatsApp do usuário (ex: (98) 98424-2784)"
-                        className="w-full h-9 px-3 rounded-[4px] bg-[#131315] border border-[#26262a] focus:border-[#25D366] text-xs font-mono text-[#f2f2f3] outline-none"
+                        className="w-full h-10 px-3.5 rounded-[6px] bg-[#131315] border border-[#26262a] focus:border-[#25D366] text-xs font-mono text-[#f2f2f3] outline-none"
                       />
                     </div>
                   )}
@@ -983,9 +1141,9 @@ export default function AdminUsersManager() {
               </button>
             </div>
 
-            <div className="p-5 sm:p-6 space-y-4 max-h-[85vh] overflow-y-auto">
-              <div className="p-3.5 rounded-[4px] bg-[#1b1b1e] border border-[#26262a] flex items-center gap-3">
-                <div className="w-9 h-9 rounded-[3px] bg-sky-500/20 border border-sky-500/40 text-sky-400 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+            <div className="p-5 sm:p-6 space-y-4 max-h-[85dvh] overflow-y-auto">
+              <div className="p-3.5 rounded-[6px] bg-[#1b1b1e] border border-[#26262a] flex items-center gap-3">
+                <div className="w-9 h-9 rounded-[4px] bg-sky-500/20 border border-sky-500/40 text-sky-400 font-mono font-bold text-xs flex items-center justify-center shrink-0">
                   <Clock size={16} />
                 </div>
                 <div className="flex flex-col min-w-0">
@@ -998,7 +1156,7 @@ export default function AdminUsersManager() {
                 Selecione os dias adicionais de degustação sem travas a conceder:
               </p>
 
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 {[7, 15, 30].map((days) => (
                   <button
                     key={days}
@@ -1045,7 +1203,7 @@ export default function AdminUsersManager() {
                         value={extendPhone}
                         onChange={(e) => setExtendPhone(formatPhoneBR(e.target.value))}
                         placeholder="WhatsApp do usuário (ex: (98) 98424-2784)"
-                        className="w-full h-9 px-3 rounded-[4px] bg-[#131315] border border-[#26262a] focus:border-[#25D366] text-xs font-mono text-[#f2f2f3] outline-none"
+                        className="w-full h-10 px-3.5 rounded-[6px] bg-[#131315] border border-[#26262a] focus:border-[#25D366] text-xs font-mono text-[#f2f2f3] outline-none"
                       />
                     </div>
                   )}
@@ -1156,6 +1314,169 @@ export default function AdminUsersManager() {
                   className="h-10 px-5 rounded-[4px] bg-rose-600 hover:bg-rose-500 text-white font-mono font-bold text-xs uppercase tracking-wider active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   Excluir Registro
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+      {/* MODAL 4: DISPARAR NOTIFICAÇÃO DIRETA NO APP DO USUÁRIO */}
+      {notifyModalUser && (
+        <div
+          className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+          onClick={() => setNotifyModalUser(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            role="dialog"
+            aria-modal="true"
+            style={{ maxWidth: "560px", width: "100%" }}
+            className="bg-[#131315] border border-[#26262a] rounded-lg shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden text-[#f2f2f3]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Bar Forge Spec */}
+            <div className="forge-spec__bar bg-[#121316] border-b border-[#26262a] px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-5 h-5 rounded-[2px] bg-[var(--gm-primary,#FE540B)]/20 border border-[var(--gm-primary,#FE540B)]/40 text-[var(--gm-primary,#FE540B)] text-xs font-mono font-bold flex items-center justify-center">
+                  04
+                </span>
+                <span className="text-xs font-mono font-bold uppercase text-[#f2f2f3] tracking-wider">
+                  NOTIFICAR APP // DISPOSITIVO DO USUÁRIO
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNotifyModalUser(null)}
+                className="w-8 h-8 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] text-[#8b8b92] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Fechar"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+              {/* Resumo do Usuário Destinatário */}
+              <div className="p-3.5 rounded-[4px] bg-[#1b1b1e] border border-[#26262a] flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-[3px] bg-[var(--gm-primary,#FE540B)] text-[var(--gm-primary-foreground,#0b0b0c)] font-mono font-bold text-sm flex items-center justify-center shrink-0">
+                    {notifyModalUser.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-bold text-sm text-[#f2f2f3] truncate">{notifyModalUser.name}</span>
+                    <span className="text-xs font-mono text-[#8b8b92] truncate">{notifyModalUser.email}</span>
+                  </div>
+                </div>
+                <span className="px-2 py-1 rounded-[4px] text-[11px] font-mono font-bold uppercase bg-[#131315] border border-[#26262a] text-[var(--gm-primary,#FE540B)] shrink-0">
+                  {notifyModalUser.planName}
+                </span>
+              </div>
+
+              {/* Modelos Rápidos de Aviso */}
+              <div className="space-y-2">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#8b8b92] block">
+                  Modelos Rápidos de Notificação:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: "vencimento" as const, label: "Vencimento" },
+                    { id: "pagamento" as const, label: "Pagamento OK" },
+                    { id: "mudanca_plano" as const, label: "Mudança Plano" },
+                    { id: "aviso_geral" as const, label: "Aviso Geral" },
+                  ].map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => applyNotifyPreset(preset.id, notifyModalUser)}
+                      className="py-2 px-2.5 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] hover:border-[var(--gm-primary,#FE540B)]/50 text-[11px] font-mono font-bold text-[#CBD5E1] hover:text-white transition-all cursor-pointer text-center"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Título */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#8b8b92] block">
+                  Título do Alerta:
+                </label>
+                <input
+                  type="text"
+                  value={notifyTitle}
+                  onChange={(e) => setNotifyTitle(e.target.value)}
+                  placeholder="Ex: Aviso de Pagamento ou Atualização de Plano"
+                  className="w-full h-11 px-3.5 rounded-[6px] bg-[#1b1b1e] border border-[#26262a] focus:border-[var(--gm-primary,#FE540B)] text-xs sm:text-[13px] font-mono text-[#f2f2f3] outline-none"
+                />
+              </div>
+
+              {/* Mensagem */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#8b8b92] block">
+                  Mensagem para o App do Usuário:
+                </label>
+                <textarea
+                  rows={4}
+                  value={notifyMessage}
+                  onChange={(e) => setNotifyMessage(e.target.value)}
+                  placeholder="Digite o aviso que aparecerá no sino, toast, alerta sonoro e push do usuário..."
+                  className="w-full p-3.5 rounded-[6px] bg-[#1b1b1e] border border-[#26262a] focus:border-[var(--gm-primary,#FE540B)] text-xs sm:text-[13px] font-mono text-[#f2f2f3] outline-none resize-none leading-relaxed"
+                />
+              </div>
+
+              {/* Tela de Destino ao Tocar */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#8b8b92] block">
+                  Tela de Destino no App:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { path: "/planos", label: "Planos" },
+                    { path: "/", label: "Dashboard" },
+                    { path: "/configuracoes", label: "Configurações" },
+                  ].map((dest) => (
+                    <button
+                      key={dest.path}
+                      type="button"
+                      onClick={() => setNotifyUrl(dest.path)}
+                      className={`py-2 px-2.5 rounded-[4px] border font-mono text-xs font-bold transition-all cursor-pointer text-center ${
+                        notifyUrl === dest.path
+                          ? "bg-[var(--gm-primary,#FE540B)]/15 border-[var(--gm-primary,#FE540B)] text-white"
+                          : "bg-[#1b1b1e] border-[#26262a] text-[#8b8b92] hover:text-white"
+                      }`}
+                    >
+                      {dest.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Info de Entrega Garantida */}
+              <div className="p-3 rounded-[4px] bg-[#18181b] border border-[#26262a] flex items-start gap-2.5 text-xs font-mono text-[#8b8b92]">
+                <Bell size={15} className="text-[var(--gm-primary,#FE540B)] shrink-0 mt-0.5" />
+                <span>
+                  Dispara alerta em tempo real (Sino + Toast + Som + Push nativo no dispositivo instalado) e fica salvo na fila do usuário caso o app esteja fechado no momento.
+                </span>
+              </div>
+
+              {/* Rodapé */}
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#26262a]">
+                <button
+                  type="button"
+                  onClick={() => setNotifyModalUser(null)}
+                  className="h-10 px-4 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] text-xs font-mono font-bold text-[#8b8b92] hover:text-[#f2f2f3] cursor-pointer"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isSendingNotify}
+                  onClick={handleConfirmDirectNotify}
+                  className="h-10 px-5 rounded-[4px] bg-[var(--gm-primary,#FE540B)] hover:brightness-110 text-[#0b0b0c] font-mono font-black text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-all shadow-[0_2px_12px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] active:scale-95 disabled:opacity-50"
+                >
+                  <Send size={14} className="stroke-[2.5]" />
+                  <span>{isSendingNotify ? "Enviando..." : "Disparar Notificação no App"}</span>
                 </button>
               </div>
             </div>
