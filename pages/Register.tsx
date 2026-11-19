@@ -71,7 +71,18 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-[100dvh] min-h-screen w-full flex items-center justify-center p-3.5 sm:p-6 bg-[#0B0B0C] relative overflow-x-hidden selection:bg-[var(--gm-primary)] selection:text-white" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div
+      className="min-h-[100dvh] w-full flex items-center justify-center px-3.5 sm:px-6 bg-[#0B0B0C] relative overflow-x-hidden overflow-y-auto selection:bg-[var(--gm-primary)] selection:text-white"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop: "max(1.25rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1.25rem, env(safe-area-inset-bottom, 0px))",
+        WebkitOverflowScrolling: "touch",
+        touchAction: "pan-y",
+      }}
+    >
       {/* Background Wallpaper */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center" aria-hidden="true">
         <div

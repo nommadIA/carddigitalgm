@@ -489,12 +489,6 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
     root.style.setProperty("--primary", primary);
     root.style.setProperty("--brand-primary", primary);
     
-    // Atualiza a cor da barra de status do celular
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", primary);
-    }
-    
     const rgb = hexToRgb(primary);
     if (rgb) {
       root.style.setProperty("--gm-primary-rgb", `${rgb.r}, ${rgb.g}, ${rgb.b}`);
@@ -520,13 +514,19 @@ export function applySettingsToDOM(s: AppSettings, persist = true, tenantId?: st
     }
   }
 
+  const effectiveThemeBg = bg || "#0B0B0C";
   if (bg) {
     root.style.setProperty("--gm-bg", bg);
     root.style.setProperty("--bg", bg);
     root.style.setProperty("--brand-bg", bg);
-    if (document.body) {
-      document.body.style.backgroundColor = bg;
-    }
+  }
+  root.style.backgroundColor = effectiveThemeBg;
+  if (document.body) {
+    document.body.style.backgroundColor = effectiveThemeBg;
+  }
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute("content", effectiveThemeBg);
   }
 
   if (title) {

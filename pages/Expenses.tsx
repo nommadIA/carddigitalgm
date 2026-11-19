@@ -835,10 +835,19 @@ export default function Expenses() {
     <Page
       title="Despesas"
       actions={
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-center md:justify-end gap-2.5 w-full md:w-auto flex-wrap">
+          <button
+            className="forge-btn forge-btn--primary w-full md:w-auto !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 cursor-pointer md:order-3"
+            type="button"
+            onClick={openNewExpenseWithCheck}
+          >
+            <Plus size={20} className="stroke-[2.5] gm-btn-plus-black" />
+            <span>Nova Despesa</span>
+          </button>
+
           <button
             type="button"
-            className="forge-btn forge-btn--secondary !h-11 !min-h-[44px] !px-4 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] cursor-pointer"
+            className="forge-btn forge-btn--secondary w-full md:w-auto !h-11 !min-h-[44px] !px-4 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 cursor-pointer md:order-1"
             onClick={handleImportRecurring}
             title="Importar despesas recorrentes para este mês"
           >
@@ -848,21 +857,12 @@ export default function Expenses() {
 
           <button
             type="button"
-            className="forge-btn forge-btn--secondary !h-11 !min-h-[44px] !px-4 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] cursor-pointer"
+            className="forge-btn forge-btn--secondary w-full md:w-auto !h-11 !min-h-[44px] !px-4 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 cursor-pointer md:order-2"
             onClick={() => setShowShareModal(true)}
             title="Compartilhar Relatório de Despesas"
           >
             <Share2 size={19} />
             <span>Compartilhar Relatório</span>
-          </button>
-
-          <button
-            className="forge-btn forge-btn--primary !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] cursor-pointer"
-            type="button"
-            onClick={openNewExpenseWithCheck}
-          >
-            <Plus size={20} className="stroke-[2.5] gm-btn-plus-black" />
-            <span>Nova Despesa</span>
           </button>
         </div>
       }
@@ -890,17 +890,8 @@ export default function Expenses() {
         style={{ minHeight: "auto", height: "auto" }}
       >
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 relative z-10">
-          {/* Mês Selector com Setas de Navegação - Forge UI */}
+          {/* Mês Selector com Navegação Limpa - Forge UI */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={handlePrevMonth}
-              className="hidden sm:flex w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white items-center justify-center transition-colors cursor-pointer shrink-0"
-              title="Mês anterior"
-            >
-              <ChevronLeft size={18} />
-            </button>
-
             <button
               type="button"
               onClick={() => {
@@ -927,37 +918,12 @@ export default function Expenses() {
               <ChevronDown size={16} className="text-[#8b8b92] group-hover:text-[var(--gm-primary,#FE540B)] transition-colors shrink-0" />
             </button>
 
-            {/* Desktop: Seta Próximo */}
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              className="hidden sm:flex w-10 h-10 min-w-[40px] min-h-[40px] rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
-              title="Próximo mês"
-            >
-              <ChevronRight size={18} />
-            </button>
-
-            {/* Desktop: Botão Hoje */}
-            <button
-              type="button"
-              onClick={() => {
-                const d = new Date();
-                const currentMonthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-                setMonth(currentMonthKey);
-                showToast("Mês atual selecionado!");
-              }}
-              className="hidden sm:flex h-10 px-3.5 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white text-xs font-mono font-bold uppercase tracking-wider transition-all items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95"
-              title="Ir para o mês atual"
-            >
-              Hoje
-            </button>
-
-            {/* Smartphone: As duas setas abaixo do MODAL MÊS DE REFERÊNCIA */}
-            <div className="flex sm:hidden items-center justify-between gap-2 w-full">
+            {/* Setas de Navegação Anterior / Próximo (Smartphone e Desktop) */}
+            <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="flex-1 h-10 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                className="flex-1 sm:flex-none sm:w-10 h-10 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
                 title="Mês anterior"
               >
                 <ChevronLeft size={18} />
@@ -966,11 +932,28 @@ export default function Expenses() {
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="flex-1 h-10 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                className="flex-1 sm:flex-none sm:w-10 h-10 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
                 title="Próximo mês"
               >
                 <ChevronRight size={18} />
               </button>
+
+              {/* Desktop: Botão Hoje */}
+              <div className="hidden sm:block">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    const currentMonthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                    setMonth(currentMonthKey);
+                    showToast("Mês atual selecionado!");
+                  }}
+                  className="h-10 px-3.5 rounded-[6px] border border-[#26262a] bg-[#1b1b1e] hover:bg-[#26262a] text-[#f2f2f3] hover:text-white text-xs font-mono font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95"
+                  title="Ir para o mês atual"
+                >
+                  Hoje
+                </button>
+              </div>
             </div>
           </div>
 

@@ -2,7 +2,6 @@
 import { supabase } from "./supabase";
 import { AppSettings, applySettingsToDOM, writeSettingsLocal, fetchSettingsSupabase } from "./settings";
 import { triggerRealNotification, getUserRegisteredLogo } from "./realNotification";
-import { playNotificationSound } from "./audio";
 
 export interface SyncNotificationItem {
   id: string;
@@ -119,21 +118,22 @@ export function saveNotifications(list: SyncNotificationItem[]) {
  */
 export function recordAndTriggerNotification(noti: SyncNotificationItem, notifyUser = true) {
   const current = getSavedNotifications();
-  // Evita duplicatas pelo ID
+  // Evita duplicatas pelo ID ou mesmo título/mensagem em janela curta (6s)
   if (current.some((n) => n.id === noti.id)) return;
+
+  const notiTimeMs = noti.createdAt ? new Date(noti.createdAt).getTime() : Date.now();
+  const isRecentDuplicate = current.slice(0, 8).some((n) => {
+    if (n.title !== noti.title || n.message !== noti.message) return false;
+    const prevMs = n.createdAt ? new Date(n.createdAt).getTime() : 0;
+    return prevMs > 0 && Math.abs(notiTimeMs - prevMs) < 6000;
+  });
+  if (isRecentDuplicate) return;
 
   const updated = [noti, ...current].slice(0, 100);
   saveNotifications(updated);
 
   if (notifyUser) {
-    // 1. Tocar som oficial
-    try {
-      playNotificationSound();
-    } catch {}
-
-    // 2. Disparar notificação nativa (sistema operacional / service worker / mobile)
-    // Se o tipo for alarme ou tiver skipInAppToast, não gera toast genérico duplo no ToastHost
-    // pois o AlarmToast já cuida da exibição do card rico oficial
+    // Dispara som + vibração + toast interno + notificação única no SO (sem duplicar som)
     const shouldShowInAppToast = noti.type !== "alarm" && !noti.skipInAppToast;
 
     triggerRealNotification({
@@ -142,6 +142,7 @@ export function recordAndTriggerNotification(noti: SyncNotificationItem, notifyU
       url: noti.url || "/",
       icon: noti.icon || getUserRegisteredLogo() || undefined,
       inAppToast: shouldShowInAppToast,
+      dedupeKey: `${noti.title}::${noti.message}`,
     });
   }
 }
@@ -219,7 +220,11 @@ async function sendChannelBroadcast(
  */
 export async function broadcastAppNotification(
   tenantId: string | null | undefined,
-  notiData: Omit<SyncNotificationItem, "id" | "createdAt"> & { id?: string; skipInAppToast?: boolean }
+  notiData: Omit<SyncNotificationItem, "id" | "createdAt"> & {
+    id?: string;
+    skipInAppToast?: boolean;
+    skipLocalSoundAndOs?: boolean;
+  }
 ) {
   const registeredUserLogo = getUserRegisteredLogo();
   const isAlarm = notiData.type === "alarm";
@@ -237,8 +242,8 @@ export async function broadcastAppNotification(
     skipInAppToast: isAlarm || Boolean(notiData.skipInAppToast),
   };
 
-  // 1. Grava e dispara localmente
-  recordAndTriggerNotification(finalNotification, true);
+  // 1. Grava localmente (só dispara som/SO localmente se o chamador ainda não tiver disparado)
+  recordAndTriggerNotification(finalNotification, !notiData.skipLocalSoundAndOs);
 
   // 2. Dispara no BroadcastChannel (outras abas no mesmo dispositivo)
   if (localBroadcastChannel) {
@@ -271,7 +276,9 @@ export async function broadcastAppNotification(
         sessionId: DEVICE_SESSION_ID,
         tenantId,
       });
-      supabase.removeChannel(transient);
+      if (currentRealtimeChannel !== transient) {
+        supabase.removeChannel(transient);
+      }
     } catch {}
   }
 }

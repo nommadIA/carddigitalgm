@@ -17,6 +17,8 @@ export interface ForgeSpecCardProps {
   figure?: React.ReactNode;
   unit?: string;
   tags?: ForgeSpecTag[];
+  headerSummary?: React.ReactNode;
+  barClassName?: string;
   className?: string;
   children?: React.ReactNode;
   onClick?: () => void;
@@ -34,6 +36,8 @@ export const ForgeSpecCard: React.FC<ForgeSpecCardProps> = ({
   figure,
   unit,
   tags = [],
+  headerSummary,
+  barClassName,
   className,
   children,
   onClick,
@@ -45,17 +49,35 @@ export const ForgeSpecCard: React.FC<ForgeSpecCardProps> = ({
 
   return (
     <div
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      data-no-scale={onClick ? "true" : undefined}
       onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
       className={cn(
         "forge-spec",
-        onClick && "cursor-pointer active:scale-[0.99] transition-transform",
+        onClick && "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gm-primary,#FE540B)]",
         className
       )}
     >
-      {/* BARRA SUPERIOR: ID + TÍTULO MONO + STATUS */}
-      <div className="forge-spec__bar">
+      {/* BARRA SUPERIOR: ID + TÍTULO MONO + RESUMO MOBILE + STATUS */}
+      <div className={cn("forge-spec__bar", barClassName)}>
         {id && <span className="forge-spec__id shrink-0">{id}</span>}
         <span className="forge-spec__title min-w-0 truncate">{title}</span>
+        {headerSummary !== undefined && (
+          <span className="lg:hidden text-[11px] font-mono font-black text-[#F2F2F3] tabular-nums shrink-0">
+            {headerSummary}
+          </span>
+        )}
         {status && (
           <span
             className={cn(

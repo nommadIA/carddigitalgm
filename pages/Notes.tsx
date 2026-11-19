@@ -718,6 +718,8 @@ export default function Notes() {
   const [lastAutoSavedAt, setLastAutoSavedAt] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaveSuccessActive, setIsSaveSuccessActive] = useState(false);
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const isSavingNoteRef = useRef(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -733,9 +735,9 @@ export default function Notes() {
 
     const ms = minutes * 60 * 1000;
     const timer = setInterval(() => {
-      // Background auto-save without closing modal
-      if (title || content) {
-        handleSave(true);
+      // Background auto-save without closing modal or dispatching OS notifications
+      if ((title || content) && !isSavingNoteRef.current) {
+        handleSave(true, true);
       }
     }, ms);
 
@@ -1383,8 +1385,13 @@ export default function Notes() {
     setModalOpen(true);
   }
 
-  async function handleSave(keepOpen = false) {
+  async function handleSave(_keepOpen = false, isAutoSave = false) {
+    if (isSavingNoteRef.current) return;
+    isSavingNoteRef.current = true;
+    setIsSavingNote(true);
+
     const isCompleted = normalizeStatus(noteStatus).includes("CONCLU");
+    const wasEditing = Boolean(editingNote);
 
     const activeTimes = isCompleted ? [] : [reminderTime, reminderTime2, reminderTime3].filter(Boolean);
     const timeStr = activeTimes.join(",");
@@ -1497,15 +1504,17 @@ export default function Notes() {
       setLastAutoSavedAt(nowStr);
       showToast(`Nota salva com sucesso! (${nowStr})`);
 
-      // Transmissão simultânea de notificação para todos os dispositivos
-      try {
-        broadcastAppNotification(tenantId, {
-          title: editingNote ? "📝 Nota Atualizada" : "📝 Nova Nota Criada",
-          message: savedNote?.title || "Nota salva com sucesso",
-          type: "note",
-          url: "/notes",
-        });
-      } catch (e) {}
+      // Transmissão simultânea de notificação apenas em salvamento manual
+      if (!isAutoSave) {
+        try {
+          broadcastAppNotification(tenantId, {
+            title: wasEditing ? "📝 Nota Atualizada" : "📝 Nova Nota Criada",
+            message: savedNote?.title || "Nota salva com sucesso",
+            type: "note",
+            url: "/notes",
+          });
+        } catch (e) {}
+      }
 
       // Ativa efeito verde neon no botão salvar por 2 segundos
       setIsSaveSuccessActive(true);
@@ -1520,6 +1529,9 @@ export default function Notes() {
         "Falha ao salvar a nota. Verifique se as permissões/tabelas no Supabase foram criadas.\n\n" +
           e.message,
       );
+    } finally {
+      isSavingNoteRef.current = false;
+      setIsSavingNote(false);
     }
   }
 
@@ -1752,7 +1764,7 @@ export default function Notes() {
         <button
           type="button"
           onClick={openNewNote}
-          className="forge-btn forge-btn--primary w-full sm:w-auto !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer"
+          className="forge-btn forge-btn--primary w-full md:w-auto !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer"
         >
           <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
             <Plus size={20} strokeWidth={2.6} className="w-5 h-5 shrink-0 gm-btn-plus-black text-[#0B0B0C]" />
@@ -1925,23 +1937,53 @@ export default function Notes() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="gm-notes-grid-stack md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6">
               <AnimatePresence>
-            {filteredNotes.map((note) => {
+            {filteredNotes.map((note, idx) => {
               const isExpanded = expandedNotes.has(note.id);
               const isLong =
                 (note.content?.length || 0) > 200 ||
                 (note.content?.split("\n").length || 0) > 4;
               const noteColor = "var(--gm-primary, #FF6900)";
+              const normNoteStatus = normalizeStatus(note.status || "a fazer");
+
+              const statusToneClass = normNoteStatus.includes("CONCLU")
+                ? "gm-note-status--concluido"
+                : normNoteStatus.includes("PROD")
+                ? "gm-note-status--producao"
+                : normNoteStatus.includes("LIX") || noteTab === "LIXEIRA"
+                ? "gm-note-status--lixeira"
+                : "gm-note-status--afazer";
+
+              const folderHeaderClass = normNoteStatus.includes("CONCLU")
+                ? "bg-gradient-to-r from-[#09291E]/95 via-[#0E261D]/85 to-[#131315] border-emerald-500/35"
+                : normNoteStatus.includes("PROD")
+                ? "bg-gradient-to-r from-[#0C2538]/95 via-[#102130]/85 to-[#131315] border-sky-500/35"
+                : normNoteStatus.includes("LIX") || noteTab === "LIXEIRA"
+                ? "bg-gradient-to-r from-[#2D1014]/95 via-[#201014]/85 to-[#131315] border-red-500/35"
+                : "bg-gradient-to-r from-[#3E1807]/95 via-[#25120A]/85 to-[#131315] border-[var(--gm-primary,#FE540B)]/40";
+
+              const folderDotClass = normNoteStatus.includes("CONCLU")
+                ? "bg-emerald-400"
+                : normNoteStatus.includes("PROD")
+                ? "bg-sky-400"
+                : normNoteStatus.includes("LIX") || noteTab === "LIXEIRA"
+                ? "bg-rose-400"
+                : "bg-[var(--gm-primary,#FE540B)]";
+
+              const stackStyle = {
+                "--note-stack-top": `calc(70px + env(safe-area-inset-top, 0px) + ${Math.min(idx, 3) * 44}px)`,
+                "--note-stack-z": 10 + idx,
+              } as React.CSSProperties;
 
               return (
                 <motion.div
                   key={note.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  layout
-                  className="col-span-1 h-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  style={stackStyle}
+                  className={`gm-note-grid-card ${statusToneClass} col-span-1 md:h-full`}
                   onMouseEnter={() => stopSignal(note.id)}
                   onTouchStart={() => stopSignal(note.id)}
                   onClick={() => {
@@ -1953,10 +1995,10 @@ export default function Notes() {
                       id={`note-card-${note.id}`}
                       onMouseEnter={() => stopSignal(note.id)}
                       onTouchStart={() => stopSignal(note.id)}
-                      className={`p-5 relative gap-3 flex flex-col transition-all cursor-pointer group h-full gm-note-card ${cardBase} hover:border-[#3F3F46] hover:bg-[#1B1B1E] ${
+                      className={`!p-0 relative flex flex-col transition-all cursor-pointer group md:h-full gm-note-card ${cardBase} hover:border-[#3F3F46] hover:bg-[#1B1B1E] ${
                         isExpanded
                           ? "overflow-y-auto custom-scroll max-h-[60vh] md:max-h-[80vh]"
-                          : "overflow-hidden min-h-[280px]"
+                          : "overflow-hidden md:min-h-[280px]"
                       } ${
                         note.id === highlightedId
                           ? "gm-signal-bottom-container"
@@ -1968,31 +2010,41 @@ export default function Notes() {
                         active={note.id === highlightedId}
                         onDismiss={() => stopSignal(note.id)}
                       />
-                      {/* Visual de Pinar Nota */}
-                      <button
-                        type="button"
-                        onClick={(e) => togglePin(note, e)}
-                        className={`gm-note-pin-btn group/pin ${note.is_pinned ? "pinned" : ""}`}
-                        title={note.is_pinned ? "Desafixar nota" : "Fixar nota no topo"}
-                      >
-                        <Pin
-                          size={15}
-                          className={
-                            note.is_pinned
-                              ? "rotate-[-30deg] transition-transform"
-                              : "rotate-0 transition-transform"
-                          }
-                        />
-                      </button>
 
-                      {/* Title */}
-                      <div className="flex flex-col gap-1 pr-11">
-                        <h3 className="font-bold text-lg text-white leading-tight mt-1">
-                          {note.title || "Sem título"}
-                        </h3>
+                      {/* ABA SUPERIOR DE PASTA (SEMPRE VISÍVEL NO EMPILHAMENTO EM CASCATA) */}
+                      <div className={`min-h-[46px] pl-3.5 pr-12 py-2 border-b flex items-center justify-between gap-2 relative ${folderHeaderClass}`}>
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${folderDotClass}`} />
+                          <h3 className="font-black text-xs sm:text-sm text-white leading-tight truncate uppercase tracking-tight">
+                            {note.title || "Sem título"}
+                          </h3>
+                        </div>
+                        <span className="text-[10px] font-mono font-bold text-zinc-400 shrink-0 tabular-nums">
+                          #{String(idx + 1).padStart(2, "0")}
+                        </span>
 
+                        {/* Visual de Pinar Nota */}
+                        <button
+                          type="button"
+                          onClick={(e) => togglePin(note, e)}
+                          className={`gm-note-pin-btn group/pin ${note.is_pinned ? "pinned" : ""}`}
+                          title={note.is_pinned ? "Desafixar nota" : "Fixar nota no topo"}
+                        >
+                          <Pin
+                            size={14}
+                            className={
+                              note.is_pinned
+                                ? "rotate-[-30deg] transition-transform"
+                                : "rotate-0 transition-transform"
+                            }
+                          />
+                        </button>
+                      </div>
+
+                      {/* Corpo do Card */}
+                      <div className="p-4 sm:p-5 flex flex-col gap-3 flex-1">
                         {(note.delivery_date || note.responsible_name) && (
-                          <div className="flex flex-col gap-0.5 mt-1 text-xs text-zinc-400">
+                          <div className="flex flex-col gap-0.5 text-xs text-zinc-400">
                             {note.delivery_date && (
                               <div className="flex items-center gap-1.5 font-mono text-[11px] tabular-nums">
                                 <Clock size={12} style={{ color: noteColor }} />
@@ -2016,7 +2068,6 @@ export default function Notes() {
                             )}
                           </div>
                         )}
-                      </div>
 
                       {/* Layouts Thumbnail Preview (up to 6 side-by-side) */}
                       {(() => {
@@ -2281,6 +2332,7 @@ export default function Notes() {
                           </div>
                         </div>
                       </div>
+                      </div>
                     </div>
                   </motion.div>
                 );
@@ -2392,19 +2444,19 @@ export default function Notes() {
                   animate={{ y: 0, opacity: 1, scale: 1 }}
                   exit={{ y: "100%", opacity: 0, scale: 0.96 }}
                   transition={{ type: "spring", damping: 26, stiffness: 320 }}
-                  className="gm-note-modal relative w-full sm:w-[94%] rounded-none sm:rounded-lg flex flex-col overflow-hidden border border-[#26262A] shadow-2xl bg-[#131315] text-white z-10 m-auto h-[100dvh] sm:h-auto"
+                  className="gm-note-modal relative w-full sm:w-[94%] rounded-xl sm:rounded-lg flex flex-col overflow-hidden border border-[#26262A] shadow-2xl bg-[#131315] text-white z-10 m-auto"
                   style={{
-                    width: window.innerWidth >= 768 ? (modalCustomSize.width ? `${modalCustomSize.width}px` : "min(1152px, 94vw)") : "100vw",
-                    height: window.innerWidth >= 768 ? (modalCustomSize.height ? `${modalCustomSize.height}px` : undefined) : "100dvh",
-                    maxWidth: window.innerWidth >= 768 ? "calc(100vw - var(--gm-sidebar-width, 224px) - 24px)" : "100vw",
-                    maxHeight: window.innerWidth < 768 ? "100dvh" : modalCustomSize.height ? `${modalCustomSize.height}px` : "92vh",
-                    borderWidth: window.innerWidth < 768 ? "0px" : "1px",
+                    width: window.innerWidth >= 768 ? (modalCustomSize.width ? `${modalCustomSize.width}px` : "min(1152px, 94vw)") : "100%",
+                    height: window.innerWidth >= 768 ? (modalCustomSize.height ? `${modalCustomSize.height}px` : undefined) : "100%",
+                    maxWidth: window.innerWidth >= 768 ? "calc(100vw - var(--gm-sidebar-width, 224px) - 24px)" : "100%",
+                    maxHeight: window.innerWidth < 768 ? "calc(100dvh - 12px)" : modalCustomSize.height ? `${modalCustomSize.height}px` : "92vh",
+                    borderWidth: "1px",
                     borderStyle: "solid",
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Indicador mobile */}
-                  <div className="w-10 h-1 rounded-sm bg-white/20 mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
+                  {/* Indicador sutil mobile */}
+                  <div className="w-8 h-[2.5px] rounded-full bg-white/20 mx-auto mt-1.5 mb-0.5 sm:hidden shrink-0" />
 
                   {/* Toast Feedback Flutuante no CENTRO da Nota */}
                   <AnimatePresence>
@@ -2416,9 +2468,9 @@ export default function Notes() {
                         transition={{ type: "spring", stiffness: 450, damping: 25 }}
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] pointer-events-none"
                       >
-                        <div className="bg-[#0B0B0C] text-white font-black text-xs md:text-sm px-6 py-3.5 rounded-lg shadow-2xl border border-emerald-500/60 flex items-center gap-3 text-center">
-                          <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500 shrink-0" />
-                          <span className="tracking-wide uppercase text-emerald-400 font-black text-sm">
+                        <div className="bg-[#0B0B0C] text-white font-black text-xs md:text-sm px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-lg shadow-2xl border border-emerald-500/60 flex items-center gap-2.5 text-center">
+                          <span className="h-2 w-2 rounded-sm bg-emerald-500 shrink-0" />
+                          <span className="tracking-wide uppercase text-emerald-400 font-black text-xs sm:text-sm">
                             {toastMessage}
                           </span>
                         </div>
@@ -2428,17 +2480,17 @@ export default function Notes() {
 
                   {/* Header / Barra de Título */}
                   <div
-                    className="px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between shrink-0 relative z-20 bg-[#131315] border-b border-[#26262A]"
+                    className="px-3 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between gap-2 shrink-0 relative z-20 bg-[#131315] border-b border-[#26262A]"
                     style={{
                       borderBottomColor: `${color}40`,
                     }}
                   >
-                    <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       <input
                         type="text"
-                        className="gm-note-title-input bg-[#0B0B0C] border border-[#26262A] hover:border-[#3F3F46] focus:border-[var(--gm-primary,#FF6900)] rounded-[4px] outline-none px-4 py-2 sm:py-2.5 font-bold text-base sm:text-lg text-white w-full placeholder:text-zinc-500 tracking-tight transition-all focus:ring-0 focus:outline-none"
+                        className="gm-note-title-input bg-[#0B0B0C] border border-[#26262A] hover:border-[#3F3F46] focus:border-[var(--gm-primary,#FF6900)] rounded-[4px] outline-none px-3 py-1.5 sm:px-4 sm:py-2.5 h-9 sm:h-11 font-bold text-sm sm:text-lg text-white w-full placeholder:text-zinc-500 tracking-tight transition-all focus:ring-0 focus:outline-none"
                         style={{ outline: "none", boxShadow: "none" }}
-                        placeholder="Título da nota"
+                        placeholder="Título da nota..."
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         onKeyDown={(e) => {
@@ -2452,14 +2504,15 @@ export default function Notes() {
                     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                       <button
                         type="button"
+                        data-icon-btn="true"
                         onClick={() => setIsPinned(!isPinned)}
-                        className={`gm-note-modal-pin-btn w-9 h-9 flex items-center justify-center rounded-[4px] transition-all cursor-pointer border ${
+                        className={`gm-note-modal-pin-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-[4px] transition-all cursor-pointer border ${
                           isPinned ? "pinned" : "bg-[#0B0B0C] border-[#26262A] hover:bg-[#1B1B1E] text-zinc-400 hover:text-white"
                         }`}
                         title={isPinned ? "Desafixar nota" : "Fixar nota no topo"}
                       >
                         <Pin
-                          size={16}
+                          size={15}
                           className={
                             isPinned
                               ? "rotate-[-30deg] transition-transform"
@@ -2469,51 +2522,54 @@ export default function Notes() {
                       </button>
                       <button
                         type="button"
+                        data-icon-btn="true"
                         onClick={() => setModalOpen(false)}
-                        className="w-9 h-9 flex items-center justify-center rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white transition-all cursor-pointer"
+                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white transition-all cursor-pointer"
                         title="Fechar nota"
                       >
-                        <X size={17} />
+                        <X size={16} />
                       </button>
                     </div>
                   </div>
 
                   {/* Navegação Superior por Abas */}
-                  <div className="px-3 sm:px-6 py-2 bg-[#131315] border-b border-[#26262A] select-none shrink-0 z-20">
+                  <div className="px-3 sm:px-6 py-1.5 sm:py-2 bg-[#131315] border-b border-[#26262A] select-none shrink-0 z-20">
                     <div className="grid grid-cols-3 gap-1 w-full bg-[#0B0B0C] p-1 rounded-md border border-[#26262A]">
                       {/* Aba 1: Nota & Texto */}
                       <button
                         type="button"
+                        data-note-tool-btn="true"
                         aria-pressed={editorTab === "note"}
                         data-selected={editorTab === "note"}
                         onClick={() => setEditorTab("note")}
-                        className={`py-2 px-2 sm:px-4 rounded-[4px] text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none whitespace-nowrap ${
+                        className={`py-1.5 sm:py-2 px-1.5 sm:px-4 rounded-[4px] text-[10px] sm:text-xs font-black uppercase tracking-tight sm:tracking-wider transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer select-none whitespace-nowrap min-h-[30px] sm:min-h-[34px] ${
                           editorTab === "note"
                             ? "bg-[var(--gm-primary,#FF6900)] text-white border border-[var(--gm-primary,#FF6900)]"
                             : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E] border border-transparent"
                         }`}
                       >
-                        <FileText size={14} className={editorTab === "note" ? "shrink-0 text-white" : "shrink-0"} />
-                        <span className="truncate">NOTA</span>
+                        <FileText size={12} className={editorTab === "note" ? "shrink-0 text-white sm:w-[14px] sm:h-[14px]" : "shrink-0 sm:w-[14px] sm:h-[14px]"} />
+                        <span>NOTA</span>
                       </button>
 
                       {/* Aba 2: Layouts & Fotos */}
                       <button
                         type="button"
+                        data-note-tool-btn="true"
                         aria-pressed={editorTab === "layouts"}
                         data-selected={editorTab === "layouts"}
                         onClick={() => setEditorTab("layouts")}
-                        className={`py-2 px-2 sm:px-4 rounded-[4px] text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none whitespace-nowrap ${
+                        className={`py-1.5 sm:py-2 px-1.5 sm:px-4 rounded-[4px] text-[10px] sm:text-xs font-black uppercase tracking-tight sm:tracking-wider transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer select-none whitespace-nowrap min-h-[30px] sm:min-h-[34px] ${
                           editorTab === "layouts"
                             ? "bg-[var(--gm-primary,#FF6900)] text-white border border-[var(--gm-primary,#FF6900)]"
                             : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E] border border-transparent"
                         }`}
                       >
-                        <ImageIcon size={14} className={editorTab === "layouts" ? "shrink-0 text-white" : "shrink-0"} />
-                        <span className="truncate">LAYOUTS</span>
+                        <ImageIcon size={12} className={editorTab === "layouts" ? "shrink-0 text-white sm:w-[14px] sm:h-[14px]" : "shrink-0 sm:w-[14px] sm:h-[14px]"} />
+                        <span>LAYOUTS</span>
                         {layoutUrls.length > 0 && (
                           <span
-                            className={`text-[11px] font-black px-1.5 py-0.5 rounded-[4px] tabular-nums ${
+                            className={`text-[9.5px] sm:text-[11px] font-black px-1 py-0.25 rounded-[3px] tabular-nums leading-none ${
                               editorTab === "layouts"
                                 ? "bg-black/25 text-white"
                                 : "bg-[#1B1B1E] text-white"
@@ -2527,270 +2583,299 @@ export default function Notes() {
                       {/* Aba 3: Configurações & Prazos */}
                       <button
                         type="button"
+                        data-note-tool-btn="true"
                         aria-pressed={editorTab === "settings"}
                         data-selected={editorTab === "settings"}
                         onClick={() => setEditorTab("settings")}
-                        className={`py-2 px-2 sm:px-4 rounded-[4px] text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer select-none whitespace-nowrap ${
+                        className={`py-1.5 sm:py-2 px-1.5 sm:px-4 rounded-[4px] text-[10px] sm:text-xs font-black uppercase tracking-tight sm:tracking-wider transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer select-none whitespace-nowrap min-h-[30px] sm:min-h-[34px] ${
                           editorTab === "settings"
                             ? "bg-[var(--gm-primary,#FF6900)] text-white border border-[var(--gm-primary,#FF6900)]"
                             : "text-zinc-400 hover:text-white hover:bg-[#1B1B1E] border border-transparent"
                         }`}
                       >
-                        <Sliders size={14} className={editorTab === "settings" ? "shrink-0 text-white" : "shrink-0"} />
-                        <span className="truncate">CONFIGURAÇÕES</span>
+                        <Sliders size={12} className={editorTab === "settings" ? "shrink-0 text-white sm:w-[14px] sm:h-[14px]" : "shrink-0 sm:w-[14px] sm:h-[14px]"} />
+                        <span>CONFIGURAÇÕES</span>
                         {(deliveryDate || deliveryTime) && (
-                          <span className="w-2 h-2 rounded-sm bg-emerald-400 shrink-0" />
+                          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-sm bg-emerald-400 shrink-0" />
                         )}
                       </button>
                     </div>
                   </div>
 
-                  {/* Text Formatting Toolbar (Visível na aba de Nota) */}
+                  {/* Text Formatting Toolbar (Organizada em grupos nítidos e 100% visível no mobile) */}
                   {editorTab === "note" && (
                     <div
-                      className="flex flex-col gap-2 px-2 md:px-5 py-2 bg-[#0B0B0C] border-b border-[#26262A] select-none shrink-0 relative z-30"
+                      className="flex flex-col gap-1.5 px-3 sm:px-6 py-2 bg-[#0B0B0C] border-b border-[#26262A] select-none shrink-0 relative z-30"
                       style={{ borderColor: `${color}30` }}
                     >
-                      {/* Core Formatting Controls Group */}
-                      <div className="flex items-center overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap justify-start md:justify-center gap-1.5 md:gap-2 py-0.5 relative z-30 touch-pan-x">
-                        {/* Bold */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyBold();
-                          }}
-                          className="py-1.5 px-3 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white font-extrabold text-sm transition-colors text-center flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Negrito"
-                        >
-                          B
-                        </button>
-
-                        {/* Italic */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyItalic();
-                          }}
-                          className="py-1.5 px-3 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white italic font-serif text-sm transition-colors text-center flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Itálico"
-                        >
-                          I
-                        </button>
-
-                        {/* Underline */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyUnderline();
-                          }}
-                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors text-center flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Sublinhar"
-                        >
-                          <Underline size={15} />
-                        </button>
-
-                        {/* Strikethrough */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyStrikeThrough();
-                          }}
-                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors text-center flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Tachado"
-                        >
-                          <Strikethrough size={15} />
-                        </button>
-
-                        {/* Cores do Texto Botão */}
-                        <div className="relative shrink-0">
-                          <button
-                            type="button"
-                            aria-pressed={colorPickerOpen}
-                            data-selected={colorPickerOpen}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              saveCurrentSelection();
-                              setColorPickerOpen(!colorPickerOpen);
-                              setHighlighterPickerOpen(false);
-                              setFontSelectorOpen(false);
-                            }}
-                            className={`py-1.5 px-2.5 rounded-[4px] border transition-colors flex items-center gap-1.5 min-h-[36px] cursor-pointer ${
-                              colorPickerOpen
-                                ? "bg-[var(--gm-primary,#FE540B)]/20 text-white border-[var(--gm-primary,#FE540B)]/60"
-                                : "bg-[#131315] hover:bg-[#1B1B1E] border-[#26262A] text-white"
-                            }`}
-                            title="Cor do Texto (Abrir configurações de cores)"
-                          >
-                            <Palette size={15} className={colorPickerOpen ? "text-white" : "text-zinc-300"} />
+                      {/* Cabeçalho compacto de Configurações de Texto */}
+                      <div className="flex items-center justify-between gap-2 md:hidden">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                          Formatação de Texto
+                        </span>
+                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-400">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#131315] border border-[#26262A]">
                             <span
-                              className="w-3.5 h-3.5 rounded-sm border border-white/40 shrink-0"
+                              className="w-2.5 h-2.5 rounded-[2px] border border-white/40"
                               style={{ backgroundColor: selectedTextColor }}
                             />
-                            <ChevronDown size={11} className={colorPickerOpen ? "text-white" : "text-zinc-400"} />
-                          </button>
-                        </div>
-
-                        {/* Galeria de Fontes Botão */}
-                        <div className="relative shrink-0">
-                          <button
-                            type="button"
-                            aria-pressed={fontSelectorOpen}
-                            data-selected={fontSelectorOpen}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              saveCurrentSelection();
-                              setFontSelectorOpen(!fontSelectorOpen);
-                              setColorPickerOpen(false);
-                              setHighlighterPickerOpen(false);
-                            }}
-                            className={`py-1.5 px-3 rounded-[4px] border text-xs transition-colors font-bold flex items-center justify-center gap-1.5 min-h-[36px] cursor-pointer whitespace-nowrap ${
-                              fontSelectorOpen
-                                ? "bg-[var(--gm-primary,#FE540B)]/20 text-white border-[var(--gm-primary,#FE540B)]/60"
-                                : "bg-[#131315] hover:bg-[#1B1B1E] border-[#26262A] text-white"
-                            }`}
-                            title="Galeria de Fontes"
-                          >
-                            <Type size={13} className={fontSelectorOpen ? "text-white" : "text-zinc-300"} />
-                            <span>Fontes</span>
-                            <ChevronDown size={12} className={fontSelectorOpen ? "text-white" : "text-zinc-400"} />
-                          </button>
-                        </div>
-
-                        {/* Size Cycle */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            cycleFontSize();
-                          }}
-                          className="py-1.5 px-3 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white text-[11px] transition-colors font-semibold flex items-center justify-center gap-1.5 min-h-[36px] cursor-pointer whitespace-nowrap"
-                          title="Tamanho da Fonte"
-                        >
-                          <span className="text-zinc-400 text-[11px] font-bold">Aa</span>
-                          <span className="font-extrabold text-[11px] bg-[#1B1B1E] px-1.5 py-0.5 rounded-[4px] uppercase text-white">
-                            {fontSizeMode === "P"
-                              ? "Peq"
-                              : fontSizeMode === "M"
-                                ? "Méd"
-                                : "Grd"}
+                            <span className="text-zinc-300 uppercase">Cor</span>
                           </span>
-                        </button>
+                          <span className="px-1.5 py-0.5 rounded bg-[#131315] border border-[#26262A] text-zinc-300">
+                            Tam: {fontSizeMode === "P" ? "Peq" : fontSizeMode === "M" ? "Méd" : "Grd"}
+                          </span>
+                        </div>
+                      </div>
 
-                        <div className="h-5 w-[1px] bg-[#26262A] mx-1 shrink-0" />
+                      {/* Linhas de ferramentas visíveis sem corte lateral no mobile */}
+                      <div className="flex flex-col md:flex-row md:flex-wrap md:items-center md:justify-center gap-1.5 relative z-30">
+                        {/* Linha 1 Mobile: Estilo (B I U S) + Cor + Fontes + Tamanho */}
+                        <div className="flex items-center justify-between sm:justify-start md:justify-center gap-1.5 flex-wrap">
+                          {/* Grupo Estilo: B / I / U / S */}
+                          <div className="inline-flex items-center bg-[#131315] border border-[#26262A] rounded-[5px] p-0.5 gap-0.5">
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyBold();
+                              }}
+                              className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white font-extrabold text-xs sm:text-sm transition-colors flex items-center justify-center cursor-pointer"
+                              title="Negrito"
+                            >
+                              B
+                            </button>
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyItalic();
+                              }}
+                              className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white italic font-serif text-xs sm:text-sm transition-colors flex items-center justify-center cursor-pointer"
+                              title="Itálico"
+                            >
+                              I
+                            </button>
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyUnderline();
+                              }}
+                              className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white transition-colors flex items-center justify-center cursor-pointer"
+                              title="Sublinhar"
+                            >
+                              <Underline size={13} className="sm:w-[15px] sm:h-[15px]" />
+                            </button>
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyStrikeThrough();
+                              }}
+                              className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white transition-colors flex items-center justify-center cursor-pointer"
+                              title="Tachado"
+                            >
+                              <Strikethrough size={13} className="sm:w-[15px] sm:h-[15px]" />
+                            </button>
+                          </div>
 
-                        {/* Align Left */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyAlign("left");
-                          }}
-                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Alinhar à Esquerda"
-                        >
-                          <AlignLeft size={15} />
-                        </button>
+                          {/* Botões Visuais: Cor + Fontes + Tamanho */}
+                          <div className="flex items-center gap-1 sm:gap-1.5 flex-1 sm:flex-none justify-end sm:justify-start">
+                            {/* Cores do Texto */}
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              aria-pressed={colorPickerOpen}
+                              data-selected={colorPickerOpen}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                saveCurrentSelection();
+                                setColorPickerOpen(!colorPickerOpen);
+                                setHighlighterPickerOpen(false);
+                                setFontSelectorOpen(false);
+                              }}
+                              className={`h-[30px] sm:h-[34px] px-2 sm:px-2.5 rounded-[5px] border transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer text-[11px] font-bold ${
+                                colorPickerOpen
+                                  ? "bg-[var(--gm-primary,#FE540B)]/20 text-white border-[var(--gm-primary,#FE540B)]/60"
+                                  : "bg-[#131315] hover:bg-[#1B1B1E] border-[#26262A] text-white"
+                              }`}
+                              title="Cor do Texto (Abrir configurações de cores)"
+                            >
+                              <Palette size={13} className={colorPickerOpen ? "text-white" : "text-zinc-300"} />
+                              <span
+                                className="w-3 h-3 rounded-[2px] border border-white/40 shrink-0"
+                                style={{ backgroundColor: selectedTextColor }}
+                              />
+                              <span className="hidden xs:inline sm:inline">Cor</span>
+                              <ChevronDown size={10} className={colorPickerOpen ? "text-white" : "text-zinc-400"} />
+                            </button>
 
-                        {/* Align Center */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyAlign("center");
-                          }}
-                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Centralizar"
-                        >
-                          <AlignCenter size={15} />
-                        </button>
+                            {/* Galeria de Fontes */}
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              aria-pressed={fontSelectorOpen}
+                              data-selected={fontSelectorOpen}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                saveCurrentSelection();
+                                setFontSelectorOpen(!fontSelectorOpen);
+                                setColorPickerOpen(false);
+                                setHighlighterPickerOpen(false);
+                              }}
+                              className={`h-[30px] sm:h-[34px] px-2 sm:px-3 rounded-[5px] border text-[11px] sm:text-xs transition-colors font-bold flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer whitespace-nowrap ${
+                                fontSelectorOpen
+                                  ? "bg-[var(--gm-primary,#FE540B)]/20 text-white border-[var(--gm-primary,#FE540B)]/60"
+                                  : "bg-[#131315] hover:bg-[#1B1B1E] border-[#26262A] text-white"
+                              }`}
+                              title="Galeria de Fontes"
+                            >
+                              <Type size={12} className={fontSelectorOpen ? "text-white" : "text-zinc-300"} />
+                              <span>Fontes</span>
+                              <ChevronDown size={10} className={fontSelectorOpen ? "text-white" : "text-zinc-400"} />
+                            </button>
 
-                        {/* Align Right */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyAlign("right");
-                          }}
-                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Alinhar à Direita"
-                        >
-                          <AlignRight size={15} />
-                        </button>
+                            {/* Size Cycle */}
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                cycleFontSize();
+                              }}
+                              className="h-[30px] sm:h-[34px] px-2 sm:px-2.5 rounded-[5px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white text-[10.5px] sm:text-[11px] transition-colors font-semibold flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                              title="Alternar Tamanho da Fonte"
+                            >
+                              <span className="text-zinc-400 font-bold">Aa</span>
+                              <span className="font-extrabold bg-[#1B1B1E] px-1.5 py-0.25 rounded-[3px] uppercase text-white">
+                                {fontSizeMode === "P"
+                                  ? "Peq"
+                                  : fontSizeMode === "M"
+                                    ? "Méd"
+                                    : "Grd"}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
 
-                        {/* Align Justify */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyAlign("justify");
-                          }}
-                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Justificar"
-                        >
-                          <AlignJustify size={15} />
-                        </button>
+                        <div className="hidden md:block h-5 w-[1px] bg-[#26262A] mx-0.5 shrink-0" />
 
-                        <div className="h-5 w-[1px] bg-[#26262A] mx-1 shrink-0" />
+                        {/* Linha 2 Mobile: Alinhamento + Listas + Marcador */}
+                        <div className="flex items-center justify-between sm:justify-start md:justify-center gap-1.5 flex-wrap">
+                          {/* Grupo Alinhamento */}
+                          <div className="inline-flex items-center bg-[#131315] border border-[#26262A] rounded-[5px] p-0.5 gap-0.5">
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyAlign("left");
+                              }}
+                              className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white transition-colors flex items-center justify-center cursor-pointer"
+                              title="Alinhar à Esquerda"
+                            >
+                              <AlignLeft size={13} className="sm:w-[15px] sm:h-[15px]" />
+                            </button>
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyAlign("center");
+                              }}
+                              className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white transition-colors flex items-center justify-center cursor-pointer"
+                              title="Centralizar"
+                            >
+                              <AlignCenter size={13} className="sm:w-[15px] sm:h-[15px]" />
+                            </button>
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyAlign("right");
+                              }}
+                              className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white transition-colors flex items-center justify-center cursor-pointer"
+                              title="Alinhar à Direita"
+                            >
+                              <AlignRight size={13} className="sm:w-[15px] sm:h-[15px]" />
+                            </button>
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                applyAlign("justify");
+                              }}
+                              className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white transition-colors flex items-center justify-center cursor-pointer"
+                              title="Justificar"
+                            >
+                              <AlignJustify size={13} className="sm:w-[15px] sm:h-[15px]" />
+                            </button>
+                          </div>
 
-                        {/* Bullet List */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyList("bullet");
-                          }}
-                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Lista de Marcadores"
-                        >
-                          <List size={15} />
-                        </button>
+                          {/* Grupo Listas + Marcador */}
+                          <div className="flex items-center gap-1 sm:gap-1.5 flex-1 sm:flex-none justify-end sm:justify-start">
+                            <div className="inline-flex items-center bg-[#131315] border border-[#26262A] rounded-[5px] p-0.5 gap-0.5">
+                              <button
+                                type="button"
+                                data-note-tool-btn="true"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  applyList("bullet");
+                                }}
+                                className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white transition-colors flex items-center justify-center cursor-pointer"
+                                title="Lista de Marcadores"
+                              >
+                                <List size={13} className="sm:w-[15px] sm:h-[15px]" />
+                              </button>
+                              <button
+                                type="button"
+                                data-note-tool-btn="true"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  applyList("ordered");
+                                }}
+                                className="h-[28px] w-[28px] sm:h-[32px] sm:w-[32px] rounded-[3px] hover:bg-[#1B1B1E] text-white transition-colors flex items-center justify-center cursor-pointer"
+                                title="Lista Numerada"
+                              >
+                                <ListOrdered size={13} className="sm:w-[15px] sm:h-[15px]" />
+                              </button>
+                            </div>
 
-                        {/* Numbered List */}
-                        <button
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            applyList("ordered");
-                          }}
-                          className="p-2 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-white transition-colors flex items-center justify-center min-h-[36px] min-w-[36px] cursor-pointer"
-                          title="Lista Numerada"
-                        >
-                          <ListOrdered size={15} />
-                        </button>
-
-                        <div className="h-5 w-[1px] bg-[#26262A] mx-1 shrink-0" />
-
-                        {/* Highlighter Botão */}
-                        <div className="relative shrink-0">
-                          <button
-                            type="button"
-                            aria-pressed={highlighterPickerOpen}
-                            data-selected={highlighterPickerOpen}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              saveCurrentSelection();
-                              setHighlighterPickerOpen(!highlighterPickerOpen);
-                              setColorPickerOpen(false);
-                              setFontSelectorOpen(false);
-                            }}
-                            className={`py-1.5 px-2.5 rounded-[4px] border transition-colors flex items-center gap-1.5 min-h-[36px] cursor-pointer ${
-                              highlighterPickerOpen
-                                ? "bg-[var(--gm-primary,#FE540B)]/20 text-white border-[var(--gm-primary,#FE540B)]/60"
-                                : "bg-[#131315] hover:bg-[#1B1B1E] border-[#26262A] text-white"
-                            }`}
-                            title="Marcador de Texto"
-                          >
-                            <Highlighter size={15} className={highlighterPickerOpen ? "text-white" : "text-zinc-300"} />
-                            <span
-                              className="w-3.5 h-3.5 rounded-sm border border-white/40 shrink-0"
-                              style={{ backgroundColor: selectedHighlightColor || "transparent" }}
-                            />
-                            <ChevronDown size={11} className={highlighterPickerOpen ? "text-white" : "text-zinc-400"} />
-                          </button>
+                            {/* Highlighter / Marcador de Texto */}
+                            <button
+                              type="button"
+                              data-note-tool-btn="true"
+                              aria-pressed={highlighterPickerOpen}
+                              data-selected={highlighterPickerOpen}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                saveCurrentSelection();
+                                setHighlighterPickerOpen(!highlighterPickerOpen);
+                                setColorPickerOpen(false);
+                                setFontSelectorOpen(false);
+                              }}
+                              className={`h-[30px] sm:h-[34px] px-2 sm:px-2.5 rounded-[5px] border transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer text-[11px] font-bold ${
+                                highlighterPickerOpen
+                                  ? "bg-[var(--gm-primary,#FE540B)]/20 text-white border-[var(--gm-primary,#FE540B)]/60"
+                                  : "bg-[#131315] hover:bg-[#1B1B1E] border-[#26262A] text-white"
+                              }`}
+                              title="Marcador de Texto"
+                            >
+                              <Highlighter size={13} className={highlighterPickerOpen ? "text-white" : "text-zinc-300"} />
+                              <span
+                                className="w-3 h-3 rounded-[2px] border border-white/40 shrink-0"
+                                style={{ backgroundColor: selectedHighlightColor || "transparent" }}
+                              />
+                              <span>Grifar</span>
+                              <ChevronDown size={10} className={highlighterPickerOpen ? "text-white" : "text-zinc-400"} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -2798,7 +2883,7 @@ export default function Notes() {
 
               {/* Scrollable Area com visual Apple, espaçamento harmônico e containers limpos */}
               <div
-                className="flex-1 overflow-y-auto custom-scroll min-h-0 relative flex flex-col p-3.5 sm:p-5 gap-4"
+                className="flex-1 overflow-y-auto custom-scroll min-h-0 relative flex flex-col p-3 sm:p-5 gap-3 sm:gap-4"
                 style={{
                   backgroundColor: "transparent",
                   boxShadow: `inset 0 0 50px ${color}10`,
@@ -2814,25 +2899,25 @@ export default function Notes() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.18 }}
-                    className="flex flex-col gap-3.5 flex-1 min-h-0"
+                    className="flex flex-col gap-2.5 sm:gap-3.5 flex-1 min-h-0"
                   >
                     {/* Contexto Rápido */}
-                    <div className="flex items-center justify-between flex-wrap gap-2 px-0.5 py-0.5">
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex items-center justify-between flex-wrap gap-1.5 sm:gap-2 px-0.5">
+                      <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
                         {/* Tipo da Nota */}
-                        <span className="text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-[4px] bg-[#0B0B0C] text-zinc-200 border border-[#26262A]">
+                        <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-[4px] bg-[#0B0B0C] text-zinc-200 border border-[#26262A]">
                           {noteType === "production" ? "PRODUÇÃO" : "GERAL"}
                         </span>
 
                         {/* Status */}
-                        <span className="text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-[4px] bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/35">
+                        <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-[4px] bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] border border-[var(--gm-primary)]/35">
                           {noteStatus.replace(/_/g, " ")}
                         </span>
 
                         {/* Prazo */}
                         {deliveryDate && (
-                          <span className="inline-flex text-[11px] font-bold text-orange-300 items-center gap-1 bg-orange-500/10 px-2.5 py-1 rounded-[4px] border border-orange-500/25 tabular-nums">
-                            <Calendar size={11} />
+                          <span className="inline-flex text-[10px] sm:text-[11px] font-bold text-orange-300 items-center gap-1 bg-orange-500/10 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-[4px] border border-orange-500/25 tabular-nums">
+                            <Calendar size={10} className="sm:w-[11px] sm:h-[11px]" />
                             {deliveryDate.split("-").reverse().join("/")}
                             {deliveryTime ? ` às ${deliveryTime}` : ""}
                           </span>
@@ -2840,8 +2925,8 @@ export default function Notes() {
 
                         {/* Responsável */}
                         {responsibleName && (
-                          <span className="inline-flex text-[11px] font-bold text-zinc-300 items-center gap-1 bg-[#0B0B0C] px-2.5 py-1 rounded-[4px] border border-[#26262A] truncate max-w-[140px]">
-                            <User size={11} />
+                          <span className="inline-flex text-[10px] sm:text-[11px] font-bold text-zinc-300 items-center gap-1 bg-[#0B0B0C] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-[4px] border border-[#26262A] truncate max-w-[120px] sm:max-w-[140px]">
+                            <User size={10} className="sm:w-[11px] sm:h-[11px]" />
                             {responsibleName}
                           </span>
                         )}
@@ -2851,19 +2936,21 @@ export default function Notes() {
                       <button
                         id="btn-note-adjust-settings"
                         type="button"
+                        data-note-tool-btn="true"
                         onClick={() => setEditorTab("settings")}
-                        className="shrink-0 ml-auto sm:ml-0 flex items-center justify-center gap-2 px-4 py-2 rounded-[6px] bg-[#F65A1A] hover:bg-[#FF7A38] text-[#0B0B0C] font-black text-xs uppercase tracking-wider border border-[#F65A1A] transition-colors cursor-pointer whitespace-nowrap"
+                        className="shrink-0 flex items-center justify-center gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 h-7 sm:h-8 rounded-[5px] bg-[#1B1B1E] hover:bg-[#F65A1A] text-zinc-200 hover:text-[#0B0B0C] font-bold text-[10.5px] sm:text-xs uppercase tracking-wide border border-[#26262A] hover:border-[#F65A1A] transition-colors cursor-pointer whitespace-nowrap"
                         title="Ajustar configurações e prazos da nota"
                       >
-                        <Sliders size={13} className="shrink-0 text-[#0B0B0C]" strokeWidth={2.5} />
-                        <span className="whitespace-nowrap">Ajustar configurações</span>
+                        <Sliders size={12} className="shrink-0" strokeWidth={2.3} />
+                        <span className="sm:hidden">Configurar</span>
+                        <span className="hidden sm:inline">Ajustar configurações</span>
                       </button>
                     </div>
 
                     {/* Prévias compactas de layouts se houver */}
                     {layoutUrls.length > 0 && (
-                      <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-md bg-[#0B0B0C] border border-[#26262A]">
-                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                      <div className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-md bg-[#0B0B0C] border border-[#26262A]">
+                        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
                           {layoutUrls.slice(0, 6).map((url, idx) => (
                             <div
                               key={idx}
@@ -2871,11 +2958,11 @@ export default function Notes() {
                                 setZoomImage({ url, index: idx });
                                 setZoomScale(1);
                               }}
-                              className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-[4px] overflow-hidden border border-[#26262A] hover:border-[#3F3F46] shrink-0 cursor-pointer transition-colors"
+                              className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-[4px] overflow-hidden border border-[#26262A] hover:border-[#3F3F46] shrink-0 cursor-pointer transition-colors"
                               title={`Ver layout ${idx + 1}`}
                             >
                               <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
-                              <span className="absolute bottom-0 right-0 bg-black/80 text-[11px] font-mono font-bold px-1 rounded-tl text-white tabular-nums">
+                              <span className="absolute bottom-0 right-0 bg-black/80 text-[10px] font-mono font-bold px-1 rounded-tl text-white tabular-nums">
                                 #{idx + 1}
                               </span>
                             </div>
@@ -2883,42 +2970,45 @@ export default function Notes() {
                         </div>
                         <button
                           type="button"
+                          data-note-tool-btn="true"
                           onClick={() => setEditorTab("layouts")}
-                          className="text-xs font-bold text-[var(--gm-primary,#FF6900)] hover:underline whitespace-nowrap shrink-0 px-2.5 py-1.5 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] transition-colors cursor-pointer"
+                          className="text-[11px] sm:text-xs font-bold text-[var(--gm-primary,#FF6900)] hover:underline whitespace-nowrap shrink-0 px-2 py-1 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] transition-colors cursor-pointer"
                         >
-                          Ver Layouts ({layoutUrls.length}) →
+                          Layouts ({layoutUrls.length}) →
                         </button>
                       </div>
                     )}
 
                     {/* Writing Card */}
-                    <div className="gm-note-editor-card flex flex-col flex-1 w-full rounded-md bg-[#0B0B0C] border border-[#26262A] transition-colors p-3.5 sm:p-5 min-h-[280px]">
+                    <div className="gm-note-editor-card flex flex-col flex-1 w-full rounded-md bg-[#0B0B0C] border border-[#26262A] transition-colors p-3 sm:p-5 min-h-[210px] sm:min-h-[280px]">
                       {/* Barra superior de controle do editor */}
-                      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#26262A] flex-wrap gap-2">
+                      <div className="flex items-center justify-between pb-2 mb-2 sm:pb-2.5 sm:mb-2.5 border-b border-[#26262A] flex-wrap gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-zinc-400">Texto da Nota</span>
-                          <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
+                          <span className="text-[11px] sm:text-xs font-semibold text-zinc-400">Texto da Nota</span>
+                          <span className="text-[10.5px] sm:text-[11px] text-zinc-500 font-mono tabular-nums">
                             {content ? content.replace(/<[^>]+>/g, "").trim().length : 0} carac.
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1">
                           <button
                             type="button"
+                            data-icon-btn="true"
                             onClick={performUndo}
-                            className="p-1.5 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
                             title="Desfazer (Undo)"
                           >
-                            <Undo2 size={14} />
+                            <Undo2 size={13} />
                           </button>
 
                           <button
                             type="button"
+                            data-icon-btn="true"
                             onClick={performRedo}
-                            className="p-1.5 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-[4px] bg-[#131315] hover:bg-[#1B1B1E] border border-[#26262A] text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center justify-center"
                             title="Refazer (Redo)"
                           >
-                            <Redo2 size={14} />
+                            <Redo2 size={13} />
                           </button>
                         </div>
                       </div>
@@ -2995,7 +3085,7 @@ export default function Notes() {
                           pushToHistory(val);
                           saveCurrentSelection();
                         }}
-                        className="gm-note-editor-content w-full flex-1 min-h-[220px] bg-transparent !outline-none text-white/95 focus:!outline-none focus-visible:!outline-none border-none focus:border-none ring-0 focus:ring-0 relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0 text-[15.5px] sm:text-[16.5px] font-normal leading-relaxed"
+                        className="gm-note-editor-content w-full flex-1 min-h-[180px] sm:min-h-[220px] bg-transparent !outline-none text-white/95 focus:!outline-none focus-visible:!outline-none border-none focus:border-none ring-0 focus:ring-0 relative empty:before:content-[attr(placeholder)] before:text-white/30 before:pointer-events-none before:absolute before:left-0 before:top-0 text-[13.5px] sm:text-[15.5px] font-normal leading-relaxed"
                         style={{ outline: "none", boxShadow: "none" }}
                         {...{ placeholder: "Escreva seu texto aqui..." }}
                       />
@@ -3308,21 +3398,21 @@ export default function Notes() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.18 }}
-                    className="flex flex-col gap-4 flex-1 min-h-0"
+                    className="flex flex-col gap-3 sm:gap-4 flex-1 min-h-0"
                   >
                     {/* Card 1: Classificação e Responsável */}
-                    <div className="p-4 sm:p-5 rounded-md border border-[#26262A] bg-[#0B0B0C] flex flex-col gap-3.5">
-                      <div className="flex items-center gap-2 pb-2 border-b border-[#26262A]">
-                        <Palette size={15} className="text-[var(--gm-primary,#FF6900)]" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
+                    <div className="p-3 sm:p-5 rounded-md border border-[#26262A] bg-[#0B0B0C] flex flex-col gap-2.5 sm:gap-3.5">
+                      <div className="flex items-center gap-2 pb-1.5 sm:pb-2 border-b border-[#26262A]">
+                        <Palette size={14} className="text-[var(--gm-primary,#FF6900)]" />
+                        <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-zinc-200">
                           Classificação & Responsável
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
                         {/* Tipo da Nota */}
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-zinc-400">
+                        <div className="flex flex-col gap-1 w-full">
+                          <label className="text-[11px] sm:text-xs font-semibold text-zinc-400">
                             Tipo da Nota
                           </label>
                           <div className="relative">
@@ -3332,18 +3422,18 @@ export default function Notes() {
                                 setNoteType(e.target.value as any);
                                 setNoteStatus("a fazer");
                               }}
-                              className="w-full appearance-none bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-colors"
+                              className="w-full appearance-none bg-[#131315] border border-[#26262A] rounded-[4px] text-xs sm:text-sm text-white pl-3 pr-9 h-9 sm:h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-colors"
                             >
                               <option value="note">GERAL</option>
                               <option value="production">PRODUÇÃO</option>
                             </select>
-                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={15} />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={14} />
                           </div>
                         </div>
 
                         {/* Status */}
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-zinc-400">
+                        <div className="flex flex-col gap-1 w-full">
+                          <label className="text-[11px] sm:text-xs font-semibold text-zinc-400">
                             Status
                           </label>
                           <div className="relative">
@@ -3364,7 +3454,7 @@ export default function Notes() {
                                   showToast("Status Concluído: lembrete e alarme zerados!");
                                 }
                               }}
-                              className="w-full appearance-none bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-3.5 pr-10 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-colors"
+                              className="w-full appearance-none bg-[#131315] border border-[#26262A] rounded-[4px] text-xs sm:text-sm text-white pl-3 pr-9 h-9 sm:h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] cursor-pointer font-semibold transition-colors"
                             >
                               {noteType === "note"
                                 ? NOTE_STATUSES.filter((s) => s !== "LIXEIRA").map((s) => (
@@ -3378,13 +3468,13 @@ export default function Notes() {
                                     </option>
                                   ))}
                             </select>
-                            <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={15} />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={14} />
                           </div>
                         </div>
 
                         {/* Responsável */}
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-zinc-400">
+                        <div className="flex flex-col gap-1 w-full">
+                          <label className="text-[11px] sm:text-xs font-semibold text-zinc-400">
                             Responsável
                           </label>
                           <div className="relative">
@@ -3393,54 +3483,54 @@ export default function Notes() {
                               placeholder="Nome do responsável"
                               value={responsibleName}
                               onChange={(e) => setResponsibleName(e.target.value)}
-                              className="bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] w-full font-semibold transition-colors"
+                              className="bg-[#131315] border border-[#26262A] rounded-[4px] text-xs sm:text-sm text-white pl-8 pr-3 h-9 sm:h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] w-full font-semibold transition-colors"
                             />
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={15} />
+                            <User className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={14} />
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Card 2: Prazos de Entrega */}
-                    <div className="p-4 sm:p-5 rounded-md border border-[#26262A] bg-[#0B0B0C] flex flex-col gap-3.5">
-                      <div className="flex items-center gap-2 pb-2 border-b border-[#26262A]">
-                        <Calendar size={15} className="text-[var(--gm-primary,#FF6900)]" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
+                    <div className="p-3 sm:p-5 rounded-md border border-[#26262A] bg-[#0B0B0C] flex flex-col gap-2.5 sm:gap-3.5">
+                      <div className="flex items-center gap-2 pb-1.5 sm:pb-2 border-b border-[#26262A]">
+                        <Calendar size={14} className="text-[var(--gm-primary,#FF6900)]" />
+                        <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-zinc-200">
                           Prazo & Horário de Entrega
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5">
                         {/* Prazo de Entrega */}
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-zinc-400">
+                        <div className="flex flex-col gap-1 w-full">
+                          <label className="text-[11px] sm:text-xs font-semibold text-zinc-400">
                             Data de Entrega
                           </label>
                           <div className="relative">
                             <GlassDatePicker
                               value={deliveryDate}
                               onChange={setDeliveryDate}
-                              className="w-full bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-9 pr-14 h-[44px] flex items-center outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-colors"
+                              className="w-full bg-[#131315] border border-[#26262A] rounded-[4px] text-xs sm:text-sm text-white pl-8 pr-12 h-9 sm:h-[44px] flex items-center outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-colors"
                               title="Prazo de Entrega"
                               themeColor={color}
                               placeholder="DD/MM/AAAA"
                             />
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={15} />
+                            <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={14} />
                           </div>
                         </div>
 
                         {/* Horário de Entrega */}
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <label className="text-xs font-semibold text-zinc-400">
+                        <div className="flex flex-col gap-1 w-full">
+                          <label className="text-[11px] sm:text-xs font-semibold text-zinc-400">
                             Horário de Entrega
                           </label>
                           <div className="relative">
                             <GlassTimePicker
                               value={deliveryTime}
                               onChange={setDeliveryTime}
-                              className="w-full bg-[#131315] border border-[#26262A] rounded-[4px] text-sm text-white pl-9 pr-3.5 h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-colors"
+                              className="w-full bg-[#131315] border border-[#26262A] rounded-[4px] text-xs sm:text-sm text-white pl-8 pr-3 h-9 sm:h-[44px] outline-none focus:border-[var(--gm-primary,#FF6900)] font-semibold transition-colors"
                             />
-                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={15} />
+                            <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={14} />
                           </div>
                         </div>
                       </div>
@@ -3451,7 +3541,7 @@ export default function Notes() {
 
               {/* Action Bar com Exibidor de Detalhes Inferiores e Botões Fixos */}
               <div
-                className="p-3 md:p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col gap-2.5 shrink-0 relative z-20 bg-[#131315] border-t border-[#26262A]"
+                className="px-3 py-2.5 md:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-col gap-2 shrink-0 relative z-20 bg-[#131315] border-t border-[#26262A]"
                 style={{
                   borderTopColor: `${color}40`,
                 }}
@@ -3459,6 +3549,7 @@ export default function Notes() {
                 {/* Botão Ocultar / Expandir */}
                 <button
                   type="button"
+                  data-note-tool-btn="true"
                   onClick={() => {
                     const next = !bottomDetailsVisible;
                     setBottomDetailsVisible(next);
@@ -3466,29 +3557,37 @@ export default function Notes() {
                       localStorage.setItem("gm_note_bottom_details_visible_v1", String(next));
                     } catch (e) {}
                   }}
-                  className="w-full py-2.5 sm:py-3 px-4 rounded-md bg-[#0B0B0C] hover:bg-[#1B1B1E] text-zinc-200 hover:text-white text-xs font-black uppercase tracking-wider flex items-center justify-between gap-2 transition-colors cursor-pointer border border-[#26262A] hover:border-[#3F3F46] min-h-[44px]"
+                  className="w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-md bg-[#0B0B0C] hover:bg-[#1B1B1E] text-zinc-200 hover:text-white text-[11px] sm:text-xs font-bold uppercase tracking-wider flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 transition-colors cursor-pointer border border-[#26262A] hover:border-[#3F3F46]"
                   title={bottomDetailsVisible ? "Ocultar Informações Extras" : "Expandir Informações Extras (Data, Horários e Salvar Auto)"}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {bottomDetailsVisible ? (
-                      <Eye size={17} className="text-[#FF6900] shrink-0" strokeWidth={2.4} />
-                    ) : (
-                      <EyeOff size={17} className="text-zinc-500 shrink-0" strokeWidth={2} />
-                    )}
-                    <span className="font-extrabold tracking-wider truncate text-xs">
-                      DATA, HORÁRIOS PROGRAMADOS E SALVAR AUTO
+                  <div className="flex items-center justify-between sm:justify-start gap-2 min-w-0 w-full sm:w-auto">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {bottomDetailsVisible ? (
+                        <Eye size={14} className="text-[#FF6900] shrink-0 sm:w-4 sm:h-4" strokeWidth={2.4} />
+                      ) : (
+                        <EyeOff size={14} className="text-zinc-500 shrink-0 sm:w-4 sm:h-4" strokeWidth={2} />
+                      )}
+                      <span className="font-extrabold tracking-wide truncate text-[10.5px] sm:text-xs sm:hidden">
+                        LEMBRETES & AUTO-SAVE
+                      </span>
+                      <span className="font-extrabold tracking-wider truncate text-xs hidden sm:inline">
+                        DATA, HORÁRIOS PROGRAMADOS E SALVAR AUTO
+                      </span>
+                    </div>
+                    <span className="text-zinc-400 text-[10px] font-bold sm:hidden">
+                      {bottomDetailsVisible ? "▲" : "▼"}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap justify-start sm:justify-end">
                     {/* Badge da Data Programada */}
                     {reminderDate ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] bg-orange-500/15 text-orange-400 border border-orange-500/35 px-2.5 py-1 rounded-[4px] font-mono font-bold whitespace-nowrap tabular-nums">
-                        <Calendar size={12} className="shrink-0 text-orange-400" />
+                      <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] bg-orange-500/15 text-orange-400 border border-orange-500/35 px-2 py-0.5 rounded-[4px] font-mono font-bold whitespace-nowrap tabular-nums">
+                        <Calendar size={11} className="shrink-0 text-orange-400" />
                         {reminderDate.split("-").reverse().join("/")}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400 font-mono px-2 py-0.5 rounded-[4px] bg-[#131315] border border-[#26262A]">
+                      <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-zinc-400 font-mono px-1.5 py-0.5 rounded-[4px] bg-[#131315] border border-[#26262A]">
                         Sem data
                       </span>
                     )}
@@ -3498,14 +3597,14 @@ export default function Notes() {
                       const activeTimes = [reminderTime, reminderTime2, reminderTime3].filter(Boolean);
                       if (activeTimes.length > 0) {
                         return (
-                          <span className="inline-flex items-center gap-1 text-[11px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 px-2.5 py-1 rounded-[4px] font-mono font-bold whitespace-nowrap tabular-nums">
-                            <Clock size={12} className="shrink-0 text-emerald-400" />
+                          <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/35 px-2 py-0.5 rounded-[4px] font-mono font-bold whitespace-nowrap tabular-nums">
+                            <Clock size={11} className="shrink-0 text-emerald-400" />
                             {activeTimes.join(" • ")}
                           </span>
                         );
                       }
                       return (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400 font-mono px-2 py-0.5 rounded-[4px] bg-[#131315] border border-[#26262A]">
+                        <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-zinc-400 font-mono px-1.5 py-0.5 rounded-[4px] bg-[#131315] border border-[#26262A]">
                           Sem horário
                         </span>
                       );
@@ -3516,7 +3615,7 @@ export default function Notes() {
                       const isOff = autoSaveInterval === "disabled";
                       return (
                         <span
-                          className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-[4px] font-mono font-bold whitespace-nowrap border tabular-nums ${
+                          className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] px-2 py-0.5 rounded-[4px] font-mono font-bold whitespace-nowrap border tabular-nums ${
                             isOff
                               ? "bg-[#131315] text-zinc-400 border-[#26262A]"
                               : "bg-blue-500/15 text-blue-400 border-blue-500/35"
@@ -3527,7 +3626,7 @@ export default function Notes() {
                       );
                     })()}
 
-                    <span className="text-zinc-400 text-[11px] font-bold ml-0.5">
+                    <span className="text-zinc-400 text-[11px] font-bold ml-0.5 hidden sm:inline">
                       {bottomDetailsVisible ? "▲" : "▼"}
                     </span>
                   </div>
@@ -3807,32 +3906,35 @@ export default function Notes() {
                 </AnimatePresence>
 
                 {/* Linha FIXA dos Botões */}
-                <div className="w-full grid grid-cols-2 gap-3 pt-0.5">
+                <div className="w-full grid grid-cols-2 gap-2.5 sm:gap-3 pt-0.5">
                   <button
                     type="button"
+                    data-note-tool-btn="true"
                     onClick={() => setModalOpen(false)}
-                    className="w-full h-11 rounded-[6px] text-xs font-bold uppercase tracking-wider text-[#F2F2F3] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] transition-colors flex items-center justify-center cursor-pointer whitespace-nowrap"
+                    className="w-full h-9 sm:h-11 rounded-[6px] text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#F2F2F3] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] hover:border-[#3F3F46] transition-colors flex items-center justify-center cursor-pointer whitespace-nowrap"
                   >
                     FECHAR
                   </button>
 
                   <button
                     type="button"
+                    data-note-tool-btn="true"
+                    disabled={isSavingNote}
                     onClick={() => handleSave(true)}
-                    className={`relative overflow-hidden w-full h-11 rounded-[6px] text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-colors duration-200 border cursor-pointer whitespace-nowrap ${
+                    className={`relative overflow-hidden w-full h-9 sm:h-11 rounded-[6px] text-[11px] sm:text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-colors duration-200 border cursor-pointer whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed ${
                       isSaveSuccessActive
                         ? "bg-emerald-500 border-emerald-500 text-[#0B0B0C]"
                         : "bg-[#F65A1A] hover:bg-[#FF7A38] border-[#F65A1A] text-[#0B0B0C]"
                     }`}
                   >
-                    <Check 
-                      size={16} 
-                      className={`shrink-0 transition-transform duration-300 ${
+                    <Check
+                      size={14}
+                      className={`shrink-0 transition-transform duration-300 sm:w-4 sm:h-4 ${
                         isSaveSuccessActive ? "scale-125 text-[#0B0B0C] stroke-[3]" : "text-[#0B0B0C] stroke-[2.75]"
-                      }`} 
+                      }`}
                     />
                     <span className="text-[#0B0B0C] font-black">
-                      {isSaveSuccessActive ? "SALVO COM SUCESSO!" : "SALVAR NOTA"}
+                      {isSavingNote ? "SALVANDO..." : isSaveSuccessActive ? "SALVO!" : "SALVAR NOTA"}
                     </span>
                   </button>
                 </div>
@@ -3992,8 +4094,8 @@ export default function Notes() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: 10 }}
                   transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                  className="relative bg-[#131315] border border-[#26262A] rounded-lg p-4 shadow-2xl flex flex-col gap-3 text-white"
-                  style={{ width: "300px", maxWidth: "calc(100vw - 32px)", margin: "auto" }}
+                  className="relative bg-[#131315] border border-[#26262A] rounded-lg p-3.5 sm:p-4 shadow-2xl flex flex-col gap-2.5 sm:gap-3 text-white"
+                  style={{ width: "296px", maxWidth: "calc(100vw - 32px)", margin: "auto" }}
                   onMouseDown={(e) => {
                     e.stopPropagation();
                   }}
@@ -4001,12 +4103,13 @@ export default function Notes() {
                   {/* Cabeçalho da Miniatura */}
                   <div className="flex items-center justify-between pb-2 border-b border-[#26262A]">
                     <div className="flex items-center gap-1.5">
-                      <Palette size={14} className="text-[var(--gm-primary,#FE540B)]" />
-                      <span className="text-xs font-black tracking-wide text-white">Cor do Texto</span>
+                      <Palette size={13} className="text-[var(--gm-primary,#FE540B)]" />
+                      <span className="text-[11px] sm:text-xs font-black tracking-wide text-white">Cor do Texto</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
+                        data-note-tool-btn="true"
                         onMouseDown={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -4014,13 +4117,14 @@ export default function Notes() {
                           applyStyleToSelection({ color: "#ffffff" });
                           setColorPickerOpen(false);
                         }}
-                        className="text-[11px] font-bold text-zinc-300 hover:text-white px-2 py-0.5 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] transition-colors cursor-pointer"
+                        className="text-[10.5px] font-bold text-zinc-300 hover:text-white px-2 py-0.5 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] transition-colors cursor-pointer"
                         title="Redefinir para Branco"
                       >
                         Padrão
                       </button>
                       <button
                         type="button"
+                        data-icon-btn="true"
                         onMouseDown={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -4038,24 +4142,25 @@ export default function Notes() {
                   <div className="flex items-center justify-between px-2.5 py-1.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-xs">
                     <div className="flex items-center gap-2">
                       <span
-                        className="w-4 h-4 rounded-sm border border-white/40 shrink-0"
+                        className="w-3.5 h-3.5 rounded-sm border border-white/40 shrink-0"
                         style={{ backgroundColor: selectedTextColor }}
                       />
-                      <span className="font-mono text-[11px] text-white uppercase tabular-nums">{selectedTextColor}</span>
+                      <span className="font-mono text-[10.5px] text-white uppercase tabular-nums">{selectedTextColor}</span>
                     </div>
-                    <span className="text-[11px] text-zinc-400 font-medium">
+                    <span className="text-[10.5px] text-zinc-400 font-medium">
                       {TEXT_COLORS.find((c) => c.hex.toLowerCase() === selectedTextColor.toLowerCase())?.label || "Personalizada"}
                     </span>
                   </div>
 
                   {/* Grid de Cores Rápidas */}
-                  <div className="grid grid-cols-5 gap-1.5 py-0.5">
+                  <div className="grid grid-cols-5 gap-1.5 py-0.5 justify-items-center">
                     {TEXT_COLORS.map((col) => {
                       const isActive = selectedTextColor.toLowerCase() === col.hex.toLowerCase();
                       return (
                         <button
                           key={col.hex}
                           type="button"
+                          data-icon-btn="true"
                           onMouseDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -4063,7 +4168,7 @@ export default function Notes() {
                             applyStyleToSelection({ color: col.hex });
                             setColorPickerOpen(false);
                           }}
-                          className={`w-9 h-9 rounded-[4px] border transition-all flex items-center justify-center cursor-pointer ${
+                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-[4px] border transition-all flex items-center justify-center cursor-pointer ${
                             isActive
                               ? "ring-2 ring-white border-white"
                               : "border-[#26262A] hover:border-white/50 opacity-90 hover:opacity-100"
@@ -4073,7 +4178,7 @@ export default function Notes() {
                         >
                           {isActive && (
                             <Check
-                              size={15}
+                              size={14}
                               className={col.hex === "#ffffff" || col.hex === "#cbd5e1" ? "text-black stroke-[3.5]" : "text-white stroke-[3.5]"}
                             />
                           )}
@@ -4106,7 +4211,7 @@ export default function Notes() {
                         }
                       }}
                       placeholder="#FFFFFF"
-                      className="flex-1 h-7 px-2.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white font-mono text-xs uppercase outline-none focus:border-[var(--gm-primary,#FE540B)]"
+                      className="flex-1 h-7 px-2.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-white font-mono text-[11px] uppercase outline-none focus:border-[var(--gm-primary,#FE540B)]"
                     />
                   </div>
                 </motion.div>
@@ -4127,8 +4232,8 @@ export default function Notes() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: 10 }}
                   transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                  className="relative bg-[#131315] border border-[#26262A] rounded-lg p-4 shadow-2xl flex flex-col gap-3 text-white"
-                  style={{ width: "300px", maxWidth: "calc(100vw - 32px)", margin: "auto" }}
+                  className="relative bg-[#131315] border border-[#26262A] rounded-lg p-3.5 sm:p-4 shadow-2xl flex flex-col gap-2.5 sm:gap-3 text-white"
+                  style={{ width: "296px", maxWidth: "calc(100vw - 32px)", margin: "auto" }}
                   onMouseDown={(e) => {
                     e.stopPropagation();
                   }}
@@ -4136,12 +4241,13 @@ export default function Notes() {
                   {/* Cabeçalho da Miniatura */}
                   <div className="flex items-center justify-between pb-2 border-b border-[#26262A]">
                     <div className="flex items-center gap-1.5">
-                      <Highlighter size={14} className="text-yellow-400" />
-                      <span className="text-xs font-black tracking-wide text-white">Marcador</span>
+                      <Highlighter size={13} className="text-yellow-400" />
+                      <span className="text-[11px] sm:text-xs font-black tracking-wide text-white">Marcador de Texto</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
+                        data-note-tool-btn="true"
                         onMouseDown={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -4149,7 +4255,7 @@ export default function Notes() {
                           removeHighlight();
                           setHighlighterPickerOpen(false);
                         }}
-                        className="text-[11px] font-bold text-red-400 hover:text-red-300 px-2 py-0.5 rounded-[4px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 transition-colors cursor-pointer flex items-center gap-1"
+                        className="text-[10.5px] font-bold text-red-400 hover:text-red-300 px-2 py-0.5 rounded-[4px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 transition-colors cursor-pointer flex items-center gap-1"
                         title="Remover marcação"
                       >
                         <Eraser size={11} />
@@ -4157,6 +4263,7 @@ export default function Notes() {
                       </button>
                       <button
                         type="button"
+                        data-icon-btn="true"
                         onMouseDown={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -4174,24 +4281,25 @@ export default function Notes() {
                   <div className="flex items-center justify-between px-2.5 py-1.5 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-xs">
                     <div className="flex items-center gap-2">
                       <span
-                        className="w-4 h-4 rounded-sm border border-white/40 shrink-0"
+                        className="w-3.5 h-3.5 rounded-sm border border-white/40 shrink-0"
                         style={{ backgroundColor: selectedHighlightColor || "transparent" }}
                       />
-                      <span className="font-mono text-[11px] text-white uppercase tabular-nums">{selectedHighlightColor || "Sem cor"}</span>
+                      <span className="font-mono text-[10.5px] text-white uppercase tabular-nums">{selectedHighlightColor || "Sem cor"}</span>
                     </div>
-                    <span className="text-[11px] text-zinc-400 font-medium">
+                    <span className="text-[10.5px] text-zinc-400 font-medium">
                       {HIGHLIGHT_COLORS.find((c) => c.hex.toLowerCase() === selectedHighlightColor.toLowerCase())?.label || "Sem marcação"}
                     </span>
                   </div>
 
                   {/* Grid de 10 Cores de Marcação */}
-                  <div className="grid grid-cols-5 gap-1.5 py-0.5">
+                  <div className="grid grid-cols-5 gap-1.5 py-0.5 justify-items-center">
                     {HIGHLIGHT_COLORS.map((col) => {
                       const isActive = selectedHighlightColor.toLowerCase() === col.hex.toLowerCase();
                       return (
                         <button
                           key={col.hex}
                           type="button"
+                          data-icon-btn="true"
                           onMouseDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -4204,7 +4312,7 @@ export default function Notes() {
                             }
                             setHighlighterPickerOpen(false);
                           }}
-                          className={`w-9 h-9 rounded-[4px] border transition-all flex items-center justify-center cursor-pointer ${
+                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-[4px] border transition-all flex items-center justify-center cursor-pointer ${
                             isActive
                               ? "ring-2 ring-yellow-400 border-white"
                               : "border-[#26262A] hover:border-white/50 opacity-90 hover:opacity-100"
@@ -4213,7 +4321,7 @@ export default function Notes() {
                           title={col.label}
                         >
                           {isActive && (
-                            <Check size={15} className="text-black stroke-[3.5]" />
+                            <Check size={14} className="text-black stroke-[3.5]" />
                           )}
                         </button>
                       );
@@ -4237,38 +4345,39 @@ export default function Notes() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 15 }}
                   transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                  className="relative w-full max-w-[360px] max-h-[85vh] bg-[#131315] border border-[#26262A] rounded-lg p-5 shadow-2xl flex flex-col gap-3 text-white"
+                  className="relative w-full max-w-[340px] max-h-[82vh] bg-[#131315] border border-[#26262A] rounded-lg p-3.5 sm:p-5 shadow-2xl flex flex-col gap-2.5 sm:gap-3 text-white"
                   onMouseDown={(e) => {
                     e.stopPropagation();
                   }}
                 >
                   {/* Cabeçalho */}
-                  <div className="flex items-center justify-between border-b border-[#26262A] pb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-[4px] bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
-                        <Type size={17} />
+                  <div className="flex items-center justify-between border-b border-[#26262A] pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[4px] bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                        <Type size={15} />
                       </div>
                       <div>
-                        <h4 className="text-sm font-black tracking-wide text-white">Galeria de Fontes</h4>
-                        <p className="text-[11px] text-zinc-400">Tipografia para o texto</p>
+                        <h4 className="text-xs sm:text-sm font-black tracking-wide text-white">Galeria de Fontes</h4>
+                        <p className="text-[10.5px] sm:text-[11px] text-zinc-400">Tipografia para o texto selecionado</p>
                       </div>
                     </div>
                     <button
                       type="button"
+                      data-icon-btn="true"
                       onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         setFontSelectorOpen(false);
                       }}
-                      className="w-8 h-8 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-[4px] bg-[#0B0B0C] hover:bg-[#1B1B1E] border border-[#26262A] flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
                       title="Fechar"
                     >
-                      <X size={16} />
+                      <X size={15} />
                     </button>
                   </div>
 
                   {/* Lista de Fontes com Rolagem Suave */}
-                  <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[360px] custom-scroll pr-1">
+                  <div className="flex flex-col gap-1 overflow-y-auto max-h-[340px] custom-scroll pr-1">
                     {[
                       { name: "Inter", value: "Inter, sans-serif", label: "Inter (Padrão)" },
                       { name: "Plus Jakarta Sans", value: "'Plus Jakarta Sans', sans-serif", label: "Plus Jakarta" },
@@ -4284,17 +4393,18 @@ export default function Notes() {
                       <button
                         key={f.name}
                         type="button"
+                        data-note-tool-btn="true"
                         onMouseDown={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           applyStyleToSelection({ "font-family": f.value });
                           setFontSelectorOpen(false);
                         }}
-                        className="text-left w-full px-3.5 py-2.5 rounded-[4px] text-sm text-zinc-200 hover:text-white hover:bg-[#1B1B1E] active:bg-[var(--gm-primary,#FE540B)]/20 transition-colors flex items-center justify-between border border-transparent hover:border-[#26262A] cursor-pointer"
+                        className="text-left w-full px-3 py-2 rounded-[4px] text-xs sm:text-sm text-zinc-200 hover:text-white hover:bg-[#1B1B1E] active:bg-[var(--gm-primary,#FE540B)]/20 transition-colors flex items-center justify-between border border-transparent hover:border-[#26262A] cursor-pointer"
                         style={{ fontFamily: f.value }}
                       >
                         <span className="font-semibold">{f.label}</span>
-                        <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-mono">Aa Bb Cc</span>
+                        <span className="text-[10px] sm:text-[11px] text-zinc-500 uppercase tracking-wider font-mono">Aa Bb Cc</span>
                       </button>
                     ))}
                   </div>

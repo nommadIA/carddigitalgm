@@ -860,17 +860,17 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <button
               type="button"
-              className="group relative p-6 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 cursor-pointer"
+              className="gm-budget-type-card group relative p-6 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:bg-[var(--gm-primary,#FE540B)] active:bg-[var(--gm-primary,#FE540B)] hover:border-[var(--gm-primary,#FE540B)] active:border-[var(--gm-primary,#FE540B)] transition-colors duration-150 text-left flex flex-col gap-4 cursor-pointer"
               onClick={() => applyTemplate("agency")}
             >
-              <div className="w-12 h-12 rounded-[6px] bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30">
-                <Palette size={24} />
+              <div className="gm-budget-type-card-icon w-12 h-12 rounded-[6px] bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] group-hover:bg-white/20 group-active:bg-white/20 group-hover:text-white group-active:text-white group-hover:border-white/40 group-active:border-white/40 flex items-center justify-center border border-[var(--gm-primary)]/30 transition-colors duration-150">
+                <Palette size={24} className="transition-colors duration-150 group-hover:text-white group-active:text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
+                <h3 className="text-lg font-bold text-white group-hover:text-[#0B0B0C] group-active:text-[#0B0B0C] transition-colors duration-150">
                   Agência & Design
                 </h3>
-                <p className="text-sm text-zinc-400 mt-1.5 leading-relaxed font-medium">
+                <p className="text-sm text-zinc-400 group-hover:text-[#0B0B0C] group-active:text-[#0B0B0C] mt-1.5 leading-relaxed font-medium transition-colors duration-150">
                   Orçamentos baseados em serviços, artes digitais e criação.
                 </p>
               </div>
@@ -878,17 +878,17 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budgetToEditI
 
             <button
               type="button"
-              className="group relative p-6 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:bg-[#1B1B1E] hover:border-[var(--gm-primary)]/60 transition-all text-left flex flex-col gap-4 cursor-pointer"
+              className="gm-budget-type-card group relative p-6 rounded-md border border-[#26262A] bg-[#0B0B0C] hover:bg-[var(--gm-primary,#FE540B)] active:bg-[var(--gm-primary,#FE540B)] hover:border-[var(--gm-primary,#FE540B)] active:border-[var(--gm-primary,#FE540B)] transition-colors duration-150 text-left flex flex-col gap-4 cursor-pointer"
               onClick={() => applyTemplate("print")}
             >
-              <div className="w-12 h-12 rounded-[6px] bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] flex items-center justify-center border border-[var(--gm-primary)]/30">
-                <Printer size={24} />
+              <div className="gm-budget-type-card-icon w-12 h-12 rounded-[6px] bg-[var(--gm-primary)]/15 text-[var(--gm-primary)] group-hover:bg-white/20 group-active:bg-white/20 group-hover:text-white group-active:text-white group-hover:border-white/40 group-active:border-white/40 flex items-center justify-center border border-[var(--gm-primary)]/30 transition-colors duration-150">
+                <Printer size={24} className="transition-colors duration-150 group-hover:text-white group-active:text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-[var(--gm-primary)] transition-colors">
+                <h3 className="text-lg font-bold text-white group-hover:text-[#0B0B0C] group-active:text-[#0B0B0C] transition-colors duration-150">
                   Impressão & Gráfica
                 </h3>
-                <p className="text-sm text-zinc-400 mt-1.5 leading-relaxed font-medium">
+                <p className="text-sm text-zinc-400 group-hover:text-[#0B0B0C] group-active:text-[#0B0B0C] mt-1.5 leading-relaxed font-medium transition-colors duration-150">
                   Cálculo de Lonas (m²) e Materiais Gráficos (Panfletos, Cartões).
                 </p>
               </div>

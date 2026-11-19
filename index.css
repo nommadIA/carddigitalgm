@@ -2911,7 +2911,7 @@ button.handle,
   margin-left: auto !important;
   margin-right: auto !important;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: visible;
   touch-action: pan-y;
   padding-left: 32px;
@@ -2952,19 +2952,21 @@ button.handle,
     max-height: 100dvh;
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto !important;
     scroll-snap-type: none !important;
     overscroll-behavior-y: auto !important;
     overscroll-behavior-x: none !important;
     scroll-padding-bottom: calc(var(--bottom-nav-height, 84px) + env(safe-area-inset-bottom, 0px) + 32px) !important;
   }
   .gm-container {
-    padding-top: 84px !important;
+    padding-top: calc(78px + env(safe-area-inset-top, 0px)) !important;
     padding-bottom: calc(var(--bottom-nav-height, 84px) + env(safe-area-inset-bottom, 0px) + 36px) !important;
     scroll-padding-bottom: calc(var(--bottom-nav-height, 84px) + env(safe-area-inset-bottom, 0px) + 36px) !important;
     padding-left: 16px !important;
     padding-right: 16px !important;
     width: 100%;
     box-sizing: border-box;
+    overflow-x: clip !important;
     overflow-y: visible !important;
     scroll-snap-type: none !important;
     overscroll-behavior-y: auto !important;
@@ -3075,9 +3077,13 @@ button.handle,
 ========================================================= */
 .gm-grid { 
   display: grid; 
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--gm-space-4); 
   width: 100%;
+  min-width: 0;
 }
+.gm-grid > * { min-width: 0; }
+.gm-grid-1 { grid-template-columns: minmax(0, 1fr); }
 .gm-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .gm-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .gm-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -9399,9 +9405,9 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
    SMARTPHONE / MOBILE RESPONSIVENESS REFINEMENTS
    ========================================================================= */
 @media (max-width: 768px) {
-  /* Prevent horizontal scrolling on mobile */
+  /* Prevent horizontal scrolling on mobile without breaking sticky descendants */
   body, html {
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
   }
 
   /* Containers com rolagem vertical & área de segurança inferior */
@@ -9431,7 +9437,7 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   }
 
   .gm-note-modal-overlay {
-    padding: 12px !important;
+    padding: max(6px, env(safe-area-inset-top, 6px)) 6px max(6px, env(safe-area-inset-bottom, 6px)) 6px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -9543,11 +9549,11 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   }
 
   .gm-note-modal {
-    width: calc(100vw - 20px) !important;
+    width: calc(100vw - 12px) !important;
     max-width: 580px !important;
-    max-height: min(calc(100dvh - 32px), 90dvh) !important;
+    max-height: calc(100dvh - max(12px, env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px) + 10px)) !important;
     margin: auto !important;
-    border-radius: 20px !important;
+    border-radius: 14px !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
@@ -9563,14 +9569,20 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
   [role="dialog"] .overflow-y-auto {
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
-    padding-bottom: 24px !important;
-    scroll-padding-bottom: 24px !important;
+    padding-bottom: 20px !important;
+    scroll-padding-bottom: 20px !important;
   }
 
-  /* Touch-friendly target heights (exceto botões de ícones e touch nav) */
-  button:not([class*="w-9"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="w-7"]):not([class*="w-6"]):not([class*="h-9"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="h-7"]):not([class*="aspect-square"]):not([data-icon-btn]):not(.p-0):not([data-touch-nav]),
-  .gm-btn, input, select, textarea {
-    min-height: 44px;
+  /* Touch-friendly target heights compactos e limpos no mobile (exceto ícones, nav e toolbar de notas) */
+  button:not([class*="w-9"]):not([class*="w-8"]):not([class*="w-10"]):not([class*="w-7"]):not([class*="w-6"]):not([class*="h-9"]):not([class*="h-8"]):not([class*="h-10"]):not([class*="h-7"]):not([class*="aspect-square"]):not([data-icon-btn]):not([data-note-tool-btn]):not(.p-0):not([data-touch-nav]):not(.gm-bottom-menu-trigger):not(.gm-bottom-nav-item):not(.gm-mobile-header-btn):not(.gm-pin-key):not(.gm-budget-type-card):not([role="switch"]):not(.gm-floating-whatsapp-btn):not(.gm-floating-save-btn),
+  .gm-btn {
+    min-height: 36px;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not(.gm-note-title-input),
+  select,
+  textarea {
+    min-height: 38px;
   }
 
   /* Botões de ícones sempre quadrados com leve arredondamento nos cantos */
@@ -9587,24 +9599,29 @@ body, .gm-card, table, .gm-table{ font-variant-numeric: tabular-nums; }
     justify-content: center !important;
   }
 
-  /* Mobile Grid spacing */
-  .grid {
-    gap: 12px !important;
+  [data-note-tool-btn] {
+    min-height: unset !important;
   }
 
-  /* Page titles on mobile */
+  /* Mobile Grid spacing */
+  .grid {
+    gap: 10px !important;
+  }
+
+  /* Page titles on mobile — visual limpo e proporcional */
   h1, .gm-h1 {
-    font-size: 24px !important;
-    line-height: 1.18 !important;
+    font-size: 20px !important;
+    line-height: 1.2 !important;
   }
 
   h2, .gm-h2 {
-    font-size: 19px !important;
-    line-height: 1.22 !important;
+    font-size: 16.5px !important;
+    line-height: 1.24 !important;
   }
 
   h3, .gm-h3 {
-    font-size: 16px !important;
+    font-size: 14.5px !important;
+    line-height: 1.28 !important;
   }
 }
 
@@ -10478,8 +10495,8 @@ body::before {
   margin-right: auto !important;
   padding-left: clamp(1rem, 3vw, 3rem) !important;
   padding-right: clamp(1rem, 3vw, 3rem) !important;
-  padding-top: 5.25rem !important; /* Mobile com top bar */
-  padding-bottom: calc(var(--bottom-nav-height, 84px) + max(env(safe-area-inset-bottom, 0px), 16px) + 32px) !important;
+  padding-top: calc(5.5rem + env(safe-area-inset-top, 0px)) !important; /* Mobile com top bar + safe-area sem cortar título */
+  padding-bottom: calc(var(--bottom-nav-height, 96px) + max(env(safe-area-inset-bottom, 0px), 16px) + 32px) !important;
 }
 
 @media (min-width: 768px) {
@@ -11861,7 +11878,7 @@ html:not([data-theme="light"]):not(.gm-light) .gm-bottom-nav {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.10),
     0 -4px 16px rgba(0, 0, 0, 0.34) !important;
-  min-height: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  min-height: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
   overflow: hidden !important;
   isolation: isolate !important;
 }
@@ -11922,22 +11939,23 @@ nav.gm-bottom-nav a.is-active span,
   color: #FFFFFF !important;
 }
 
-/* Botão flutuante MENU recolhido (Botão do App): ÚNICO com cor Laranja Translúcida + Desfoque real */
+/* Botão flutuante MENU recolhido (Botão do App): ÚNICO com cor Laranja Translúcida Mais Saturada + Desfoque real */
 button.gm-bottom-menu-trigger,
 .gm-bottom-menu-trigger {
   background: linear-gradient(
     180deg,
-    rgba(var(--gm-primary-rgb, 254, 84, 11), 0.56) 0%,
-    rgba(var(--gm-primary-rgb, 254, 84, 11), 0.66) 100%
+    rgba(var(--gm-primary-rgb, 254, 84, 11), 0.84) 0%,
+    rgba(var(--gm-primary-rgb, 254, 84, 11), 0.92) 100%
   ) !important;
   background-color: transparent !important;
-  -webkit-backdrop-filter: blur(26px) saturate(185%) !important;
-  backdrop-filter: blur(26px) saturate(185%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(240%) brightness(1.08) !important;
+  backdrop-filter: blur(22px) saturate(240%) brightness(1.08) !important;
+  border: 1px solid rgba(255, 165, 110, 0.55) !important;
   color: #0B0B0C !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.30),
-    0 4px 14px rgba(0, 0, 0, 0.28) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 6px 20px rgba(var(--gm-primary-rgb, 254, 84, 11), 0.38),
+    0 4px 12px rgba(0, 0, 0, 0.35) !important;
   overflow: hidden !important;
   isolation: isolate !important;
 }
@@ -12053,3 +12071,378 @@ aside.gm-sidebar .sidebar-btn:active,
   transition: transform 75ms cubic-bezier(0.2, 0, 0, 1) !important;
 }
 
+/* =========================================================
+   BOTÕES AGÊNCIA & IMPRESSÃO (NOVO ORÇAMENTO)
+   Hover / Clique: Fundo Laranja, Ícones Brancos, Textos Pretos
+   ========================================================= */
+button.gm-budget-type-card:hover,
+button.gm-budget-type-card:active,
+button.gm-budget-type-card:focus-visible {
+  background: var(--gm-primary, #FE540B) !important;
+  background-color: var(--gm-primary, #FE540B) !important;
+  border-color: var(--gm-primary, #FE540B) !important;
+}
+
+button.gm-budget-type-card:hover .gm-budget-type-card-icon,
+button.gm-budget-type-card:active .gm-budget-type-card-icon,
+button.gm-budget-type-card:focus-visible .gm-budget-type-card-icon {
+  background: rgba(255, 255, 255, 0.20) !important;
+  background-color: rgba(255, 255, 255, 0.20) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #FFFFFF !important;
+}
+
+button.gm-budget-type-card:hover svg,
+button.gm-budget-type-card:hover svg.lucide,
+button.gm-budget-type-card:active svg,
+button.gm-budget-type-card:active svg.lucide,
+button.gm-budget-type-card:focus-visible svg,
+button.gm-budget-type-card:focus-visible svg.lucide {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+button.gm-budget-type-card:hover h3,
+button.gm-budget-type-card:hover p,
+button.gm-budget-type-card:active h3,
+button.gm-budget-type-card:active p,
+button.gm-budget-type-card:focus-visible h3,
+button.gm-budget-type-card:focus-visible p {
+  color: #0B0B0C !important;
+}
+
+/* =========================================================
+   MOBILE: FULL-SCREEN PWA EDGE-TO-EDGE + ROLAGEM VERTICAL PREMIUM iOS
+   ========================================================= */
+html {
+  background-color: var(--gm-bg, #0B0B0C) !important;
+}
+
+html,
+body {
+  min-height: 100dvh !important;
+  overscroll-behavior-x: none !important;
+}
+
+@media (max-width: 767px) {
+  .gm-main {
+    scroll-behavior: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: auto !important;
+    overscroll-behavior-x: none !important;
+    will-change: scroll-position;
+  }
+
+  /* Padrão Unificado de Cabeçalho Mobile (Título em cima centralizado e Botão centralizado abaixo) */
+  .gm-header {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .gm-header .gm-title {
+    width: 100% !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .gm-header .gm-title h1,
+  .gm-header .gm-title h2,
+  .gm-header .gm-title p {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .gm-header .gm-row {
+    width: 100% !important;
+    justify-content: center !important;
+    margin-left: 0 !important;
+  }
+
+  /* Escala Global Mobile: Textos & Botões ligeiramente menores, limpos e legíveis */
+  .gm-subtitle-text {
+    font-size: 12px !important;
+    line-height: 1.38 !important;
+  }
+
+  .gm-section-title {
+    font-size: 10.5px !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  .forge-spec__bar {
+    padding: 8px 13px !important;
+  }
+
+  .forge-spec__body {
+    padding: 13px 14px !important;
+  }
+
+  .forge-spec__figure {
+    font-size: 23px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .forge-spec__eyebrow,
+  .forge-spec__title,
+  .forge-spec__status,
+  .forge-spec__tag {
+    font-size: 10px !important;
+  }
+
+  .forge-spec__tag {
+    height: 20px !important;
+    padding: 0 6px !important;
+  }
+
+  /* Botões principais e secundários mais compactos e proporcionais no mobile */
+  .forge-btn:not(.gm-budget-type-card):not([data-note-tool-btn]),
+  .forge-btn--primary:not(.gm-budget-type-card),
+  .forge-btn-primary:not(.gm-budget-type-card),
+  .forge-btn--secondary:not(.gm-budget-type-card),
+  .forge-btn-secondary:not(.gm-budget-type-card),
+  .forge-btn-ghost:not(.gm-budget-type-card),
+  .gm-btn:not([data-icon-btn]):not(.gm-square-btn):not([data-note-tool-btn]),
+  .gm-btn-lg,
+  .gm-btn-primary,
+  .gm-btn-primary-white,
+  .gm-btn-secondary,
+  .gm-btn-outline,
+  .gm-btn-ghost,
+  .tc-pill-btn,
+  .tc-pill-btn-primary,
+  .tc-pill-btn-secondary,
+  .btn-primary,
+  .btn-secondary,
+  button[class*="bg-[#F65A1A]"]:not([data-note-tool-btn]):not(.gm-wrap-btn),
+  button[class*="bg-[#f65a1a]"]:not([data-note-tool-btn]):not(.gm-wrap-btn),
+  button[class*="bg-[var(--gm-primary)]"]:not([data-note-tool-btn]):not(.gm-wrap-btn),
+  a[class*="bg-[#F65A1A]"]:not(.gm-wrap-btn),
+  a[class*="bg-[#f65a1a]"]:not(.gm-wrap-btn),
+  a[class*="bg-[var(--gm-primary)]"]:not(.gm-wrap-btn) {
+    min-height: 36px !important;
+    padding: 0 12px !important;
+    font-size: 11.5px !important;
+    gap: 6px !important;
+    letter-spacing: 0.03em !important;
+  }
+
+  .gm-wrap-btn {
+    min-height: 38px !important;
+    height: auto !important;
+    padding: 8px 12px !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .forge-btn svg,
+  .gm-btn svg,
+  .tc-pill-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+}
+
+/* =========================================================
+   PLANOS & ASSINATURA: PASTAS EMPILHADAS CLICÁVEIS NO MOBILE
+   ========================================================= */
+@media (max-width: 1279px) {
+  .gm-plans-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-bottom: 14px;
+    position: relative;
+  }
+
+  .gm-plan-folder-card {
+    position: sticky;
+    will-change: transform;
+    transform: translateZ(0);
+    transition: border-color 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+  }
+
+  .gm-plan-folder-card--1 {
+    top: calc(70px + env(safe-area-inset-top, 0px));
+    z-index: 10;
+  }
+
+  .gm-plan-folder-card--2 {
+    top: calc(126px + env(safe-area-inset-top, 0px));
+    z-index: 20;
+    box-shadow: 0 -14px 30px rgba(0, 0, 0, 0.78), 0 10px 26px rgba(0, 0, 0, 0.45);
+  }
+
+  .gm-plan-folder-card--3 {
+    top: calc(182px + env(safe-area-inset-top, 0px));
+    z-index: 30;
+    box-shadow: 0 -16px 34px rgba(0, 0, 0, 0.86), 0 12px 30px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@media (min-width: 1280px) {
+  .gm-plan-folder-card {
+    position: static;
+    top: auto;
+  }
+}
+
+/* =========================================================
+   DASHBOARD (INÍCIO): MÉTRICAS EM PASTAS EMPILHADAS NO MOBILE
+   ========================================================= */
+@media (max-width: 1023px) {
+  .gm-metrics-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 10px;
+    position: relative;
+  }
+
+  .gm-metric-folder-card {
+    position: sticky;
+    border-radius: 14px !important;
+    will-change: transform;
+    transform: translateZ(0);
+    transition: border-color 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+  }
+
+  .gm-metric-folder-card--1 {
+    top: calc(70px + env(safe-area-inset-top, 0px));
+    z-index: 10;
+  }
+
+  .gm-metric-folder-card--2 {
+    top: calc(112px + env(safe-area-inset-top, 0px));
+    z-index: 20;
+    box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.82), 0 8px 20px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .gm-metric-folder-card--3 {
+    top: calc(154px + env(safe-area-inset-top, 0px));
+    z-index: 30;
+    box-shadow: 0 -12px 26px rgba(0, 0, 0, 0.86), 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .gm-metric-folder-card--4 {
+    top: calc(196px + env(safe-area-inset-top, 0px));
+    z-index: 40;
+    box-shadow: 0 -14px 28px rgba(0, 0, 0, 0.9), 0 10px 24px rgba(0, 0, 0, 0.55) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .gm-metric-folder-card {
+    position: static;
+    top: auto;
+  }
+}
+
+/* =========================================================
+   ORÇAMENTOS (MODO GRADE): CARDS EMPILHADOS NO MOBILE
+   ========================================================= */
+@media (max-width: 767px) {
+  .gm-budget-grid-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding-bottom: 24px !important;
+    position: relative;
+  }
+
+  .gm-budget-grid-card {
+    position: sticky !important;
+    top: var(--budget-stack-top, calc(70px + env(safe-area-inset-top, 0px)));
+    z-index: var(--budget-stack-z, 10);
+    border-radius: 14px !important;
+    will-change: transform;
+    transform: translateZ(0);
+    box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.82), 0 8px 20px rgba(0, 0, 0, 0.45) !important;
+    transition: border-color 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+  }
+
+  .gm-budget-grid-card:first-child {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .gm-budget-grid-card {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+  }
+}
+
+/* =========================================================
+   NOTAS: CARDS EMPILHADOS EM CASCATA NO MOBILE
+   ========================================================= */
+.gm-note-grid-card .gm-note-pin-btn {
+  top: 8px !important;
+  right: 10px !important;
+  width: 30px !important;
+  height: 30px !important;
+}
+
+@media (max-width: 767px) {
+  .gm-notes-grid-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding-bottom: 24px !important;
+    position: relative;
+  }
+
+  .gm-note-grid-card {
+    position: sticky !important;
+    top: var(--note-stack-top, calc(70px + env(safe-area-inset-top, 0px)));
+    z-index: var(--note-stack-z, 10);
+    height: auto !important;
+    border-radius: 14px !important;
+    will-change: transform;
+    transform: translateZ(0);
+    box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.84), 0 8px 20px rgba(0, 0, 0, 0.45) !important;
+    transition: border-color 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+  }
+
+  .gm-note-grid-card:first-child {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .gm-note-grid-card .gm-note-card {
+    height: auto !important;
+    min-height: 0 !important;
+    border-radius: 14px !important;
+  }
+
+  .gm-note-grid-card.gm-note-status--afazer .gm-note-card {
+    border-color: rgba(254, 84, 11, 0.45) !important;
+  }
+
+  .gm-note-grid-card.gm-note-status--producao .gm-note-card {
+    border-color: rgba(56, 189, 248, 0.4) !important;
+  }
+
+  .gm-note-grid-card.gm-note-status--concluido .gm-note-card {
+    border-color: rgba(16, 185, 129, 0.4) !important;
+  }
+
+  .gm-note-grid-card.gm-note-status--lixeira .gm-note-card {
+    border-color: rgba(244, 63, 94, 0.4) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .gm-note-grid-card {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+  }
+}

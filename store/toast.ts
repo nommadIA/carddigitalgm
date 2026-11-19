@@ -9,6 +9,7 @@ export type ToastItem = {
   title: string;
   message?: string;
   ttl?: number; // ms
+  silent?: boolean;
 };
 
 type Listener = (items: ToastItem[]) => void;
@@ -30,16 +31,19 @@ export function pushToast(input: Omit<ToastItem, "id">) {
   const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const item: ToastItem = { id, ttl: 2800, ...input };
 
-  toasts = [item, ...toasts].slice(0, 4);
+  // Mantém estritamente 1 notificação Toast visível por vez
+  toasts = [item];
   emit();
-  
-  // Play the interaction reaction sound
-  if (item.type === "success") {
-    playUiSound("success");
-  } else if (item.type === "error") {
-    playUiSound("alert");
-  } else {
-    playNotificationSound();
+
+  // Toca som apenas se não tiver sido marcado como silencioso (evita áudio duplo com triggerRealNotification)
+  if (!item.silent) {
+    if (item.type === "success") {
+      playUiSound("success");
+    } else if (item.type === "error") {
+      playUiSound("alert");
+    } else {
+      playNotificationSound();
+    }
   }
 
   window.setTimeout(() => {

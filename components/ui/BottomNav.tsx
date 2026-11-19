@@ -58,10 +58,10 @@ export default function BottomNav() {
 
   const heightAnim = useTransform(
     springStretch,
-    (s) => `calc(76px + env(safe-area-inset-bottom, 0px) + ${s}px)`
+    (s) => `calc(92px + env(safe-area-inset-bottom, 0px) + ${s}px)`
   );
-  const handleWidthAnim = useTransform(springStretch, [0, 60], [48, 64]);
-  const handleTopPaddingAnim = useTransform(springStretch, [0, 60], [6, 14]);
+  const handleWidthAnim = useTransform(springStretch, [0, 60], [44, 60]);
+  const handleTopPaddingAnim = useTransform(springStretch, [0, 60], [8, 16]);
 
   useEffect(() => {
     if (expanded) {
@@ -157,7 +157,7 @@ export default function BottomNav() {
               y: springTranslateY,
               height: heightAnim,
               zIndex: 800,
-              "--gm-mobile-nav-height": "76px",
+              "--gm-mobile-nav-height": "92px",
               borderTopLeftRadius: "16px",
               borderTopRightRadius: "16px",
               borderBottomLeftRadius: "0px",
@@ -168,10 +168,10 @@ export default function BottomNav() {
             } as unknown as React.CSSProperties}
           >
 
-            {/* ALÇA SUPERIOR CENTRALIZADA (PUXAR P/ CIMA EXPANDE ALTURA / TOQUE OCULTA) */}
+            {/* ALÇA SUPERIOR CENTRALIZADA MAIS FINA (PUXAR P/ CIMA EXPANDE ALTURA / TOQUE OCULTA) */}
             <motion.div
               style={{ paddingTop: handleTopPaddingAnim }}
-              className="w-full flex justify-center pb-1.5 cursor-pointer group active:opacity-80 transition-opacity duration-100 touch-none"
+              className="w-full flex justify-center pb-2 cursor-pointer group active:opacity-80 transition-opacity duration-100 touch-none"
               onClick={() => setExpanded(false)}
               title="Toque ou arraste para baixo para ocultar o menu"
               role="button"
@@ -179,7 +179,7 @@ export default function BottomNav() {
             >
               <motion.div
                 style={{ width: handleWidthAnim }}
-                className="h-1.5 rounded-full bg-white/25 group-hover:bg-white/40 active:scale-95 transition-colors duration-100"
+                className="h-[2.5px] rounded-full bg-white/30 group-hover:bg-white/45 active:scale-95 transition-colors duration-100"
               />
             </motion.div>
 

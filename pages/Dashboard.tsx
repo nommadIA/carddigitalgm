@@ -13,6 +13,7 @@ import {
   FileText,
   UserPlus,
   User,
+  ChevronDown,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth, MASTER_TENANT_ID } from "../store/AuthContext";
@@ -120,8 +121,9 @@ export default function Dashboard() {
     clientesAtivos: 0,
   });
 
-  // Recent budgets list (starts empty for new accounts)
+  // Recent budgets list (compressed by default to reduce vertical scroll on Dashboard)
   const [recentBudgets, setRecentBudgets] = useState<BudgetRow[]>([]);
+  const [isRecentBudgetsExpanded, setIsRecentBudgetsExpanded] = useState(false);
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -431,9 +433,9 @@ export default function Dashboard() {
   return (
     <div className="w-full bg-transparent text-[color:var(--gm-text)] space-y-6">
       {/* 1. TOP HEADER WITH USER LOGO & TITLE */}
-      <div className="w-full flex items-center justify-start gap-4 text-left">
+      <div className="w-full flex flex-row items-center justify-start gap-3.5 sm:gap-4 text-left">
         {appSettings?.company_logo_url ? (
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg !p-0 flex items-center justify-center shrink-0 overflow-hidden border border-[#26262A] bg-[#131315]">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-lg !p-0 flex items-center justify-center shrink-0 overflow-hidden border border-[#26262A] bg-[#131315]">
             <img
               src={appSettings.company_logo_url}
               alt={appSettings.company_name || "Logo da Empresa"}
@@ -441,16 +443,16 @@ export default function Dashboard() {
             />
           </div>
         ) : (
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/30 p-3 flex items-center justify-center text-[color:var(--gm-primary)] shrink-0 font-black text-2xl sm:text-3xl uppercase tracking-wider">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-lg bg-[color:var(--gm-primary)]/10 border border-[color:var(--gm-primary)]/30 p-2.5 sm:p-3 flex items-center justify-center text-[color:var(--gm-primary)] shrink-0 font-black text-xl sm:text-3xl uppercase tracking-wider">
             {appSettings?.company_name ? appSettings.company_name.substring(0, 2) : "GM"}
           </div>
         )}
 
-        <div className="flex flex-col text-left flex-1 min-w-0">
-          <div className="text-xs sm:text-sm font-extrabold tracking-widest text-[color:var(--gm-primary)] uppercase">
+        <div className="flex flex-col items-start text-left flex-1 min-w-0">
+          <div className="text-xs sm:text-sm font-extrabold tracking-widest text-[color:var(--gm-primary)] uppercase truncate max-w-full">
             {appSettings?.company_name ? `${appSettings.company_name} · PAINEL` : "PAINEL"}
           </div>
-          <h1 className="text-[clamp(1.625rem,2.5vw,2.125rem)] leading-[1.15] font-black text-[color:var(--gm-text)] tracking-tight mt-1 truncate">
+          <h1 className="text-[clamp(1.625rem,2.5vw,2.125rem)] leading-[1.15] font-black text-[color:var(--gm-text)] tracking-tight mt-1 truncate max-w-full">
             Dashboard
           </h1>
         </div>
@@ -557,8 +559,8 @@ export default function Dashboard() {
       {/* SEPARADOR: MÉTRICAS */}
       <SectionDivider label="Métricas gerais" />
 
-      {/* 4. TOP METRIC CARDS WITH FORGE-SPEC UI DESIGN */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mt-1 items-stretch">
+      {/* 4. TOP METRIC CARDS — EMPILHADOS EM PASTAS CLICÁVEIS NO MOBILE / GRID 4 COLUNAS NO DESKTOP */}
+      <div className="gm-metrics-stack lg:grid lg:grid-cols-4 lg:gap-5 mt-1 items-stretch">
         {/* CARD 1: FATURADO NO MÊS */}
         <ForgeSpecCard
           id="01"
@@ -567,7 +569,10 @@ export default function Dashboard() {
           statusLive={true}
           eyebrow="TOTAL APROVADO / CONCLUÍDO"
           figure={formatCurrency(stats.faturamentoMensal)}
-          className="h-full"
+          headerSummary={formatCurrency(stats.faturamentoMensal)}
+          barClassName="bg-gradient-to-r from-[#3E1807]/90 via-[#25120A]/80 to-[#131315] lg:bg-none"
+          className="gm-metric-folder-card gm-metric-folder-card--1 h-full !border-[var(--gm-primary,#FE540B)]/45 lg:!border-[#26262A] hover:!border-[var(--gm-primary,#FE540B)]/75"
+          onClick={() => navigate("/financial")}
           tags={[
             { label: "+12,4% ESTE MÊS", accent: true, icon: <ArrowUpRight size={13} className="text-[var(--gm-primary,#FE540B)] stroke-[2.5]" /> },
             { label: "METAS 2026", accent: false }
@@ -583,7 +588,10 @@ export default function Dashboard() {
           eyebrow="EM ANÁLISE / AGUARDANDO"
           figure={stats.orcametosAbertos}
           unit="ITENS"
-          className="h-full"
+          headerSummary={`${stats.orcametosAbertos} ITENS`}
+          barClassName="bg-gradient-to-r from-[#0C2538]/90 via-[#102434]/80 to-[#131315] lg:bg-none"
+          className="gm-metric-folder-card gm-metric-folder-card--2 h-full !border-sky-500/45 lg:!border-[#26262A] hover:!border-sky-400/75"
+          onClick={() => navigate("/budgets")}
           tags={[
             { label: <><AnimatedNumber value={stats.aguardando} /> EM ANÁLISE</>, accent: true, icon: <Clock size={13} className="text-[var(--gm-primary,#FE540B)] stroke-[2.2]" /> },
             { label: "PENDENTE", accent: false }
@@ -598,7 +606,10 @@ export default function Dashboard() {
           statusLive={true}
           eyebrow="MÉDIA POR CLIENTE"
           figure={formatCurrency(stats.ticketMedio)}
-          className="h-full"
+          headerSummary={formatCurrency(stats.ticketMedio)}
+          barClassName="bg-gradient-to-r from-[#312008]/90 via-[#22180A]/80 to-[#131315] lg:bg-none"
+          className="gm-metric-folder-card gm-metric-folder-card--3 h-full !border-amber-500/45 lg:!border-[#26262A] hover:!border-amber-400/75"
+          onClick={() => navigate("/financial")}
           tags={[
             { label: "+4,1% DO ALVO", accent: true, icon: <ArrowUpRight size={13} className="text-[var(--gm-primary,#FE540B)] stroke-[2.5]" /> },
             { label: "ACIMA DA META", accent: false }
@@ -614,7 +625,10 @@ export default function Dashboard() {
           eyebrow="BASE CADASTRADA"
           figure={stats.clientesAtivos}
           unit="BASE"
-          className="h-full"
+          headerSummary={`${stats.clientesAtivos} BASE`}
+          barClassName="bg-gradient-to-r from-[#09291E]/90 via-[#0D211A]/80 to-[#131315] lg:bg-none"
+          className="gm-metric-folder-card gm-metric-folder-card--4 h-full !border-emerald-500/45 lg:!border-[#26262A] hover:!border-emerald-400/75"
+          onClick={() => navigate("/clients")}
           tags={[
             { label: "+9 NOVOS ESTA SEMANA", accent: true, icon: <Users size={13} className="text-[var(--gm-primary,#FE540B)] stroke-[2.2]" /> },
             { label: "CRM ATIVO", accent: false }
@@ -625,74 +639,189 @@ export default function Dashboard() {
       {/* SEPARADOR: ORÇAMENTOS RECENTES */}
       <SectionDivider label="Atividade recente" />
 
-      {/* 4. SECTION: ORÇAMENTOS RECENTES */}
+      {/* 5. SECTION: ORÇAMENTOS RECENTES (COMPRIMIDO COM SETA DE EXPANSÃO) */}
       <div className="space-y-4 mt-1">
         <div className="forge-spec overflow-hidden">
-          <div className="forge-spec__bar">
+          <div
+            role="button"
+            tabIndex={0}
+            data-no-scale="true"
+            aria-expanded={isRecentBudgetsExpanded}
+            onClick={() => setIsRecentBudgetsExpanded((prev) => !prev)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setIsRecentBudgetsExpanded((prev) => !prev);
+              }
+            }}
+            className="forge-spec__bar cursor-pointer select-none hover:bg-white/[0.02] transition-colors"
+          >
             <span className="forge-spec__id shrink-0">05</span>
             <span className="forge-spec__title min-w-0 truncate">ORÇAMENTOS RECENTES</span>
+            <span className="px-1.5 py-0.5 rounded-[4px] bg-[#1B1B1E] border border-[#26262A] text-[10px] font-mono font-bold text-[#8B8B92] tabular-nums shrink-0">
+              {recentBudgets.length}
+            </span>
             <Link
               to="/budgets"
-              className="forge-btn forge-btn--primary gm-dash-primary-btn !h-9 !min-h-[36px] !py-0 px-3.5 !rounded-[6px] text-[12.5px] font-mono font-bold tracking-wider uppercase inline-flex items-center justify-center gap-2 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 cursor-pointer shadow-none shrink-0 group"
+              onClick={(e) => e.stopPropagation()}
+              className="forge-btn forge-btn--primary gm-dash-primary-btn !h-8 sm:!h-9 !min-h-[32px] sm:!min-h-[36px] !py-0 px-2.5 sm:px-3.5 !rounded-[6px] text-[11px] sm:text-[12.5px] font-mono font-bold tracking-wider uppercase inline-flex items-center justify-center gap-1.5 sm:gap-2 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 cursor-pointer shadow-none shrink-0 group"
               title="Ver Todos os Orçamentos"
             >
-              <ArrowUpRight size={16} className="shrink-0 stroke-[2.5]" />
+              <ArrowUpRight size={14} className="shrink-0 stroke-[2.5]" />
               <span>VER TODOS</span>
             </Link>
+            <button
+              type="button"
+              data-icon-btn="true"
+              aria-expanded={isRecentBudgetsExpanded}
+              aria-label={isRecentBudgetsExpanded ? "Recolher orçamentos recentes" : "Expandir orçamentos recentes"}
+              title={isRecentBudgetsExpanded ? "Recolher" : "Expandir"}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsRecentBudgetsExpanded((prev) => !prev);
+              }}
+              className="w-8 h-8 rounded-[6px] bg-[#1B1B1E] hover:bg-[#26262A] border border-[#26262A] hover:border-[var(--gm-primary,#FE540B)]/60 text-[var(--gm-primary,#FE540B)] flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+            >
+              <ChevronDown
+                size={16}
+                className={`transition-transform duration-200 ${isRecentBudgetsExpanded ? "rotate-180" : "rotate-0"}`}
+              />
+            </button>
           </div>
 
-          <div className="overflow-x-auto relative z-10">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#26262a] text-xs font-mono font-bold text-[#8b8b92] uppercase tracking-wider bg-white/[0.01]">
-                  <th className="px-4 sm:px-6 py-3.5">CLIENTE</th>
-                  <th className="px-4 sm:px-6 py-3.5">SERVIÇO</th>
-                  <th className="px-4 sm:px-6 py-3.5 text-right">VALOR</th>
-                  <th className="px-4 sm:px-6 py-3.5 text-right">STATUS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#26262a] text-sm">
+          {!isRecentBudgetsExpanded ? (
+            <div
+              role="button"
+              tabIndex={0}
+              data-no-scale="true"
+              onClick={() => setIsRecentBudgetsExpanded(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setIsRecentBudgetsExpanded(true);
+                }
+              }}
+              className="px-3.5 sm:px-6 py-2.5 flex items-center justify-between gap-2.5 cursor-pointer hover:bg-white/[0.02] transition-colors"
+            >
+              {recentBudgets.length === 0 ? (
+                <span className="text-[11px] sm:text-xs font-medium text-[#8B8B92] truncate">
+                  Nenhum orçamento emitido ainda • Toque para expandir
+                </span>
+              ) : (
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="w-2 h-2 rounded-full bg-[var(--gm-primary,#FE540B)] shrink-0" />
+                  <span className="text-xs font-semibold text-[#F2F2F3] truncate">
+                    {recentBudgets[0].client_name}
+                  </span>
+                  <span className="text-[11px] font-mono font-bold text-[#8B8B92] tabular-nums shrink-0">
+                    {recentBudgets[0].total_amount.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </span>
+                </div>
+              )}
+              <span className="text-[10.5px] font-mono font-bold uppercase tracking-wider text-[var(--gm-primary,#FE540B)] shrink-0">
+                Expandir
+              </span>
+            </div>
+          ) : (
+            <>
+              {/* Lista compacta no mobile */}
+              <div className="md:hidden divide-y divide-[#26262A]">
                 {recentBudgets.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-xs font-semibold text-[#8b8b92]">
-                      Nenhum orçamento emitido ainda. Clique em "Novo Orçamento" para começar.
-                    </td>
-                  </tr>
+                  <div className="px-4 py-5 text-center text-xs font-semibold text-[#8B8B92]">
+                    Nenhum orçamento emitido ainda. Clique em "Novo Orçamento" para começar.
+                  </div>
                 ) : (
                   recentBudgets.map((item) => (
-                    <tr
+                    <div
                       key={item.id}
-                      className="hover:bg-white/[0.03] transition-colors cursor-pointer group"
-                      onClick={() => navigate(`/budgets`)}
+                      onClick={() => navigate("/budgets")}
+                      className="px-3.5 py-2.5 flex items-center justify-between gap-2.5 hover:bg-white/[0.03] transition-colors cursor-pointer"
                     >
-                      <td className="px-4 sm:px-6 py-3.5 font-bold text-[#f2f2f3] whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] flex items-center justify-center text-[#8b8b92] font-mono font-bold text-[11px] uppercase shrink-0 group-hover:bg-[#f65a1a] group-hover:text-black group-hover:border-[#f65a1a] transition-colors">
-                            {item.client_name.substring(0, 2)}
-                          </div>
-                          <span className="text-sm font-semibold text-[#f2f2f3] truncate max-w-[160px] sm:max-w-[220px]">
-                            {item.client_name}
-                          </span>
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="w-7 h-7 rounded-[4px] border border-[#26262A] bg-[#1b1b1e] flex items-center justify-center text-[#8B8B92] font-mono font-bold text-[10px] uppercase shrink-0">
+                          {item.client_name.substring(0, 2)}
                         </div>
-                      </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-[#8b8b92] font-medium whitespace-nowrap max-w-[160px] sm:max-w-[240px] truncate">
-                        {item.service_name}
-                      </td>
-                      <td className="px-4 sm:px-6 py-3.5 font-bold font-mono tabular-nums text-right text-[#f2f2f3] whitespace-nowrap">
-                        {item.total_amount.toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}
-                      </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-right whitespace-nowrap">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-semibold text-[#f2f2f3] truncate">
+                            {item.client_name}
+                          </div>
+                          <div className="text-[11px] text-[#8b8b92] truncate">
+                            {item.service_name}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="text-xs font-bold font-mono tabular-nums text-[#f2f2f3]">
+                          {item.total_amount.toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
+                        </span>
                         {getStatusBadge(item.status)}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
+              </div>
+
+              {/* Tabela completa no desktop */}
+              <div className="hidden md:block overflow-x-auto relative z-10">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#26262a] text-xs font-mono font-bold text-[#8b8b92] uppercase tracking-wider bg-white/[0.01]">
+                      <th className="px-4 sm:px-6 py-3.5">CLIENTE</th>
+                      <th className="px-4 sm:px-6 py-3.5">SERVIÇO</th>
+                      <th className="px-4 sm:px-6 py-3.5 text-right">VALOR</th>
+                      <th className="px-4 sm:px-6 py-3.5 text-right">STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#26262a] text-sm">
+                    {recentBudgets.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-8 text-center text-xs font-semibold text-[#8b8b92]">
+                          Nenhum orçamento emitido ainda. Clique em "Novo Orçamento" para começar.
+                        </td>
+                      </tr>
+                    ) : (
+                      recentBudgets.map((item) => (
+                        <tr
+                          key={item.id}
+                          className="hover:bg-white/[0.03] transition-colors cursor-pointer group"
+                          onClick={() => navigate(`/budgets`)}
+                        >
+                          <td className="px-4 sm:px-6 py-3.5 font-bold text-[#f2f2f3] whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-[4px] border border-[#26262a] bg-[#1b1b1e] flex items-center justify-center text-[#8b8b92] font-mono font-bold text-[11px] uppercase shrink-0 group-hover:bg-[#f65a1a] group-hover:text-black group-hover:border-[#f65a1a] transition-colors">
+                                {item.client_name.substring(0, 2)}
+                              </div>
+                              <span className="text-sm font-semibold text-[#f2f2f3] truncate max-w-[160px] sm:max-w-[220px]">
+                                {item.client_name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-3.5 text-[#8b8b92] font-medium whitespace-nowrap max-w-[160px] sm:max-w-[240px] truncate">
+                            {item.service_name}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3.5 font-bold font-mono tabular-nums text-right text-[#f2f2f3] whitespace-nowrap">
+                            {item.total_amount.toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3.5 text-right whitespace-nowrap">
+                            {getStatusBadge(item.status)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

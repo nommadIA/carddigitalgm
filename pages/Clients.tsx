@@ -598,7 +598,7 @@ export default function Clients() {
         title="Clientes"
         actions={
           <button 
-            className="forge-btn forge-btn--primary w-full sm:w-auto !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer" 
+            className="forge-btn forge-btn--primary w-full md:w-auto !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 group cursor-pointer" 
             type="button" 
             onClick={handleOpenNewClient}
           >
@@ -627,7 +627,7 @@ export default function Clients() {
         )}
         <div className="mb-4 space-y-4">
           <SectionDivider label="Resumo" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+          <div className="gm-metrics-stack lg:grid lg:grid-cols-3 lg:gap-4 items-stretch">
             <ForgeSpecCard
               id="01"
               title="CLIENTES ATIVOS"
@@ -636,8 +636,11 @@ export default function Clients() {
               eyebrow="BASE CADASTRADA"
               figure={clientSummary.totalAtivos}
               unit="BASE"
+              headerSummary={`${clientSummary.totalAtivos} BASE`}
+              barClassName="bg-gradient-to-r from-[#3E1807]/90 via-[#25120A]/80 to-[#131315] lg:bg-none"
               animationKey={tab}
-              className="h-full"
+              className="gm-metric-folder-card gm-metric-folder-card--1 h-full !border-[var(--gm-primary,#FE540B)]/45 lg:!border-[#26262A] hover:!border-[var(--gm-primary,#FE540B)]/75"
+              onClick={() => setTab("ATIVOS")}
               tags={[
                 { label: "CRM ATIVO", accent: true }
               ]}
@@ -651,15 +654,18 @@ export default function Clients() {
               eyebrow="CRESCIMENTO RECENTE"
               figure={clientSummary.novos30d}
               unit="NOVOS"
+              headerSummary={`+${clientSummary.novos30d} NOVOS`}
+              barClassName="bg-gradient-to-r from-[#0C2538]/90 via-[#102434]/80 to-[#131315] lg:bg-none"
               animationKey={tab}
-              className="h-full"
+              className="gm-metric-folder-card gm-metric-folder-card--2 h-full !border-sky-500/45 lg:!border-[#26262A] hover:!border-sky-400/75"
+              onClick={() => setTab("ATIVOS")}
               tags={[
                 { label: <>+<AnimatedNumber value={clientSummary.novos30d} replayKey={tab} /> CADASTRADOS</>, accent: true }
               ]}
             />
 
-            <div className="forge-spec h-full md:col-span-2 lg:col-span-1">
-              <div className="forge-spec__bar">
+            <div className="forge-spec gm-metric-folder-card gm-metric-folder-card--3 h-full md:col-span-2 lg:col-span-1 !border-emerald-500/45 lg:!border-[#26262A]">
+              <div className="forge-spec__bar bg-gradient-to-r from-[#09291E]/90 via-[#0D211A]/80 to-[#131315] lg:bg-none">
                 <span className="forge-spec__id">03</span>
                 <span className="forge-spec__title">CADASTROS POR MÊS</span>
                 <span className="forge-spec__status forge-spec__status--live tabular-nums">

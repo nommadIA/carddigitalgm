@@ -432,10 +432,17 @@ export const ColorSettingsManager: React.FC<ColorSettingsManagerProps> = ({
     setVar("--color-ember", colors.primary);
     setVar("--color-spark", colors.accent || colors.primary);
 
-    // Atualiza a meta tag do navegador móvel
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) {
-      metaTheme.setAttribute("content", colors.primary);
+    // Atualiza a meta tag do navegador móvel para combinar com o fundo escuro sem bordas coloridas
+    if (!isHoverPreviewingRef.current) {
+      const safeThemeBg = colors.bg || "#0B0B0C";
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute("content", safeThemeBg);
+      }
+      document.documentElement.style.backgroundColor = safeThemeBg;
+      if (document.body) {
+        document.body.style.backgroundColor = safeThemeBg;
+      }
     }
 
     // Dispara evento global de sincronização

@@ -11,6 +11,54 @@ export interface SystemNotificationOptions {
   url?: string;
   soundId?: string;
   inAppToast?: boolean;
+  sound?: boolean;
+  dedupeKey?: string;
+}
+
+// Tag única global: garante que apenas UMA notificação do app sinalize o dispositivo por vez
+export const SINGLE_APP_NOTIFICATION_TAG = "carddigital-gm-single-notification";
+
+// Janela de deduplicação para evitar disparos duplicados pelo mesmo evento (entre chamadas ou abas/PWA)
+const recentNotificationTimestamps = new Map<string, number>();
+const DEDUPE_WINDOW_MS = 6000;
+const OS_NOTIF_DEDUPE_STORAGE_KEY = "gm.os_notif_dedupe_lock_v1";
+
+function claimCrossTabNotificationSlot(dedupeKey: string): boolean {
+  const now = Date.now();
+  const prevTs = recentNotificationTimestamps.get(dedupeKey);
+  if (prevTs && now - prevTs < DEDUPE_WINDOW_MS) {
+    return false;
+  }
+
+  if (typeof localStorage !== "undefined") {
+    try {
+      const raw = localStorage.getItem(OS_NOTIF_DEDUPE_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (
+          parsed &&
+          parsed.key === dedupeKey &&
+          typeof parsed.ts === "number" &&
+          now - parsed.ts < DEDUPE_WINDOW_MS
+        ) {
+          recentNotificationTimestamps.set(dedupeKey, parsed.ts);
+          return false;
+        }
+      }
+      localStorage.setItem(
+        OS_NOTIF_DEDUPE_STORAGE_KEY,
+        JSON.stringify({ key: dedupeKey, ts: now })
+      );
+    } catch {}
+  }
+
+  recentNotificationTimestamps.set(dedupeKey, now);
+  if (recentNotificationTimestamps.size > 40) {
+    for (const [k, ts] of recentNotificationTimestamps.entries()) {
+      if (now - ts > DEDUPE_WINDOW_MS * 2) recentNotificationTimestamps.delete(k);
+    }
+  }
+  return true;
 }
 
 // Logo oficial do CardDigital GM (Five Icon / Favicon / App Icon oficial em formato PNG para suporte total nos SOs)
@@ -34,56 +82,106 @@ export function getUserRegisteredLogo(): string | null {
   return null;
 }
 
+async function runSerializedOsNotification<T>(task: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== "undefined" && (navigator as any).locks?.request) {
+    try {
+      return await (navigator as any).locks.request("gm_single_os_notif_lock", task);
+    } catch {}
+  }
+  return task();
+}
+
+/**
+ * Mantém estritamente 1 notificação do app no sistema operacional.
+ * Limpa apenas notificações legadas com tags diferentes e substitui in-place pela tag única
+ * (evita race condition no Windows Action Center ao chamar n.close() antes de showNotification).
+ */
+async function showSingleOsNotificationViaSw(
+  reg: ServiceWorkerRegistration,
+  title: string,
+  swOptions: any
+): Promise<boolean> {
+  return runSerializedOsNotification(async () => {
+    try {
+      if (typeof reg.getNotifications === "function") {
+        const existing = await reg.getNotifications().catch(() => []);
+        for (const n of existing) {
+          if (n.tag !== SINGLE_APP_NOTIFICATION_TAG) {
+            try {
+              n.close();
+            } catch {}
+          }
+        }
+      }
+      await reg.showNotification(title, {
+        ...swOptions,
+        tag: SINGLE_APP_NOTIFICATION_TAG,
+        renotify: true,
+      });
+      return true;
+    } catch (e) {
+      console.warn("[Notification] Erro ao exibir notificação única via SW:", e);
+      return false;
+    }
+  });
+}
+
 /**
  * Dispara uma notificação REAL tanto DENTRO do aplicativo (toast visual e som)
- * quanto FORA do aplicativo (notificação nativa do sistema operacional / desktop / mobile / PWA).
- * 
- * 1. Badge / Five Icon: Sempre o logo oficial do app CardDigital GM no cabeçalho do sistema.
- * 2. Icon / Caixa de Notificações: O logo cadastrado do usuário (ou oficial caso ainda não tenha cadastrado).
+ * quanto FORA do aplicativo (notificação nativa única do sistema operacional / desktop / mobile / PWA).
  */
 export async function triggerRealNotification(options: SystemNotificationOptions = {}): Promise<boolean> {
   const title = options.title || "🔔 CardDigital GM · Notificação";
   const body = options.body || "Sua notificação em tempo real está funcionando perfeitamente dentro e fora do app!";
-  
+
+  // Deduplicação síncrona entre chamadas e múltiplas abas/janelas PWA antes de qualquer await
+  const contentDedupeKey = `${title}::${body}`.trim().toLowerCase();
+  const rawDedupeKey = (options.dedupeKey || contentDedupeKey).trim().toLowerCase();
+  if (!claimCrossTabNotificationSlot(rawDedupeKey)) {
+    return true;
+  }
+
   // 1. Five Icon do App Oficial CardDigital GM para o cabeçalho/badge
   const badge = options.badge || OFFICIAL_APP_FAVICON;
 
   // 2. Logo cadastrado do usuário para a caixa de notificações
   const userRegisteredLogo = getUserRegisteredLogo();
   const icon = options.icon || userRegisteredLogo || OFFICIAL_APP_FAVICON;
-  
+
   const url = options.url || (typeof window !== "undefined" ? window.location.href : "/");
 
-  // 1. Tocar som ativo do sistema
-  try {
-    const savedSound = (typeof localStorage !== "undefined" ? localStorage.getItem("gm.notificationSound") : null) || options.soundId;
-    playNotificationSound(savedSound || undefined);
-  } catch (e) {
-    console.warn("[Notification] Erro ao tocar som:", e);
+  // 1. Tocar som ativo do sistema (somente 1 vez)
+  if (options.sound !== false) {
+    try {
+      const savedSound = (typeof localStorage !== "undefined" ? localStorage.getItem("gm.notificationSound") : null) || options.soundId;
+      playNotificationSound(savedSound || undefined);
+    } catch (e) {
+      console.warn("[Notification] Erro ao tocar som:", e);
+    }
   }
 
   // 2. Vibração tátil no smartphone
   if (typeof navigator !== "undefined" && "vibrate" in navigator) {
     try {
-      navigator.vibrate([200, 100, 200, 100, 200]);
+      navigator.vibrate([200, 100, 200]);
     } catch (e) {}
   }
 
-  // 3. Notificação DENTRO DO APP (Toast em tempo real)
+  // 3. Notificação DENTRO DO APP (Toast em tempo real silencioso para não duplicar o som)
   if (options.inAppToast !== false) {
     pushToast({
       type: "success",
       title: title,
       message: body,
       ttl: 6000,
+      silent: true,
     });
   }
 
-  // 4. Notificação FORA DO APP (Nativa do Sistema Operacional / Windows / Mac / Android / iOS PWA)
+  // 4. Notificação FORA DO APP (Nativa única do Sistema Operacional / Windows / Mac / Android / iOS PWA)
   if (typeof window !== "undefined" && "Notification" in window) {
     let permission = Notification.permission;
-    
-    // Se ainda não foi solicitada, solicita permissão imediatamente
+
     if (permission !== "granted" && permission !== "denied") {
       try {
         permission = await Notification.requestPermission();
@@ -95,48 +193,46 @@ export async function triggerRealNotification(options: SystemNotificationOptions
     if (permission === "granted") {
       let shownViaSw = false;
 
-      // Disparo prioritário via Service Worker (garante entrega fora do app / 2º plano / minimizado)
       if ("serviceWorker" in navigator) {
         try {
           const reg = await navigator.serviceWorker.ready;
           if (reg && typeof reg.showNotification === "function") {
-            const swOptions: any = {
+            shownViaSw = await showSingleOsNotificationViaSw(reg, title, {
               body,
               icon,
               badge,
-              vibrate: [200, 100, 200, 100, 200],
-              tag: "gm-real-notif-" + Date.now(),
+              vibrate: [200, 100, 200],
+              tag: SINGLE_APP_NOTIFICATION_TAG,
               renotify: true,
               requireInteraction: false,
               data: { url },
-            };
-            await reg.showNotification(title, swOptions);
-            shownViaSw = true;
-          }
-
-          if (reg && reg.active) {
+            });
+          } else if (reg && reg.active) {
             reg.active.postMessage({
-              type: "TEST_NOTIFICATION",
+              type: "SHOW_NOTIFICATION",
               title,
               body,
               icon,
               badge,
-              url,
+              tag: SINGLE_APP_NOTIFICATION_TAG,
+              data: { url },
             });
+            shownViaSw = true;
           }
         } catch (e) {
           console.warn("[Notification] Erro ao disparar via Service Worker:", e);
         }
       }
 
-      // Disparo via Notification API do navegador (para navegadores de desktop)
+      // Fallback via Notification API do navegador (somente se o SW não exibiu)
       if (!shownViaSw) {
         try {
           const notif = new Notification(title, {
             body,
             icon,
             badge,
-            tag: "gm-real-notif-" + Date.now(),
+            tag: SINGLE_APP_NOTIFICATION_TAG,
+            renotify: true,
             requireInteraction: false,
             data: { url },
           } as any);
@@ -155,6 +251,7 @@ export async function triggerRealNotification(options: SystemNotificationOptions
         title: "Permissão de Notificação Bloqueada",
         message: "Para receber alertas fora do app, habilite as notificações nas configurações do seu navegador.",
         ttl: 7000,
+        silent: true,
       });
     }
   }
@@ -176,6 +273,18 @@ export function addInAppNotificationItem(item: {
     const list = raw ? JSON.parse(raw) : [];
     const now = new Date();
     const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+    // Evita inserir item idêntico repetido imediatamente no sino
+    if (
+      Array.isArray(list) &&
+      list[0] &&
+      list[0].title === item.title &&
+      list[0].message === item.message &&
+      list[0].time === timeStr
+    ) {
+      return;
+    }
+
     const newItem = {
       id: "notif_" + Date.now(),
       title: item.title,
@@ -350,16 +459,15 @@ export async function testNotificationFechado(): Promise<{ ok: boolean; message:
     try {
       const reg = await navigator.serviceWorker.ready;
       if (reg && typeof reg.showNotification === "function") {
-        await reg.showNotification(title, {
+        swActive = await showSingleOsNotificationViaSw(reg, title, {
           body,
           icon,
           badge: OFFICIAL_APP_FAVICON,
-          vibrate: [200, 100, 200, 100, 200],
-          tag: "test-push-fechado-" + Date.now(),
+          vibrate: [200, 100, 200],
+          tag: SINGLE_APP_NOTIFICATION_TAG,
           renotify: true,
           data: { url: "/" },
-        } as any);
-        swActive = true;
+        });
       }
     } catch (e) {}
   }

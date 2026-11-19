@@ -63,7 +63,8 @@ bootReal();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     try {
-      navigator.serviceWorker.register("/sw.js").then((reg) => {
+      navigator.serviceWorker.register("/sw.js?v=7").then((reg) => {
+        reg.update().catch(() => {});
         // Inicia sincronização de alarmes em segundo plano
         if (reg && reg.active) {
           reg.active.postMessage({ type: 'START_BACKGROUND_SYNC' });

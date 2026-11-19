@@ -40,15 +40,25 @@ export async function forceSavePushToken(tenantId: string, userId: string) {
 
     if (!("serviceWorker" in navigator)) return { ok: false, reason: "no_sw_api" };
 
-    // Unregister all existing service workers to clear any conflicts
+    // Unregister only conflicting/legacy service workers, preserving active /sw.js?v=7
     const registrations = await navigator.serviceWorker.getRegistrations();
-    for (let registration of registrations) {
-      await registration.unregister();
-      console.log("[PushFCM] Unregistered old service worker:", registration.scope);
+    let existingSwReg: ServiceWorkerRegistration | undefined;
+    for (const registration of registrations) {
+      const scriptUrl =
+        registration.active?.scriptURL ||
+        registration.waiting?.scriptURL ||
+        registration.installing?.scriptURL ||
+        "";
+      if (scriptUrl.includes("/sw.js?v=7")) {
+        existingSwReg = registration;
+      } else {
+        await registration.unregister().catch(() => {});
+        console.log("[PushFCM] Unregistered legacy service worker:", registration.scope);
+      }
     }
 
-    const swReg = await navigator.serviceWorker.register("/sw.js?v=5");
-    await swReg.update();
+    const swReg = existingSwReg || (await navigator.serviceWorker.register("/sw.js?v=7"));
+    await swReg.update().catch(() => {});
     
     // Wait for the service worker to be ready
     const readySwReg = await navigator.serviceWorker.ready;
@@ -98,13 +108,6 @@ export async function forceSavePushToken(tenantId: string, userId: string) {
       ? rawVapid.trim().replace(/\s/g, '') 
       : "";
 
-    // Diagnóstico detalhado para o usuário verificar no console
-    console.log("[PushFCM] Verificando Configuração Firebase:");
-    console.log("- API Key (Início/Fim):", firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 10)}...${firebaseConfig.apiKey.slice(-5)}` : "MISSING");
-    console.log("- Project ID:", firebaseConfig.projectId || "MISSING");
-    console.log("- App ID:", firebaseConfig.appId || "MISSING");
-    console.log("- VAPID Key (Início/Fim):", cleanVapidKey ? `${cleanVapidKey.substring(0, 10)}...${cleanVapidKey.slice(-5)}` : "MISSING");
-
     if (!firebaseConfig.apiKey || !firebaseConfig.apiKey.startsWith("AIza")) {
       console.error("ERRO: VITE_FIREBASE_API_KEY parece inválida ou não foi carregada corretamente. Verifique os Secrets.");
       return { ok: false, reason: "invalid_api_key_format" };
@@ -117,12 +120,8 @@ export async function forceSavePushToken(tenantId: string, userId: string) {
 
     // Validação robusta de Base64URL para evitar erro do atob interno do Firebase
     try {
-      // O Firebase usa atob internamente. Vamos testar se a chave é decodificável.
-      // 1. Converte Base64URL para Base64 padrão
       let base64 = cleanVapidKey.replace(/-/g, '+').replace(/_/g, '/');
-      // 2. Remove qualquer caractere que não seja válido em Base64 (proteção contra lixo de cópia/cola)
       base64 = base64.replace(/[^A-Za-z0-9+/]/g, '');
-      // 3. Adicionamos preenchimento (padding) se necessário para o atob
       const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, '=');
       window.atob(padded);
     } catch (e) {
@@ -130,40 +129,32 @@ export async function forceSavePushToken(tenantId: string, userId: string) {
       return { ok: false, reason: "malformed_vapid_key" };
     }
 
-    // Clear Firebase Installations and Messaging cache if there's a problem
-    try {
-      const deleteDB = (dbName: string) => new Promise((resolve) => {
-        const req = window.indexedDB.deleteDatabase(dbName);
-        req.onsuccess = resolve;
-        req.onerror = resolve;
-        req.onblocked = resolve;
-      });
-
-      if (window.indexedDB.databases) {
-        const dbs = await window.indexedDB.databases();
-        for (const db of dbs) {
-          if (db.name && (db.name.includes("firebase-installations") || db.name.includes("firebase-messaging") || db.name.includes("fcm"))) {
-            await deleteDB(db.name);
-            console.log("[PushFCM] Cleared Firebase DB:", db.name);
-          }
-        }
-      } else {
-        // Fallback for browsers that don't support indexedDB.databases()
-        await deleteDB("firebase-installations-database");
-        await deleteDB("firebase-messaging-database");
-        await deleteDB("firebase-heartbeat-database");
-        await deleteDB("fcm_token_details_db");
-      }
-    } catch (e) {
-      console.warn("Could not clear IndexedDB:", e);
-    }
-
     const messaging = getMessaging(app);
 
-    const token = await getToken(messaging, {
-      vapidKey: cleanVapidKey,
-      serviceWorkerRegistration: readySwReg,
-    });
+    let token = "";
+    try {
+      token = await getToken(messaging, {
+        vapidKey: cleanVapidKey,
+        serviceWorkerRegistration: readySwReg,
+      });
+    } catch {
+      // Somente em caso de erro de cache/token corrompido, limpa IDB e tenta uma vez
+      try {
+        const deleteDB = (dbName: string) => new Promise((resolve) => {
+          const req = window.indexedDB.deleteDatabase(dbName);
+          req.onsuccess = resolve;
+          req.onerror = resolve;
+          req.onblocked = resolve;
+        });
+        await deleteDB("firebase-installations-database");
+        await deleteDB("firebase-messaging-database");
+        await deleteDB("fcm_token_details_db");
+        token = await getToken(messaging, {
+          vapidKey: cleanVapidKey,
+          serviceWorkerRegistration: readySwReg,
+        });
+      } catch {}
+    }
 
     if (!token) return { ok: false, reason: "empty_token" };
 

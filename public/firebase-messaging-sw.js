@@ -16,6 +16,10 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
 const OFFICIAL_APP_FAVICON = "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.png";
+const SINGLE_APP_NOTIFICATION_TAG = "carddigital-gm-single-notification";
+
+let lastFcmKey = "";
+let lastFcmAt = 0;
 
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
@@ -23,13 +27,37 @@ messaging.onBackgroundMessage((payload) => {
   const body = payload.notification?.body || "Nova notificação recebida";
   const icon = payload.notification?.icon || OFFICIAL_APP_FAVICON;
 
+  const now = Date.now();
+  const key = `${String(title).trim().toLowerCase()}::${String(body).trim().toLowerCase()}`;
+  if (key === lastFcmKey && now - lastFcmAt < 6000) {
+    return;
+  }
+  lastFcmKey = key;
+  lastFcmAt = now;
+
   const notificationOptions = {
     body: body,
     icon: icon,
     badge: OFFICIAL_APP_FAVICON,
+    tag: SINGLE_APP_NOTIFICATION_TAG,
+    renotify: true,
     data: payload.data,
     vibrate: [200, 100, 200]
   };
 
-  self.registration.showNotification(title, notificationOptions);
+  self.registration
+    .getNotifications()
+    .then((existing) => {
+      if (Array.isArray(existing)) {
+        existing.forEach((n) => {
+          if (n.tag !== SINGLE_APP_NOTIFICATION_TAG) {
+            try {
+              n.close();
+            } catch (e) {}
+          }
+        });
+      }
+      return self.registration.showNotification(title, notificationOptions);
+    })
+    .catch(() => self.registration.showNotification(title, notificationOptions));
 });

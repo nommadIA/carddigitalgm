@@ -425,8 +425,8 @@ export default function Financial() {
     <Page
       title="Relatórios Financeiros"
       actions={
-        <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto items-stretch sm:items-center">
-          <div className="flex items-center rounded-[6px] p-1 w-full sm:w-auto justify-between sm:justify-start h-10 border border-[#26262A] bg-[#131315]">
+        <div className="flex flex-col md:flex-row gap-2.5 w-full md:w-auto items-stretch md:items-center justify-center md:justify-end">
+          <div className="flex items-center rounded-[6px] p-1 w-full md:w-auto justify-between md:justify-start h-10 border border-[#26262A] bg-[#131315]">
             <button 
               type="button"
               onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
@@ -456,11 +456,11 @@ export default function Financial() {
             </button>
           </div>
           
-          <div className="grid grid-cols-4 sm:flex flex-row gap-2 w-full sm:w-auto">
+          <div className="grid grid-cols-4 md:flex flex-row gap-2 w-full md:w-auto">
             <button
               type="button"
               onClick={() => handleShare(resumo, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }), transactions)}
-              className="forge-btn forge-btn--secondary w-full sm:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer"
+              className="forge-btn forge-btn--secondary w-full md:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer"
               title="Compartilhar Relatório"
             >
               <Share2 size={15} />
@@ -468,7 +468,7 @@ export default function Financial() {
             <button 
               type="button"
               onClick={() => handlePDF(transactions, selectedDate.toLocaleString("pt-BR", { month: "long", year: "numeric" }))} 
-              className="forge-btn forge-btn--secondary w-full sm:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer" 
+              className="forge-btn forge-btn--secondary w-full md:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer" 
               title="Gerar PDF"
             >
               <FileText size={15} />
@@ -476,7 +476,7 @@ export default function Financial() {
             <button 
               type="button"
               onClick={handleSave} 
-              className="forge-btn forge-btn--primary w-full sm:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer" 
+              className="forge-btn forge-btn--primary w-full md:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer" 
               title="Fechar e Salvar Mês"
             >
               <Save size={15} />
@@ -484,7 +484,7 @@ export default function Financial() {
             <button 
               type="button"
               onClick={openHistory} 
-              className="forge-btn forge-btn--secondary w-full sm:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer" 
+              className="forge-btn forge-btn--secondary w-full md:!w-10 !h-10 !min-w-[40px] !p-0 !rounded-[6px] cursor-pointer" 
               title="Histórico"
             >
               <History size={15} />

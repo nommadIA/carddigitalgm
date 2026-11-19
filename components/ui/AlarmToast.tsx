@@ -1,10 +1,9 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { checkAlarms, markAlarmAsTriggered, toggleAlarmsForBudget } from "../../lib/alarmSystem";
-import { Bell, BellOff, X } from "lucide-react";
+import { checkAlarms, markAlarmAsTriggered } from "../../lib/alarmSystem";
+import { Bell, X } from "lucide-react";
 import { BudgetAlarm } from "../../types";
-import { playNotificationSound } from "../../lib/audio";
 import { readSettingsLocal } from "../../lib/settings";
 import { triggerRealNotification } from "../../lib/realNotification";
 import { broadcastAppNotification } from "../../lib/syncHub";
@@ -45,6 +44,7 @@ const AlarmToast = () => {
   const alarmsAllowed = canAccess("alarms").allowed;
   const realtimeAllowed = canAccess("realtime_alarms").allowed;
   const [alarms, setAlarms] = useState<BudgetAlarm[]>([]);
+  const triggeredIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!alarmsAllowed) {
@@ -60,14 +60,15 @@ const AlarmToast = () => {
     const runAlarmCheck = () => {
       const alarm = checkAlarms();
       if (alarm) {
-        setAlarms((prev) => {
-          // Evita duplicatas visuais
-          if (prev.find(a => a.id === alarm.id)) return prev;
-          playNotificationSound(); // ✅ Add sound for new alarm
-          return [alarm, ...prev];
-        });
+        if (triggeredIdsRef.current.has(alarm.id)) return;
+        triggeredIdsRef.current.add(alarm.id);
 
-        // Dispara notificação nativa fora do app / segundo plano
+        // Marca imediatamente como disparado antes dos efeitos assíncronos para bloquear concorrência/SW
+        markAlarmAsTriggered(alarm.id);
+
+        setAlarms([alarm]);
+
+        // Dispara apenas UMA notificação única (com 1 som e tag única no SO)
         const text = getNotificationText(alarm);
         const currentSettings = readSettingsLocal();
         const userLogo = currentSettings?.company_logo_url || currentSettings?.avatar_url || undefined;
@@ -76,9 +77,10 @@ const AlarmToast = () => {
           body: text,
           icon: userLogo,
           inAppToast: false, // O AlarmToast já renderiza o card visual interno
+          dedupeKey: `alarm_${alarm.id}`,
         }).catch(() => {});
 
-        // Transmissão simultânea de alarme para Smartphone & Desktop (Plano Profissional)
+        // Registra no sino e sincroniza com outros dispositivos SEM disparar som/SO duplicado neste dispositivo
         if (realtimeAllowed) {
           try {
             const tid = typeof localStorage !== "undefined" ? localStorage.getItem("tenant_id") : null;
@@ -90,12 +92,10 @@ const AlarmToast = () => {
               icon: userLogo,
               url: alarm.type === "EXPENSE" ? "/expenses" : alarm.type === "NOTE" ? "/notes" : "/budgets",
               skipInAppToast: true,
+              skipLocalSoundAndOs: true,
             });
           } catch (e) {}
         }
-
-        // Marca como disparado (no storage e IndexedDB)
-        markAlarmAsTriggered(alarm.id);
       }
     };
 

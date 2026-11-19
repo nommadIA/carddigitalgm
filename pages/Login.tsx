@@ -517,50 +517,36 @@ export default function Login() {
   return (
     <div 
       onPointerMove={handlePointerMove}
-      className="gm-login-page-root min-h-[100dvh] h-[100dvh] w-full flex flex-col lg:flex-row bg-[#08090b] text-[#f2f2f3] relative overflow-hidden selection:bg-[var(--gm-primary)] selection:text-white"
+      className="gm-login-page-root min-h-[100dvh] lg:h-[100dvh] w-full flex flex-col lg:flex-row bg-[#0B0B0C] text-[#f2f2f3] relative overflow-x-hidden lg:overflow-hidden selection:bg-[var(--gm-primary)] selection:text-white"
     >
       {/* ------------------------------------------------------------- */}
-      {/* MOBILE BACKDROP: Fundo animado visível apenas em telas mobile */}
+      {/* MOBILE BACKDROP: Fundo limpo e consistente na borda mobile    */}
       {/* ------------------------------------------------------------- */}
       <div 
-        className="lg:hidden fixed inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center select-none"
+        className="lg:hidden fixed inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center select-none bg-[#0B0B0C]"
         aria-hidden="true"
       >
-        <motion.div
-          animate={bgAnim.animate}
-          transition={bgAnim.transition as any}
-          className="w-full h-full will-change-transform scale-[1.12]"
-        >
-          {bgInfo.isVideo && bgInfo.url ? (
-            <video
-              src={bgInfo.url}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-              style={{
-                objectFit: (bgInfo.fit as any) || "cover",
-                objectPosition: `${bgInfo.pos_x} ${bgInfo.pos_y}`,
-              }}
-            />
-          ) : (
-            <div
-              className="w-full h-full"
-              style={{
-                background:
-                  "radial-gradient(circle at 50% 35%, rgba(254, 84, 11, 0.16) 0%, rgba(8, 9, 11, 0.96) 65%)",
-              }}
-            />
-          )}
-        </motion.div>
-        <div className="absolute inset-0 bg-black/70" />
+        <div
+          className="w-full h-full"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 24%, rgba(254, 84, 11, 0.08) 0%, #0B0B0C 60%)",
+          }}
+        />
       </div>
 
       {/* ------------------------------------------------------------- */}
       {/* LADO ESQUERDO: Painel de Credenciais Minimalista Forge        */}
       {/* ------------------------------------------------------------- */}
-      <div className="w-full lg:w-[480px] xl:w-[540px] 2xl:w-[580px] h-full flex flex-col justify-between shrink-0 bg-[#0B0B0C]/95 lg:bg-[#0B0B0C] lg:border-r border-[#26262A] relative z-20 overflow-y-auto px-6 sm:px-10 lg:px-12 xl:px-14 py-8 sm:py-10 shadow-2xl">
+      <div
+        className="w-full lg:w-[480px] xl:w-[540px] 2xl:w-[580px] min-h-[100dvh] lg:min-h-0 lg:h-full flex flex-col justify-between shrink-0 bg-[#0B0B0C] lg:border-r border-[#26262A] relative z-20 overflow-y-auto px-6 sm:px-10 lg:px-12 xl:px-14 shadow-2xl"
+        style={{
+          paddingTop: "max(1.75rem, env(safe-area-inset-top, 0px))",
+          paddingBottom: "max(1.75rem, env(safe-area-inset-bottom, 0px))",
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-y",
+        }}
+      >
         {/* Topo: LOGO OFICIAL DO APP CardDigital GM */}
         <div className="flex items-center justify-between mb-5 sm:mb-7">
           <div className="flex items-center gap-3">

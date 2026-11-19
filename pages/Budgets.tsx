@@ -628,8 +628,8 @@ function VirtualizedBudgetGrid({
   stopSignal?: (id: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8 sm:pb-4">
-      {items.map((r) => {
+    <div className="gm-budget-grid-stack md:grid md:grid-cols-2 md:gap-4 pb-8 sm:pb-4">
+      {items.map((r, idx) => {
         const created = r.created_at ? new Date(r.created_at) : null;
         const currentStatus = normalizeStatus(r.status);
 
@@ -640,14 +640,47 @@ function VirtualizedBudgetGrid({
 
         const isHighlighted = r.id === highlightedId;
 
+        const folderHeaderClass =
+          currentStatus === "CONCLUIDO"
+            ? "bg-gradient-to-r from-[#09291E]/95 via-[#0E261D]/85 to-[#131315] border-emerald-500/35"
+            : currentStatus === "APROVADO" || currentStatus === "PRODUCAO"
+            ? "bg-gradient-to-r from-[#3E1807]/95 via-[#25120A]/85 to-[#131315] border-[var(--gm-primary,#FE540B)]/40"
+            : currentStatus === "CANCELADO"
+            ? "bg-gradient-to-r from-[#2D1014]/95 via-[#201014]/85 to-[#131315] border-red-500/35"
+            : "bg-gradient-to-r from-[#0C2538]/95 via-[#102130]/85 to-[#131315] border-sky-500/35";
+
+        const folderDotClass =
+          currentStatus === "CONCLUIDO"
+            ? "bg-emerald-400"
+            : currentStatus === "APROVADO" || currentStatus === "PRODUCAO"
+            ? "bg-[var(--gm-primary,#FE540B)]"
+            : currentStatus === "CANCELADO"
+            ? "bg-red-400"
+            : "bg-sky-400";
+
+        const folderBorderClass =
+          currentStatus === "CONCLUIDO"
+            ? "!border-emerald-500/40 md:!border-[#26262A]"
+            : currentStatus === "APROVADO" || currentStatus === "PRODUCAO"
+            ? "!border-[var(--gm-primary,#FE540B)]/45 md:!border-[#26262A]"
+            : currentStatus === "CANCELADO"
+            ? "!border-red-500/40 md:!border-[#26262A]"
+            : "!border-sky-500/40 md:!border-[#26262A]";
+
+        const stackStyle = {
+          "--budget-stack-top": `calc(70px + env(safe-area-inset-top, 0px) + ${Math.min(idx, 3) * 42}px)`,
+          "--budget-stack-z": 10 + idx,
+        } as React.CSSProperties;
+
         return (
-          <Card
+          <div
             key={r.id}
             id={`budget-card-${r.id}`}
+            style={stackStyle}
             onMouseEnter={() => stopSignal?.(r.id)}
             onTouchStart={() => stopSignal?.(r.id)}
             onClick={() => stopSignal?.(r.id)}
-            className={`gm-budget-card bg-[#131315] border-[#26262A] rounded-lg flex flex-col justify-between !p-4 transition-all duration-300 relative ${
+            className={`forge-spec gm-budget-card gm-budget-grid-card bg-[#131315] border rounded-2xl md:rounded-lg flex flex-col justify-between !p-0 overflow-hidden transition-all duration-300 relative ${folderBorderClass} ${
               isHighlighted ? "gm-signal-bottom-container" : ""
             }`}
           >
@@ -655,194 +688,224 @@ function VirtualizedBudgetGrid({
               active={isHighlighted}
               onDismiss={() => stopSignal?.(r.id)}
             />
-            {/* HEADER estruturado e equilibrado */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="font-black truncate text-white text-[15px] sm:text-base tracking-tight uppercase">
+
+            {/* ABA SUPERIOR DE PASTA (SEMPRE VISÍVEL AO EMPILHAR NO MODO GRADE MOBILE) */}
+            <div className={`min-h-[42px] px-3.5 sm:px-4 py-2 border-b flex items-center justify-between gap-2 ${folderHeaderClass}`}>
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${folderDotClass}`} />
+                <span className="font-black truncate text-white text-xs sm:text-sm tracking-tight uppercase">
                   {(r.client_name || "CLIENTE").toUpperCase()}
-                </div>
-                <div className="text-xs sm:text-sm truncate mt-0.5 font-bold text-zinc-300">
-                  {r.title || "Orçamento"}
-                </div>
-
-                <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-zinc-200 text-[11px] sm:text-xs font-bold tabular-nums">
-                    <Calendar size={13} className="text-[var(--gm-primary)] shrink-0" />
-                    <span>{created ? created.toLocaleDateString("pt-BR") : "-"}</span>
-                  </div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-zinc-200 text-[11px] sm:text-xs font-bold tabular-nums">
-                    <Clock size={13} className="text-[var(--gm-primary)] shrink-0" />
-                    <span>{r.delivery_days ?? 5} dias úteis</span>
-                  </div>
-                </div>
+                </span>
               </div>
-
-              <div className="text-right shrink-0 pl-1">
-                <div className="font-black text-[17px] sm:text-[19px] text-[var(--gm-primary)] leading-tight tabular-nums">
+              <div className="flex items-center gap-1.5 shrink-0 tabular-nums">
+                <span className="font-black text-xs sm:text-sm text-[var(--gm-primary)] leading-none">
                   {CURRENCY.format(Number(r.total_amount || 0))}
-                </div>
-                <div className="text-[11px] text-zinc-400 font-black uppercase tracking-wider mt-0.5">
-                  Total
-                </div>
+                </span>
               </div>
             </div>
 
-            {/* FOOTER: cápsulas + 6 botões organizados */}
-            <div className="mt-4 pt-3.5 border-t border-[#26262A] flex flex-col gap-2.5">
-              {/* Cápsulas de status uniformes */}
-              <div className="grid grid-cols-4 gap-1.5 sm:gap-2 w-full">
-                {sortedOptions.map((opt) => {
-                  const isActive = currentStatus === opt.value;
-                  const activeCls = pillClass(opt.value);
-                  const inactiveCls =
-                    "bg-[#0B0B0C] border border-[#26262A] text-zinc-300 hover:bg-[#1B1B1E] hover:text-white font-bold";
+            <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 relative z-10">
+              {/* SUBHEADER estruturado e equilibrado */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs sm:text-sm truncate font-bold text-zinc-300">
+                    {r.title || "Orçamento"}
+                  </div>
 
-                  return (
+                  <div className="flex items-center gap-1.5 sm:gap-2 mt-2 flex-wrap">
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-zinc-200 text-[10.5px] sm:text-xs font-bold tabular-nums">
+                      <Calendar size={12} className="text-[var(--gm-primary)] shrink-0" />
+                      <span>{created ? created.toLocaleDateString("pt-BR") : "-"}</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] text-zinc-200 text-[10.5px] sm:text-xs font-bold tabular-nums">
+                      <Clock size={12} className="text-[var(--gm-primary)] shrink-0" />
+                      <span>{r.delivery_days ?? 5} dias úteis</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0 pl-1">
+                  <div className="text-[10px] text-zinc-400 font-mono font-bold uppercase tracking-wider">
+                    #{String(idx + 1).padStart(2, "0")} · Total
+                  </div>
+                </div>
+              </div>
+
+              {/* FOOTER: cápsulas + 6 botões organizados */}
+              <div className="mt-3.5 pt-3 border-t border-[#26262A] flex flex-col gap-2">
+                {/* Cápsulas de status uniformes sem cortar palavras no mobile */}
+                <div className="grid grid-cols-4 gap-1 sm:gap-1.5 w-full">
+                  {sortedOptions.map((opt) => {
+                    const isActive = currentStatus === opt.value;
+                    const activeCls = pillClass(opt.value);
+                    const inactiveCls =
+                      "bg-[#0B0B0C] border border-[#26262A] text-zinc-300 hover:bg-[#1B1B1E] hover:text-white font-bold";
+
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateStatusInstant(r.id, opt.value);
+                        }}
+                        className={`gm-status-capsule w-full h-9 sm:h-8 min-h-[36px] sm:min-h-[32px] px-0.5 sm:px-1 rounded-[4px] text-[9.5px] sm:text-[11px] font-black tracking-tighter sm:tracking-tight transition-all truncate flex items-center justify-center border cursor-pointer ${
+                          isActive ? activeCls : inactiveCls
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 6 BOTÕES DE AÇÃO */}
+                {(tab as any) !== "LIXEIRA" ? (
+                  <div className="grid grid-cols-6 gap-1 sm:gap-1.5 w-full mt-0.5">
                     <button
-                      key={opt.value}
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        updateStatusInstant(r.id, opt.value);
+                        setDuplicateId?.(r.id);
                       }}
-                      className={`gm-status-capsule w-full h-10 sm:h-8 min-h-[40px] sm:min-h-[32px] px-1 rounded-[4px] text-[11px] font-black tracking-tight transition-all truncate flex items-center justify-center border cursor-pointer ${
-                        isActive ? activeCls : inactiveCls
-                      }`}
+                      className="gm-grid-action-btn btn-modelo active:scale-95"
+                      title="Modelo"
                     >
-                      {opt.label}
+                      <span className="gm-grid-icon-wrap">
+                        <Copy size={16} className="shrink-0" />
+                      </span>
+                      <span className="gm-grid-label-wrap">
+                        <span className="sm:hidden">Mod</span>
+                        <span className="hidden sm:inline">Modelo</span>
+                      </span>
                     </button>
-                  );
-                })}
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditId(r.id);
+                      }}
+                      className="gm-grid-action-btn btn-editar active:scale-95"
+                      title="Editar"
+                    >
+                      <span className="gm-grid-icon-wrap">
+                        <Pencil size={16} className="shrink-0" />
+                      </span>
+                      <span className="gm-grid-label-wrap">
+                        <span className="sm:hidden">Edit</span>
+                        <span className="hidden sm:inline">Editar</span>
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShare(r);
+                      }}
+                      disabled={sharing === r.id}
+                      className="gm-grid-action-btn btn-whatsapp active:scale-95 disabled:opacity-50"
+                      title="WhatsApp"
+                    >
+                      <span className="gm-grid-icon-wrap">
+                        {sharing === r.id ? (
+                          <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <WhatsAppIcon size={16} className="shrink-0" />
+                        )}
+                      </span>
+                      <span className="gm-grid-label-wrap">
+                        <span className="sm:hidden">Zap</span>
+                        <span className="hidden sm:inline">WhatsApp</span>
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePdf(r.id, r.tenant_id);
+                      }}
+                      className="gm-grid-action-btn btn-baixar active:scale-95"
+                      title="Baixar PDF"
+                    >
+                      <span className="gm-grid-icon-wrap">
+                        <FileDown size={16} className="shrink-0" />
+                      </span>
+                      <span className="gm-grid-label-wrap">
+                        <span className="sm:hidden">PDF</span>
+                        <span className="hidden sm:inline">Baixar</span>
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setReminderConfigOpen(true);
+                      }}
+                      className="gm-grid-action-btn btn-programar active:scale-95"
+                      title="Programar"
+                    >
+                      <span className="gm-grid-icon-wrap">
+                        <Bell size={16} className="shrink-0" />
+                      </span>
+                      <span className="gm-grid-label-wrap">
+                        <span className="sm:hidden">Prog</span>
+                        <span className="hidden sm:inline">Programar</span>
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        softDelete(r.id);
+                      }}
+                      className="gm-grid-action-btn btn-lixeira active:scale-95"
+                      title="Lixeira"
+                    >
+                      <span className="gm-grid-icon-wrap">
+                        <Trash2 size={16} className="shrink-0" />
+                      </span>
+                      <span className="gm-grid-label-wrap">
+                        <span className="sm:hidden">Lixo</span>
+                        <span className="hidden sm:inline">Lixeira</span>
+                      </span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 w-full mt-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        restore(r.id);
+                      }}
+                      className="h-10 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                      title="Restaurar orçamento"
+                    >
+                      <RotateCcw size={16} />
+                      <span>Restaurar</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        confirmHardDelete(r.id);
+                      }}
+                      className="h-10 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                      title="Excluir definitivamente"
+                    >
+                      <Trash2 size={16} />
+                      <span>Excluir Definitivo</span>
+                    </button>
+                  </div>
+                )}
               </div>
-
-              {/* 6 BOTÕES DE AÇÃO: ÍCONES EM REPOUSO (LARANJA), TROCA PELO NOME COM COR EXCLUSIVA NO HOVER */}
-              {(tab as any) !== "LIXEIRA" ? (
-                <div className="grid grid-cols-6 gap-1 sm:gap-1.5 w-full mt-1">
-                  {/* 1. USAR MODELO - Hover: Laranja vívido (text-orange-400) */}
-                  <button
-                    type="button"
-                    onClick={() => setDuplicateId?.(r.id)}
-                    className="gm-grid-action-btn btn-modelo active:scale-95"
-                    title="Modelo"
-                  >
-                    <span className="gm-grid-icon-wrap">
-                      <Copy size={17} className="shrink-0" />
-                    </span>
-                    <span className="gm-grid-label-wrap">
-                      <span className="sm:hidden">Mod</span>
-                      <span className="hidden sm:inline">Modelo</span>
-                    </span>
-                  </button>
-
-                  {/* 2. EDITAR - Hover: Âmbar / Amarelo ouro (text-amber-400) */}
-                  <button
-                    type="button"
-                    onClick={() => setEditId(r.id)}
-                    className="gm-grid-action-btn btn-editar active:scale-95"
-                    title="Editar"
-                  >
-                    <span className="gm-grid-icon-wrap">
-                      <Pencil size={17} className="shrink-0" />
-                    </span>
-                    <span className="gm-grid-label-wrap">
-                      <span className="sm:hidden">Edit</span>
-                      <span className="hidden sm:inline">Editar</span>
-                    </span>
-                  </button>
-
-                  {/* 3. WHATSAPP - Hover: Verde esmeralda (text-emerald-400) */}
-                  <button
-                    type="button"
-                    onClick={() => handleShare(r)}
-                    disabled={sharing === r.id}
-                    className="gm-grid-action-btn btn-whatsapp active:scale-95 disabled:opacity-50"
-                    title="WhatsApp"
-                  >
-                    <span className="gm-grid-icon-wrap">
-                      {sharing === r.id ? (
-                        <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <WhatsAppIcon size={17} className="shrink-0" />
-                      )}
-                    </span>
-                    <span className="gm-grid-label-wrap">
-                      <span className="sm:hidden">Zap</span>
-                      <span className="hidden sm:inline">WhatsApp</span>
-                    </span>
-                  </button>
-
-                  {/* 4. BAIXAR PDF - Hover: Azul celeste (text-sky-400) */}
-                  <button
-                    type="button"
-                    onClick={() => handlePdf(r.id, r.tenant_id)}
-                    className="gm-grid-action-btn btn-baixar active:scale-95"
-                    title="Baixar PDF"
-                  >
-                    <span className="gm-grid-icon-wrap">
-                      <FileDown size={17} className="shrink-0" />
-                    </span>
-                    <span className="gm-grid-label-wrap">
-                      <span className="sm:hidden">PDF</span>
-                      <span className="hidden sm:inline">Baixar</span>
-                    </span>
-                  </button>
-
-                  {/* 5. PROGRAMAR LEMBRETES - Hover: Roxo / Violeta neon (text-purple-400) */}
-                  <button
-                    type="button"
-                    onClick={() => setReminderConfigOpen(true)}
-                    className="gm-grid-action-btn btn-programar active:scale-95"
-                    title="Programar"
-                  >
-                    <span className="gm-grid-icon-wrap">
-                      <Bell size={17} className="shrink-0" />
-                    </span>
-                    <span className="gm-grid-label-wrap">
-                      <span className="sm:hidden">Prog</span>
-                      <span className="hidden sm:inline">Programar</span>
-                    </span>
-                  </button>
-
-                  {/* 6. LIXEIRA - Hover: Vermelho coral (text-red-400) */}
-                  <button
-                    type="button"
-                    onClick={() => softDelete(r.id)}
-                    className="gm-grid-action-btn btn-lixeira active:scale-95"
-                    title="Lixeira"
-                  >
-                    <span className="gm-grid-icon-wrap">
-                      <Trash2 size={17} className="shrink-0" />
-                    </span>
-                    <span className="gm-grid-label-wrap">
-                      <span className="sm:hidden">Lixo</span>
-                      <span className="hidden sm:inline">Lixeira</span>
-                    </span>
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 w-full mt-1">
-                  <button
-                    type="button"
-                    onClick={() => restore(r.id)}
-                    className="h-10 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-                    title="Restaurar orçamento"
-                  >
-                    <RotateCcw size={16} />
-                    <span>Restaurar</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => confirmHardDelete(r.id)}
-                    className="h-10 rounded-[6px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-                    title="Excluir definitivamente"
-                  >
-                    <Trash2 size={16} />
-                    <span>Excluir Definitivo</span>
-                  </button>
-                </div>
-              )}
             </div>
-          </Card>
+          </div>
         );
       })}
     </div>
@@ -1582,15 +1645,32 @@ export default function Budgets() {
     <Page
       title="Orçamentos"
       actions={
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
+        <div className="flex flex-col md:flex-row items-center gap-2.5 md:gap-3 w-full md:w-auto justify-center md:justify-end">
+          {/* BOTÃO PRIMÁRIO: FORGE BUTTON (CENTRALIZADO ABAIXO DO TÍTULO NO MOBILE) */}
+          <button 
+            className="forge-btn forge-btn--primary w-full md:w-auto !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 cursor-pointer md:order-2" 
+            type="button" 
+            onClick={openNewBudgetWithCheck}
+            title="Criar Novo Orçamento"
+          >
+            {isExpired || !budgetQuota.allowed ? (
+              <Lock size={17} className="shrink-0 text-[#0b0b0c]" />
+            ) : (
+              <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
+                <Plus size={20} strokeWidth={2.6} className="w-5 h-5 shrink-0 gm-btn-plus-black text-[#0b0b0c]" />
+              </span>
+            )}
+            <span className="text-sm font-bold uppercase tracking-wider">Novo Orçamento</span>
+          </button>
+
           {/* SELETOR DE MODO NO CABEÇALHO DO TOPO (FORGE UI SYSTEM) */}
-          <div className="flex items-center gap-1 p-1 bg-[#131315] border border-[#26262a] rounded-[6px] h-11">
+          <div className="flex items-center justify-center gap-1 p-1 bg-[#131315] border border-[#26262a] rounded-[6px] h-11 w-full md:w-auto md:order-1">
             <button
               type="button"
               onClick={() => handleSetViewMode("grid")}
               aria-pressed={viewMode === "grid"}
               data-selected={viewMode === "grid"}
-              className={`h-9 px-3.5 rounded-[4px] text-[13px] font-bold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${
+              className={`flex-1 md:flex-initial h-9 px-3.5 rounded-[4px] text-[13px] font-bold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${
                 viewMode === "grid"
                   ? "gm-viewmode-btn-active !h-9 !px-3.5 font-bold text-white"
                   : "gm-viewmode-btn-inactive !h-9 !px-3.5"
@@ -1605,7 +1685,7 @@ export default function Budgets() {
               onClick={() => handleSetViewMode("list")}
               aria-pressed={viewMode === "list"}
               data-selected={viewMode === "list"}
-              className={`h-9 px-3.5 rounded-[4px] text-[13px] font-bold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${
+              className={`flex-1 md:flex-initial h-9 px-3.5 rounded-[4px] text-[13px] font-bold transition-[background-color,color,transform] duration-150 active:scale-[0.96] flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider ${
                 viewMode === "list"
                   ? "gm-viewmode-btn-active !h-9 !px-3.5 font-bold text-white"
                   : "gm-viewmode-btn-inactive !h-9 !px-3.5"
@@ -1616,23 +1696,6 @@ export default function Budgets() {
               <span>Listas</span>
             </button>
           </div>
-
-          {/* BOTÃO PRIMÁRIO: FORGE BUTTON */}
-          <button 
-            className="forge-btn forge-btn--primary !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2.5 active:scale-[0.96] transition-[transform,background-color,box-shadow] duration-150 cursor-pointer" 
-            type="button" 
-            onClick={openNewBudgetWithCheck}
-            title="Criar Novo Orçamento"
-          >
-            {isExpired || !budgetQuota.allowed ? (
-              <Lock size={17} className="shrink-0 text-[#0b0b0c]" />
-            ) : (
-              <span className="gm-plus-icon-wrapper inline-flex items-center justify-center shrink-0">
-                <Plus size={20} strokeWidth={2.6} className="w-5 h-5 shrink-0 gm-btn-plus-black text-[#0b0b0c]" />
-              </span>
-            )}
-            <span className="text-sm font-bold uppercase tracking-wider">Novo Orçamento</span>
-          </button>
         </div>
       }
     >
@@ -1652,7 +1715,7 @@ export default function Budgets() {
       <div className="mb-6 space-y-4">
         <SectionDivider label="Resumo" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+        <div className="gm-metrics-stack lg:grid lg:grid-cols-3 lg:gap-4 items-stretch">
           <ForgeSpecCard
             id="01"
             title="EM ABERTO"
@@ -1660,8 +1723,10 @@ export default function Budgets() {
             statusLive={true}
             eyebrow="AGUARDANDO + APROVADO"
             figure={CURRENCY.format(statusSummary.totalAtivo)}
+            headerSummary={CURRENCY.format(statusSummary.totalAtivo)}
+            barClassName="bg-gradient-to-r from-[#3E1807]/90 via-[#25120A]/80 to-[#131315] lg:bg-none"
             animationKey={tab}
-            className="h-full"
+            className="gm-metric-folder-card gm-metric-folder-card--1 h-full !border-[var(--gm-primary,#FE540B)]/45 lg:!border-[#26262A] hover:!border-[var(--gm-primary,#FE540B)]/75"
             tags={[
               { label: <><AnimatedNumber value={statusSummary.countAtivo} replayKey={tab} /> ORÇAMENTO(S)</>, accent: true }
             ]}
@@ -1675,16 +1740,18 @@ export default function Budgets() {
             statusLive={true}
             eyebrow="FINALIZADOS COM SUCESSO"
             figure={CURRENCY.format(statusSummary.totalConcluido)}
+            headerSummary={CURRENCY.format(statusSummary.totalConcluido)}
+            barClassName="bg-gradient-to-r from-[#09291E]/90 via-[#0D211A]/80 to-[#131315] lg:bg-none"
             animationKey={tab}
-            className="h-full"
+            className="gm-metric-folder-card gm-metric-folder-card--2 h-full !border-emerald-500/45 lg:!border-[#26262A] hover:!border-emerald-400/75"
             tags={[
               { label: <><AnimatedNumber value={statusSummary.countConcluido} replayKey={tab} /> ORÇAMENTO(S)</>, accent: true }
             ]}
             onClick={() => { setTab("CONCLUIDOS"); setSelectedMonth("TODOS"); }}
           />
 
-          <div className="forge-spec h-full md:col-span-2 lg:col-span-1">
-            <div className="forge-spec__bar">
+          <div className="forge-spec gm-metric-folder-card gm-metric-folder-card--3 h-full md:col-span-2 lg:col-span-1 !border-sky-500/45 lg:!border-[#26262A]">
+            <div className="forge-spec__bar bg-gradient-to-r from-[#0C2538]/90 via-[#102434]/80 to-[#131315] lg:bg-none">
               <span className="forge-spec__id">03</span>
               <span className="forge-spec__title">VALOR POR STATUS</span>
               <span className="forge-spec__status forge-spec__status--live tabular-nums">

@@ -69,7 +69,15 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 bg-[#0B0B0C] text-[#F2F2F3] relative overflow-hidden select-none">
+    <div
+      className="min-h-[100dvh] w-full flex flex-col items-center justify-center px-4 sm:px-6 bg-[#0B0B0C] text-[#F2F2F3] relative overflow-x-hidden overflow-y-auto select-none"
+      style={{
+        paddingTop: "max(1.5rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+        WebkitOverflowScrolling: "touch",
+        touchAction: "pan-y",
+      }}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}

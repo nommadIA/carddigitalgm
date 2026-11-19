@@ -106,7 +106,6 @@ import {
   previewTypingSoundPreset,
   TYPING_SOUND_PRESETS,
 } from "../lib/audio";
-import { triggerRealNotification } from "../lib/realNotification";
 import { broadcastBackgroundChange, broadcastAppNotification } from "../lib/syncHub";
 import SmartphonePermissionModal from "../components/ui/SmartphonePermissionModal";
 import NotificationCheckinModal from "../components/notifications/NotificationCheckinModal";
@@ -1660,14 +1659,14 @@ export default function Configuracoes() {
     <Page
       title="Configurações"
       actions={
-        <div className="flex flex-wrap gap-2.5 w-full sm:w-auto items-center justify-end">
+        <div className="flex flex-wrap gap-2.5 w-full md:w-auto items-center justify-center md:justify-end">
           <AnimatePresence>
             {saveSuccess && (
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 h-10 rounded-[6px] text-xs font-bold uppercase tracking-wider"
+                className="flex items-center justify-center gap-1.5 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 h-10 rounded-[6px] text-xs font-bold uppercase tracking-wider w-full md:w-auto"
               >
                 <Check size={15} className="shrink-0" />
                 <span>Salvo!</span>
@@ -1676,7 +1675,7 @@ export default function Configuracoes() {
           </AnimatePresence>
           <button
             type="button"
-            className="w-full sm:w-auto sm:min-w-[196px] h-11 px-5 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#F65A1A))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#F65A1A))] text-sm uppercase tracking-wider font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-none active:scale-[0.96] disabled:opacity-50 whitespace-nowrap"
+            className="w-full md:w-auto md:min-w-[196px] h-11 px-5 rounded-[6px] bg-[var(--gm-btn-bg,var(--gm-primary,#F65A1A))] hover:brightness-110 text-[var(--gm-primary-foreground,#0B0B0C)] border border-[var(--gm-btn-border,var(--gm-primary,#F65A1A))] text-sm uppercase tracking-wider font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-none active:scale-[0.96] disabled:opacity-50 whitespace-nowrap"
             onClick={handleSave}
             disabled={saving}
           >
@@ -3011,17 +3010,10 @@ export default function Configuracoes() {
 
                         setTesting(true);
                         try {
-                          // 1. Dispara localmente
-                          await triggerRealNotification({
+                          // Dispara uma única notificação local + simultânea para outros dispositivos da conta
+                          await broadcastAppNotification(tenantId, {
                             title: "CardDigital GM · Notificação Simultânea",
-                            body: "Notificação funcionando simultaneamente no Smartphone e Desktop!",
-                            soundId: activeSound,
-                          });
-
-                          // 2. Dispara simultaneamente para todos os dispositivos logados na mesma conta
-                          broadcastAppNotification(tenantId, {
-                            title: "CardDigital GM · Teste Simultâneo",
-                            message: "Notificação disparada e sincronizada em todos os seus dispositivos!",
+                            message: "Notificação funcionando simultaneamente no Smartphone e Desktop!",
                             type: "system",
                           });
                         } catch (e) {

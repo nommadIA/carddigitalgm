@@ -1,25 +1,16 @@
 {
+  "id": "/",
   "name": "CardDigital GM",
-  "short_name": "CardDigitalGM",
+  "short_name": "CardDigital",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0b1220",
-  "theme_color": "#ff6600",
-  "description": "Gestão de Orçamentos, Clientes e Despesas",
+  "display_override": ["fullscreen", "standalone"],
+  "background_color": "#0B0B0C",
+  "theme_color": "#0B0B0C",
+  "description": "Gestão profissional para designers e agências com IA e Orçamentos.",
   "gcm_sender_id": "594745417419",
   "icons": [
-    {
-      "src": "/logo.png",
-      "sizes": "192x192 512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.png",
-      "sizes": "192x192 512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
@@ -31,6 +22,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

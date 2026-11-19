@@ -1049,9 +1049,9 @@ const Market = () => {
     <Page 
         title="Mercado"
         actions={
-            <div className="flex gap-2.5">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center md:justify-end gap-2.5 w-full md:w-auto">
                 <button 
-                    className="forge-btn forge-btn--secondary !h-11 !min-h-[44px] !px-4 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] group cursor-pointer" 
+                    className="forge-btn forge-btn--secondary w-full md:w-auto !h-11 !min-h-[44px] !px-4 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 group cursor-pointer" 
                     onClick={() => setShowHistory(!showHistory)}
                 >
                     <History size={19} className="w-5 h-5 shrink-0 stroke-[2]" />
@@ -1059,7 +1059,7 @@ const Market = () => {
                 </button>
                 {!showHistory && cartItems.length > 0 && (
                     <button 
-                        className="forge-btn forge-btn--primary !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] group cursor-pointer" 
+                        className="forge-btn forge-btn--primary w-full md:w-auto !h-11 !min-h-[44px] !px-5 !rounded-[6px] text-sm font-bold uppercase tracking-[0.05em] inline-flex items-center justify-center gap-2 group cursor-pointer" 
                         onClick={handleShare}
                     >
                         <Share2 size={19} className="w-5 h-5 shrink-0 stroke-[2.5]" />
@@ -1069,14 +1069,14 @@ const Market = () => {
             </div>
         }
     >
-       <div className="w-full space-y-6 pb-4">
+       <div className="w-full min-w-0 space-y-6 pb-4">
        <SectionDivider label="Resumo Financeiro" />
        <Grid cols={1}>
-           <div className="relative rounded-lg border border-[#26262A] bg-[#131315] p-0 overflow-hidden">
-              <div className="p-5 sm:p-6 flex flex-col md:flex-row justify-between items-center gap-5 relative z-10">
-                 <div>
+           <div className="relative w-full min-w-0 rounded-lg border border-[#26262A] bg-[#131315] p-0 overflow-hidden">
+              <div className="p-4 sm:p-6 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-5 relative z-10">
+                 <div className="w-full md:w-auto text-center md:text-left">
                     <p className="text-[11px] font-mono uppercase tracking-[0.14em] font-semibold mb-1.5 text-[#8B8B92]">Saldo Disponível</p>
-                    <div className="flex items-center justify-center sm:justify-start gap-3.5">
+                    <div className="flex items-center justify-center md:justify-start gap-3.5">
                         <div className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums text-[var(--gm-primary)]">
                             <AnimatedNumber value={availableBalanceDisplay} currency decimals={2} replayKey={String(showHistory)} />
                         </div>
@@ -1104,7 +1104,7 @@ const Market = () => {
                         </div>
                      </div>
                  </div>
-                 <div className="text-center md:text-right bg-[#0B0B0C] px-5 py-4 rounded-md border border-[#26262A] min-w-[190px]">
+                 <div className="text-center md:text-right bg-[#0B0B0C] px-5 py-4 rounded-md border border-[#26262A] w-full md:w-auto md:min-w-[190px]">
                      <p className="text-[11px] font-mono uppercase tracking-[0.14em] font-semibold mb-1 text-[#8B8B92]">Total da Lista</p>
                      <div className="text-2xl font-bold tabular-nums text-[#F2F2F3]">
                          <AnimatedNumber value={totalListValue} currency decimals={2} replayKey={String(showHistory)} />
@@ -1232,7 +1232,7 @@ const Market = () => {
        ) : (
            <Grid cols={1} className="gap-6">
                 {/* Add Item Form */}
-                <div className="p-6 rounded-lg bg-[#131315] border border-[#26262A] !overflow-visible !contain-none relative z-30 shadow-none">
+                <div className="w-full min-w-0 p-4 sm:p-6 rounded-lg bg-[#131315] border border-[#26262A] !overflow-visible !contain-none relative z-30 shadow-none">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                         <div className="text-lg font-bold text-white flex items-center gap-2">
                             <span>Adicionar Item</span>
@@ -1245,13 +1245,13 @@ const Market = () => {
                         )}
                     </div>
 
-                    <div className="flex flex-col gap-5">
+                    <div className="flex flex-col gap-5 w-full min-w-0">
                         {/* 4 Voice Commands Section */}
-                        <div className="w-full bg-[#0B0B0C] p-4 rounded-md border border-[#26262A]">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <div className="w-full min-w-0 bg-[#0B0B0C] p-3 sm:p-4 rounded-md border border-[#26262A]">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-3">
                                 <span className="text-xs uppercase tracking-wider font-bold text-slate-300 flex items-center gap-1.5">
-                                    <Mic size={15} className="text-[var(--gm-primary)]" />
-                                    Captação por Voz (4 Comandos)
+                                    <Mic size={15} className="text-[var(--gm-primary)] shrink-0" />
+                                    <span className="truncate">Captação por Voz (4 Comandos)</span>
                                 </span>
                                 <span className="text-[11px] text-slate-400">
                                     {voiceStep === 'product' && '📍 Etapa atual: 1. Produto'}
@@ -1264,7 +1264,7 @@ const Market = () => {
                             </div>
 
                             {/* 4 Comandos de Voz */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2.5">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2.5 w-full min-w-0">
                                 {/* 1. PRODUTO */}
                                 <button 
                                     type="button"
@@ -1272,7 +1272,7 @@ const Market = () => {
                                     disabled={isListening || processingVoice}
                                     aria-pressed={voiceStep === 'product' || activeVoiceCommand === 'product'}
                                     data-selected={voiceStep === 'product' || activeVoiceCommand === 'product' ? 'true' : undefined}
-                                    className={`px-3 !h-[38px] rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    className={`w-full min-w-0 px-2 sm:px-3 !h-[38px] rounded-[6px] text-[11px] sm:text-[11.5px] font-semibold uppercase tracking-[0.04em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer overflow-hidden ${
                                         activeVoiceCommand === 'product' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'product' && processingVoice
@@ -1284,16 +1284,16 @@ const Market = () => {
                                     title="Gravar por voz: 1. Produto"
                                 >
                                     {activeVoiceCommand === 'product' && isListening ? (
-                                        <span className="relative flex h-2 w-2">
+                                        <span className="relative flex h-2 w-2 shrink-0">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                         </span>
                                     ) : activeVoiceCommand === 'product' && processingVoice ? (
-                                        <Loader2 size={13} className="animate-spin text-white" />
+                                        <Loader2 size={13} className="animate-spin text-white shrink-0" />
                                     ) : (
-                                        <Mic size={13} className={voiceStep === 'product' ? 'text-white' : 'text-[#FF7A38]'} />
+                                        <Mic size={13} className={`shrink-0 ${voiceStep === 'product' ? 'text-white' : 'text-[#FF7A38]'}`} />
                                     )}
-                                    <span>1. Produto</span>
+                                    <span className="truncate">1. Produto</span>
                                 </button>
 
                                 {/* 2. PREÇO */}
@@ -1303,7 +1303,7 @@ const Market = () => {
                                     disabled={isListening || processingVoice}
                                     aria-pressed={voiceStep === 'price' || activeVoiceCommand === 'price'}
                                     data-selected={voiceStep === 'price' || activeVoiceCommand === 'price' ? 'true' : undefined}
-                                    className={`px-3 !h-[38px] rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    className={`w-full min-w-0 px-2 sm:px-3 !h-[38px] rounded-[6px] text-[11px] sm:text-[11.5px] font-semibold uppercase tracking-[0.04em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer overflow-hidden ${
                                         activeVoiceCommand === 'price' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'price' && processingVoice
@@ -1315,16 +1315,16 @@ const Market = () => {
                                     title="Gravar por voz: 2. Preço"
                                 >
                                     {activeVoiceCommand === 'price' && isListening ? (
-                                        <span className="relative flex h-2 w-2">
+                                        <span className="relative flex h-2 w-2 shrink-0">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                         </span>
                                     ) : activeVoiceCommand === 'price' && processingVoice ? (
-                                        <Loader2 size={13} className="animate-spin text-white" />
+                                        <Loader2 size={13} className="animate-spin text-white shrink-0" />
                                     ) : (
-                                        <Mic size={13} className={voiceStep === 'price' ? 'text-white' : 'text-[#FF7A38]'} />
+                                        <Mic size={13} className={`shrink-0 ${voiceStep === 'price' ? 'text-white' : 'text-[#FF7A38]'}`} />
                                     )}
-                                    <span>2. Preço</span>
+                                    <span className="truncate">2. Preço</span>
                                 </button>
 
                                 {/* 3. VALOR */}
@@ -1334,7 +1334,7 @@ const Market = () => {
                                     disabled={isListening || processingVoice}
                                     aria-pressed={voiceStep === 'value' || activeVoiceCommand === 'value'}
                                     data-selected={voiceStep === 'value' || activeVoiceCommand === 'value' ? 'true' : undefined}
-                                    className={`px-3 !h-[38px] rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    className={`w-full min-w-0 px-2 sm:px-3 !h-[38px] rounded-[6px] text-[11px] sm:text-[11.5px] font-semibold uppercase tracking-[0.04em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer overflow-hidden ${
                                         activeVoiceCommand === 'value' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'value' && processingVoice
@@ -1346,16 +1346,16 @@ const Market = () => {
                                     title="Gravar por voz: 3. Valor"
                                 >
                                     {activeVoiceCommand === 'value' && isListening ? (
-                                        <span className="relative flex h-2 w-2">
+                                        <span className="relative flex h-2 w-2 shrink-0">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                         </span>
                                     ) : activeVoiceCommand === 'value' && processingVoice ? (
-                                        <Loader2 size={13} className="animate-spin text-white" />
+                                        <Loader2 size={13} className="animate-spin text-white shrink-0" />
                                     ) : (
-                                        <Mic size={13} className={voiceStep === 'value' ? 'text-white' : 'text-[#FF7A38]'} />
+                                        <Mic size={13} className={`shrink-0 ${voiceStep === 'value' ? 'text-white' : 'text-[#FF7A38]'}`} />
                                     )}
-                                    <span>3. Valor</span>
+                                    <span className="truncate">3. Valor</span>
                                 </button>
 
                                 {/* 4. QUANTIDADE */}
@@ -1365,7 +1365,7 @@ const Market = () => {
                                     disabled={isListening || processingVoice}
                                     aria-pressed={voiceStep === 'quantity' || activeVoiceCommand === 'quantity'}
                                     data-selected={voiceStep === 'quantity' || activeVoiceCommand === 'quantity' ? 'true' : undefined}
-                                    className={`px-3 !h-[38px] rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer ${
+                                    className={`w-full min-w-0 px-2 sm:px-3 !h-[38px] rounded-[6px] text-[11px] sm:text-[11.5px] font-semibold uppercase tracking-[0.04em] transition-all flex items-center justify-center gap-1.5 border shadow-none cursor-pointer overflow-hidden ${
                                         activeVoiceCommand === 'quantity' && isListening 
                                             ? 'bg-red-500 text-white border-red-400 animate-pulse'
                                             : activeVoiceCommand === 'quantity' && processingVoice
@@ -1377,16 +1377,16 @@ const Market = () => {
                                     title="Gravar por voz: 4. Quantidade"
                                 >
                                     {activeVoiceCommand === 'quantity' && isListening ? (
-                                        <span className="relative flex h-2 w-2">
+                                        <span className="relative flex h-2 w-2 shrink-0">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                         </span>
                                     ) : activeVoiceCommand === 'quantity' && processingVoice ? (
-                                        <Loader2 size={13} className="animate-spin text-white" />
+                                        <Loader2 size={13} className="animate-spin text-white shrink-0" />
                                     ) : (
-                                        <Mic size={13} className={voiceStep === 'quantity' ? 'text-white' : 'text-[#FF7A38]'} />
+                                        <Mic size={13} className={`shrink-0 ${voiceStep === 'quantity' ? 'text-white' : 'text-[#FF7A38]'}`} />
                                     )}
-                                    <span>4. Quantidade</span>
+                                    <span className="truncate">4. Quantidade</span>
                                 </button>
                             </div>
 
@@ -1397,7 +1397,7 @@ const Market = () => {
                                 disabled={isListening || processingVoice}
                                 aria-pressed={activeVoiceCommand === 'sequential'}
                                 data-selected={activeVoiceCommand === 'sequential' ? 'true' : undefined}
-                                className={`w-full !h-[40px] !px-4 !rounded-[6px] text-[11.5px] font-semibold uppercase tracking-[0.05em] flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                                className={`w-full min-w-0 max-w-full !h-auto min-h-[42px] py-2.5 !px-3 sm:!px-4 !rounded-[6px] !whitespace-normal text-center leading-snug text-[11px] sm:text-[11.5px] font-semibold uppercase tracking-[0.04em] flex items-center justify-center gap-2 border transition-all cursor-pointer ${
                                     activeVoiceCommand === 'sequential' && isListening
                                         ? 'bg-red-500 text-white border-red-400 animate-pulse shadow-none'
                                         : activeVoiceCommand === 'sequential' && processingVoice
@@ -1407,26 +1407,26 @@ const Market = () => {
                             >
                                 {activeVoiceCommand === 'sequential' && isListening ? (
                                     <>
-                                        <Loader2 size={14} className="animate-spin text-white" />
+                                        <Loader2 size={14} className="animate-spin text-white shrink-0" />
                                         <span>Ouvindo passo atual...</span>
                                     </>
                                 ) : activeVoiceCommand === 'sequential' && processingVoice ? (
                                     <>
-                                        <Loader2 size={14} className="animate-spin text-white" />
+                                        <Loader2 size={14} className="animate-spin text-white shrink-0" />
                                         <span>Processando fala...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Mic size={14} className="forge-btn__icon" />
-                                        <span>Gravar Sequencial Completo (1. Produto ➔ 2. Preço ➔ 4. Qtd)</span>
+                                        <Mic size={14} className="forge-btn__icon shrink-0" />
+                                        <span className="leading-snug">GRAVAR SEQUENCIA</span>
                                     </>
                                 )}
                             </button>
                         </div>
 
-                        <div className="flex flex-col gap-2">
-                            <div className="flex flex-col md:flex-row gap-4 items-end">
-                                <div className="flex-1 w-full relative" ref={productContainerRef}>
+                        <div className="flex flex-col gap-2 w-full min-w-0">
+                            <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-end w-full min-w-0">
+                                <div className="flex-1 w-full min-w-0 relative" ref={productContainerRef}>
                                     <label className="gm-label mb-1.5 flex items-center justify-between">
                                         <span>Produto (1. Alimento / Item)</span>
                                         {voiceStep === 'product' && (
@@ -1574,12 +1574,12 @@ const Market = () => {
                     </div>
                 </div>
 
-                <div className="bg-[#131315] rounded-lg border border-[#26262A] overflow-hidden mt-6 p-0">
-                    <div className="bg-[#131315] p-5 border-b border-[#26262A] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="w-full min-w-0 bg-[#131315] rounded-lg border border-[#26262A] overflow-hidden mt-6 p-0">
+                    <div className="bg-[#131315] p-4 sm:p-5 border-b border-[#26262A] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="text-lg font-bold text-[#F2F2F3]">Itens na Lista ({cartItems.length})</div>
                         {cartItems.length > 0 && (
                             <button 
-                                className="forge-btn forge-btn--primary !h-[40px] !px-5 !rounded-[6px] text-xs font-semibold uppercase tracking-wider flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0 disabled:opacity-50"
+                                className="forge-btn forge-btn--primary !h-[40px] w-full sm:w-auto !px-5 !rounded-[6px] text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap shrink-0 disabled:opacity-50"
                                 onClick={() => setShowFinalizeConfirm(true)}
                                 disabled={finalizing}
                             >
@@ -1589,24 +1589,24 @@ const Market = () => {
                         )}
                     </div>
                     {cartItems.length === 0 ? (
-                        <div className="text-center text-[#8B8B92] py-12 flex flex-col items-center border border-dashed border-[#26262A] rounded-md bg-[#0B0B0C] m-5">
+                        <div className="text-center text-[#8B8B92] py-12 flex flex-col items-center border border-dashed border-[#26262A] rounded-md bg-[#0B0B0C] m-4 sm:m-5">
                             <ShoppingCart size={40} className="mb-3 opacity-50 text-[#8B8B92]" />
                             <p className="text-sm text-[#8B8B92]">Sua lista de compras está vazia.</p>
                         </div>
                     ) : (
                         <div className="divide-y divide-[#26262A]">
                             {cartItems.map(item => (
-                                <div key={item.id} className="flex flex-col sm:flex-row justify-between sm:items-center py-4 px-5 hover:bg-[#1B1B1E] transition-colors gap-4">
-                                    <div className="flex items-center gap-4">
+                                <div key={item.id} className="flex flex-col sm:flex-row justify-between sm:items-center py-4 px-4 sm:px-5 hover:bg-[#1B1B1E] transition-colors gap-4 min-w-0">
+                                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                                         <div className="w-10 h-10 rounded-[4px] bg-[#0B0B0C] border border-[#26262A] flex items-center justify-center font-bold tabular-nums text-[#F2F2F3] text-sm flex-shrink-0">
                                             {item.quantity}x
                                         </div>
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <div className="font-bold text-base text-[#F2F2F3] truncate">{item.name}</div>
                                             <div className="text-xs text-[#8B8B92] mt-0.5 tabular-nums">Unitário: {CURRENCY_FORMATTER.format(item.unit_price)}</div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-between sm:justify-end gap-5">
+                                    <div className="flex items-center justify-between sm:justify-end gap-5 shrink-0">
                                         <span className="font-bold text-lg tabular-nums text-[var(--gm-primary)]">{CURRENCY_FORMATTER.format(Number(item.unit_price) * Number(item.quantity))}</span>
                                         <button 
                                             type="button"

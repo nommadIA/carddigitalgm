@@ -15,11 +15,11 @@ export function Page({ title, subtitle, actions, children, className }: PageProp
   return (
     <div className={`min-h-full flex flex-col w-full min-w-0 ${className || ""}`}>
       {showHeader && (
-        <div className="gm-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 pb-4 border-b border-[#26262A]">
-          <div className="gm-title min-w-0 flex-1">
+        <div className="gm-header flex flex-col md:flex-row items-center justify-between gap-2.5 md:gap-4 mb-4 md:mb-6 pb-3 md:pb-4 border-b border-[#26262A]">
+          <div className="gm-title w-full md:w-auto min-w-0 flex-1 flex flex-col items-center text-center md:items-start md:text-left">
             {typeof title === "string" ? (
               title ? (
-                <h1 className="text-[clamp(1.5rem,2.4vw,2rem)] font-black tracking-tight text-white flex items-center gap-2.5 leading-tight">
+                <h1 className="w-full md:w-auto text-[clamp(1.25rem,3.6vw,1.95rem)] font-black tracking-tight text-white flex items-center justify-center md:justify-start gap-2 leading-tight text-center md:text-left">
                   {title}
                 </h1>
               ) : null
@@ -27,13 +27,13 @@ export function Page({ title, subtitle, actions, children, className }: PageProp
               title
             )}
             {subtitle && (
-              <p className="gm-subtitle-text text-sm font-medium text-[#CBD5E1] mt-1.5 leading-relaxed">
+              <p className="gm-subtitle-text text-xs md:text-sm font-medium text-[#CBD5E1] mt-1 md:mt-1.5 leading-relaxed text-center md:text-left">
                 {subtitle}
               </p>
             )}
           </div>
           {actions && (
-            <div className="gm-row w-full sm:w-auto shrink-0 flex flex-wrap items-center gap-2.5">
+            <div className="gm-row w-full md:w-auto shrink-0 flex flex-wrap items-center justify-center md:justify-end gap-2 md:gap-2.5">
               {actions}
             </div>
           )}

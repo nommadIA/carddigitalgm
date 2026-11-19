@@ -911,8 +911,12 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       {/* MOBILE TOP HEADER - GLASSMORPHISM FROSTED (PORTAL NO BODY PARA BLUR REAL) */}
       {typeof document !== "undefined" && createPortal(
         <header 
-          className="fixed top-0 left-0 right-0 w-full h-16 z-[100] flex md:hidden items-center justify-between gap-2 px-3 sm:px-4 gm-mobile-header select-none"
-          style={{ zIndex: 100 }}
+          className="fixed top-0 left-0 right-0 w-full z-[100] flex md:hidden items-center justify-between gap-2 px-3 sm:px-4 gm-mobile-header select-none"
+          style={{
+            zIndex: 100,
+            paddingTop: "env(safe-area-inset-top, 0px)",
+            height: "calc(64px + env(safe-area-inset-top, 0px))",
+          }}
         >
           <div className="flex items-center gap-2.5 min-w-0">
               <div className="relative flex items-center justify-center shrink-0">
@@ -1196,7 +1200,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
           <div className="gm-bg-prism-layer" style={{ zIndex: 0 }} aria-hidden="true" />
         )}
 
-        <div className="gm-container w-full max-w-[1440px] min-[1441px]:max-w-[1536px] mx-auto flex flex-col items-stretch px-4 sm:px-6 lg:px-10 xl:px-12 pt-20 md:pt-8 lg:pt-10 pb-[calc(var(--gm-mobile-nav-safe-height,96px)+28px)] md:pb-12 relative z-10">
+        <div className="gm-container w-full max-w-[1440px] min-[1441px]:max-w-[1536px] mx-auto flex flex-col items-stretch px-4 sm:px-6 lg:px-10 xl:px-12 pt-20 md:pt-8 lg:pt-10 pb-[calc(var(--gm-mobile-nav-safe-height,108px)+28px)] md:pb-12 relative z-10">
           {children}
         </div>
       </main>
@@ -1213,7 +1217,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.85, opacity: 0, y: 8 }}
                 transition={{ type: "spring", damping: 32, stiffness: 580, mass: 0.55 }}
-                className="fixed bottom-[calc(var(--gm-mobile-nav-safe-height,96px)+14px)] md:bottom-7 right-4 md:right-7 z-[10002] pointer-events-auto"
+                className="fixed bottom-[calc(var(--gm-mobile-nav-safe-height,108px)+14px)] md:bottom-7 right-4 md:right-7 z-[10002] pointer-events-auto"
               >
                 <button
                   type="button"

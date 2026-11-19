@@ -458,35 +458,35 @@ export default function AdminUsersManager() {
   return (
     <div className="w-full min-h-screen pb-6 text-[#f2f2f3] select-none space-y-6">
       {/* 1. TOP BANNER / NAVEGAÇÃO FORGE INDUSTRIAL */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-[#26262a]">
-        <div className="flex items-center gap-3.5">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-5 border-b border-[#26262a] text-center md:text-left">
+        <div className="flex flex-col md:flex-row items-center gap-3.5 w-full md:w-auto">
           <Link
             to="/"
-            className="w-10 h-10 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] hover:border-[var(--gm-primary,#FE540B)] flex items-center justify-center text-[#8b8b92] hover:text-white transition-all cursor-pointer shadow-sm group"
+            className="w-10 h-10 rounded-[4px] bg-[#1b1b1e] hover:bg-[#26262a] border border-[#26262a] hover:border-[var(--gm-primary,#FE540B)] flex items-center justify-center text-[#8b8b92] hover:text-white transition-all cursor-pointer shadow-sm group shrink-0"
             title="Voltar ao Dashboard"
           >
             <ArrowLeft size={16} className="transition-transform" />
           </Link>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center md:items-start">
+            <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
               <span className="px-2 py-0.5 rounded-[2px] text-xs font-mono font-bold uppercase tracking-wider bg-[var(--gm-primary,#FE540B)]/15 border border-[var(--gm-primary,#FE540B)]/40 text-[var(--gm-primary,#FE540B)]">
                 MÓDULO MASTER ADM
               </span>
               <span className="text-xs text-[#8b8b92] font-mono">Conta: gmedificacao@gmail.com</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[#f2f2f3] tracking-tight mt-1 flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#f2f2f3] tracking-tight mt-1 flex items-center justify-center md:justify-start gap-2.5 flex-wrap">
               <span>Gestão de Usuários & Assinaturas</span>
               <ShieldCheck size={22} className="text-[var(--gm-primary,#FE540B)] shrink-0" />
             </h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-start sm:justify-end">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto justify-center md:justify-end">
           <button
             type="button"
             onClick={loadUsers}
             disabled={loading}
-            className="h-10 px-4 rounded-[4px] text-xs font-mono font-bold tracking-wider uppercase inline-flex items-center gap-2 cursor-pointer transition-all border border-[#26262a] bg-[#131315] hover:bg-[#1b1b1e] text-[#f2f2f3] hover:border-[#38383f] disabled:opacity-50"
+            className="h-11 px-4 rounded-[6px] text-xs font-mono font-bold tracking-wider uppercase inline-flex items-center justify-center gap-2 cursor-pointer transition-all border border-[#26262a] bg-[#131315] hover:bg-[#1b1b1e] text-[#f2f2f3] hover:border-[#38383f] disabled:opacity-50 w-full sm:w-auto"
             title="Atualizar lista de usuários"
           >
             <RefreshCw size={13} className={loading ? "animate-spin text-[var(--gm-primary,#FE540B)]" : "text-[#8b8b92]"} />
@@ -495,7 +495,7 @@ export default function AdminUsersManager() {
 
           <Link
             to="/planos"
-            className="h-10 px-4 rounded-[4px] text-xs font-mono font-bold tracking-wider uppercase inline-flex items-center gap-2 cursor-pointer shadow-[0_2px_12px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0b0b0c)] active:scale-[0.99]"
+            className="h-11 px-4 rounded-[6px] text-xs font-mono font-bold tracking-wider uppercase inline-flex items-center justify-center gap-2 cursor-pointer shadow-[0_2px_12px_rgba(var(--gm-primary-rgb,246,90,26),0.3)] bg-[var(--gm-btn-bg,var(--gm-primary,#FE540B))] hover:brightness-110 text-[var(--gm-primary-foreground,#0b0b0c)] active:scale-[0.99] w-full sm:w-auto"
             title="Gerenciar valores e chaves Pix"
           >
             <Sparkles size={14} className="stroke-[2.5]" />

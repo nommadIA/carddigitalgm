@@ -249,7 +249,7 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <AuthProvider>
         <BootReady />
-        <div className="min-h-screen w-full max-w-full overflow-x-hidden">
+        <div className="min-h-screen w-full max-w-full overflow-x-clip">
           <Router>
             <AppRoutes />
           </Router>

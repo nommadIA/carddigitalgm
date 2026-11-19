@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>GM Edificação</title>
+    <title>CardDigital GM app</title>
 
     <!-- Safe fetch property configuration: Prevents "Cannot set property fetch of #<Window> which has only a getter" -->
     <script>
@@ -74,10 +74,10 @@
     </script>
     
     <!-- Open Graph / WhatsApp Rich Previews -->
-    <meta name="description" content="Orçamentos, serviços e atendimento em um único lugar.&#10;Design de Marcas | Material Gráfico | Comunicação Visual&#10;&#10;Acesse nosso site de forma rápida e segura!" />
+    <meta name="description" content="Gestão profissional para designers e agências com IA e Orçamentos." />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="GM Edificação" />
-    <meta property="og:description" content="Orçamentos, serviços e atendimento em um único lugar.&#10;Design de Marcas | Material Gráfico | Comunicação Visual&#10;&#10;Acesse nosso site de forma rápida e segura!" />
+    <meta property="og:title" content="CardDigital GM app" />
+    <meta property="og:description" content="Gestão profissional para designers e agências com IA e Orçamentos." />
     <meta property="og:image" content="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/logo.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="300" />
@@ -89,16 +89,15 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
-    <link
-      rel="apple-touch-icon"
-      href="https://hbvqfpqnuzvzcvhnickt.supabase.co/storage/v1/object/public/tenant-assets/6f4ee596-eb5e-415f-9189-d571ad85ed95/LOGO%20APP%20oficial.svg"
-    />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <meta name="theme-color" content="#ff7a00" />
+    <meta name="theme-color" content="#0B0B0C" />
 
-    <!-- PWA Manifest Placeholder -->
+    <!-- PWA Manifest & Full-Screen Mobile App Meta -->
     <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="CardDigital GM" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <link rel="preconnect" href="https://hbvqfpqnuzvzcvhnickt.supabase.co" crossorigin>
@@ -109,14 +108,18 @@
 
 <style>
   html, body {
-    background-color: var(--gm-bg, #0b0f14);
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100dvh;
+    background-color: var(--gm-bg, #0B0B0C);
     color: var(--gm-title, #ffffff);
     color-scheme: dark;
   }
   /* Base - Limpo e sem efeitos */
   .app-bg {
-    background: var(--gm-bg, #0b0f14);
-    min-height: 100vh;
+    background: var(--gm-bg, #0B0B0C);
+    min-height: 100dvh;
   }
   
   /* “Frame” de preview */
@@ -143,7 +146,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0b0e14;
+    background: #0B0B0C;
     overflow: hidden;
   }
 
@@ -345,7 +348,7 @@
         var reserved = [
           'login', 'register', 'auth', 'update-password', 'budgets', 
           'clients', 'expenses', 'market', 'notes', 'financial', 
-          'minha-bio', 'configuracoes', 'dashboard', 'pix'
+          'minha-bio', 'configuracoes', 'dashboard', 'pix', 'planos', 'admin'
         ];
         var isSite = (window.location.href.indexOf('/bio') !== -1 || hash.indexOf('/bio') !== -1) ||
                      (path && !reserved.includes(path)) ||
@@ -371,7 +374,7 @@
             var reserved = [
               'login', 'register', 'auth', 'update-password', 'budgets', 
               'clients', 'expenses', 'market', 'notes', 'financial', 
-              'minha-bio', 'configuracoes', 'dashboard', 'pix'
+              'minha-bio', 'configuracoes', 'dashboard', 'pix', 'planos', 'admin'
             ];
             var isSite = (window.location.href.indexOf('/bio') !== -1 || hash.indexOf('/bio') !== -1) ||
                          (path && !reserved.includes(path)) ||
@@ -431,7 +434,7 @@
       var reserved = [
         'login', 'register', 'auth', 'update-password', 'budgets', 
         'clients', 'expenses', 'market', 'notes', 'financial', 
-        'minha-bio', 'configuracoes', 'dashboard', 'pix'
+        'minha-bio', 'configuracoes', 'dashboard', 'pix', 'planos', 'admin'
       ];
       var isSiteRoute = (window.location.href.indexOf('/bio') !== -1 || hash.indexOf('/bio') !== -1) ||
                         (path && !reserved.includes(path)) ||
@@ -627,6 +630,5 @@
       }, isSiteRoute ? 0 : 6500);
     })();
   </script>
-  <video id="gm-video-bg" autoPlay loop muted playsInline style="display: none;"></video>
   </body>
 </html>
